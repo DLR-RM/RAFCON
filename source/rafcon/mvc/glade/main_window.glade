@@ -70,6 +70,18 @@
                   <object class="GtkHBox" id="left_bar_hbox">
                     <property name="visible">True</property>
                     <child>
+                      <object class="GtkButton" id="left_bar_hide_button">
+                        <property name="width_request">10</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
                       <object class="GtkVPaned" id="left_v_pane">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -220,18 +232,6 @@
                         </child>
                       </object>
                       <packing>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="left_bar_hide_button">
-                        <property name="width_request">15</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
@@ -250,7 +250,7 @@
                         <property name="visible">True</property>
                         <child>
                           <object class="GtkButton" id="left_bar_return_button">
-                            <property name="width_request">15</property>
+                            <property name="width_request">10</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                           </object>
@@ -563,7 +563,7 @@
                                         </child>
                                         <child>
                                           <object class="GtkButton" id="console_return_button">
-                                            <property name="height_request">15</property>
+                                            <property name="height_request">10</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
                                           </object>
@@ -592,19 +592,6 @@
                                   <object class="GtkVBox" id="debug_console_vbox">
                                     <property name="visible">True</property>
                                     <property name="orientation">vertical</property>
-                                    <child>
-                                      <object class="GtkButton" id="console_hide_button">
-                                        <property name="height_request">15</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">True</property>
-                                        <property name="focus_on_click">False</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="position">0</property>
-                                      </packing>
-                                    </child>
                                     <child>
                                       <object class="GtkHBox" id="debug_label_hbox">
                                         <property name="visible">True</property>
@@ -708,7 +695,7 @@
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
-                                        <property name="position">1</property>
+                                        <property name="position">0</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -721,6 +708,20 @@
                                         </child>
                                       </object>
                                       <packing>
+                                        <property name="position">1</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton" id="console_hide_button">
+                                        <property name="height_request">10</property>
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="receives_default">True</property>
+                                        <property name="focus_on_click">False</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="pack_type">end</property>
                                         <property name="position">2</property>
                                       </packing>
                                     </child>
@@ -739,7 +740,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="right_bar_return_button">
-                            <property name="width_request">15</property>
+                            <property name="width_request">10</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                           </object>
@@ -757,18 +758,6 @@
                     <child>
                       <object class="GtkHBox" id="right_bar_hbox">
                         <property name="visible">True</property>
-                        <child>
-                          <object class="GtkButton" id="right_bar_hide_button">
-                            <property name="width_request">15</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
                         <child>
                           <object class="GtkVBox" id="state_editor">
                             <property name="visible">True</property>
@@ -800,7 +789,6 @@
                                         </child>
                                       </object>
                                       <packing>
-                                        <property name="expand">False</property>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
@@ -825,6 +813,19 @@
                             </child>
                           </object>
                           <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="right_bar_hide_button">
+                            <property name="width_request">10</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
                             <property name="position">1</property>
                           </packing>
                         </child>
