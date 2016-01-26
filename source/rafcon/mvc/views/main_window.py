@@ -131,6 +131,20 @@ class MainWindowView(View):
         self['top_level_vbox'].pack_start(self.tool_bar.get_top_widget(), expand=False, fill=True, padding=0)
         self['top_level_vbox'].reorder_child(self.tool_bar.get_top_widget(), 1)
 
+        ################################################
+        # Hide Buttons
+        ################################################
+        self['left_bar_hide_button'].set_image(self.create_arrow_label(constants.BUTTON_LEFTA))
+        self['right_bar_hide_button'].set_image(self.create_arrow_label(constants.BUTTON_RIGHTA))
+        self['console_hide_button'].set_image(self.create_arrow_label(constants.BUTTON_DOWNA))
+
+        ################################################
+        # Return Buttons
+        ################################################
+        self['left_bar_return_button'].set_image(self.create_arrow_label(constants.BUTTON_RIGHTA))
+        self['right_bar_return_button'].set_image(self.create_arrow_label(constants.BUTTON_LEFTA))
+        self['console_return_button'].set_image(self.create_arrow_label(constants.BUTTON_UPA))
+
         # --------------------------------------------------------------------------
         # Edit graphical_editor_shortcuts
         # --------------------------------------------------------------------------
@@ -185,7 +199,7 @@ class MainWindowView(View):
         # setup correct sizes
         ######################################################
         self['top_level_h_pane'].set_position(300)
-        self['right_h_pane'].set_position(900)
+        self['right_h_pane'].set_position(1000)
         self['left_v_pane'].set_position(400)
         self['central_v_pane'].set_position(600)
 
@@ -253,6 +267,12 @@ class MainWindowView(View):
                 tab_label.set_angle(90)
             notebook.set_tab_reorderable(child, True)
             notebook.set_tab_detachable(child, True)
+
+    @staticmethod
+    def create_arrow_label(icon):
+        label = gtk.Label()
+        label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, constants.FONT_SIZE_BIG, icon))
+        return label
 
     def replace_notebook_placeholder_with_widget(self, tab_label, notebook, view):
         """Replace notebook's placeholder with widget by removing the placeholder, creating a widget, and assigning the

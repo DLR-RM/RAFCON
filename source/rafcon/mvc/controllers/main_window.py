@@ -163,28 +163,8 @@ class MainWindowController(ExtendedController):
                                                        menu_bar_controller)
         self.add_controller('top_tool_bar_controller', top_tool_bar_controller)
 
-        #view['right_bar_hide_button'].set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
-        #                                                                                   constants.FONT_SIZE_BIG,
-        #                                                                                   constants.BUTTON_RIGHTA))
-        #view['hide_right_bar_eventbox'].connect('button_release_event', self.right_bar_hide_clicked)
-
-        #view['console_hide_button'].set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
-        #                                                                                 constants.FONT_SIZE_BIG,
-        #                                                                                 constants.BUTTON_DOWNA))
-        #view['console_hide_eventbox'].connect('button_release_event', self.console_hide_clicked)
-
-        view['left_bar_return_button'].set_image(self.create_arrow_label(constants.BUTTON_RIGHTA))
-        view['left_bar_return_button'].set_border_width(constants.BORDER_WIDTH)
-
-        view['right_bar_return_button'].set_image(self.create_arrow_label(constants.BUTTON_LEFTA))
-        view['right_bar_return_button'].set_border_width(constants.BORDER_WIDTH)
-
-        view['console_return_button'].set_image(self.create_arrow_label(constants.BUTTON_UPA))
-        view['console_return_button'].set_border_width(constants.BORDER_WIDTH)
-        view['console_return_button'].set_size_request(0, constants.BUTTON_MIN_HEIGHT - 10)
-
-        self.left_bar_child = view['right_h_pane'].get_child1()
-        self.right_bar_child = view['top_level_h_pane'].get_child2()
+        self.left_bar_child = view['top_level_h_pane'].get_child1()
+        self.right_bar_child = view['right_h_pane'].get_child2()
         self.console_child = view['central_v_pane'].get_child2()
 
         view['debug_console_button_hbox'].reorder_child(view['button_show_error'], 0)
@@ -196,6 +176,11 @@ class MainWindowController(ExtendedController):
         self.register_actions(self.shortcut_manager)
         view['main_window'].connect('delete_event', self.get_controller("menu_bar_controller").on_delete_event)
         view['main_window'].connect('destroy', self.get_controller("menu_bar_controller").on_destroy)
+
+        # connect left, right and console hide buttons' signals to their corresponding methods
+        view['left_bar_hide_button'].connect('clicked', self.on_left_bar_hide_clicked)
+        view['right_bar_hide_button'].connect('clicked', self.on_right_bar_hide_clicked)
+        view['console_hide_button'].connect('clicked', self.on_console_hide_clicked)
 
         # Connect left and right bar return buttons' signals to their corresponding methods
         view['left_bar_return_button'].connect('clicked', self.on_left_bar_return_button_clicked)
@@ -268,74 +253,46 @@ class MainWindowController(ExtendedController):
                 if self.view[button_name].get_active():
                     self.view[button_name].set_active(False)
 
-    @staticmethod
-    def create_arrow_label(icon):
-        label = gtk.Label()
-        label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
-                                                                    constants.FONT_SIZE_BIG,
-                                                                    icon))
-        return label
-
-    def create_label_box(self, text):
-        hbox = gtk.HBox()
-        label = gui_helper.create_label_with_text_and_spacing(text, font_size=constants.FONT_SIZE_BIG,
-                                                              letter_spacing=constants.LETTER_SPACING_1PT)
-        label.set_alignment(0.0, 0.5)
-        inner_eventbox = gtk.EventBox()
-        inner_label = gtk.Label()
-        inner_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
-                                                                          constants.FONT_SIZE_BIG,
-                                                                          constants.BUTTON_LEFTA))
-        inner_eventbox.connect("button_release_event", self.left_bar_hide_clicked)
-        inner_eventbox.add(inner_label)
-        hbox.pack_start(label, True, True, 0)
-        hbox.pack_start(inner_eventbox, False, True, 0)
-        hbox.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
-        return hbox
+    # def create_label_box(self, text):
+    #     hbox = gtk.HBox()
+    #     label = gui_helper.create_label_with_text_and_spacing(text, font_size=constants.FONT_SIZE_BIG,
+    #                                                           letter_spacing=constants.LETTER_SPACING_1PT)
+    #     label.set_alignment(0.0, 0.5)
+    #     inner_eventbox = gtk.EventBox()
+    #     inner_label = gtk.Label()
+    #     inner_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
+    #                                                                       constants.FONT_SIZE_BIG,
+    #                                                                       constants.BUTTON_LEFTA))
+    #     inner_eventbox.connect("button_release_event", self.left_bar_hide_clicked)
+    #     inner_eventbox.add(inner_label)
+    #     hbox.pack_start(label, True, True, 0)
+    #     hbox.pack_start(inner_eventbox, False, True, 0)
+    #     hbox.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+    #     return hbox
 
     def on_left_bar_return_button_clicked(self, widget, event=None):
         self.view['left_bar_return_button'].hide()
-        self.view['left_h_pane'].add1(self.left_bar_child)
+        self.view['top_level_h_pane'].add1(self.left_bar_child)
 
     def on_right_bar_return_button_clicked(self, widget, event=None):
         self.view['right_bar_return_button'].hide()
-        self.view['top_level_h_pane'].add2(self.right_bar_child)
+        self.view['right_h_pane'].add2(self.right_bar_child)
 
     def on_console_return_button_clicked(self, widget, event=None):
         self.view['console_return_button'].hide()
-        self.view['left_v_pane_2'].add2(self.console_child)
+        self.view['central_v_pane'].add2(self.console_child)
 
-    def left_bar_hide_clicked(self, widget, event=None):
-        self.view['left_h_pane'].remove(self.left_bar_child)
+    def on_left_bar_hide_clicked(self, widget, event=None):
+        self.view['top_level_h_pane'].remove(self.left_bar_child)
         self.view['left_bar_return_button'].show()
 
-    def right_bar_hide_clicked(self, widget, event=None):
-        self.view['top_level_h_pane'].remove(self.right_bar_child)
+    def on_right_bar_hide_clicked(self, widget, event=None):
+        self.view['right_h_pane'].remove(self.right_bar_child)
         self.view['right_bar_return_button'].show()
 
-    def console_hide_clicked(self, widget, event=None):
-        self.view['left_v_pane_2'].remove(self.console_child)
+    def on_console_hide_clicked(self, widget, event=None):
+        self.view['central_v_pane'].remove(self.console_child)
         self.view['console_return_button'].show()
-
-    # def create_notebook_widget(self, title, widget, use_scroller=True, border=10):
-    #     title_label = self.create_label_box(title)
-    #     event_box = gtk.EventBox()
-    #     vbox = gtk.VBox()
-    #     vbox.pack_start(title_label, False, True, 0)
-    #     if use_scroller:
-    #         scroller = gtk.ScrolledWindow()
-    #         scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-    #         alig = gtk.Alignment(0., 0., 1., 1.)
-    #         alig.set_padding(0, 0, border, 0)
-    #         alig.add(widget)
-    #         alig.show()
-    #         scroller.add_with_viewport(alig)
-    #         vbox.pack_start(scroller, True, True, 0)
-    #     else:
-    #         vbox.pack_start(widget, True, True, 0)
-    #     event_box.add(vbox)
-    #     event_box.show_all()
-    #     return event_box
 
     # Shortcut buttons
     def on_button_start_shortcut_toggled(self, widget, event=None):

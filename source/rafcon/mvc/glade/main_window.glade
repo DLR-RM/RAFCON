@@ -564,7 +564,6 @@
                                         <child>
                                           <object class="GtkButton" id="console_return_button">
                                             <property name="height_request">15</property>
-                                            <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
                                           </object>
