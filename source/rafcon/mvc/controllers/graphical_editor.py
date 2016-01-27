@@ -910,8 +910,10 @@ class GraphicalEditorController(ExtendedController):
             else:
                 transition_id = responsible_parent_m.state.add_transition(from_state_id, from_outcome_id, to_state_id,
                                                                           to_outcome_id)
-                transition_m = responsible_parent_m.get_transition_m(transition_id)
-                transition_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
+                if self.temporary_waypoints:
+                    transition_m = responsible_parent_m.get_transition_m(transition_id)
+                    transition_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
+                    self._publish_changes(model=transition_m, change='append_to_last_change')
         except (AttributeError, ValueError) as e:
             logger.warn("Transition couldn't be added: {0}".format(e))
             # import traceback
@@ -948,8 +950,10 @@ class GraphicalEditorController(ExtendedController):
             try:
                 data_flow_id = responsible_parent.state.add_data_flow(from_state_id, from_port_id,
                                                                       target_state_id, target_port_id)
-                data_flow_m = responsible_parent.get_data_flow_m(data_flow_id)
-                data_flow_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
+                if self.temporary_waypoints:
+                    data_flow_m = responsible_parent.get_data_flow_m(data_flow_id)
+                    data_flow_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
+                    self._publish_changes(model=data_flow_m, change='append_to_last_change')
             except AttributeError as e:
                 logger.warn("Data flow couldn't be added: {0}".format(e))
             except Exception as e:
