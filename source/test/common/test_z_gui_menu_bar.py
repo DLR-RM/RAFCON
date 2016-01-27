@@ -18,6 +18,8 @@ from rafcon.statemachine.state_machine import StateMachine
 # mvc elements
 from rafcon.mvc.models import GlobalVariableManagerModel
 from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.graphical_editor import GraphicalEditor as OpenGLEditor
+from rafcon.mvc.mygaphas.view import ExtendedGtkView as GaphasEditor
 from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements
@@ -128,6 +130,13 @@ def wait_for_values_identical_number_state_machines(sm_manager_model, val2):
             break
 
 
+def focus_graphical_editor_in_page(page):
+    graphical_controller = page.children()[0]
+    if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
+        graphical_controller = graphical_controller.children()[0]
+    graphical_controller.grab_focus()
+
+
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(*args):
     """ The function triggers and test basic functions of the menu bar.
@@ -176,7 +185,7 @@ def trigger_gui_signals(*args):
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
     page_id = state_machines_ctrl.get_page_id(first_sm_id+2)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
-    page.children()[0].grab_focus()
+    focus_graphical_editor_in_page(page)
 
     time.sleep(sleep_time_short)
     #########################################################
@@ -202,7 +211,7 @@ def trigger_gui_signals(*args):
     # print "focus"
     # paste clipboard element into the new state
     main_window_controller.view['main_window'].grab_focus()  # refresh focus
-    page.children()[0].grab_focus()
+    focus_graphical_editor_in_page(page)
     # time.sleep(3)
     # print "paste"
     # print dir(page.children()[0]), "\n\n", page.children()[0], "\n\n", page.children()[0].has_focus()
@@ -237,7 +246,7 @@ def trigger_gui_signals(*args):
 
     # paste clipboard element into the new state
     main_window_controller.view['main_window'].grab_focus()  # refresh focus
-    page.children()[0].grab_focus()
+    focus_graphical_editor_in_page(page)
     glib.idle_add(menubar_ctrl.on_paste_clipboard_activate, None, None)
     # global_clipboard.paste(state_m)  # sm_m.selection)
     time.sleep(sleep_time_short)
@@ -272,7 +281,7 @@ def trigger_gui_signals(*args):
 
     # paste clipboard element into the new state
     main_window_controller.view['main_window'].grab_focus()  # refresh focus
-    page.children()[0].grab_focus()
+    focus_graphical_editor_in_page(page)
     # glib.idle_add(menubar_ctrl.on_paste_clipboard_activate, None, None)
     call_gui_callback(menubar_ctrl.on_paste_clipboard_activate, None, None)
     # global_clipboard.paste(state_m)  # sm_m.selection)
