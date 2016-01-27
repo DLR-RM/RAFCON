@@ -16,6 +16,7 @@ import copy
 import sys
 import traceback
 import datetime
+import getpass
 
 from gtkmvc import ModelMT, Observable
 # import yaml
@@ -41,7 +42,8 @@ from rafcon.statemachine.global_variable_manager import GlobalVariableManager
 from rafcon.statemachine.library_manager import LibraryManager
 from rafcon.statemachine.state_machine import StateMachine
 
-from rafcon.mvc.models.container_state import ContainerState, ContainerStateModel
+from rafcon.mvc.models.container_state import ContainerState, ContainerStateModel, StateModel
+from rafcon.mvc.models.abstract_state import MetaSignalMsg
 
 import rafcon.mvc.statemachine_helper
 
@@ -55,7 +57,7 @@ core_object_list = [Transition, DataFlow, Outcome, InputDataPort, OutputDataPort
                     GlobalVariableManager, LibraryManager, StateMachine,
                     ExecutionState, HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
 
-HISTORY_DEBUG_LOG_FILE = '/tmp/test_file.txt'
+HISTORY_DEBUG_LOG_FILE = '/tmp/{0}/test_file.txt'.format(getpass.getuser())
 
 
 def get_state_tuple(state, state_m=None):
@@ -108,16 +110,18 @@ class NotificationOverview(dict):
         self.__type = 'before'
         if 'after' in info:
             self.__type = 'after'
+        elif 'signal' in info:
+            self.__type = 'after'
         self.with_prints = with_prints
-
         s, new_overview = self.get_nice_info_dict_string(info)
-        self.__description = str(datetime.datetime.now()) + "\n" + s
+        self.time_stamp = datetime.datetime.now()
+        self.__description = str(self.time_stamp) + "\n" + s
         self.new_overview = new_overview
         self.__overview = self.parent_state_of_notification_source(info)
         dict.__init__(self, self.__overview)
         if self.with_prints:
-            self.print_overview()
             print str(self)
+            self.print_overview(new_overview)
 
     def __str__(self):
         return self.__description
@@ -147,7 +151,7 @@ class NotificationOverview(dict):
         print "prop_: ", overview['prop_name']
         print "insta: ", overview['instance']
         print "metho: ", overview['method_name']
-        print "level: ", overview['level']
+        # print "level: ", overview['level']
         print "prop-: ", overview['prop_name'][-1]
 
     def get_all(self):
@@ -175,6 +179,41 @@ class NotificationOverview(dict):
     def get_nice_info_dict_string(self, info, level='\t', overview=None):
         """ Inserts all elements of a notification info-dictionary of gtkmvc into one string and indicates levels of calls definded by 'kwargs'
         """
+        def get_nice_meta_signal_msg_tuple_string(meta_signal_msg_tuple, level, overview):
+            meta_signal_dict = {}
+            # origin
+            s = "\n{0}origin={1}".format(level + "\t", meta_signal_msg_tuple.origin)
+            meta_signal_dict['origin'] = meta_signal_msg_tuple.origin
+            # change
+            s += "\n{0}change={1}".format(level + "\t", meta_signal_msg_tuple.change)
+            meta_signal_dict['change'] = meta_signal_msg_tuple.change
+            # affects_children
+            s += "\n{0}affects_children={1}".format(level + "\t", meta_signal_msg_tuple.affects_children)
+            meta_signal_dict['affects_children'] = meta_signal_msg_tuple.affects_children
+            overview['meta_signal'].append(meta_signal_dict)
+
+            # notification (tuple)
+            notification_dict = {}
+            meta_signal_dict['notification'] = notification_dict
+            if meta_signal_msg_tuple.notification is None:
+                s += "\n{0}notification={1}".format(level + "\t", meta_signal_msg_tuple.notification)
+            else:
+                s += "\n{0}notification=Notification(".format(level + "\t")
+                # model
+                notification_dict['model'] = meta_signal_msg_tuple.notification.model
+                s += "\n{0}model={1}".format(level + "\t\t", meta_signal_msg_tuple.notification.model)
+                # prop_name
+                notification_dict['prop_name'] = meta_signal_msg_tuple.notification.prop_name
+                s += "\n{0}prop_name={1}".format(level + "\t\t", meta_signal_msg_tuple.notification.prop_name)
+                # info
+                notification_dict['info'] = meta_signal_msg_tuple.notification.info
+                overview['kwargs'].append(meta_signal_msg_tuple.notification.info)
+                s += "\n{0}info=\n{1}{0}\n".format(level + "\t\t",
+                                               self.get_nice_info_dict_string(meta_signal_msg_tuple.notification.info,
+                                                                              level+'\t\t\t',
+                                                                              overview))
+            return s
+
         overview_was_none = False
         if overview is None:
             overview_was_none = True
@@ -183,15 +222,20 @@ class NotificationOverview(dict):
             overview['info'] = []
             if 'before' in info:
                 overview['type'] = 'before'
-            else:
+            elif 'after' in info:
                 overview['type'] = 'after'
                 overview['result'] = []
+            else:  # 'signal' in info:
+                overview['type'] = 'signal'
+                overview['meta_signal'] = []
 
-        if ('after' in info or 'before' in info) and 'model' in info:
+        if ('after' in info or 'before' in info or 'signal' in info) and 'model' in info:
             if 'before' in info:
                 s = "{0}'before': {1}".format(level, info['before'])
-            else:
+            elif 'after' in info:
                 s = "{0}'after': {1}".format(level, info['after'])
+            else:
+                s = "{0}'signal': {1}".format(level, info['signal'])
         else:
             return str(info)
         overview['info'].append(info)
@@ -201,31 +245,37 @@ class NotificationOverview(dict):
         # prop_name
         s += "\n{0}'prop_name': {1}".format(level, info['prop_name'])
         overview['prop_name'].append(info['prop_name'])
-        # instance
-        s += "\n{0}'instance': {1}".format(level, info['instance'])
-        overview['instance'].append(info['instance'])
-        # method_name
-        s += "\n{0}'method_name': {1}".format(level, info['method_name'])
-        overview['method_name'].append(info['method_name'])
-        # args
-        s += "\n{0}'args': {1}".format(level, info['args'])
-        overview['args'].append(info['args'])
+        if not overview['type'] == 'signal':
+            # instance
+            s += "\n{0}'instance': {1}".format(level, info['instance'])
+            overview['instance'].append(info['instance'])
+            # method_name
+            s += "\n{0}'method_name': {1}".format(level, info['method_name'])
+            overview['method_name'].append(info['method_name'])
+            # args
+            s += "\n{0}'args': {1}".format(level, info['args'])
+            overview['args'].append(info['args'])
 
-        overview['kwargs'].append(info['kwargs'])
-        if overview['type'] == 'after':
-            overview['result'].append(info['result'])
-        # kwargs
-        s += "\n{0}'kwargs': {1}".format(level, self.get_nice_info_dict_string(info['kwargs'], level + "\t", overview))
-        if overview['type'] == 'after':
-            s += "\n{0}'result': {1}".format(level, info['result'])
-        # additional elements not created by gtkmvc or common function calls
-        overview['others'].append({})
-        for key, value in info.items():
-            if key in ['before', 'after', 'model', 'prop_name', 'instance', 'method_name', 'args', 'kwargs', 'result']:
-                pass
-            else:
-                s += "\n{0}'{2}': {1}".format(level, info[key], key)
-                overview['others'][len(overview['others'])-1][key] = info[key]
+            overview['kwargs'].append(info['kwargs'])
+            if overview['type'] == 'after':
+                overview['result'].append(info['result'])
+            # kwargs
+            s += "\n{0}'kwargs': {1}".format(level, self.get_nice_info_dict_string(info['kwargs'], level + "\t", overview))
+            if overview['type'] == 'after':
+                s += "\n{0}'result': {1}".format(level, info['result'])
+            # additional elements not created by gtkmvc or common function calls
+            overview['others'].append({})
+            for key, value in info.items():
+                if key in ['before', 'after', 'model', 'prop_name', 'instance', 'method_name', 'args', 'kwargs', 'result']:
+                    pass
+                else:
+                    s += "\n{0}'{2}': {1}".format(level, info[key], key)
+                    overview['others'][len(overview['others'])-1][key] = info[key]
+        else:
+            overview['kwargs'].append({})
+            overview['meta_signal'].append(info['arg'])
+            s += "\n{0}'arg': MetaSignalMsg({1}".format(level,
+                                                        get_nice_meta_signal_msg_tuple_string(info['arg'], level, overview))
 
         if overview_was_none:
             return s, overview
@@ -274,8 +324,6 @@ class NotificationOverview(dict):
         overview = find_parent(info, {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'level': [],
                                       'info': []})
 
-        if self.with_prints:
-            self.print_overview(overview)
         return overview
 
 
@@ -340,7 +388,7 @@ def get_state_from_state_tuple(state_tuple):
     return state
 
 
-def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=False):
+def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=False, level=None):
     meta_dict = {'state': copy.deepcopy(state_model.meta), 'is_start': False, 'data_flows': {}, 'transitions': {},
                  'outcomes': {}, 'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}, 'states': {},
                  'related_parent_transitions': {}, 'related_parent_data_flows': {}}
@@ -400,22 +448,9 @@ def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=Fa
     return meta_dict
 
 
-def insert_state_meta_data(meta_dict, state_model, with_parent_linkage=True, with_prints=False):
+def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None):
     # meta_dict = {'state': state_model.meta, 'data_flows': {}, 'transitions': {}, 'outcomes': {},
     #              'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}}
-
-    # if with_parent_linkage:
-    #     with_parent_linkage = False
-    #     if state_model.parent is not None:  # not root_state
-    #         state_id = state_model.state.state_id
-    #         for t_id in meta_dict['related_parent_transitions'].keys():
-    #             transition_m = state_model.parent.transitions[t_id]
-    #             if transition_m.transition.from_state == state_id or transition_m.transition.to_state == state_id:
-    #                 transition_m.meta = meta_dict['related_parent_transitions'][t_id]
-    #         for df_id in meta_dict['related_parent_data_flows'].keys():
-    #             data_flow_m = state_model.parent.data_flows[df_id]
-    #             if data_flow_m.data_flow.from_state == state_id or data_flow_m.data_flow.to_state == state_id:
-    #                 data_flow_m.meta = meta_dict['related_parent_data_flows'][df_id]
 
     state_model.meta = copy.deepcopy(meta_dict['state'])
     if with_prints:
@@ -442,7 +477,13 @@ def insert_state_meta_data(meta_dict, state_model, with_parent_linkage=True, wit
             if with_prints:
                 print "FIN: ", state_id, state_m.state.state_id, meta_dict['states'].keys(), state_model.state.state_id
             if state_m.state.state_id != UNIQUE_DECIDER_STATE_ID:
-                insert_state_meta_data(meta_dict['states'][state_m.state.state_id], state_m, with_parent_linkage)
+                if level is None:
+                    insert_state_meta_data(meta_dict['states'][state_m.state.state_id], state_m, with_prints)
+                elif level > 0:
+                    insert_state_meta_data(meta_dict['states'][state_m.state.state_id], state_m, with_prints, level - 1)
+                else:
+                    pass
+
             if with_prints:
                 print "FINISHED META for STATE: ", state_m.state.state_id
         for elem in state_model.transitions:
@@ -488,6 +529,71 @@ class ActionDummy:
 
     def redo(self):
         pass
+
+
+class MetaAction:
+
+    def __init__(self, parent_path, state_machine_model, overview):
+
+        self.type = "change " + overview['meta_signal'][-1]['change']
+        overview['method_name'].append("change " + overview['meta_signal'][-1]['change'])
+        overview['info'][-1]['method_name'] = "change " + overview['meta_signal'][-1]['change']
+        overview['instance'].append(overview['model'][-1])
+        overview['info'][-1]['instance'] = overview['model'][-1]
+        self.state_machine = state_machine_model.state_machine
+        self.state_machine_model = state_machine_model
+        self.parent_path = parent_path
+
+        self.before_overview = overview
+        self.before_storage = self.get_storage()  # tuple of state and states-list of storage tuple
+
+        self.after_overview = None
+        self.after_storage = None  # tuple of state and states-list of storage tuple
+
+        self.__version_id = None
+
+    @property
+    def version_id(self):
+        return self.__version_id
+
+    @version_id.setter
+    def version_id(self, value):
+        if self.__version_id is None:
+            self.__version_id = value
+        else:
+            logger.warning("The version_id of an action is not allowed to be modify after first assignment")
+
+    def set_after(self, overview):
+        self.after_overview = overview
+        self.after_storage = self.get_storage()  # tuple of state and states-list of storage tuple
+
+    def get_storage(self):
+
+        state_model = self.state_machine_model.get_state_model_by_path(self.parent_path)
+        return get_state_element_meta(state_model)
+
+    def get_state_model_changed(self):
+        return self.state_machine_model.get_state_model_by_path(self.parent_path)
+
+    def undo(self):
+        # TODO check why levels are not working
+        state_m = self.get_state_model_changed()
+        if self.before_overview['meta_signal'][-1]['affects_children']:
+            insert_state_meta_data(meta_dict=self.before_storage, state_model=state_m)
+            state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))
+        else:
+            insert_state_meta_data(meta_dict=self.before_storage, state_model=state_m)
+            state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
+
+    def redo(self):
+        # TODO check why levels are not working
+        state_m = self.get_state_model_changed()
+        if self.before_overview['meta_signal'][-1]['affects_children']:
+            insert_state_meta_data(meta_dict=self.after_storage, state_model=state_m)
+            state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))
+        else:
+            insert_state_meta_data(meta_dict=self.after_storage, state_model=state_m)
+            state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
 
 
 class Action:
@@ -575,13 +681,14 @@ class Action:
         return g_sm_editor
 
     @staticmethod
-    def run_graphical_viewer(g_sm_editor):
+    def run_graphical_viewer(g_sm_editor, responsible_m):
         """ Enables and re-initiate graphical viewer's drawing process.
         :param g_sm_editor: graphical state machine editor
         """
         if g_sm_editor:
             g_sm_editor.suspend_drawing = False
-            g_sm_editor._redraw()  # is used to secure update of graphical editor # TODO remove if not necessary anymore (private)
+            # TODO integrate meta-data affects_children status
+            responsible_m.meta_signal.emit(MetaSignalMsg("undo_redo_action", "all", True))
 
     def redo(self):
         """ General Redo, that takes all elements in the parent path state stored of the before action state machine status.
@@ -614,7 +721,7 @@ class Action:
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
 
-        self.run_graphical_viewer(g_sm_editor)
+        self.run_graphical_viewer(g_sm_editor, actual_state_model)
 
     def update_state(self, state, stored_state):
 
@@ -838,7 +945,7 @@ class StateMachineAction(Action):
         if self.with_print:
             logger.info("SM set_root_state_to_version: FINISHED")
 
-        self.run_graphical_viewer(g_sm_editor)
+        self.run_graphical_viewer(g_sm_editor, self.state_machine_model.root_state)
 
     def redo(self):
         # print "#H# STATE_MACHINE_REDO STARTED"
@@ -915,9 +1022,9 @@ class AddObjectAction(Action):
         self.add_core_object_to_state(state, core_obj)
 
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
+        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model, level=1)
 
-        self.run_graphical_viewer(g_sm_editor)
+        self.run_graphical_viewer(g_sm_editor, actual_state_model)
 
     def undo(self):
 
@@ -942,9 +1049,9 @@ class AddObjectAction(Action):
 
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
+        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model, level=1)
 
-        self.run_graphical_viewer(g_sm_editor)
+        self.run_graphical_viewer(g_sm_editor, actual_state_model)
 
     def correct_reference_state(self, state, storage_version_of_state, storage_path):
 
@@ -1101,9 +1208,9 @@ class RemoveObjectAction(Action):
 
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
+        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model, level=1)
 
-        self.run_graphical_viewer(g_sm_editor)
+        self.run_graphical_viewer(g_sm_editor, actual_state_model)
 
     def redo(self):
 
@@ -1120,9 +1227,9 @@ class RemoveObjectAction(Action):
         state = self.get_state_changed()
         path_of_state = state.get_path()
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        insert_state_meta_data(meta_dict=self.after_storage[3], state_model=actual_state_model)
+        insert_state_meta_data(meta_dict=self.after_storage[3], state_model=actual_state_model, level=1)
 
-        self.run_graphical_viewer(g_sm_editor)
+        self.run_graphical_viewer(g_sm_editor, actual_state_model)
 
     def correct_reference_state(self, state, storage_version_of_state, storage_path):
 
@@ -1411,7 +1518,7 @@ class StateAction(Action):
                                  'final_outcome', 'preempted', 'active', 'is_root_state',  # any not observed
                                  'scoped_data', 'v_checker']
     possible_method_names = ['parent',  # will be ignored
-                             'name', 'description', 'script_text',  # State
+                             'name', 'description', 'script', 'script_text',  # State
                              'outcomes', 'input_data_ports', 'output_data_ports',  # State
                              'states', 'scoped_variables', 'data_flows', 'transitions', 'start_state_id',  # ContainerState
                              'change_state_type']
@@ -1454,7 +1561,7 @@ class StateAction(Action):
         self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
 
     def undo(self):
-        if self.action_type in ['parent', 'outcomes', 'input_data_ports', 'output_data_ports']:
+        if self.action_type in ['parent', 'outcomes', 'input_data_ports', 'output_data_ports', 'script']:
             Action.undo(self)
         elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type']:
             Action.undo(self)
@@ -1465,7 +1572,7 @@ class StateAction(Action):
             assert False
 
     def redo(self):
-        if self.action_type in ['outcomes', 'input_data_ports', 'output_data_ports']:
+        if self.action_type in ['outcomes', 'input_data_ports', 'output_data_ports', 'script']:
             Action.redo(self)
         elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type']:
             Action.redo(self)
@@ -1536,6 +1643,7 @@ class History(ModelMT):
         self.refactored_history = True
         self.with_prints = False
         self.with_debug_logs = False
+        self.with_meta_data_actions = True
 
     def get_state_element_meta_from_tmp_storage(self, state_path):
         path_elements = state_path.split('/')
@@ -1545,6 +1653,7 @@ class History(ModelMT):
         for path_elem in path_elements:
             act_state_elements_meta = act_state_elements_meta['states'][path_elem]
         # print act_state_elements_meta
+        return act_state_elements_meta
 
     def recover_specific_version(self, pointer_on_version_to_recover):
         """ Recovers a specific version of the all_time_history element by doing several undos and redos.
@@ -1883,8 +1992,32 @@ class History(ModelMT):
             logger.debug("Failure occurred while finishing action")
             traceback.print_exc(file=sys.stdout)
 
-    def meta_changed_notify_after(self, changed_parent_model, changed_model, recursive_changes):
-        raise DeprecationWarning
+    @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state changed
+    def meta_changed_notify_after(self, changed_model, prop_name, info):
+        if not self.with_meta_data_actions:
+            return
+        overview = NotificationOverview(info)
+        # logger.info("meta_changed: \n{0}".format(overview))
+        overview = overview.new_overview
+        if self.busy:
+            return
+
+        if overview['meta_signal'][-1]['change'] == 'append_to_last_change':
+             # update last actions after_storage -> meta-data
+            self.actual_action.after_storage = self.actual_action.get_storage()
+            self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        else:
+            if isinstance(overview['model'][-1], StateModel):
+                changed_parent_model = overview['model'][-1]
+            else:
+                changed_parent_model = overview['model'][-1].parent
+            self.actual_action = MetaAction(changed_parent_model.state.get_path(),
+                                            state_machine_model=self.state_machine_model,
+                                            overview=overview)
+            # b_tuple = self.actual_action.before_storage
+            meta_dict = self.get_state_element_meta_from_tmp_storage(changed_parent_model.state.get_path())
+            self.actual_action.before_storage = meta_dict
+            self.finish_new_action(overview)
 
     def manual_changed_notify_before(self, change_type, changed_parent_model, changed_model, recursive_changes):
         pass
@@ -1896,7 +2029,7 @@ class History(ModelMT):
         :param recursive_changes bool: indicates if the changes are recursive and touch multiple or all recursive childs
         :return:
         """
-        if change_type == 'gui_meta_data_changed':
+        if change_type == 'gui_meta_data_changed' and self.with_meta_data_actions:
             # store meta data
 
             from rafcon.mvc.models.state import StateModel
