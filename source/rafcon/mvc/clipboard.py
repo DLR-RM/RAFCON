@@ -148,7 +148,6 @@ class Clipboard(Observable):
         orig_state_copy_m = self.state_model_copies[0]
 
         target_state.add_state(orig_state_copy)
-        orig_state_copy.parent = target_state
 
         new_state_copy_m = target_state_m.states[orig_state_copy.state_id]
 
