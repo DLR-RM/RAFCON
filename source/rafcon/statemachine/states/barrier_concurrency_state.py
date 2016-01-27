@@ -296,8 +296,10 @@ class BarrierConcurrencyState(ConcurrencyState):
                     load_from_storage=True)
         try:
             state.description = dictionary['description']
-        except TypeError:
-            pass
+        except (TypeError, KeyError):  # (Very) old state machines do not have a description field
+            import traceback
+            formatted_lines = traceback.format_exc().splitlines()
+            logger.warning("Erroneous description for state '{1}': {0}".format(formatted_lines[-1], dictionary['name']))
 
         if states:
             return state
