@@ -2007,10 +2007,10 @@ class History(ModelMT):
             self.actual_action.after_storage = self.actual_action.get_storage()
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
         else:
-            if isinstance(overview['model'][-1], StateModel):
-                changed_parent_model = overview['model'][-1]
+            if isinstance(overview['model'][0], StateModel):
+                changed_parent_model = overview['model'][0]
             else:
-                changed_parent_model = overview['model'][-1].parent
+                changed_parent_model = overview['model'][0].parent
             self.actual_action = MetaAction(changed_parent_model.state.get_path(),
                                             state_machine_model=self.state_machine_model,
                                             overview=overview)
