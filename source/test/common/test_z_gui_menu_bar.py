@@ -300,7 +300,7 @@ def trigger_gui_signals(*args):
     # wait_for_values_identical_number_state_machines(sm_manager_model, 1)
     assert len(sm_manager_model.state_machines) == 1
 
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
+    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.TMP_TEST_PATH)
 
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
