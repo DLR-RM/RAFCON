@@ -581,8 +581,12 @@ class MetaAction:
         if self.before_overview['meta_signal'][-1]['affects_children']:
             insert_state_meta_data(meta_dict=self.before_storage, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))
+            # if state_m.state.is_root_state:
+            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
         else:
             insert_state_meta_data(meta_dict=self.before_storage, state_model=state_m)
+            # if state_m.state.is_root_state:
+            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
 
     def redo(self):
@@ -591,8 +595,12 @@ class MetaAction:
         if self.before_overview['meta_signal'][-1]['affects_children']:
             insert_state_meta_data(meta_dict=self.after_storage, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))
+            # if state_m.state.is_root_state:
+            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
         else:
             insert_state_meta_data(meta_dict=self.after_storage, state_model=state_m)
+            # if state_m.state.is_root_state:
+            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
 
 
@@ -1992,13 +2000,17 @@ class History(ModelMT):
             logger.debug("Failure occurred while finishing action")
             traceback.print_exc(file=sys.stdout)
 
-    @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state changed
+    @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state_model changed
+    # @ModelMT.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
     def meta_changed_notify_after(self, changed_model, prop_name, info):
         if not self.with_meta_data_actions:
             return
         overview = NotificationOverview(info)
         # logger.info("meta_changed: \n{0}".format(overview))
         overview = overview.new_overview
+        # WORKAROUND: avoid multiple signals of the root_state, by comparing first and last model in overview
+        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:
+            return
         if self.busy:
             return
 
