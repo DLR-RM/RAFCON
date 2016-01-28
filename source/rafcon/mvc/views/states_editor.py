@@ -29,6 +29,6 @@ class StatesEditorView(View):
             mouse_x = widget_position.x + x
             mouse_y = widget_position.y + y
             if alloc.x < mouse_x < alloc.x + alloc.width and alloc.y < mouse_y < alloc.y + alloc.height and \
-                            event.button == 2:
+                    event.button == 2:
                 self.notebook.emit("tab_close_event", i)
                 return

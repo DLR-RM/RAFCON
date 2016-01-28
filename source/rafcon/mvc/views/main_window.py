@@ -145,6 +145,13 @@ class MainWindowView(View):
         self['right_bar_return_button'].set_image(self.create_arrow_label(constants.BUTTON_LEFTA))
         self['console_return_button'].set_image(self.create_arrow_label(constants.BUTTON_UPA))
 
+        ################################################
+        # Undock Buttons
+        ################################################
+        self['undock_right_bar_button'].set_image(self.create_arrow_label(constants.BUTTON_UNDOCK))
+        self['undock_left_bar_button'].set_image(self.create_arrow_label(constants.BUTTON_UNDOCK))
+        self['undock_console_button'].set_image(self.create_arrow_label(constants.BUTTON_UNDOCK))
+
         # --------------------------------------------------------------------------
         # Edit graphical_editor_shortcuts
         # --------------------------------------------------------------------------
@@ -232,19 +239,16 @@ class MainWindowView(View):
         return event_box
 
     def create_label_box(self, text):
+        """Creates a horizontal box containing a label that shows a title.
+
+        :param text: The title to be shown
+        :return: The horizontal box
+        """
         hbox = gtk.HBox()
         label = gui_helper.create_label_with_text_and_spacing(text, font_size=constants.FONT_SIZE_BIG,
                                                               letter_spacing=constants.LETTER_SPACING_1PT)
         label.set_alignment(0.0, 0.5)
-        #inner_eventbox = gtk.EventBox()
-        #inner_label = gtk.Label()
-        #inner_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
-        #                                                                  constants.FONT_SIZE_BIG,
-        #                                                                  constants.BUTTON_LEFTA))
-        #inner_eventbox.connect("button_release_event", self.left_bar_hide_clicked)
-        #inner_eventbox.add(inner_label)
         hbox.pack_start(label, True, True, 0)
-        #hbox.pack_start(inner_eventbox, False, True, 0)
         hbox.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
         return hbox
 

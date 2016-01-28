@@ -216,10 +216,6 @@ class StatesEditorController(ExtendedController):
 
         :param state_m: The selected state model.
         """
-        """Triggered whenever a state is selected.
-
-        :param state_m: The selected state model.
-        """
         state_identifier = self.get_state_identifier(state_m)
 
         if state_identifier in self.closed_tabs:
