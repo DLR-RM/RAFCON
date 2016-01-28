@@ -19,7 +19,6 @@ from rafcon.mvc.controllers.top_tool_bar import TopToolBarController
 from rafcon.mvc.controllers.execution_history import ExecutionHistoryTreeController
 
 from rafcon.statemachine.enums import StateMachineExecutionStatus
-from rafcon.mvc import gui_helper
 
 from rafcon.mvc.singleton import global_variable_manager_model as gvm_model
 import rafcon.statemachine.singleton
@@ -46,6 +45,14 @@ except ImportError as e:
 
 
 class MainWindowController(ExtendedController):
+    """Controller handling the main window.
+
+    :ivar dock_status: Dict holding mappings between bars/console and their current docking status.
+    :ivar undocking_windows: Dict holding mappings between bars/console and their corresponding windows to be undocked
+        into.
+    :ivar bar_containers: Dict holding mappings between bars/console and their corresponding containers, which are
+        defined in the glade file.
+    """
 
     def __init__(self, state_machine_manager_model, view, editor_type='PortConnectionGrouped'):
         ExtendedController.__init__(self, state_machine_manager_model, view)
@@ -167,6 +174,12 @@ class MainWindowController(ExtendedController):
         self.right_bar_child = view['right_h_pane'].get_child2()
         self.console_child = view['central_v_pane'].get_child2()
 
+        self.dock_status = {'left_bar': True, 'right_bar': True, 'console': True}
+        self.undocking_windows = {'left_bar': view.left_bar_window, 'right_bar': view.right_bar_window,
+                                  'console': view.console_window}
+        self.bar_containers = {'left_bar': view['left_bar_container'], 'right_bar': view['right_bar_container'],
+                               'console': view['console_container']}
+
         view['debug_console_button_hbox'].reorder_child(view['button_show_error'], 0)
         view['debug_console_button_hbox'].reorder_child(view['button_show_warning'], 1)
         view['debug_console_button_hbox'].reorder_child(view['button_show_info'], 2)
@@ -183,14 +196,19 @@ class MainWindowController(ExtendedController):
         view['console_hide_button'].connect('clicked', self.on_console_hide_clicked)
 
         # Connect left bar, right bar and console return buttons' signals to their corresponding methods
-        view['left_bar_return_button'].connect('clicked', self.on_left_bar_return_button_clicked)
-        view['right_bar_return_button'].connect('clicked', self.on_right_bar_return_button_clicked)
-        view['console_return_button'].connect('clicked', self.on_console_return_button_clicked)
+        view['left_bar_return_button'].connect('clicked', self.on_left_bar_return_clicked)
+        view['right_bar_return_button'].connect('clicked', self.on_right_bar_return_clicked)
+        view['console_return_button'].connect('clicked', self.on_console_return_clicked)
 
         # Connect undock buttons' signals
-        view['undock_left_bar_button'].connect('clicked', self.on_left_bar_undock_clicked)
-        view['undock_right_bar_button'].connect('clicked', self.on_right_bar_undock_clicked)
-        view['undock_console_button'].connect('clicked', self.on_console_undock_clicked)
+        view['undock_left_bar_button'].connect('clicked', self.on_undock_clicked, 'left_bar')
+        view['undock_right_bar_button'].connect('clicked', self.on_undock_clicked, 'right_bar')
+        view['undock_console_button'].connect('clicked', self.on_undock_clicked, 'console')
+
+        # Closing undocked windows will dock them back to the main window
+        self.view.left_bar_window.connect('destroy', self.on_undock_clicked, 'left_bar')
+        self.view.right_bar_window.connect('destroy', self.on_undock_clicked, 'right_bar')
+        self.view.console_window.connect('destroy', self.on_undock_clicked, 'console')
 
         # Connect Shortcut buttons' signals to their corresponding methods
         view['button_start_shortcut'].connect('toggled', self.on_button_start_shortcut_toggled)
@@ -258,15 +276,15 @@ class MainWindowController(ExtendedController):
                 if self.view[button_name].get_active():
                     self.view[button_name].set_active(False)
 
-    def on_left_bar_return_button_clicked(self, widget, event=None):
+    def on_left_bar_return_clicked(self, widget, event=None):
         self.view['left_bar_return_button'].hide()
         self.view['top_level_h_pane'].add1(self.left_bar_child)
 
-    def on_right_bar_return_button_clicked(self, widget, event=None):
+    def on_right_bar_return_clicked(self, widget, event=None):
         self.view['right_bar_return_button'].hide()
         self.view['right_h_pane'].add2(self.right_bar_child)
 
-    def on_console_return_button_clicked(self, widget, event=None):
+    def on_console_return_clicked(self, widget, event=None):
         self.view['console_return_button'].hide()
         self.view['central_v_pane'].add2(self.console_child)
 
@@ -282,14 +300,25 @@ class MainWindowController(ExtendedController):
         self.view['central_v_pane'].remove(self.console_child)
         self.view['console_return_button'].show()
 
-    def on_left_bar_undock_clicked(self, widget, event=None):
-        pass
+    def on_undock_clicked(self, widget, bar, event=None):
+        """Triggered whenever either one of the three "dock/undock buttons" is clicked.
 
-    def on_right_bar_undock_clicked(self, widget, event=None):
-        pass
+        If the bar/console is docked to the main window, it is popped out of the main window into a separate new window,
+        and the allocated space in the main window for the bar/console is hidden. If the bar/console is already in a
+        separate window, it will be docked back to the main window.
 
-    def on_console_undock_clicked(self, widget, event=None):
-        pass
+        :param bar: The bar/console to be docked/undocked
+        """
+        if self.dock_status[bar]:
+            self.undocking_windows[bar].show()
+            self.view[bar].reparent(self.undocking_windows[bar])
+            self.hide_bar(bar)
+            self.dock_status[bar] = False
+        else:
+            self.view[bar].reparent(self.bar_containers[bar])
+            self.show_bar(bar)
+            self.undocking_windows[bar].hide()
+            self.dock_status[bar] = True
 
     # Shortcut buttons
     def on_button_start_shortcut_toggled(self, widget, event=None):
@@ -351,3 +380,21 @@ class MainWindowController(ExtendedController):
     def delay(milliseconds, func):
         thread = threading.Timer(milliseconds / 1000.0, func)
         thread.start()
+
+    def hide_bar(self, bar):
+        """Helper method that triggers the hide-button callback function for a specific bar.
+
+        :param bar: The bar/console to be hidden.
+        """
+        hide_functions = {'left_bar': self.on_left_bar_hide_clicked, 'right_bar': self.on_right_bar_hide_clicked,
+                          'console': self.on_console_hide_clicked}
+        hide_functions[bar](None)
+
+    def show_bar(self, bar):
+        """Helper method that triggers the return-button callback function for a specific bar.
+
+        :param bar: The bar/console to be shown.
+        """
+        show_functions = {'left_bar': self.on_left_bar_return_clicked, 'right_bar': self.on_right_bar_return_clicked,
+                          'console': self.on_console_return_clicked}
+        show_functions[bar](None)

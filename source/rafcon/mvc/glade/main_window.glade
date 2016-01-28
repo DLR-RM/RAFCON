@@ -67,7 +67,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <child>
-                  <object class="GtkHBox" id="left_bar_hbox">
+                  <object class="GtkHBox" id="left_bar_container">
                     <property name="visible">True</property>
                     <child>
                       <object class="GtkButton" id="left_bar_hide_button">
@@ -82,7 +82,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkVPaned" id="left_v_pane">
+                      <object class="GtkVPaned" id="left_bar">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="orientation">vertical</property>
@@ -622,132 +622,141 @@
                               <object class="GtkEventBox" id="debug_eventbox">
                                 <property name="visible">True</property>
                                 <child>
-                                  <object class="GtkVBox" id="debug_console_vbox">
+                                  <object class="GtkVBox" id="console_container">
                                     <property name="visible">True</property>
                                     <property name="orientation">vertical</property>
                                     <child>
-                                      <object class="GtkHBox" id="debug_label_hbox">
+                                      <object class="GtkVBox" id="console">
                                         <property name="visible">True</property>
-                                        <property name="border_width">10</property>
+                                        <property name="orientation">vertical</property>
                                         <child>
-                                          <object class="GtkLabel" id="debug_console_label">
+                                          <object class="GtkHBox" id="debug_label_hbox">
                                             <property name="visible">True</property>
-                                            <property name="xalign">0</property>
-                                            <property name="label" translatable="yes">DEBUG CONSOLE</property>
-                                          </object>
-                                          <packing>
-                                            <property name="position">0</property>
-                                          </packing>
-                                        </child>
-                                        <child>
-                                          <object class="GtkHBox" id="debug_console_button_hbox">
-                                            <property name="visible">True</property>
+                                            <property name="border_width">10</property>
                                             <child>
-                                              <object class="GtkCheckButton" id="button_show_debug">
-                                                <property name="label" translatable="yes">DEBUG</property>
+                                              <object class="GtkLabel" id="debug_console_label">
                                                 <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">False</property>
-                                                <property name="focus_on_click">False</property>
-                                                <property name="active">True</property>
-                                                <property name="draw_indicator">True</property>
+                                                <property name="xalign">0</property>
+                                                <property name="label" translatable="yes">DEBUG CONSOLE</property>
                                               </object>
                                               <packing>
-                                                <property name="expand">False</property>
-                                                <property name="fill">False</property>
-                                                <property name="padding">5</property>
-                                                <property name="pack_type">end</property>
-                                                <property name="position">3</property>
+                                                <property name="position">0</property>
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkCheckButton" id="button_show_info">
-                                                <property name="label" translatable="yes">INFO</property>
+                                              <object class="GtkHBox" id="debug_console_button_hbox">
                                                 <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">False</property>
-                                                <property name="focus_on_click">False</property>
-                                                <property name="active">True</property>
-                                                <property name="draw_indicator">True</property>
+                                                <child>
+                                                  <object class="GtkCheckButton" id="button_show_debug">
+                                                    <property name="label" translatable="yes">DEBUG</property>
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                    <property name="receives_default">False</property>
+                                                    <property name="focus_on_click">False</property>
+                                                    <property name="active">True</property>
+                                                    <property name="draw_indicator">True</property>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="expand">False</property>
+                                                    <property name="fill">False</property>
+                                                    <property name="padding">5</property>
+                                                    <property name="pack_type">end</property>
+                                                    <property name="position">3</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkCheckButton" id="button_show_info">
+                                                    <property name="label" translatable="yes">INFO</property>
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                    <property name="receives_default">False</property>
+                                                    <property name="focus_on_click">False</property>
+                                                    <property name="active">True</property>
+                                                    <property name="draw_indicator">True</property>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="expand">False</property>
+                                                    <property name="fill">False</property>
+                                                    <property name="padding">5</property>
+                                                    <property name="pack_type">end</property>
+                                                    <property name="position">2</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkCheckButton" id="button_show_warning">
+                                                    <property name="label" translatable="yes">WARNING</property>
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                    <property name="receives_default">False</property>
+                                                    <property name="focus_on_click">False</property>
+                                                    <property name="active">True</property>
+                                                    <property name="draw_indicator">True</property>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="expand">False</property>
+                                                    <property name="fill">False</property>
+                                                    <property name="padding">5</property>
+                                                    <property name="pack_type">end</property>
+                                                    <property name="position">1</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkCheckButton" id="button_show_error">
+                                                    <property name="label" translatable="yes">ERROR</property>
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                    <property name="receives_default">False</property>
+                                                    <property name="focus_on_click">False</property>
+                                                    <property name="active">True</property>
+                                                    <property name="draw_indicator">True</property>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="expand">False</property>
+                                                    <property name="fill">False</property>
+                                                    <property name="padding">5</property>
+                                                    <property name="pack_type">end</property>
+                                                    <property name="position">0</property>
+                                                  </packing>
+                                                </child>
                                               </object>
                                               <packing>
-                                                <property name="expand">False</property>
-                                                <property name="fill">False</property>
-                                                <property name="padding">5</property>
-                                                <property name="pack_type">end</property>
                                                 <property name="position">2</property>
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkCheckButton" id="button_show_warning">
-                                                <property name="label" translatable="yes">WARNING</property>
+                                              <object class="GtkButton" id="undock_console_button">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
-                                                <property name="receives_default">False</property>
-                                                <property name="focus_on_click">False</property>
-                                                <property name="active">True</property>
-                                                <property name="draw_indicator">True</property>
+                                                <property name="receives_default">True</property>
                                               </object>
                                               <packing>
                                                 <property name="expand">False</property>
-                                                <property name="fill">False</property>
-                                                <property name="padding">5</property>
                                                 <property name="pack_type">end</property>
                                                 <property name="position">1</property>
                                               </packing>
                                             </child>
-                                            <child>
-                                              <object class="GtkCheckButton" id="button_show_error">
-                                                <property name="label" translatable="yes">ERROR</property>
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">False</property>
-                                                <property name="focus_on_click">False</property>
-                                                <property name="active">True</property>
-                                                <property name="draw_indicator">True</property>
-                                              </object>
-                                              <packing>
-                                                <property name="expand">False</property>
-                                                <property name="fill">False</property>
-                                                <property name="padding">5</property>
-                                                <property name="pack_type">end</property>
-                                                <property name="position">0</property>
-                                              </packing>
-                                            </child>
-                                          </object>
-                                          <packing>
-                                            <property name="position">2</property>
-                                          </packing>
-                                        </child>
-                                        <child>
-                                          <object class="GtkButton" id="undock_console_button">
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">True</property>
-                                            <property name="receives_default">True</property>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>
-                                            <property name="pack_type">end</property>
+                                            <property name="position">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkScrolledWindow" id="console_scroller">
+                                            <property name="height_request">150</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                          </object>
+                                          <packing>
                                             <property name="position">1</property>
                                           </packing>
                                         </child>
                                       </object>
                                       <packing>
-                                        <property name="expand">False</property>
                                         <property name="position">0</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkScrolledWindow" id="console_scroller">
-                                        <property name="height_request">150</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <child>
-                                          <placeholder/>
-                                        </child>
-                                      </object>
-                                      <packing>
-                                        <property name="position">1</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -761,7 +770,7 @@
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="pack_type">end</property>
-                                        <property name="position">2</property>
+                                        <property name="position">1</property>
                                       </packing>
                                     </child>
                                   </object>
@@ -795,10 +804,10 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkHBox" id="right_bar_hbox">
+                      <object class="GtkHBox" id="right_bar_container">
                         <property name="visible">True</property>
                         <child>
-                          <object class="GtkVBox" id="state_editor">
+                          <object class="GtkVBox" id="right_bar">
                             <property name="visible">True</property>
                             <property name="orientation">vertical</property>
                             <child>

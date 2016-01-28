@@ -29,9 +29,9 @@ class MainWindowView(View):
         # Logging
         ######################################################
         self.logging_view = LoggingView()
-        self['debug_console_vbox'].remove(self['console_scroller'])
+        self['console'].remove(self['console_scroller'])
         self.logging_view.get_top_widget().show()
-        self['debug_console_vbox'].pack_start(self.logging_view.get_top_widget(), True, True, 0)
+        self['console'].pack_start(self.logging_view.get_top_widget(), True, True, 0)
 
         ######################################################
         # Library Tree
@@ -193,7 +193,7 @@ class MainWindowView(View):
         #self['library_event_box'].set_border_width(constants.BORDER_WIDTH)
         self['debug_eventbox'].set_border_width(constants.BORDER_WIDTH)
         self['debug_label_hbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
-        self['state_editor'].set_border_width(constants.BORDER_WIDTH)
+        self['right_bar'].set_border_width(constants.BORDER_WIDTH)
 
         self['button_show_info'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_INFO', True))
         self['button_show_debug'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True))
@@ -207,8 +207,12 @@ class MainWindowView(View):
         ######################################################
         self['top_level_h_pane'].set_position(300)
         self['right_h_pane'].set_position(1000)
-        self['left_v_pane'].set_position(400)
+        self['left_bar'].set_position(400)
         self['central_v_pane'].set_position(600)
+
+        self.left_bar_window = gtk.Window()
+        self.right_bar_window = gtk.Window()
+        self.console_window = gtk.Window()
 
     @staticmethod
     def create_button_label(icon):
