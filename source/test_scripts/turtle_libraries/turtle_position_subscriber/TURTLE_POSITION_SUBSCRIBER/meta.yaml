@@ -1,17 +1,20 @@
 !ExecutionState
 description: null
-filename: script.py
 input_data_ports:
-    14: !DataPort {data_port_id: 14, data_type: str, default_value: new_turtle, name: turtle_name}
-    15: !DataPort {data_port_id: 15, data_type: str, default_value: new_turtle, name: global_storage_id_of_turtle_pos}
+    14: !InputDataPort {data_port_id: 14, data_type: &id001 !!python/name:__builtin__.str '',
+        default_value: new_turtle, name: turtle_name}
+    15: !InputDataPort {data_port_id: 15, data_type: *id001, default_value: new_turtle,
+        name: global_storage_id_of_turtle_pos}
 name: turtle_position_subscriber
 outcomes:
     -2: !Outcome {name: preempted, outcome_id: -2}
     -1: !Outcome {name: aborted, outcome_id: -1}
     0: !Outcome {name: success, outcome_id: 0}
 output_data_ports:
-    16: !DataPort {data_port_id: 16, data_type: float, default_value: null, name: x_pos}
-    17: !DataPort {data_port_id: 17, data_type: float, default_value: null, name: y_pos}
-    18: !DataPort {data_port_id: 18, data_type: float, default_value: null, name: phi}
-path: /home_local/brun_sb/develop/taskcontrol/source/test_scripts/turtle_libraries/turtle_position_subscriber/TURTLE_POSITION_SUBSCRIBER
+    16: !OutputDataPort {data_port_id: 16, data_type: &id002 !!python/name:__builtin__.float '',
+        default_value: null, name: x_pos}
+    17: !OutputDataPort {data_port_id: 17, data_type: *id002, default_value: null,
+        name: y_pos}
+    18: !OutputDataPort {data_port_id: 18, data_type: *id002, default_value: null,
+        name: phi}
 state_id: TURTLE_POSITION_SUBSCRIBER

@@ -21,3 +21,4 @@ _static/
 *.prf
 
 .idea/
+.cache/
