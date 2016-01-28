@@ -203,6 +203,31 @@ class GraphicalEditorController(ExtendedController):
         # logger.info("meta data '{0}' of model '{1}' changed".format(name, model))
         # History.meta_changed_notify_after(self, model, name, affects_children)
 
+    # @ExtendedController.observe("meta_signal", signal=True)  # meta data of root_state_model changed -> not possible -> this controller is not observing the root_state
+    @ExtendedController.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
+    def meta_changed_notify_after(self, changed_model, prop_name, info):
+        from rafcon.mvc.history import NotificationOverview
+        default_overview = NotificationOverview(info)
+        # logger.info("meta_changed: \n{0}".format(default_overview))
+        overview = default_overview.new_overview
+        # try to do general update
+        if 'redo' in overview['meta_signal'][-1]['origin'] or 'undo' in overview['meta_signal'][-1]['origin']:
+            # logger.info("meta_changed: \n{0}".format(default_overview))
+            logger.info("update_view")
+            self.update_view()
+            # and try to do specific update
+            if isinstance(overview['model'][-1], StateModel):
+                state_m = overview['model'][-1]
+                logger.info("update_state")
+            elif isinstance(overview['model'][-1], StateMachineModel):
+                state_m = overview['model'][-1].root_state
+                logger.info("update_root_state")
+            else:
+                state_m = overview['model'][-1].parent
+                logger.info("update_parent_state")
+            state_v = self.canvas.get_view_for_model(state_m)
+            self.canvas.request_update(state_v, matrix=False)
+
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change(self, model, prop_name, info):
         """Called on any change within th state machine
