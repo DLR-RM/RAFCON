@@ -204,9 +204,9 @@ class MainWindowController(ExtendedController):
         view['undock_console_button'].connect('clicked', self.on_console_dock_clicked)
 
         # Closing undocked windows will dock them back to the main window
-        view.left_bar_window.connect('destroy', self.on_left_bar_dock_clicked)
-        view.right_bar_window.connect('destroy', self.on_right_bar_dock_clicked)
-        view.console_window.connect('destroy', self.on_console_dock_clicked)
+        view.left_bar_window.connect('delete_event', self.on_left_bar_dock_clicked)
+        view.right_bar_window.connect('delete-event', self.on_right_bar_dock_clicked)
+        view.console_window.connect('delete_event', self.on_console_dock_clicked)
 
         # Connect Shortcut buttons' signals to their corresponding methods
         view['button_start_shortcut'].connect('toggled', self.on_button_start_shortcut_toggled)
@@ -311,6 +311,7 @@ class MainWindowController(ExtendedController):
             self.view['left_bar'].reparent(self.view['left_bar_container'])
             self.view.left_bar_window.hide()
             self.left_bar_docked = True
+        return True
 
     def on_right_bar_dock_clicked(self, widget, event=None):
         if self.right_bar_docked:
@@ -327,6 +328,7 @@ class MainWindowController(ExtendedController):
             self.on_right_bar_return_clicked(None)
             self.view.right_bar_window.hide()
             self.right_bar_docked = True
+        return True
 
     def on_console_dock_clicked(self, widget, event=None):
         if self.console_docked:
@@ -343,6 +345,7 @@ class MainWindowController(ExtendedController):
             self.on_console_return_clicked(None)
             self.view.console_window.hide()
             self.console_docked = True
+        return True
 
     # Shortcut buttons
     def on_button_start_shortcut_toggled(self, widget, event=None):
