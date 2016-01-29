@@ -204,9 +204,9 @@ class MainWindowController(ExtendedController):
         view['undock_console_button'].connect('clicked', self.on_console_dock_clicked)
 
         # Closing undocked windows will dock them back to the main window
-        self.view.left_bar_window.connect('destroy', self.on_left_bar_dock_clicked)
-        self.view.right_bar_window.connect('destroy', self.on_right_bar_dock_clicked)
-        self.view.console_window.connect('destroy', self.on_console_dock_clicked)
+        view.left_bar_window.connect('destroy', self.on_left_bar_dock_clicked)
+        view.right_bar_window.connect('destroy', self.on_right_bar_dock_clicked)
+        view.console_window.connect('destroy', self.on_console_dock_clicked)
 
         # Connect Shortcut buttons' signals to their corresponding methods
         view['button_start_shortcut'].connect('toggled', self.on_button_start_shortcut_toggled)
@@ -317,6 +317,7 @@ class MainWindowController(ExtendedController):
             width = self.view.top_window_width - self.view['right_h_pane'].get_position() -\
                     self.view['top_level_h_pane'].get_position()
             self.view.right_bar_window.resize(width, self.view['right_bar'].get_allocation().height)
+            self.view.right_bar_window.set_position(gtk.WIN_POS_MOUSE)
             self.view['right_bar'].reparent(self.view.right_bar_window)
             self.view.right_bar_window.show()
             self.on_right_bar_hide_clicked(None)
@@ -331,6 +332,8 @@ class MainWindowController(ExtendedController):
         if self.console_docked:
             self.view.console_window.resize(self.view['right_h_pane'].get_position(),
                                             self.view['console'].get_allocation().height)
+            self.view.console_window.move(self.view['top_level_h_pane'].get_position(),
+                                          self.view['central_v_pane'].get_position())
             self.view['console'].reparent(self.view.console_window)
             self.view.console_window.show()
             self.on_console_hide_clicked(None)
