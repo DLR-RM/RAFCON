@@ -174,11 +174,9 @@ class MainWindowController(ExtendedController):
         self.right_bar_child = view['right_h_pane'].get_child2()
         self.console_child = view['central_v_pane'].get_child2()
 
-        self.dock_status = {'left_bar': True, 'right_bar': True, 'console': True}
-        self.undocking_windows = {'left_bar': view.left_bar_window, 'right_bar': view.right_bar_window,
-                                  'console': view.console_window}
-        self.bar_containers = {'left_bar': view['left_bar_container'], 'right_bar': view['right_bar_container'],
-                               'console': view['console_container']}
+        self.left_bar_docked = True
+        self.right_bar_docked = True
+        self.console_docked = True
 
         view['debug_console_button_hbox'].reorder_child(view['button_show_error'], 0)
         view['debug_console_button_hbox'].reorder_child(view['button_show_warning'], 1)
@@ -201,14 +199,14 @@ class MainWindowController(ExtendedController):
         view['console_return_button'].connect('clicked', self.on_console_return_clicked)
 
         # Connect undock buttons' signals
-        view['undock_left_bar_button'].connect('clicked', self.on_undock_clicked, 'left_bar')
-        view['undock_right_bar_button'].connect('clicked', self.on_undock_clicked, 'right_bar')
-        view['undock_console_button'].connect('clicked', self.on_undock_clicked, 'console')
+        view['undock_left_bar_button'].connect('clicked', self.on_left_bar_dock_clicked)
+        view['undock_right_bar_button'].connect('clicked', self.on_right_bar_dock_clicked)
+        view['undock_console_button'].connect('clicked', self.on_console_dock_clicked)
 
         # Closing undocked windows will dock them back to the main window
-        self.view.left_bar_window.connect('destroy', self.on_undock_clicked, 'left_bar')
-        self.view.right_bar_window.connect('destroy', self.on_undock_clicked, 'right_bar')
-        self.view.console_window.connect('destroy', self.on_undock_clicked, 'console')
+        self.view.left_bar_window.connect('destroy', self.on_left_bar_dock_clicked)
+        self.view.right_bar_window.connect('destroy', self.on_right_bar_dock_clicked)
+        self.view.console_window.connect('destroy', self.on_console_dock_clicked)
 
         # Connect Shortcut buttons' signals to their corresponding methods
         view['button_start_shortcut'].connect('toggled', self.on_button_start_shortcut_toggled)
@@ -300,25 +298,48 @@ class MainWindowController(ExtendedController):
         self.view['central_v_pane'].remove(self.console_child)
         self.view['console_return_button'].show()
 
-    def on_undock_clicked(self, widget, bar, event=None):
-        """Triggered whenever either one of the three "dock/undock buttons" is clicked.
-
-        If the bar/console is docked to the main window, it is popped out of the main window into a separate new window,
-        and the allocated space in the main window for the bar/console is hidden. If the bar/console is already in a
-        separate window, it will be docked back to the main window.
-
-        :param bar: The bar/console to be docked/undocked
-        """
-        if self.dock_status[bar]:
-            self.undocking_windows[bar].show()
-            self.view[bar].reparent(self.undocking_windows[bar])
-            self.hide_bar(bar)
-            self.dock_status[bar] = False
+    def on_left_bar_dock_clicked(self, widget, event=None):
+        if self.left_bar_docked:
+            self.view.left_bar_window.resize(self.view['top_level_h_pane'].get_position(),
+                                             self.view['left_bar'].get_allocation().height)
+            self.view['left_bar'].reparent(self.view.left_bar_window)
+            self.view.left_bar_window.show()
+            self.on_left_bar_hide_clicked(None)
+            self.left_bar_docked = False
         else:
-            self.view[bar].reparent(self.bar_containers[bar])
-            self.show_bar(bar)
-            self.undocking_windows[bar].hide()
-            self.dock_status[bar] = True
+            self.on_left_bar_return_clicked(None)
+            self.view['left_bar'].reparent(self.view['left_bar_container'])
+            self.view.left_bar_window.hide()
+            self.left_bar_docked = True
+
+    def on_right_bar_dock_clicked(self, widget, event=None):
+        if self.right_bar_docked:
+            width = self.view.top_window_width - self.view['right_h_pane'].get_position() -\
+                    self.view['top_level_h_pane'].get_position()
+            self.view.right_bar_window.resize(width, self.view['right_bar'].get_allocation().height)
+            self.view['right_bar'].reparent(self.view.right_bar_window)
+            self.view.right_bar_window.show()
+            self.on_right_bar_hide_clicked(None)
+            self.right_bar_docked = False
+        else:
+            self.view['right_bar'].reparent(self.view['right_bar_container'])
+            self.on_right_bar_return_clicked(None)
+            self.view.right_bar_window.hide()
+            self.right_bar_docked = True
+
+    def on_console_dock_clicked(self, widget, event=None):
+        if self.console_docked:
+            self.view.console_window.resize(self.view['right_h_pane'].get_position(),
+                                            self.view['console'].get_allocation().height)
+            self.view['console'].reparent(self.view.console_window)
+            self.view.console_window.show()
+            self.on_console_hide_clicked(None)
+            self.console_docked = False
+        else:
+            self.view['console'].reparent(self.view['console_container'])
+            self.on_console_return_clicked(None)
+            self.view.console_window.hide()
+            self.console_docked = True
 
     # Shortcut buttons
     def on_button_start_shortcut_toggled(self, widget, event=None):
@@ -376,21 +397,3 @@ class MainWindowController(ExtendedController):
     def delay(milliseconds, func):
         thread = threading.Timer(milliseconds / 1000.0, func)
         thread.start()
-
-    def hide_bar(self, bar):
-        """Helper method that triggers the hide-button callback function for a specific bar.
-
-        :param bar: The bar/console to be hidden.
-        """
-        hide_functions = {'left_bar': self.on_left_bar_hide_clicked, 'right_bar': self.on_right_bar_hide_clicked,
-                          'console': self.on_console_hide_clicked}
-        hide_functions[bar](None)
-
-    def show_bar(self, bar):
-        """Helper method that triggers the return-button callback function for a specific bar.
-
-        :param bar: The bar/console to be shown.
-        """
-        show_functions = {'left_bar': self.on_left_bar_return_clicked, 'right_bar': self.on_right_bar_return_clicked,
-                          'console': self.on_console_return_clicked}
-        show_functions[bar](None)

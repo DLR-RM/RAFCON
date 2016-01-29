@@ -213,6 +213,8 @@ class MainWindowView(View):
         self.left_bar_window = gtk.Window()
         self.right_bar_window = gtk.Window()
         self.console_window = gtk.Window()
+        
+        self.top_window_width = self['main_window'].get_size()[0]
 
     @staticmethod
     def create_button_label(icon):
