@@ -19,7 +19,7 @@ class ExtendedController(Controller):
         The passed controller is registered as child of self. The register_actions method of the child controller is
         called, allowing the child controller to register shortcut callbacks.
 
-        :param key: Name of the controller (unique within self), to latter access it again
+        :param key: Name of the controller (unique within self), to later access it again
         :param ExtendedController controller: Controller to be added as child
         """
         assert isinstance(controller, ExtendedController)
@@ -87,6 +87,11 @@ class ExtendedController(Controller):
         return self.__child_controllers.values()
 
     def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions in all child controllers.
+
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
+        """
         assert isinstance(shortcut_manager, ShortcutManager)
         self.__shortcut_manager = shortcut_manager
 

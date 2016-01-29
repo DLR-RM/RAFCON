@@ -33,8 +33,7 @@ class StateEditorController(ExtendedController):
     }
 
     def __init__(self, model, view):
-        """Constructor
-        """
+        """Constructor"""
         ExtendedController.__init__(self, model, view)
 
         self.add_controller('properties_ctrl', StateOverviewController(model, view['properties_view']))

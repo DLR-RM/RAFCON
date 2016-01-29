@@ -9,7 +9,6 @@ def convert_string_to_type(string_value):
     :param string_value: the string to be converted, e.g. "int"
     :return: The type derived from string_value, e.g. int
     """
-
     # If the parameter is already a type, return it
     if isinstance(string_value, type) or isclass(string_value):
         return string_value
@@ -39,7 +38,7 @@ def convert_string_to_type(string_value):
 
 
 def convert_string_value_to_type_value(string_value, data_type):
-    """ Helper function to convert a given string to a given data type
+    """Helper function to convert a given string to a given data type
 
     :param str string_value: the string to convert
     :param type data_type: the target data type

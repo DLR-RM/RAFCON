@@ -21,8 +21,7 @@ class StateModel(AbstractStateModel):
      """
 
     def __init__(self, state, parent=None, meta=None, load_meta_data=True):
-        """Constructor
-        """
+        """Constructor"""
         super(StateModel, self).__init__(state, parent, meta)
 
         if load_meta_data and type(self) == StateModel:
@@ -44,6 +43,7 @@ class StateModel(AbstractStateModel):
         "_notify_method_before" is used as trigger method when the changing function is entered and
         "_notify_method_after" is used when the changing function returns. This changing function in the example
         would be "modify_input_data_port".
+
         :param model: The model that was changed
         :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)

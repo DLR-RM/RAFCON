@@ -39,8 +39,7 @@ class GraphicalEditorController(ExtendedController):
     _change_state_type = False
 
     def __init__(self, model, view):
-        """Constructor
-        """
+        """Constructor"""
         ExtendedController.__init__(self, model, view)
         assert type(view) == GraphicalEditorView
         assert isinstance(self.model, StateMachineModel)
@@ -54,8 +53,7 @@ class GraphicalEditorController(ExtendedController):
         view.setup_canvas(self.canvas, self.zoom)
 
     def register_view(self, view):
-        """Called when the View was registered
-        """
+        """Called when the View was registered"""
         assert self.view == view
         self.setup_canvas()
         self.view.connect('new_state_selection', self._select_new_states)
@@ -64,14 +62,14 @@ class GraphicalEditorController(ExtendedController):
         self.view.connect('meta_data_changed', self._meta_data_changed)
 
     def register_adapters(self):
-        """Adapters should be registered in this method call
-        """
+        """Adapters should be registered in this method call"""
         pass
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
         """
         shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))
         shortcut_manager.add_callback_for_action("add2", partial(self._add_new_state, state_type=StateType.HIERARCHY))

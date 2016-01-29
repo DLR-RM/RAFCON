@@ -35,8 +35,7 @@ class StateMachineManagerModel(ModelMT, Observable):
                        "state_machine_mark_dirty", "state_machine_un_mark_dirty")
 
     def __init__(self, state_machine_manager, meta=None):
-        """Constructor
-        """
+        """Constructor"""
         ModelMT.__init__(self)  # pass columns as separate parameters
         Observable.__init__(self)
         self.register_observer(self)
@@ -99,8 +98,7 @@ class StateMachineManagerModel(ModelMT, Observable):
 
     @property
     def selected_state_machine_id(self):
-        """Property for the _selected_state_machine_id field
-        """
+        """Property for the _selected_state_machine_id field"""
         return self._selected_state_machine_id
 
     @selected_state_machine_id.setter
