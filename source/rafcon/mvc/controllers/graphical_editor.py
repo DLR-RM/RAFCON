@@ -652,7 +652,8 @@ class GraphicalEditorController(ExtendedController):
         """
         selection = self._find_selection(x, y, find_states=True, find_data_flows=False,
                                          find_data_ports=False, find_transitions=False)
-        if self.single_selection != selection and (isinstance(selection, ContainerStateModel) or selection is None):
+        if not self.model.selection.is_selected(selection) \
+                and (isinstance(selection, ContainerStateModel) or selection is None):
             self.single_selection = selection
             self.model.selection.set(selection)
 

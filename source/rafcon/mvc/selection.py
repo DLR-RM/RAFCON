@@ -73,6 +73,8 @@ class Selection(Observable):
         return [s for s in self.__selected][key]
 
     def is_selected(self, item):
+        if item is None:
+            return len(self.__selected) == 0
         return item in self.__selected
 
     def get_all(self):

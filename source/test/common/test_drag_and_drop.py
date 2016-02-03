@@ -15,6 +15,8 @@ from rafcon.statemachine.state_machine import StateMachine
 # mvc elements
 from rafcon.mvc.controllers import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
+from rafcon.mvc.controllers.graphical_editor_gaphas import GraphicalEditorController as \
+        GraphicalEditorGaphasController
 
 # singleton elements
 import rafcon.mvc.singleton
@@ -77,15 +79,18 @@ def trigger_drag_and_drop_tests(*args):
     library_tree_controller.view.get_selection().select_iter(tree_model.iter_children(tree_model.get_iter_root()))
 
     # insert state in rootstate
-    graphical_editor_controller.on_drag_motion(None, None, 200, 200, None)
-    library_tree_controller.on_drag_data_get(library_tree_controller.view, None, selection_data, 0, None)
-    graphical_editor_controller.on_drag_data_received(None, None, 200, 200, selection_data, None, None)
+    call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 200, 200, None)
+    call_gui_callback(library_tree_controller.on_drag_data_get, library_tree_controller.view, None, selection_data, 0, None)
+    call_gui_callback(graphical_editor_controller.on_drag_data_received, None, None, 200, 200, selection_data, None, None)
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 2
 
     # insert state in state1
-    graphical_editor_controller.on_drag_motion(None, None, 100, 100, None)
-    library_tree_controller.on_drag_data_get(library_tree_controller.view, None, selection_data, 0, None)
-    graphical_editor_controller.on_drag_data_received(None, None, 20, 20, selection_data, None, None)
+    if isinstance(graphical_editor_controller, GraphicalEditorGaphasController):
+        call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 100, 100, None)
+    else:
+        call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 150, 150, None)
+    call_gui_callback(library_tree_controller.on_drag_data_get, library_tree_controller.view, None, selection_data, 0, None)
+    call_gui_callback(graphical_editor_controller.on_drag_data_received, None, None, 20, 20, selection_data, None, None)
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states['State1'].states) == 1
 
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
