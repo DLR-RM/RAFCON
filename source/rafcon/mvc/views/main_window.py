@@ -36,8 +36,7 @@ class MainWindowView(View):
         ################################################
         # Undock Buttons
         ################################################
-        self.undock_left_bar_button = gtk.Button()
-        self.undock_left_bar_button.set_image(create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_left_bar_button'].set_image(create_button_label(constants.BUTTON_UNDOCK))
         self['undock_right_bar_button'].set_image(create_button_label(constants.BUTTON_UNDOCK))
         self['undock_console_button'].set_image(create_button_label(constants.BUTTON_UNDOCK))
 
@@ -46,16 +45,15 @@ class MainWindowView(View):
         ######################################################
         self.library_tree = LibraryTreeView()
         self.library_tree.show()
-        self.replace_notebook_placeholder_with_widget('libraries', 'tree_notebook_up',
-                                                      self.library_tree)
+        self['libraries_alignment'].add(self.library_tree)
 
         ######################################################
         # State Machine Tree
         ######################################################
         self.state_machine_tree = StateMachineTreeView()
         self.state_machine_tree.show()
-        self.replace_notebook_placeholder_with_widget('state_tree', 'tree_notebook_up',
-                                                      self.state_machine_tree)
+        self['state_tree_alignment'].add(self.state_machine_tree)
+
         # TODO: this is not always the active state machine
 
         ######################################################
@@ -63,26 +61,30 @@ class MainWindowView(View):
         ######################################################
         self.global_var_editor = GlobalVariableEditorView()
         self.global_var_editor.show()
-        self.replace_notebook_placeholder_with_widget('global_variables', 'tree_notebook_up',
-                                                      self.global_var_editor.get_top_widget())
+        self['global_variables_alignment'].add(self.global_var_editor.get_top_widget())
 
+        self.upper_notebook_page_titles = {0: 'Libraries', 1: 'State Tree', 2: 'Global Variables'}
         self['tree_notebook_up'].set_current_page(0)
+        self.update_upper_notebook_title()
 
         ######################################################
         # State Machine History
         ######################################################
         self.state_machine_history = StateMachineHistoryView()
         self.state_machine_history.show()
-        self.replace_notebook_placeholder_with_widget('history', 'tree_notebook_down',
-                                                      self.state_machine_history.get_top_widget())
+        self['history_alignment'].add(self.state_machine_history.get_top_widget())
 
         ######################################################
         # State Machine Execution History
         ######################################################
         self.execution_history = ExecutionHistoryView()
         self.execution_history.show()
-        self.replace_notebook_placeholder_with_widget('execution_history', 'tree_notebook_down',
-                                                      self.execution_history.get_top_widget())
+        self['execution_history_alignment'].add(self.execution_history.get_top_widget())
+
+        self.lower_notebook_page_titles = {0: 'History', 1: 'Execution History', 2: 'Network'}
+        self['tree_notebook_down'].set_current_page(0)
+        self.update_lower_notebook_title()
+
         ######################################################
         # rotate all tab labels by 90 degrees and make detachable
         ######################################################
@@ -193,7 +195,6 @@ class MainWindowView(View):
         self['tree_notebook_down'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['tree_notebook_down'].set_tab_vborder(constants.BORDER_WIDTH * 3)
 
-        #self['library_event_box'].set_border_width(constants.BORDER_WIDTH)
         self['debug_eventbox'].set_border_width(constants.BORDER_WIDTH)
         self['debug_label_hbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
         self['right_bar'].set_border_width(constants.BORDER_WIDTH)
@@ -219,44 +220,6 @@ class MainWindowView(View):
         
         self.top_window_width = self['main_window'].get_size()[0]
 
-    def create_notebook_widget(self, title, widget, notebook, use_scroller=True, border=10):
-        title_label = self.create_label_box(title, notebook)
-        event_box = gtk.EventBox()
-        vbox = gtk.VBox()
-        vbox.pack_start(title_label, False, True, 0)
-        if use_scroller:
-            scroller = gtk.ScrolledWindow()
-            scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-            alig = gtk.Alignment(0., 0., 1., 1.)
-            alig.set_padding(0, 0, border, 0)
-            alig.add(widget)
-            alig.show()
-            scroller.add_with_viewport(alig)
-            vbox.pack_start(scroller, True, True, 0)
-        else:
-            vbox.pack_start(widget, True, True, 0)
-        event_box.add(vbox)
-        event_box.show_all()
-        return event_box, title_label
-
-    def create_label_box(self, text, notebook):
-        """Creates a horizontal box containing a label that shows a title and an undocking button only if the notebook
-        is the upper one in the bar.
-
-        :param text: The title to be shown
-        :param notebook: The GTK notebook to host the label box
-        :return: The horizontal box
-        """
-        hbox = gtk.HBox()
-        label = gui_helper.create_label_with_text_and_spacing(text, font_size=constants.FONT_SIZE_BIG,
-                                                              letter_spacing=constants.LETTER_SPACING_1PT)
-        label.set_alignment(0.0, 0.5)
-        hbox.pack_start(label, True, True, 0)
-        if notebook == 'tree_notebook_up':
-            hbox.pack_start(self.undock_left_bar_button, False, True, 0)
-        hbox.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
-        return hbox
-
     @staticmethod
     def rotate_and_detach_tab_labels(notebook):
         """Rotates tab labels of a given notebook by 90 degrees and makes them detachable.
@@ -277,20 +240,19 @@ class MainWindowView(View):
             notebook.set_tab_reorderable(child, True)
             notebook.set_tab_detachable(child, True)
 
-    def replace_notebook_placeholder_with_widget(self, tab_label, notebook, view):
-        """Replace notebook's placeholder with widget by removing the placeholder, creating a widget, and assigning the
-        widget to the corresponding tab in the notebook.
+    def update_upper_notebook_title(self, page_num=0):
+        """Changes the text of the title label of the upper GTK notebook in the left bar.
 
-        :param tab_label: String containing the label of the tab containing the placeholder to be removed
-        :param notebook: Name of the notebook
-        :param view: The widget to replace the placeholder
+        :param page_num: The selected page number
         """
-        placeholder = tab_label + '_placeholder'
-        page_num = self[notebook].page_num(self[placeholder])
-        self[notebook].remove_page(page_num)
-        notebook_widget, title_label = self.create_notebook_widget(get_widget_title(tab_label), view, notebook,
-                                                                   border=constants.BORDER_WIDTH_TEXTVIEW)
-        self[notebook].insert_page(notebook_widget, gtk.Label(tab_label), page_num)
+        self['upper_notebook_title'].set_text(self.upper_notebook_page_titles[page_num])
+
+    def update_lower_notebook_title(self, page_num=0):
+        """Changes the text of the title label of the lower GTK notebook in the left bar.
+
+        :param page_num: The selected page number
+        """
+        self['lower_notebook_title'].set_text(self.lower_notebook_page_titles[page_num])
 
 
 def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):

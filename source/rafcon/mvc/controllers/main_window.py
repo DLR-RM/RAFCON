@@ -47,11 +47,7 @@ except ImportError as e:
 class MainWindowController(ExtendedController):
     """Controller handling the main window.
 
-    :ivar dock_status: Dict holding mappings between bars/console and their current docking status.
-    :ivar undocking_windows: Dict holding mappings between bars/console and their corresponding windows to be undocked
-        into.
-    :ivar bar_containers: Dict holding mappings between bars/console and their corresponding containers, which are
-        defined in the glade file.
+    :ivar docked: Dict holding mappings between bars/console and their current docking-status.
     """
 
     def __init__(self, state_machine_manager_model, view, editor_type='PortConnectionGrouped'):
@@ -174,9 +170,7 @@ class MainWindowController(ExtendedController):
         self.right_bar_child = view['right_h_pane'].get_child2()
         self.console_child = view['central_v_pane'].get_child2()
 
-        self.left_bar_docked = True
-        self.right_bar_docked = True
-        self.console_docked = True
+        self.docked = {'left_bar': True, 'right_bar': True, 'console': True}
 
         view['debug_console_button_hbox'].reorder_child(view['button_show_error'], 0)
         view['debug_console_button_hbox'].reorder_child(view['button_show_warning'], 1)
@@ -199,7 +193,7 @@ class MainWindowController(ExtendedController):
         view['console_return_button'].connect('clicked', self.on_console_return_clicked)
 
         # Connect undock buttons' signals
-        view.undock_left_bar_button.connect('clicked', self.on_left_bar_dock_clicked)
+        view['undock_left_bar_button'].connect('clicked', self.on_left_bar_dock_clicked)
         view['undock_right_bar_button'].connect('clicked', self.on_right_bar_dock_clicked)
         view['undock_console_button'].connect('clicked', self.on_console_dock_clicked)
 
@@ -223,6 +217,9 @@ class MainWindowController(ExtendedController):
         view['button_show_info'].connect('toggled', self.on_debug_content_change)
         view['button_show_warning'].connect('toggled', self.on_debug_content_change)
         view['button_show_error'].connect('toggled', self.on_debug_content_change)
+
+        view['tree_notebook_up'].connect('switch-page', self.on_upper_notebook_tab_switch)
+        view['tree_notebook_down'].connect('switch-page', self.on_lower_notebook_tab_switch)
 
         # hide not usable buttons
         self.view['step_buttons'].hide()
@@ -299,23 +296,36 @@ class MainWindowController(ExtendedController):
         self.view['console_return_button'].show()
 
     def on_left_bar_dock_clicked(self, widget, event=None):
-        if self.left_bar_docked:
+        """Triggered when the (un)dock button of the left bar is clicked.
+
+        If the left bar is docked to main window, it is undocked into a separate new window with the same size as the
+        bar. The new window's position is approximately the same as the bar used to be.
+        If the left bar is undocked, it is docked back to the main window.
+        """
+        if self.docked['left_bar']:
             self.view.left_bar_window.resize(self.view['top_level_h_pane'].get_position(),
                                              self.view['left_bar'].get_allocation().height)
             self.view['left_bar'].reparent(self.view.left_bar_window)
             self.view.left_bar_window.show()
             self.on_left_bar_hide_clicked(None)
             self.view['left_bar_return_button'].hide()
-            self.left_bar_docked = False
+            self.docked['left_bar'] = False
         else:
             self.on_left_bar_return_clicked(None)
             self.view['left_bar'].reparent(self.view['left_bar_container'])
+            window_width, _ = self.view.left_bar_window.get_size()
+            self.view['top_level_h_pane'].set_position(window_width)
             self.view.left_bar_window.hide()
-            self.left_bar_docked = True
+            self.docked['left_bar'] = True
         return True
 
     def on_right_bar_dock_clicked(self, widget, event=None):
-        if self.right_bar_docked:
+        """Triggered when the (un)dock button of the right bar is clicked.
+
+        If right bar is docked to main window, it is undocked into a separate new window with the same size as the bar.
+        The new window's position is approximately the same as the bar used to be.
+        """
+        if self.docked['right_bar']:
             width = self.view.top_window_width - self.view['right_h_pane'].get_position() -\
                     self.view['top_level_h_pane'].get_position()
             self.view.right_bar_window.resize(width, self.view['right_bar'].get_allocation().height)
@@ -324,16 +334,16 @@ class MainWindowController(ExtendedController):
             self.view.right_bar_window.show()
             self.on_right_bar_hide_clicked(None)
             self.view['right_bar_return_button'].hide()
-            self.right_bar_docked = False
+            self.docked['right_bar'] = False
         else:
             self.view['right_bar'].reparent(self.view['right_bar_container'])
             self.on_right_bar_return_clicked(None)
             self.view.right_bar_window.hide()
-            self.right_bar_docked = True
+            self.docked['right_bar'] = True
         return True
 
     def on_console_dock_clicked(self, widget, event=None):
-        if self.console_docked:
+        if self.docked['console']:
             self.view.console_window.resize(self.view['right_h_pane'].get_position(),
                                             self.view['console'].get_allocation().height)
             self.view.console_window.move(self.view['top_level_h_pane'].get_position(),
@@ -342,12 +352,12 @@ class MainWindowController(ExtendedController):
             self.view.console_window.show()
             self.on_console_hide_clicked(None)
             self.view['console_return_button'].hide()
-            self.console_docked = False
+            self.docked['console'] = False
         else:
             self.view['console'].reparent(self.view['console_container'])
             self.on_console_return_clicked(None)
             self.view.console_window.hide()
-            self.console_docked = True
+            self.docked['console'] = True
         return True
 
     # Shortcut buttons
@@ -401,6 +411,13 @@ class MainWindowController(ExtendedController):
             gui_config.set_config_value('LOGGING_SHOW_ERROR', False)
         # gui_config.save_configuration()
         self.view.logging_view.update_filtered_buffer()
+
+    def on_upper_notebook_tab_switch(self, notebook, page, page_num):
+        self.view.update_upper_notebook_title(page_num)
+
+    def on_lower_notebook_tab_switch(self, notebook, page, page_num):
+        self.view.update_lower_notebook_title(page_num)
+
 
     @staticmethod
     def delay(milliseconds, func):

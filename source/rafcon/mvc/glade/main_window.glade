@@ -89,70 +89,181 @@
                         <property name="position">400</property>
                         <property name="position_set">True</property>
                         <child>
-                          <object class="GtkNotebook" id="tree_notebook_up">
+                          <object class="GtkVBox" id="vbox1">
                             <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="border_width">5</property>
-                            <property name="tab_pos">left</property>
-                            <property name="show_border">False</property>
-                            <property name="scrollable">True</property>
-                            <property name="tab_vborder">6</property>
-                            <property name="group_id">1</property>
+                            <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkLabel" id="libraries_placeholder">
+                              <object class="GtkEventBox" id="eventbox3">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">libraries_placeholder
-</property>
-                              </object>
-                            </child>
-                            <child type="tab">
-                              <object class="GtkLabel" id="library_tree_tab">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">libraries</property>
-                                <property name="angle">90</property>
+                                <child>
+                                  <object class="GtkHBox" id="state_editor_label_hbox1">
+                                    <property name="visible">True</property>
+                                    <child>
+                                      <object class="GtkLabel" id="upper_notebook_title">
+                                        <property name="visible">True</property>
+                                        <property name="xalign">0</property>
+                                        <property name="label" translatable="yes">upper_notebook_title</property>
+                                      </object>
+                                      <packing>
+                                        <property name="padding">53</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkEventBox" id="undock_state_editor1">
+                                        <property name="visible">True</property>
+                                        <child>
+                                          <object class="GtkButton" id="undock_left_bar_button">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">True</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="position">1</property>
+                                      </packing>
+                                    </child>
+                                  </object>
+                                </child>
                               </object>
                               <packing>
-                                <property name="tab_fill">False</property>
+                                <property name="expand">False</property>
+                                <property name="position">0</property>
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkLabel" id="state_tree_placeholder">
+                              <object class="GtkNotebook" id="tree_notebook_up">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">state_machine_tree_placeholder</property>
+                                <property name="can_focus">True</property>
+                                <property name="border_width">5</property>
+                                <property name="tab_pos">left</property>
+                                <property name="show_border">False</property>
+                                <property name="scrollable">True</property>
+                                <property name="tab_vborder">6</property>
+                                <property name="group_id">1</property>
+                                <child>
+                                  <object class="GtkEventBox" id="libraries_event_box">
+                                    <property name="visible">True</property>
+                                    <child>
+                                      <object class="GtkScrolledWindow" id="libraries_scrolledwindow">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="hscrollbar_policy">automatic</property>
+                                        <property name="vscrollbar_policy">automatic</property>
+                                        <child>
+                                          <object class="GtkViewport" id="libraries_viewport">
+                                            <property name="visible">True</property>
+                                            <property name="resize_mode">queue</property>
+                                            <child>
+                                              <object class="GtkAlignment" id="libraries_alignment">
+                                                <property name="visible">True</property>
+                                                <property name="xalign">0</property>
+                                                <property name="yalign">0</property>
+                                                <property name="left_padding">10</property>
+                                                <child>
+                                                  <placeholder/>
+                                                </child>
+                                              </object>
+                                            </child>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child type="tab">
+                                  <object class="GtkLabel" id="library_tree_tab">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">libraries</property>
+                                    <property name="angle">90</property>
+                                  </object>
+                                  <packing>
+                                    <property name="tab_fill">False</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScrolledWindow" id="state_tree_scrolledwindow">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="hscrollbar_policy">automatic</property>
+                                    <property name="vscrollbar_policy">automatic</property>
+                                    <child>
+                                      <object class="GtkViewport" id="state_tree_viewport">
+                                        <property name="visible">True</property>
+                                        <property name="resize_mode">queue</property>
+                                        <child>
+                                          <object class="GtkAlignment" id="state_tree_alignment">
+                                            <property name="visible">True</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0</property>
+                                            <property name="left_padding">10</property>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                                <child type="tab">
+                                  <object class="GtkLabel" id="state_machine_tree_tab">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">state_tree</property>
+                                    <property name="angle">90</property>
+                                  </object>
+                                  <packing>
+                                    <property name="position">1</property>
+                                    <property name="tab_fill">False</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScrolledWindow" id="global_variables_scrolledwindow">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="hscrollbar_policy">automatic</property>
+                                    <property name="vscrollbar_policy">automatic</property>
+                                    <child>
+                                      <object class="GtkViewport" id="global_variables_viewport">
+                                        <property name="visible">True</property>
+                                        <property name="resize_mode">queue</property>
+                                        <child>
+                                          <object class="GtkAlignment" id="global_variables_alignment">
+                                            <property name="visible">True</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0</property>
+                                            <property name="left_padding">10</property>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="position">2</property>
+                                  </packing>
+                                </child>
+                                <child type="tab">
+                                  <object class="GtkLabel" id="global_variables_tab">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">global_variables</property>
+                                    <property name="angle">90</property>
+                                  </object>
+                                  <packing>
+                                    <property name="position">2</property>
+                                    <property name="tab_fill">False</property>
+                                  </packing>
+                                </child>
                               </object>
                               <packing>
                                 <property name="position">1</property>
-                              </packing>
-                            </child>
-                            <child type="tab">
-                              <object class="GtkLabel" id="state_machine_tree_tab">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">state_tree</property>
-                                <property name="angle">90</property>
-                              </object>
-                              <packing>
-                                <property name="position">1</property>
-                                <property name="tab_fill">False</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel" id="global_variables_placeholder">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">global_variables_placeholder</property>
-                              </object>
-                              <packing>
-                                <property name="position">2</property>
-                              </packing>
-                            </child>
-                            <child type="tab">
-                              <object class="GtkLabel" id="global_variables_tab">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">global_variables</property>
-                                <property name="angle">90</property>
-                              </object>
-                              <packing>
-                                <property name="position">2</property>
-                                <property name="tab_fill">False</property>
                               </packing>
                             </child>
                           </object>
@@ -162,66 +273,160 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkNotebook" id="tree_notebook_down">
+                          <object class="GtkVBox" id="vbox2">
                             <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="tab_pos">left</property>
-                            <property name="tab_vborder">6</property>
-                            <property name="group_id">1</property>
+                            <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkLabel" id="history_placeholder">
+                              <object class="GtkEventBox" id="eventbox6">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">history_placeholder</property>
-                              </object>
-                            </child>
-                            <child type="tab">
-                              <object class="GtkLabel" id="history_tab">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">history</property>
-                                <property name="angle">90</property>
+                                <child>
+                                  <object class="GtkHBox" id="hbox4">
+                                    <property name="visible">True</property>
+                                    <child>
+                                      <object class="GtkLabel" id="lower_notebook_title">
+                                        <property name="visible">True</property>
+                                        <property name="xalign">0</property>
+                                        <property name="label" translatable="yes">lower_notebook_title</property>
+                                      </object>
+                                      <packing>
+                                        <property name="padding">53</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                </child>
                               </object>
                               <packing>
-                                <property name="tab_fill">False</property>
+                                <property name="expand">False</property>
+                                <property name="position">0</property>
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkLabel" id="execution_history_placeholder">
+                              <object class="GtkNotebook" id="tree_notebook_down">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">execution_history_placeholder</property>
+                                <property name="can_focus">True</property>
+                                <property name="tab_pos">left</property>
+                                <property name="tab_vborder">6</property>
+                                <property name="group_id">1</property>
+                                <child>
+                                  <object class="GtkScrolledWindow" id="history_scrolledwindow">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="hscrollbar_policy">automatic</property>
+                                    <property name="vscrollbar_policy">automatic</property>
+                                    <child>
+                                      <object class="GtkViewport" id="history_viewport">
+                                        <property name="visible">True</property>
+                                        <property name="resize_mode">queue</property>
+                                        <child>
+                                          <object class="GtkAlignment" id="history_alignment">
+                                            <property name="visible">True</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0</property>
+                                            <property name="left_padding">10</property>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child type="tab">
+                                  <object class="GtkLabel" id="history_tab">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">history</property>
+                                    <property name="angle">90</property>
+                                  </object>
+                                  <packing>
+                                    <property name="tab_fill">False</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScrolledWindow" id="execution_history_scrolledwindow">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="hscrollbar_policy">automatic</property>
+                                    <property name="vscrollbar_policy">automatic</property>
+                                    <child>
+                                      <object class="GtkViewport" id="execution_history_viewport">
+                                        <property name="visible">True</property>
+                                        <property name="resize_mode">queue</property>
+                                        <child>
+                                          <object class="GtkAlignment" id="execution_history_alignment">
+                                            <property name="visible">True</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0</property>
+                                            <property name="left_padding">10</property>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                                <child type="tab">
+                                  <object class="GtkLabel" id="execution_history_tab">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">execution_history</property>
+                                    <property name="angle">90</property>
+                                  </object>
+                                  <packing>
+                                    <property name="position">1</property>
+                                    <property name="tab_fill">False</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScrolledWindow" id="network_scrolledwindow">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="hscrollbar_policy">automatic</property>
+                                    <property name="vscrollbar_policy">automatic</property>
+                                    <child>
+                                      <object class="GtkViewport" id="network_viewport">
+                                        <property name="visible">True</property>
+                                        <property name="resize_mode">queue</property>
+                                        <child>
+                                          <object class="GtkAlignment" id="network_alignment">
+                                            <property name="visible">True</property>
+                                            <property name="xalign">0</property>
+                                            <property name="yalign">0</property>
+                                            <property name="left_padding">10</property>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="position">2</property>
+                                  </packing>
+                                </child>
+                                <child type="tab">
+                                  <object class="GtkLabel" id="network_tab">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">network</property>
+                                    <property name="angle">90</property>
+                                  </object>
+                                  <packing>
+                                    <property name="position">2</property>
+                                    <property name="tab_fill">False</property>
+                                  </packing>
+                                </child>
                               </object>
                               <packing>
                                 <property name="position">1</property>
-                              </packing>
-                            </child>
-                            <child type="tab">
-                              <object class="GtkLabel" id="execution_history_tab">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">execution_history</property>
-                                <property name="angle">90</property>
-                              </object>
-                              <packing>
-                                <property name="position">1</property>
-                                <property name="tab_fill">False</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel" id="network_placeholder">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">network_placeholder</property>
-                              </object>
-                              <packing>
-                                <property name="position">2</property>
-                              </packing>
-                            </child>
-                            <child type="tab">
-                              <object class="GtkLabel" id="network_tab">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">network</property>
-                                <property name="angle">90</property>
-                              </object>
-                              <packing>
-                                <property name="position">2</property>
-                                <property name="tab_fill">False</property>
                               </packing>
                             </child>
                           </object>
@@ -713,6 +918,8 @@
                                             <property name="height_request">150</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
+                                            <property name="hscrollbar_policy">automatic</property>
+                                            <property name="vscrollbar_policy">automatic</property>
                                             <child>
                                               <placeholder/>
                                             </child>
