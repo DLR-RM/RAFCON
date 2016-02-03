@@ -33,19 +33,29 @@ class MainWindowView(View):
         self.logging_view.get_top_widget().show()
         self['console'].pack_start(self.logging_view.get_top_widget(), True, True, 0)
 
+        ################################################
+        # Undock Buttons
+        ################################################
+        self.undock_left_bar_button = gtk.Button()
+        self.undock_left_bar_button.set_image(create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_right_bar_button'].set_image(create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_console_button'].set_image(create_button_label(constants.BUTTON_UNDOCK))
+
         ######################################################
         # Library Tree
         ######################################################
         self.library_tree = LibraryTreeView()
         self.library_tree.show()
-        self.replace_notebook_placeholder_with_widget('libraries', 'tree_notebook_up', self.library_tree)
+        self.replace_notebook_placeholder_with_widget('libraries', 'tree_notebook_up',
+                                                      self.library_tree)
 
         ######################################################
         # State Machine Tree
         ######################################################
         self.state_machine_tree = StateMachineTreeView()
         self.state_machine_tree.show()
-        self.replace_notebook_placeholder_with_widget('state_tree', 'tree_notebook_up', self.state_machine_tree)
+        self.replace_notebook_placeholder_with_widget('state_tree', 'tree_notebook_up',
+                                                      self.state_machine_tree)
         # TODO: this is not always the active state machine
 
         ######################################################
@@ -134,23 +144,16 @@ class MainWindowView(View):
         ################################################
         # Hide Buttons
         ################################################
-        self['left_bar_hide_button'].set_image(self.create_arrow_label(constants.BUTTON_LEFTA))
-        self['right_bar_hide_button'].set_image(self.create_arrow_label(constants.BUTTON_RIGHTA))
-        self['console_hide_button'].set_image(self.create_arrow_label(constants.BUTTON_DOWNA))
+        self['left_bar_hide_button'].set_image(create_button_label(constants.BUTTON_LEFTA))
+        self['right_bar_hide_button'].set_image(create_button_label(constants.BUTTON_RIGHTA))
+        self['console_hide_button'].set_image(create_button_label(constants.BUTTON_DOWNA))
 
         ################################################
         # Return Buttons
         ################################################
-        self['left_bar_return_button'].set_image(self.create_arrow_label(constants.BUTTON_RIGHTA))
-        self['right_bar_return_button'].set_image(self.create_arrow_label(constants.BUTTON_LEFTA))
-        self['console_return_button'].set_image(self.create_arrow_label(constants.BUTTON_UPA))
-
-        ################################################
-        # Undock Buttons
-        ################################################
-        self['undock_right_bar_button'].set_image(self.create_arrow_label(constants.BUTTON_UNDOCK))
-        self['undock_left_bar_button'].set_image(self.create_arrow_label(constants.BUTTON_UNDOCK))
-        self['undock_console_button'].set_image(self.create_arrow_label(constants.BUTTON_UNDOCK))
+        self['left_bar_return_button'].set_image(create_button_label(constants.BUTTON_RIGHTA))
+        self['right_bar_return_button'].set_image(create_button_label(constants.BUTTON_LEFTA))
+        self['console_return_button'].set_image(create_button_label(constants.BUTTON_UPA))
 
         # --------------------------------------------------------------------------
         # Edit graphical_editor_shortcuts
@@ -165,14 +168,14 @@ class MainWindowView(View):
         button_step_out_shortcut = self['button_step_out_shortcut']
         button_step_backward_shortcut = self['button_step_backward_shortcut']
 
-        button_start_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_START))
-        button_pause_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_PAUSE))
-        button_stop_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STOP))
-        button_step_mode_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STEPM))
-        button_step_in_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STEP_INTO))
-        button_step_over_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STEP_OVER))
-        button_step_out_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_STEP_OUT))
-        button_step_backward_shortcut.set_label_widget(self.create_button_label(constants.BUTTON_BACKW))
+        button_start_shortcut.set_label_widget(create_button_label(constants.BUTTON_START))
+        button_pause_shortcut.set_label_widget(create_button_label(constants.BUTTON_PAUSE))
+        button_stop_shortcut.set_label_widget(create_button_label(constants.BUTTON_STOP))
+        button_step_mode_shortcut.set_label_widget(create_button_label(constants.BUTTON_STEPM))
+        button_step_in_shortcut.set_label_widget(create_button_label(constants.BUTTON_STEP_INTO))
+        button_step_over_shortcut.set_label_widget(create_button_label(constants.BUTTON_STEP_OVER))
+        button_step_out_shortcut.set_label_widget(create_button_label(constants.BUTTON_STEP_OUT))
+        button_step_backward_shortcut.set_label_widget(create_button_label(constants.BUTTON_BACKW))
 
         # --------------------------------------------------------------------------
 
@@ -216,16 +219,8 @@ class MainWindowView(View):
         
         self.top_window_width = self['main_window'].get_size()[0]
 
-    @staticmethod
-    def create_button_label(icon):
-        label = gtk.Label()
-        label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, constants.FONT_SIZE_NORMAL,
-                                                                    icon))
-        label.show()
-        return label
-
-    def create_notebook_widget(self, title, widget, use_scroller=True, border=10):
-        title_label = self.create_label_box(title)
+    def create_notebook_widget(self, title, widget, notebook, use_scroller=True, border=10):
+        title_label = self.create_label_box(title, notebook)
         event_box = gtk.EventBox()
         vbox = gtk.VBox()
         vbox.pack_start(title_label, False, True, 0)
@@ -242,12 +237,14 @@ class MainWindowView(View):
             vbox.pack_start(widget, True, True, 0)
         event_box.add(vbox)
         event_box.show_all()
-        return event_box
+        return event_box, title_label
 
-    def create_label_box(self, text):
-        """Creates a horizontal box containing a label that shows a title.
+    def create_label_box(self, text, notebook):
+        """Creates a horizontal box containing a label that shows a title and an undocking button only if the notebook
+        is the upper one in the bar.
 
         :param text: The title to be shown
+        :param notebook: The GTK notebook to host the label box
         :return: The horizontal box
         """
         hbox = gtk.HBox()
@@ -255,6 +252,8 @@ class MainWindowView(View):
                                                               letter_spacing=constants.LETTER_SPACING_1PT)
         label.set_alignment(0.0, 0.5)
         hbox.pack_start(label, True, True, 0)
+        if notebook == 'tree_notebook_up':
+            hbox.pack_start(self.undock_left_bar_button, False, True, 0)
         hbox.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
         return hbox
 
@@ -278,12 +277,6 @@ class MainWindowView(View):
             notebook.set_tab_reorderable(child, True)
             notebook.set_tab_detachable(child, True)
 
-    @staticmethod
-    def create_arrow_label(icon):
-        label = gtk.Label()
-        label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, constants.FONT_SIZE_BIG, icon))
-        return label
-
     def replace_notebook_placeholder_with_widget(self, tab_label, notebook, view):
         """Replace notebook's placeholder with widget by removing the placeholder, creating a widget, and assigning the
         widget to the corresponding tab in the notebook.
@@ -295,9 +288,22 @@ class MainWindowView(View):
         placeholder = tab_label + '_placeholder'
         page_num = self[notebook].page_num(self[placeholder])
         self[notebook].remove_page(page_num)
-        notebook_widget = self.create_notebook_widget(get_widget_title(tab_label), view,
-                                                      border=constants.BORDER_WIDTH_TEXTVIEW)
+        notebook_widget, title_label = self.create_notebook_widget(get_widget_title(tab_label), view, notebook,
+                                                                   border=constants.BORDER_WIDTH_TEXTVIEW)
         self[notebook].insert_page(notebook_widget, gtk.Label(tab_label), page_num)
+
+
+def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
+    """Create a button label with a chosen icon.
+
+    :param icon: The icon
+    :param font_size: The size of the icon
+    :return: The created label
+    """
+    label = gtk.Label()
+    label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, font_size, icon))
+    label.show()
+    return label
 
 
 def get_widget_title(tab_label):

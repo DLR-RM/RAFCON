@@ -199,7 +199,7 @@ class MainWindowController(ExtendedController):
         view['console_return_button'].connect('clicked', self.on_console_return_clicked)
 
         # Connect undock buttons' signals
-        view['undock_left_bar_button'].connect('clicked', self.on_left_bar_dock_clicked)
+        view.undock_left_bar_button.connect('clicked', self.on_left_bar_dock_clicked)
         view['undock_right_bar_button'].connect('clicked', self.on_right_bar_dock_clicked)
         view['undock_console_button'].connect('clicked', self.on_console_dock_clicked)
 
