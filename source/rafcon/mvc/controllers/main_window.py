@@ -305,6 +305,7 @@ class MainWindowController(ExtendedController):
             self.view['left_bar'].reparent(self.view.left_bar_window)
             self.view.left_bar_window.show()
             self.on_left_bar_hide_clicked(None)
+            self.view['left_bar_return_button'].hide()
             self.left_bar_docked = False
         else:
             self.on_left_bar_return_clicked(None)
@@ -322,6 +323,7 @@ class MainWindowController(ExtendedController):
             self.view['right_bar'].reparent(self.view.right_bar_window)
             self.view.right_bar_window.show()
             self.on_right_bar_hide_clicked(None)
+            self.view['right_bar_return_button'].hide()
             self.right_bar_docked = False
         else:
             self.view['right_bar'].reparent(self.view['right_bar_container'])
@@ -339,6 +341,7 @@ class MainWindowController(ExtendedController):
             self.view['console'].reparent(self.view.console_window)
             self.view.console_window.show()
             self.on_console_hide_clicked(None)
+            self.view['console_return_button'].hide()
             self.console_docked = False
         else:
             self.view['console'].reparent(self.view['console_container'])
