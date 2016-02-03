@@ -11,10 +11,7 @@ class StateIconView(View, gtk.IconView):
         View.__init__(self)
         gtk.IconView.__init__(self)
 
-        self.set_orientation(gtk.ORIENTATION_HORIZONTAL)
         self.set_columns(len(self.states))
-
-        self.set_column_spacing(0)
         self.set_margin(0)
 
         liststore = gtk.ListStore(str)
