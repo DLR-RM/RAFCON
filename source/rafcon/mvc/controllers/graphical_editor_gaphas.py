@@ -23,6 +23,11 @@ from rafcon.mvc.mygaphas.canvas import MyCanvas
 
 from functools import partial
 
+from gtk.gdk import ACTION_COPY
+from gtk import DEST_DEFAULT_ALL
+
+from gaphas.aspect import InMotion, ItemFinder
+
 
 class GraphicalEditorController(ExtendedController):
     """Controller handling the graphical editor
@@ -50,6 +55,8 @@ class GraphicalEditorController(ExtendedController):
 
         view.setup_canvas(self.canvas, self.zoom)
 
+        view.editor.drag_dest_set(DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
+
     def register_view(self, view):
         """Called when the View was registered
         """
@@ -59,6 +66,8 @@ class GraphicalEditorController(ExtendedController):
         self.view.connect('deselect_states', self._deselect_states)
         self.view.connect('remove_state_from_state_machine', self._remove_state_view)
         self.view.connect('meta_data_changed', self._meta_data_changed)
+        self.view.editor.connect("drag-data-received", self.on_drag_data_received)
+        self.view.editor.connect("drag-motion", self.on_drag_motion)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -81,6 +90,41 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action('show_data_values', self.update_view)
         shortcut_manager.add_callback_for_action('data_flow_mode', self.data_flow_mode)
         shortcut_manager.add_callback_for_action('show_aborted_preempted', self.update_view)
+
+    def on_drag_data_received(self, widget, context, x, y, data, info, time):
+        """Receives state_id from LibraryTree and moves the state to the position of the mouse
+
+        :param widget:
+        :param context:
+        :param x: Integer: x-position of mouse
+        :param y: Integer: y-position of mouse
+        :param data: SelectionData: contains state_id
+        :param info:
+        :param time:
+        """
+        item = self.canvas.get_view_for_model(self.model.selection.get_selected_state().states[data.get_text()])
+        pos_start = item.model.meta['gui']['editor_gaphas']['rel_pos']
+        motion = InMotion(item, self.view.editor)
+        motion.start_move(self.view.editor.get_matrix_i2v(item).transform_point(pos_start[0], pos_start[1]))
+        motion.move((x,y))
+
+    def on_drag_motion(self, widget, context, x, y, time):
+        """Changes the selection on mouse over during drag motion
+
+        :param widget:
+        :param context:
+        :param x: Integer: x-position of mouse
+        :param y: Integer: y-position of mouse
+        :param time:
+        """
+        selected = self.view.editor.focused_item
+        hovered = ItemFinder(self.view.editor).get_item_at_point((x,y))
+        if isinstance(hovered, NameView):
+            hovered = hovered.parent
+        if selected is not hovered and hovered is None:
+            self.view.emit('deselect_states')
+        elif selected is not hovered and isinstance(hovered.model, ContainerStateModel):
+            self.view.emit('new_state_selection', hovered)
 
     def update_view(self, *args):
         self.canvas.update_root_items()

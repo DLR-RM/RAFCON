@@ -705,6 +705,19 @@
                                                     <property name="position">2</property>
                                                   </packing>
                                                 </child>
+                                                <child>
+                                                  <object class="GtkVBox" id="state_icons_box">
+                                                    <property name="visible">True</property>
+                                                    <property name="orientation">vertical</property>
+                                                    <child>
+                                                      <placeholder/>
+                                                    </child>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="expand">False</property>
+                                                    <property name="position">2</property>
+                                                  </packing>
+                                                </child>
                                               </object>
                                               <packing>
                                                 <property name="expand">False</property>

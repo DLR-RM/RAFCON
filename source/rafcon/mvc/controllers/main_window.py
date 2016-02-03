@@ -2,7 +2,7 @@ import gtk
 import threading
 
 from rafcon.mvc.controllers import GlobalVariableManagerController, StateMachineTreeController, \
-    StateMachineHistoryController, LibraryTreeController
+    StateMachineHistoryController, LibraryTreeController, StateIconController
 
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.library_manager import LibraryManagerModel
@@ -108,6 +108,13 @@ class MainWindowController(ExtendedController):
         view['main_window'].add_events(
             gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
             gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
+
+        ######################################################
+        # state icons
+        ######################################################
+        state_icon_controller = StateIconController(state_machine_manager_model, view.state_icons,
+                                                    self.shortcut_manager)
+        self.add_controller('state_icon_controller', state_icon_controller)
 
         ######################################################
         # statemachine tree

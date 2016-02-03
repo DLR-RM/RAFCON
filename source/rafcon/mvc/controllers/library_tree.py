@@ -4,9 +4,10 @@ from functools import partial
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 
-from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.singleton import library_manager
+
+import rafcon.mvc.statemachine_helper as statemachine_helper
 
 from rafcon.utils import log
 
@@ -18,6 +19,8 @@ class LibraryTreeController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         self.library_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
         view.set_model(self.library_tree_store)
+
+        view.drag_source_set(gtk.gdk.BUTTON1_MASK, [('STRING', 0, 0)], gtk.gdk.ACTION_COPY)
 
         self.state_machine_manager_model = state_machine_manager_model
 
@@ -33,6 +36,9 @@ class LibraryTreeController(ExtendedController):
         self.view.connect('cursor-changed', self.on_cursor_changed)
 
         self.view.connect('button_press_event', self.mouse_click)
+
+        self.view.connect("drag-data-get", self.on_drag_data_get)
+        self.view.connect("drag-begin", self.on_drag_begin)
 
     def mouse_click(self, widget, event=None):
         # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}".format(event.button, gtk.gdk.BUTTON_PRESS,
@@ -142,51 +148,29 @@ class LibraryTreeController(ExtendedController):
         # The user clicked on an entry in the tree store
         return
 
+    def on_drag_data_get(self, widget, context, data, info, time):
+        """dragged state is inserted and its state_id sent to the receiver
+
+        :param widget:
+        :param context:
+        :param data: SelectionData: contains state_id
+        :param info:
+        :param time:
+        """
+        library_state = self._get_selected_library_state()
+        if statemachine_helper.insert_state(library_state, False):
+            data.set_text(library_state.state_id)
+
+    def on_drag_begin(self, widget, context):
+        """replace drag icon
+
+        :param widget:
+        :param context:
+        """
+        self.view.drag_source_set_icon_stock(gtk.STOCK_NEW)
+
     def insert_button_clicked(self, widget, as_template=False):
-        smm_m = self.state_machine_manager_model
-        (model, row) = self.view.get_selection().get_selected()
-        library_key = model[row][0]
-        library = model[row][1]
-        library_path = model[row][2]
-
-        if not smm_m.selected_state_machine_id:
-            logger.error("Please select a container state within a state machine first")
-            return
-
-        current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
-        if len(current_selection.get_states()) > 1 or len(current_selection.get_states()) == 0:
-            logger.error("Please select exactly one state for the insertion of a library")
-            return
-
-        current_state_m = current_selection.get_states()[0]
-        current_state = current_state_m.state
-        if not isinstance(current_state, ContainerState):
-            logger.error("Libraries can only be inserted in container states")
-            return
-
-        logger.debug("Link library state %s (with file path %s, and library path %s) into the state machine" %
-                     (str(library_key), str(library), str(library_path)))
-
-        library_state = LibraryState(library_path, library_key, "0.1", library_key)
-
-        # If inserted as library, we can just insert the library state
-        if not as_template:
-            current_state.add_state(library_state)
-        # If inserted as template, we have to extract the state_copy and load the meta data manually
-        else:
-            template = library_state.state_copy
-            orig_state_id = template.state_id
-            template.change_state_id()
-            current_state.add_state(template)
-
-            from os.path import join
-            lib_os_path, _, _ = library_manager.get_os_path_to_library(library_state.library_path,
-                                                                       library_state.library_name)
-            root_state_path = join(lib_os_path, orig_state_id)
-            template_m = current_state_m.states[template.state_id]
-            template_m.load_meta_data(root_state_path)
-            # Causes the template to be resized
-            template_m.temp['gui']['editor']['template'] = True
+        statemachine_helper.insert_state(self._get_selected_library_state(), as_template)
 
     def open_button_clicked(self, widget):
         try:
@@ -210,3 +194,21 @@ class LibraryTreeController(ExtendedController):
 
         smm_m.state_machine_manager.add_state_machine(state_machine)
         return state_machine
+
+    def _get_selected_library_state(self):
+        """Returns the LibraryState which was selected in the LibraryTree
+
+        :return: LibraryState: selected state in TreeView
+        """
+        (model, row) = self.view.get_selection().get_selected()
+        library_key = model[row][0]
+        library = model[row][1]
+        library_path = model[row][2]
+
+        if isinstance(library, dict):
+            return None
+
+        logger.debug("Link library state %s (with file path %s, and library path %s) into the state machine" %
+                     (str(library_key), str(library), str(library_path)))
+
+        return LibraryState(library_path, library_key, "0.1", library_key)
