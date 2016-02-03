@@ -27,6 +27,7 @@ class StateIconController(ExtendedController):
     def register_view(self, view):
         self.view.connect("drag-data-get", self.on_drag_data_get)
         self.view.connect("drag-begin", self.on_drag_begin)
+        self.view.connect("drag-end", self.on_drag_end)
 
     def on_drag_data_get(self, widget, context, data, info, time):
         """dragged state is inserted and its state_id sent to the receiver
@@ -58,3 +59,6 @@ class StateIconController(ExtendedController):
         :param context:
         """
         self.view.drag_source_set_icon_stock(gtk.STOCK_NEW)
+
+    def on_drag_end(self, widget, context):
+        self.view.unselect_all()
