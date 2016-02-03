@@ -108,8 +108,11 @@ class MainWindowController(ExtendedController):
         if global_net_config.get_config_value('NETWORK_CONNECTIONS', False):
             from rafcon.mvc.controllers.network_connections import NetworkController
             from rafcon.network.singleton import network_connections
+
+            from rafcon.mvc.views.network_connections import NetworkConnectionsView
+            network_connections_view = NetworkConnectionsView()
             network_connections_ctrl = NetworkController(state_machine_manager_model,
-                                                         view.network_connections_view)
+                                                         network_connections_view)
             network_connections.initialize()
             self.add_controller('network_connections_ctrl', network_connections_ctrl)
 
@@ -119,10 +122,12 @@ class MainWindowController(ExtendedController):
             view['tree_notebook_down'].remove_page(page_num)
 
             network_label = gtk.Label('Network')
-            network_notebook_widget = self.create_notebook_widget('NETWORK',
-                                                                  view.network_connections_view.get_top_widget(),
+
+            network_notebook_widget = view.create_notebook_widget('NETWORK',
+                                                                  network_connections_view.get_top_widget(),
                                                                   use_scroller=False,
                                                                   border=constants.BORDER_WIDTH_TEXTVIEW)
+
             view['tree_notebook_down'].insert_page(network_notebook_widget, network_label, page_num)
         else:
             network_tab = view['network_tab']
