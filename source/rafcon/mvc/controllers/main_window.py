@@ -20,7 +20,6 @@ from rafcon.mvc.controllers.top_tool_bar import TopToolBarController
 from rafcon.mvc.controllers.execution_history import ExecutionHistoryTreeController
 
 from rafcon.statemachine.enums import StateMachineExecutionStatus
-from rafcon.mvc import gui_helper
 
 from rafcon.mvc.singleton import global_variable_manager_model as gvm_model
 import rafcon.statemachine.singleton

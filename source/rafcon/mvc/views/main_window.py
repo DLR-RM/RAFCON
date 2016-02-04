@@ -74,6 +74,10 @@ class MainWindowView(View):
         self.replace_notebook_placeholder_with_widget('history', 'tree_notebook_down',
                                                       self.state_machine_history.get_top_widget())
 
+        self.execution_history = ExecutionHistoryView()
+        self.execution_history.show()
+        self["state_icons_box"].pack_start(self.state_icons.get_top_widget())                                              
+                                                      
         ######################################################
         # State Machine Execution History
         ######################################################
@@ -81,7 +85,6 @@ class MainWindowView(View):
         self.execution_history.show()
         self.replace_notebook_placeholder_with_widget('execution_history', 'tree_notebook_down',
                                                       self.execution_history.get_top_widget())
-        
         ######################################################
         # rotate all tab labels by 90 degrees and make detachable
         ######################################################

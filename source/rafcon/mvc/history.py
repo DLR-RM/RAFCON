@@ -34,6 +34,7 @@ from rafcon.statemachine.states.state import State
 from rafcon.statemachine.data_port import DataPort
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 
@@ -55,7 +56,7 @@ logger = log.get_logger(__name__)
 
 core_object_list = [Transition, DataFlow, Outcome, InputDataPort, OutputDataPort, ScopedData, ScopedVariable, Script,
                     GlobalVariableManager, LibraryManager, StateMachine,
-                    ExecutionState, HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
+                    ExecutionState, HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState, LibraryState]
 
 HISTORY_DEBUG_LOG_FILE = '/tmp/{0}/test_file.txt'.format(getpass.getuser())
 
@@ -1086,6 +1087,8 @@ class CoreObjectIdentifier:
                                    State.__name__: 'states'}
 
     def __init__(self, core_obj_or_cls):
+        if not(type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list):
+            logger.warning("\n{0}\n{1}\n{2}".format(core_obj_or_cls, type(core_obj_or_cls),core_object_list))
         assert type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list
         print core_obj_or_cls
         self._sm_id = None
@@ -1101,7 +1104,8 @@ class CoreObjectIdentifier:
             self._type = 'class'
 
         if not self._type == 'class':
-            if self._type in ['ExecutionState', 'HierarchyState', 'BarrierConcurrencyState', 'PreemptiveConcurrencyState']:
+            if self._type in ['ExecutionState', 'HierarchyState', 'BarrierConcurrencyState',
+                              'PreemptiveConcurrencyState', 'LibraryState']:
                 self._path = core_obj_or_cls.get_path()
                 self._id = core_obj_or_cls.state_id
                 self._sm_id = core_obj_or_cls.get_sm_for_state().state_machine_id
@@ -1215,6 +1219,10 @@ class RemoveObjectAction(Action):
         self.adjust_linkage()
 
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
+        actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model, level=1)
+
+        self.run_graphical_viewer(g_sm_editor, actual_state_model)
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model, level=1)
 
@@ -2009,7 +2017,8 @@ class History(ModelMT):
         # logger.info("meta_changed: \n{0}".format(overview))
         overview = overview.new_overview
         # WORKAROUND: avoid multiple signals of the root_state, by comparing first and last model in overview
-        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:
+        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1] or \
+                overview['meta_signal'][-1]['change'] == 'all':  # avoid strange change: 'all' TODO test why those occur
             return
         if self.busy:
             return
