@@ -1,6 +1,10 @@
 from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.controllers import StateOverviewController, SourceEditorController, \
-    DataPortListController, ScopedVariableListController, StateOutcomesEditorController, LinkageOverviewController
+from rafcon.mvc.controllers.state_overview import StateOverviewController
+from rafcon.mvc.controllers.source_editor import  SourceEditorController
+from rafcon.mvc.controllers.io_data_port_list import DataPortListController
+from rafcon.mvc.controllers.scoped_variable_list import ScopedVariableListController
+from rafcon.mvc.controllers.state_outcomes import StateOutcomesEditorController
+from rafcon.mvc.controllers.linkage_overview import LinkageOverviewController
 
 from rafcon.mvc.controllers.state_transitions import StateTransitionsEditorController
 from rafcon.mvc.controllers.state_data_flows import StateDataFlowsEditorController
@@ -29,8 +33,7 @@ class StateEditorController(ExtendedController):
     }
 
     def __init__(self, model, view):
-        """Constructor
-        """
+        """Constructor"""
         ExtendedController.__init__(self, model, view)
 
         self.add_controller('properties_ctrl', StateOverviewController(model, view['properties_view']))
@@ -148,9 +151,9 @@ class StateEditorController(ExtendedController):
         if isinstance(self.model.state, LibraryState):
             return
         tbuffer = textview.get_buffer()
-        entry_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
+        entry_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter()) or None
 
-        if len(entry_text) > 0 and not self.model.state.description == entry_text:
+        if not self.model.state.description == entry_text:
             logger.debug("Changed description of state {0}".format(self.model.state.name))
             self.model.state.description = entry_text
             self.view['description_text_view'].get_buffer().set_text(self.model.state.description)

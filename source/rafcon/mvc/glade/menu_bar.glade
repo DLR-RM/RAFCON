@@ -87,7 +87,6 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_new_activate"/>
               </object>
             </child>
             <child>
@@ -97,7 +96,6 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_open_activate"/>
               </object>
             </child>
             <child>
@@ -107,7 +105,6 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_save_activate"/>
               </object>
             </child>
             <child>
@@ -117,7 +114,6 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_save_as_activate"/>
               </object>
             </child>
             <child>
@@ -127,7 +123,6 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_menu_properties_activate"/>
               </object>
             </child>
             <child>
@@ -142,7 +137,6 @@
                 <property name="image">image2</property>
                 <property name="use_stock">False</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_refresh_all_activate"/>
               </object>
             </child>
             <child>
@@ -152,7 +146,6 @@
                 <property name="image">image1</property>
                 <property name="use_stock">False</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_refresh_libraries_activate"/>
               </object>
             </child>
             <child>
@@ -167,7 +160,6 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_quit_activate"/>
               </object>
             </child>
           </object>
@@ -188,7 +180,6 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_cut_selection_activate"/>
               </object>
             </child>
             <child>
@@ -198,7 +189,6 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_copy_selection_activate"/>
               </object>
             </child>
             <child>
@@ -208,7 +198,6 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_paste_clipboard_activate"/>
               </object>
             </child>
             <child>
@@ -218,7 +207,6 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_delete_activate"/>
               </object>
             </child>
             <child>
@@ -232,7 +220,6 @@
                 <property name="visible">True</property>
                 <property name="image">image8</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_add_state_activate"/>
               </object>
             </child>
             <child>
@@ -241,7 +228,6 @@
                 <property name="visible">True</property>
                 <property name="image">image9</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_group_states_activate"/>
               </object>
             </child>
             <child>
@@ -250,7 +236,6 @@
                 <property name="visible">True</property>
                 <property name="image">image10</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_ungroup_states_activate"/>
               </object>
             </child>
             <child>
@@ -265,7 +250,6 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_undo_activate"/>
               </object>
             </child>
             <child>
@@ -275,7 +259,6 @@
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
-                <signal name="activate" handler="on_redo_activate"/>
               </object>
             </child>
             <child>
@@ -288,7 +271,6 @@
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Grid</property>
                 <property name="use_underline">True</property>
-                <signal name="toggled" handler="on_grid_toggled"/>
               </object>
             </child>
           </object>
@@ -307,7 +289,6 @@
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Data Flow Mode</property>
                 <property name="use_underline">True</property>
-                <signal name="toggled" handler="on_data_flow_mode_toggled"/>
               </object>
             </child>
             <child>
@@ -315,7 +296,6 @@
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Show All Data Flows</property>
                 <property name="use_underline">True</property>
-                <signal name="toggled" handler="on_show_all_data_flows_toggled"/>
               </object>
             </child>
             <child>
@@ -323,7 +303,6 @@
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Show Data Flow Values</property>
                 <property name="use_underline">True</property>
-                <signal name="toggled" handler="on_show_data_flow_values_toggled"/>
               </object>
             </child>
             <child>
@@ -331,7 +310,6 @@
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Show Aborted/Preempted</property>
                 <property name="use_underline">True</property>
-                <signal name="toggled" handler="on_show_aborted_preempted_toggled"/>
               </object>
             </child>
             <child>
@@ -345,7 +323,6 @@
                 <property name="visible">True</property>
                 <property name="image">image11</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_expert_view_activate"/>
               </object>
             </child>
           </object>
@@ -366,7 +343,6 @@
                 <property name="visible">True</property>
                 <property name="image">image3</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_start_activate"/>
               </object>
             </child>
             <child>
@@ -375,7 +351,14 @@
                 <property name="visible">True</property>
                 <property name="image">image17</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_start_from_selected_state_activate"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="run_to_selected_state">
+                <property name="label" translatable="yes">run to selected state</property>
+                <property name="visible">True</property>
+                <property name="image">image20</property>
+                <property name="use_stock">False</property>
               </object>
             </child>
             <child>
@@ -384,7 +367,6 @@
                 <property name="visible">True</property>
                 <property name="image">image4</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_pause_activate"/>
               </object>
             </child>
             <child>
@@ -393,7 +375,6 @@
                 <property name="visible">True</property>
                 <property name="image">image5</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_stop_activate"/>
               </object>
             </child>
             <child>
@@ -407,16 +388,30 @@
                 <property name="visible">True</property>
                 <property name="image">image12</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_step_mode_activate"/>
               </object>
             </child>
             <child>
               <object class="GtkImageMenuItem" id="step_into">
-                <property name="label" translatable="yes">step</property>
+                <property name="label" translatable="yes">step_into</property>
                 <property name="visible">True</property>
                 <property name="image">image6</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_step_into_activate"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="step_over">
+                <property name="label" translatable="yes">step_over</property>
+                <property name="visible">True</property>
+                <property name="image">image18</property>
+                <property name="use_stock">False</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="step_out">
+                <property name="label" translatable="yes">step_out</property>
+                <property name="visible">True</property>
+                <property name="image">image19</property>
+                <property name="use_stock">False</property>
               </object>
             </child>
             <child>
@@ -425,7 +420,6 @@
                 <property name="visible">True</property>
                 <property name="image">image7</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_backward_step_activate"/>
               </object>
             </child>
           </object>
@@ -445,12 +439,23 @@
                 <property name="visible">True</property>
                 <property name="image">image13</property>
                 <property name="use_stock">False</property>
-                <signal name="activate" handler="on_about_activate"/>
               </object>
             </child>
           </object>
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkImage" id="image18">
+    <property name="visible">True</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image19">
+    <property name="visible">True</property>
+    <property name="stock">gtk-missing-image</property>
+  </object>
+  <object class="GtkImage" id="image20">
+    <property name="visible">True</property>
+    <property name="stock">gtk-missing-image</property>
   </object>
 </interface>

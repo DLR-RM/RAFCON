@@ -11,6 +11,7 @@ from rafcon.utils.geometry import deg2rad
 from rafcon.statemachine.states.container_state import ContainerState
 
 from rafcon.mvc.config import global_gui_config as gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.mvc.models.outcome import OutcomeModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
@@ -243,7 +244,7 @@ class PortView(object):
         fill_color = gap_draw_helper.get_col_rgba(self.fill_color, transparency)
 
         show_additional_value = False
-        if gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and value is not None:
+        if global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True) and value is not None:
             show_additional_value = True
 
         parameters = {
@@ -585,7 +586,7 @@ class OutcomeView(LogicPortView):
         draw_label = True
         if self.has_outgoing_connection():
             draw_label = False
-        if not gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False) and self.outcome_id in [-1, -2]:
+        if not global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False) and self.outcome_id in [-1, -2]:
             draw_label = False
 
         self.draw_port(context, fill_color, state.transparent, draw_label=draw_label)

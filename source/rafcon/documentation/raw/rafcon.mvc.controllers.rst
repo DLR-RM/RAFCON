@@ -9,6 +9,9 @@ responsible for the logic.
 All controllers of RAFCON inherit from :class:`rafcon.mvc.controllers.extended_controller.ExtendedController`, which
 inherits from the controller class of GTKMVC.
 
+.. contents::
+    :backlinks: top
+
 ExtendedController (in extended_controller)
 -------------------------------------------
 

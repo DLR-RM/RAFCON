@@ -1,10 +1,7 @@
-from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
-
 import sys
 import time
+
+from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
 from gtk.gdk import keyval_name
@@ -19,6 +16,7 @@ from math import sin, cos, atan2
 from rafcon.statemachine.enums import StateType
 
 from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc import statemachine_helper
 from rafcon.mvc.models.abstract_state import MetaSignalMsg
@@ -30,6 +28,12 @@ from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.views.graphical_editor import Direction
 from rafcon.mvc.controllers.extended_controller import ExtendedController
+
+from rafcon.mvc import singleton as mvc_singleton
+
+from rafcon.utils import log
+
+logger = log.get_logger(__name__)
 
 
 def check_pos(pos):
@@ -86,10 +90,10 @@ class GraphicalEditorController(ExtendedController):
     _suspend_drawing = False
 
     def __init__(self, model, view):
-        """Constructor
-        """
+        """Constructor"""
         assert isinstance(model, StateMachineModel)
         ExtendedController.__init__(self, model, view)
+
         self.root_state_m = model.root_state
 
         self.timer_id = None
@@ -133,19 +137,18 @@ class GraphicalEditorController(ExtendedController):
         self.last_time = time.time()
 
     def register_view(self, view):
-        """Called when the View was registered
-        """
+        """Called when the View was registered"""
         pass
 
     def register_adapters(self):
-        """Adapters should be registered in this method call
-        """
+        """Adapters should be registered in this method call"""
         pass
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
         """
         shortcut_manager.add_callback_for_action("delete", self._delete_selection)
         shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))
@@ -180,7 +183,7 @@ class GraphicalEditorController(ExtendedController):
     @ExtendedController.observe("meta_signal", signal=True)  # meta data of state machine changed
     @ExtendedController.observe("state_meta_signal", signal=True)  # meta data of any state within state machine changed
     def state_machine_change(self, model, prop_name, info):
-        """Called on any change within th state machine
+        """Called on any change within the state machine
 
         This method is called, when any state, transition, data flow, etc. within the state machine changes. This
         then typically requires a redraw of the graphical editor, to display these changes immediately.
@@ -236,6 +239,7 @@ class GraphicalEditorController(ExtendedController):
             self.single_selection = selection
             self._redraw()
 
+    @log.log_exceptions(logger)
     def _on_expose_event(self, *args):
         """Redraw the graphical editor
 
@@ -351,10 +355,24 @@ class GraphicalEditorController(ExtendedController):
 
             # Check, whether an outcome was clicked on
             outcome_state, outcome_key = self._check_for_outcome_selection(new_selection, self.mouse_move_start_coords)
+
+            # Check, whether a port (input, output, scope) was clicked on
+            if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True):
+                # Check, whether port (connector) was clicked on
+                port_model, port_type, is_connector = self._check_for_port_selection(new_selection,
+                                                                                     self.mouse_move_start_coords)
+            else:
+                port_model = None
+
             if outcome_state is not None:
+                # Abort connection creation, as the user requested a connection from a data port to a logical port
+                if self.selected_port_connector:
+                    logger.error("Creation of connections between data and logic ports not allowed")
+                    self._abort()
+
                 # Store the selected outcome if no outcome was selected before, this is the start of a drag and drop
                 # operation to create a new transition
-                if self.selected_outcome is None:
+                elif not self.selected_outcome:
                     if outcome_state is not self.root_state_m or outcome_key is None:
                         self.selected_outcome = outcome_state, outcome_key
                         self.mouse_move_redraw = True
@@ -364,24 +382,25 @@ class GraphicalEditorController(ExtendedController):
                     self._create_new_transition(outcome_state, outcome_key)
             # Another possibility to create a transition is by clicking the state of the transition target when
             # having an outcome selected.
-            elif self.selected_outcome is not None and isinstance(new_selection, AbstractStateModel) and \
-                    ((new_selection.parent is self.selected_outcome[0].parent and
-                              self.selected_outcome[1] is not None) or
-                         (new_selection.parent is self.selected_outcome[0] and self.selected_outcome[1] is None)):
+            elif self.selected_outcome and isinstance(new_selection, AbstractStateModel) and \
+                    ((new_selection.parent is self.selected_outcome[0].parent and self.selected_outcome[1] is not None)
+                     or (new_selection.parent is self.selected_outcome[0] and not self.selected_outcome[1])):
                 self._create_new_transition(new_selection)
             # Allow the user to create waypoints while creating a new transition
-            elif self.selected_outcome is not None:
+            elif self.selected_outcome:
                 self._handle_new_waypoint()
 
             # Check, whether a port (input, output, scope) was clicked on
-            if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
-                # Check, whether port (connector) was clicked on
-                port_model, port_type, is_connector = self._check_for_port_selection(new_selection,
-                                                                                     self.mouse_move_start_coords)
+            if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True):
                 if port_model is not None:
+                    # Abort connection creation, as the user requested a connection from a logical port to a data port
+                    if self.selected_outcome:
+                        logger.error("Creation of connections between data and logic ports not allowed")
+                        self._abort()
+
                     # Store the selected port if no port was selected before, this is the start of a drag and drop
                     # operation to create a new data flow
-                    if not self.selected_port_connector and is_connector:
+                    elif not self.selected_port_connector and is_connector:
                         self.model.selection.set(port_model)
                         self.selected_port_type = port_type
                         self.selected_port_connector = True
@@ -420,8 +439,7 @@ class GraphicalEditorController(ExtendedController):
         """Triggered when a mouse button is being released
 
         :param widget: The widget beneath the mouse when the release was done
-        :param event: Information about the event, e. g. x and y coordinate
-        Not used so far
+        :param event: Information about the event, e.g. x and y coordinate
         """
         self.last_button_pressed = None
         self.drag_origin_offset = None
@@ -702,8 +720,7 @@ class GraphicalEditorController(ExtendedController):
         """Check whether a port was clicked on
 
         Checks whether the current selected_model is a state and if so looks for an outcome at the given coordinates.
-        If an
-        outcome is found, it is stored.
+        If an outcome is found, it is stored.
 
         :param gtkmvc.Model selected_model: The model that was clicked on
         :param tuple coords: Coordinates to search for outcomes
@@ -841,7 +858,6 @@ class GraphicalEditorController(ExtendedController):
             waypoint_pos = self._get_absolute_position(connection_m.parent, waypoint)
             if dist(waypoint_pos, coords) < close_threshold:
                 connection_m.meta['gui']['editor_opengl']['waypoints'].remove(waypoint)
-                logger.debug('Connection waypoint removed')
                 self._publish_changes(connection_m, "waypoint_remove", False)
                 self._redraw()
                 return True
@@ -865,7 +881,6 @@ class GraphicalEditorController(ExtendedController):
           waypoint to
         :param tuple coords: The coordinates of the new waypoint
         """
-
         connection_temp = connection_m.temp['gui']['editor']
         parent_state_m = connection_m.parent
         # The waypoints should exist as dictionary. If not (for any reason), we have to convert it to one
@@ -890,7 +905,7 @@ class GraphicalEditorController(ExtendedController):
             if point_on_line(rel_coords, points[i], points[i + 1]):
                 waypoint_list.insert(i, rel_coords)
         logger.debug('Connection waypoint added at rel pos {0:.1f} | {1:.1f} (abs pos {0:.1f} | {1:.1f})'.format(
-            rel_coords[0], rel_coords[1], coords[0], coords[1]))
+                rel_coords[0], rel_coords[1], coords[0], coords[1]))
 
         self._publish_changes(connection_m, "waypoint_add", False)
         self._redraw()
@@ -905,7 +920,8 @@ class GraphicalEditorController(ExtendedController):
         :param rafcon.mvc.models.abstract_state.AbstractStateModel to_state_m: The to state model of the new transition
         :param int to_outcome_id: The id of the to outcome or None if the transition does not go to the parent state
         """
-        from_state_id = self.selected_outcome[0].state.state_id
+        from_state_m = self.selected_outcome[0]
+        from_state_id = from_state_m.state.state_id
         from_outcome_id = self.selected_outcome[1]
         to_state_id = to_state_m.state.state_id
         # Prevent accidental creation of transitions with double click on one outcome
@@ -917,10 +933,10 @@ class GraphicalEditorController(ExtendedController):
         if from_outcome_id is None:
             from_state_id = None
 
-        if to_outcome_id is None:
-            responsible_parent_m = to_state_m.parent
+        if from_outcome_id is None:  # Origin is income
+            responsible_parent_m = from_state_m
         else:
-            responsible_parent_m = to_state_m
+            responsible_parent_m = from_state_m.parent
 
         try:
             if not isinstance(responsible_parent_m, ContainerStateModel):
@@ -928,11 +944,12 @@ class GraphicalEditorController(ExtendedController):
             else:
                 transition_id = responsible_parent_m.state.add_transition(from_state_id, from_outcome_id, to_state_id,
                                                                           to_outcome_id)
-                transition_m = responsible_parent_m.get_transition_m(transition_id)
-                transition_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
+                if self.temporary_waypoints:
+                    transition_m = responsible_parent_m.get_transition_m(transition_id)
+                    transition_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
+                    self._publish_changes(model=transition_m, change='append_to_last_change')
         except (AttributeError, ValueError) as e:
             logger.warn("Transition couldn't be added: {0}".format(e))
-            raise
             # import traceback
             # logger.debug("The graphical editor had an internal error: %s %s" % (str(e), str(traceback.format_exc())))
         except Exception as e:
@@ -967,8 +984,10 @@ class GraphicalEditorController(ExtendedController):
             try:
                 data_flow_id = responsible_parent.state.add_data_flow(from_state_id, from_port_id,
                                                                       target_state_id, target_port_id)
-                data_flow_m = responsible_parent.get_data_flow_m(data_flow_id)
-                data_flow_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
+                if self.temporary_waypoints:
+                    data_flow_m = responsible_parent.get_data_flow_m(data_flow_id)
+                    data_flow_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
+                    self._publish_changes(model=data_flow_m, change='append_to_last_change')
             except AttributeError as e:
                 logger.warn("Data flow couldn't be added: {0}".format(e))
             except Exception as e:
@@ -1017,7 +1036,6 @@ class GraphicalEditorController(ExtendedController):
         :param bool redraw: Flag whether to redraw state-machine after moving
         :param bool redraw: Flag whether to publish the changes after moving
         """
-
         left, right, bottom, top = self.get_boundaries(port_m)
         size = (right - left, top - bottom)
 
@@ -1077,7 +1095,7 @@ class GraphicalEditorController(ExtendedController):
             new_pos = move_pos(cur_pos, port_m.parent.meta['gui']['editor_opengl']['size'])
             self._move_data_port(port_m, new_pos, redraw, publish_changes)
 
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             if self.model.selection:
                 for model in self.model.selection:
                     if isinstance(model, AbstractStateModel):
@@ -1399,7 +1417,6 @@ class GraphicalEditorController(ExtendedController):
         This method draws all other components, not directly belonging to a certain state. For a starter, this is the
         selection frame the user draws for a multi selection.
         """
-
         # Draw the multi selection frame
         frame = self.model.temp['gui']['editor']['selection_frame']
         if isinstance(frame, list):
@@ -1489,11 +1506,11 @@ class GraphicalEditorController(ExtendedController):
         # Call the drawing method of the view
         # The view returns the id of the state in OpenGL and the positions of the outcomes, input and output ports
         (opengl_id, income_pos, outcome_pos, outcome_radius, resize_length) = self.view.editor.draw_state(
-            state_m.state.name if not state_m.state.is_root_state_of_library else "", pos, size,
-            state_m.state.outcomes,
-            state_m.input_data_ports if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True) else [],
-            state_m.output_data_ports if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True) else [],
-            selected, active, depth)
+                state_m.state.name if not state_m.state.is_root_state_of_library else "", pos, size,
+                state_m.state.outcomes,
+                state_m.input_data_ports if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True) else [],
+                state_m.output_data_ports if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True) else [],
+                selected, active, depth)
         state_temp['id'] = opengl_id
         state_temp['income_pos'] = income_pos
         state_temp['outcome_pos'] = outcome_pos
@@ -1539,12 +1556,12 @@ class GraphicalEditorController(ExtendedController):
 
                 redraw |= self.draw_state(child_state, child_rel_pos, child_size, depth + 1)
 
-            if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
+            if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True):
                 self.draw_inner_data_ports(state_m, depth)
 
             self.draw_transitions(state_m, depth)
 
-            if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
+            if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True):
                 self.draw_data_flows(state_m, depth)
 
             if isinstance(state_temp['template'], bool) and state_temp['template'] is True:
@@ -1579,7 +1596,7 @@ class GraphicalEditorController(ExtendedController):
 
         self._handle_new_transition(state_m, depth)
 
-        if global_gui_config.get_config_value('SHOW_DATA_FLOWS', True):
+        if global_runtime_config.get_config_value('SHOW_DATA_FLOWS', True):
             self._handle_new_data_flow(state_m, depth)
 
         return redraw
@@ -1679,7 +1696,7 @@ class GraphicalEditorController(ExtendedController):
 
                 assert isinstance(from_state,
                                   AbstractStateModel), "Transition from unknown state with ID {id:s}".format(
-                    id=from_state_id)
+                        id=from_state_id)
 
                 try:
                     # Set the from coordinates to the outcome coordinates received earlier
@@ -1692,14 +1709,19 @@ class GraphicalEditorController(ExtendedController):
 
             to_state_id = transition_m.transition.to_state
 
-            if to_state_id == parent_state_m.state.state_id:  # Transition goes back to parent
-                # Set the to coordinates to the outcome coordinates received earlier
-                to_pos = parent_state_m.temp['gui']['editor']['outcome_pos'][
-                    transition_m.transition.to_outcome]
-            else:
-                # Set the to coordinates to the center of the next state
-                to_state = parent_state_m.states[to_state_id]
-                to_pos = to_state.temp['gui']['editor']['income_pos']
+            try:
+                if to_state_id == parent_state_m.state.state_id:  # Transition goes back to parent
+                    # Set the to coordinates to the outcome coordinates received earlier
+                    to_pos = parent_state_m.temp['gui']['editor']['outcome_pos'][
+                        transition_m.transition.to_outcome]
+                else:
+                    # Set the to coordinates to the center of the next state
+                    to_state = parent_state_m.states[to_state_id]
+                    to_pos = to_state.temp['gui']['editor']['income_pos']
+            except KeyError:
+                logger.warning("Transition could not be drawn because outcome-meta-data could not been reached "
+                               "{0}".format(transition_m.transition))
+                continue
 
             if isinstance(transition_m.meta['gui']['editor_opengl']['waypoints'], dict):
                 transition_m.meta['gui']['editor_opengl']['waypoints'] = transition_m.meta['gui']['editor']['waypoints']
@@ -2052,14 +2074,20 @@ class GraphicalEditorController(ExtendedController):
         # logger.debug("publish changes to history")
 
     def _delete_selection(self, *args):
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             selection = self.model.selection.get_all()
             if len(selection) > 0:
                 statemachine_helper.delete_models(self.model.selection.get_all())
                 self.model.selection.clear()
 
     def _add_new_state(self, *args, **kwargs):
-        if not self.view.editor.has_focus():  # or singleton.global_focus is self:
+        """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
+
+        Adds a new state only if the parent state (selected state) is a container state, and if the graphical editor or
+        the state machine tree are in focus.
+        """
+        state_machine_tree_ctrl = mvc_singleton.main_window_controller.get_controller('state_machine_tree_controller')
+        if not self.view.editor.is_focus() and not state_machine_tree_ctrl.view['state_machine_tree_view'].is_focus():
             return
 
         if 'state_type' not in kwargs or kwargs['state_type'] not in list(StateType):
@@ -2079,13 +2107,13 @@ class GraphicalEditorController(ExtendedController):
             statemachine_helper.add_state(model.parent, state_type)
 
     def _toggle_data_flow_visibility(self, *args):
-        if self.view.editor.has_focus():
-            global_gui_config.set_config_value('SHOW_DATA_FLOWS',
-                                               not global_gui_config.get_config_value("SHOW_DATA_FLOWS"))
+        if self.view.editor.is_focus():
+            global_runtime_config.set_config_value('SHOW_DATA_FLOWS',
+                                                   not global_runtime_config.get_config_value("SHOW_DATA_FLOWS"))
             self._redraw()
 
     def _abort(self, *args):
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             if self.mouse_move_redraw:
                 if self.selected_outcome is not None:
                     self.selected_outcome = None
@@ -2110,7 +2138,7 @@ class GraphicalEditorController(ExtendedController):
                             if waypoints:
                                 for waypoint_id, waypoint_pos in enumerate(waypoints):
                                     waypoints[waypoint_id] = model_temp['original_waypoint_{0}_rel_pos'.format(
-                                        waypoint_id)]
+                                            waypoint_id)]
                 elif isinstance(self.single_selection, AbstractStateModel):
                     self.single_selection.meta['gui']['editor_opengl']['rel_pos'] = \
                         self.single_selection.temp['gui']['editor']['original_rel_pos']
@@ -2124,21 +2152,21 @@ class GraphicalEditorController(ExtendedController):
     def _copy_selection(self, *args):
         """Copies the current selection to the clipboard.
         """
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             logger.debug("copy selection")
             global_clipboard.copy(self.model.selection)
 
     def _cut_selection(self, *args):
         """Cuts the current selection and copys it to the clipboard.
         """
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             logger.debug("cut selection")
             global_clipboard.cut(self.model.selection)
 
     def _paste_clipboard(self, *args):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             logger.debug("Paste")
 
             current_selection = self.model.selection

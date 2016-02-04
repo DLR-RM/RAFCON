@@ -73,8 +73,7 @@ def get_state_machine_id(state_machine_m):
 
 
 def add_state_machine(widget, event=None):
-    """Create a new state-machine when the user clicks on the '+' next to the tabs
-    """
+    """Create a new state-machine when the user clicks on the '+' next to the tabs"""
     logger.debug("Creating new state-machine...")
     root_state = HierarchyState("new root state")
     state_machine = StateMachine(root_state)
@@ -82,6 +81,13 @@ def add_state_machine(widget, event=None):
 
 
 class StateMachinesEditorController(ExtendedController):
+    """Controller handling the State Machines Editor
+
+    :param  rafcon.mvc.models.state_machine_manager.StateMachineManagerModel sm_manager_model: The state machine manager
+         model, holding data regarding state machines.
+    :param rafcon.mvc.views.state_machines_editor.StateMachinesEditorView view: The GTK view showing the tabs of state
+        machines.
+    """
     def __init__(self, sm_manager_model, view):
         ExtendedController.__init__(self, sm_manager_model, view, spurious=True)
 
@@ -91,6 +97,7 @@ class StateMachinesEditorController(ExtendedController):
         self.last_opened_state_machines = collections.deque(maxlen=10)
 
     def register_view(self, view):
+        """Called when the View was registered"""
         self.view['notebook'].connect("add_state_machine", add_state_machine)
         self.view['notebook'].connect("close_state_machine", self.close_state_machine)
         self.view['notebook'].connect('switch-page', self.on_switch_page)
@@ -100,6 +107,11 @@ class StateMachinesEditorController(ExtendedController):
             self.add_graphical_state_machine_editor(state_machine)
 
     def register_actions(self, shortcut_manager):
+        """Register callback methods fot triggered actions.
+
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
+        """
         shortcut_manager.add_callback_for_action('close', self.on_close_shortcut)
 
         # Call register_action of parent in order to register actions for child controllers
@@ -116,8 +128,7 @@ class StateMachinesEditorController(ExtendedController):
                 return
 
     def on_close_shortcut(self, *args):
-        """Close active state machine (triggered by shortcut)
-        """
+        """Close active state machine (triggered by shortcut)"""
         state_machine_m = self.model.get_selected_state_machine_model()
         if state_machine_m is None:
             return
@@ -150,9 +161,9 @@ class StateMachinesEditorController(ExtendedController):
         """Add to for new state machine
 
         If a new state machine was added, a new tab is created with a graphical editor for this state machine.
-        :param state_machine_m: The enw state machine model
-        """
 
+        :param state_machine_m: The new state machine model
+        """
         assert isinstance(state_machine_m, StateMachineModel)
 
         sm_id = get_state_machine_id(state_machine_m)
@@ -185,8 +196,7 @@ class StateMachinesEditorController(ExtendedController):
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def notification_selected_sm_changed(self, model, prop_name, info):
-        """If a new state machine is selected, make sure the tab is open
-        """
+        """If a new state machine is selected, make sure the tab is open"""
         selected_state_machine_id = self.model.selected_state_machine_id
         if selected_state_machine_id is None:
             return
@@ -243,8 +253,13 @@ class StateMachinesEditorController(ExtendedController):
             label.set_label(tab_title)
 
     def on_close_clicked(self, event, state_machine_m, result, force=False):
-        """ Callback for the "close-clicked" emitted by custom TabLabel widget. """
+        """Triggered when the close button of a state machine tab is clicked
 
+        Closes state machine if it is saved. Otherwise gives the user the option to 'Close without Saving' or to 'Cancel
+        the Close Operation'
+
+        :param state_machine_m: The selected state machine model.
+        """
         if force:
             self.remove_state_machine(state_machine_m)
         elif state_machine_m.state_machine.marked_dirty:
@@ -270,19 +285,21 @@ class StateMachinesEditorController(ExtendedController):
             self.remove_state_machine(state_machine_m)
 
     def remove_state_machine(self, state_machine_m):
-        sm_id = get_state_machine_id(state_machine_m)
+        """
 
-        self.remove_controller(sm_id)
+        :param state_machine_m: The selected state machine model.
+        """
+        sm_id = get_state_machine_id(state_machine_m)
 
         copy_of_last_opened_state_machines = copy.deepcopy(self.last_opened_state_machines)
 
-        # the following statement will switch the acitve notebook tab automaically and the history of the
+        # the following statement will switch the active notebook tab automatically and the history of the
         # last opened state machines will be destroyed
         # Close tab and remove info
         page_id = self.get_page_id(sm_id)
         self.view.notebook.remove_page(page_id)
         del self.tabs[sm_id]
-
+        self.remove_controller(sm_id)
         self.last_opened_state_machines = copy_of_last_opened_state_machines
 
         # self.model is the state_machine_manager_model
@@ -308,8 +325,7 @@ class StateMachinesEditorController(ExtendedController):
             self.model.selected_state_machine_id = None
 
     def close_all_pages(self):
-        """Closes all tabs of the state machines editor
-        """
+        """Closes all tabs of the state machines editor."""
         state_machine_m_list = []
         for tab in self.tabs.itervalues():
             state_machine_m_list.append(tab['state_machine_m'])

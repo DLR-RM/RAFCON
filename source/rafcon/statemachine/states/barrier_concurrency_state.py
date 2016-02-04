@@ -48,11 +48,9 @@ class BarrierConcurrencyState(ConcurrencyState):
             self.add_state(DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID))
 
         for state_id, state in self.states.iteritems():
-            logger.info("generate transitons for state %s" % state_id)
             if not state_id == UNIQUE_DECIDER_STATE_ID:
                 for outcome in self.states[state_id].outcomes.values():
                     if not outcome.outcome_id < 0:
-                        logger.info("generate transitons for state %s outcome %s" % (state_id, outcome.outcome_id))
                         self.add_transition(from_state_id=state_id, from_outcome=outcome.outcome_id,
                                             to_state_id=UNIQUE_DECIDER_STATE_ID, to_outcome=None)
 
@@ -62,6 +60,7 @@ class BarrierConcurrencyState(ConcurrencyState):
 
         :return:
         """
+        logger.debug("Starting execution of {0}{1}".format(self, " (backwards)" if self.backward_execution else ""))
         self.setup_run()
         # data to be accessed by the decider
         child_errors = {}
@@ -75,19 +74,15 @@ class BarrierConcurrencyState(ConcurrencyState):
             #######################################################
 
             if self.backward_execution:
-                logger.debug("Backward executing barrier concurrency state with id %s and name %s" % (self._state_id, self.name))
-
                 history_item = self.execution_history.get_last_history_item()
                 assert isinstance(history_item, ConcurrencyItem)
                 # history_item.state_reference must be "self" in this case
 
             else:  # forward_execution
-                logger.debug("Executing barrier concurrency state with id %s" % self._state_id)
                 history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
 
             self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
             # start all threads
-            history_index = 0
             for key, state in self.states.iteritems():
                 # skip the decider state
                 if key is not decider_state.state_id:
@@ -95,8 +90,9 @@ class BarrierConcurrencyState(ConcurrencyState):
                     state_output = self.create_output_dictionary_for_state(state)
                     state.input_data = state_input
                     state.output_data = state_output
-                    state.start(history_item.execution_histories[history_index], self.backward_execution)
-                    history_index += 1
+
+            for history_index, state in enumerate(self.states.itervalues()):
+                state.start(history_item.execution_histories[history_index], self.backward_execution)
 
             #######################################################
             # wait for all child threads to finish
@@ -126,7 +122,6 @@ class BarrierConcurrencyState(ConcurrencyState):
 
                     # do not write the output of the entry script
                     self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-                    logger.debug("Backward leave the barrier concurrency state with name %s" % self.name)
                     return self.finalize()
                 else:
                     self.backward_execution = False
@@ -143,7 +138,6 @@ class BarrierConcurrencyState(ConcurrencyState):
             # standard state execution
             decider_state.input_data = self.get_inputs_for_state(decider_state)
             decider_state.output_data = self.create_output_dictionary_for_state(decider_state)
-            logger.debug("Executing the decider state of the concurrency barrier state")
             decider_state.start(self.execution_history, backward_execution=False)
             decider_state.join()
 
@@ -185,7 +179,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             return self.finalize(outcome)
 
         except Exception, e:
-            logger.error("Runtime error: {0}\n{1}".format(e, str(traceback.format_exc())))
+            logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
             return self.finalize(Outcome(-1, "aborted"))
@@ -302,8 +296,10 @@ class BarrierConcurrencyState(ConcurrencyState):
                     load_from_storage=True)
         try:
             state.description = dictionary['description']
-        except TypeError:
-            pass
+        except (TypeError, KeyError):  # (Very) old state machines do not have a description field
+            import traceback
+            formatted_lines = traceback.format_exc().splitlines()
+            logger.warning("Erroneous description for state '{1}': {0}".format(formatted_lines[-1], dictionary['name']))
 
         if states:
             return state

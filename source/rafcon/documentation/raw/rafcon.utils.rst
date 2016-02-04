@@ -1,6 +1,9 @@
 Utils
 =====
 
+.. contents::
+    :backlinks: top
+
 config
 ------
 .. automodule:: rafcon.utils.config
@@ -16,10 +19,6 @@ dialog
 geometry
 --------
 .. automodule:: rafcon.utils.geometry
-
-gui_helper
-----------
-.. automodule:: rafcon.utils.gui_helper
 
 json_utils
 ----------

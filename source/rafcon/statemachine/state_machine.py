@@ -61,22 +61,10 @@ class StateMachine(ModelMT, Observable):
         self._root_state.output_data = self._root_state.create_output_dictionary_for_state(self._root_state)
         self._root_state.start(self.execution_history)
 
-        wait_for_finishing_thread = threading.Thread(target=self.wait_for_finishing, args=(self._root_state,))
-        wait_for_finishing_thread.start()
-
-    @staticmethod
-    def wait_for_finishing(state):
-        """ This method waits until a specific states finished its execution and stops the execution engine afterwards.
-
-        :param state: the state to wait for its execution to finish
-        :return:
-        """
-        state.join()
-        state.state_execution_status = StateExecutionState.INACTIVE
-        logger.debug("The final outcome of the state was %s" % (str(state.final_outcome)))
-        # deferred import to avoid cyclic import at the beginning of the script
-        from rafcon.statemachine.singleton import state_machine_execution_engine
-        state_machine_execution_engine.set_execution_mode_to_stopped()
+    def join(self):
+        """Wait for root state to finish execution"""
+        self._root_state.join()
+        self._root_state.state_execution_status = StateExecutionState.INACTIVE
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

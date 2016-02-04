@@ -358,7 +358,7 @@ def update_meta_data_for_state_view(graphical_editor_view, state_v, affects_chil
         update_meta_data_for_name_view(graphical_editor_view, state_v.name_view, publish=False)
         for transition_v in state_v.get_transitions():
             update_meta_data_for_transition_waypoints(graphical_editor_view, transition_v, None)
-        for child_state_v in state_v.child_state_vs:
+        for child_state_v in state_v.child_state_views():
             update_meta_data_for_state_view(graphical_editor_view, child_state_v, True, publish=False)
 
     rel_pos = calc_rel_pos_to_parent(graphical_editor_view.editor.canvas, state_v, state_v.handles()[NW])

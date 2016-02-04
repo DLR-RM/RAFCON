@@ -1,6 +1,4 @@
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
+from functools import partial
 
 from rafcon.statemachine.enums import StateType
 
@@ -16,12 +14,17 @@ from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.views.graphical_editor_gaphas import GraphicalEditorView
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 from rafcon.mvc.mygaphas.items.connection import DataFlowView, TransitionView
+from rafcon.mvc.mygaphas import guide
 
 from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
 
 from rafcon.mvc.mygaphas.canvas import MyCanvas
 
-from functools import partial
+from rafcon.mvc import singleton as mvc_singleton
+
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 from gtk.gdk import ACTION_COPY
 from gtk import DEST_DEFAULT_ALL
@@ -41,8 +44,7 @@ class GraphicalEditorController(ExtendedController):
     _change_state_type = False
 
     def __init__(self, model, view):
-        """Constructor
-        """
+        """Constructor"""
         ExtendedController.__init__(self, model, view)
         assert type(view) == GraphicalEditorView
         assert isinstance(self.model, StateMachineModel)
@@ -58,8 +60,7 @@ class GraphicalEditorController(ExtendedController):
         view.editor.drag_dest_set(DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
 
     def register_view(self, view):
-        """Called when the View was registered
-        """
+        """Called when the View was registered"""
         assert self.view == view
         self.setup_canvas()
         self.view.connect('new_state_selection', self._select_new_states)
@@ -70,14 +71,14 @@ class GraphicalEditorController(ExtendedController):
         self.view.editor.connect("drag-motion", self.on_drag_motion)
 
     def register_adapters(self):
-        """Adapters should be registered in this method call
-        """
+        """Adapters should be registered in this method call"""
         pass
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
         """
         shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))
         shortcut_manager.add_callback_for_action("add2", partial(self._add_new_state, state_type=StateType.HIERARCHY))
@@ -134,7 +135,14 @@ class GraphicalEditorController(ExtendedController):
         self.canvas.update_root_items()
 
     def _add_new_state(self, *args, **kwargs):
-        if not self.view.editor.has_focus():  # or singleton.global_focus is self:
+        """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
+
+        Adds a new state only if the parent state (selected state) is a container state, and if the graphical editor or
+        the state machine tree are in focus.
+        """
+        state_machine_tree_ctrl = mvc_singleton.main_window_controller.get_controller('state_machine_tree_controller')
+        if not self.view.editor.is_focus() and not state_machine_tree_ctrl.view['state_machine_tree_view'].is_focus():
+            # or singleton.global_focus is self:
             return
 
         if 'state_type' not in kwargs or kwargs['state_type'] not in list(StateType):
@@ -153,21 +161,21 @@ class GraphicalEditorController(ExtendedController):
     def _copy_selection(self, *args):
         """Copies the current selection to the clipboard.
         """
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             logger.debug("copy selection")
             global_clipboard.copy(self.model.selection)
 
     def _cut_selection(self, *args):
         """Cuts the current selection and copys it to the clipboard.
         """
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             logger.debug("cut selection")
             global_clipboard.cut(self.model.selection)
 
     def _paste_clipboard(self, *args):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
-        if self.view.editor.has_focus():
+        if self.view.editor.is_focus():
             logger.debug("Paste")
 
             current_selection = self.model.selection
@@ -237,6 +245,31 @@ class GraphicalEditorController(ExtendedController):
         # logger.info("meta data '{0}' of model '{1}' changed".format(name, model))
         # History.meta_changed_notify_after(self, model, name, affects_children)
 
+    # @ExtendedController.observe("meta_signal", signal=True)  # meta data of root_state_model changed -> not possible -> this controller is not observing the root_state
+    @ExtendedController.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
+    def meta_changed_notify_after(self, changed_model, prop_name, info):
+        from rafcon.mvc.history import NotificationOverview
+        default_overview = NotificationOverview(info)
+        # logger.info("meta_changed: \n{0}".format(default_overview))
+        overview = default_overview.new_overview
+        # try to do general update
+        if 'redo' in overview['meta_signal'][-1]['origin'] or 'undo' in overview['meta_signal'][-1]['origin']:
+            # logger.info("meta_changed: \n{0}".format(default_overview))
+            logger.info("update_view")
+            self.update_view()
+            # and try to do specific update
+            if isinstance(overview['model'][-1], StateModel):
+                state_m = overview['model'][-1]
+                logger.info("update_state")
+            elif isinstance(overview['model'][-1], StateMachineModel):
+                state_m = overview['model'][-1].root_state
+                logger.info("update_root_state")
+            else:
+                state_m = overview['model'][-1].parent
+                logger.info("update_parent_state")
+            state_v = self.canvas.get_view_for_model(state_m)
+            self.canvas.request_update(state_v, matrix=False)
+
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change(self, model, prop_name, info):
         """Called on any change within th state machine
@@ -256,22 +289,11 @@ class GraphicalEditorController(ExtendedController):
                 self._change_state_type = True
                 return
 
-            if method_name == 'remove_state':
-                if self._change_state_type:
-                    return
-                state_m = model.states[arguments[1]]
-                state_v = self.canvas.get_view_for_model(state_m)
-                if state_v:
-                    parent_v = self.canvas.get_parent(state_v)
-                    state_v.remove()
-                    if parent_v:
-                        self.canvas.request_update(parent_v)
-
         if 'method_name' in info and info['method_name'] == 'root_state_after_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
             # The method causing the change raised an exception, thus nothing was changed
-            if isinstance(result, str) and "CRASH" in result:
+            if (isinstance(result, str) and "CRASH" in result) or isinstance(result, Exception):
                 return
 
             if method_name == 'add_state':
@@ -281,7 +303,15 @@ class GraphicalEditorController(ExtendedController):
                 new_state_m = model.states[new_state.state_id]
                 self.add_state_view_to_parent(new_state_m, model)
             elif method_name == 'remove_state':
-                pass  # Handled in root_state_before_change
+                if self._change_state_type:
+                    return
+                state_v = self.canvas.get_view_for_id(StateView, arguments[1])
+                if state_v:
+                    parent_v = self.canvas.get_parent(state_v)
+                    state_v.remove()
+                    if parent_v:
+                        self.canvas.request_update(parent_v)
+
             # ----------------------------------
             #           TRANSITIONS
             # ----------------------------------
@@ -301,6 +331,7 @@ class GraphicalEditorController(ExtendedController):
                 transition_m = model
                 transition_v = self.canvas.get_view_for_model(transition_m)
                 self.connect_transition_handle_to_state(transition_v, transition_m, transition_m.parent)
+
             # ----------------------------------
             #           DATA FLOW
             # ----------------------------------
@@ -316,6 +347,7 @@ class GraphicalEditorController(ExtendedController):
                 data_flow_m = model
                 data_flow_v = self.canvas.get_view_for_model(data_flow_m)
                 self.connect_data_flow_handle_to_state(data_flow_v, data_flow_m, data_flow_m.parent)
+
             # ----------------------------------
             #           OUTCOMES
             # ----------------------------------
@@ -333,6 +365,7 @@ class GraphicalEditorController(ExtendedController):
                     if outcome_v.outcome_id == arguments[1]:
                         state_v.remove_outcome(outcome_v)
                         self.canvas.request_update(state_v, matrix=False)
+
             # ----------------------------------
             #           DATA PORTS
             # ----------------------------------
@@ -388,7 +421,7 @@ class GraphicalEditorController(ExtendedController):
                         self.canvas.request_update(state_v, matrix=False)
 
             # ----------------------------------
-            #            STATE NAME
+            #        STATE MISCELLANEOUS
             # ----------------------------------
             elif method_name == 'name':
                 # The name of a state was changed
@@ -427,7 +460,7 @@ class GraphicalEditorController(ExtendedController):
                     # Check for new transitions, which do not have a TransitionView (typically related to DeciderState)
                     for transition_m in new_state_m.transitions:
                         if not self.canvas.get_view_for_model(transition_m):
-                            self.add_transition_view_for_model(transition_m, model)
+                            self.add_transition_view_for_model(transition_m, new_state_m)
                     # Check for old StateViews (typically DeciderState) and TransitionViews, no longer existing
                     for child_v in self.canvas.get_children(state_v):
                         if isinstance(child_v, StateView):
@@ -485,7 +518,7 @@ class GraphicalEditorController(ExtendedController):
             state_v = self.canvas.get_view_for_model(state_m)
             state_v.selected = True
             self.view.editor.select_item(state_v)
-            if global_gui_config.get_config_value("DATA_FLOW_MODE"):
+            if global_runtime_config.get_config_value("DATA_FLOW_MODE"):
                 for data_flow in self.get_connected_data_flows(state_v):
                     data_flow.show()
                 self.set_non_active_states_transparent(True, state_v)
@@ -710,7 +743,6 @@ class GraphicalEditorController(ExtendedController):
 
         state_v = StateView(state_m, size, hierarchy_level)
         self.canvas.add(state_v, parent)
-        state_temp['view'] = state_v
         state_v.matrix.translate(*rel_pos)
 
         for outcome_m in state_m.outcomes:
@@ -768,7 +800,7 @@ class GraphicalEditorController(ExtendedController):
         :param rafcon.mvc.models.container_state.ContainerStateModel parent_state_m: The model of the container
             state, of which the transitions shall be drawn
         """
-        parent_state_v = parent_state_m.temp['gui']['editor']['view']
+        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
         assert isinstance(parent_state_v, StateView)
         for transition_m in parent_state_m.transitions:
             transition_v = TransitionView(transition_m, hierarchy_level)
@@ -804,7 +836,7 @@ class GraphicalEditorController(ExtendedController):
                 parent_state_v.connect_to_income(transition_v, transition_v.from_handle())
             else:
                 from_state_m = parent_state_m.states[from_state_id]
-                from_state_v = from_state_m.temp['gui']['editor']['view']
+                from_state_v = self.canvas.get_view_for_model(from_state_m)
                 from_outcome_id = transition_m.transition.from_outcome
                 from_state_v.connect_to_outcome(from_outcome_id, transition_v, transition_v.from_handle())
                 # from_state_v.connect_to_double_port_outcome(from_outcome_id, transition_v,
@@ -819,7 +851,7 @@ class GraphicalEditorController(ExtendedController):
             else:
                 # Set the to coordinates to the center of the next state
                 to_state_m = parent_state_m.states[to_state_id]
-                to_state_v = to_state_m.temp['gui']['editor']['view']
+                to_state_v = self.canvas.get_view_for_model(to_state_m)
                 to_state_v.connect_to_income(transition_v, transition_v.to_handle())
 
         except AttributeError as e:
@@ -838,7 +870,7 @@ class GraphicalEditorController(ExtendedController):
         :param rafcon.mvc.models.container_state.ContainerStateModel parent_state_m: The model of the container
             state, of which the data flows shall be drawn
         """
-        parent_state_v = parent_state_m.temp['gui']['editor']['view']
+        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
         assert isinstance(parent_state_v, StateView)
         for data_flow_m in parent_state_m.data_flows:
             from_state_id = data_flow_m.data_flow.from_state
@@ -867,18 +899,17 @@ class GraphicalEditorController(ExtendedController):
 
             self.draw_data_flow(data_flow_m, data_flow_v, parent_state_m)
 
-    @staticmethod
-    def draw_data_flow(data_flow_m, data_flow_v, parent_state_m):
+    def draw_data_flow(self, data_flow_m, data_flow_v, parent_state_m):
         # Get id and references to the from and to state
         from_state_id = data_flow_m.data_flow.from_state
         from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
             from_state_id]
-        from_state_v = from_state_m.temp['gui']['editor']['view']
+        from_state_v = self.canvas.get_view_for_model(from_state_m)
 
         to_state_id = data_flow_m.data_flow.to_state
         to_state_m = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
             to_state_id]
-        to_state_v = to_state_m.temp['gui']['editor']['view']
+        to_state_v = self.canvas.get_view_for_model(to_state_m)
 
         from_key = data_flow_m.data_flow.from_key
         to_key = data_flow_m.data_flow.to_key

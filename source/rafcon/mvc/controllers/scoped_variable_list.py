@@ -2,18 +2,25 @@ import gtk
 from gtk import ListStore
 
 from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.utils import log
-logger = log.get_logger(__name__)
+
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.io_data_port_list import dataport_compare_method
+
+from rafcon.utils.comparison import compare_variables
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 class ScopedVariableListController(ExtendedController):
+    """Controller handling the scoped variable list
+
+    :param rafcon.mvc.models.state.StateModel model: The state model, holding state data.
+    :param rafcon.mvc.views.scoped_variables_list.ScopedVariablesListView view: The GTK view showing the list of scoped
+        variables.
+    """
 
     def __init__(self, model, view):
-        """Constructor
-        """
+        """Constructor"""
         ExtendedController.__init__(self, model, view)
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view.get_top_widget())
 
@@ -24,9 +31,7 @@ class ScopedVariableListController(ExtendedController):
         self.scoped_variables_list_store = ListStore(str, str, str, int)
 
     def register_view(self, view):
-        """Called when the View was registered
-        """
-
+        """Called when the View was registered"""
         view.get_top_widget().set_model(self.scoped_variables_list_store)
 
         view['name_col'].add_attribute(view['name_text'], 'text', 0)
@@ -50,23 +55,24 @@ class ScopedVariableListController(ExtendedController):
             self.reload_scoped_variables_list_store()
 
     def register_adapters(self):
-        """Adapters should be registered in this method call
-        """
+        """Adapters should be registered in this method call"""
+        pass
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
         """
         shortcut_manager.add_callback_for_action("delete", self.remove_port)
         shortcut_manager.add_callback_for_action("add", self.add_port)
 
     def add_port(self, *_):
-        if self.view[self.view.top].has_focus():
+        if self.view[self.view.top].is_focus():
             self.on_new_scoped_variable_button_clicked(None)
 
     def remove_port(self, *_):
-        if self.view[self.view.top].has_focus():
+        if self.view[self.view.top].is_focus():
             self.on_delete_scoped_variable_button_clicked(None)
 
     @ExtendedController.observe("scoped_variables", after=True)
@@ -84,21 +90,44 @@ class ScopedVariableListController(ExtendedController):
             self.select_entry(selected_data_port_id)
 
     def on_new_scoped_variable_button_clicked(self, widget, data=None):
-        new_sv_name = "scoped_%s" % str(self.new_sv_counter)
+        """Triggered when the New button in the Scoped Variables tab is clicked.
+
+        Create a new scoped variable with default values.
+        """
         if hasattr(self.model, 'states'):
-            self.new_sv_counter += 1
-            self.model.state.add_scoped_variable(new_sv_name, "int", 0)
+            data_port_id = None
+            while data_port_id is None:
+                try:
+                    data_port_id = self.model.state.add_scoped_variable("scoped_%s" % self.new_sv_counter, "int", 0)
+                except ValueError:
+                    pass
+                self.new_sv_counter += 1
+            self.select_entry(data_port_id)
 
     def on_delete_scoped_variable_button_clicked(self, widget, data=None):
+        """Triggered when the Delete button in the Scoped Variables tab is clicked.
+
+        Deletes the selected scoped variable.
+        """
         tree_view = self.view["scoped_variables_tree_view"]
         if hasattr(self.model, 'states'):
-            path = tree_view.get_cursor()[0][0]
+
+            path = self.get_path()  # tree_view.get_cursor()[0][0]
             if path is not None:
                 scoped_variable_key = self.scoped_variables_list_store[int(path)][3]
                 self.scoped_variables_list_store.clear()
                 self.model.state.remove_scoped_variable(scoped_variable_key)
+            if len(self.scoped_variables_list_store) > 0:
+                self.view[self.view.top].set_cursor(min(path, len(self.scoped_variables_list_store) - 1))
 
     def on_name_changed(self, widget, path, text):
+        """Triggered when a scoped variable's name is edited
+
+        Changes the scoped variable's name.
+
+        :param path: The path identifying the edited variable
+        :param text: New variable's name
+        """
         scoped_variable_id = self.scoped_variables_list_store[int(path)][3]
         try:
             self.model.state.scoped_variables[scoped_variable_id].name = text
@@ -106,6 +135,13 @@ class ScopedVariableListController(ExtendedController):
             logger.error("Error while changing port name: {0}".format(e))
 
     def on_data_type_changed(self, widget, path, text):
+        """Triggered when a scoped variable's data type is edited.
+
+        Changes the scoped variable's data type.
+
+        :param path: The path identifying the edited variable
+        :param text: New variable's data type
+        """
         data_port_id = self.scoped_variables_list_store[int(path)][3]
         try:
             self.model.state.scoped_variables[data_port_id].change_data_type(text, None)
@@ -113,6 +149,13 @@ class ScopedVariableListController(ExtendedController):
             logger.error("Error while changing data type: {0}".format(e))
 
     def on_default_value_changed(self, widget, path, text):
+        """Triggered when a scoped variable's value is edited.
+
+        Changes the scoped variable's value.
+
+        :param path: The path identifying the edited variable
+        :param text: New variable's value
+        """
         data_port_id = self.scoped_variables_list_store[int(path)][3]
         try:
             self.model.state.scoped_variables[data_port_id].default_value = text
@@ -129,9 +172,16 @@ class ScopedVariableListController(ExtendedController):
                 break
             ctr += 1
 
+    def get_path(self):
+        """Returns the path/index to the currently selected port entry"""
+        cursor = self.view[self.view.top].get_cursor()
+        # the cursor is a tuple containing the current path and the focused column
+        if cursor[0] is None:
+            return None
+        return cursor[0][0]
+
     def reload_scoped_variables_list_store(self):
-        """Reloads the scoped variable list store from the data port models
-        """
+        """Reloads the scoped variable list store from the data port models"""
         if hasattr(self.model, 'scoped_variables'):
             tmp = ListStore(str, str, str, int)
             for sv_model in self.model.scoped_variables:
@@ -147,7 +197,7 @@ class ScopedVariableListController(ExtendedController):
                             sv_model.scoped_variable.default_value, sv_model.scoped_variable.data_port_id])
             tms = gtk.TreeModelSort(tmp)
             tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-            tms.set_sort_func(0, dataport_compare_method)
+            tms.set_sort_func(0, compare_variables)
             tms.sort_column_changed()
             tmp = tms
             self.scoped_variables_list_store.clear()

@@ -21,8 +21,7 @@ class StateModel(AbstractStateModel):
      """
 
     def __init__(self, state, parent=None, meta=None, load_meta_data=True):
-        """Constructor
-        """
+        """Constructor"""
         super(StateModel, self).__init__(state, parent, meta)
 
         if load_meta_data and type(self) == StateModel:
@@ -44,11 +43,12 @@ class StateModel(AbstractStateModel):
         "_notify_method_before" is used as trigger method when the changing function is entered and
         "_notify_method_after" is used when the changing function returns. This changing function in the example
         would be "modify_input_data_port".
+
         :param model: The model that was changed
         :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
-
+        # logger.info("STATEMODEL {0} {1}".format(0,1)) if 'after' in info else logger.info("STATEMODEL {0} {1}".format(1,0))
         # If this model has been changed (and not one of its child states), then we have to update all child models
         # This must be done before notifying anybody else, because other may relay on the updated models
         if hasattr(info, 'after') and info['after'] and self.state == info['instance']:
@@ -80,16 +80,15 @@ class StateModel(AbstractStateModel):
 
         # Outcomes are not modelled as class, therefore the model passed when adding/removing an outcome is the
         # parent StateModel. Thus we have to look at the method that caused a property change.
-        elif "modify_outcome" in info.method_name and self is model or \
-                isinstance(info.instance, Outcome) and self is model.parent:
+        elif isinstance(info.instance, Outcome) and self is model.parent:
             changed_list = self.outcomes
             cause = "outcome_change"
 
         if not (cause is None or changed_list is None):
             if hasattr(info, 'before') and info['before']:
-                changed_list._notify_method_before(info.instance, cause, (model,), info)
+                changed_list._notify_method_before(self.state, cause, (self.state,), info)
             elif hasattr(info, 'after') and info['after']:
-                changed_list._notify_method_after(info.instance, cause, None, (model,), info)
+                changed_list._notify_method_after(self.state, cause, None, (self.state,), info)
 
         # Notifies parent state
         super(StateModel, self).model_changed(model, prop_name, info)
@@ -123,6 +122,7 @@ class StateModel(AbstractStateModel):
             output-data-port models
             outcome models
         """
+        # logger.info("method_name: " + info.method_name)
         model_list = None
         if "input_data_port" in info.method_name:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("input_data_port")
@@ -158,32 +158,40 @@ class StateModel(AbstractStateModel):
         for outcome in self.state.outcomes.itervalues():
             self.outcomes.append(OutcomeModel(outcome, self))
 
-    def add_missing_model(self, model_list, data_list, model_name, model_class, model_key):
-        for data in data_list.itervalues():
+    def add_missing_model(self, model_list_or_dict, core_objects_dict, model_name, model_class, model_key):
+        """
+        :param model_list_or_dict: could be a list or dictionary of one model type
+        :param core_objects_dict: dictionary of one type of core-elements (rafcon.statemachine)
+        :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
+        :param model_class: model-class of the elements that should be insert
+        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element (e.g. 'state_id')
+        :return:
+        """
+        for core_object in core_objects_dict.itervalues():
             found = False
-            for model_item in model_list:
-                model = model_item if model_key is None else model_list[model_item]
-                if data is getattr(model, model_name):
+            for model_or_key in model_list_or_dict:
+                model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
+                if core_object is getattr(model, model_name):
                     found = True
                     break
             if not found:
                 if model_key is None:
-                    model_list.append(model_class(data, self))
+                    model_list_or_dict.append(model_class(core_object, self))
                 else:
-                    model_list[getattr(data, model_key)] = model_class(data, self)
+                    model_list_or_dict[getattr(core_object, model_key)] = model_class(core_object, self)
                 return
 
-    def remove_additional_model(self, model_list, data_list, model_name, model_key):
-        for model_item in model_list:
-            model = model_item if model_key is None else model_list[model_item]
+    def remove_additional_model(self, model_list_or_dict, core_objects_dict, model_name, model_key):
+        for model_or_key in model_list_or_dict:
+            model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
             found = False
-            for data in data_list.itervalues():
-                if data is getattr(model, model_name):
+            for core_object in core_objects_dict.itervalues():
+                if core_object is getattr(model, model_name):
                     found = True
                     break
             if not found:
                 if model_key is None:
-                    model_list.remove(model)
+                    model_list_or_dict.remove(model)
                 else:
-                    del model_list[model_item]
+                    del model_list_or_dict[model_or_key]
                 return

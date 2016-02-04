@@ -25,8 +25,11 @@ logger = log.get_logger(__name__)
 
 
 class MenuBarController(ExtendedController):
-    """
-    The class to trigger all the action, available in the menu bar.
+    """Controller handling the Menu Bar
+
+    The class to trigger all the actions, available in the menu bar.
+
+    :param state_machine_manager_model
     """
 
     def __init__(self, state_machine_manager_model, view, state_machines_editor_ctrl, states_editor_ctrl, logging_view,
@@ -39,33 +42,71 @@ class MenuBarController(ExtendedController):
         self.main_window_view = view
 
     def register_view(self, view):
-        """Called when the View was registered
-        """
-        data_flow_mode = global_gui_config.get_config_value("DATA_FLOW_MODE", True)
+        """Called when the View was registered"""
+        data_flow_mode = global_runtime_config.get_config_value("DATA_FLOW_MODE", False)
         view["data_flow_mode"].set_active(data_flow_mode)
 
-        show_all_data_flows = global_gui_config.get_config_value("SHOW_DATA_FLOWS", True)
+        show_all_data_flows = global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
         view["show_all_data_flows"].set_active(show_all_data_flows)
 
-        show_data_flow_values = global_gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
+        show_data_flow_values = global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
         view["show_data_flow_values"].set_active(show_data_flow_values)
 
-        show_aborted_preempted = global_gui_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
+        show_aborted_preempted = global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
         view["show_aborted_preempted"].set_active(show_aborted_preempted)
 
         if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
             view["data_flow_mode"].hide()
             view["show_data_flow_values"].hide()
 
+        self.view['new'].connect('activate', self.on_new_activate)
+        self.view['open'].connect('activate', self.on_open_activate)
+        self.view['save'].connect('activate', self.on_save_activate)
+        self.view['save_as'].connect('activate', self.on_save_as_activate)
+        self.view['menu_properties'].connect('activate', self.on_menu_properties_activate)
+        self.view['refresh_all'].connect('activate', self.on_refresh_all_activate)
+        self.view['refresh_libraries'].connect('activate', self.on_refresh_libraries_activate)
+        self.view['quit'].connect('activate', self.on_quit_activate)
+
+        self.view['cut_selection'].connect('activate', self.on_cut_selection_activate)
+        self.view['copy_selection'].connect('activate', self.on_copy_selection_activate)
+        self.view['paste_clipboard'].connect('activate', self.on_paste_clipboard_activate)
+        self.view['delete'].connect('activate', self.on_delete_activate)
+        self.view['add_state'].connect('activate', self.on_add_state_activate)
+        self.view['group_states'].connect('activate', self.on_group_states_activate)
+        self.view['ungroup_states'].connect('activate', self.on_ungroup_states_activate)
+        self.view['undo'].connect('activate', self.on_undo_activate)
+        self.view['redo'].connect('activate', self.on_redo_activate)
+        self.view['grid'].connect('activate', self.on_grid_toggled)
+
+        self.view['data_flow_mode'].connect('toggled', self.on_data_flow_mode_toggled)
+        self.view['show_all_data_flows'].connect('toggled', self.on_show_all_data_flows_toggled)
+        self.view['show_data_flow_values'].connect('toggled', self.on_show_data_flow_values_toggled)
+        self.view['show_aborted_preempted'].connect('toggled', self.on_show_aborted_preempted_toggled)
+        self.view['expert_view'].connect('activate', self.on_expert_view_activate)
+
+        self.view['start'].connect('activate', self.on_start_activate)
+        self.view['start_from_selected_state'].connect('activate', self.on_start_from_selected_state_activate)
+        self.view['run_to_selected_state'].connect('activate', self.on_run_to_selected_state_activate)
+        self.view['pause'].connect('activate', self.on_pause_activate)
+        self.view['stop'].connect('activate', self.on_stop_activate)
+        self.view['step_mode'].connect('activate', self.on_step_mode_activate)
+        self.view['step_into'].connect('activate', self.on_step_into_activate)
+        self.view['step_over'].connect('activate', self.on_step_over_activate)
+        self.view['step_out'].connect('activate', self.on_step_out_activate)
+        self.view['backward_step'].connect('activate', self.on_backward_step_activate)
+
+        self.view['about'].connect('activate', self.on_about_activate)
+
     def register_adapters(self):
-        """Adapters should be registered in this method call
-        """
+        """Adapters should be registered in this method call"""
         pass
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
         """
         shortcut_manager.add_callback_for_action('save', partial(self.call_action_callback, "on_save_activate"))
         shortcut_manager.add_callback_for_action('save_as', partial(self.call_action_callback, "on_save_as_activate"))
@@ -74,6 +115,8 @@ class MenuBarController(ExtendedController):
         shortcut_manager.add_callback_for_action('quit', partial(self.call_action_callback, "on_quit_activate"))
 
         shortcut_manager.add_callback_for_action('start', partial(self.call_action_callback, "on_start_activate"))
+        shortcut_manager.add_callback_for_action('start_from_selected', partial(self.call_action_callback,
+                                                                                "on_start_from_selected_state_activate"))
         shortcut_manager.add_callback_for_action('stop', partial(self.call_action_callback, "on_stop_activate"))
         shortcut_manager.add_callback_for_action('pause', partial(self.call_action_callback, "on_pause_activate"))
         shortcut_manager.add_callback_for_action('step_mode',
@@ -452,27 +495,27 @@ class MenuBarController(ExtendedController):
 
     def on_data_flow_mode_toggled(self, widget, data=None):
         if widget.get_active():
-            global_gui_config.set_config_value("DATA_FLOW_MODE", True)
+            global_runtime_config.set_config_value("DATA_FLOW_MODE", True)
         else:
-            global_gui_config.set_config_value("DATA_FLOW_MODE", False)
+            global_runtime_config.set_config_value("DATA_FLOW_MODE", False)
 
     def on_show_all_data_flows_toggled(self, widget, data=None):
         if widget.get_active():
-            global_gui_config.set_config_value("SHOW_DATA_FLOWS", True)
+            global_runtime_config.set_config_value("SHOW_DATA_FLOWS", True)
         else:
-            global_gui_config.set_config_value("SHOW_DATA_FLOWS", False)
+            global_runtime_config.set_config_value("SHOW_DATA_FLOWS", False)
 
     def on_show_data_flow_values_toggled(self, widget, data=None):
         if widget.get_active():
-            global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
+            global_runtime_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
         else:
-            global_gui_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
+            global_runtime_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
 
     def on_show_aborted_preempted_toggled(self, widget, data=None):
         if widget.get_active():
-            global_gui_config.set_config_value("SHOW_ABORTED_PREEMPTED", True)
+            global_runtime_config.set_config_value("SHOW_ABORTED_PREEMPTED", True)
         else:
-            global_gui_config.set_config_value("SHOW_ABORTED_PREEMPTED", False)
+            global_runtime_config.set_config_value("SHOW_ABORTED_PREEMPTED", False)
 
     def on_expert_view_activate(self, widget, data=None):
         pass
@@ -481,11 +524,9 @@ class MenuBarController(ExtendedController):
     # menu bar functionality - Execution
     ######################################################
     def on_start_activate(self, widget, data=None):
-        logger.debug("Start execution engine ...")
         state_machine_execution_engine.start(self.model.selected_state_machine_id)
 
     def on_start_from_selected_state_activate(self, widget, data=None):
-        logger.debug("Start from selected state ...")
         sel = state_machine_manager_model.get_selected_state_machine_model().selection
         state_list = sel.get_states()
         if len(state_list) is not 1:
@@ -494,32 +535,39 @@ class MenuBarController(ExtendedController):
             state_machine_execution_engine.start(self.model.selected_state_machine_id, state_list[0].state.get_path())
 
     def on_pause_activate(self, widget, data=None):
-        logger.debug("Pause execution engine ...")
         state_machine_execution_engine.pause()
 
     def on_stop_activate(self, widget, data=None):
-        logger.debug("Stop execution engine ...")
         state_machine_execution_engine.stop()
 
     def on_step_mode_activate(self, widget, data=None):
-        logger.debug("Activate execution engine step mode ...")
         state_machine_execution_engine.step_mode()
 
     def on_step_into_activate(self, widget, data=None):
-        logger.debug("Execution step into ...")
         state_machine_execution_engine.step_into()
 
     def on_step_over_activate(self, widget, data=None):
-        logger.debug("Execution step over ...")
         state_machine_execution_engine.step_over()
 
     def on_step_out_activate(self, widget, data=None):
-        logger.debug("Execution step out ...")
         state_machine_execution_engine.step_out()
 
     def on_backward_step_activate(self, widget, data=None):
-        logger.debug("Executing backward step ...")
         state_machine_execution_engine.backward_step()
+
+    def on_run_to_selected_state_activate(self, widget, data=None):
+        logger.debug("Run to selected state ...")
+        # is state machine is not already started or pause, start it
+        if state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED \
+                or state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.PAUSED:
+            state_machine_execution_engine.start(self.model.selected_state_machine_id)
+
+        sel = state_machine_manager_model.get_selected_state_machine_model().selection
+        state_list = sel.get_states()
+        if len(state_list) is not 1:
+            logger.error("Exactly one state must be selected!")
+        else:
+            state_machine_execution_engine.run_to_selected_state(state_list[0].state.get_path())
 
     ######################################################
     # menu bar functionality - Help

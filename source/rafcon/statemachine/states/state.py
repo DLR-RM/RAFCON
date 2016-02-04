@@ -64,7 +64,7 @@ class State(Observable, YAMLObject, JSONObject):
         self._state_execution_status = None
 
         # before adding a state to a parent state or a sm the get_filesystem_path cannot return the file system path
-        # there fore this variable caches the path until the state gets a parent
+        # therefore this variable caches the path until the state gets a parent
         self._file_system_path = None
 
         self.thread = None
@@ -88,7 +88,7 @@ class State(Observable, YAMLObject, JSONObject):
         self.execution_history = None
         self.backward_execution = False
 
-        logger.debug("State with id %s and name %s initialized" % (self._state_id, self.name))
+        logger.debug("New {0} created".format(self))
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- generic methods -----------------------------------------
@@ -146,8 +146,9 @@ class State(Observable, YAMLObject, JSONObject):
         """
         if self.thread:
             self.thread.join()
+            self.thread = None
         else:
-            logger.debug("State %s was not started yet, cannot join" % self.name)
+            logger.debug("Cannot join {0}, as the state hasn't been started, yet".format(self))
 
     def setup_run(self):
         """ Executes a generic set of actions that has to be called in the run methods of each derived state class.
@@ -401,7 +402,6 @@ class State(Observable, YAMLObject, JSONObject):
             else:
                 return self.parent.get_sm_for_state()
 
-        logger.debug("The root state does not belong to a state machine. Therefore there is no state_machine_id, yet")
         return None
 
     def set_file_system_path(self, file_system_path):
@@ -634,7 +634,7 @@ class State(Observable, YAMLObject, JSONObject):
         self._state_id = state_id
 
     def __str__(self):
-        return "State '{0}' with ID '{1}' and type {2}".format(self.name, self.state_id, type(self).__name__)
+        return "{2} with name '{0}' and id '{1}'".format(self.name, self.state_id, type(self).__name__)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -933,6 +933,8 @@ class State(Observable, YAMLObject, JSONObject):
         # If we are within a concurrency state, we have to notify it about our finalization
         if self.concurrency_queue:
             self.concurrency_queue.put(self.state_id)
+
+        logger.debug("Finished execution of {0}: {1}".format(self, self.final_outcome))
 
         return None
 

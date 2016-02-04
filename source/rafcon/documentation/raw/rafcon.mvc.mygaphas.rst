@@ -1,0 +1,132 @@
+Gaphas extensions for RAFCON
+============================
+
+Gaphas is a Python library for state-machine editors using Canvas: https://github.com/amolenaar/gaphas
+
+It is used her as library for the graphical editor as replacement for OpenGL. This modules contains all extensions
+necessary for RAFCON.
+
+.. contents::
+    :backlinks: top
+
+Views
+-----
+
+Views are derived from :py:class:`gaphas.item` and are the visual representations for core elements/models.
+
+
+Perpendicular Line
+^^^^^^^^^^^^^^^^^^
+
+The base class for the :py:class:`rafcon.mvc.mygaphas.items.connection.ConnectionView`.
+
+.. automodule:: rafcon.mvc.mygaphas.items.line
+
+ConnectionViews
+^^^^^^^^^^^^^^^
+
+.. automodule:: rafcon.mvc.mygaphas.items.connection
+
+
+PortViews
+^^^^^^^^^
+
+Each port (income, outcome, data ports) are represented as a view element.
+
+.. automodule:: rafcon.mvc.mygaphas.items.ports
+
+
+StateView and NameView
+^^^^^^^^^^^^^^^^^^^^^^
+
+Each :py:class:`rafcon.mvc.mygaphas.items.state.StateView` holds a child item
+:py:class:`rafcon.mvc.mygaphas.items.state.NameView`, as the name of a state can be resized and
+repositioned.
+
+.. automodule:: rafcon.mvc.mygaphas.items.state
+
+
+
+
+Utility functions
+-----------------
+
+Enumerations
+^^^^^^^^^^^^
+
+.. automodule:: rafcon.mvc.mygaphas.utils.enums
+
+
+Helper methods for drawing operations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: rafcon.mvc.mygaphas.utils.gap_draw_helper
+
+
+General helper methods
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: rafcon.mvc.mygaphas.utils.gap_helper
+
+
+
+aspect
+------
+
+.. automodule:: rafcon.mvc.mygaphas.aspect
+
+
+
+canvas
+------
+
+.. automodule:: rafcon.mvc.mygaphas.canvas
+
+
+
+connector
+---------
+
+.. automodule:: rafcon.mvc.mygaphas.connector
+
+
+
+constraint
+----------
+
+.. automodule:: rafcon.mvc.mygaphas.constraint
+
+
+
+guide
+-----
+
+.. automodule:: rafcon.mvc.mygaphas.guide
+
+
+
+painter
+-------
+
+.. automodule:: rafcon.mvc.mygaphas.painter
+
+
+
+segment
+-------
+
+.. automodule:: rafcon.mvc.mygaphas.segment
+
+
+
+tools
+-----
+
+.. automodule:: rafcon.mvc.mygaphas.tools
+
+
+
+view
+----
+
+.. automodule:: rafcon.mvc.mygaphas.view

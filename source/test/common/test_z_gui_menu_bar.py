@@ -17,21 +17,23 @@ from rafcon.statemachine.state_machine import StateMachine
 
 # mvc elements
 from rafcon.mvc.models import GlobalVariableManagerModel
-from rafcon.mvc.controllers import MainWindowController
+from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.graphical_editor import GraphicalEditor as OpenGLEditor
+from rafcon.mvc.mygaphas.view import ExtendedGtkView as GaphasEditor
 from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements
 import rafcon.mvc.singleton
 
 # test environment elements
-import test_utils
-from test_utils import call_gui_callback
+import testing_utils
+from testing_utils import call_gui_callback
 import pytest
 
 
 def setup_module(module):
     # set the test_libraries path temporarily to the correct value
-    test_utils.remove_all_libraries()
+    testing_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     print "File: ", dirname(__file__), dirname(dirname(__file__))
 
@@ -40,7 +42,7 @@ def setup_module(module):
 
 
 def teardown_module(module):
-    test_utils.reload_config()
+    testing_utils.reload_config()
 
 
 def create_models(*args, **kargs):
@@ -128,6 +130,14 @@ def wait_for_values_identical_number_state_machines(sm_manager_model, val2):
             break
 
 
+def focus_graphical_editor_in_page(page):
+    graphical_controller = page.children()[0]
+    if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
+        graphical_controller = graphical_controller.children()[0]
+    graphical_controller.grab_focus()
+
+
+@log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(*args):
     """ The function triggers and test basic functions of the menu bar.
     At the moment those functions are tested:
@@ -175,7 +185,7 @@ def trigger_gui_signals(*args):
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
     page_id = state_machines_ctrl.get_page_id(first_sm_id+2)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
-    page.children()[0].grab_focus()
+    focus_graphical_editor_in_page(page)
 
     time.sleep(sleep_time_short)
     #########################################################
@@ -201,7 +211,7 @@ def trigger_gui_signals(*args):
     # print "focus"
     # paste clipboard element into the new state
     main_window_controller.view['main_window'].grab_focus()  # refresh focus
-    page.children()[0].grab_focus()
+    focus_graphical_editor_in_page(page)
     # time.sleep(3)
     # print "paste"
     # print dir(page.children()[0]), "\n\n", page.children()[0], "\n\n", page.children()[0].has_focus()
@@ -236,7 +246,7 @@ def trigger_gui_signals(*args):
 
     # paste clipboard element into the new state
     main_window_controller.view['main_window'].grab_focus()  # refresh focus
-    page.children()[0].grab_focus()
+    focus_graphical_editor_in_page(page)
     glib.idle_add(menubar_ctrl.on_paste_clipboard_activate, None, None)
     # global_clipboard.paste(state_m)  # sm_m.selection)
     time.sleep(sleep_time_short)
@@ -271,7 +281,7 @@ def trigger_gui_signals(*args):
 
     # paste clipboard element into the new state
     main_window_controller.view['main_window'].grab_focus()  # refresh focus
-    page.children()[0].grab_focus()
+    focus_graphical_editor_in_page(page)
     # glib.idle_add(menubar_ctrl.on_paste_clipboard_activate, None, None)
     call_gui_callback(menubar_ctrl.on_paste_clipboard_activate, None, None)
     # global_clipboard.paste(state_m)  # sm_m.selection)
@@ -290,37 +300,38 @@ def trigger_gui_signals(*args):
     # wait_for_values_identical_number_state_machines(sm_manager_model, 1)
     assert len(sm_manager_model.state_machines) == 1
 
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, "/tmp")
+    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.TMP_TEST_PATH)
 
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
 def test_gui(caplog):
-    test_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithrading_lock.acquire()
     # delete all old state machines
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(test_utils.RAFCON_PATH + "/mvc/")
+    os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
     rafcon.statemachine.singleton.library_manager.initialize()
     [execution_state, logger, ctr_state, gvm_model] = create_models()
 
     state_machine = StateMachine(ctr_state)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    test_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(test_utils.sm_manager_model, main_window_view,
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
 
-    thread = threading.Thread(target=trigger_gui_signals, args=[test_utils.sm_manager_model,
+    thread = threading.Thread(target=trigger_gui_signals, args=[testing_utils.sm_manager_model,
                                                                 main_window_controller])
     thread.start()
 
     gtk.main()
     logger.debug("after gtk main")
-    os.chdir(test_utils.RAFCON_PATH + "/../test/common")
-    test_utils.assert_logger_warnings_and_errors(caplog)
-    test_utils.test_multithrading_lock.release()
+    thread.join()
+    os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

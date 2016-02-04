@@ -42,22 +42,19 @@ class LibraryStateModel(AbstractStateModel):
             self.load_meta_data()
 
     def _load_input_data_port_models(self):
-        """Reloads the input data port models directly from the the state
-        """
+        """Reloads the input data port models directly from the the state"""
         self.input_data_ports = []
         for input_data_port in self.state.input_data_ports.itervalues():
             self.input_data_ports.append(DataPortModel(input_data_port, self))
 
     def _load_output_data_port_models(self):
-        """Reloads the output data port models directly from the the state
-        """
+        """Reloads the output data port models directly from the the state"""
         self.output_data_ports = []
         for output_data_port in self.state.output_data_ports.itervalues():
             self.output_data_ports.append(DataPortModel(output_data_port, self))
 
     def _load_outcome_models(self):
-        """Reloads the input data port models directly from the the state
-        """
+        """Reloads the input data port models directly from the the state"""
         self.outcomes = []
         for outcome in self.state.outcomes.itervalues():
             self.outcomes.append(OutcomeModel(outcome, self))

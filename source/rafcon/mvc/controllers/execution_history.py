@@ -10,9 +10,13 @@ logger = log.get_logger(__name__)
 
 
 class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
+    """Controller handling the execution history
 
-    """
-
+    :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel model: The state machine manager model,
+        holding data regarding state machines.
+    :param rafcon.mvc.views.execution_history.ExecutionHistoryTreeView view: The GTK View showing the execution history
+        tree.
+    :param rafcon.statemachine.state_machine_manager.StateMachineManager state_machine_manager:
     """
 
     def __init__(self, model=None, view=None, state_machine_manager=None):
@@ -35,6 +39,8 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
         self.history_tree.connect('button_press_event', self.right_click)
 
     def right_click(self, widget, event=None):
+        """Triggered when right click is pressed in the history tree.
+        """
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             x = int(event.x)
             y = int(event.y)
@@ -71,6 +77,7 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
     #                     # TODO: update when finished RUNNING all states or other state activated
 
     def reload_history(self, widget, event=None):
+        """Triggered when the 'Reload History' button is clicked."""
         self.update()
 
     def update(self):

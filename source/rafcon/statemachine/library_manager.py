@@ -62,7 +62,7 @@ class LibraryManager(Observable):
 
             if os.path.exists(lib_path):
                 lib_path = os.path.realpath(lib_path)
-                logger.debug('Adding libraries from {0}'.format(lib_path))
+                logger.debug("Adding library '{1}' from {0}".format(lib_path, lib_key))
                 self._library_paths[lib_key] = lib_path
                 self._libraries[lib_key] = {}
                 self.add_libraries_from_path(lib_path, self._libraries[lib_key])
@@ -76,7 +76,7 @@ class LibraryManager(Observable):
             self._libraries = OrderedDict(sorted(self._libraries.items()))
         else:
             self._libraries = dict(sorted(self._libraries.items()))
-        logger.debug("Initialization of LibraryManager done.")
+        logger.debug("Initialization of LibraryManager done")
 
     def add_libraries_from_path(self, lib_path, target_dict):
         """
@@ -97,9 +97,6 @@ class LibraryManager(Observable):
                         target_dict[lib] = OrderedDict(sorted(target_dict[lib].items()))
                     else:
                         target_dict[lib] = dict(sorted(target_dict[lib].items()))
-            else:
-                if os.path.isdir(os.path.join(lib_path, lib)) and '.' == lib[0]:
-                    logger.warn('lib_root_path/lib_path .*-folder are ignored if within lib_path, e.g. -> {0} -> full path is {1}'.format(lib, os.path.join(lib_path, lib)))
 
     def add_library(self, lib, lib_path, target_dict):
         """

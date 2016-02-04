@@ -19,3 +19,6 @@ _static/
 
 # Profiler output
 *.prf
+
+.idea/
+.cache/

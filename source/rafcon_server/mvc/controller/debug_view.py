@@ -5,6 +5,7 @@ from rafcon.network.network_config import global_net_config
 
 from rafcon.utils import filesystem
 from rafcon.utils import constants
+from rafcon.utils import storage_utils
 
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine import interface

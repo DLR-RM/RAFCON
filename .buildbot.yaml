@@ -1,0 +1,4 @@
+test:
+  - echo $DISPLAY
+  - glxinfo 
+  - python setup.py -v test
