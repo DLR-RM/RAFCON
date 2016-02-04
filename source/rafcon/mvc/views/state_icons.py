@@ -5,7 +5,7 @@ from rafcon.utils import constants
 
 class StateIconView(View, gtk.IconView):
     top = 'state_icon_view'
-    states = ["HS", "ES", "PCS", "BCS"]
+    states = ["HS", "ES", "PS", "BS"]
 
     def __init__(self):
         View.__init__(self)
@@ -13,6 +13,9 @@ class StateIconView(View, gtk.IconView):
 
         self.set_columns(len(self.states))
         self.set_margin(0)
+        self.set_spacing(0)
+        self.set_row_spacing(0)
+        self.set_column_spacing(0)
 
         liststore = gtk.ListStore(str)
         self.set_model(liststore)
