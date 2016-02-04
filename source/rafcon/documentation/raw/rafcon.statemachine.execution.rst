@@ -1,6 +1,9 @@
 Execution
 =========
 
+.. contents::
+    :backlinks: top
+
 execution_history
 -----------------
 .. automodule:: rafcon.statemachine.execution.execution_history

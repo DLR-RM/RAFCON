@@ -33,9 +33,11 @@ class Transition(StateElement):
         super(Transition, self).__init__()
 
         if transition_id is None:
-            self.transition_id = generate_transition_id()
+            self._transition_id = generate_transition_id()
         else:
-            self.transition_id = transition_id
+            if not isinstance(transition_id, int):
+                raise ValueError("transition_id must be of type int")
+            self._transition_id = transition_id
 
         self.from_state = from_state
         self.from_outcome = from_outcome
@@ -187,11 +189,3 @@ class Transition(StateElement):
         """
         return self._transition_id
 
-    @transition_id.setter
-    @Observable.observed
-    def transition_id(self, transition_id):
-        if transition_id is not None:
-            if not isinstance(transition_id, int):
-                raise ValueError("transition_id must be of type int")
-
-        self._change_property_with_validity_check('_transition_id', transition_id)

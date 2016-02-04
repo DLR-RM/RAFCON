@@ -1,4 +1,3 @@
-
 import __builtin__
 from pydoc import locate, ErrorDuringImport
 from inspect import isclass
@@ -10,7 +9,6 @@ def convert_string_to_type(string_value):
     :param string_value: the string to be converted, e.g. "int"
     :return: The type derived from string_value, e.g. int
     """
-
     # If the parameter is already a type, return it
     if isinstance(string_value, type) or isclass(string_value):
         return string_value
@@ -40,7 +38,7 @@ def convert_string_to_type(string_value):
 
 
 def convert_string_value_to_type_value(string_value, data_type):
-    """ Helper function to convert a given string to a given data type
+    """Helper function to convert a given string to a given data type
 
     :param str string_value: the string to convert
     :param type data_type: the target data type
@@ -67,14 +65,14 @@ def convert_string_value_to_type_value(string_value, data_type):
             try:
                 converted_value = literal_eval(string_value)
             except ValueError:
-                converted_value = literal_eval('"'+string_value+'"')
+                converted_value = literal_eval('"' + string_value + '"')
         elif isinstance(data_type, type):  # Try native type conversion
             converted_value = data_type(string_value)
         elif isclass(data_type):  # Call class constructor
             converted_value = data_type(string_value)
         else:
             raise ValueError("No conversion from string '{0}' to data type '{0}' defined".format(
-                             string_value, data_type))
+                string_value, data_type))
     except (ValueError, SyntaxError, TypeError) as e:
         raise AttributeError("Can't convert '{0}' to type '{1}': {2}".format(string_value, data_type, e))
     return converted_value

@@ -10,6 +10,7 @@ from rafcon.statemachine.scope import ScopedVariable
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
 from rafcon.mvc.config import global_gui_config as gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.mvc.models.transition import TransitionModel
 from rafcon.mvc.models.data_flow import DataFlowModel
 
@@ -98,7 +99,7 @@ class DataFlowView(ConnectionView):
         self.model = data_flow_m
         self.line_width = .5 / hierarchy_level
 
-        self._show = gui_config.get_config_value("SHOW_DATA_FLOWS", False)
+        self._show = global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
 
         self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
         self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_PORT'])
@@ -114,7 +115,7 @@ class DataFlowView(ConnectionView):
 
     @property
     def show_connection(self):
-        return gui_config.get_config_value("SHOW_DATA_FLOWS", False) or self._show
+        return global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True) or self._show
 
     def show(self):
         self._show = True
@@ -302,7 +303,7 @@ class ScopedVariableDataFlowView(DataFlowView):
             c.rotate(-rot_angle)
 
         parent_state = self.parent.model.state
-        if (gui_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False) and port_layout and
+        if (global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True) and port_layout and
                 isinstance(parent_state, HierarchyState)):
             scoped_data_id = str(self._scoped_variable.data_port_id) + parent_state.state_id
             if scoped_data_id in parent_state.scoped_data.iterkeys():

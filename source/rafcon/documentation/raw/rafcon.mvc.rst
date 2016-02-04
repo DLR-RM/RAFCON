@@ -1,9 +1,8 @@
-
-.. toctree::
-   :maxdepth: 4
-
 Model-View-Controller (mvc)
 ===========================
+
+.. contents::
+    :backlinks: top
 
 Subpackages
 -----------
@@ -13,6 +12,7 @@ Subpackages
     rafcon.mvc.controllers
     rafcon.mvc.models
     rafcon.mvc.views
+    rafcon.mvc.mygaphas
 
 main
 ----

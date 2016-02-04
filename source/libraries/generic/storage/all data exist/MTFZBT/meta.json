@@ -1,0 +1,40 @@
+{
+    "__jsonqualname__": "rafcon.statemachine.states.execution_state.ExecutionState", 
+    "description": "All data exist\n\nChecks whether all of the given key exist in the data storage of the next higher library or root state.\n\nParameters:\n* key: A list with names of the data\n\nOutcomes:\n* yes: If all keys exist\n* no: If at least one key does not exist", 
+    "input_data_ports": {
+        "1": {
+            "__jsonqualname__": "rafcon.statemachine.data_port.InputDataPort", 
+            "data_port_id": 1, 
+            "data_type": {
+                "__type__": "list"
+            }, 
+            "default_value": [], 
+            "name": "keys"
+        }
+    }, 
+    "name": "all data exist", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "name": "yes", 
+            "outcome_id": 0
+        }, 
+        "1": {
+            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "name": "no", 
+            "outcome_id": 1
+        }
+    }, 
+    "output_data_ports": {}, 
+    "state_id": "MTFZBT"
+}

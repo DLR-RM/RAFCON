@@ -51,7 +51,12 @@ class GuiConfig(DefaultConfig):
 
     def configure_fonts(self):
         tv = gtk.TextView()
-        context = tv.get_pango_context()
+        try:
+            context = tv.get_pango_context()
+        except Exception:
+            return
+        if not context:  # A Pango context is not always available
+            return
         existing_fonts = context.list_families()
         existing_font_names = [font.get_name() for font in existing_fonts]
 

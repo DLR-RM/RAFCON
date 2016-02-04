@@ -7,24 +7,25 @@
 
 
 """
-from rafcon.utils import log
-logger = log.get_logger(__name__)
+
 from gtkmvc import ModelMT, Observable
 from rafcon.statemachine.state_machine import StateMachine
 
 import rafcon.statemachine.singleton
 from rafcon.network.network_config import global_net_config
 
+from rafcon.utils import log
+
+logger = log.get_logger(__name__)
+
 
 class StateMachineManager(ModelMT, Observable):
-
     """A class to organize all main components of a state machine
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar _state_machine: a list of all state machine that are managed by the state machine manager
+    :ivar _state_machines: a list of all state machines that are managed by the state machine manager
     :ivar _active_state_machine_id: the id of the currently active state machine
-
     """
 
     state_machine_manager = None
@@ -64,10 +65,10 @@ class StateMachineManager(ModelMT, Observable):
         return None
 
     def has_dirty_state_machine(self):
-        """
-        Checks if one of the registered sm has the marked_dirty flag set to True (i.e. the sm was recently modified,
+        """Checks if one of the registered sm has the marked_dirty flag set to True (i.e. the sm was recently modified,
         without being saved)
-        :return:
+
+        :return: True if contains state machine that is marked dirty, False otherwise.
         """
         for sm in self.state_machines.itervalues():
             if sm.marked_dirty:
@@ -75,19 +76,16 @@ class StateMachineManager(ModelMT, Observable):
         return False
 
     def reset_dirty_flags(self):
-        """
-        Set all marked_dirty flags of the state machine to false.
-        :return:
-        """
+        """Set all marked_dirty flags of the state machine to false."""
         for sm_id, sm in self.state_machines.iteritems():
             sm.marked_dirty = False
 
     @Observable.observed
     def add_state_machine(self, state_machine):
-        """
-        Add a state machine to the list of managed state machines. If there is no active state set yet, the active state
-        :param state_machine:
-        :return:
+        """Add a state machine to the list of managed state machines. If there is no active state machine set yet,
+            then set as active state machine.
+
+        :param state_machine: State Machine Object
         """
         if not isinstance(state_machine, StateMachine):
             raise AttributeError("state_machine must be of type StateMachine")
@@ -102,10 +100,9 @@ class StateMachineManager(ModelMT, Observable):
 
     @Observable.observed
     def remove_state_machine(self, state_machine_id):
-        """
-        Remove the state machine for a specified state machine id from the list of registered state machines.
-        :param state_machine_id: the id of the state machine to remove
-        :return:
+        """Remove the state machine for a specified state machine id from the list of registered state machines.
+
+        :param state_machine_id: the id of the state machine to be removed
         """
         if state_machine_id in self._state_machines:
             del self._state_machines[state_machine_id]

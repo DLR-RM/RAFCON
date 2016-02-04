@@ -17,8 +17,8 @@ import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
 
 # test environment elements
-import test_utils
-from test_utils import call_gui_callback, TMP_TEST_PATH
+import testing_utils
+from testing_utils import call_gui_callback, TMP_TEST_PATH
 import pytest
 
 
@@ -218,14 +218,14 @@ def test_storage_without_gui(caplog):
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
-    test_utils.remove_all_libraries()
+    testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
     save_state_machine(sm_model=sm_m, path=TMP_TEST_PATH + "/test_storage_without_gui", logger=logger, with_gui=with_gui,
                        menubar_ctrl=None)
 
     missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
-    test_utils.reload_config()
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.reload_config()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def _test_storage_with_gui(caplog):
@@ -245,7 +245,7 @@ def _test_storage_with_gui(caplog):
 
     missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
     os.chdir(rafcon.__path__[0] + "/../test/common")
-    test_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':

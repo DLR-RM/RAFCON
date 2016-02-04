@@ -2,6 +2,7 @@ import rafcon
 from os.path import join, dirname
 import getpass
 from threading import Lock, Condition
+from rafcon.utils import log
 
 test_multithrading_lock = Lock()
 
@@ -9,6 +10,11 @@ TMP_TEST_PATH = "/tmp/{0}/rafcon_unit_tests".format(getpass.getuser())
 
 RAFCON_PATH = rafcon.__path__[0]
 TEST_SM_PATH = join(dirname(RAFCON_PATH), 'test_scripts')
+TMP_UNIT_TEST_PATH = "/tmp/{0}/rafcon_unit_test".format(getpass.getuser())
+
+
+def get_tmp_unit_test_path():
+    return TMP_UNIT_TEST_PATH
 
 
 def get_test_sm_path(state_machine_name):
@@ -58,6 +64,7 @@ def call_gui_callback(callback, *args):
     import glib
     condition = Condition()
 
+    @log.log_exceptions()
     def fun():
         """Call callback and notify condition variable
         """

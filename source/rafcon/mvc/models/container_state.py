@@ -118,9 +118,9 @@ class ContainerStateModel(StateModel):
 
         if not (cause is None or changed_list is None):
             if hasattr(info, 'before') and info['before']:
-                changed_list._notify_method_before(info.instance, cause, (model,), info)
+                changed_list._notify_method_before(self.state, cause, (self.state,), info)
             elif hasattr(info, 'after') and info['after']:
-                changed_list._notify_method_after(info.instance, cause, None, (model,), info)
+                changed_list._notify_method_after(self.state, cause, None, (self.state,), info)
 
         # Finally call the method of the base class, to forward changes in ports and outcomes
         StateModel.model_changed(self, model, prop_name, info)
