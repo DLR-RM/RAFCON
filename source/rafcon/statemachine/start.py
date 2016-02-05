@@ -15,8 +15,6 @@ from Queue import Empty
 import threading
 
 import rafcon
-# TODO: needed for observer pattern in network/network_connections.py
-import rafcon.mvc.singleton as mvc_singletons
 from rafcon.utils.config import config_path
 
 
@@ -131,6 +129,8 @@ if __name__ == '__main__':
     start_state_machine(setup_config)
 
     if global_net_config.get_config_value("NETWORK_CONNECTIONS", False):
+        # TODO: needed for observer pattern in network/network_connections.py
+        import rafcon.mvc.singleton as mvc_singletons
         from twisted.internet import reactor
         reactor.run()
 
