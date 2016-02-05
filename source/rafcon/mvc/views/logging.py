@@ -2,7 +2,7 @@ import gtk
 import threading
 from gtkmvc import View
 import glib
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 from rafcon.utils import log
 from rafcon.mvc.config import global_gui_config
 

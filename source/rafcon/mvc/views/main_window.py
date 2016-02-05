@@ -11,7 +11,7 @@ from rafcon.mvc.views.states_editor import StatesEditorView
 from rafcon.mvc.views.top_tool_bar import TopToolBarView
 from rafcon.mvc.views.menu_bar import MenuBarView
 from rafcon.mvc.views.tool_bar import ToolBarView
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc import gui_helper
 

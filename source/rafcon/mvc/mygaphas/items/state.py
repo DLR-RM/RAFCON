@@ -3,7 +3,7 @@ from pango import SCALE, FontDescription, WRAP_WORD
 from math import pow
 from copy import copy
 
-from rafcon.utils import constants, log
+from rafcon.mvc.utils import constants, log
 
 from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.runtime_config import global_runtime_config

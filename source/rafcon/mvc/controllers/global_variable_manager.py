@@ -7,7 +7,7 @@ from gtk import ListStore
 import gtk
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.utils.comparison import compare_variables
+from rafcon.mvc.utils.comparison import compare_variables
 
 
 class GlobalVariableManagerController(ExtendedController):

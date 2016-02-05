@@ -20,7 +20,7 @@ from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortVi
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 from rafcon.mvc.mygaphas.utils import gap_helper
 
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

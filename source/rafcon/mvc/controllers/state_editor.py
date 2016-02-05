@@ -12,7 +12,7 @@ from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc import gui_helper
 from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

@@ -4,7 +4,7 @@ from pango import FontDescription, SCALE
 import cairo
 from gaphas.state import observers
 
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 
 from rafcon.statemachine.scope import ScopedVariable
 from rafcon.statemachine.states.hierarchy_state import HierarchyState

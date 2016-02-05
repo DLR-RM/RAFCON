@@ -26,7 +26,7 @@ import rafcon.statemachine.config
 from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.network.network_config import global_net_config
 
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

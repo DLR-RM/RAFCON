@@ -1,7 +1,7 @@
 import gtk
 from gtkmvc import View
 from rafcon.mvc.config import global_gui_config
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 
 try:
     import gtksourceview2
