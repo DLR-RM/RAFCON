@@ -14,7 +14,6 @@ from rafcon.mvc.views.menu_bar import MenuBarView
 from rafcon.mvc.views.tool_bar import ToolBarView
 from rafcon.mvc.views.undocked_window import UndockedWindowView
 from rafcon.mvc.utils import constants
-from rafcon.utils import gui_helpers
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc import gui_helper
 
@@ -39,9 +38,9 @@ class MainWindowView(View):
         ################################################
         # Undock Buttons
         ################################################
-        self['undock_left_bar_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_UNDOCK))
-        self['undock_right_bar_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_UNDOCK))
-        self['undock_console_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_left_bar_button'].set_image(gui_helper.create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_right_bar_button'].set_image(gui_helper.create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_console_button'].set_image(gui_helper.create_button_label(constants.BUTTON_UNDOCK))
 
         ######################################################
         # Library Tree
@@ -156,16 +155,16 @@ class MainWindowView(View):
         ################################################
         # Hide Buttons
         ################################################
-        self['left_bar_hide_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_LEFTA))
-        self['right_bar_hide_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_RIGHTA))
-        self['console_hide_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_DOWNA))
+        self['left_bar_hide_button'].set_image(gui_helper.create_button_label(constants.BUTTON_LEFTA))
+        self['right_bar_hide_button'].set_image(gui_helper.create_button_label(constants.BUTTON_RIGHTA))
+        self['console_hide_button'].set_image(gui_helper.create_button_label(constants.BUTTON_DOWNA))
 
         ################################################
         # Return Buttons
         ################################################
-        self['left_bar_return_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_RIGHTA))
-        self['right_bar_return_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_LEFTA))
-        self['console_return_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_UPA))
+        self['left_bar_return_button'].set_image(gui_helper.create_button_label(constants.BUTTON_RIGHTA))
+        self['right_bar_return_button'].set_image(gui_helper.create_button_label(constants.BUTTON_LEFTA))
+        self['console_return_button'].set_image(gui_helper.create_button_label(constants.BUTTON_UPA))
 
         # --------------------------------------------------------------------------
         # Edit graphical_editor_shortcuts
@@ -180,14 +179,14 @@ class MainWindowView(View):
         button_step_out_shortcut = self['button_step_out_shortcut']
         button_step_backward_shortcut = self['button_step_backward_shortcut']
 
-        button_start_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_START))
-        button_pause_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_PAUSE))
-        button_stop_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_STOP))
-        button_step_mode_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_STEPM))
-        button_step_in_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_STEP_INTO))
-        button_step_over_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_STEP_OVER))
-        button_step_out_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_STEP_OUT))
-        button_step_backward_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_BACKW))
+        button_start_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_START))
+        button_pause_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_PAUSE))
+        button_stop_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_STOP))
+        button_step_mode_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_STEPM))
+        button_step_in_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_STEP_INTO))
+        button_step_over_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_STEP_OVER))
+        button_step_out_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_STEP_OUT))
+        button_step_backward_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_BACKW))
 
         # --------------------------------------------------------------------------
 
