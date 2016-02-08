@@ -363,14 +363,18 @@ def insert_state(state, as_template=False):
         return False
 
     current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
-    if len(current_selection.get_states()) > 1 or len(current_selection.get_states()) == 0:
-        logger.error("Please select exactly one state for the insertion of a library")
+    if len(current_selection.get_states()) > 1:
+        logger.error("Please select exactly one state for the insertion")
+        return False
+
+    if len(current_selection.get_states()) == 0:
+        logger.error("Please select a state for the insertion")
         return False
 
     current_state_m = current_selection.get_states()[0]
     current_state = current_state_m.state
     if not isinstance(current_state, ContainerState):
-        logger.error("Libraries can only be inserted in container states")
+        logger.error("States can only be inserted in container states")
         return False
 
     if not as_template:

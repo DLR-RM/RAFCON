@@ -40,7 +40,9 @@ class StateIconController(ExtendedController):
         :param info:
         :param time:
         """
-        data.set_text(self._insert_state())
+        state_id = self._insert_state()
+        if state_id is not None:
+            data.set_text(state_id)
 
     def on_drag_begin(self, widget, context):
         """replace drag icon

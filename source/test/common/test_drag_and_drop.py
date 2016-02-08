@@ -28,6 +28,20 @@ import testing_utils
 from testing_utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
 import pytest
 
+
+class StructHelper:
+    def __init__(self, x, y, text):
+        self.x = x
+        self.y = y
+        self.text = text
+
+    def set_text(self, text):
+        self.text = text
+
+    def get_text(self):
+        return self.text
+
+
 def create_models(*args, **kargs):
 
     logger = log.get_logger(__name__)
@@ -67,23 +81,38 @@ def trigger_drag_and_drop_tests(*args):
     sm_manager_model = args[0]
     main_window_controller = args[1]
     logger = args[2]
-    selection_data = gtk.Entry()
 
     rafcon.statemachine.singleton.library_manager.initialize()
 
     states_machines_editor_controller = main_window_controller.get_controller('state_machines_editor_ctrl')
     library_tree_controller = main_window_controller.get_controller('library_controller')
+    time.sleep(1.0)
     graphical_editor_controller = states_machines_editor_controller.get_child_controllers()[0]
+    state_icon_controller = main_window_controller.get_controller('state_icon_controller')
 
     library_tree_controller.view.expand_all()
     tree_model = library_tree_controller.view.get_model()
     library_tree_controller.view.get_selection().select_iter(tree_model.iter_children(tree_model.get_iter_root()))
+
+    selection_data = StructHelper(0, 0, None)
 
     # insert state in rootstate
     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 200, 200, None)
     call_gui_callback(library_tree_controller.on_drag_data_get, library_tree_controller.view, None, selection_data, 0, None)
     call_gui_callback(graphical_editor_controller.on_drag_data_received, None, None, 200, 200, selection_data, None, None)
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 2
+
+    # insert state from IconView
+    call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 300, 300, None)
+    call_gui_callback(state_icon_controller.on_mouse_motion, None, StructHelper(30, 15, None))
+    call_gui_callback(state_icon_controller.on_drag_data_get, None, None, selection_data, None, None)
+    call_gui_callback(graphical_editor_controller.on_drag_data_received, None, None, 300, 300, selection_data, None, None)
+    assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 3
+
+    # insert state next to root state
+    call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 700, 300, None)
+    call_gui_callback(state_icon_controller.on_mouse_motion, None, StructHelper(30, 15, None))
+    call_gui_callback(state_icon_controller.on_drag_data_get, None, None, selection_data, None, None)
 
     # insert state in state1
     if isinstance(graphical_editor_controller, GraphicalEditorGaphasController):
