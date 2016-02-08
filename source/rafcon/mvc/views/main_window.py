@@ -113,7 +113,7 @@ class MainWindowView(View):
                                                                                font_size=constants.FONT_SIZE_BIG,
                                                                                letter_spacing=constants.
                                                                                LETTER_SPACING_1PT)
-        graphical_editor_label.set_alignment(0., .5)
+        graphical_editor_label.set_alignment(.05, .5)
         self['graphical_editor_label_event_box'].add(graphical_editor_label)
 
         ######################################################
@@ -127,8 +127,8 @@ class MainWindowView(View):
         state_editor_label = gui_helper.create_label_with_text_and_spacing('STATE EDITOR',
                                                                            font_size=constants.FONT_SIZE_BIG,
                                                                            letter_spacing=constants.LETTER_SPACING_1PT)
-        state_editor_label.set_alignment(0., .5)
-        self['state_editor_label_hbox'].pack_start(state_editor_label, True, True, 0)
+        state_editor_label.set_alignment(0., 0.)
+        self['state_editor_label_hbox'].pack_start(state_editor_label, expand=True, fill=True, padding=0)
         self['state_editor_label_hbox'].reorder_child(state_editor_label, 0)
 
         ##################################################
@@ -196,17 +196,17 @@ class MainWindowView(View):
 
         self['top_menu_hbox'].set_border_width(constants.BORDER_WIDTH)
 
-        self['tree_notebook_up'].set_border_width(constants.BORDER_WIDTH)
+        self['tree_notebook_up'].set_border_width(0)
         self['tree_notebook_up'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['tree_notebook_up'].set_tab_vborder(constants.BORDER_WIDTH * 3)
 
-        self['tree_notebook_down'].set_border_width(constants.BORDER_WIDTH)
+        self['tree_notebook_down'].set_border_width(0)
         self['tree_notebook_down'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['tree_notebook_down'].set_tab_vborder(constants.BORDER_WIDTH * 3)
 
-        self['debug_eventbox'].set_border_width(constants.BORDER_WIDTH)
+        self['debug_eventbox'].set_border_width(0)
         self['debug_label_hbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
-        self['right_bar'].set_border_width(constants.BORDER_WIDTH)
+        self['right_bar'].set_border_width(0)
 
         self['button_show_info'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_INFO', True))
         self['button_show_debug'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True))
