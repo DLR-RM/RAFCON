@@ -51,14 +51,29 @@ class StateIconController(ExtendedController):
         self.view.drag_source_set_icon_stock(gtk.STOCK_NEW)
 
     def on_drag_end(self, widget, context):
+        """if the drag is finished, all icons are unselected
+
+        :param widget:
+        :param context:
+        """
         self.view.unselect_all()
 
     def on_mouse_click(self, widget, event):
+        """state insertion on mouse click
+
+        :param widget:
+        :param gtk.gdk.Event event: mouse click event
+        """
         if self.view.get_path_at_pos(int(event.x), int(event.y)) is not None \
                 and len(self.view.get_selected_items()) > 0:
             self._insert_state()
 
     def on_mouse_motion(self, widget, event):
+        """selection on mouse over
+
+        :param widget:
+        :param gtk.gdk.Event event: mouse motion event
+        """
         path = self.view.get_path_at_pos(int(event.x), int(event.y))
         if path is not None:
             self.view.select_path(path)
@@ -66,15 +81,20 @@ class StateIconController(ExtendedController):
             self.view.unselect_all()
 
     def _insert_state(self):
+        """insert state
+
+        :return: state ID
+        :rtype: String
+        """
         selected_path = self.view.states[self.view.get_selected_items()[0][0]]
 
-        if selected_path is "ES":
+        if selected_path == "ES":
             state = ExecutionState()
-        elif selected_path is "HS":
+        elif selected_path == "HS":
             state = HierarchyState()
-        elif selected_path is "PCS":
+        elif selected_path == "PS":
             state = PreemptiveConcurrencyState()
-        elif selected_path is "BCS":
+        elif selected_path == "BS":
             state = BarrierConcurrencyState()
 
         if statemachine_helper.insert_state(state, False):
