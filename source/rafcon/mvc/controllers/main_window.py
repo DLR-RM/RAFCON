@@ -2,6 +2,7 @@ import gtk
 import threading
 
 from rafcon.mvc.controllers.global_variable_manager import GlobalVariableManagerController
+from rafcon.mvc.controllers.state_icons import StateIconController
 from rafcon.mvc.controllers.state_machine_tree import StateMachineTreeController
 from rafcon.mvc.controllers.state_machine_history import StateMachineHistoryController
 from rafcon.mvc.controllers.library_tree import LibraryTreeController
@@ -27,7 +28,7 @@ import rafcon.statemachine.config
 from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.network.network_config import global_net_config
 
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -81,6 +82,13 @@ class MainWindowController(ExtendedController):
         #    gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
 
         # state tree
+
+        ######################################################
+        # state icons
+        ######################################################
+        state_icon_controller = StateIconController(state_machine_manager_model, view.state_icons,
+                                                    self.shortcut_manager)
+        self.add_controller('state_icon_controller', state_icon_controller)
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
 

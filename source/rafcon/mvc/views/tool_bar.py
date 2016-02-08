@@ -1,6 +1,6 @@
 import gtk
 from gtkmvc import View
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 from rafcon.mvc.config import global_gui_config as gui_config
 
 

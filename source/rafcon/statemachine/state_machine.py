@@ -8,18 +8,17 @@
 
 """
 
-from gtkmvc import ModelMT, Observable
-import threading
+from gtkmvc import Observable
 
 from rafcon.statemachine.id_generator import generate_state_machine_id
-from rafcon.utils import log
-logger = log.get_logger(__name__)
 from rafcon.statemachine.execution.execution_history import ExecutionHistory
 from rafcon.statemachine.enums import StateExecutionState
 
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
-class StateMachine(ModelMT, Observable):
 
+class StateMachine(Observable):
     """A class for to organizing all main components of a state machine
 
     It inherits from Observable to make a change of its fields observable.
@@ -30,26 +29,18 @@ class StateMachine(ModelMT, Observable):
 
     """
 
-    state_machine = None
+    old_marked_dirty = True
 
-    __observables__ = ("state_machine",)
+    _root_state = None
+    _marked_dirty = True
+    _file_system_path = None
 
     def __init__(self, root_state=None):
-        ModelMT.__init__(self)
         Observable.__init__(self)
 
-        # if root_state is not None:
-        #     assert isinstance(root_state, State)
-
-        self.state_machine = self
-
         self.state_machine_id = generate_state_machine_id()
-        self._root_state = None
         self.root_state = root_state
-        self._marked_dirty = True
-        self.old_marked_dirty = True
         self.execution_history = ExecutionHistory()
-        self._file_system_path = None
 
     def start(self):
         """
@@ -66,9 +57,9 @@ class StateMachine(ModelMT, Observable):
         self._root_state.join()
         self._root_state.state_execution_status = StateExecutionState.INACTIVE
 
-#########################################################################
-# Properties for all class fields that must be observed by gtkmvc
-#########################################################################
+    #########################################################################
+    # Properties for all class fields that must be observed by gtkmvc
+    #########################################################################
 
     @property
     def root_state(self):
@@ -137,13 +128,12 @@ class StateMachine(ModelMT, Observable):
         return state
 
     @Observable.observed
-    #def root_state_before_change(self, model, prop_name, instance, method_name, args, kwargs):
     def root_state_before_change(self, **kwargs):
         pass
 
     @Observable.observed
     def root_state_after_change(self, **kwargs):
-    #def root_state_after_change(self, model, prop_name, instance, method_name, result, args, kwargs):
+        #def root_state_after_change(self, model, prop_name, instance, method_name, result, args, kwargs):
         pass
 
     @property

@@ -18,7 +18,7 @@ from rafcon.mvc.views.about_dialog import MyAboutDialog
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
-from rafcon.utils.dialog import RAFCONDialog
+from rafcon.mvc.utils.dialog import RAFCONDialog
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

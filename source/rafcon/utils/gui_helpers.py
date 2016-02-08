@@ -1,6 +1,6 @@
 import gtk
 
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 
 
 def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):

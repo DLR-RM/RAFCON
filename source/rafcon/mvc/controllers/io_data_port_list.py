@@ -1,14 +1,13 @@
 import gtk
 from gtk import ListStore
 from gtk import TreeViewColumn, CellRendererToggle
-
-from rafcon.statemachine.states.library_state import LibraryState
-
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils import MoveAndEditWithTabKeyListFeatureController
-from rafcon.utils.comparison import compare_variables
-
+from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.utils import log
+
+from rafcon.mvc.utils.comparison import compare_variables
+
 logger = log.get_logger(__name__)
 
 

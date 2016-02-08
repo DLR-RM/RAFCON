@@ -8,18 +8,16 @@
 
 """
 
-from gtkmvc import ModelMT, Observable
-from rafcon.statemachine.state_machine import StateMachine
+from gtkmvc import Observable
 
-import rafcon.statemachine.singleton
+from rafcon.statemachine.state_machine import StateMachine
 from rafcon.network.network_config import global_net_config
 
 from rafcon.utils import log
-
 logger = log.get_logger(__name__)
 
 
-class StateMachineManager(ModelMT, Observable):
+class StateMachineManager(Observable):
     """A class to organize all main components of a state machine
 
     It inherits from Observable to make a change of its fields observable.
@@ -28,17 +26,12 @@ class StateMachineManager(ModelMT, Observable):
     :ivar _active_state_machine_id: the id of the currently active state machine
     """
 
-    state_machine_manager = None
-
-    __observables__ = ("state_machine_manager",)
+    _active_state_machine_id = None
 
     def __init__(self, state_machines=None):
-        ModelMT.__init__(self)
         Observable.__init__(self)
-        self._state_machines = {}
-        self._active_state_machine_id = None
 
-        self.state_machine_manager = self
+        self._state_machines = {}
 
         if state_machines is not None:
             for state_machine in state_machines:
@@ -51,9 +44,10 @@ class StateMachineManager(ModelMT, Observable):
             self.remove_state_machine(sm_id)
 
     def refresh_state_machines(self, sm_ids, state_machine_id_to_path):
+        from rafcon.statemachine.singleton import global_storage
         for sm_idx in range(len(state_machine_id_to_path)):
-            [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-                global_storage.load_statemachine_from_path(state_machine_id_to_path[sm_ids[sm_idx]])
+            [state_machine, version, creation_time] = global_storage.load_statemachine_from_path(
+                    state_machine_id_to_path[sm_ids[sm_idx]])
             self.add_state_machine(state_machine)
 
     def get_sm_id_for_root_state_id(self, root_state_id):
@@ -123,9 +117,9 @@ class StateMachineManager(ModelMT, Observable):
         else:
             return None
 
-#########################################################################
-# Properties for all class fields that must be observed by gtkmvc
-#########################################################################
+    #########################################################################
+    # Properties for all class fields that must be observed by gtkmvc
+    #########################################################################
 
     @property
     def state_machines(self):

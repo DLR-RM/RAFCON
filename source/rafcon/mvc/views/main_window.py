@@ -2,6 +2,7 @@ import gtk
 from gtkmvc import View
 from rafcon.mvc.views.logging import LoggingView
 from rafcon.mvc.views.library_tree import LibraryTreeView
+from rafcon.mvc.views.state_icons import StateIconView
 from rafcon.mvc.views.state_machine_tree import StateMachineTreeView
 from rafcon.mvc.views.global_variable_editor import GlobalVariableEditorView
 from rafcon.mvc.views.state_machine_history import StateMachineHistoryView
@@ -12,7 +13,7 @@ from rafcon.mvc.views.top_tool_bar import TopToolBarView
 from rafcon.mvc.views.menu_bar import MenuBarView
 from rafcon.mvc.views.tool_bar import ToolBarView
 from rafcon.mvc.views.undocked_window import UndockedWindowView
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 from rafcon.utils import gui_helpers
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc import gui_helper
@@ -50,6 +51,13 @@ class MainWindowView(View):
         self['libraries_alignment'].add(self.library_tree)
 
         ######################################################
+        # State Icons
+        ######################################################
+        self.state_icons = StateIconView()
+        self.state_icons.show()
+        self["state_icons_box"].pack_start(self.state_icons.get_top_widget())
+
+        ######################################################
         # State Machine Tree
         ######################################################
         self.state_machine_tree = StateMachineTreeView()
@@ -75,7 +83,7 @@ class MainWindowView(View):
         self.state_machine_history = StateMachineHistoryView()
         self.state_machine_history.show()
         self['history_alignment'].add(self.state_machine_history.get_top_widget())
-
+                                                      
         ######################################################
         # State Machine Execution History
         ######################################################
