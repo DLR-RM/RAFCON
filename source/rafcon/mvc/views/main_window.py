@@ -2,6 +2,7 @@ import gtk
 from gtkmvc import View
 from rafcon.mvc.views.logging import LoggingView
 from rafcon.mvc.views.library_tree import LibraryTreeView
+from rafcon.mvc.views.state_icons import StateIconView
 from rafcon.mvc.views.state_machine_tree import StateMachineTreeView
 from rafcon.mvc.views.global_variable_editor import GlobalVariableEditorView
 from rafcon.mvc.views.state_machine_history import StateMachineHistoryView
@@ -41,6 +42,13 @@ class MainWindowView(View):
         self.replace_notebook_placeholder_with_widget('libraries', 'tree_notebook_up', self.library_tree)
 
         ######################################################
+        # State Icons
+        ######################################################
+        self.state_icons = StateIconView()
+        self.state_icons.show()
+        self["state_icons_box"].pack_start(self.state_icons.get_top_widget())
+
+        ######################################################
         # State Machine Tree
         ######################################################
         self.state_machine_tree = StateMachineTreeView()
@@ -65,7 +73,7 @@ class MainWindowView(View):
         self.state_machine_history.show()
         self.replace_notebook_placeholder_with_widget('history', 'tree_notebook_down',
                                                       self.state_machine_history.get_top_widget())
-
+                                                      
         ######################################################
         # State Machine Execution History
         ######################################################
@@ -73,6 +81,7 @@ class MainWindowView(View):
         self.execution_history.show()
         self.replace_notebook_placeholder_with_widget('execution_history', 'tree_notebook_down',
                                                       self.execution_history.get_top_widget())
+
         ######################################################
         # rotate all tab labels by 90 degrees and make detachable
         ######################################################

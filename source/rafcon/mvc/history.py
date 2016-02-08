@@ -1223,6 +1223,10 @@ class RemoveObjectAction(Action):
         insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model, level=1)
 
         self.run_graphical_viewer(g_sm_editor, actual_state_model)
+        actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model, level=1)
+
+        self.run_graphical_viewer(g_sm_editor, actual_state_model)
 
     def redo(self):
 
