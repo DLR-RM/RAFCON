@@ -15,8 +15,9 @@ from rafcon.mvc.controllers.states_editor import StatesEditorController
 from rafcon.mvc.controllers.state_machines_editor import StateMachinesEditorController
 from rafcon.mvc.controllers.menu_bar import MenuBarController
 from rafcon.mvc.controllers.tool_bar import ToolBarController
-from rafcon.mvc.controllers.top_tool_bar import TopToolBarController
+from rafcon.mvc.controllers.top_tool_bar import TopToolBarMainWindowController
 from rafcon.mvc.controllers.execution_history import ExecutionHistoryTreeController
+from rafcon.mvc.controllers.undocked_window import UndockedWindowController
 
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
@@ -54,6 +55,7 @@ class MainWindowController(ExtendedController):
         ExtendedController.__init__(self, state_machine_manager_model, view)
 
         rafcon.mvc.singleton.main_window_controller = self
+        self.state_machine_manager_model = state_machine_manager_model
         self.editor_type = editor_type
         self.shortcut_manager = None
 
@@ -137,8 +139,7 @@ class MainWindowController(ExtendedController):
         ######################################################
         # state machine execution history
         ######################################################
-        execution_history_ctrl = ExecutionHistoryTreeController(state_machine_manager_model,
-                                                                view.execution_history,
+        execution_history_ctrl = ExecutionHistoryTreeController(state_machine_manager_model, view.execution_history,
                                                                 state_machine_manager)
         self.add_controller('execution_history_ctrl', execution_history_ctrl)
 
@@ -157,19 +158,28 @@ class MainWindowController(ExtendedController):
         ######################################################
         # tool bar
         ######################################################
-        tool_bar_controller = ToolBarController(state_machine_manager_model,
-                                                view.tool_bar,
-                                                menu_bar_controller)
+        tool_bar_controller = ToolBarController(state_machine_manager_model, view.tool_bar, menu_bar_controller)
         self.add_controller('tool_bar_controller', tool_bar_controller)
 
         ######################################################
         # top tool bar
         ######################################################
-        top_tool_bar_controller = TopToolBarController(state_machine_manager_model,
-                                                       view.top_tool_bar,
-                                                       view['main_window'],
-                                                       menu_bar_controller)
+        top_tool_bar_controller = TopToolBarMainWindowController(state_machine_manager_model,
+                                                                 view.top_tool_bar,
+                                                                 view['main_window'])
         self.add_controller('top_tool_bar_controller', top_tool_bar_controller)
+
+        ######################################################
+        # Undocked Windows Controllers
+        ######################################################
+        left_undocked_window_controller = UndockedWindowController(state_machine_manager_model, view.left_bar_window)
+        self.add_controller('left_window_controller', left_undocked_window_controller)
+
+        right_undocked_window_controller = UndockedWindowController(state_machine_manager_model, view.right_bar_window)
+        self.add_controller('right_window_controller', right_undocked_window_controller)
+
+        console_undocked_window_controller = UndockedWindowController(state_machine_manager_model, view.console_window)
+        self.add_controller('console_window_controller', console_undocked_window_controller)
 
         self.left_bar_child = view['top_level_h_pane'].get_child1()
         self.right_bar_child = view['right_h_pane'].get_child2()
@@ -184,8 +194,8 @@ class MainWindowController(ExtendedController):
 
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
-        view['main_window'].connect('delete_event', self.get_controller("menu_bar_controller").on_delete_event)
-        view['main_window'].connect('destroy', self.get_controller("menu_bar_controller").on_destroy)
+        view['main_window'].connect('delete_event', self.get_controller('menu_bar_controller').on_delete_event)
+        view['main_window'].connect('destroy', self.get_controller('menu_bar_controller').on_destroy)
 
         # connect left bar, right bar and console hide buttons' signals to their corresponding methods
         view['left_bar_hide_button'].connect('clicked', self.on_left_bar_hide_clicked)
@@ -198,14 +208,9 @@ class MainWindowController(ExtendedController):
         view['console_return_button'].connect('clicked', self.on_console_return_clicked)
 
         # Connect undock buttons' signals
-        view['undock_left_bar_button'].connect('clicked', self.on_left_bar_dock_clicked)
-        view['undock_right_bar_button'].connect('clicked', self.on_right_bar_dock_clicked)
-        view['undock_console_button'].connect('clicked', self.on_console_dock_clicked)
-
-        # Closing undocked windows will dock them back to the main window
-        view.left_bar_window.connect('delete_event', self.on_left_bar_dock_clicked)
-        view.right_bar_window.connect('delete-event', self.on_right_bar_dock_clicked)
-        view.console_window.connect('delete_event', self.on_console_dock_clicked)
+        view['undock_left_bar_button'].connect('clicked', self.on_left_bar_undock_clicked)
+        view['undock_right_bar_button'].connect('clicked', self.on_right_bar_undock_clicked)
+        view['undock_console_button'].connect('clicked', self.on_console_undock_clicked)
 
         # Connect Shortcut buttons' signals to their corresponding methods
         view['button_start_shortcut'].connect('toggled', self.on_button_start_shortcut_toggled)
@@ -300,70 +305,73 @@ class MainWindowController(ExtendedController):
         self.view['central_v_pane'].remove(self.console_child)
         self.view['console_return_button'].show()
 
-    def on_left_bar_dock_clicked(self, widget, event=None):
-        """Triggered when the (un)dock button of the left bar is clicked.
+    def on_left_bar_undock_clicked(self, widget, event=None):
+        """Triggered when the undock button of the left bar window.
 
-        If the left bar is docked to main window, it is undocked into a separate new window with the same size as the
-        bar. The new window's position is approximately the same as the bar used to be.
+        The left bar is undocked into a separate new window with the same size as the bar. The new window's position is
+        approximately the same as the bar used to be.
+        """
+        self.view.left_bar_window.get_top_widget().resize(self.view['top_level_h_pane'].get_position(),
+                                                          self.view['left_bar'].get_allocation().height)
+        self.view.left_bar_window.get_top_widget().set_position(gtk.WIN_POS_MOUSE)
+        self.view['left_bar'].reparent(self.view.left_bar_window['top_level_vbox'])
+        self.get_controller('left_window_controller').show_window()
+        self.view['undock_left_bar_button'].hide()
+        self.on_left_bar_hide_clicked(None)
+        self.view['left_bar_return_button'].hide()
+
+    def on_left_bar_dock_clicked(self, widget, event=None):
+        """Triggered when the dock button of the left bar window.
+
         If the left bar is undocked, it is docked back to the main window.
         """
-        if self.docked['left_bar']:
-            self.view.left_bar_window.resize(self.view['top_level_h_pane'].get_position(),
-                                             self.view['left_bar'].get_allocation().height)
-            self.view['left_bar'].reparent(self.view.left_bar_window)
-            self.view.left_bar_window.show()
-            self.on_left_bar_hide_clicked(None)
-            self.view['left_bar_return_button'].hide()
-            self.docked['left_bar'] = False
-        else:
-            self.on_left_bar_return_clicked(None)
-            self.view['left_bar'].reparent(self.view['left_bar_container'])
-            window_width, _ = self.view.left_bar_window.get_size()
-            self.view['top_level_h_pane'].set_position(window_width)
-            self.view.left_bar_window.hide()
-            self.docked['left_bar'] = True
+        self.on_left_bar_return_clicked(None)
+        self.view['left_bar'].reparent(self.view['left_bar_container'])
+        #window_width, window_height = self.view.left_bar_window.get_size()
+        #self.view['top_level_h_pane'].set_position(window_width)
+        self.get_controller('left_window_controller').hide_window()
+        self.view['undock_left_bar_button'].show()
         return True
 
+    def on_right_bar_undock_clicked(self, widget, event=None):
+        width = self.view.top_window_width - self.view['right_h_pane'].get_position() -\
+                self.view['top_level_h_pane'].get_position()
+        self.view.right_bar_window.get_top_widget().resize(width, self.view['right_bar'].get_allocation().height)
+        self.view.right_bar_window.get_top_widget().set_position(gtk.WIN_POS_MOUSE)
+        self.view['right_bar'].reparent(self.view.right_bar_window['top_level_vbox'])
+        self.get_controller('right_window_controller').show_window()
+        self.view['undock_right_bar_button'].hide()
+        self.on_right_bar_hide_clicked(None)
+        self.view['right_bar_return_button'].hide()
+
     def on_right_bar_dock_clicked(self, widget, event=None):
-        """Triggered when the (un)dock button of the right bar is clicked.
+        """Triggered when the dock button of the right bar is clicked.
 
         If right bar is docked to main window, it is undocked into a separate new window with the same size as the bar.
         The new window's position is approximately the same as the bar used to be.
         """
-        if self.docked['right_bar']:
-            width = self.view.top_window_width - self.view['right_h_pane'].get_position() -\
-                    self.view['top_level_h_pane'].get_position()
-            self.view.right_bar_window.resize(width, self.view['right_bar'].get_allocation().height)
-            self.view.right_bar_window.set_position(gtk.WIN_POS_MOUSE)
-            self.view['right_bar'].reparent(self.view.right_bar_window)
-            self.view.right_bar_window.show()
-            self.on_right_bar_hide_clicked(None)
-            self.view['right_bar_return_button'].hide()
-            self.docked['right_bar'] = False
-        else:
-            self.view['right_bar'].reparent(self.view['right_bar_container'])
-            self.on_right_bar_return_clicked(None)
-            self.view.right_bar_window.hide()
-            self.docked['right_bar'] = True
-        return True
+        self.view['right_bar'].reparent(self.view['right_bar_container'])
+        self.on_right_bar_return_clicked(None)
+        self.get_controller('right_window_controller').hide_window()
+        self.docked['right_bar'] = True
+        self.view['undock_right_bar_button'].show()
+
+    def on_console_undock_clicked(self, widget, event=None):
+        self.view.console_window.get_top_widget().resize(self.view['right_h_pane'].get_position(),
+                                                         self.view['console'].get_allocation().height)
+        self.view.console_window.get_top_widget().move(self.view['top_level_h_pane'].get_position(),
+                                                       self.view['central_v_pane'].get_position())
+        self.view['console'].reparent(self.view.console_window['top_level_vbox'])
+        self.get_controller('console_window_controller').show_window()
+        self.view['undock_console_button'].hide()
+        self.on_console_hide_clicked(None)
+        self.view['console_return_button'].hide()
 
     def on_console_dock_clicked(self, widget, event=None):
-        if self.docked['console']:
-            self.view.console_window.resize(self.view['right_h_pane'].get_position(),
-                                            self.view['console'].get_allocation().height)
-            self.view.console_window.move(self.view['top_level_h_pane'].get_position(),
-                                          self.view['central_v_pane'].get_position())
-            self.view['console'].reparent(self.view.console_window)
-            self.view.console_window.show()
-            self.on_console_hide_clicked(None)
-            self.view['console_return_button'].hide()
-            self.docked['console'] = False
-        else:
-            self.view['console'].reparent(self.view['console_container'])
-            self.on_console_return_clicked(None)
-            self.view.console_window.hide()
-            self.docked['console'] = True
-        return True
+        self.view['console'].reparent(self.view['console_container'])
+        self.on_console_return_clicked(None)
+        self.get_controller('console_window_controller').hide_window()
+        self.view['undock_console_button'].show()
 
     # Shortcut buttons
     def on_button_start_shortcut_toggled(self, widget, event=None):
@@ -422,7 +430,6 @@ class MainWindowController(ExtendedController):
 
     def on_lower_notebook_tab_switch(self, notebook, page, page_num):
         self.view.update_lower_notebook_title(page_num)
-
 
     @staticmethod
     def delay(milliseconds, func):

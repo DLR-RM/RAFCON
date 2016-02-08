@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkWindow" id="undock_window">
+    <property name="border_width">3</property>
+    <property name="title" translatable="yes">RAFCON</property>
+    <property name="window_position">center</property>
+    <child>
+      <object class="GtkEventBox" id="top_level_event_box">
+        <property name="visible">True</property>
+        <child>
+          <object class="GtkVBox" id="top_level_vbox">
+            <property name="visible">True</property>
+            <property name="orientation">vertical</property>
+            <property name="spacing">4</property>
+            <child>
+              <object class="GtkEventBox" id="eventbox2">
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkHBox" id="top_menu_hbox">
+                    <property name="visible">True</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="top_tool_bar_placeholder">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">top_tool_bar_placeholder</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="pack_type">end</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkToggleAction" id="toggleaction1"/>
+  <object class="GtkAction" id="action1"/>
+  <object class="GtkAction" id="action2"/>
+  <object class="GtkToggleAction" id="toggleaction2"/>
+  <object class="GtkAction" id="action3"/>
+</interface>

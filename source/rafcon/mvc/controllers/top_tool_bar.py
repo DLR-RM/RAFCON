@@ -1,4 +1,5 @@
 from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc import singleton as mvc_singleton
 from rafcon.utils import log
 import gtk
 
@@ -6,38 +7,31 @@ logger = log.get_logger(__name__)
 
 
 class TopToolBarController(ExtendedController):
-    """
-    The class to trigger all the action, available in the tool bar.
+    """The class to trigger all the actions available in the tool bar.
+
+    :param state_machine_manager_model:
+    :param view:
+    :param top_level_window:
     """
 
-    def __init__(self, state_machine_manager_model, view, top_level_window, menu_bar_controller):
+    def __init__(self, state_machine_manager_model, view, top_level_window):
         ExtendedController.__init__(self, state_machine_manager_model, view)
         self.shortcut_manager = None
 
         self.top_level_window = top_level_window
         self.fullscreen = False
-        self.menu_bar_controller = menu_bar_controller
+        self.menu_bar_controller = mvc_singleton.main_window_controller.get_controller('menu_bar_controller')
+        self.main_window_controller = mvc_singleton.main_window_controller
 
         view.get_top_widget().connect("motion_notify_event", self.motion_detected)
         view.get_top_widget().connect("button_press_event", self.button_pressed_event)
 
     def register_view(self, view):
-        """Called when the View was registered
-        """
+        """Called when the View was registered"""
         view['minimize_button'].connect('clicked', self.on_minimize_button_clicked)
         view['maximize_button'].connect('clicked', self.on_maximize_button_clicked)
         view['close_button'].connect('clicked', self.on_close_button_clicked)
-
-    def register_adapters(self):
-        """Adapters should be registered in this method call
-        """
-        pass
-
-    def register_actions(self, shortcut_manager):
-        """Register callback methods for triggered actions
-
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
-        """
+        view['redock_button'].connect('clicked', self.on_redock_button_clicked)
 
     def on_minimize_button_clicked(self, widget, data=None):
         self.top_level_window.iconify()
@@ -54,6 +48,12 @@ class TopToolBarController(ExtendedController):
     def on_close_button_clicked(self, widget, data=None):
         self.menu_bar_controller.on_quit_activate(None)
 
+    def on_redock_button_clicked(self, widget, data=None):
+        redock_functions = {'left_bar_window': self.main_window_controller.on_left_bar_dock_clicked,
+                            'right_bar_window': self.main_window_controller.on_right_bar_dock_clicked,
+                            'console_window': self.main_window_controller.on_console_dock_clicked}
+        redock_functions[self.top_level_window.get_title()](None)
+
     def motion_detected(self, widget, event=None):
         if event.is_hint:
             x, y, state = event.window.get_pointer()
@@ -66,3 +66,23 @@ class TopToolBarController(ExtendedController):
     def button_pressed_event(self, widget, event=None):
         if event.type == gtk.gdk._2BUTTON_PRESS:
             self.on_maximize_button_clicked(None)
+
+
+class TopToolBarMainWindowController(TopToolBarController):
+    """
+
+    """
+
+    def __init__(self, state_machine_manager_model, view, top_level_window):
+        super(TopToolBarMainWindowController, self).__init__(state_machine_manager_model, view, top_level_window)
+        view['redock_button'].hide()
+
+
+class TopToolBarUndockedWindowController(TopToolBarController):
+    """
+
+    """
+
+    def __init__(self, state_machine_manager_model, view, top_level_window):
+        super(TopToolBarUndockedWindowController, self).__init__(state_machine_manager_model, view, top_level_window)
+        view['close_button'].hide()

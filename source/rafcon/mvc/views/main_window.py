@@ -11,7 +11,9 @@ from rafcon.mvc.views.states_editor import StatesEditorView
 from rafcon.mvc.views.top_tool_bar import TopToolBarView
 from rafcon.mvc.views.menu_bar import MenuBarView
 from rafcon.mvc.views.tool_bar import ToolBarView
+from rafcon.mvc.views.undocked_window import UndockedWindowView
 from rafcon.utils import constants
+from rafcon.utils import gui_helpers
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc import gui_helper
 
@@ -36,9 +38,9 @@ class MainWindowView(View):
         ################################################
         # Undock Buttons
         ################################################
-        self['undock_left_bar_button'].set_image(create_button_label(constants.BUTTON_UNDOCK))
-        self['undock_right_bar_button'].set_image(create_button_label(constants.BUTTON_UNDOCK))
-        self['undock_console_button'].set_image(create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_left_bar_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_right_bar_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_console_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_UNDOCK))
 
         ######################################################
         # Library Tree
@@ -146,16 +148,16 @@ class MainWindowView(View):
         ################################################
         # Hide Buttons
         ################################################
-        self['left_bar_hide_button'].set_image(create_button_label(constants.BUTTON_LEFTA))
-        self['right_bar_hide_button'].set_image(create_button_label(constants.BUTTON_RIGHTA))
-        self['console_hide_button'].set_image(create_button_label(constants.BUTTON_DOWNA))
+        self['left_bar_hide_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_LEFTA))
+        self['right_bar_hide_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_RIGHTA))
+        self['console_hide_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_DOWNA))
 
         ################################################
         # Return Buttons
         ################################################
-        self['left_bar_return_button'].set_image(create_button_label(constants.BUTTON_RIGHTA))
-        self['right_bar_return_button'].set_image(create_button_label(constants.BUTTON_LEFTA))
-        self['console_return_button'].set_image(create_button_label(constants.BUTTON_UPA))
+        self['left_bar_return_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_RIGHTA))
+        self['right_bar_return_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_LEFTA))
+        self['console_return_button'].set_image(gui_helpers.create_button_label(constants.BUTTON_UPA))
 
         # --------------------------------------------------------------------------
         # Edit graphical_editor_shortcuts
@@ -170,14 +172,14 @@ class MainWindowView(View):
         button_step_out_shortcut = self['button_step_out_shortcut']
         button_step_backward_shortcut = self['button_step_backward_shortcut']
 
-        button_start_shortcut.set_label_widget(create_button_label(constants.BUTTON_START))
-        button_pause_shortcut.set_label_widget(create_button_label(constants.BUTTON_PAUSE))
-        button_stop_shortcut.set_label_widget(create_button_label(constants.BUTTON_STOP))
-        button_step_mode_shortcut.set_label_widget(create_button_label(constants.BUTTON_STEPM))
-        button_step_in_shortcut.set_label_widget(create_button_label(constants.BUTTON_STEP_INTO))
-        button_step_over_shortcut.set_label_widget(create_button_label(constants.BUTTON_STEP_OVER))
-        button_step_out_shortcut.set_label_widget(create_button_label(constants.BUTTON_STEP_OUT))
-        button_step_backward_shortcut.set_label_widget(create_button_label(constants.BUTTON_BACKW))
+        button_start_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_START))
+        button_pause_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_PAUSE))
+        button_stop_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_STOP))
+        button_step_mode_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_STEPM))
+        button_step_in_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_STEP_INTO))
+        button_step_over_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_STEP_OVER))
+        button_step_out_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_STEP_OUT))
+        button_step_backward_shortcut.set_label_widget(gui_helpers.create_button_label(constants.BUTTON_BACKW))
 
         # --------------------------------------------------------------------------
 
@@ -214,10 +216,10 @@ class MainWindowView(View):
         self['left_bar'].set_position(400)
         self['central_v_pane'].set_position(600)
 
-        self.left_bar_window = gtk.Window()
-        self.right_bar_window = gtk.Window()
-        self.console_window = gtk.Window()
-        
+        self.left_bar_window = UndockedWindowView('left_bar_window')
+        self.right_bar_window = UndockedWindowView('right_bar_window')
+        self.console_window = UndockedWindowView('console_window')
+
         self.top_window_width = self['main_window'].get_size()[0]
 
     @staticmethod
@@ -253,19 +255,6 @@ class MainWindowView(View):
         :param page_num: The selected page number
         """
         self['lower_notebook_title'].set_text(self.lower_notebook_page_titles[page_num])
-
-
-def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
-    """Create a button label with a chosen icon.
-
-    :param icon: The icon
-    :param font_size: The size of the icon
-    :return: The created label
-    """
-    label = gtk.Label()
-    label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, font_size, icon))
-    label.show()
-    return label
 
 
 def get_widget_title(tab_label):
