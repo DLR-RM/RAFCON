@@ -88,7 +88,11 @@ class StateIconController(ExtendedController):
         :return: state ID
         :rtype: String
         """
-        selected_path = self.view.states[self.view.get_selected_items()[0][0]]
+
+        selected = self.view.get_selected_items()
+        if not selected:
+            return
+        selected_path = self.view.states[selected[0][0]]
 
         if selected_path == "ES":
             state = ExecutionState()
