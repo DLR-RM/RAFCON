@@ -91,8 +91,7 @@ def trigger_drag_and_drop_tests(*args):
     state_icon_controller = main_window_controller.get_controller('state_icon_controller')
 
     library_tree_controller.view.expand_all()
-    tree_model = library_tree_controller.view.get_model()
-    library_tree_controller.view.get_selection().select_iter(tree_model.iter_children(tree_model.get_iter_root()))
+    library_tree_controller.view.get_selection().select_path((0, 0))
 
     selection_data = StructHelper(0, 0, None)
 
@@ -176,7 +175,7 @@ def test_drag_and_drop_test(caplog):
     test_multithrading_lock.release()
 
     testing_utils.reload_config()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
 
 
 if __name__ == '__main__':
