@@ -72,10 +72,6 @@ class MainWindowView(View):
         self.global_var_editor.show()
         self['global_variables_alignment'].add(self.global_var_editor.get_top_widget())
 
-        self.upper_notebook_page_titles = {0: 'Libraries', 1: 'State Tree', 2: 'Global Variables'}
-        self['tree_notebook_up'].set_current_page(0)
-        self.update_upper_notebook_title()
-
         ######################################################
         # State Machine History
         ######################################################
@@ -90,9 +86,7 @@ class MainWindowView(View):
         self.execution_history.show()
         self['execution_history_alignment'].add(self.execution_history.get_top_widget())
 
-        self.lower_notebook_page_titles = {0: 'History', 1: 'Execution History', 2: 'Network'}
         self['tree_notebook_down'].set_current_page(0)
-        self.update_lower_notebook_title()
 
         ######################################################
         # rotate all tab labels by 90 degrees and make detachable
@@ -248,32 +242,3 @@ class MainWindowView(View):
                 tab_label.set_angle(90)
             notebook.set_tab_reorderable(child, True)
             notebook.set_tab_detachable(child, True)
-
-    def update_upper_notebook_title(self, page_num=0):
-        """Changes the text of the title label of the upper GTK notebook in the left bar.
-
-        :param page_num: The selected page number
-        """
-        self['upper_notebook_title'].set_text(self.upper_notebook_page_titles[page_num])
-
-    def update_lower_notebook_title(self, page_num=0):
-        """Changes the text of the title label of the lower GTK notebook in the left bar.
-
-        :param page_num: The selected page number
-        """
-        self['lower_notebook_title'].set_text(self.lower_notebook_page_titles[page_num])
-
-
-def get_widget_title(tab_label):
-    """Transform tab label to title by replacing underscores with white spaces and capitalizing the first letter of each
-    word.
-
-    :param tab_label: The string of the tab label to be transformed
-    :return: The transformed title as a string
-    """
-    title = ''
-    title_list = tab_label.split('_')
-    for word in title_list:
-        title += word.upper() + ' '
-    title.strip()
-    return title

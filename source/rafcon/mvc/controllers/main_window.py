@@ -29,6 +29,7 @@ from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.network.network_config import global_net_config
 
 from rafcon.mvc.utils import constants
+from rafcon.mvc import gui_helper
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -199,6 +200,15 @@ class MainWindowController(ExtendedController):
         view['debug_console_button_hbox'].reorder_child(view['button_show_info'], 2)
         view['debug_console_button_hbox'].reorder_child(view['button_show_debug'], 3)
 
+        view['tree_notebook_up'].set_current_page(0)
+        view['tree_notebook_down'].set_current_page(0)
+
+        # Initialize the Left-Bar Notebooks' titles according to initially-selected tabs
+        self.on_notebook_tab_switch(view['tree_notebook_up'], None, view['tree_notebook_up'].get_current_page(),
+                                    view['upper_notebook_title'], 'upper')
+        self.on_notebook_tab_switch(view['tree_notebook_down'], None, view['tree_notebook_down'].get_current_page(),
+                                    view['lower_notebook_title'], 'lower')
+
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
         view['main_window'].connect('delete_event', self.get_controller('menu_bar_controller').on_delete_event)
@@ -235,8 +245,10 @@ class MainWindowController(ExtendedController):
         view['button_show_warning'].connect('toggled', self.on_debug_content_change)
         view['button_show_error'].connect('toggled', self.on_debug_content_change)
 
-        view['tree_notebook_up'].connect('switch-page', self.on_upper_notebook_tab_switch)
-        view['tree_notebook_down'].connect('switch-page', self.on_lower_notebook_tab_switch)
+        view['tree_notebook_up'].connect('switch-page', self.on_notebook_tab_switch, view['upper_notebook_title'],
+                                         'upper')
+        view['tree_notebook_down'].connect('switch-page', self.on_notebook_tab_switch, view['lower_notebook_title'],
+                                           'lower')
 
         # hide not usable buttons
         self.view['step_buttons'].hide()
@@ -432,11 +444,12 @@ class MainWindowController(ExtendedController):
         # gui_config.save_configuration()
         self.view.logging_view.update_filtered_buffer()
 
-    def on_upper_notebook_tab_switch(self, notebook, page, page_num):
-        self.view.update_upper_notebook_title(page_num)
-
-    def on_lower_notebook_tab_switch(self, notebook, page, page_num):
-        self.view.update_lower_notebook_title(page_num)
+    def on_notebook_tab_switch(self, notebook, page, page_num, title_label, notebook_identifier):
+        child = notebook.get_nth_page(page_num)
+        tab_label_eventbox = notebook.get_tab_label(child)
+        title = gui_helper.get_widget_title(tab_label_eventbox.get_tooltip_text())
+        title_label.set_text(title)
+        #self.view.left_bar_window.reset_title(title, notebook_identifier)
 
     @staticmethod
     def delay(milliseconds, func):

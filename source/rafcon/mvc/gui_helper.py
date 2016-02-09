@@ -50,3 +50,18 @@ def set_button_children_size_request(widget):
                 set_button_children_size_request(child)
     except AttributeError:
         return
+
+
+def get_widget_title(tab_label):
+    """Transform Notebook tab label to title by replacing underscores with white spaces and capitalizing the first
+    letter of each word.
+
+    :param tab_label: The string of the tab label to be transformed
+    :return: The transformed title as a string
+    """
+    title = ''
+    title_list = tab_label.split('_')
+    for word in title_list:
+        title += word.upper() + ' '
+    title.strip()
+    return title
