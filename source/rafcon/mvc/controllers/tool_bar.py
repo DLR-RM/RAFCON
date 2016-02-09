@@ -5,8 +5,10 @@ logger = log.get_logger(__name__)
 
 
 class ToolBarController(ExtendedController):
-    """
-    The class to trigger all the action, available in the tool bar.
+    """The class to trigger all the action, available in the tool bar.
+
+    :param  state_machine_manager_model:
+    :param view:
     """
 
     def __init__(self, state_machine_manager_model, view, menu_bar_ctrl):

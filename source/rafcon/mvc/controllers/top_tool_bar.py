@@ -7,11 +7,12 @@ logger = log.get_logger(__name__)
 
 
 class TopToolBarController(ExtendedController):
-    """The class to trigger all the actions available in the tool bar.
+    """The class to trigger all the actions available in the top tool bar.
 
-    :param state_machine_manager_model:
-    :param view:
-    :param top_level_window:
+    :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel state_machine_manager_model: The state
+        machine manager model, holding data regarding state machines. Should be exchangeable.
+    :param rafcon.mvc.views.top_tool_bar.TopToolBarView view: The GTK View showing the top tool bar buttons.
+    :param top_level_window: The top level window containing the top tool bar.
     """
 
     def __init__(self, state_machine_manager_model, view, top_level_window):
@@ -49,6 +50,10 @@ class TopToolBarController(ExtendedController):
         self.menu_bar_controller.on_quit_activate(None)
 
     def on_redock_button_clicked(self, widget, data=None):
+        """Triggered when the redock button in any window is clicked.
+
+        Calls the corresponding re-docking function of the open window.
+        """
         redock_functions = {'left_bar_window': self.main_window_controller.on_left_bar_dock_clicked,
                             'right_bar_window': self.main_window_controller.on_right_bar_dock_clicked,
                             'console_window': self.main_window_controller.on_console_dock_clicked}
@@ -69,8 +74,9 @@ class TopToolBarController(ExtendedController):
 
 
 class TopToolBarMainWindowController(TopToolBarController):
-    """
+    """Controller handling the top tool bar in the main window.
 
+    In this controller, the re-dock button in the top tool bar is hidden.
     """
 
     def __init__(self, state_machine_manager_model, view, top_level_window):
@@ -79,8 +85,9 @@ class TopToolBarMainWindowController(TopToolBarController):
 
 
 class TopToolBarUndockedWindowController(TopToolBarController):
-    """
+    """Controller handling the top tool bar in the un-docked windows.
 
+    In this controller, the close button in the top tool bar is hidden.
     """
 
     def __init__(self, state_machine_manager_model, view, top_level_window):

@@ -49,6 +49,9 @@ except ImportError as e:
 class MainWindowController(ExtendedController):
     """Controller handling the main window.
 
+    :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel state_machine_manager_model: The state
+        machine manager model, holding data regarding state machines. Should be exchangeable.
+    :param rafcon.mvc.views.main_window.MainWindowView view: The GTK View showing the main window.
     :ivar docked: Dict holding mappings between bars/console and their current docking-status.
     """
 
@@ -81,14 +84,13 @@ class MainWindowController(ExtendedController):
         #    gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
         #    gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
 
-        # state tree
-
         ######################################################
         # state icons
         ######################################################
         state_icon_controller = StateIconController(state_machine_manager_model, view.state_icons,
                                                     self.shortcut_manager)
         self.add_controller('state_icon_controller', state_icon_controller)
+
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
 
@@ -126,15 +128,13 @@ class MainWindowController(ExtendedController):
             network_connections.initialize()
             self.add_controller('network_connections_ctrl', network_connections_ctrl)
 
-            # remove placehold in tab
             network_tab = view['network_placeholder']
             page_num = view['tree_notebook_down'].page_num(network_tab)
             view['tree_notebook_down'].remove_page(page_num)
 
             network_label = gtk.Label('Network')
 
-            network_notebook_widget = view.create_notebook_widget('NETWORK',
-                                                                  network_connections_view.get_top_widget(),
+            network_notebook_widget = view.create_notebook_widget('NETWORK',  network_connections_view.get_top_widget(),
                                                                   use_scroller=False,
                                                                   border=constants.BORDER_WIDTH_TEXTVIEW)
 
@@ -172,8 +172,7 @@ class MainWindowController(ExtendedController):
         ######################################################
         # top tool bar
         ######################################################
-        top_tool_bar_controller = TopToolBarMainWindowController(state_machine_manager_model,
-                                                                 view.top_tool_bar,
+        top_tool_bar_controller = TopToolBarMainWindowController(state_machine_manager_model, view.top_tool_bar,
                                                                  view['main_window'])
         self.add_controller('top_tool_bar_controller', top_tool_bar_controller)
 

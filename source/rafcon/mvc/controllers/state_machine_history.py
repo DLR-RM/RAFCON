@@ -25,10 +25,13 @@ import gtk
 
 
 class StateMachineHistoryController(ExtendedController):
+    """Controller handling the State Machine History
+
+    :param model: StateMachineModel should be exchangeable
+    :param view:
+    """
     def __init__(self, model, view):
-        """Constructor
-        :param model StateMachineModel should be exchangeable
-        """
+        """Constructor"""
         assert isinstance(model, StateMachineManagerModel)
 
         ExtendedController.__init__(self, model, view)
@@ -54,10 +57,7 @@ class StateMachineHistoryController(ExtendedController):
         self.register()
 
     def register(self):
-        """
-        Change the state machine that is observed for new selected states to the selected state machine.
-        :return:
-        """
+        """Change the state machine that is observed for new selected states to the selected state machine."""
         # logger.debug("StateMachineEditionChangeHistory register state_machine old/new sm_id %s/%s" %
         #              (self.__my_selected_sm_id, self.model.selected_state_machine_id))
 

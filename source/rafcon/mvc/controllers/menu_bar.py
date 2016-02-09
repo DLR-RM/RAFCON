@@ -29,7 +29,8 @@ class MenuBarController(ExtendedController):
 
     The class to trigger all the actions, available in the menu bar.
 
-    :param state_machine_manager_model
+    :param state_machine_manager_model:
+    :param view:
     """
 
     def __init__(self, state_machine_manager_model, view, state_machines_editor_ctrl, states_editor_ctrl, logging_view,
