@@ -367,6 +367,12 @@ style "treeview" = "my_default"
 }
 
 
+style "iconview" = "my_default"
+{
+    bg[SELECTED]			= @medium_gray
+    base[NORMAL]            = @widget_background
+}
+
 
 style "chooser_treeview" = "my_default"
 {
@@ -391,6 +397,7 @@ style "chooser_treeview" = "my_default"
 
 widget_class "*GtkEventBox.GtkVBox.GtkScrolledWindow*"	style "scrolled_window"
 widget_class "*Tree*"					style "treeview"
+widget_class "*Icon*"                   style "iconview"
 widget_class "*FileChooserDialog*Tree*"			style "chooser_treeview"
 
 

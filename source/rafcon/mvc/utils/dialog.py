@@ -1,6 +1,7 @@
 from gtk import MessageDialog, HBox, MESSAGE_INFO, BUTTONS_NONE, DIALOG_MODAL, Alignment
 
-from constants import BUTTON_MIN_WIDTH, BUTTON_MIN_HEIGHT
+from rafcon.mvc.utils.constants import BUTTON_MIN_HEIGHT
+from utils.constants import BUTTON_MIN_WIDTH, BUTTON_MIN_HEIGHT
 
 
 class RAFCONDialog(MessageDialog):

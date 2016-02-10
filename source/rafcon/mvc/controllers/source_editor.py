@@ -144,7 +144,7 @@ class SourceEditorController(ExtendedController):
                     logger.debug("Source script is not stored to memory")
                 widget.destroy()
 
-            from rafcon.utils.dialog import RAFCONDialog
+            from rafcon.mvc.utils.dialog import RAFCONDialog
             dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
             message_string = "Are you sure that you want to save this file?\n\nThe following errors were found:"
             for elem in pylint_stdout_data:

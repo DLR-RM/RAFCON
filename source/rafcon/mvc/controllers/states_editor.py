@@ -11,7 +11,7 @@ from rafcon.mvc.models.container_state import StateModel, ContainerStateModel
 from rafcon.mvc.selection import Selection
 from rafcon.mvc.config import global_gui_config
 
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

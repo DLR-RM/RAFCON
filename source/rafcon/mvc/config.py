@@ -6,7 +6,7 @@ import gtk
 from rafcon.utils.config import DefaultConfig, ConfigError
 from rafcon.utils import filesystem
 from rafcon.utils import storage_utils
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

@@ -1,6 +1,6 @@
 import gtk
 from gtk import Container, Button
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 
 
 def create_tab_header_label(tab_name, icons):

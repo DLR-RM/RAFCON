@@ -9,7 +9,7 @@ from rafcon.mvc.views.scoped_variables_list import ScopedVariablesListView
 from rafcon.mvc.views.state_transitions import StateTransitionsEditorView
 from rafcon.mvc.views.state_data_flows import StateDataFlowsEditorView
 from rafcon.mvc.views.linkage_overview import LinkageOverviewView
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 
 
 class StateEditorView(View):

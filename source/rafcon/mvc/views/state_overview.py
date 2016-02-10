@@ -1,5 +1,5 @@
 from gtkmvc import View
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 
 
 class StateOverviewView(View):

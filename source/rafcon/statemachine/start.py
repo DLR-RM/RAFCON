@@ -1,19 +1,12 @@
 #!/usr/bin/env python
 
-from twisted.internet import gtk2reactor
-# needed for glib.idle_add, and signals
-gtk2reactor.install()
-from twisted.internet import reactor
-
 from rafcon.utils import log
 logger = log.get_logger("start-no-gui")
 logger.info("initialize RAFCON ... ")
 from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
 
-import logging
 import os
 import glib
-import gtk
 import argparse
 from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
 import signal
@@ -22,8 +15,6 @@ from Queue import Empty
 import threading
 
 import rafcon
-# TODO: needed for observer pattern in network/network_connections.py
-import rafcon.mvc.singleton as mvc_singletons
 from rafcon.utils.config import config_path
 
 
@@ -137,8 +128,11 @@ if __name__ == '__main__':
 
     start_state_machine(setup_config)
 
-    # setup network connections
-    reactor.run()
+    if global_net_config.get_config_value("NETWORK_CONNECTIONS", False):
+        # TODO: needed for observer pattern in network/network_connections.py
+        import rafcon.mvc.singleton as mvc_singletons
+        from twisted.internet import reactor
+        reactor.run()
 
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
     logger.info("State machine execution finished!")

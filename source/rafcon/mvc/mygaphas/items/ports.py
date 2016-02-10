@@ -5,7 +5,7 @@ from gaphas.state import observed
 from gaphas.connector import Handle
 import cairo
 
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 from rafcon.utils.geometry import deg2rad
 
 from rafcon.statemachine.states.container_state import ContainerState

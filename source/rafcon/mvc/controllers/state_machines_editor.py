@@ -10,7 +10,7 @@ from rafcon.mvc.models.state_machine import StateMachineModel, StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
 import rafcon.statemachine.singleton
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 from rafcon.mvc.config import global_gui_config
 
 from rafcon.utils import log
@@ -271,7 +271,7 @@ class StateMachinesEditorController(ExtendedController):
                     logger.debug("Closing of state machine model canceled")
                 widget.destroy()
 
-            from rafcon.utils.dialog import RAFCONDialog
+            from rafcon.mvc.utils.dialog import RAFCONDialog
             sm_id = get_state_machine_id(state_machine_m)
             root_state_name = state_machine_m.root_state.state.name
             dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)

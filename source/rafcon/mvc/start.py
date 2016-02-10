@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-from twisted.internet import gtk2reactor
-gtk2reactor.install()
-from twisted.internet import reactor
-
 import logging
 import os
 import gtk
@@ -175,10 +171,15 @@ if __name__ == '__main__':
     logger.setLevel(logging.INFO)
     logger.info("Ready")
     logger.setLevel(level)
-    reactor.run()
-    # reactor.run() replaces the gtk.main() call after gtk2reactor.install()
-    # gtk.main()
-    logger.debug("Gtk main loop exited!")
+
+    if global_net_config.get_config_value("NETWORK_CONNECTIONS", False):
+        from twisted.internet import reactor
+        from twisted.internet import gtk2reactor
+        # needed for glib.idle_add, and signals
+        gtk2reactor.install()
+        reactor.run()
+    else:
+        gtk.main()
 
     # If there is a running state-machine, wait for it to be finished before exiting
     sm = sm_singletons.state_machine_manager.get_active_state_machine()

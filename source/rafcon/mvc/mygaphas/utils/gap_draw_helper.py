@@ -5,7 +5,7 @@ from cairo import ANTIALIAS_SUBPIXEL
 
 from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.mygaphas.utils.enums import SnappedSide
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 from rafcon.utils.geometry import deg2rad
 
 

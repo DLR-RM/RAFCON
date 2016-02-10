@@ -5,7 +5,7 @@ import gobject
 
 from rafcon.network.protobuf.udp_message_pb2 import UDPMessage
 
-from rafcon.utils import constants
+from rafcon.network import constants
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

@@ -1,7 +1,7 @@
 import gtk
 import gobject
 from gtkmvc import View
-from rafcon.utils import constants
+from rafcon.mvc.utils import constants
 
 gobject.signal_new("tab_close_event", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, (int,))
 
