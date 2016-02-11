@@ -50,14 +50,20 @@ class TopToolBarController(ExtendedController):
         self.menu_bar_controller.on_quit_activate(None)
 
     def on_redock_button_clicked(self, widget, data=None):
-        """Triggered when the redock button in any window is clicked.
+        """Triggered when the re-dock button in any window is clicked.
 
-        Calls the corresponding re-docking function of the open window.
+        Calls the corresponding re-docking function of the open window. The mapping to the corresponding function is
+        based on the window's title.
+        The un-docked left-bar window always contains a forward slash '/'.
+        The un-docked right-bar window has the title 'STATE EDITOR', which never changes.
+        The un-docked console window has the title 'CONSOLE', which never changes.
         """
-        redock_functions = {'left_bar_window': self.main_window_controller.on_left_bar_dock_clicked,
-                            'right_bar_window': self.main_window_controller.on_right_bar_dock_clicked,
-                            'console_window': self.main_window_controller.on_console_dock_clicked}
-        redock_functions[self.top_level_window.get_title()](None)
+        if '/' in self.top_level_window.get_title():
+            self.main_window_controller.on_left_bar_dock_clicked(None)
+        elif self.top_level_window.get_title() == 'STATE EDITOR':
+            self.main_window_controller.on_right_bar_dock_clicked(None)
+        elif self.top_level_window.get_title == 'CONSOLE':
+            self.main_window_controller.on_console_dock_clicked(None)
 
     def motion_detected(self, widget, event=None):
         if event.is_hint:

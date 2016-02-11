@@ -135,7 +135,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkNotebook" id="tree_notebook_up">
+                              <object class="GtkNotebook" id="upper_notebook">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="border_width">5</property>
@@ -306,7 +306,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkNotebook" id="tree_notebook_down">
+                              <object class="GtkNotebook" id="lower_notebook">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="tab_pos">left</property>

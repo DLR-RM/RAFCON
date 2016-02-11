@@ -86,13 +86,16 @@ class MainWindowView(View):
         self.execution_history.show()
         self['execution_history_alignment'].add(self.execution_history.get_top_widget())
 
-        self['tree_notebook_down'].set_current_page(0)
+        self['lower_notebook'].set_current_page(0)
 
         ######################################################
         # rotate all tab labels by 90 degrees and make detachable
         ######################################################
-        self.rotate_and_detach_tab_labels(self['tree_notebook_up'])
-        self.rotate_and_detach_tab_labels(self['tree_notebook_down'])
+        self.rotate_and_detach_tab_labels(self['upper_notebook'])
+        self.rotate_and_detach_tab_labels(self['lower_notebook'])
+
+        self['upper_notebook'].set_current_page(0)
+        self['lower_notebook'].set_current_page(0)
 
         ######################################################
         # State-machines-editor (graphical)
@@ -190,13 +193,13 @@ class MainWindowView(View):
 
         self['top_menu_hbox'].set_border_width(constants.BORDER_WIDTH)
 
-        self['tree_notebook_up'].set_border_width(0)
-        self['tree_notebook_up'].set_tab_hborder(constants.BORDER_WIDTH * 2)
-        self['tree_notebook_up'].set_tab_vborder(constants.BORDER_WIDTH * 3)
+        self['upper_notebook'].set_border_width(0)
+        self['upper_notebook'].set_tab_hborder(constants.BORDER_WIDTH * 2)
+        self['upper_notebook'].set_tab_vborder(constants.BORDER_WIDTH * 3)
 
-        self['tree_notebook_down'].set_border_width(0)
-        self['tree_notebook_down'].set_tab_hborder(constants.BORDER_WIDTH * 2)
-        self['tree_notebook_down'].set_tab_vborder(constants.BORDER_WIDTH * 3)
+        self['lower_notebook'].set_border_width(0)
+        self['lower_notebook'].set_tab_hborder(constants.BORDER_WIDTH * 2)
+        self['lower_notebook'].set_tab_vborder(constants.BORDER_WIDTH * 3)
 
         self['debug_eventbox'].set_border_width(0)
         self['debug_label_hbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)

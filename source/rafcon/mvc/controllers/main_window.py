@@ -121,17 +121,15 @@ class MainWindowController(ExtendedController):
         if global_net_config.get_config_value('NETWORK_CONNECTIONS', False):
             from rafcon.mvc.controllers.network_connections import NetworkController
             from rafcon.network.singleton import network_connections
-
             from rafcon.mvc.views.network_connections import NetworkConnectionsView
             network_connections_view = NetworkConnectionsView()
-            network_connections_ctrl = NetworkController(state_machine_manager_model,
-                                                         network_connections_view)
+            network_connections_ctrl = NetworkController(state_machine_manager_model, network_connections_view)
             network_connections.initialize()
             self.add_controller('network_connections_ctrl', network_connections_ctrl)
 
             network_tab = view['network_placeholder']
-            page_num = view['tree_notebook_down'].page_num(network_tab)
-            view['tree_notebook_down'].remove_page(page_num)
+            page_num = view['lower_notebook'].page_num(network_tab)
+            view['lower_notebook'].remove_page(page_num)
 
             network_label = gtk.Label('Network')
 
@@ -139,11 +137,11 @@ class MainWindowController(ExtendedController):
                                                                   use_scroller=False,
                                                                   border=constants.BORDER_WIDTH_TEXTVIEW)
 
-            view['tree_notebook_down'].insert_page(network_notebook_widget, network_label, page_num)
+            view['lower_notebook'].insert_page(network_notebook_widget, network_label, page_num)
         else:
             network_tab = view['network_tab']
-            page_num = view['tree_notebook_down'].page_num(network_tab)
-            view['tree_notebook_down'].remove_page(page_num)
+            page_num = view['lower_notebook'].page_num(network_tab)
+            view['lower_notebook'].remove_page(page_num)
 
         ######################################################
         # state machine execution history
@@ -200,14 +198,16 @@ class MainWindowController(ExtendedController):
         view['debug_console_button_hbox'].reorder_child(view['button_show_info'], 2)
         view['debug_console_button_hbox'].reorder_child(view['button_show_debug'], 3)
 
-        view['tree_notebook_up'].set_current_page(0)
-        view['tree_notebook_down'].set_current_page(0)
-
         # Initialize the Left-Bar Notebooks' titles according to initially-selected tabs
-        self.on_notebook_tab_switch(view['tree_notebook_up'], None, view['tree_notebook_up'].get_current_page(),
-                                    view['upper_notebook_title'], 'upper')
-        self.on_notebook_tab_switch(view['tree_notebook_down'], None, view['tree_notebook_down'].get_current_page(),
-                                    view['lower_notebook_title'], 'lower')
+        upper_title = gui_helper.set_notebook_title(view['upper_notebook'], view['upper_notebook'].get_current_page(),
+                                                    view['upper_notebook_title'])
+        lower_title = gui_helper.set_notebook_title(view['lower_notebook'], view['lower_notebook'].get_current_page(),
+                                                    view['lower_notebook_title'])
+
+        # Initialize the Left-Bar un-docked window title
+        view.left_bar_window.initialize_title(gui_helper.create_left_bar_window_title(upper_title, lower_title))
+        view.right_bar_window.initialize_title('STATE EDITOR')
+        view.console_window.initialize_title('CONSOLE')
 
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
@@ -245,10 +245,10 @@ class MainWindowController(ExtendedController):
         view['button_show_warning'].connect('toggled', self.on_debug_content_change)
         view['button_show_error'].connect('toggled', self.on_debug_content_change)
 
-        view['tree_notebook_up'].connect('switch-page', self.on_notebook_tab_switch, view['upper_notebook_title'],
-                                         'upper')
-        view['tree_notebook_down'].connect('switch-page', self.on_notebook_tab_switch, view['lower_notebook_title'],
-                                           'lower')
+        view['upper_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['upper_notebook_title'],
+                                       view.left_bar_window, 'upper')
+        view['lower_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['lower_notebook_title'],
+                                       view.left_bar_window, 'lower')
 
         # hide not usable buttons
         self.view['step_buttons'].hide()
@@ -444,12 +444,20 @@ class MainWindowController(ExtendedController):
         # gui_config.save_configuration()
         self.view.logging_view.update_filtered_buffer()
 
-    def on_notebook_tab_switch(self, notebook, page, page_num, title_label, notebook_identifier):
-        child = notebook.get_nth_page(page_num)
-        tab_label_eventbox = notebook.get_tab_label(child)
-        title = gui_helper.get_widget_title(tab_label_eventbox.get_tooltip_text())
-        title_label.set_text(title)
-        #self.view.left_bar_window.reset_title(title, notebook_identifier)
+    @staticmethod
+    def on_notebook_tab_switch(notebook, page, page_num, title_label, window, notebook_identifier):
+        """Triggered whenever a left-bar notebook tab is changed.
+
+        Updates the title of the corresponding notebook and updates the title of the left-bar window in case un-docked.
+
+        :param notebook: The GTK notebook where a tab-change occurred
+        :param page_num: The page number of the currently-selected tab
+        :param title_label: The label holding the notebook's title
+        :param window: The left-bar window, for which the title should be changed
+        :param notebook_identifier: A string identifying whether the notebook is the upper or the lower one
+        """
+        title = gui_helper.set_notebook_title(notebook, page_num, title_label)
+        window.reset_title(title, notebook_identifier)
 
     @staticmethod
     def delay(milliseconds, func):

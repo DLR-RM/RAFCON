@@ -65,3 +65,38 @@ def get_widget_title(tab_label):
         title += word.upper() + ' '
     title.strip()
     return title
+
+
+def create_left_bar_window_title(upper_title, lower_title):
+    """Create the title of the un-docked left-bar window based on the open tabs in the upper and lower notebooks.
+
+    :param upper_title: The title of the currently-opened tab in the upper notebook
+    :param lower_title: The title of the currently-opened tab in the lower notebook
+    :return: The un-docked left-bar window title as a String
+    """
+    return upper_title + ' / ' + lower_title
+
+
+def get_notebook_tab_title(notebook, page_num):
+    """Helper function that gets a notebook's tab title given its page number
+
+    :param notebook: The GTK notebook
+    :param page_num: The page number of the tab, for which the title is required
+    :return: The title of the tab
+    """
+    child = notebook.get_nth_page(page_num)
+    tab_label_eventbox = notebook.get_tab_label(child)
+    return get_widget_title(tab_label_eventbox.get_tooltip_text())
+
+
+def set_notebook_title(notebook, page_num, title_label):
+    """Set the title of a GTK notebook to one of its tab's titles
+
+    :param notebook: The GTK notebook
+    :param page_num: The page number of a specific tab
+    :param title_label: The GTK label holding the notebook's title
+    :return: The new title of the notebook
+    """
+    title = get_notebook_tab_title(notebook, page_num)
+    title_label.set_text(title)
+    return title

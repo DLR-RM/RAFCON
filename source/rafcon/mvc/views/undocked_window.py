@@ -17,19 +17,26 @@ class UndockedWindowView(View):
         self['top_menu_hbox'].reorder_child(self.top_tool_bar.get_top_widget(), 1)
         self.get_top_widget().set_decorated(False)
 
-    def reset_title(self, title, notebook):
+    def initialize_title(self, window_title):
+        """Initialize the title of the un-docked window
+
+        :param window_title: The title of the window
+        """
+        self.get_top_widget().set_title(window_title)
+
+    def reset_title(self, title, notebook_identifier):
         """Triggered whenever a notebook tab is switched in the left bar.
 
         Resets the title of the un-docked window to the format 'upper_open_tab / lower_open_tab'
 
         :param title: The name of the newly selected tab
-        :param notebook: string taking one of two values 'up' or 'down' indicating which notebook was changed
+        :param notebook: string taking one of two values 'upper' or 'lower' indicating which notebook was changed
         """
         current_title = self.get_top_widget().get_title()
-        title_up = current_title.split('/')[0]
-        title_down = current_title.split('/')[1]
-        if notebook == 'up':
-            new_title = title + ' / ' + title_down
+        upper_title = current_title.split('/')[0].strip()
+        lower_title = current_title.split('/')[1].strip()
+        if notebook_identifier == 'upper':
+            new_title = title + ' / ' + lower_title
         else:
-            new_title = title_up + ' / ' + title
+            new_title = upper_title + ' / ' + title
         self.get_top_widget().set_title(new_title)
