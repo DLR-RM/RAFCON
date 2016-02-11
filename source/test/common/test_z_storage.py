@@ -18,7 +18,7 @@ import rafcon.mvc.singleton
 
 # test environment elements
 import testing_utils
-from testing_utils import call_gui_callback, TMP_TEST_PATH
+from testing_utils import call_gui_callback, get_unique_temp_path
 import pytest
 
 
@@ -220,7 +220,7 @@ def test_storage_without_gui(caplog):
     print "init libs"
     testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
-    save_state_machine(sm_model=sm_m, path=TMP_TEST_PATH + "/test_storage_without_gui", logger=logger, with_gui=with_gui,
+    save_state_machine(sm_model=sm_m, path=get_unique_temp_path(), logger=logger, with_gui=with_gui,
                        menubar_ctrl=None)
 
     missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
@@ -240,7 +240,7 @@ def _test_storage_with_gui(caplog):
     print "init libs"
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    save_state_machine(sm_model=sm_m, path=TMP_TEST_PATH + "/test_storage_with_gui", logger=logger, with_gui=with_gui,
+    save_state_machine(sm_model=sm_m, path=get_unique_temp_path(), logger=logger, with_gui=with_gui,
                        menubar_ctrl=None)
 
     missing_elements = check_that_all_files_are_there(sm_m, with_print=True)

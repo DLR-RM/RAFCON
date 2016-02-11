@@ -75,8 +75,7 @@ def trigger_gui_signals(*args):
         elif sd.name == "whiskey_number":
             assert sd.value == 20
 
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_tmp_unit_test_path() +
-                      os.path.split(__file__)[0] + os.path.split(__file__)[1])
+    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
 
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
     call_gui_callback(menubar_ctrl.on_quit_activate, None)

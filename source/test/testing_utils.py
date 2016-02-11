@@ -1,20 +1,26 @@
-import rafcon
+import tempfile
 from os.path import join, dirname
-import getpass
+from os import mkdir
 from threading import Lock, Condition
+
+import rafcon
 from rafcon.utils import log
+
 
 test_multithrading_lock = Lock()
 
-TMP_TEST_PATH = "/tmp/{0}/rafcon_unit_tests".format(getpass.getuser())
+RAFCON_TEMP_PATH_TEST_BASE = join(tempfile.gettempdir(), 'rafcon_tests')
+try:
+    mkdir(RAFCON_TEMP_PATH_TEST_BASE)
+except OSError:  # Raised when directory is already existing, thus can be ignored
+    pass
 
 RAFCON_PATH = rafcon.__path__[0]
 TEST_SM_PATH = join(dirname(RAFCON_PATH), 'test_scripts')
-TMP_UNIT_TEST_PATH = "/tmp/{0}/rafcon_unit_test".format(getpass.getuser())
 
 
-def get_tmp_unit_test_path():
-    return TMP_UNIT_TEST_PATH
+def get_unique_temp_path():
+    return tempfile.mkdtemp(dir=RAFCON_TEMP_PATH_TEST_BASE)
 
 
 def get_test_sm_path(state_machine_name):

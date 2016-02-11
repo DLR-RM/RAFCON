@@ -58,7 +58,7 @@ def test_hierarchy_state_execution(caplog):
 
 
 def test_hierarchy_save_load_test(caplog):
-    storage_path = testing_utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
+    storage_path = testing_utils.get_unique_temp_path()
     s = StateMachineStorage(storage_path)
 
     hierarchy_state = create_hierarchy_state()

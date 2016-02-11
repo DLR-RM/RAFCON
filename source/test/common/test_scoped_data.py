@@ -53,7 +53,7 @@ def create_statemachine():
 # remember: scoped data is all data in a container state (including input_data, scoped variables and outputs of child
 # states)
 def test_scoped_data(caplog):
-    storage_path = testing_utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
+    storage_path = testing_utils.get_unique_temp_path()
     s = StateMachineStorage(storage_path)
 
     sm = create_statemachine()
