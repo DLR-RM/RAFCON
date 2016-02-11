@@ -516,16 +516,20 @@ class GraphicalEditorController(ExtendedController):
 
         for state_m in selected_state_m_list:
             state_v = self.canvas.get_view_for_model(state_m)
-            state_v.selected = True
-            self.view.editor.select_item(state_v)
-            if global_runtime_config.get_config_value("DATA_FLOW_MODE"):
-                for data_flow in self.get_connected_data_flows(state_v):
-                    data_flow.show()
-                self.set_non_active_states_transparent(True, state_v)
+            if state_v is not None:
+                state_v.selected = True
+                self.view.editor.select_item(state_v)
+                if global_runtime_config.get_config_value("DATA_FLOW_MODE"):
+                    for data_flow in self.get_connected_data_flows(state_v):
+                        data_flow.show()
+                    self.set_non_active_states_transparent(True, state_v)
+                else:
+                    for data_flow in self.get_connected_data_flows(state_v):
+                        data_flow.hide()
+                    self.set_non_active_states_transparent(False, state_v)
             else:
-                for data_flow in self.get_connected_data_flows(state_v):
-                    data_flow.hide()
-                self.set_non_active_states_transparent(False, state_v)
+                logger.info("canvas could not get state-view "
+                            "for selected state with path {0}".format(state_m.state.get_path()))
 
         self.view.editor.focused_item = state_v
 
