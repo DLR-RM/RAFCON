@@ -25,7 +25,7 @@ from rafcon.statemachine.config import global_config
 
 # test environment elements
 import testing_utils
-from testing_utils import test_multithrading_lock, call_gui_callback, TMP_TEST_PATH
+from testing_utils import test_multithrading_lock, call_gui_callback, get_unique_temp_path
 from test_z_gui_state_type_change import get_state_editor_ctrl_and_store_id_dict
 import pytest
 
@@ -301,7 +301,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
         call_gui_callback(menubar_ctrl.on_stop_activate, None)
-        menubar_ctrl.model.get_selected_state_machine_model().state_machine.file_system_path = TMP_TEST_PATH + "/test_states_editor_widget"
+        menubar_ctrl.model.get_selected_state_machine_model().state_machine.file_system_path = get_unique_temp_path()
         call_gui_callback(menubar_ctrl.on_save_activate, None)
         call_gui_callback(menubar_ctrl.on_quit_activate, None)
 

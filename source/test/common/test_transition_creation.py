@@ -67,7 +67,7 @@ def create_statemachine():
 
 def test_transition_creation(caplog):
 
-    storage_path = testing_utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
+    storage_path = testing_utils.get_unique_temp_path()
     test_storage = StateMachineStorage(storage_path)
 
     sm = create_statemachine()

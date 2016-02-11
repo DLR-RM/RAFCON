@@ -56,7 +56,7 @@ def test_concurrency_preemption_state_execution(caplog):
 def test_concurrency_preemption_save_load(caplog):
     testing_utils.test_multithrading_lock.acquire()
 
-    storage_path = testing_utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
+    storage_path = testing_utils.get_unique_temp_path()
     s = StateMachineStorage(storage_path)
 
     preemption_state_sm = create_preemption_statemachine()

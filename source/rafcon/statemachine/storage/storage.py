@@ -21,7 +21,7 @@ from rafcon.statemachine.state_machine import StateMachine
 
 from rafcon.statemachine.config import global_config
 
-from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
+from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import filesystem
 from rafcon.utils import storage_utils
 from rafcon.utils import log
@@ -55,7 +55,7 @@ class StateMachineStorage(Observable):
     STATEMACHINE_FILE = 'statemachine.yaml'
     LIBRARY_FILE = 'library.yaml'
 
-    def __init__(self, base_path=GLOBAL_STORAGE_BASE_PATH):
+    def __init__(self, base_path=RAFCON_TEMP_PATH_STORAGE):
         Observable.__init__(self)
 
         self._base_path = None

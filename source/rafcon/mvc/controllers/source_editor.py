@@ -2,7 +2,7 @@ import gtk
 import os
 from pylint import epylint as lint
 
-from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
+from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.statemachine.states.library_state import LibraryState
@@ -22,7 +22,7 @@ class SourceEditorController(ExtendedController):
     # - Code function-expander
     # - Code completion
 
-    tmp_file = os.path.join(GLOBAL_STORAGE_BASE_PATH, 'file_to_get_pylinted.py')
+    tmp_file = os.path.join(RAFCON_TEMP_PATH_STORAGE, 'file_to_get_pylinted.py')
 
     def __init__(self, model, view):
         """Constructor"""

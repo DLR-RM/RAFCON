@@ -44,7 +44,7 @@ def create_statemachine():
 
 def test_default_values_of_data_ports(caplog):
 
-    storage_path = testing_utils.get_tmp_unit_test_path() + os.path.split(__file__)[0] + os.path.split(__file__)[1]
+    storage_path = testing_utils.get_unique_temp_path()
     print storage_path
     test_storage = StateMachineStorage(storage_path)
 

@@ -9,7 +9,7 @@ from gtkmvc import Observable
 from yaml import YAMLObject
 
 from rafcon.utils.json_utils import JSONObject
-from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
+from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -421,7 +421,7 @@ class State(Observable, YAMLObject, JSONObject):
             if self._file_system_path:
                 return self._file_system_path
             else:
-                return GLOBAL_STORAGE_BASE_PATH + str(self.get_path())
+                return RAFCON_TEMP_PATH_STORAGE + str(self.get_path())
         else:
             return self.get_sm_for_state().file_system_path + "/" + self.get_path()
 

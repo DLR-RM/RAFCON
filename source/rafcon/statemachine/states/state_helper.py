@@ -10,7 +10,7 @@
 import os
 
 from rafcon.statemachine.storage.storage import StateMachineStorage
-from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
+from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 
 
 class StateHelper(object):
@@ -30,7 +30,7 @@ class StateHelper(object):
         :return: the copy of the source state
         """
         state_copy = None
-        local_storage = StateMachineStorage(GLOBAL_STORAGE_BASE_PATH+"/state_copy_tmp_folder")
+        local_storage = StateMachineStorage(RAFCON_TEMP_PATH_STORAGE+"/state_copy_tmp_folder")
 
         if not os.path.exists(local_storage.base_path):
             os.makedirs(local_storage.base_path)

@@ -158,13 +158,11 @@ class log_exceptions(object):
             """Catch all exceptions and log them as error message"""
             try:
                 return function(*args, **kwargs)
-            except Exception as e:
-                import traceback
+            except:
                 # Only create custom logger if no logger was passed and an exception occured
                 if not self.logger:
                     self.logger = get_logger(__name__)
-                self.logger.error("Unexpected error ({1}): {0}\n{2}".format(e, type(e).__name__,
-                                                                            traceback.format_exc()))
+                self.logger.exception("Unexpected error")
                 if self.gtk_quit:
                     from gtk import main_quit
                     main_quit()
