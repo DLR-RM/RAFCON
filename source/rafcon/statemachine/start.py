@@ -3,7 +3,7 @@
 from rafcon.utils import log
 logger = log.get_logger("start-no-gui")
 logger.info("initialize RAFCON ... ")
-from rafcon.utils.constants import GLOBAL_STORAGE_BASE_PATH
+from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 
 import os
 import glib
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     sm_singletons.library_manager.initialize()
 
     # Set base path of global storage
-    sm_singletons.global_storage.base_path = GLOBAL_STORAGE_BASE_PATH
+    sm_singletons.global_storage.base_path = RAFCON_TEMP_PATH_STORAGE
 
     start_state_machine(setup_config)
 
