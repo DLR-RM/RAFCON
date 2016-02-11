@@ -473,17 +473,19 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
             print "output: ", elem.data_port.data_port_id, meta_dict['output_data_ports'].keys()
         assert elem.data_port.data_port_id in meta_dict['output_data_ports']
         elem.meta = copy.deepcopy(meta_dict['output_data_ports'][elem.data_port.data_port_id])
-    if hasattr(state_model, 'states'):
+    if isinstance(state_model, ContainerStateModel):
         for state_id, state_m in state_model.states.iteritems():
             if with_prints:
                 print "FIN: ", state_id, state_m.state.state_id, meta_dict['states'].keys(), state_model.state.state_id
-            if state_m.state.state_id != UNIQUE_DECIDER_STATE_ID:
+            if state_m.state.state_id in meta_dict['states']:
                 if level is None:
                     insert_state_meta_data(meta_dict['states'][state_m.state.state_id], state_m, with_prints)
                 elif level > 0:
                     insert_state_meta_data(meta_dict['states'][state_m.state.state_id], state_m, with_prints, level - 1)
                 else:
                     pass
+            else:
+                logger.warning("no meta data for STATE: '{0}' in storage".format(state_m.state.state_id))
 
             if with_prints:
                 print "FINISHED META for STATE: ", state_m.state.state_id
@@ -495,8 +497,12 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
             if elem.transition.transition_id in meta_dict['transitions']:
                 elem.meta = copy.deepcopy(meta_dict['transitions'][elem.transition.transition_id])
             else:
-                logger.info("Storage Dict seems to miss Meta-Data of Transition in State: %s %s for transition: %s" %
-                            (state_model.state.state_id, state_model.state.name, elem.transition))
+                logger.warning("Storage Dict seems to miss Meta-Data of Transition in State: {0} {1} for transition:"
+                            " {2}\nreal: {3}\nstorage: {4}".format(state_model.state.state_id,
+                                                                   state_model.state.name,
+                                                                   elem.transition,
+                                                                   [t_m.transition.transition_id for t_m in state_model.transitions],
+                                                                   meta_dict['transitions']))
         for elem in state_model.data_flows:
             if with_prints:
                 print "data_flow: ", elem.data_flow.data_flow_id, meta_dict['data_flows'].keys()
@@ -847,13 +853,14 @@ class Action:
             #         logger.error("found DECIDER_STATE_TRANSITION_WITHOUT_DECIDER_STATE")
             #         state.remove_transition(t.transition_id)
 
-            if not isinstance(state, BarrierConcurrencyState):
-                for t_id, t in stored_state.transitions.iteritems():
-                    # print "\n\n\n++++++++++++++++ ", stored_state.outcomes, state.outcomes, "\n\n\n++++++++++++++++ "
-                    # print "### transitions to delete ", [t.from_state, t.to_state], t
-                    if UNIQUE_DECIDER_STATE_ID not in [t.from_state, t.to_state]:
-                        state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
-            # logger.debug("CHECK TRANSITIONS %s" % state.transitions.keys())
+            if isinstance(state, BarrierConcurrencyState):
+                for t_id in state.transitions.keys():
+                    state.remove_transition(t_id)
+
+            for t_id, t in stored_state.transitions.iteritems():
+                state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
+
+            # logger.debug("CHECK self TRANSITIONS of unique state%s" % state.transitions.keys())
             for t in state.transitions.values():
                 # logger.debug(str([t.from_state, t.from_outcome, t.to_state, t.to_outcome]))
                 if UNIQUE_DECIDER_STATE_ID == t.from_state and UNIQUE_DECIDER_STATE_ID == t.to_state:
