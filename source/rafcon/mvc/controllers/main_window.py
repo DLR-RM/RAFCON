@@ -153,19 +153,13 @@ class MainWindowController(ExtendedController):
         ######################################################
         # menu bar
         ######################################################
-        menu_bar_controller = MenuBarController(state_machine_manager_model,
-                                                view,
-                                                state_machines_editor_ctrl,
-                                                states_editor_ctrl,
-                                                view.logging_view,
-                                                view.get_top_widget(),
-                                                self.shortcut_manager)
+        menu_bar_controller = MenuBarController(state_machine_manager_model, view, self.shortcut_manager)
         self.add_controller('menu_bar_controller', menu_bar_controller)
 
         ######################################################
         # tool bar
         ######################################################
-        tool_bar_controller = ToolBarController(state_machine_manager_model, view.tool_bar, menu_bar_controller)
+        tool_bar_controller = ToolBarController(state_machine_manager_model, view.tool_bar)
         self.add_controller('tool_bar_controller', tool_bar_controller)
 
         ######################################################

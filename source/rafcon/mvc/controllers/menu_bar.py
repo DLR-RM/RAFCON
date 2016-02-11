@@ -13,6 +13,7 @@ import rafcon.statemachine.singleton as core_singletons
 import rafcon.mvc.singleton as gui_singletons
 from rafcon.mvc import gui_helper
 from rafcon.mvc.singleton import state_machine_manager_model
+from rafcon.mvc import singleton as mvc_singleton
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.views.about_dialog import MyAboutDialog
 from rafcon.mvc.config import global_gui_config
@@ -29,17 +30,18 @@ class MenuBarController(ExtendedController):
 
     The class to trigger all the actions, available in the menu bar.
 
-    :param state_machine_manager_model:
-    :param view:
+    :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel state_machine_manager_model: The state
+        machine manager model, holding data regarding state machines. Should be exchangeable.
+    :param rafcon.mvc.views.menu_bar.MenuBarView view: The GTK View showing the Menu Bar and Menu Items.
     """
 
-    def __init__(self, state_machine_manager_model, view, state_machines_editor_ctrl, states_editor_ctrl, logging_view,
-                 top_level_window, shortcut_manager):
+    def __init__(self, state_machine_manager_model, view, shortcut_manager):
         ExtendedController.__init__(self, state_machine_manager_model, view.menu_bar)
-        self.state_machines_editor_ctrl = state_machines_editor_ctrl
-        self.states_editor_ctrl = states_editor_ctrl
+        self.state_machines_editor_ctrl = mvc_singleton.main_window_controller.\
+            get_controller('state_machines_editor_ctrl')
+        self.states_editor_ctrl = mvc_singleton.main_window_controller.get_controller('states_editor_ctrl')
         self.shortcut_manager = shortcut_manager
-        self.logging_view = logging_view
+        self.logging_view = view.logging_view
         self.main_window_view = view
 
     def register_view(self, view):
@@ -261,11 +263,10 @@ class MenuBarController(ExtendedController):
         library_manager.refresh_libraries()
 
     def on_refresh_all_activate(self, widget, data=None, force=False):
-        """
-        Reloads all libraries and thus all state machines as well.
+        """Reloads all libraries and thus all state machines as well.
+
         :param widget: the main widget
         :param data: optional data
-        :return:
         """
         if force:
             self.refresh_libs_and_statemachines()
@@ -303,10 +304,7 @@ class MenuBarController(ExtendedController):
                 self.refresh_libs_and_statemachines()
 
     def refresh_libs_and_statemachines(self):
-        """
-        Deletes all libraries and state machines and reloads them freshly from the file system.
-        :return:
-        """
+        """Deletes all libraries and state machines and reloads them freshly from the file system."""
         library_manager.refresh_libraries()
 
         # delete dirty flags for state machines

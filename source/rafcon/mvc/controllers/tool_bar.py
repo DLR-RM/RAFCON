@@ -1,4 +1,5 @@
 from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc import singleton as mvc_singleton
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -7,18 +8,18 @@ logger = log.get_logger(__name__)
 class ToolBarController(ExtendedController):
     """The class to trigger all the action, available in the tool bar.
 
-    :param  state_machine_manager_model:
+    :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel state_machine_manager_model: The state
+        machine manager model, holding data regarding state machines. Should be exchangeable.
     :param view:
     """
 
-    def __init__(self, state_machine_manager_model, view, menu_bar_ctrl):
+    def __init__(self, state_machine_manager_model, view):
         ExtendedController.__init__(self, state_machine_manager_model, view)
-        self.menu_bar_ctrl = menu_bar_ctrl
+        self.menu_bar_ctrl = mvc_singleton.main_window_controller.get_controller('menu_bar_controller')
         self.shortcut_manager = None
 
     def register_view(self, view):
-        """Called when the View was registered
-        """
+        """Called when the View was registered"""
         self.view['button_new'].connect('clicked', self.on_button_new_clicked)
         self.view['button_refresh'].connect('clicked', self.on_button_refresh_clicked)
         self.view['button_open'].connect('clicked', self.on_button_open_clicked)
@@ -26,8 +27,7 @@ class ToolBarController(ExtendedController):
         self.view['button_refresh_libs'].connect('clicked', self.on_button_refresh_libs_clicked)
 
     def register_adapters(self):
-        """Adapters should be registered in this method call
-        """
+        """Adapters should be registered in this method call"""
         pass
 
     def register_actions(self, shortcut_manager):
@@ -35,6 +35,7 @@ class ToolBarController(ExtendedController):
 
         :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
+        pass
 
     def on_button_refresh_libs_clicked(self, widget, data=None):
         self.menu_bar_ctrl.on_refresh_libraries_activate(widget, data)
