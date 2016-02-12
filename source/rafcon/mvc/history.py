@@ -1097,7 +1097,6 @@ class CoreObjectIdentifier:
         if not(type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list):
             logger.warning("\n{0}\n{1}\n{2}".format(core_obj_or_cls, type(core_obj_or_cls),core_object_list))
         assert type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list
-        print core_obj_or_cls
         self._sm_id = None
         self._path = None
         # type can be, object types (of type Transition e.g.) or class
