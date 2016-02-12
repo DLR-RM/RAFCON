@@ -104,7 +104,13 @@ class SourceEditorController(ExtendedController):
             self.view.set_text("")
             return
 
-        logger.debug("Apply button pressed!")
+        logger.debug("Parsing execute script...")
+        # Ugly workaround to give user at least some feedback about the parser
+        # Without the loop, this function would block the GTK main loop and the log message would appear after the
+        # function has finished
+        # TODO: run parser in separate thread
+        while gtk.events_pending():
+            gtk.main_iteration_do()
 
         ###############
         # get script
@@ -126,9 +132,6 @@ class SourceEditorController(ExtendedController):
         pylint_stdout_data = pylint_stdout.readlines()
         pylint_stderr_data = pylint_stderr.readlines()
 
-        logger.debug("pylint_stdout_data: %s" % pylint_stdout_data)
-        logger.debug("pylint_stderr: %s" % pylint_stderr_data)
-
         invalid_sytax = False
         for elem in pylint_stdout_data:
             if "error" in elem:
@@ -141,7 +144,7 @@ class SourceEditorController(ExtendedController):
                 if response_id == 42:
                     self.set_script_text(current_text)
                 else:
-                    logger.debug("Source script is not stored to memory")
+                    logger.debug("The script was not saved")
                 widget.destroy()
 
             from rafcon.mvc.utils.dialog import RAFCONDialog
@@ -160,14 +163,8 @@ class SourceEditorController(ExtendedController):
             self.set_script_text(current_text)
 
     def set_script_text(self, text):
-        try:
-            if self.model.state.set_script_text(text):
-                logger.debug("Source script is stored to memory")
-                return True
-            else:
-                logger.debug("Source script is not stored to memory")
-        except TypeError as e:
-            logger.warning("Source script is not stored to memory: {0}".format(e))
+        self.model.state.set_script_text(text)
+        logger.debug("The script was saved")
 
     def filter_out_not_compatible_modules(self, pylint_msg):
         """This method filters out every pylint message that addresses an error of a module that is explicitly ignored
