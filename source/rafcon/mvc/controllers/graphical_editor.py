@@ -657,7 +657,7 @@ class GraphicalEditorController(ExtendedController):
         """
         self.view.editor.emit("expose_event", None)
         rel_pos = self.view.editor.screen_to_opengl_coordinates((x, y))
-        self._move_state(self.model.selection.get_selected_state().states[data.get_text()], rel_pos)
+        self._move_state(self.model.selection.get_selected_state().states[data.get_text()], rel_pos, combined_action=True)
 
     def on_drag_motion(self, widget, context, x, y, time):
         """Changes the selection on mouse over during drag motion
@@ -995,7 +995,7 @@ class GraphicalEditorController(ExtendedController):
 
         self._abort()
 
-    def _move_state(self, state_m, new_pos, redraw=True, publish_changes=True):
+    def _move_state(self, state_m, new_pos, redraw=True, publish_changes=True, combined_action=False):
         """Move the state to the given position
 
         The method moves the state and all its child states with their transitions, data flows and waypoints. The
@@ -1021,7 +1021,10 @@ class GraphicalEditorController(ExtendedController):
         state_m.meta['gui']['editor_gaphas']['rel_pos'] = (new_rel_pos[0], -new_rel_pos[1])
 
         if publish_changes:
-            self._publish_changes(state_m, "position", affects_children=False)
+            if combined_action:
+                self._publish_changes(state_m, "append_to_last_change", affects_children=False)
+            else:
+                self._publish_changes(state_m, "position", affects_children=False)
         if redraw:
             self._redraw()
 
