@@ -62,7 +62,7 @@ class TopToolBarController(ExtendedController):
             self.main_window_controller.on_left_bar_dock_clicked(None)
         elif self.top_level_window.get_title() == 'STATE EDITOR':
             self.main_window_controller.on_right_bar_dock_clicked(None)
-        elif self.top_level_window.get_title == 'CONSOLE':
+        elif self.top_level_window.get_title() == 'CONSOLE':
             self.main_window_controller.on_console_dock_clicked(None)
 
     def motion_detected(self, widget, event=None):
