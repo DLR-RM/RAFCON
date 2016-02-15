@@ -395,3 +395,22 @@ def insert_state(state, as_template=False):
         # Causes the template to be resized
         template_m.temp['gui']['editor']['template'] = True
         return True
+
+
+def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', combined_action=False):
+
+    state_m_meta = state_m.meta['gui']['editor_opengl']
+    t_m = state_m.parent.get_transition_m(t_id)
+    outcome_id = t_m.transition.from_outcome
+    first_point_x = state_m_meta['rel_pos'][0] + 1.3*state_m_meta['size'][0]
+    first_point_y = state_m_meta['rel_pos'][1] - 0.1*outcome_id*state_m_meta['size'][1]
+    second_point_x = state_m_meta['rel_pos'][0] + 0.5*state_m_meta['size'][0]
+    second_point_y = state_m_meta['rel_pos'][1] + (0.5-0.1*outcome_id)*state_m_meta['size'][1]
+
+    t_m.meta['gui']['editor_opengl'].update({'waypoints': [(first_point_x, first_point_y),
+                                                           (second_point_x, second_point_y)]})
+    from rafcon.mvc.models.abstract_state import MetaSignalMsg
+    if combined_action:
+        t_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='append_to_last_change'))
+    else:
+        t_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='viapoint_position'))

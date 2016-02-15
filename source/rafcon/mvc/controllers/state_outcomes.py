@@ -147,6 +147,10 @@ class StateOutcomesListController(ExtendedController):
                     logger.warn("The transition couldn't be added: {0}".format(e))
                     return
 
+                # add self transition meta data
+                if 'self' in text.split('.'):
+                    insert_self_transition_meta_data(self.model, t_id, 'outcomes_widget', 'append_to_last_change')
+
             else:
                 # logger.debug("s32")
                 logger.debug("outcome-editor got None in to_state-combo-change no transition is added")
