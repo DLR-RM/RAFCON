@@ -1720,10 +1720,10 @@ class History(ModelMT):
         :param pointer_on_version_to_recover: the id of the list element which is to recover
         :return:
         """
-        logger.info("recover version %s of trail state machine edit history" % pointer_on_version_to_recover)
         # search for traceable path -> list of action to undo and list of action to redo
         undo_redo_list = self.changes.undo_redo_list_from_actual_trail_history_to_version_id(pointer_on_version_to_recover)
-        # logger.info("undo_redo {0}".format(undo_redo_list))
+        logger.info("Multiple undo and redo to reach modification history element of version {0} "
+                    "-> undo-redo-list is: {1}".format(pointer_on_version_to_recover, undo_redo_list))
         for elem in undo_redo_list:
             if elem[1] == 'undo':
                 # do undo
@@ -2358,11 +2358,17 @@ class ChangeHistory(Observable):
         # set pointer of previous element
         if self.all_time_pointer is not None:
             prev_tree_elem = self.all_time_history[prev_id]
+            prev_old_next_ids = copy.deepcopy(prev_tree_elem.old_next_ids)
             if self.with_prints:
                 logger.info("new pointer {0} element {1}\nnew next_id {2}".format(self.all_time_history[self.trail_pointer].action.version_id,
                                                                                   prev_tree_elem,
                                                                                   len(self.all_time_history) - 1))
             prev_tree_elem.next_id = len(self.all_time_history) - 1
+            if not prev_old_next_ids == prev_tree_elem.old_next_ids:
+                logger.info("This action creates a new branch in modification-history "
+                            "-> actions of old branches can be reached by clicking on respective action in "
+                            "modification-history-widget (common left lower bar)")
+
 
         # do single trail history
         if self.trail_pointer is not None:
