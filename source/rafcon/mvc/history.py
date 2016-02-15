@@ -2392,7 +2392,8 @@ class ChangeHistory(Observable):
             logger.warning("No UNDO left over!!!")
         else:
             logger.error("History undo FAILURE")
-        logger.info("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
+        if self.with_prints:
+            logger.info("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
 
     @Observable.observed
     def redo(self):
