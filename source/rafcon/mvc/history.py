@@ -1978,8 +1978,8 @@ class History(ModelMT):
                 if self.with_debug_logs:
                     self.store_test_log_file("$5 add Outcome,In-OutPut in root and State, ScopedVariable, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
                 self.actual_action = Action(parent_path=overview['instance'][-1].get_path(),
-                                                     state_machine_model=self.state_machine_model,
-                                                     overview=overview)
+                                            state_machine_model=self.state_machine_model,
+                                            overview=overview)
             else:
                 if self.with_debug_logs:
                     self.store_test_log_file("$5 remove Outcome,In-OutPut in root and State, ScopedVariables, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
@@ -2358,9 +2358,10 @@ class ChangeHistory(Observable):
         # set pointer of previous element
         if self.all_time_pointer is not None:
             prev_tree_elem = self.all_time_history[prev_id]
-            logger.info("new pointer {0} element {1}\nnew next_id {2}".format(self.all_time_history[self.trail_pointer].action.version_id,
-                                                                              prev_tree_elem,
-                                                                              len(self.all_time_history) - 1))
+            if self.with_prints:
+                logger.info("new pointer {0} element {1}\nnew next_id {2}".format(self.all_time_history[self.trail_pointer].action.version_id,
+                                                                                  prev_tree_elem,
+                                                                                  len(self.all_time_history) - 1))
             prev_tree_elem.next_id = len(self.all_time_history) - 1
 
         # do single trail history
