@@ -2220,6 +2220,7 @@ class History(ModelMT):
                 if self.with_prints:
                     print "HISTORY after not count"
 
+
     @ModelMT.observe("state", before=True)
     @ModelMT.observe("outcomes", before=True)
     @ModelMT.observe("is_start", before=True)
@@ -2365,10 +2366,7 @@ class ChangeHistory(Observable):
                                                                                   len(self.all_time_history) - 1))
             prev_tree_elem.next_id = len(self.all_time_history) - 1
             if not prev_old_next_ids == prev_tree_elem.old_next_ids:
-                logger.info("This action creates a new branch in modification-history "
-                            "-> actions of old branches can be reached by clicking on respective action in "
-                            "modification-history-widget (common left lower bar)")
-
+                logger.info("This action has been created a new branch in the state machine modification-history")
 
         # do single trail history
         if self.trail_pointer is not None:
