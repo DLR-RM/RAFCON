@@ -1,0 +1,46 @@
+!Vividict
+vivid_dict_content:
+    gui: !Vividict
+        vivid_dict_content:
+            editor: !Vividict
+                vivid_dict_content:
+                    height: 4.0
+                    id: 4
+                    outcome_pos:
+                        -2: !!python/tuple
+                        - 37.16643763087855
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                wJEMkXkLR0A=
+                        -1: !!python/tuple
+                        - 37.96643763087855
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                wJEMkXkLR0A=
+                        0: !!python/tuple
+                        - 38.36643763087855
+                        - !!python/object/apply:numpy.core.multiarray.scalar
+                            - !!python/object/apply:numpy.dtype
+                                args: [f8, 0, 1]
+                                state: !!python/tuple [3, <, null, null, null, -1,
+                                    -1, 0]
+                            - !!binary |
+                                wJEMkXkLRkA=
+                    outcome_radius: 0.17391304347826086
+                    pos_x: 34.36643763087855
+                    pos_y: !!python/object/apply:numpy.core.multiarray.scalar
+                    - !!python/object/apply:numpy.dtype
+                        args: [f8, 0, 1]
+                        state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
+                    - !!binary |
+                        wJEMkXkLRUA=
+                    resize_length: 0.5
+                    width: 4.0

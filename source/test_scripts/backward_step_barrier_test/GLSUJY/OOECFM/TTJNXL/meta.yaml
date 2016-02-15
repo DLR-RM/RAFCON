@@ -10,17 +10,18 @@ data_flows:
         to_state: TTJNXL}
 description: null
 input_data_ports:
-    1: !DataPort {data_port_id: 1, data_type: &id001 !!python/name:__builtin__.int '',
+    1: !InputDataPort {data_port_id: 1, data_type: &id001 !!python/name:__builtin__.int '',
         default_value: 10, name: number_in}
-    2: !DataPort {data_port_id: 2, data_type: !!python/name:__builtin__.str '', default_value: whiskey,
-        name: type}
+    2: !InputDataPort {data_port_id: 2, data_type: !!python/name:__builtin__.str '',
+        default_value: whiskey, name: type}
 name: decimate whiskeys
 outcomes:
     -2: !Outcome {name: preempted, outcome_id: -2}
     -1: !Outcome {name: aborted, outcome_id: -1}
     0: !Outcome {name: success, outcome_id: 0}
 output_data_ports:
-    12: !DataPort {data_port_id: 12, data_type: *id001, default_value: null, name: number_out}
+    12: !OutputDataPort {data_port_id: 12, data_type: *id001, default_value: null,
+        name: number_out}
 scoped_variables: {}
 state_id: TTJNXL
 transitions:

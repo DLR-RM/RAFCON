@@ -1,0 +1,66 @@
+!Vividict
+data_flow6:
+    gui:
+        editor:
+            waypoints: {}
+        editor_opengl:
+            waypoints: {}
+data_flow7:
+    gui:
+        editor:
+            waypoints: {}
+        editor_opengl:
+            waypoints: {}
+data_flow8:
+    gui:
+        editor:
+            waypoints: {}
+        editor_opengl:
+            waypoints: {}
+data_flow9:
+    gui:
+        editor:
+            waypoints: {}
+        editor_opengl:
+            waypoints: {}
+gui:
+    editor_opengl:
+        rel_pos: {}
+        size: !!python/tuple [100, 100]
+outcome-1: {}
+outcome-2: {}
+outcome0: {}
+scoped_variable1:
+    gui:
+        editor_opengl:
+            inner_rel_pos: !!python/tuple [0.0, -5.0]
+transition1:
+    gui:
+        editor:
+            waypoints: {}
+        editor_opengl:
+            waypoints: {}
+transition2:
+    gui:
+        editor:
+            waypoints: {}
+        editor_opengl:
+            waypoints: {}
+transition3:
+    gui:
+        editor:
+            waypoints: {}
+        editor_opengl:
+            waypoints: {}
+transition4:
+    gui:
+        editor:
+            waypoints: {}
+        editor_opengl:
+            waypoints: {}
+transition5:
+    gui:
+        editor:
+            waypoints: {}
+        editor_opengl:
+            waypoints: {}

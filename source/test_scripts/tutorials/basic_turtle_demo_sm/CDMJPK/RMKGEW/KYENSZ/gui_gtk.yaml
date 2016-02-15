@@ -1,136 +1,130 @@
 !Vividict
-gui: !Vividict
-    editor_gaphas: !Vividict
+gui:
+    editor_gaphas:
         rel_pos: !!python/tuple [34.16865838297865, 19.600865361702084]
         size: !!python/tuple [57.87716521841146, 35.07070341976602]
-    editor_opengl: !Vividict
+    editor_opengl:
         rel_pos: !!python/tuple [34.16865838297865, -19.600865361702084]
         size: !!python/tuple [76.84782297872326, 38.08988595744671]
-income: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+income:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [0.625, 12.8593748462532]
-name: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
-            rel_pos: !Vividict {}
-            size: !Vividict {}
-outcome-1: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+name:
+    gui:
+        editor_gaphas:
+            rel_pos: {}
+            size: {}
+outcome-1:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [57.25216521841146, 7.716870748956339]
-outcome-2: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+outcome-2:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [57.25216521841146, 6.059691131914902]
-outcome0: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+outcome0:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [9.320463930411488, 34.44570341976602]
-transition1: !Vividict
-    gui: !Vividict
-        editor: !Vividict
-            waypoints: &id001 !Vividict {}
-        editor_gaphas: !Vividict
+transition1:
+    gui:
+        editor:
+            waypoints: {}
+        editor_gaphas:
             waypoints: []
-        editor_opengl: !Vividict
-            waypoints: *id001
-transition10: !Vividict
-    gui: !Vividict
-        editor: !Vividict
-            waypoints: &id002 !Vividict {}
-        editor_gaphas: !Vividict
+        editor_opengl:
+            waypoints: {}
+transition10:
+    gui:
+        editor:
+            waypoints: {}
+        editor_gaphas:
             waypoints: []
-        editor_opengl: !Vividict
-            waypoints: *id002
-transition11: !Vividict
-    gui: !Vividict
-        editor: !Vividict
-            waypoints: &id003 !Vividict {}
-        editor_gaphas: !Vividict
+        editor_opengl:
+            waypoints: {}
+transition11:
+    gui:
+        editor:
+            waypoints: {}
+        editor_gaphas:
             waypoints: []
-        editor_opengl: !Vividict
-            waypoints: *id003
-transition13: !Vividict
-    gui: !Vividict
-        editor: !Vividict
-            waypoints: &id004 !Vividict {}
-        editor_gaphas: !Vividict
+        editor_opengl:
+            waypoints: {}
+transition13:
+    gui:
+        editor:
+            waypoints: {}
+        editor_gaphas:
             waypoints: []
-        editor_opengl: !Vividict
-            waypoints: *id004
-transition14: !Vividict
-    gui: !Vividict
-        editor: !Vividict
-            waypoints: &id005 !Vividict {}
-        editor_gaphas: !Vividict
+        editor_opengl:
+            waypoints: {}
+transition14:
+    gui:
+        editor:
+            waypoints: {}
+        editor_gaphas:
             waypoints: []
-        editor_opengl: !Vividict
-            waypoints: *id005
-transition15: !Vividict
-    gui: !Vividict
-        editor: !Vividict
-            waypoints: &id006 !Vividict {}
-        editor_gaphas: !Vividict
+        editor_opengl:
+            waypoints: {}
+transition15:
+    gui:
+        editor:
+            waypoints: {}
+        editor_gaphas:
             waypoints: []
-        editor_opengl: !Vividict
-            waypoints: *id006
-transition2: !Vividict
-    gui: !Vividict
-        editor: !Vividict
-            waypoints: &id007 !Vividict {}
-        editor_gaphas: !Vividict
+        editor_opengl:
+            waypoints: {}
+transition2:
+    gui:
+        editor:
+            waypoints: {}
+        editor_gaphas:
             waypoints:
             - !!python/tuple [21.113389603918222, 25.89538663608694]
             - !!python/tuple [21.113389603918222, 24.159396952832466]
-        editor_opengl: !Vividict
-            waypoints: *id007
-transition4: !Vividict
-    gui: !Vividict
-        editor: !Vividict
-            waypoints: &id008 !Vividict {}
-        editor_gaphas: !Vividict
+        editor_opengl:
+            waypoints: {}
+transition4:
+    gui:
+        editor:
+            waypoints: {}
+        editor_gaphas:
             waypoints: []
-        editor_opengl: !Vividict
-            waypoints: *id008
-transition6: !Vividict
-    gui: !Vividict
-        editor: !Vividict
-            waypoints: &id009 !Vividict {}
-        editor_gaphas: !Vividict
+        editor_opengl:
+            waypoints: {}
+transition6:
+    gui:
+        editor:
+            waypoints: {}
+        editor_gaphas:
             waypoints: []
-        editor_opengl: !Vividict
-            waypoints: *id009
-transition7: !Vividict
-    gui: !Vividict
-        editor: !Vividict
-            waypoints: &id010 !Vividict {}
-        editor_gaphas: !Vividict
+        editor_opengl:
+            waypoints: {}
+transition7:
+    gui:
+        editor:
+            waypoints: {}
+        editor_gaphas:
             waypoints: []
-        editor_opengl: !Vividict
-            waypoints: *id010
-transition8: !Vividict
-    gui: !Vividict
-        editor: !Vividict
-            waypoints:
-            - !!python/tuple [63.55412814124282, -13.895642265931542]
-            - !!python/tuple [63.55412814124282, -22.769292962094966]
-            - !!python/tuple [2.030668232154298, -22.769292962094973]
-            - !!python/tuple [2.0306682321542984, -28.785542960777605]
-        editor_gaphas: !Vividict
+        editor_opengl:
+            waypoints: {}
+transition8:
+    gui:
+        editor_gaphas:
             waypoints:
             - !!python/tuple [48.57280758930523, 20.00095418521333]
-        editor_opengl: !Vividict
+        editor_opengl:
             waypoints:
             - !!python/tuple [63.55412814124282, -13.895642265931542]
             - !!python/tuple [63.55412814124282, -22.769292962094966]
             - !!python/tuple [2.030668232154298, -22.769292962094973]
             - !!python/tuple [2.0306682321542984, -28.785542960777605]
-transition9: !Vividict
-    gui: !Vividict
-        editor: !Vividict
-            waypoints: &id011 !Vividict {}
-        editor_gaphas: !Vividict
+transition9:
+    gui:
+        editor:
+            waypoints: {}
+        editor_gaphas:
             waypoints: []
-        editor_opengl: !Vividict
-            waypoints: *id011
+        editor_opengl:
+            waypoints: {}

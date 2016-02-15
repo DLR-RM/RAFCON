@@ -1,10 +1,10 @@
 !ExecutionState
 description: null
 input_data_ports:
-    1: !DataPort {data_port_id: 1, data_type: !!python/name:__builtin__.int '', default_value: null,
-        name: number}
-    3: !DataPort {data_port_id: 3, data_type: !!python/name:__builtin__.str '', default_value: val,
-        name: type}
+    1: !InputDataPort {data_port_id: 1, data_type: !!python/name:__builtin__.int '',
+        default_value: null, name: number}
+    3: !InputDataPort {data_port_id: 3, data_type: !!python/name:__builtin__.str '',
+        default_value: val, name: type}
 name: Sing
 outcomes:
     -2: !Outcome {name: preempted, outcome_id: -2}
