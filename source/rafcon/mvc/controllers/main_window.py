@@ -327,7 +327,7 @@ class MainWindowController(ExtendedController):
         self.view.left_bar_window.get_top_widget().resize(self.view['top_level_h_pane'].get_position(),
                                                           self.view['left_bar'].get_allocation().height)
         self.view.left_bar_window.get_top_widget().set_position(gtk.WIN_POS_MOUSE)
-        self.view['left_bar'].reparent(self.view.left_bar_window['top_level_vbox'])
+        self.view['left_bar'].reparent(self.view.left_bar_window['eventbox3'])
         self.get_controller('left_window_controller').show_window()
         self.view['undock_left_bar_button'].hide()
         self.on_left_bar_hide_clicked(None)
@@ -351,7 +351,7 @@ class MainWindowController(ExtendedController):
                 self.view['top_level_h_pane'].get_position()
         self.view.right_bar_window.get_top_widget().resize(width, self.view['right_bar'].get_allocation().height)
         self.view.right_bar_window.get_top_widget().set_position(gtk.WIN_POS_MOUSE)
-        self.view['right_bar'].reparent(self.view.right_bar_window['top_level_vbox'])
+        self.view['right_bar'].reparent(self.view.right_bar_window['eventbox3'])
         self.get_controller('right_window_controller').show_window()
         self.view['undock_right_bar_button'].hide()
         self.on_right_bar_hide_clicked(None)
@@ -374,7 +374,7 @@ class MainWindowController(ExtendedController):
                                                          self.view['console'].get_allocation().height)
         self.view.console_window.get_top_widget().move(self.view['top_level_h_pane'].get_position(),
                                                        self.view['central_v_pane'].get_position())
-        self.view['console'].reparent(self.view.console_window['top_level_vbox'])
+        self.view['console'].reparent(self.view.console_window['eventbox3'])
         self.get_controller('console_window_controller').show_window()
         self.view['undock_console_button'].hide()
         self.on_console_hide_clicked(None)

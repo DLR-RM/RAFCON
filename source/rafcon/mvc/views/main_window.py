@@ -1,4 +1,3 @@
-import gtk
 from gtkmvc import View
 from rafcon.mvc.views.logging import LoggingView
 from rafcon.mvc.views.library_tree import LibraryTreeView
@@ -85,8 +84,6 @@ class MainWindowView(View):
         self.execution_history = ExecutionHistoryView()
         self.execution_history.show()
         self['execution_history_alignment'].add(self.execution_history.get_top_widget())
-
-        self['lower_notebook'].set_current_page(0)
 
         ######################################################
         # rotate all tab labels by 90 degrees and make detachable

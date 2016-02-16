@@ -156,7 +156,6 @@
                                         <child>
                                           <object class="GtkViewport" id="libraries_viewport">
                                             <property name="visible">True</property>
-                                            <property name="resize_mode">queue</property>
                                             <child>
                                               <object class="GtkAlignment" id="libraries_alignment">
                                                 <property name="visible">True</property>
@@ -193,7 +192,6 @@
                                     <child>
                                       <object class="GtkViewport" id="state_tree_viewport">
                                         <property name="visible">True</property>
-                                        <property name="resize_mode">queue</property>
                                         <child>
                                           <object class="GtkAlignment" id="state_tree_alignment">
                                             <property name="visible">True</property>
@@ -232,7 +230,6 @@
                                     <child>
                                       <object class="GtkViewport" id="global_variables_viewport">
                                         <property name="visible">True</property>
-                                        <property name="resize_mode">queue</property>
                                         <child>
                                           <object class="GtkAlignment" id="global_variables_alignment">
                                             <property name="visible">True</property>
@@ -321,7 +318,6 @@
                                     <child>
                                       <object class="GtkViewport" id="history_viewport">
                                         <property name="visible">True</property>
-                                        <property name="resize_mode">queue</property>
                                         <child>
                                           <object class="GtkAlignment" id="history_alignment">
                                             <property name="visible">True</property>
@@ -356,7 +352,6 @@
                                     <child>
                                       <object class="GtkViewport" id="execution_history_viewport">
                                         <property name="visible">True</property>
-                                        <property name="resize_mode">queue</property>
                                         <child>
                                           <object class="GtkAlignment" id="execution_history_alignment">
                                             <property name="visible">True</property>
@@ -395,7 +390,6 @@
                                     <child>
                                       <object class="GtkViewport" id="network_viewport">
                                         <property name="visible">True</property>
-                                        <property name="resize_mode">queue</property>
                                         <child>
                                           <object class="GtkAlignment" id="network_alignment">
                                             <property name="visible">True</property>

@@ -43,7 +43,24 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkEventBox" id="eventbox3">
+                <property name="visible">True</property>
+                <child>
+                  <placeholder/>
+                </child>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkStatusbar" id="statusbar1">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">2</property>
+              </packing>
             </child>
           </object>
         </child>
