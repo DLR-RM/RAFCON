@@ -1,7 +1,7 @@
 !ExecutionState
 description: null
 input_data_ports:
-    35: !DataPort {data_port_id: 35, data_type: !!python/name:__builtin__.int '',
+    35: !InputDataPort {data_port_id: 35, data_type: !!python/name:__builtin__.int '',
         default_value: 99, name: bottles}
 name: Count bottles
 outcomes:

@@ -17,8 +17,8 @@ outcomes:
     0: !Outcome {name: the end, outcome_id: 0}
 output_data_ports: {}
 scoped_variables:
-    29: !ScopedVariable {data_type: !!python/name:__builtin__.int '', default_value: 3,
-        name: bottles, scoped_variable_id: 29}
+    29: !ScopedVariable {data_port_id: 29, data_type: !!python/name:__builtin__.int '',
+        default_value: 3, name: bottles}
 state_id: GLSUJY
 transitions:
     1: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: PXTKIH,

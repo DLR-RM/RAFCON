@@ -1,0 +1,20 @@
+!Vividict
+gui:
+    editor_opengl:
+        rel_pos: {}
+        size: !!python/tuple [100, 100]
+outcome-1: {}
+outcome-2: {}
+outcome0: {}
+transition1:
+    gui:
+        editor:
+            waypoints: {}
+        editor_opengl:
+            waypoints: {}
+transition2:
+    gui:
+        editor:
+            waypoints: {}
+        editor_opengl:
+            waypoints: {}

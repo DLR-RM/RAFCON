@@ -1,55 +1,60 @@
 !Vividict
-gui: !Vividict
-    editor_gaphas: !Vividict
+gui:
+    editor_gaphas:
         rel_pos: !!python/tuple [14.04683838545671, 23.17683873528425]
         size: !!python/tuple [6.190496494848334, 5.953717067501206]
-    editor_opengl: !Vividict
+    editor_opengl:
         rel_pos: !!python/tuple [40.77200572049625, -25.626575985374785]
         size: !!python/tuple [6.924413686068874, 5.613563443761585]
-income: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+    show_content: {}
+income:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [5.877996494848334, 0.9640443180063514]
-input19: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+input19:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [0.3125, 5.060659507376025]
-input20: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+input20:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [0.3125, 4.232069698855307]
-input21: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+input21:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [0.3125, 3.403479890334588]
-input22: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+input22:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [0.3125, 2.57489008181387]
-input_data_port19: !Vividict {}
-input_data_port20: !Vividict {}
-input_data_port21: !Vividict {}
-input_data_port22: !Vividict {}
-name: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+input_data_port19:
+    gui: {}
+input_data_port20:
+    gui: {}
+input_data_port21:
+    gui: {}
+input_data_port22:
+    gui: {}
+name:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [0.625, 0.625]
-            size: !Vividict {}
-        editor_opengl: !Vividict
+            size: {}
+        editor_opengl:
             rel_pos: !!python/tuple [0.625, -0.625]
-outcome-1: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+outcome-1:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [5.877996494848334, 4.545905462123111]
-outcome-2: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+outcome-2:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [5.877996494848334, 3.9976981937269773]
-outcome0: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+outcome0:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [0.3125, 1.1864067406685717]
-outcome1: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+outcome1:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [5.877996494848334, 2.6867396237506784]

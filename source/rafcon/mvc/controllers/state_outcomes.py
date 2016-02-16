@@ -2,6 +2,7 @@ import gtk
 import gobject
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.statemachine_helper import insert_self_transition_meta_data
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -13,12 +14,11 @@ class StateOutcomesListController(ExtendedController):
 
     The controller allows to add and remove outcomes as well as to add, remove and to modify the related transition.
 
-    The related transition can be set to a child-state or to a outcome of the parent. Hereby the transition also can
-    switch from pointing to an outcome or to a state. It react to changes in the state's respective outcomes-list or
-    transitions-list and use the focus change to update after a modification.
+    The related transition can be set to a sibling-state, to the state it self or to a outcome of the parent.
+    Hereby the transition also can switch from pointing to an outcome or to a state. It react to changes in the
+    state's respective outcomes-list, transitions-list or change of parent-state and use additionally the focus change
+    to update after a modification (e.g. the focus change updates if not observed state-names change).
     """
-
-    # TODO - widget should update if parent of state has changed (e.g. because of state-type-change of parent)
 
     def __init__(self, model, view):
         ExtendedController.__init__(self, model, view)
@@ -124,16 +124,33 @@ class StateOutcomesListController(ExtendedController):
             if text is not None:
                 to_state_id = text.split('.')[1]
                 if not transition_parent_state.transitions[t_id].to_state == to_state_id:
-                    transition_parent_state.transitions[t_id].modify_target(to_state=to_state_id)
+                    try:
+                        transition_parent_state.transitions[t_id].modify_target(to_state=to_state_id)
+                    except ValueError as e:
+                        logger.warn("The target of transition couldn't be modified: {0}".format(e))
             else:
-                transition_parent_state.remove_transition(t_id)
+                try:
+                    transition_parent_state.remove_transition(t_id)
+                except AttributeError as e:
+                    logger.warn("The transition couldn't be removed: {0}".format(e))
         else:  # there is no transition till now
             if text is not None and not self.model.state.is_root_state:
                 # logger.debug("s31")
                 transition_parent_state = self.model.parent.state
                 to_state_id = text.split('.')[1]
-                transition_parent_state.add_transition(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
-                                                       to_state_id=to_state_id, to_outcome=None, transition_id=None)
+                try:
+                    t_id = transition_parent_state.add_transition(from_state_id=self.model.state.state_id,
+                                                                  from_outcome=outcome_id,
+                                                                  to_state_id=to_state_id,
+                                                                  to_outcome=None, transition_id=None)
+                except (ValueError, TypeError) as e:
+                    logger.warn("The transition couldn't be added: {0}".format(e))
+                    return
+
+                # add self transition meta data
+                if 'self' in text.split('.'):
+                    insert_self_transition_meta_data(self.model, t_id, 'outcomes_widget', 'append_to_last_change')
+
             else:
                 # logger.debug("s32")
                 logger.debug("outcome-editor got None in to_state-combo-change no transition is added")
@@ -153,28 +170,41 @@ class StateOutcomesListController(ExtendedController):
                 new_to_outcome_id = int(text.split('.')[2])
                 if not transition_parent_state.transitions[t_id].to_outcome == new_to_outcome_id:
                     to_state_id = self.model.parent.state.state_id
-                    transition_parent_state.transitions[t_id].modify_target(to_state=to_state_id,
-                                                                            to_outcome=new_to_outcome_id)
+                    try:
+                        transition_parent_state.transitions[t_id].modify_target(to_state=to_state_id,
+                                                                                to_outcome=new_to_outcome_id)
+                    except ValueError as e:
+                        logger.warn("The target of transition couldn't be modified: {0}".format(e))
             else:
                 transition_parent_state.remove_transition(t_id)
         else:  # there is no transition till now
             if text is not None:
                 # logger.debug("o31")
                 to_outcome = int(text.split('.')[2])
-                self.model.parent.state.add_transition(from_state_id=self.model.state.state_id, from_outcome=outcome_id,
-                                                    to_state_id=self.model.parent.state.state_id, to_outcome=to_outcome,
-                                                    transition_id=None)
+
+                try:
+                    self.model.parent.state.add_transition(from_state_id=self.model.state.state_id,
+                                                           from_outcome=outcome_id,
+                                                           to_state_id=self.model.parent.state.state_id,
+                                                           to_outcome=to_outcome, transition_id=None)
+                except (ValueError, TypeError) as e:
+                    logger.warn("The transition couldn't be added: {0}".format(e))
             else:
                 # logger.debug("o32")
                 logger.debug("outcome-editor got None in to_outcome-combo-change no transition is added")
 
     def on_add(self, button, info=None):
         # logger.debug("add outcome")
-        try:
-            outcome_id = self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1))
-        except AttributeError as e:
-            logger.warning("The outcome couldn't be added: {0}".format(e))
-            return
+        outcome_id = None
+        for run_id in range(5):
+            try:
+                outcome_id = self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1+run_id))
+                break
+            except ValueError as e:
+                logger.debug("The outcome couldn't be added: {0}".format(e))
+                if run_id == 4:
+                    logger.warn("The outcome couldn't be added: {0}".format(e))
+                    return
         # Search for new entry and select it
         ctr = 0
         for outcome_entry in self.tree_store:
@@ -221,6 +251,9 @@ class StateOutcomesListController(ExtendedController):
                 if not model.state.state_id == parent_child_state_m.state.state_id:
                     self.to_state_combo_list.append([parent_child_state_m.state.name + "." + parent_child_state_m.state.state_id,
                                                      parent_child_state_m.state.state_id, parent_id])
+                else:
+                    self.to_state_combo_list.append(["self." + parent_child_state_m.state.state_id,
+                                                     parent_child_state_m.state.state_id, parent_id])
             # check for "to outcome combos" -> so all outcomes of parent
             for outcome in model.parent.state.outcomes.values():
                 # print "type outcome: ", outcome.name, type(outcome)
@@ -235,13 +268,16 @@ class StateOutcomesListController(ExtendedController):
                 if transition.from_state == model.state.state_id and transition.from_outcome in model.state.outcomes.keys():
                     # check for "to other outcomes" connections -> so to parent-state and parent-outcome "ext" transitions
                     if transition.to_state == model.parent.state.state_id:
-                        to_state_name = model.parent.state.name
                         to_state_id = model.parent.state.state_id
-                        self.dict_to_other_outcome[transition.from_outcome] = [to_state_name + '.' + str(transition.to_outcome),
+                        to_outcome_name = model.parent.state.outcomes[transition.to_outcome].name
+                        self.dict_to_other_outcome[transition.from_outcome] = [to_outcome_name + '.' + str(transition.to_outcome),
                                                                                to_state_id,
                                                                                transition.transition_id]
                     else:  # or to other state
-                        to_state_name = model.parent.states[transition.to_state].state.name
+                        if model.parent.states[transition.to_state].state.state_id == self.model.state.state_id:
+                            to_state_name = 'self'
+                        else:
+                            to_state_name = model.parent.states[transition.to_state].state.name
                         self.dict_to_other_state[transition.from_outcome] = [to_state_name + '.' + transition.to_state,
                                                                              '',
                                                                              transition.transition_id]
@@ -285,6 +321,7 @@ class StateOutcomesListController(ExtendedController):
                                           '#f0E5C7', '#f0E5c7', outcome, self.model.state])
         self.update_runs = False
 
+    @ExtendedController.observe("parent", after=True)
     @ExtendedController.observe("outcomes", after=True)
     @ExtendedController.observe("transitions", after=True)
     def outcomes_changed(self, model, prop_name, info):

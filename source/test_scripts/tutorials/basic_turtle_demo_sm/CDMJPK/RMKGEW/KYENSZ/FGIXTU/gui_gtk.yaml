@@ -1,29 +1,29 @@
 !Vividict
-gui: !Vividict
-    editor_gaphas: !Vividict
+gui:
+    editor_gaphas:
         rel_pos: !!python/tuple [34.24163869699839, 11.829576292605083]
         size: !!python/tuple [6.190496494848334, 5.953717067501206]
-    editor_opengl: !Vividict
+    editor_opengl:
         rel_pos: !!python/tuple [38.30117209891576, -11.153717296013113]
         size: !!python/tuple [6.924413686068874, 5.613563443761585]
-income: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+income:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [0.3125, 1.1909786577051165]
-name: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
-            rel_pos: !Vividict {}
-            size: !Vividict {}
-outcome-1: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+name:
+    gui:
+        editor_gaphas:
+            rel_pos: {}
+            size: {}
+outcome-1:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [5.877996494848334, 2.5502371771666175]
-outcome-2: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+outcome-2:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [5.877996494848334, 1.7216473686458993]
-outcome0: !Vividict
-    gui: !Vividict
-        editor_gaphas: !Vividict
+outcome0:
+    gui:
+        editor_gaphas:
             rel_pos: !!python/tuple [5.877996494848334, 1.1909786577051165]

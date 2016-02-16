@@ -1,93 +1,99 @@
 !Vividict
-data_flow1: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+data_flow1:
+    gui:
+        editor_opengl:
             waypoints: []
-data_flow10: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+data_flow10:
+    gui:
+        editor_opengl:
             waypoints: []
-data_flow2: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+data_flow2:
+    gui:
+        editor_opengl:
             waypoints: []
-data_flow3: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+data_flow3:
+    gui:
+        editor_opengl:
             waypoints:
             - !!python/tuple [69.47894736842096, -56.792036491228096]
             - !!python/tuple [69.47894736842096, -69.97656510601661]
-data_flow4: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+data_flow4:
+    gui:
+        editor_opengl:
             waypoints: []
-data_flow5: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+data_flow5:
+    gui:
+        editor_opengl:
             waypoints:
             - !!python/tuple [97.85115621052657, -49.59317445614036]
             - !!python/tuple [97.85115621052657, -75.71104340775477]
-data_flow6: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+data_flow6:
+    gui:
+        editor_opengl:
             waypoints:
             - !!python/tuple [138.36315621052663, -57.91056280701747]
             - !!python/tuple [138.36315621052663, -81.44552170949297]
-data_flow7: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+data_flow7:
+    gui:
+        editor_opengl:
             waypoints: []
-data_flow8: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+data_flow8:
+    gui:
+        editor_opengl:
             waypoints:
             - !!python/tuple [168.2848404210529, -48.81885866666666]
             - !!python/tuple [168.2848404210529, -87.1800000112311]
-data_flow9: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+data_flow9:
+    gui:
+        editor_opengl:
             waypoints:
             - !!python/tuple [210.96947199999988, -59.12525964912277]
             - !!python/tuple [210.96947199999988, -92.91447831296928]
-gui: !Vividict
-    editor_opengl: !Vividict
-        rel_pos: !Vividict {}
+gui:
+    editor_opengl:
+        rel_pos: {}
         size: !!python/tuple [321.3891447368421, 123.66759004740443]
-input_data_port18: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+input_data_port18:
+    gui:
+        editor_opengl:
             inner_rel_pos: !!python/tuple [3.6018947368421, -79.19031578947363]
-output_data_port19: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+outcome-1:
+    gui: {}
+outcome-2:
+    gui: {}
+outcome0:
+    gui: {}
+output_data_port19:
+    gui:
+        editor_opengl:
             inner_rel_pos: !!python/tuple [309.4108552631581, -96.30164473684236]
-transition1: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+transition1:
+    gui:
+        editor_opengl:
             waypoints: []
-transition2: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+transition2:
+    gui:
+        editor_opengl:
             waypoints: []
-transition3: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+transition3:
+    gui:
+        editor_opengl:
             waypoints: []
-transition4: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+transition4:
+    gui:
+        editor_opengl:
             waypoints: []
-transition5: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+transition5:
+    gui:
+        editor_opengl:
             waypoints: []
-transition6: !Vividict
-    gui: !Vividict
-        editor_opengl: !Vividict
+transition6:
+    gui:
+        editor_opengl:
             waypoints: []
-transition8: !Vividict
-    gui: !Vividict
-        editor: !Vividict
-            waypoints: &id001 !Vividict {}
-        editor_opengl: !Vividict
-            waypoints: *id001
+transition8:
+    gui:
+        editor:
+            waypoints: {}
+        editor_opengl:
+            waypoints: {}

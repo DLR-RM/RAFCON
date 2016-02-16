@@ -1,0 +1,23 @@
+!HierarchyState
+data_flows: {}
+description: null
+input_data_ports: {}
+name: p2
+outcomes:
+    -2: !Outcome {name: preempted, outcome_id: -2}
+    -1: !Outcome {name: aborted, outcome_id: -1}
+    0: !Outcome {name: success, outcome_id: 0}
+output_data_ports: {}
+scoped_variables: {}
+state_id: LGQFZM
+transitions:
+    1: !Transition {from_outcome: null, from_state: null, to_outcome: null, to_state: HMJXNW,
+        transition_id: 1}
+    2: !Transition {from_outcome: -2, from_state: HMJXNW, to_outcome: null, to_state: BEGSOW,
+        transition_id: 2}
+    3: !Transition {from_outcome: 0, from_state: HMJXNW, to_outcome: null, to_state: DDSVOQ,
+        transition_id: 3}
+    4: !Transition {from_outcome: 0, from_state: BEGSOW, to_outcome: null, to_state: DDSVOQ,
+        transition_id: 4}
+    5: !Transition {from_outcome: 0, from_state: DDSVOQ, to_outcome: 0, to_state: LGQFZM,
+        transition_id: 5}

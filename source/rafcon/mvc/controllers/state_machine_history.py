@@ -1,27 +1,15 @@
+import gtk
 import gobject
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.utils import log
-
-from rafcon.statemachine.states.state import State, DataPort
-from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.data_flow import DataFlow
-from rafcon.statemachine.transition import Transition
-
-from rafcon.mvc.models.state import StateModel
-from rafcon.mvc.models.container_state import ContainerState
-from rafcon.mvc.models.container_state import ContainerState
 
 from rafcon.mvc import singleton as mvc_singleton
 
 logger = log.get_logger(__name__)
 
 # TODO Comment
-import gtk
 
 
 class StateMachineHistoryController(ExtendedController):
@@ -37,10 +25,17 @@ class StateMachineHistoryController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         self.view_is_registered = False
 
-        # Nr, version_id, Method, Instance, Details, model
-        self.list_store = gtk.ListStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT)
+        self.mode = 'branch'
+        # self.mode = 'trail'
+        assert self.mode in ['trail', 'branch']
+        if self.mode == 'trail':
+            self.list_store = gtk.ListStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT)
+        else:
+            self.list_store = gtk.ListStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT)
+            # self.tree_store = gtk.TreeStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT)
         if view is not None:
             view['history_tree'].set_model(self.list_store)
+
         # view.set_hover_expand(True)
 
         self.__my_selected_sm_id = None
@@ -55,6 +50,18 @@ class StateMachineHistoryController(ExtendedController):
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):
         self.register()
+
+    def set_mode(self, mode):
+        # Nr, version_id, Method, Instance, Details, model
+        assert mode in ['trail', 'branch']
+        self.mode = mode
+        if self.mode == 'trail':
+            self.list_store = gtk.ListStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT)
+        else:
+            self.list_store = gtk.ListStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT)
+            # self.tree_store = gtk.TreeStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT)
+        if self.view is not None:
+            self.view['history_tree'].set_model(self.list_store)
 
     def register(self):
         """Change the state machine that is observed for new selected states to the selected state machine."""
@@ -86,6 +93,7 @@ class StateMachineHistoryController(ExtendedController):
         view['redo_button'].connect('clicked', self.on_redo_button_clicked)
         view['reset_button'].connect('clicked', self.on_reset_button_clicked)
         self.view_is_registered = True
+        self.set_mode(self.mode)
 
     def register_adapters(self):
         pass
@@ -155,11 +163,23 @@ class StateMachineHistoryController(ExtendedController):
         self.doing_update = True
         self.list_store.clear()
         self.count = 0
-        for action in self._selected_sm_model.history.changes.single_trail_history():
-            # if action.before_info['kwargs']:
-            #     self.new_change(action.before_model, action.before_prop_name, action.before_info)
-            # else:
-            # self.new_change(action.before_model, action.before_prop_name, action.before_info)
+
+        def insert_all_next_actions(version_id):
+            if len(self._selected_sm_model.history.changes.all_time_history) == 0:
+                return
+            next_id = version_id
+            while next_id is not None:
+                # print next_id, len(self._selected_sm_model.history.changes.all_time_history)
+                history_tree_elem = self._selected_sm_model.history.changes.all_time_history[next_id]
+                next_id = history_tree_elem.next_id
+                action = history_tree_elem.action
+                insert_this_action(action)
+                if history_tree_elem.old_next_ids and self.mode == 'branch':
+                    for old_next_id in history_tree_elem.old_next_ids:
+                        insert_all_next_actions(old_next_id)
+
+        def insert_this_action(action):
+
             if 'method_name' not in action.before_overview['info'][-1]:
                 logger.warning("Found no method_name in before_info %s" % action.before_overview['info'][-1])
                 method_name = None
@@ -171,36 +191,45 @@ class StateMachineHistoryController(ExtendedController):
                 inst = None
             else:
                 inst = action.before_overview['instance'][-1]
-            self.new_change(action.before_overview['model'][-1], action.before_overview['prop_name'][-1],
-                            method_name, inst, info, action.version_id)
 
-            # self.new_change(action.before_model, action.before_prop_name,
-            #                 action.before_info['method_name'], action.before_info['instance'], info)
+            if self.mode == 'trail':
+                active = len(self.list_store) <= self._selected_sm_model.history.changes.trail_pointer
+            else:
+                all_active = self._selected_sm_model.history.changes.get_all_active_actions()
+                active = action.version_id in all_active
+            self.new_change(action.before_overview['model'][-1], action.before_overview['prop_name'][-1],
+                            method_name, inst, info, action.version_id, active)
+
+        insert_all_next_actions(version_id=0)
 
         # set selection of Tree
-        row_number = self._selected_sm_model.history.changes.trail_pointer
-        if len(self.list_store) > 0:
-            self.view['history_tree'].set_cursor(len(self.list_store) - 1 - row_number)
+        if self._selected_sm_model.history.changes.trail_pointer is not None:
+            row_number = self._selected_sm_model.history.changes.single_trail_history()[self._selected_sm_model.history.changes.trail_pointer].version_id
+            # row_number = self._selected_sm_model.history.changes.trail_pointer
+            if len(self.list_store) > 0 and row_number is not None:
+                self.view['history_tree'].set_cursor(len(self.list_store) - 1 - row_number)
 
         # set colors of Tree
         # - is state full and all element which are open to be re-done gray
         self.doing_update = False
+        # for history_tree_elem in self._selected_sm_model.history.changes.all_time_history:
+        #     logger.info("ActionVersionId: {0} and {1}".format(history_tree_elem.action.version_id,
+        #                                                       str(history_tree_elem)))
 
-    def new_change(self, model, prop_name, method_name, instance, info, version_id):
+    def new_change(self, model, prop_name, method_name, instance, info, version_id,active):
         # Nr, Instance, Method, Details, model
-        if not self._selected_sm_model.history.locked:
-            row_number = self._selected_sm_model.history.changes.trail_pointer
-            if len(self.list_store) <= row_number:
-                foreground = "white"
-                # foreground = "green"
-            else:
-                # foreground = "gray"
-                foreground = "#707070"
-            self.list_store.prepend((self.count,
-                                     version_id,  # '',  # version
-                                     method_name,
-                                     instance,
-                                     info,
-                                     foreground,
-                                     model))
-            self.count += 1
+
+        if active:
+            foreground = "white"
+            # foreground = "green"
+        else:
+            # foreground = "gray"
+            foreground = "#707070"
+        self.list_store.prepend((self.count,
+                                 version_id,  # '',  # version
+                                 method_name,
+                                 instance,
+                                 info,
+                                 foreground,
+                                 model))
+        self.count += 1
