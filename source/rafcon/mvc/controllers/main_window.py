@@ -248,6 +248,15 @@ class MainWindowController(ExtendedController):
         # hide not usable buttons
         self.view['step_buttons'].hide()
 
+        position = global_runtime_config.get_config_value('LEFT_BAR_DOCKED_POS')
+        view['top_level_h_pane'].set_position(position) if position else view['top_level_h_pane'].set_position(300)
+
+        position = global_runtime_config.get_config_value('RIGHT_BAR_DOCKED_POS')
+        view['right_h_pane'].set_position(position) if position else view['right_h_pane'].set_position(1000)
+
+        position = global_runtime_config.get_config_value('CONSOLE_DOCKED_POS')
+        view['central_v_pane'].set_position(position) if position else view['central_v_pane'].set_position(600)
+
     def highlight_execution_of_current_sm(self, active):
         notebook = self.get_controller('state_machines_editor_ctrl').view['notebook']
         page_num = self.get_controller('state_machines_editor_ctrl').view['notebook'].get_current_page()

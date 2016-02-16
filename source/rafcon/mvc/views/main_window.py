@@ -209,14 +209,6 @@ class MainWindowView(View):
 
         self.logging_view.update_filtered_buffer()
 
-        ######################################################
-        # setup correct sizes
-        ######################################################
-        self['top_level_h_pane'].set_position(300)
-        self['right_h_pane'].set_position(1000)
-        self['left_bar'].set_position(400)
-        self['central_v_pane'].set_position(600)
-
         self.left_bar_window = UndockedWindowView('left_bar_window')
         self.right_bar_window = UndockedWindowView('right_bar_window')
         self.console_window = UndockedWindowView('console_window')
