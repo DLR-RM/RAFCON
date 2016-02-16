@@ -415,7 +415,7 @@ class MenuBarController(ExtendedController):
 
     def _prepare_destruction(self):
         logger.debug("Saving runtime config")
-        global_runtime_config.save_configuration(self.main_window_view, 'MAIN_WINDOW')
+        global_runtime_config.save_configuration(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
         import glib
 
         # We decided on not saving the configuration when exiting
