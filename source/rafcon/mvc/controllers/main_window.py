@@ -26,6 +26,7 @@ from rafcon.mvc.singleton import global_variable_manager_model as gvm_model
 import rafcon.statemachine.singleton
 import rafcon.statemachine.config
 from rafcon.mvc.config import global_gui_config as gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.network.network_config import global_net_config
 
 from rafcon.mvc.utils import constants
@@ -324,10 +325,18 @@ class MainWindowController(ExtendedController):
         The left bar is undocked into a separate new window with the same size as the bar. The new window's position is
         approximately the same as the bar used to be.
         """
-        self.view.left_bar_window.get_top_widget().resize(self.view['top_level_h_pane'].get_position(),
-                                                          self.view['left_bar'].get_allocation().height)
-        self.view.left_bar_window.get_top_widget().set_position(gtk.WIN_POS_MOUSE)
-        self.view['left_bar'].reparent(self.view.left_bar_window['eventbox3'])
+        size = global_runtime_config.get_config_value('LEFT_BAR_UNDOCKED_SIZE')
+        position = global_runtime_config.get_config_value('LEFT_BAR_UNDOCKED_POS')
+        if size:
+            self.view.left_bar_window.get_top_widget().resize(size[0], size[1])
+        else:
+            self.view.left_bar_window.get_top_widget().resize(self.view['top_level_h_pane'].get_position(),
+                                                              self.view['left_bar'].get_allocation().height)
+        if position:
+            self.view.left_bar_window.get_top_widget().move(position[0], position[1])
+        else:
+            self.view.left_bar_window.get_top_widget().set_position(gtk.WIN_POS_MOUSE)
+        self.view['left_bar'].reparent(self.view.left_bar_window['central_eventbox'])
         self.get_controller('left_window_controller').show_window()
         self.view['undock_left_bar_button'].hide()
         self.on_left_bar_hide_clicked(None)
@@ -338,6 +347,7 @@ class MainWindowController(ExtendedController):
 
         If the left bar is undocked, it is docked back to the main window.
         """
+        global_runtime_config.save_configuration(self.view.left_bar_window, 'LEFT_BAR_UNDOCKED')
         self.on_left_bar_return_clicked(None)
         self.view['left_bar'].reparent(self.view['left_bar_container'])
         #window_width, window_height = self.view.left_bar_window.get_size()
@@ -347,11 +357,19 @@ class MainWindowController(ExtendedController):
         return True
 
     def on_right_bar_undock_clicked(self, widget, event=None):
-        width = self.view.top_window_width - self.view['right_h_pane'].get_position() -\
-                self.view['top_level_h_pane'].get_position()
-        self.view.right_bar_window.get_top_widget().resize(width, self.view['right_bar'].get_allocation().height)
-        self.view.right_bar_window.get_top_widget().set_position(gtk.WIN_POS_MOUSE)
-        self.view['right_bar'].reparent(self.view.right_bar_window['eventbox3'])
+        size = global_runtime_config.get_config_value('RIGHT_BAR_UNDOCKED_SIZE')
+        position = global_runtime_config.get_config_value('RIGHT_BAR_UNDOCKED_POS')
+        if size:
+            self.view.right_bar_window.get_top_widget().resize(size[0], size[1])
+        else:
+            width = self.view.top_window_width - self.view['right_h_pane'].get_position() -\
+                    self.view['top_level_h_pane'].get_position()
+            self.view.right_bar_window.get_top_widget().resize(width, self.view['right_bar'].get_allocation().height)
+        if position:
+            self.view.right_bar_window.get_top_widget().move(position[0], position[1])
+        else:
+            self.view.right_bar_window.get_top_widget().set_position(gtk.WIN_POS_MOUSE)
+        self.view['right_bar'].reparent(self.view.right_bar_window['central_eventbox'])
         self.get_controller('right_window_controller').show_window()
         self.view['undock_right_bar_button'].hide()
         self.on_right_bar_hide_clicked(None)
@@ -363,6 +381,7 @@ class MainWindowController(ExtendedController):
         If right bar is docked to main window, it is undocked into a separate new window with the same size as the bar.
         The new window's position is approximately the same as the bar used to be.
         """
+        global_runtime_config.save_configuration(self.view.right_bar_window, 'RIGHT_BAR_UNDOCKED')
         self.view['right_bar'].reparent(self.view['right_bar_container'])
         self.on_right_bar_return_clicked(None)
         self.get_controller('right_window_controller').hide_window()
@@ -370,17 +389,26 @@ class MainWindowController(ExtendedController):
         self.view['undock_right_bar_button'].show()
 
     def on_console_undock_clicked(self, widget, event=None):
-        self.view.console_window.get_top_widget().resize(self.view['right_h_pane'].get_position(),
-                                                         self.view['console'].get_allocation().height)
-        self.view.console_window.get_top_widget().move(self.view['top_level_h_pane'].get_position(),
-                                                       self.view['central_v_pane'].get_position())
-        self.view['console'].reparent(self.view.console_window['eventbox3'])
+        size = global_runtime_config.get_config_value('CONSOLE_UNDOCKED_SIZE')
+        position = global_runtime_config.get_config_value('CONSOLE_UNDOCKED_POS')
+        if size:
+            self.view.console_window.get_top_widget().resize(size[0], size[1])
+        else:
+            self.view.console_window.get_top_widget().resize(self.view['right_h_pane'].get_position(),
+                                                             self.view['console'].get_allocation().height)
+        if position:
+            self.view.console_window.get_top_widget().move(position[0], position[1])
+        else:
+            self.view.console_window.get_top_widget().move(self.view['top_level_h_pane'].get_position(),
+                                                           self.view['central_v_pane'].get_position())
+        self.view['console'].reparent(self.view.console_window['central_eventbox'])
         self.get_controller('console_window_controller').show_window()
         self.view['undock_console_button'].hide()
         self.on_console_hide_clicked(None)
         self.view['console_return_button'].hide()
 
     def on_console_dock_clicked(self, widget, event=None):
+        global_runtime_config.save_configuration(self.view.console_window, 'CONSOLE_UNDOCKED')
         self.view['console'].reparent(self.view['console_container'])
         self.on_console_return_clicked(None)
         self.get_controller('console_window_controller').hide_window()

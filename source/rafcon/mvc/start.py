@@ -152,10 +152,10 @@ if __name__ == '__main__':
 
     sm_manager_model = mvc_singletons.state_machine_manager_model
 
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type="LogicDataGrouped")
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type='LogicDataGrouped')
     main_window = main_window_view.get_top_widget()
-    size = global_runtime_config.get_config_value("WINDOW_SIZE", None)
-    position = global_runtime_config.get_config_value("WINDOW_POS", None)
+    size = global_runtime_config.get_config_value('MAIN_WINDOW_SIZE')
+    position = global_runtime_config.get_config_value('MAIN_WINDOW_POS')
     if size:
         main_window.resize(size[0], size[1])
     if position:
