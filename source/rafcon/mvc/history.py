@@ -1073,11 +1073,11 @@ class AddObjectAction(Action):
 
         partial_path = self.added_object_identifier._path.split('/')
         for path_element in storage_path.split('/'):
-            logger.info("pop: " + partial_path.pop(0))
+            partial_path.pop(0)
         for path_element in partial_path:
             storage_version_of_state = storage_version_of_state.states[path_element]
             state = state.states[path_element]
-            logger.info("state is now: {0} {1}".format(state.state_id, storage_version_of_state.state_id))
+            # logger.info("state is now: {0} {1}".format(state.state_id, storage_version_of_state.state_id))
 
         return state, storage_version_of_state
 
@@ -1721,8 +1721,9 @@ class History(ModelMT):
         :return:
         """
         # search for traceable path -> list of action to undo and list of action to redo
+        logger.info("Going to history status #{0}".format(pointer_on_version_to_recover))
         undo_redo_list = self.changes.undo_redo_list_from_actual_trail_history_to_version_id(pointer_on_version_to_recover)
-        logger.info("Multiple undo and redo to reach modification history element of version {0} "
+        logger.debug("Multiple undo and redo to reach modification history element of version {0} "
                     "-> undo-redo-list is: {1}".format(pointer_on_version_to_recover, undo_redo_list))
         for elem in undo_redo_list:
             if elem[1] == 'undo':
@@ -1745,9 +1746,9 @@ class History(ModelMT):
             self._re_initiate_observation()
 
     def undo(self):
-        if not self.changes.trail_history or self.changes.trail_pointer < 0 \
+        if not self.changes.trail_history or self.changes.trail_pointer == 0 \
                 or not self.changes.trail_pointer < len(self.changes.trail_history):
-            logger.debug("There is no more TrailEditionHistory element to Undo")
+            logger.debug("There is no more action that can be undone")
             return
         # else:
         #     logger.debug("do Undo %s %s %s" % (bool(self.changes.trail_history), self.changes.trail_history, (self.changes.trail_pointer, len(self.changes.trail_history))))
@@ -1773,7 +1774,7 @@ class History(ModelMT):
     def redo(self):
         if not self.changes.trail_history or self.changes.trail_history and not self.changes.trail_pointer + 1 < len(
                 self.changes.trail_history):
-            logger.debug("There is no more TrailHistory element to Redo")
+            logger.debug("There is no more action that can be redone")
             return
         # else:
         #     logger.debug("do Redo %s %s %s" % (bool(self.changes.trail_history), self.changes.trail_history, (self.changes.trail_pointer, len(self.changes.trail_history))))
