@@ -27,7 +27,7 @@ class StateMachineHistoryController(ExtendedController):
         self.tree_folded = False
         # self._mode = 'trail'
         assert self._mode in ['trail', 'branch']
-        self.history_tree_store = gtk.TreeStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT)
+        self.history_tree_store = gtk.TreeStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT, str)
 
         if view is not None:
             view['history_tree'].set_model(self.history_tree_store)
@@ -190,6 +190,10 @@ class StateMachineHistoryController(ExtendedController):
             model = action.before_overview['model'][-1]
             method_name = action.before_overview['method_name'][-1]
             instance = action.before_overview['instance'][-1]
+            if hasattr(action.before_overview, 'new_overview'):
+                parameter = [str(elem) for i1, elem in enumerate(action.before_overview.new_overview['args'][-1]) if not i1 == 0]
+            else:
+                parameter = action.before_overview['args']
 
             # find active actions in to be marked in view
             if self._mode == 'trail':
@@ -203,7 +207,8 @@ class StateMachineHistoryController(ExtendedController):
             if init_branch:
                 version_label = 'b.' + str(action.version_id)
 
-            tree_row_iter = self.new_change(model, method_name, instance, info, version_label, active, parent_tree_item)
+            tree_row_iter = self.new_change(model, method_name, instance, info, version_label, active, parent_tree_item,
+                                            parameter)
             self.list_tree_iter[action.version_id] = (tree_row_iter, parent_tree_item)
             return tree_row_iter
 
@@ -283,7 +288,7 @@ class StateMachineHistoryController(ExtendedController):
             # foreground = "gray"
             return "#707070"
 
-    def new_change(self, model, method_name, instance, info, version_id, active, parent_tree_item):
+    def new_change(self, model, method_name, instance, info, version_id, active, parent_tree_item, parameter):
         # Nr, Instance, Method, Details, model
 
         # TODO may useful tooltip
@@ -307,7 +312,8 @@ class StateMachineHistoryController(ExtendedController):
                                                         instance,
                                                         info,
                                                         foreground,
-                                                        model))
+                                                        model,
+                                                        parameter))
 
         # handle expand-mode
         if parent_tree_item is not None:
