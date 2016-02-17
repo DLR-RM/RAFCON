@@ -103,6 +103,9 @@ class AbstractStateModel(ModelMT):
         self._load_output_data_port_models()
         self._load_outcome_models()
 
+    def __str__(self):
+        return "Model of state: {0}".format(self.state)
+
     @property
     def parent(self):
         if not self._parent:

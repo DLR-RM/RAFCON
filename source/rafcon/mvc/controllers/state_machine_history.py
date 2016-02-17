@@ -191,9 +191,11 @@ class StateMachineHistoryController(ExtendedController):
             method_name = action.before_overview['method_name'][-1]
             instance = action.before_overview['instance'][-1]
             if hasattr(action.before_overview, 'new_overview'):
-                parameter = [str(elem) for i1, elem in enumerate(action.before_overview.new_overview['args'][-1]) if not i1 == 0]
+                parameters = [str(elem) for i1, elem in enumerate(action.before_overview.new_overview['args'][-1]) if not i1 == 0]
+                for name, value in action.before_overview.new_overview['kwargs'][-1].iteritems(): # .iteritems():
+                    parameters.append("{0}: {1}".format(name, value))
             else:
-                parameter = action.before_overview['args']
+                parameters = action.before_overview['args']
 
             # find active actions in to be marked in view
             if self._mode == 'trail':
@@ -208,7 +210,7 @@ class StateMachineHistoryController(ExtendedController):
                 version_label = 'b.' + str(action.version_id)
 
             tree_row_iter = self.new_change(model, method_name, instance, info, version_label, active, parent_tree_item,
-                                            parameter)
+                                            parameters)
             self.list_tree_iter[action.version_id] = (tree_row_iter, parent_tree_item)
             return tree_row_iter
 
@@ -288,7 +290,7 @@ class StateMachineHistoryController(ExtendedController):
             # foreground = "gray"
             return "#707070"
 
-    def new_change(self, model, method_name, instance, info, version_id, active, parent_tree_item, parameter):
+    def new_change(self, model, method_name, instance, info, version_id, active, parent_tree_item, parameters):
         # Nr, Instance, Method, Details, model
 
         # TODO may useful tooltip
@@ -313,7 +315,7 @@ class StateMachineHistoryController(ExtendedController):
                                                         info,
                                                         foreground,
                                                         model,
-                                                        parameter))
+                                                        parameters))
 
         # handle expand-mode
         if parent_tree_item is not None:

@@ -29,6 +29,9 @@ class DataPortModel(StateElementModel):
         assert isinstance(data_port, DataPort)
         self.data_port = data_port
 
+    def __str__(self):
+        return "Model of DataPort: {0}".format(self.data_port)
+
     @ModelMT.observe("data_port", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(DataPortModel, self).model_changed(model, prop_name, info)

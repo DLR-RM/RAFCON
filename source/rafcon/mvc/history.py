@@ -527,7 +527,7 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
 class ActionDummy:
     def __init__(self, before_after='before'):
         self.before_overview = NotificationOverview({before_after: True, 'model': None, 'method_name': None,
-                                                     'instance': None, 'prop_name': None, 'args': (), 'kwargs': [],
+                                                     'instance': None, 'prop_name': None, 'args': (), 'kwargs': {},
                                                      'info': {}})
         # self.before_overview =
         # self.before_overview.new_overview = {'args': None}

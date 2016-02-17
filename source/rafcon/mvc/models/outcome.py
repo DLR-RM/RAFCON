@@ -28,6 +28,9 @@ class OutcomeModel(StateElementModel):
         assert isinstance(outcome, Outcome)
         self.outcome = outcome
 
+    def __str__(self):
+        return "Model of Outcome: {0}".format(self.outcome)
+
     @ModelMT.observe("outcome", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(OutcomeModel, self).model_changed(model, prop_name, info)
