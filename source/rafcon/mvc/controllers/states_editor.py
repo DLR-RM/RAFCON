@@ -334,13 +334,9 @@ class StatesEditorController(ExtendedController):
         :param state_m: The state model to be searched
         :return: page containing the state and the state_identifier
         """
-        # TODO use sm_id - the sm_id is not found while remove_state
-        # TODO           -> work-around is to use only the path to find the page
-        for identifier, page_info in self.tabs.iteritems():
+        for state_identifier, page_info in self.tabs.iteritems():
             if page_info['state_m'] is state_m:
-                searched_page = page_info['page']
-                state_identifier = identifier
-                return searched_page, state_identifier
+                return page_info['page'], state_identifier
         return None, None
 
     def on_tab_close_clicked(self, event, state_m):
