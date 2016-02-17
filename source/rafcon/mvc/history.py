@@ -526,7 +526,7 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
 
 class ActionDummy:
     def __init__(self):
-        pass
+        self.before_overview = {'model': [None], 'method_name': [None], 'instance': [None], 'info': {}}
 
     def set_after(self, overview):
         pass
@@ -2333,6 +2333,7 @@ class ChangeHistory(Observable):
     - all_actions is a type of a tree # prev_id, action, next_id, old_next_ids
     """
 
+    # TODO remove explizit trail-history -> next_id is holding the same information and old_next_ids the branching
     def __init__(self):
         Observable.__init__(self)
         self.trail_history = []
@@ -2343,6 +2344,9 @@ class ChangeHistory(Observable):
         self.counter = 0
 
         self.with_prints = False
+
+        # insert initial dummy element
+        self.insert_action(ActionDummy())
 
     @Observable.observed
     def insert_action(self, action):
@@ -2382,17 +2386,18 @@ class ChangeHistory(Observable):
         if self.trail_pointer == -1:
             self.trail_pointer = None
         self.all_time_pointer = len(self.all_time_history) - 1  # general should be equal to self.counter and version_id
-        if self.with_prints:
+        if self.with_prints and action is not None:
             logger.info("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
 
     @Observable.observed
     def undo(self):
         # logger.debug("try undo: undo_pointer: %s history lenght: %s" % (self.trail_pointer, len(self.trail_history)))
-        if self.trail_pointer is not None and not self.trail_pointer < 0:
+        if self.trail_pointer is not None and not self.trail_pointer < 0 and \
+                self.trail_history[self.trail_pointer] is not None:
             self.trail_history[self.trail_pointer].undo()
             self.trail_pointer -= 1
             self.all_time_pointer -= 1
-        elif self.trail_pointer is not None:
+        elif self.trail_pointer is not None or self.trail_history[self.trail_pointer].action is None:
             logger.warning("No UNDO left over!!!")
         else:
             logger.error("History undo FAILURE")
@@ -2402,11 +2407,12 @@ class ChangeHistory(Observable):
     @Observable.observed
     def redo(self):
         # logger.debug("try redo: undo_pointer: %s history lenght: %s" % (self.trail_pointer, len(self.trail_history)))
-        if self.trail_history is not None and self.trail_pointer + 1 < len(self.trail_history):
+        if self.trail_history is not None and self.trail_pointer + 1 < len(self.trail_history) and \
+                self.trail_history[self.trail_pointer + 1] is not None:
             self.trail_history[self.trail_pointer + 1].redo()
             self.trail_pointer += 1
             self.all_time_pointer += 1
-        elif self.trail_history is not None:
+        elif self.trail_history is not None or self.trail_history[self.trail_pointer + 1] is None:
             logger.warning("No REDO left over!!!")
         else:
             logger.error("History redo FAILURE")
@@ -2445,7 +2451,7 @@ class ChangeHistory(Observable):
         # append all actions of the path -> active actions of the branch
         for version_id in path:
             # set default next_id to active trail
-            self.trail_history[-1].next_id = version_id
+            self.all_time_history[self.trail_history[-1].version_id].next_id = version_id
             self.trail_history.append(self.all_time_history[version_id].action)
         if self.with_prints:
             logger.info("new active trail: {0}".format([a.version_id for a in self.trail_history]))
@@ -2463,12 +2469,11 @@ class ChangeHistory(Observable):
     def undo_redo_list_from_actual_trail_history_to_version_id(self, version_id):
         """Perform fast search from actual active branch to specific version_id and collect all recovery steps.
         """
-        all_trail_action = [a.version_id for a in self.single_trail_history()]
+        all_trail_action = [a.version_id for a in self.single_trail_history() if a is not None]
         all_active_action = self.get_all_active_actions()
         undo_redo_list = []
         _undo_redo_list = []
 
-        version_id = int(version_id)
         intermediate_version_id = version_id
         if self.with_prints:
             logger.info("\n\nactive_action: {0} in: {3}"
@@ -2497,18 +2502,14 @@ class ChangeHistory(Observable):
         # collect undo and redo on trail
         if intermediate_goal_version_id in all_active_action:
             # collect needed undo to reach intermediate version
-            # logger.info("undo from {0} to {1}".format(intermediate_version_id, version_id))
             while not intermediate_version_id == intermediate_goal_version_id:
-                # logger.info("go back {0} {1}".format(intermediate_version_id, version_id))
                 undo_redo_list.append((intermediate_version_id, 'undo'))
                 intermediate_version_id = self.all_time_history[intermediate_version_id].prev_id
 
         elif intermediate_goal_version_id in all_trail_action:
             # collect needed redo to reach intermediate version
-            # logger.info("redo from {0} to {1}".format(intermediate_version_id, intermediate_goal_version_id))
             while not intermediate_version_id == intermediate_goal_version_id:
                 intermediate_version_id = self.all_time_history[intermediate_version_id].next_id
-                # logger.info("go forward {0} {1}".format(intermediate_version_id, intermediate_goal_version_id))
                 undo_redo_list.append((intermediate_version_id, 'redo'))
 
         for elem in _undo_redo_list:
@@ -2528,3 +2529,6 @@ class ChangeHistory(Observable):
         self.trail_pointer = None
         self.all_time_pointer = None
         self.counter = 0
+
+        # insert initial dummy element
+        self.insert_action(ActionDummy())

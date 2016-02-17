@@ -1062,24 +1062,24 @@ def test_state_property_changes_history(caplog):
     output_res_state2 = state2.add_output_data_port("res", "int")
 
     state_dict['Nested'].add_state(state1)
-    assert len(sm_model.history.changes.single_trail_history()) == 1
-    state_dict['Nested'].add_state(state2)
     assert len(sm_model.history.changes.single_trail_history()) == 2
-    output_res_nested = state_dict['Nested'].add_output_data_port("res", "int")
+    state_dict['Nested'].add_state(state2)
     assert len(sm_model.history.changes.single_trail_history()) == 3
+    output_res_nested = state_dict['Nested'].add_output_data_port("res", "int")
+    assert len(sm_model.history.changes.single_trail_history()) == 4
 
     oc_again_state1 = state1.add_outcome("again")
-    assert len(sm_model.history.changes.single_trail_history()) == 4
-    oc_counted_state1 = state1.add_outcome("counted")
     assert len(sm_model.history.changes.single_trail_history()) == 5
+    oc_counted_state1 = state1.add_outcome("counted")
+    assert len(sm_model.history.changes.single_trail_history()) == 6
 
     oc_done_state2 = state2.add_outcome("done")
     oc_best_state2 = state2.add_outcome("best")
     oc_full_state2 = state2.add_outcome("full")
-    assert len(sm_model.history.changes.single_trail_history()) == 8
+    assert len(sm_model.history.changes.single_trail_history()) == 9
 
     oc_great_nested = state_dict['Nested'].add_outcome("great")
-    assert len(sm_model.history.changes.single_trail_history()) == 9
+    assert len(sm_model.history.changes.single_trail_history()) == 10
 
     #######################################
     # Properties of State #################
