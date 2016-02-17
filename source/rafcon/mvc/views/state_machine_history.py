@@ -25,7 +25,7 @@ class HistoryTreeView(View, gtk.TreeView):
         self.append_column(tvcolumn)
 
         cell = gtk.CellRendererText()
-        tvcolumn = gtk.TreeViewColumn('Parameter', cell, text=7, foreground=foreground)
+        tvcolumn = gtk.TreeViewColumn('Parameters', cell, text=7, foreground=foreground)
         self.append_column(tvcolumn)
 
         cell = gtk.CellRendererText()
