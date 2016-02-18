@@ -13,6 +13,8 @@ logger = log.get_logger(__name__)
 
 
 class StateMachineHistoryController(ExtendedController):
+    string_substitution_dict = {}  # will be used to substitute strings for better and shorter tree columns
+
     def __init__(self, model, view):
         """Constructor
         :param model StateMachineModel should be exchangeable
@@ -209,8 +211,8 @@ class StateMachineHistoryController(ExtendedController):
             if init_branch:
                 version_label = 'b.' + str(action.version_id)
 
-            tree_row_iter = self.new_change(model, method_name, instance, info, version_label, active, parent_tree_item,
-                                            parameters)
+            tree_row_iter = self.new_change(model, str(method_name).replace('_', ' '), instance, info, version_label, active,
+                                            parent_tree_item, ', '.join(parameters))
             self.list_tree_iter[action.version_id] = (tree_row_iter, parent_tree_item)
             return tree_row_iter
 
