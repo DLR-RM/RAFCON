@@ -399,7 +399,7 @@ def test_add_remove_history(caplog):
 
     state_dict['Nested'].add_state(state1)
     state_dict['Nested'].add_state(state2)
-    sm_history.changes.reset()
+    sm_history.modifications.reset()
     state_dict['state1'] = state1
     state_dict['state2'] = state2
 
@@ -422,7 +422,7 @@ def test_add_remove_history(caplog):
         # add outcome
         # print "\n\n###########1", state_dict[state_name].state_id, state_dict[state_name].input_data_ports.keys()
         outcome_super = sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).add_outcome('super')
-        assert len(sm_history.changes.single_trail_history()) == 2
+        assert len(sm_history.modifications.single_trail_history()) == 2
         # print "\n\n###########2", state_dict[state_name].state_id, state_dict[state_name].input_data_ports.keys()
         sm_history.undo()
         # print "\n\n###########3", state_dict[state_name].state_id, state_dict[state_name].input_data_ports.keys()
@@ -443,7 +443,7 @@ def test_add_remove_history(caplog):
         # print_all(sm_model.root_state)
         save_state_machine(sm_model, state_machine_path + '_before', logger, with_gui=False, menubar_ctrl=None)
         sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).remove_outcome(outcome_super)  # new outcome should be the third one
-        assert len(sm_history.changes.single_trail_history()) == 3
+        assert len(sm_history.modifications.single_trail_history()) == 3
         save_state_machine(sm_model, state_machine_path + '_after', logger, with_gui=False, menubar_ctrl=None)
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         sm_history.undo()
@@ -465,11 +465,11 @@ def test_add_remove_history(caplog):
         sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).add_state(state4)
         state_path_dict['state4'] = state4.get_path()
         print sm_model.state_machine.get_state_by_path(state_path_dict['state4']).get_path()
-        assert len(sm_history.changes.single_trail_history()) == 4
+        assert len(sm_history.modifications.single_trail_history()) == 4
         sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).add_state(state5)
         state_path_dict['state5'] = state5.get_path()
         print sm_model.state_machine.get_state_by_path(state_path_dict['state5']).get_path()
-        assert len(sm_history.changes.single_trail_history()) == 5
+        assert len(sm_history.modifications.single_trail_history()) == 5
         print state_dict[state_name].states
         # store_state_machine(sm_model, test_history_path1)
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
@@ -495,9 +495,9 @@ def test_add_remove_history(caplog):
         state_dict[state_name] = sm_model.get_state_model_by_path(state_dict[state_name].get_path()).state
 
         outcome_state4 = state4.add_outcome('UsedHere')
-        assert len(sm_history.changes.single_trail_history()) == 6
+        assert len(sm_history.modifications.single_trail_history()) == 6
         outcome_state5 = state5.add_outcome('UsedHere')
-        assert len(sm_history.changes.single_trail_history()) == 7
+        assert len(sm_history.modifications.single_trail_history()) == 7
 
         ################
         # add transition from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id
@@ -506,11 +506,11 @@ def test_add_remove_history(caplog):
         state_m = sm_model.get_state_model_by_path(state_path_dict[state_name])
         state = sm_model.state_machine.get_state_by_path(state_path_dict[state_name])
         check_state_for_all_models(state, state_m)
-        assert len(sm_history.changes.single_trail_history()) == 8
+        assert len(sm_history.modifications.single_trail_history()) == 8
         state_dict[state_name].add_transition(from_state_id=state5.state_id, from_outcome=outcome_state5,
                                               to_state_id=state.state_id, to_outcome=-1)
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.changes.single_trail_history()) == 9
+        assert len(sm_history.modifications.single_trail_history()) == 9
         sm_history.undo()
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         sm_history.redo()
@@ -525,7 +525,7 @@ def test_add_remove_history(caplog):
         # remove transition
         state_dict[state_name].remove_transition(new_transition_id1)  # new outcome should be the third one
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_model.history.changes.single_trail_history()) == 10
+        assert len(sm_model.history.modifications.single_trail_history()) == 10
         sm_history.undo()
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         sm_history.redo()
@@ -540,7 +540,7 @@ def test_add_remove_history(caplog):
         # remove state
         state_dict[state_name].remove_state(state5.state_id)
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.changes.single_trail_history()) == 11
+        assert len(sm_history.modifications.single_trail_history()) == 11
         sm_history.undo()
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         sm_history.redo()
@@ -554,7 +554,7 @@ def test_add_remove_history(caplog):
         # add input_data_port
         input_state4 = state4.add_input_data_port("input", "str", "zero")
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.changes.single_trail_history()) == 12
+        assert len(sm_history.modifications.single_trail_history()) == 12
         sm_history.undo()
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         sm_history.redo()
@@ -568,7 +568,7 @@ def test_add_remove_history(caplog):
         # remove input_data_port
         state4.remove_input_data_port(input_state4)
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.changes.single_trail_history()) == 13
+        assert len(sm_history.modifications.single_trail_history()) == 13
         sm_history.undo()
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         sm_history.redo()
@@ -582,7 +582,7 @@ def test_add_remove_history(caplog):
         # add output_data_port
         output_state4 = state4.add_output_data_port("output_"+state4.state_id, "int")
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.changes.single_trail_history()) == 14
+        assert len(sm_history.modifications.single_trail_history()) == 14
         sm_history.undo()
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         sm_history.redo()
@@ -596,7 +596,7 @@ def test_add_remove_history(caplog):
         # remove output_data_port
         state4.remove_output_data_port(output_state4)
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.changes.single_trail_history()) == 15
+        assert len(sm_history.modifications.single_trail_history()) == 15
         sm_history.undo()
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         sm_history.redo()
@@ -609,19 +609,19 @@ def test_add_remove_history(caplog):
         # prepare again state4
         output_state4 = state4.add_output_data_port("output", "int")
         input_state4 = state4.add_input_data_port("input_new", "str", "zero")
-        assert len(sm_history.changes.single_trail_history()) == 17
+        assert len(sm_history.modifications.single_trail_history()) == 17
         output_state4 = state4.add_output_data_port("output_new", "int")
-        assert len(sm_history.changes.single_trail_history()) == 18
+        assert len(sm_history.modifications.single_trail_history()) == 18
 
         state5 = ExecutionState('State5', 'STATE5')
         state_dict[state_name].add_state(state5)
         print state_path_dict['state5'] + "\n" + state5.get_path()
         assert state_path_dict['state5'] == state5.get_path()
-        assert len(sm_history.changes.single_trail_history()) == 19
+        assert len(sm_history.modifications.single_trail_history()) == 19
         input_par_state5 = state5.add_input_data_port("par", "int", 0)
-        assert len(sm_history.changes.single_trail_history()) == 20
+        assert len(sm_history.modifications.single_trail_history()) == 20
         output_res_state5 = state5.add_output_data_port("res", "int")
-        assert len(sm_history.changes.single_trail_history()) == 21
+        assert len(sm_history.modifications.single_trail_history()) == 21
 
 
         #####################
@@ -629,7 +629,7 @@ def test_add_remove_history(caplog):
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         scoped_buffer_nested = state_dict[state_name].add_scoped_variable("buffer", "int")
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.changes.single_trail_history()) == 22
+        assert len(sm_history.modifications.single_trail_history()) == 22
         sm_history.undo()
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         sm_history.redo()
@@ -644,7 +644,7 @@ def test_add_remove_history(caplog):
         # remove scoped_variable
         state_dict[state_name].remove_scoped_variable(scoped_buffer_nested)
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_model.history.changes.single_trail_history()) == 23
+        assert len(sm_model.history.modifications.single_trail_history()) == 23
         sm_model.history.undo()
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         sm_model.history.redo()
@@ -660,7 +660,7 @@ def test_add_remove_history(caplog):
         new_df_id = state_dict[state_name].add_data_flow(from_state_id=state4.state_id, from_data_port_id=output_state4,
                                                          to_state_id=state5.state_id, to_data_port_id=input_par_state5)
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_model.history.changes.single_trail_history()) == 24
+        assert len(sm_model.history.modifications.single_trail_history()) == 24
         sm_model.history.undo()
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         sm_model.history.redo()
@@ -675,7 +675,7 @@ def test_add_remove_history(caplog):
         # remove data_flow
         state_dict[state_name].remove_data_flow(new_df_id)
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_model.history.changes.single_trail_history()) == 25
+        assert len(sm_model.history.modifications.single_trail_history()) == 25
         sm_model.history.undo()
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         sm_model.history.redo()
@@ -685,7 +685,7 @@ def test_add_remove_history(caplog):
     # do_check_for_state(state_dict, state_name='state1')
     # do_check_for_state(state_dict, state_name='state2')
     do_check_for_state(state_name='Nested')
-    sm_model.history.changes.reset()
+    sm_model.history.modifications.reset()
     save_state_machine(sm_model, TEST_PATH + "_add_remove_child_hierarchical_state", logger, with_gui=False)
     # assert check_if_all_states_there(state_dict['Container'], state_check_dict1)
     # state_check_dict2 = print_all_states_with_path_and_name(state_dict['Container'])
@@ -697,7 +697,7 @@ def test_add_remove_history(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_state_property_changes_history(caplog):
+def test_state_property_modifications_history(caplog):
     ##################
     # state properties
 
@@ -748,24 +748,24 @@ def test_state_property_changes_history(caplog):
 
     nested_state_path = state_dict['Nested'].get_path()
     state_dict['Nested'].add_state(state1)
-    assert len(sm_model.history.changes.single_trail_history()) == 2
+    assert len(sm_model.history.modifications.single_trail_history()) == 2
     state_dict['Nested'].add_state(state2)
-    assert len(sm_model.history.changes.single_trail_history()) == 3
+    assert len(sm_model.history.modifications.single_trail_history()) == 3
     output_res_nested = state_dict['Nested'].add_output_data_port("res", "int")
-    assert len(sm_model.history.changes.single_trail_history()) == 4
+    assert len(sm_model.history.modifications.single_trail_history()) == 4
 
     oc_again_state1 = state1.add_outcome("again")
-    assert len(sm_model.history.changes.single_trail_history()) == 5
+    assert len(sm_model.history.modifications.single_trail_history()) == 5
     oc_counted_state1 = state1.add_outcome("counted")
-    assert len(sm_model.history.changes.single_trail_history()) == 6
+    assert len(sm_model.history.modifications.single_trail_history()) == 6
 
     oc_done_state2 = state2.add_outcome("done")
     oc_best_state2 = state2.add_outcome("best")
     oc_full_state2 = state2.add_outcome("full")
-    assert len(sm_model.history.changes.single_trail_history()) == 9
+    assert len(sm_model.history.modifications.single_trail_history()) == 9
 
     oc_great_nested = state_dict['Nested'].add_outcome("great")
-    assert len(sm_model.history.changes.single_trail_history()) == 10
+    assert len(sm_model.history.modifications.single_trail_history()) == 10
 
     #######################################
     ######## Properties of State ##########
@@ -879,7 +879,7 @@ def test_state_property_changes_history(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_outcome_property_changes_history(caplog):
+def test_outcome_property_modifications_history(caplog):
     ##################
     # outcome properties
 
@@ -940,7 +940,7 @@ def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
     return state_editor_ctrl, time_waited
 
 
-def test_transition_property_changes_history(caplog):
+def test_transition_property_modifications_history(caplog):
     ##################
     # transition properties
 
@@ -1194,7 +1194,7 @@ def test_scoped_variable_modify_notification(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_data_flow_property_changes_history(caplog):
+def test_data_flow_property_modifications_history(caplog):
     ##################
     # data_flow properties
 
@@ -1319,7 +1319,7 @@ def test_data_flow_property_changes_history(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_type_changes_without_gui(caplog):
+def test_type_modifications_without_gui(caplog):
 
     with_gui = False
 
@@ -1354,7 +1354,7 @@ def test_type_changes_without_gui(caplog):
 
 
 @pytest.mark.parametrize("with_gui", [True])
-def test_state_machine_changes_with_gui(with_gui, caplog):
+def test_state_machine_modifications_with_gui(with_gui, caplog):
 
     test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
@@ -1435,7 +1435,7 @@ def trigger_state_type_change_tests(*args):
     assert my_sm_id is not None
 
     sm_model = sm_m  # sm_manager_model.state_machines[my_sm_id]
-    sm_model.history.changes.reset()
+    sm_model.history.modifications.reset()
 
     state_parent_m = sm_m.get_state_model_by_path(state_dict[parent_of_type_change].get_path())
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
@@ -1490,7 +1490,7 @@ def trigger_state_type_change_tests(*args):
 
     save_state_machine(sm_model, state_machine_path + '_after1', logger, with_gui, menubar_ctrl)
 
-    assert len(sm_model.history.changes.single_trail_history()) == 2
+    assert len(sm_model.history.modifications.single_trail_history()) == 2
     logger.info("BCS -> HS")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
@@ -1556,7 +1556,7 @@ def trigger_state_type_change_tests(*args):
 
     save_state_machine(sm_model, state_machine_path + '_after2', logger, with_gui, menubar_ctrl)
 
-    assert len(sm_model.history.changes.single_trail_history()) == 3
+    assert len(sm_model.history.modifications.single_trail_history()) == 3
     logger.info("HS -> BCS")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
@@ -1612,7 +1612,7 @@ def trigger_state_type_change_tests(*args):
 
     save_state_machine(sm_model, state_machine_path + '_after3', logger, with_gui, menubar_ctrl)
 
-    assert len(sm_model.history.changes.single_trail_history()) == 4
+    assert len(sm_model.history.modifications.single_trail_history()) == 4
     logger.info("PCS -> HS")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
@@ -1672,7 +1672,7 @@ def trigger_state_type_change_tests(*args):
 
     save_state_machine(sm_model, state_machine_path + '_after4', logger, with_gui, menubar_ctrl)
 
-    assert len(sm_model.history.changes.single_trail_history()) == 5
+    assert len(sm_model.history.modifications.single_trail_history()) == 5
     logger.info("ES -> PCS")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
@@ -1738,7 +1738,7 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
 
-    assert len(sm_model.history.changes.single_trail_history()) == 6
+    assert len(sm_model.history.modifications.single_trail_history()) == 6
     logger.info("BCS -> HS")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
@@ -1788,7 +1788,7 @@ def trigger_state_type_change_tests(*args):
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
 
-    assert len(sm_model.history.changes.single_trail_history()) == 7
+    assert len(sm_model.history.modifications.single_trail_history()) == 7
     logger.info("HS -> BCS")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
@@ -1837,7 +1837,7 @@ def trigger_state_type_change_tests(*args):
         sm_m.state_machine.change_root_state_type(PreemptiveConcurrencyState)
         state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
 
-    assert len(sm_model.history.changes.single_trail_history()) == 8
+    assert len(sm_model.history.modifications.single_trail_history()) == 8
     logger.info("PCS -> HS")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
@@ -1891,7 +1891,7 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
 
-    assert len(sm_model.history.changes.single_trail_history()) == 9
+    assert len(sm_model.history.modifications.single_trail_history()) == 9
     logger.info("ES -> PCS")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
@@ -1928,16 +1928,16 @@ def trigger_state_type_change_tests(*args):
 
 if __name__ == '__main__':
     # test_add_remove_history(None)
-    # test_state_property_changes_history(None)
+    # test_state_property_modifications_history(None)
     #
-    # test_outcome_property_changes_history(None)
+    # test_outcome_property_modifications_history(None)
     # test_input_port_modify_notification(None)
     # test_output_port_modify_notification(None)
     #
-    # test_transition_property_changes_history(None)
+    # test_transition_property_modifications_history(None)
     # test_scoped_variable_modify_notification(None)
-    # test_data_flow_property_changes_history(None)
+    # test_data_flow_property_modifications_history(None)
     #
-    # test_type_changes_without_gui(None)
-    # test_state_machine_changes_with_gui(True, None)
+    # test_type_modifications_without_gui(None)
+    # test_state_machine_modifications_with_gui(True, None)
     pytest.main([__file__])

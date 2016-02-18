@@ -248,7 +248,7 @@ class GraphicalEditorController(ExtendedController):
     # @ExtendedController.observe("meta_signal", signal=True)  # meta data of root_state_model changed -> not possible -> this controller is not observing the root_state
     @ExtendedController.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
     def meta_changed_notify_after(self, changed_model, prop_name, info):
-        from rafcon.mvc.history import NotificationOverview
+        from rafcon.mvc.utils.notification_overview import NotificationOverview
         default_overview = NotificationOverview(info)
         # logger.info("meta_changed: \n{0}".format(default_overview))
         overview = default_overview.new_overview

@@ -4,7 +4,7 @@ import threading
 from rafcon.mvc.controllers.global_variable_manager import GlobalVariableManagerController
 from rafcon.mvc.controllers.state_icons import StateIconController
 from rafcon.mvc.controllers.state_machine_tree import StateMachineTreeController
-from rafcon.mvc.controllers.state_machine_history import StateMachineHistoryController
+from rafcon.mvc.controllers.modification_history import ModificationHistoryTreeController
 from rafcon.mvc.controllers.library_tree import LibraryTreeController
 
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
@@ -110,7 +110,7 @@ class MainWindowController(ExtendedController):
         ######################################################
         # state machine edition history
         ######################################################
-        state_machine_history_controller = StateMachineHistoryController(state_machine_manager_model,
+        state_machine_history_controller = ModificationHistoryTreeController(state_machine_manager_model,
                                                                          view.state_machine_history)
         self.add_controller('state_machine_history_controller', state_machine_history_controller)
 

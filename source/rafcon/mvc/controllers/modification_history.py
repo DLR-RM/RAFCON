@@ -12,7 +12,7 @@ logger = log.get_logger(__name__)
 # TODO Comment
 
 
-class StateMachineHistoryController(ExtendedController):
+class ModificationHistoryTreeController(ExtendedController):
     string_substitution_dict = {}  # will be used to substitute strings for better and shorter tree columns
 
     def __init__(self, model, view):
@@ -110,7 +110,7 @@ class StateMachineHistoryController(ExtendedController):
 
     def on_reset_button_clicked(self, widget, event=None):
         # logger.debug("do reset")
-        self._selected_sm_model.history.changes.reset()
+        self._selected_sm_model.history.modifications.reset()
 
     def on_toggle_mode(self, widget, event=None):
         if self.view['branch_checkbox'].get_active():
@@ -168,7 +168,7 @@ class StateMachineHistoryController(ExtendedController):
         self._selected_sm_model.history.redo()
         return True
 
-    @ExtendedController.observe("changes", after=True)
+    @ExtendedController.observe("modifications", after=True)
     def update(self, model, prop_name, info):
         """ The method updates the history a gtk.TreeStore which is the model of respective TreeView.
         It functionality is strongly depends on a consistent history-tree hold by a ChangeHistory-Class.
@@ -180,7 +180,7 @@ class StateMachineHistoryController(ExtendedController):
         self.doing_update = True
         self.history_tree_store.clear()
         self.list_tree_iter = {}
-        trail_actions = [action.version_id for action in self._selected_sm_model.history.changes.single_trail_history()]
+        trail_actions = [action.version_id for action in self._selected_sm_model.history.modifications.single_trail_history()]
 
         def insert_this_action(action, parent_tree_item, init_branch=False):
             """ The function insert a action with respective arguments (e.g. method_name, instance) into a TreeStore.
@@ -201,9 +201,9 @@ class StateMachineHistoryController(ExtendedController):
 
             # find active actions in to be marked in view
             if self._mode == 'trail':
-                active = len(self.history_tree_store) <= self._selected_sm_model.history.changes.trail_pointer
+                active = len(self.history_tree_store) <= self._selected_sm_model.history.modifications.trail_pointer
             else:
-                all_active = self._selected_sm_model.history.changes.get_all_active_actions()
+                all_active = self._selected_sm_model.history.modifications.get_all_active_actions()
                 active = action.version_id in all_active
 
             # generate label to mark branches
@@ -219,17 +219,17 @@ class StateMachineHistoryController(ExtendedController):
         def insert_all_next_actions(version_id, parent_tree_item=None):
             """ The function defines linkage of history-tree-elements in a gtk-tree-view to create a optimal overview.
             """
-            if len(self._selected_sm_model.history.changes.all_time_history) == 0:
+            if len(self._selected_sm_model.history.modifications.all_time_history) == 0:
                 return
             next_id = version_id
             while next_id is not None:
-                # print next_id, len(self._selected_sm_model.history.changes.all_time_history)
+                # print next_id, len(self._selected_sm_model.history.modifications.all_time_history)
                 version_id = next_id
-                history_tree_elem = self._selected_sm_model.history.changes.all_time_history[next_id]
+                history_tree_elem = self._selected_sm_model.history.modifications.all_time_history[next_id]
                 next_id = history_tree_elem.next_id
                 prev_tree_elem = None
                 if history_tree_elem.prev_id is not None:
-                    prev_tree_elem = self._selected_sm_model.history.changes.all_time_history[history_tree_elem.prev_id]
+                    prev_tree_elem = self._selected_sm_model.history.modifications.all_time_history[history_tree_elem.prev_id]
                 action = history_tree_elem.action
                 # logger.info("prev branch #{0} <-> {1}, trail_actions are {2}".format(history_tree_elem.action.version_id, prev_tree_elem, trail_actions))
                 in_trail = history_tree_elem.action.version_id in trail_actions
@@ -245,7 +245,7 @@ class StateMachineHistoryController(ExtendedController):
                     child_tree_item = insert_this_action(action, prev_id_iter, init_branch=True)
                 elif prev_tree_elem is not None and not prev_tree_elem.old_next_ids:
                     # no branch and not trail
-                    prev_prev_tree_elem = self._selected_sm_model.history.changes.all_time_history[prev_tree_elem.prev_id]
+                    prev_prev_tree_elem = self._selected_sm_model.history.modifications.all_time_history[prev_tree_elem.prev_id]
                     branch_limit_for_extra_ident_level = 1 if prev_tree_elem.prev_id in trail_actions else 0
                     if len(prev_prev_tree_elem.old_next_ids) > branch_limit_for_extra_ident_level:
                         # -> level + 1 as previous element, because to many branches -> so prev_id iter as parent_iter
@@ -267,8 +267,8 @@ class StateMachineHistoryController(ExtendedController):
         insert_all_next_actions(version_id=0)
 
         # set selection of Tree
-        if self._selected_sm_model.history.changes.trail_pointer is not None and len(self.history_tree_store) > 1:
-            searched_row_version_id = self._selected_sm_model.history.changes.single_trail_history()[self._selected_sm_model.history.changes.trail_pointer].version_id
+        if self._selected_sm_model.history.modifications.trail_pointer is not None and len(self.history_tree_store) > 1:
+            searched_row_version_id = self._selected_sm_model.history.modifications.single_trail_history()[self._selected_sm_model.history.modifications.trail_pointer].version_id
             row_number = 0
             for action_entry in self.history_tree_store:
                 # compare action.version_id
@@ -280,7 +280,7 @@ class StateMachineHistoryController(ExtendedController):
         # set colors of Tree
         # - is state full and all element which are open to be re-done gray
         self.doing_update = False
-        # for history_tree_elem in self._selected_sm_model.history.changes.all_time_history:
+        # for history_tree_elem in self._selected_sm_model.history.modifications.all_time_history:
         #     logger.info("ActionVersionId: {0} and {1}".format(history_tree_elem.action.version_id,
         #                                                       str(history_tree_elem)))
 
