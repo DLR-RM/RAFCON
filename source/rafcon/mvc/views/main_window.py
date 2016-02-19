@@ -1,4 +1,5 @@
 from gtkmvc import View
+
 from rafcon.mvc.views.logging import LoggingView
 from rafcon.mvc.views.library_tree import LibraryTreeView
 from rafcon.mvc.views.state_icons import StateIconView
@@ -12,8 +13,10 @@ from rafcon.mvc.views.top_tool_bar import TopToolBarView
 from rafcon.mvc.views.menu_bar import MenuBarView
 from rafcon.mvc.views.tool_bar import ToolBarView
 from rafcon.mvc.views.undocked_window import UndockedWindowView
+
 from rafcon.mvc.utils import constants
 from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.mvc import gui_helper
 
 
@@ -25,14 +28,6 @@ class MainWindowView(View):
         View.__init__(self)
         # Add gui components by removing their corresponding placeholders defined in the glade file first and then
         # adding the widgets.
-
-        ######################################################
-        # Logging
-        ######################################################
-        self.logging_view = LoggingView()
-        self['console'].remove(self['console_scroller'])
-        self.logging_view.get_top_widget().show()
-        self['console'].pack_start(self.logging_view.get_top_widget(), True, True, 0)
 
         ################################################
         # Undock Buttons
@@ -125,6 +120,14 @@ class MainWindowView(View):
         self['state_editor_label_hbox'].pack_start(state_editor_label, expand=True, fill=True, padding=0)
         self['state_editor_label_hbox'].reorder_child(state_editor_label, 0)
 
+        ######################################################
+        # Logging
+        ######################################################
+        self.logging_view = LoggingView()
+        self['console'].remove(self['console_scroller'])
+        self['console'].pack_start(self.logging_view.get_top_widget(), True, True, 0)
+        self.logging_view.get_top_widget().show()
+
         ##################################################
         # menu bar view
         ##################################################
@@ -191,12 +194,12 @@ class MainWindowView(View):
         self['top_menu_hbox'].set_border_width(constants.BORDER_WIDTH)
 
         self['upper_notebook'].set_border_width(0)
-        self['upper_notebook'].set_tab_hborder(constants.BORDER_WIDTH * 2)
-        self['upper_notebook'].set_tab_vborder(constants.BORDER_WIDTH * 3)
+        self['upper_notebook'].set_tab_hborder(constants.BORDER_WIDTH*2)
+        self['upper_notebook'].set_tab_vborder(constants.BORDER_WIDTH*3)
 
         self['lower_notebook'].set_border_width(0)
-        self['lower_notebook'].set_tab_hborder(constants.BORDER_WIDTH * 2)
-        self['lower_notebook'].set_tab_vborder(constants.BORDER_WIDTH * 3)
+        self['lower_notebook'].set_tab_hborder(constants.BORDER_WIDTH*2)
+        self['lower_notebook'].set_tab_vborder(constants.BORDER_WIDTH*3)
 
         self['debug_eventbox'].set_border_width(0)
         self['debug_label_hbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)

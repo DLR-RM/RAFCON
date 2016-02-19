@@ -438,7 +438,7 @@
                   </object>
                   <packing>
                     <property name="resize">False</property>
-                    <property name="shrink">True</property>
+                    <property name="shrink">False</property>
                   </packing>
                 </child>
                 <child>
@@ -464,7 +464,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="orientation">vertical</property>
-                            <property name="position">400</property>
                             <child>
                               <object class="GtkVBox" id="graphical_editor_outer_vbox">
                                 <property name="visible">True</property>
@@ -795,8 +794,8 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="resize">True</property>
-                                <property name="shrink">True</property>
+                                <property name="resize">False</property>
+                                <property name="shrink">False</property>
                               </packing>
                             </child>
                             <child>
@@ -983,7 +982,7 @@
                       </object>
                       <packing>
                         <property name="resize">False</property>
-                        <property name="shrink">True</property>
+                        <property name="shrink">False</property>
                       </packing>
                     </child>
                     <child>

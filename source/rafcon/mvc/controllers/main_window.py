@@ -248,14 +248,43 @@ class MainWindowController(ExtendedController):
         # hide not usable buttons
         self.view['step_buttons'].hide()
 
-        position = global_runtime_config.get_config_value('LEFT_BAR_DOCKED_POS')
-        view['top_level_h_pane'].set_position(position) if position else view['top_level_h_pane'].set_position(300)
+        # Initializing Main Window Size & Position
+        self.set_window_size_and_position(view.get_top_widget(), 'MAIN_WINDOW')
 
-        position = global_runtime_config.get_config_value('RIGHT_BAR_DOCKED_POS')
-        view['right_h_pane'].set_position(position) if position else view['right_h_pane'].set_position(1000)
+        # Initializing Pane positions
+        self.set_pane_position('RIGHT_BAR_DOCKED_POS', 'right_h_pane', default_pos=1000)
+        self.set_pane_position('LEFT_BAR_DOCKED_POS', 'top_level_h_pane', default_pos=300)
+        self.set_pane_position('CONSOLE_DOCKED_POS', 'central_v_pane', default_pos=600)
 
-        position = global_runtime_config.get_config_value('CONSOLE_DOCKED_POS')
-        view['central_v_pane'].set_position(position) if position else view['central_v_pane'].set_position(600)
+    def set_pane_position(self, config_id, pane, default_pos=100):
+        """Adjusts the position of a GTK Pane to a value stored in the runtime config file. If there was no value
+        stored, the pane's position is set to a default value.
+
+        :param config_id: The pane identifier saved in the runtime config file
+        :param pane: The corresponding pane for which the position is to be adjusted
+        :param default_pos: A default value for the pane's position in case it was not stored in the runtime config
+        """
+        position = global_runtime_config.get_config_value(config_id)
+        self.view[pane].set_position(position) if position else self.view[pane].set_position(default_pos)
+
+    def set_window_size_and_position(self, window, window_key):
+        """Adjust window's size and position according to the corresponding values in the runtime config file.
+
+        :param window: The GTK Window to be adjusted
+        :param window_key: The window's key stored in the runtime config file
+        """
+        size = global_runtime_config.get_config_value(window_key+'_SIZE')
+        position = global_runtime_config.get_config_value(window_key+'_POS')
+        if size:
+            window.resize(size[0], size[1])
+        if position:
+            position = (max(0, position[0]), max(0, position[1]))
+            screen_width = gtk.gdk.screen_width()
+            screen_height = gtk.gdk.screen_height()
+            if position[0] < screen_width and position[1] < screen_height:
+                window.move(position[0], position[1])
+        else:
+            window.set_position(gtk.WIN_POS_MOUSE)
 
     def highlight_execution_of_current_sm(self, active):
         notebook = self.get_controller('state_machines_editor_ctrl').view['notebook']
@@ -329,23 +358,16 @@ class MainWindowController(ExtendedController):
         self.view['console_return_button'].show()
 
     def on_left_bar_undock_clicked(self, widget, event=None):
-        """Triggered when the undock button of the left bar window.
+        """Triggered when the un-dock button of the left bar is clicked.
 
-        The left bar is undocked into a separate new window with the same size as the bar. The new window's position is
-        approximately the same as the bar used to be.
+        The left bar is un-docked into a separate new window, and the bar is hidden from the main-window by triggering
+        the method on_left_bar_hide_clicked(). triggering this method shows the 'left_bar_return_button' in the
+        main-window, which doesn't serve any purpose when the bar is un-docked. This button is therefore deliberately
+        hidden. The un-dock button, which is also part of the bar is hidden, because the re-dock button is included in
+        the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons visible in the new
+        window. The new window's size and position are loaded from runtime_config, if they exist.
         """
-        global_runtime_config.save_configuration(self.view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
-        size = global_runtime_config.get_config_value('LEFT_BAR_UNDOCKED_SIZE')
-        position = global_runtime_config.get_config_value('LEFT_BAR_UNDOCKED_POS')
-        if size:
-            self.view.left_bar_window.get_top_widget().resize(size[0], size[1])
-        else:
-            self.view.left_bar_window.get_top_widget().resize(self.view['top_level_h_pane'].get_position(),
-                                                              self.view['left_bar'].get_allocation().height)
-        if position:
-            self.view.left_bar_window.get_top_widget().move(position[0], position[1])
-        else:
-            self.view.left_bar_window.get_top_widget().set_position(gtk.WIN_POS_MOUSE)
+        self.set_window_size_and_position(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
         self.view['left_bar'].reparent(self.view.left_bar_window['central_eventbox'])
         self.get_controller('left_window_controller').show_window()
         self.view['undock_left_bar_button'].hide()
@@ -353,14 +375,12 @@ class MainWindowController(ExtendedController):
         self.view['left_bar_return_button'].hide()
 
     def on_left_bar_dock_clicked(self, widget, event=None):
-        """Triggered when the dock button of the left bar window.
+        """Triggered when the re-dock button of the left-bar window is clicked.
 
-        If the left bar is undocked, it is docked back to the main window.
+        The size & position of the open window are saved to the runtime_config file, and the left-bar is re-docked back
+        to the main-window, and the left-bar window is hidden. The un-dock button of the bar is made visible again.
         """
-        global_runtime_config.save_configuration(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_UNDOCKED')
-        position = global_runtime_config.get_config_value('LEFT_BAR_DOCKED_POS')
-        if position:
-            self.view['top_level_h_pane'].set_position(position)
+        global_runtime_config.save_configuration(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
         self.on_left_bar_return_clicked(None)
         self.view['left_bar'].reparent(self.view['left_bar_container'])
         self.get_controller('left_window_controller').hide_window()
@@ -368,19 +388,16 @@ class MainWindowController(ExtendedController):
         return True
 
     def on_right_bar_undock_clicked(self, widget, event=None):
-        global_runtime_config.save_configuration(self.view['right_h_pane'], 'RIGHT_BAR_DOCKED')
-        size = global_runtime_config.get_config_value('RIGHT_BAR_UNDOCKED_SIZE')
-        position = global_runtime_config.get_config_value('RIGHT_BAR_UNDOCKED_POS')
-        if size:
-            self.view.right_bar_window.get_top_widget().resize(size[0], size[1])
-        else:
-            width = self.view.top_window_width - self.view['right_h_pane'].get_position() -\
-                    self.view['top_level_h_pane'].get_position()
-            self.view.right_bar_window.get_top_widget().resize(width, self.view['right_bar'].get_allocation().height)
-        if position:
-            self.view.right_bar_window.get_top_widget().move(position[0], position[1])
-        else:
-            self.view.right_bar_window.get_top_widget().set_position(gtk.WIN_POS_MOUSE)
+        """Triggered when the un-dock button of the right bar is clicked.
+
+        The right bar is un-docked into a separate new window, and the bar is hidden from the main-window by triggering
+        the method on_right_bar_hide_clicked(). triggering this method shows the 'right_bar_return_button' in the
+        main-window, which doesn't serve any purpose when the bar is un-docked. This button is therefore deliberately
+        hidden. The un-dock button, which is also part of the bar, is hidden, because the re-dock button is included in
+        the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons visible in the new
+        window. The new window's size and position are loaded from runtime_config, if they exist.
+        """
+        self.set_window_size_and_position(self.view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
         self.view['right_bar'].reparent(self.view.right_bar_window['central_eventbox'])
         self.get_controller('right_window_controller').show_window()
         self.view['undock_right_bar_button'].hide()
@@ -388,35 +405,29 @@ class MainWindowController(ExtendedController):
         self.view['right_bar_return_button'].hide()
 
     def on_right_bar_dock_clicked(self, widget, event=None):
-        """Triggered when the dock button of the right bar is clicked.
+        """Triggered when the re-dock button of the right-bar window is clicked.
 
-        If right bar is docked to main window, it is undocked into a separate new window with the same size as the bar.
-        The new window's position is approximately the same as the bar used to be.
+        The size & position of the open window is saved to the runtime_config file, and the right-bar is re-docked back
+        to the main-window, and the right-bar window is hidden. The un-dock button of the bar is made visible again.
         """
-        global_runtime_config.save_configuration(self.view.right_bar_window.get_top_widget(), 'RIGHT_BAR_UNDOCKED')
-        position = global_runtime_config.get_config_value('RIGHT_BAR_DOCKED_POS')
-        if position:
-            self.view['right_h_pane'].set_position(position)
-        self.view['right_bar'].reparent(self.view['right_bar_container'])
+        global_runtime_config.save_configuration(self.view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
         self.on_right_bar_return_clicked(None)
+        self.view['right_bar'].reparent(self.view['right_bar_container'])
         self.get_controller('right_window_controller').hide_window()
         self.docked['right_bar'] = True
         self.view['undock_right_bar_button'].show()
 
     def on_console_undock_clicked(self, widget, event=None):
-        global_runtime_config.save_configuration(self.view['central_v_pane'], 'CONSOLE_DOCKED')
-        size = global_runtime_config.get_config_value('CONSOLE_UNDOCKED_SIZE')
-        position = global_runtime_config.get_config_value('CONSOLE_UNDOCKED_POS')
-        if size:
-            self.view.console_window.get_top_widget().resize(size[0], size[1])
-        else:
-            self.view.console_window.get_top_widget().resize(self.view['right_h_pane'].get_position(),
-                                                             self.view['console'].get_allocation().height)
-        if position:
-            self.view.console_window.get_top_widget().move(position[0], position[1])
-        else:
-            self.view.console_window.get_top_widget().move(self.view['top_level_h_pane'].get_position(),
-                                                           self.view['central_v_pane'].get_position())
+        """Triggered when the un-dock button of the console is clicked.
+
+        The console is un-docked into a separate new window, and the console is hidden from the main-window by
+        triggering the method on_console_hide_clicked(). triggering this method shows the 'console_return_button' in the
+        main-window, which doesn't serve any purpose when the bar is un-docked. This button is therefore deliberately
+        hidden. The un-dock button, which is also part of the console, is hidden, because the re-dock button is included
+        in the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons visible in the
+        new window. The new window's size and position are loaded from runtime_config, if they exist.
+        """
+        self.set_window_size_and_position(self.view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
         self.view['console'].reparent(self.view.console_window['central_eventbox'])
         self.get_controller('console_window_controller').show_window()
         self.view['undock_console_button'].hide()
@@ -424,12 +435,14 @@ class MainWindowController(ExtendedController):
         self.view['console_return_button'].hide()
 
     def on_console_dock_clicked(self, widget, event=None):
-        global_runtime_config.save_configuration(self.view.console_window.get_top_widget(), 'CONSOLE_UNDOCKED')
-        position = global_runtime_config.get_config_value('CONSOLE_DOCKED_POS')
-        if position:
-            self.view['central_v_pane'].set_position(position)
-        self.view['console'].reparent(self.view['console_container'])
+        """Triggered when the re-dock button of the console window is clicked.
+
+        The size & position of the open window is saved to the runtime_config file, and the console is re-docked back
+        to the main-window, and the console window is hidden. The un-dock button of the bar is made visible again.
+        """
+        global_runtime_config.save_configuration(self.view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
         self.on_console_return_clicked(None)
+        self.view['console'].reparent(self.view['console_container'])
         self.get_controller('console_window_controller').hide_window()
         self.view['undock_console_button'].show()
 

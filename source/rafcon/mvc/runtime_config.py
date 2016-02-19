@@ -8,7 +8,6 @@
 
 """
 import gtk
-from rafcon.mvc.views.main_window import MainWindowView
 from rafcon.utils.config import DefaultConfig
 from rafcon.utils import log
 
