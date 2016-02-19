@@ -332,7 +332,7 @@ class StateDataFlowsListController(ExtendedController):
         except:
             if self.debug_log:
                 import traceback
-                from rafcon.mvc.history import NotificationOverview
+                from rafcon.mvc.utils.notification_overview import NotificationOverview
                 self.store_debug_log_file(NotificationOverview(info))
                 self.store_debug_log_file(str(traceback.format_exc()))
             logger.warning("update of data_flow widget fails while detecting change in state %s %s" %

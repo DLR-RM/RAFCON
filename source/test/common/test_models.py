@@ -777,7 +777,7 @@ def test_add_remove_models(caplog):
 
     state_dict['Nested'].add_state(state1)
     state_dict['Nested'].add_state(state2)
-    sm_history.changes.reset()
+    sm_history.modifications.reset()
     state_dict['state1'] = state1
     state_dict['state2'] = state2
 
@@ -1005,7 +1005,7 @@ def test_add_remove_models(caplog):
     do_check_for_state(state_dict, state_name='state1')
     # # do_check_for_state(state_dict, history_ctrl, state_name='state2')
     # # do_check_for_state(state_dict, history_ctrl, state_name='Nested')
-    # sm_history.changes.reset()
+    # sm_history.modifications.reset()
     # assert check_if_all_states_there(state_dict['Container'], state_check_dict1)
     # state_check_dict2 = print_all_states_with_path_and_name(state_dict['Container'])
     do_check_for_state(state_dict, state_name='Container')
@@ -1014,7 +1014,7 @@ def test_add_remove_models(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_state_property_changes_history(caplog):
+def test_state_property_modifications_history(caplog):
     ##################
     # state properties
 
@@ -1062,24 +1062,24 @@ def test_state_property_changes_history(caplog):
     output_res_state2 = state2.add_output_data_port("res", "int")
 
     state_dict['Nested'].add_state(state1)
-    assert len(sm_model.history.changes.single_trail_history()) == 1
+    assert len(sm_model.history.modifications.single_trail_history()) == 2
     state_dict['Nested'].add_state(state2)
-    assert len(sm_model.history.changes.single_trail_history()) == 2
+    assert len(sm_model.history.modifications.single_trail_history()) == 3
     output_res_nested = state_dict['Nested'].add_output_data_port("res", "int")
-    assert len(sm_model.history.changes.single_trail_history()) == 3
+    assert len(sm_model.history.modifications.single_trail_history()) == 4
 
     oc_again_state1 = state1.add_outcome("again")
-    assert len(sm_model.history.changes.single_trail_history()) == 4
+    assert len(sm_model.history.modifications.single_trail_history()) == 5
     oc_counted_state1 = state1.add_outcome("counted")
-    assert len(sm_model.history.changes.single_trail_history()) == 5
+    assert len(sm_model.history.modifications.single_trail_history()) == 6
 
     oc_done_state2 = state2.add_outcome("done")
     oc_best_state2 = state2.add_outcome("best")
     oc_full_state2 = state2.add_outcome("full")
-    assert len(sm_model.history.changes.single_trail_history()) == 8
+    assert len(sm_model.history.modifications.single_trail_history()) == 9
 
     oc_great_nested = state_dict['Nested'].add_outcome("great")
-    assert len(sm_model.history.changes.single_trail_history()) == 9
+    assert len(sm_model.history.modifications.single_trail_history()) == 10
 
     #######################################
     # Properties of State #################
@@ -1185,7 +1185,7 @@ def test_state_property_changes_history(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_outcome_property_changes_history(caplog):
+def test_outcome_property_modifications_history(caplog):
     ##################
     # outcome properties
 
@@ -1231,7 +1231,7 @@ def test_outcome_property_changes_history(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_transition_property_changes_history(caplog):
+def test_transition_property_modifications_history(caplog):
     ##################
     # transition properties
 
@@ -1476,7 +1476,7 @@ def test_scoped_variable_modify_notification(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_data_flow_property_changes_history(caplog):
+def test_data_flow_property_modifications_history(caplog):
     ##################
     # data_flow properties
 

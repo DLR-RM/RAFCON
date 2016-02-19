@@ -28,6 +28,9 @@ class DataFlowModel(StateElementModel):
         assert isinstance(data_flow, DataFlow)
         self.data_flow = data_flow
 
+    def __str__(self):
+        return "Model of DataFlow: {0}".format(self.data_flow)
+
     @ModelMT.observe("data_flow", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(DataFlowModel, self).model_changed(model, prop_name, info)

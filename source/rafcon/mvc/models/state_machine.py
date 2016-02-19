@@ -53,10 +53,10 @@ class StateMachineModel(ModelMT):
 
         self.selection = Selection()
 
-        from rafcon.mvc.history import History
+        from rafcon.mvc.models.modification_history import ModificationsHistoryModel
         history_enabled = global_gui_config.get_config_value('HISTORY_ENABLED')
         logger.info("is history enabled: %s" % history_enabled)
-        self.history = History(self)
+        self.history = ModificationsHistoryModel(self)
         if not history_enabled:
             self.history.fake = True
 

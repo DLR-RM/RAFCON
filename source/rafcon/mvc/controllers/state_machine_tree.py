@@ -4,7 +4,7 @@ import gobject
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-from rafcon.mvc.history import NotificationOverview
+from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -246,25 +246,28 @@ class StateMachineTreeController(ExtendedController):
             #     self.update(self._selected_sm_model.root_state)
 
             (model, actual_iter) = self.view.get_selection().get_selected()
-            selected_iter = self.state_row_iter_dict_by_state_path[
-                self._selected_sm_model.selection.get_selected_state().state.get_path()]
-            # logger.debug("TreeSelectionPaths actual %s and in state_machine.selection %s " % (actual_iter, selected_iter))
-            # print "\n\n####### 3 ########\n\n"
-            selected_path = self.tree_store.get_path(selected_iter)
-            if actual_iter is None:
-                actual_path = None
-            else:
-                # print "\n\n####### 4 ########\n\n"
-                actual_path = self.tree_store.get_path(actual_iter)
-            # logger.debug("TreeSelectionPaths actual %s and in state_machine.selection %s " % (actual_path, selected_path))
-            if not selected_path == actual_path:
-                # logger.debug("reselect state machine tree-selection")
-                # if single selection-mode is set no un-select is needed
-                # self.view.get_selection().unselect_path(actual_path)
-                # self.no_cursor_selection = True
-                self.view.expand_to_path(selected_path)
-                self.view.get_selection().select_iter(selected_iter)
-                # self.no_cursor_selection = False
+            try:
+                selected_iter = self.state_row_iter_dict_by_state_path[
+                    self._selected_sm_model.selection.get_selected_state().state.get_path()]
+                # logger.debug("TreeSelectionPaths actual %s and in state_machine.selection %s " % (actual_iter, selected_iter))
+                # print "\n\n####### 3 ########\n\n"
+                selected_path = self.tree_store.get_path(selected_iter)
+                if actual_iter is None:
+                    actual_path = None
+                else:
+                    # print "\n\n####### 4 ########\n\n"
+                    actual_path = self.tree_store.get_path(actual_iter)
+                # logger.debug("TreeSelectionPaths actual %s and in state_machine.selection %s " % (actual_path, selected_path))
+                if not selected_path == actual_path:
+                    # logger.debug("reselect state machine tree-selection")
+                    # if single selection-mode is set no un-select is needed
+                    # self.view.get_selection().unselect_path(actual_path)
+                    # self.no_cursor_selection = True
+                    self.view.expand_to_path(selected_path)
+                    self.view.get_selection().select_iter(selected_iter)
+                    # self.no_cursor_selection = False
 
-                # # work around to force selection to state-editor
-                # self._selected_sm_model.selection.set([self._selected_sm_model.selection.get_selected_state()])
+                    # # work around to force selection to state-editor
+                    # self._selected_sm_model.selection.set([self._selected_sm_model.selection.get_selected_state()])
+            except (TypeError, KeyError):
+                logger.warning("Could not update selection")
