@@ -39,6 +39,8 @@ import rafcon.mvc.singleton as mvc_singleton
 
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
+from rafcon.mvc.utils.notification_overview import NotificationOverview
+
 logger = log.get_logger(__name__)
 
 core_object_list = [Transition, DataFlow, Outcome, InputDataPort, OutputDataPort, ScopedData, ScopedVariable, Script,
@@ -277,7 +279,7 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
     state_model.is_start = copy.deepcopy(meta_dict['is_start'])
     if state_model.is_start and not state_model.state.is_root_state:  # TODO not nice that model stuff does things in core
         if not (isinstance(state_model.parent.state, BarrierConcurrencyState) or
-                    isinstance(state_model.parent.state, PreemptiveConcurrencyState)):
+                isinstance(state_model.parent.state, PreemptiveConcurrencyState)):
             # logger.debug("set start_state_id %s" % state_model.parent.state)
             # state_model.parent.state.start_state_id = state_model.state.state_id
             pass
@@ -287,7 +289,10 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
 
 class ActionDummy:
     def __init__(self, overview=None):
-        self.before_overview = overview
+        if overview is None:
+            self.before_overview = NotificationOverview()
+        else:
+            self.before_overview = overview
         self.after_overview = None
 
     def set_after(self, overview=None):
@@ -303,6 +308,9 @@ class ActionDummy:
 class MetaAction:
 
     def __init__(self, parent_path, state_machine_model, overview):
+
+        assert isinstance(overview, NotificationOverview)
+        assert overview['type'] == 'signal'
 
         self.type = "change " + overview['meta_signal'][-1]['change']
         overview['method_name'].append("change " + overview['meta_signal'][-1]['change'])
@@ -375,7 +383,7 @@ class MetaAction:
 
 class Action:
     def __init__(self, parent_path, state_machine_model, overview):
-
+        assert isinstance(overview, NotificationOverview)
         self.type = overview['method_name'][-1]
         self.state_machine = state_machine_model.state_machine
         self.state_machine_model = state_machine_model
@@ -769,11 +777,10 @@ class AddObjectAction(Action):
 
     def set_after(self, overview):
         Action.set_after(self, overview)
-        new_overview = overview.new_overview
         # logger.info("add_object \n" + str(self.after_info))
         # get new object from respective list and create identifier
-        list_name = new_overview['method_name'][-1].replace('add_', '') + 's'
-        new_object = getattr(new_overview['args'][-1][0], list_name)[new_overview['result'][-1]]
+        list_name = overview['method_name'][-1].replace('add_', '') + 's'
+        new_object = getattr(overview['args'][-1][0], list_name)[overview['result'][-1]]
         self.added_object_identifier = CoreObjectIdentifier(new_object)
 
     def redo(self):
@@ -950,15 +957,15 @@ class RemoveObjectAction(Action):
 
     def get_object_identifier(self):
         # logger.info("remove_object \n" + str(self.before_info))
-        new_overview = self.before_overview.new_overview
+        overview = self.before_overview
         # get new object from respective list and create identifier
-        object_type_name = new_overview['method_name'][-1].replace('remove_', '')
+        object_type_name = overview['method_name'][-1].replace('remove_', '')
         list_name = object_type_name + 's'
-        if len(new_overview['args'][-1]) < 2:
-            object_id = new_overview['kwargs'][-1][object_type_name + '_id']
+        if len(overview['args'][-1]) < 2:
+            object_id = overview['kwargs'][-1][object_type_name + '_id']
         else:
-            object_id = new_overview['args'][-1][1]
-        new_object = getattr(new_overview['args'][-1][0], list_name)[object_id]
+            object_id = overview['args'][-1][1]
+        new_object = getattr(overview['args'][-1][0], list_name)[object_id]
         self.removed_object_identifier = CoreObjectIdentifier(new_object)
         # logger.info("removed_object with identifier {0}".format(self.removed_object_identifier))
 

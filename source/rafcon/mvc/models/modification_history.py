@@ -369,7 +369,12 @@ class ModificationsHistoryModel(ModelMT):
         # logger.debug("History stores AFTER")
         if self.with_debug_logs:
             self.store_test_log_file(str(overview) + "\n")
-
+fix notification pattern and clean-up and refactor NotificationOverview class
+- adapt state-machine notification according other observable and model classes
+    -> insert after and before booleans and forward kwargs no longer as info-argument
+- insert a check if result=Exception for root_state_type_change
+- check for notification overview objects if used -> do not tolerate anymore simple dicts
+- for now show meta-data as parameter for MetaActions -> still needs to be improved
         try:
             self.actual_action.set_after(overview)
             self.state_machine_model.history.modifications.insert_action(self.actual_action)
@@ -386,7 +391,6 @@ class ModificationsHistoryModel(ModelMT):
             return
         overview = NotificationOverview(info)
         # logger.info("meta_changed: \n{0}".format(overview))
-        overview = overview.new_overview
         # WORKAROUND: avoid multiple signals of the root_state, by comparing first and last model in overview
         if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1] or \
                 overview['meta_signal'][-1]['change'] == 'all':  # avoid strange change: 'all' TODO test why those occur
@@ -746,9 +750,6 @@ class ModificationsHistory(Observable):
     - the pointer are pointing on the next undo ... so redo is pointer + 1
     - all_actions is a type of a tree # prev_id, action, next_id, old_next_ids
     """
-    dummy_notification_overview = NotificationOverview({'before': True, 'model': None, 'method_name': None,
-                                                        'instance': None, 'prop_name': None, 'args': (), 'kwargs': {},
-                                                        'info': {}})
 
     # TODO remove explizit trail-history -> next_id is holding the same information and old_next_ids the branching
     def __init__(self):
@@ -763,7 +764,7 @@ class ModificationsHistory(Observable):
         self.with_prints = False
 
         # insert initial dummy element
-        self.insert_action(ActionDummy(self.dummy_notification_overview))
+        self.insert_action(ActionDummy())
 
     @Observable.observed
     def insert_action(self, action):
@@ -948,5 +949,5 @@ class ModificationsHistory(Observable):
         self.counter = 0
 
         # insert initial dummy element
-        self.insert_action(ActionDummy(self.dummy_notification_overview))
+        self.insert_action(ActionDummy())
 

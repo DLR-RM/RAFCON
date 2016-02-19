@@ -1,13 +1,15 @@
 import datetime
 
-from rafcon.statemachine.states.state import State
-
 
 class NotificationOverview(dict):
-    # TODO generalize
+    empty_info = {'before': True, 'model': None, 'method_name': None, 'instance': None,
+                  'prop_name': None, 'args': (), 'kwargs': {}, 'info': {}}
+    # TODO comment
 
-    def __init__(self, info, with_prints=False):
+    def __init__(self, info=None, with_prints=False):
 
+        if info is None:
+            info = self.empty_info
         self.info = info
         self.__type = 'before'
         if 'after' in info:
@@ -15,15 +17,13 @@ class NotificationOverview(dict):
         elif 'signal' in info:
             self.__type = 'after'
         self.with_prints = with_prints
-        s, new_overview = self.get_nice_info_dict_string(info)
+        s, overview_dict = self.get_nice_info_dict_string(info)
         self.time_stamp = datetime.datetime.now()
-        self.__description = str(self.time_stamp) + "\n" + s
-        self.new_overview = new_overview
-        self.__overview = self.parent_state_of_notification_source(info)
-        dict.__init__(self, self.__overview)
+        self._overview_dict = overview_dict
+        dict.__init__(self, overview_dict)
+        self.__description = s
         if self.with_prints:
             print str(self)
-            self.print_overview(new_overview)
 
     def __str__(self):
         return self.__description
@@ -31,6 +31,10 @@ class NotificationOverview(dict):
     def __setitem__(self, key, value):
         if key in ['info', 'model', 'prop_name', 'instance', 'method_name', 'level']:
             dict.__setitem__(self, key, value)
+
+    @property
+    def type(self):
+        return self.__type
 
     def update(self, E=None, **F):
         if E is not None:
@@ -40,46 +44,15 @@ class NotificationOverview(dict):
             dict.update(self, E)
 
     def print_overview(self, overview=None):
-        if overview is None:
-            overview = self.__overview
-        info_print = ''
-        info_count = 0
-        for elem in overview['info']:
-            info_print += "\ninfo %s: %s" % (info_count, str(elem))
-            info_count += 1
-
-        print info_print
-        print "model: ", overview['model']
-        print "prop_: ", overview['prop_name']
-        print "insta: ", overview['instance']
-        print "metho: ", overview['method_name']
-        # print "level: ", overview['level']
-        print "prop-: ", overview['prop_name'][-1]
-
-    def get_all(self):
-        return self.__overview
-
-    def check_overview(self):
-        overview = self.__overview
-        if overview['prop_name'][-1] == 'state':
-            # print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
-            assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
-        else:
-            if overview['model'][-1].parent:
-                if not isinstance(overview['model'][-1].parent.state, State):  # is root_state
-                    overview['model'][-1].state.get_path()
-                    if self.with_prints:
-                        print "Path_root: ", overview['model'][-1].state.get_path()
-                else:
-                    overview['model'][-1].parent.state.get_path()
-                    if self.with_prints:
-                        print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
-                            overview['model'][-1].parent.state.get_path()
-                    assert overview['model'][-2].state.get_path() == \
-                           overview['model'][-1].parent.state.get_path().split('/')[0]
+        print self
 
     def get_nice_info_dict_string(self, info, level='\t', overview=None):
-        """ Inserts all elements of a notification info-dictionary of gtkmvc into one string and indicates levels of calls definded by 'kwargs'
+        """ Inserts all elements of a notification info-dictionary of gtkmvc or a Signal into one string and indicates
+        levels of calls defined by 'kwargs'. Additionally, the elements get structured into a dict that holds all levels
+        of the general notification key-value pairs in faster accessible lists. The dictionary has the element 'type'
+        and the general elements {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'args': [],
+        'kwargs': []}) plus specific elements according the type. Type is always one of the following list
+        ['before', 'after', 'signal'].
         """
         def get_nice_meta_signal_msg_tuple_string(meta_signal_msg_tuple, level, overview):
             meta_signal_dict = {}
@@ -162,7 +135,9 @@ class NotificationOverview(dict):
             if overview['type'] == 'after':
                 overview['result'].append(info['result'])
             # kwargs
-            s += "\n{0}'kwargs': {1}".format(level, self.get_nice_info_dict_string(info['kwargs'], level + "\t", overview))
+            s += "\n{0}'kwargs': {1}".format(level, self.get_nice_info_dict_string(info['kwargs'],
+                                                                                   level + "\t",
+                                                                                   overview))
             if overview['type'] == 'after':
                 s += "\n{0}'result': {1}".format(level, info['result'])
             # additional elements not created by gtkmvc or common function calls
@@ -177,53 +152,11 @@ class NotificationOverview(dict):
             overview['kwargs'].append({})
             overview['meta_signal'].append(info['arg'])
             s += "\n{0}'arg': MetaSignalMsg({1}".format(level,
-                                                        get_nice_meta_signal_msg_tuple_string(info['arg'], level, overview))
+                                                        get_nice_meta_signal_msg_tuple_string(info['arg'],
+                                                                                              level,
+                                                                                              overview))
 
         if overview_was_none:
             return s, overview
         else:
             return s
-
-    def parent_state_of_notification_source(self, info):
-
-        if self.with_prints:
-            print "----- xxxxxxx %s \n%s\n%s\n%s\n" % (self.__type, info['model'], info['prop_name'], info)
-
-        def set_dict(info, d):
-            d['model'].append(info['model'])
-            d['prop_name'].append(info['prop_name'])
-            d['instance'].append(info['instance'])
-            d['method_name'].append(info['method_name'])
-            if self.with_prints:
-                print "set"
-
-        def find_parent(info, elem):
-            elem['info'].append(info)
-            if 'kwargs' in info and info['kwargs']:
-                if self.with_prints:
-                    print 'kwargs'
-                elem['level'].append('kwargs')
-                set_dict(info, elem)
-                if 'method_name' in info['kwargs'] and 'instance' in info['kwargs']:
-                    find_parent(info['kwargs'], elem)
-            elif 'info' in info and info['info']:
-                if self.with_prints:
-                    print 'info'
-                elem['level'].append('info')
-                set_dict(info, elem)
-                find_parent(info['info'], elem)
-                assert len(info['info']) < 2
-            elif 'info' in info:
-                set_dict(info, elem)
-            elif 'kwargs' in info:
-                set_dict(info, elem)
-            else:
-                if self.with_prints:
-                    print 'assert'
-                assert True
-            return elem
-
-        overview = find_parent(info, {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'level': [],
-                                      'info': []})
-
-        return overview

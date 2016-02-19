@@ -188,16 +188,20 @@ class ModificationHistoryTreeController(ExtendedController):
                 - defines which element is marked as active
                 - generate branch labels with version-id
             """
-
+            if action.before_overview is None:
+                logger.error("model is  None of {1}: {0}".format(action.before_overview, type(action.before_overview).__name__))
             model = action.before_overview['model'][-1]
             method_name = action.before_overview['method_name'][-1]
             instance = action.before_overview['instance'][-1]
-            if hasattr(action.before_overview, 'new_overview'):
-                parameters = [str(elem) for i1, elem in enumerate(action.before_overview.new_overview['args'][-1]) if not i1 == 0]
-                for name, value in action.before_overview.new_overview['kwargs'][-1].iteritems(): # .iteritems():
-                    parameters.append("{0}: {1}".format(name, value))
+            parameters = []
+            if action.before_overview['type'] == 'signal':
+                # logger.info(action.before_overview._overview_dict)
+                parameters.append(str(action.before_overview['model'][-1].meta))
             else:
-                parameters = action.before_overview['args']
+                for value in action.before_overview['args'][-1]:
+                    parameters.append(str(value))
+            for name, value in action.before_overview['kwargs'][-1].iteritems():
+                parameters.append("{0}: {1}".format(name, value))
 
             # find active actions in to be marked in view
             if self._mode == 'trail':
@@ -219,7 +223,7 @@ class ModificationHistoryTreeController(ExtendedController):
         def insert_all_next_actions(version_id, parent_tree_item=None):
             """ The function defines linkage of history-tree-elements in a gtk-tree-view to create a optimal overview.
             """
-            if len(self._selected_sm_model.history.modifications.all_time_history) == 0:
+            if len(self._selected_sm_model.history.modifications.all_time_history) == 1:
                 return
             next_id = version_id
             while next_id is not None:
