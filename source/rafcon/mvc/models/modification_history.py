@@ -369,12 +369,7 @@ class ModificationsHistoryModel(ModelMT):
         # logger.debug("History stores AFTER")
         if self.with_debug_logs:
             self.store_test_log_file(str(overview) + "\n")
-fix notification pattern and clean-up and refactor NotificationOverview class
-- adapt state-machine notification according other observable and model classes
-    -> insert after and before booleans and forward kwargs no longer as info-argument
-- insert a check if result=Exception for root_state_type_change
-- check for notification overview objects if used -> do not tolerate anymore simple dicts
-- for now show meta-data as parameter for MetaActions -> still needs to be improved
+
         try:
             self.actual_action.set_after(overview)
             self.state_machine_model.history.modifications.insert_action(self.actual_action)
