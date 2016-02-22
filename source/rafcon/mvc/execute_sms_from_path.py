@@ -86,9 +86,6 @@ def run_sm():
     # [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
     #     global_storage.load_statemachine_from_path("../../test_scripts/tutorials/99_bottles_of_beer_in_library")
 
-    [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_path("/home/brun_sb/Desktop/debug_sm")
-
     [logger, gvm_model] = create_models()
     main_window_view = MainWindowView()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
