@@ -6,11 +6,13 @@ from rafcon.statemachine.state_machine_manager import StateMachineManager
 from rafcon.statemachine.execution.execution_history import ConcurrencyItem, CallItem
 from rafcon.utils import log
 
+import rafcon.mvc.singleton as mvc_singleton
+
 logger = log.get_logger(__name__)
 
 
 class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
-    """Controller handling the execution history
+    """Controller handling the execution history.
 
     :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel model: The state machine manager model,
         holding data regarding state machines.
@@ -34,6 +36,11 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
 
     def register_adapters(self):
         pass
+
+    def focus_tab(self):
+        # logger.info("focus execution-history")
+        if mvc_singleton.main_window_controller is not None and mvc_singleton.main_window_controller.view is not None:
+            mvc_singleton.main_window_controller.view.bring_tab_to_the_top('execution_history')
 
     def register_view(self, view):
         self.history_tree.connect('button_press_event', self.right_click)
