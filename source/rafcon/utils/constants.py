@@ -1,10 +1,12 @@
 import tempfile
+import getpass
 import os
 
-RAFCON_TEMP_PATH_BASE = os.path.join(tempfile.gettempdir(), 'rafcon')
+
+RAFCON_TEMP_PATH_BASE = os.path.join(tempfile.gettempdir(), 'rafcon-{0}/{1}'.format(getpass.getuser(), os.getpid()))
 
 try:
-    os.mkdir(RAFCON_TEMP_PATH_BASE)
+    os.makedirs(RAFCON_TEMP_PATH_BASE)
 except OSError:  # Raised when directory is already existing, thus can be ignored
     pass
 
