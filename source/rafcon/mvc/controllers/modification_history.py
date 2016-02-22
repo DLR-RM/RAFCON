@@ -58,6 +58,7 @@ class ModificationHistoryTreeController(ExtendedController):
 
     @ExtendedController.observe("execution_engine", after=True)
     def execution_engine_status_changed(self, model, prop_name, info):
+        # TODO re-organize as request to controller which holds view of Notebook modification-history could be in
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED:
             self.next_activity_focus_self = True
 
@@ -175,28 +176,40 @@ class ModificationHistoryTreeController(ExtendedController):
         self.no_cursor_observation = False
 
     def undo(self, key_value, modifier_mask):
+        """ Undo for selected state-machine if no state-source-editor is open and focused in states-editor-controller.
+        :return: bool  -- True if a undo was performed.
+                       -- False if focus on source-editor.
+        """
+        # TODO re-organize as request to controller which holds source-editor-view or any parent to it
         for key, tab in mvc_singleton.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
             if tab['controller'].get_controller('source_ctrl') is not None and \
                     tab['controller'].get_controller('source_ctrl').view.textview.is_focus():
-                # print tab['controller'].get_controller('source_ctrl').view.textview.get_buffer().can_undo(), key
-                if tab['controller'].get_controller('source_ctrl').view.textview.get_buffer().can_undo():
-                    return False
-        self._selected_sm_model.history.undo()
-        return True
+                return False
+        if self._selected_sm_model is not None:
+            self._selected_sm_model.history.undo()
+            return True
+        else:
+            logger.debug("Undo is not possible now as long as no state_machine is selected.")
 
     def redo(self, key_value, modifier_mask):
+        """ Redo for selected state-machine if no state-source-editor is open and focused in states-editor-controller.
+        :return: bool  -- True if a redo was performed.
+                       -- False if focus on source-editor.
+        """
+        # TODO re-organize as request to controller which holds source-editor-view or any parent to it
         for key, tab in mvc_singleton.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
             if tab['controller'].get_controller('source_ctrl') is not None and \
                     tab['controller'].get_controller('source_ctrl').view.textview.is_focus():
-                # print tab['controller'].get_controller('source_ctrl').view.textview.get_buffer().can_redo(), key
-                if tab['controller'].get_controller('source_ctrl').view.textview.get_buffer().can_redo():
-                    return False
-        self._selected_sm_model.history.redo()
-        return True
+                return False
+        if self._selected_sm_model is not None:
+            self._selected_sm_model.history.redo()
+            return True
+        else:
+            logger.debug("Redo is not possible now as long as no state_machine is selected.")
 
     @ExtendedController.observe("modifications", after=True)
     def update(self, model, prop_name, info):
-        """ The method updates the history a gtk.TreeStore which is the model of respective TreeView.
+        """ The method updates the history (a gtk.TreeStore) which is the model of respective TreeView.
         It functionality is strongly depends on a consistent history-tree hold by a ChangeHistory-Class.
         """
         # logger.debug("History changed %s\n%s\n%s" % (model, prop_name, info))
