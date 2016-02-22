@@ -72,6 +72,7 @@ class LibraryState(State):
             raise AttributeError("Library does not have the correct version!")
 
         # copy all ports and outcomes of self.state_copy to let the library state appear like the container state
+        # this will also set the parent of all outcomes and data ports to self
         self.outcomes = self.state_copy.outcomes
         self.input_data_ports = self.state_copy.input_data_ports
         self.output_data_ports = self.state_copy.output_data_ports
