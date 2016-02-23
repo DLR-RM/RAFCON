@@ -964,10 +964,13 @@ class RemoveObjectAction(Action):
         # get new object from respective list and create identifier
         object_type_name = overview['method_name'][-1].replace('remove_', '')
         list_name = object_type_name + 's'
-        if len(overview['args'][-1]) < 2:
+        if object_type_name + '_id' in overview['kwargs'][-1]:
             object_id = overview['kwargs'][-1][object_type_name + '_id']
         else:
-            object_id = overview['args'][-1][1]
+            if len(overview['args'][-1]) < 2:
+                logger.error("Length of args-tuple is shorter as assumed.")
+            else:
+                object_id = overview['args'][-1][1]
         new_object = getattr(overview['args'][-1][0], list_name)[object_id]
         self.removed_object_identifier = CoreObjectIdentifier(new_object)
         # logger.info("removed_object with identifier {0}".format(self.removed_object_identifier))

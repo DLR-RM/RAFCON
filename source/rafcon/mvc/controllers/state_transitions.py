@@ -3,6 +3,8 @@ import gobject
 
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.utils.notification_overview import NotificationOverview
+
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.utils import log
@@ -117,9 +119,8 @@ class StateTransitionsListController(ExtendedController):
             from_state_id = self.combo['free_from_outcomes_dict'].keys()[0]
             free_outcomes = self.combo['free_from_outcomes_dict'][from_state_id]
             responsible_parent = self.model.state
-
         elif self.view_dict['transitions_external'] and self.combo['free_ext_from_outcomes_dict'] and \
-                        self.model.state.state_id in self.combo['free_ext_from_outcomes_dict']:
+                self.model.state.state_id in self.combo['free_ext_from_outcomes_dict']:
             from_state_id = self.model.state.state_id
             free_outcomes = self.combo['free_ext_from_outcomes_dict'][from_state_id]
             responsible_parent = self.model.parent.state
@@ -138,6 +139,8 @@ class StateTransitionsListController(ExtendedController):
         # print "NEW TRANSITION IS: ", from_state_id, from_outcome, to_state_id, to_outcome
 
         try:
+            if from_state_id == responsible_parent.state_id:
+                from_state_id = None
             t_id = responsible_parent.add_transition(from_state_id, from_outcome, to_state_id, to_outcome)
             # Set the selection to the new transition
             ctr = 0
@@ -147,10 +150,8 @@ class StateTransitionsListController(ExtendedController):
                     self.view.tree_view.set_cursor(ctr)
                     break
                 ctr += 1
-        except AttributeError as e:
-            logger.debug("Transition couldn't be added: {0}".format(e))
-        except Exception as e:
-            logger.error("Unexpected exception while creating transition: {0}".format(e))
+        except (AttributeError, ValueError) as e:
+            logger.error("Transition couldn't be added: {0}".format(e))
 
     def on_remove(self, button, info=None):
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
@@ -528,20 +529,37 @@ class StateTransitionsListController(ExtendedController):
             if (isinstance(info['kwargs']['result'], str) and "CRASH" in info['kwargs']['result']) or \
                     isinstance(info['kwargs']['result'], Exception):
                 return
-        # self.notification_logs(model, prop_name, info)
-        if self.no_update and info.method_name in ["change_state_type" and "change_root_state_type"]:
-            # print "DO_UNLOCK TRANSITION WIDGET"
-            self.no_update = False
-            self.combo = {}
 
-        if self.no_update:
-            return
+        # # self.notification_logs(model, prop_name, info)
+        # # if self.no_update and info.method_name in ["change_state_type", "change_root_state_type"] and 'after' in info:
+        # if self.no_update and info.method_name in ["change_state_type" and "change_root_state_type"]:
+        #     # print "DO_UNLOCK TRANSITION WIDGET"
+        #     self.no_update = False
+        #     self.combo = {}
+        # # elif self.no_update and info.method_name in ["change_state_type", "change_root_state_type"] and 'before' in info:
+        # #     self.no_update = True
+        #
+        # if self.no_update:
+        #     return
+
+        # overview = NotificationOverview(info)
+        # logger.info("{0}=={1}\n{2}".format(overview['model'][-1].state.state_id, self.model.state.state_id, overview))
+        # if overview['method_name'][-1] in ['add_state', 'remove_state', 'add_outcome', 'remove_outcome',
+        #                                    'add_transition', 'remove_transition', 'append', 'remove']:
+
         # print "DO_UPDATE TRANSITION WIDGET"
         try:
             self.update()
-        except:
+        except KeyError as e:
+            # TODO finish to debug this -> has to run successfully test_state_machine_modifications_with_gui(True, None)
+            # TODO check the test -> could not be reproduced by manual undo-redo calls, check model<->core
             # logger.warning("update of transition widget fails while detecting list change state %s %s" %
             #               (self.model.state.name, self.model.state.state_id))
+            # import traceback
+            # import sys
+            # from rafcon.mvc.utils.notification_overview import NotificationOverview
+            # logger.info(NotificationOverview(info))
+            # traceback.print_exc()
             pass
 
     def notification_logs(self, model, prop_name, info):
