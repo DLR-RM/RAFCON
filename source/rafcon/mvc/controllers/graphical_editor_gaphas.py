@@ -295,7 +295,11 @@ class GraphicalEditorController(ExtendedController):
             if (isinstance(result, str) and "CRASH" in result) or isinstance(result, Exception):
                 return
 
-            if method_name == 'add_state':
+            if method_name == 'state_execution_status':
+                state_v = self.canvas.get_view_for_core_element(arguments[0])
+                if state_v:
+                    self.canvas.request_update(state_v)
+            elif method_name == 'add_state':
                 if self._change_state_type:
                     return
                 new_state = arguments[1]
