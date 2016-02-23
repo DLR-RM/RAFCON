@@ -33,7 +33,7 @@ class ModificationHistoryTreeController(ExtendedController):
         self._mode = 'branch'
         self.with_tree = True
         self.tree_folded = False
-        
+
         assert self._mode in ['trail', 'branch']
         self.history_tree_store = gtk.TreeStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT, str)
 

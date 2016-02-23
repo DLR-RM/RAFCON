@@ -5,7 +5,7 @@ from rafcon.mvc.views.library_tree import LibraryTreeView
 from rafcon.mvc.views.state_icons import StateIconView
 from rafcon.mvc.views.state_machine_tree import StateMachineTreeView
 from rafcon.mvc.views.global_variable_editor import GlobalVariableEditorView
-from rafcon.mvc.views.state_machine_history import StateMachineHistoryView
+from rafcon.mvc.views.modification_history import ModificationHistoryView
 from rafcon.mvc.views.execution_history import ExecutionHistoryView
 from rafcon.mvc.views.state_machines_editor import StateMachinesEditorView
 from rafcon.mvc.views.states_editor import StatesEditorView
@@ -71,7 +71,7 @@ class MainWindowView(View):
         ######################################################
         # State Machine History
         ######################################################
-        self.state_machine_history = StateMachineHistoryView()
+        self.state_machine_history = ModificationHistoryView()
         self.state_machine_history.show()
         self.replace_notebook_placeholder_with_widget('history', 'tree_notebook_down',
                                                       self.state_machine_history.get_top_widget())

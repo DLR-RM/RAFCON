@@ -36,7 +36,7 @@ class HistoryTreeView(View, gtk.TreeView):
         self['history_treeview'] = self
 
 
-class StateMachineHistoryView(View, gtk.ScrolledWindow):
+class ModificationHistoryView(View, gtk.ScrolledWindow):
     top = 'history_view'
 
     def __init__(self):
