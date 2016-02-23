@@ -16,7 +16,6 @@ from rafcon.mvc.views.undocked_window import UndockedWindowView
 
 from rafcon.mvc.utils import constants
 from rafcon.mvc.config import global_gui_config
-from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.mvc import gui_helper
 
 
@@ -28,7 +27,6 @@ class MainWindowView(View):
         View.__init__(self)
         # Add gui components by removing their corresponding placeholders defined in the glade file first and then
         # adding the widgets.
-        #self.notebook_names = ['upper_notebook', 'lower_notebook']
         self.left_bar_notebooks = [self['upper_notebook'], self['lower_notebook']]
 
         ################################################
