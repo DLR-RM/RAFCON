@@ -61,6 +61,7 @@ def create_tab_header(title, close_callback, sticky_callback, *additional_parame
 
     if global_gui_config.get_config_value('KEEP_ONLY_STICKY_STATES_OPEN', True):
         sticky_button = create_sticky_button(sticky_callback, *additional_parameters)
+        sticky_button.set_name('sticky_button')
         hbox.pack_start(sticky_button, expand=False, fill=False, padding=0)
     else:
         sticky_button = None

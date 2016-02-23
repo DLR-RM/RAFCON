@@ -99,6 +99,7 @@ style "basic_layout"
 
     GtkScrolledWindow::scrollbar-spacing         = 0
     GtkScrolledWindow::scrollbar-within-bevel    = 1
+    GtkScrolledWindow::shadow-type               = GTK_SHADOW_NONE
 
     GtkStatusbar::shadow-type                    = GTK_SHADOW_NONE
 
@@ -132,8 +133,6 @@ style "basic_layout"
     GtkNotebook::tab-curvature                   = 0
     GtkNotebook::tab-overlap                     = 0
 
-    #ExoIconBar::focus-padding                    = 1
-
     engine "" {
         # engine specific settings go here
     }
@@ -166,6 +165,7 @@ gtk_color_scheme = "accent:#2c90ff"
 gtk_color_scheme = "scrollbar_background:#454a4e"
 gtk_color_scheme = "scrollbar_scroller:#282d32"
 gtk_color_scheme = "scrollbar_scroller_active:#2c90ff"
+gtk_color_scheme = "scrollbar_scroller_active_decent:#44494d"
 
 gtk_color_scheme = "red:#dd0000"
 gtk_color_scheme = "green:#00dd00"
@@ -264,9 +264,9 @@ style "button"
     GtkButton::relief = GTK_RELIEF_NORMAL
 }
 class "GtkButton" style : highest "button"
-#class "GtkButton" style : highest "test-style"
 
 style "scrollbar" {
+    bg[INSENSITIVE]   = @scrollbar_background
     bg[ACTIVE]        = @scrollbar_background
     bg[NORMAL]        = @scrollbar_scroller
     bg[PRELIGHT]      = @scrollbar_scroller_active
@@ -274,14 +274,12 @@ style "scrollbar" {
 }
 class "GtkScrollbar" style : highest "scrollbar"
 
-/*style "notebook-tab" {
-    fg[ACTIVE]        = @red
-    fg[INSENSITIVE]   = @red
-    fg[NORMAL]        = @red
-    fg[PRELIGHT]      = @red
-    fg[SELECTED]      = @red
+style "scrollbar-decent" = "scrollbar" {
+    bg[PRELIGHT]      = @scrollbar_scroller_active_decent
 }
-widget_class "*GtkNotebook.GtkEventBox.GtkLabel" style : highest "notebook-tab"*/
+widget "*graphical_editor_vbox.*.GtkScrolledWindow*" style : highest "scrollbar-decent"
+
+#widget "*graphical_editor_vbox.*Box*" style : highest "test-style"
 
 style "notebook" {
     bg[ACTIVE]        = @button_background
@@ -356,13 +354,14 @@ widget_class "*GtkNotebook*GtkEventBox" style : highest "inner-widget"
 style "widget-title" {
     bg[NORMAL]        = @background_menu
 }
+widget "*source_viewport*.*widget_title*" style : highest "widget-title"
 widget "*outcomes_viewport*.*widget_title*" style : highest "widget-title"
 widget "*data_ports_box*.*widget_title*" style : highest "widget-title"
 widget "*transitions_viewport*.*widget_title*" style : highest "widget-title"
 widget "*data_flows_viewport*.*widget_title*" style : highest "widget-title"
 widget "*description_scroller*.*widget_title*" style : highest "widget-title"
 
-
+#widget "*sticky_button*" style : highest "test-style"
 
 style "icons" {
     base[INSENSITIVE] = @background_menu

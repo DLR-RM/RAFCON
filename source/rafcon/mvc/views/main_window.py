@@ -97,6 +97,7 @@ class MainWindowView(View):
         self['graphical_editor_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 0)
 
         self['graphical_editor_label_event_box'].remove(self['graphical_editor_label'])
+        self['graphical_editor_label_event_box'].set_border_width(constants.GRID_SIZE)
         graphical_editor_label = gui_helper.create_label_with_text_and_spacing('GRAPHICAL EDITOR',
                                                                                font_size=constants.FONT_SIZE_BIG,
                                                                                letter_spacing=constants.
@@ -112,12 +113,13 @@ class MainWindowView(View):
         self.states_editor.show()
 
         self['state_editor_label_hbox'].remove(self['state_editor_label'])
+        self['state_editor_label_hbox'].set_border_width(constants.GRID_SIZE)
         state_editor_label = gui_helper.create_label_with_text_and_spacing('STATE EDITOR',
                                                                            font_size=constants.FONT_SIZE_BIG,
                                                                            letter_spacing=constants.LETTER_SPACING_1PT)
         state_editor_label.set_alignment(0., .5)
-        self['state_editor_label_hbox'].pack_start(state_editor_label, True, True, 0)
-        self['state_editor_label_hbox'].reorder_child(state_editor_label, 0)
+        self['state_editor_label_hbox'].add(state_editor_label)
+        #self['state_editor_label_hbox'].reorder_child(state_editor_label, 0)
 
         ##################################################
         # menu bar view
@@ -234,7 +236,7 @@ class MainWindowView(View):
         label.show()
         return label
 
-    def create_notebook_widget(self, title, widget, use_scroller=True, border=10):
+    def create_notebook_widget(self, title, widget, use_scroller=True, border=constants.GRID_SIZE):
         title_label = self.create_label_box(title)
         event_box = gtk.EventBox()
         vbox = gtk.VBox()

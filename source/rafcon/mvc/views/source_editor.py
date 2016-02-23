@@ -31,6 +31,7 @@ class SourceEditorView(View):
         source_label = gtk.Label("Source Editor")
         source_label.set_alignment(0.0, 0.5)
         source_box = gtk.EventBox()
+        source_box.set_name('widget_title')
         source_box.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
         source_box.add(source_label)
         source_box.show_all()

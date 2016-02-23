@@ -66,6 +66,9 @@
                     <property name="can_focus">True</property>
                     <property name="tab_pos">right</property>
                     <property name="scrollable">True</property>
+                    <property name="tab_border">0</property>
+                    <property name="tab_hborder">0</property>
+                    <property name="tab_vborder">0</property>
                     <property name="group_id">2</property>
                     <child>
                       <object class="GtkViewport" id="source_viewport">
