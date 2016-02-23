@@ -33,7 +33,7 @@ class ModificationHistoryTreeController(ExtendedController):
         self._mode = 'branch'
         self.with_tree = True
         self.tree_folded = False
-        # self._mode = 'trail'
+        
         assert self._mode in ['trail', 'branch']
         self.history_tree_store = gtk.TreeStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT, str)
 
@@ -110,9 +110,6 @@ class ModificationHistoryTreeController(ExtendedController):
         if self._mode == 'branch':
             view['branch_checkbox'].set_active(True)
         view['branch_checkbox'].connect('toggled', self.on_toggle_mode)
-        if self.with_tree:
-            view['tree_checkbox'].set_active(True)
-        view['tree_checkbox'].connect('toggled', self.on_toggle_with_tree)
         if self.tree_folded:
             view['folded_checkbox'].set_active(True)
         view['folded_checkbox'].connect('toggled', self.on_toggle_tree_folded)
@@ -145,11 +142,6 @@ class ModificationHistoryTreeController(ExtendedController):
         else:
             self._mode = 'trail'
         logger.info("modification history mode: {0}".format(self._mode))
-        self.update(None, None, None)
-
-    def on_toggle_with_tree(self, widget, event=None):
-        self.with_tree = self.view['tree_checkbox'].get_active()
-        logger.info("modification history with tree: {0}".format(self.with_tree))
         self.update(None, None, None)
 
     def on_toggle_tree_folded(self, widget, event=None):
