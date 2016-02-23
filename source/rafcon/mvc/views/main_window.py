@@ -187,22 +187,23 @@ class MainWindowView(View):
 
         self.get_top_widget().set_decorated(False)
 
-        self['main_window'].set_border_width(constants.MAIN_WINDOW_BORDER_WIDTH)
+        # self['main_window'].set_border_width(constants.MAIN_WINDOW_BORDER_WIDTH)
 
-        self['top_menu_hbox'].set_border_width(constants.BORDER_WIDTH)
+        # self['top_menu_hbox'].set_border_width(constants.BORDER_WIDTH)
 
-        self['tree_notebook_up'].set_border_width(constants.BORDER_WIDTH)
+        # self['tree_notebook_up'].set_border_width(constants.BORDER_WIDTH)
         self['tree_notebook_up'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['tree_notebook_up'].set_tab_vborder(constants.BORDER_WIDTH * 3)
 
-        self['tree_notebook_down'].set_border_width(constants.BORDER_WIDTH)
+        # self['tree_notebook_down'].set_border_width(constants.BORDER_WIDTH)
         self['tree_notebook_down'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['tree_notebook_down'].set_tab_vborder(constants.BORDER_WIDTH * 3)
 
         #self['library_event_box'].set_border_width(constants.BORDER_WIDTH)
-        self['debug_eventbox'].set_border_width(constants.BORDER_WIDTH)
-        self['debug_label_hbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
-        self['right_bar'].set_border_width(constants.BORDER_WIDTH)
+        # self['debug_eventbox'].set_border_width(constants.BORDER_WIDTH)
+        # self['debug_label_hbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+
+        # self['right_bar'].set_border_width(constants.BORDER_WIDTH)
 
         self['button_show_info'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_INFO', True))
         self['button_show_debug'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True))
@@ -242,7 +243,7 @@ class MainWindowView(View):
             scroller = gtk.ScrolledWindow()
             scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
             alig = gtk.Alignment(0., 0., 1., 1.)
-            alig.set_padding(0, 0, border, 0)
+            alig.set_padding(0, 0, 0, 0)
             alig.add(widget)
             alig.show()
             scroller.add_with_viewport(alig)
@@ -265,6 +266,7 @@ class MainWindowView(View):
         label.set_alignment(0.0, 0.5)
         hbox.pack_start(label, True, True, 0)
         hbox.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+        hbox.set_name('widget_title')
         return hbox
 
     @staticmethod

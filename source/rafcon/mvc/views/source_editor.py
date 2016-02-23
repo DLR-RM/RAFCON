@@ -26,6 +26,7 @@ class SourceEditorView(View):
         hbox.pack_end(cancel_button, False, True, constants.PADDING)
         hbox.pack_end(apply_button, False, True, constants.PADDING)
         hbox.set_border_width(constants.BORDER_WIDTH)
+        hbox.set_name('widget_title')
 
         source_label = gtk.Label("Source Editor")
         source_label.set_alignment(0.0, 0.5)

@@ -27,6 +27,7 @@ class LoggingView(View):
 
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrollable.set_name('console_scroller')
         scrollable.add(self.text_view)
         self.text_view.show()
 

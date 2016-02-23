@@ -13,6 +13,7 @@ class StateMachinesEditorView(View):
         self.notebook = PlusAddNotebook()
         # self.notebook = gtk.Notebook()
         self.notebook.set_scrollable(True)
+        self.notebook.set_name("state_machines_notebook")
         self.notebook.show()
         self['notebook'] = self.notebook
 

@@ -6,7 +6,7 @@
     <property name="visible">True</property>
     <property name="orientation">vertical</property>
     <child>
-      <object class="GtkEventBox" id="eventbox1">
+      <object class="GtkEventBox" id="widget_title">
         <property name="visible">True</property>
         <property name="border_width">10</property>
         <child>

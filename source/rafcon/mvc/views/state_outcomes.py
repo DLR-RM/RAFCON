@@ -89,6 +89,7 @@ class StateOutcomesEditorView(View):
 
         eventbox = gtk.EventBox()
         eventbox.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+        eventbox.set_name('widget_title')
         outcomes_label = gtk.Label("Outcomes")
         outcomes_label.set_alignment(0.0, 0.5)
         eventbox.add(outcomes_label)

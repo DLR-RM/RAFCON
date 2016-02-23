@@ -29,7 +29,7 @@ class StateEditorView(View):
         self['data_flows_view'] = StateDataFlowsEditorView()
         self['linkage_overview'] = LinkageOverviewView()
 
-        self['properties_viewport'].set_border_width(constants.BORDER_WIDTH)
+        # self['properties_viewport'].set_border_width(constants.BORDER_WIDTH)
 
         self['properties_viewport'].add(self['properties_view'].get_top_widget())
         self['input_ports_scroller'].add(self['inputs_view'].get_top_widget())
@@ -59,8 +59,8 @@ class StateEditorView(View):
         self['new_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
 
-        self['top_spacing_alignment'].set_size_request(0, constants.BORDER_WIDTH)
-        self['bottom_spacing_alignment'].set_size_request(0, constants.BORDER_WIDTH)
+        # self['top_spacing_alignment'].set_size_request(0, constants.BORDER_WIDTH)
+        # self['bottom_spacing_alignment'].set_size_request(0, constants.BORDER_WIDTH)
 
         textview = gtk.TextView()
         textview.set_accepts_tab(False)
@@ -69,6 +69,7 @@ class StateEditorView(View):
         self['description_text_view'] = textview
 
         vbox = gtk.VBox()
+        vbox.set_name("widget_title")
         description_label = gtk.Label("Description")
         description_label.set_alignment(0.0, 0.5)
         description_box = gtk.EventBox()
@@ -76,7 +77,7 @@ class StateEditorView(View):
         description_box.add(description_label)
         description_box.show_all()
         vbox.pack_start(description_box, False, True, 0)
-        vbox.pack_start(textview, True, True, constants.BORDER_WIDTH_TEXTVIEW)
+        vbox.pack_start(textview, True, True, 0)
         vbox.show()
 
         self['description_scroller'].add_with_viewport(vbox)
