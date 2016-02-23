@@ -19,6 +19,9 @@ class StateEditorView(View):
     def __init__(self):
         View.__init__(self)
 
+        self.page_dict = {}
+        self.notebook_names = ['main_notebook_1', 'main_notebook_2']
+
         self['properties_view'] = StateOverviewView()
         self['inputs_view'] = InputPortsListView()
         self['outputs_view'] = OutputPortsListView()
@@ -48,7 +51,13 @@ class StateEditorView(View):
         self['main_notebook_1'].set_tab_vborder(constants.BORDER_WIDTH * 3)
         self['main_notebook_2'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['main_notebook_2'].set_tab_vborder(constants.BORDER_WIDTH * 3)
-        self['main_notebook_2'].set_page(1)
+        self.page_dict["Source"] = self['main_notebook_1'].get_nth_page(0)
+        self.page_dict["Data Linkage"] = self['main_notebook_1'].get_nth_page(1)
+        self.page_dict["Logical Linkage"] = self['main_notebook_1'].get_nth_page(2)
+        self.page_dict["Linkage Overview"] = self['main_notebook_2'].get_nth_page(0)
+        self.page_dict["Description"] = self['main_notebook_2'].get_nth_page(1)
+        self['main_notebook_1'].set_current_page(self['main_notebook_1'].page_num(self.page_dict["Source"]))
+        self['main_notebook_2'].set_current_page(self['main_notebook_2'].page_num(self.page_dict["Description"]))
 
         self['vpaned'].set_position(425)
 
@@ -81,26 +90,14 @@ class StateEditorView(View):
 
         self['description_scroller'].add_with_viewport(vbox)
 
-    # def resize_logic_data_expander(self, widget, data=None):
-    # # deactivate other expanders
-    #     for expander in self.expanders:
-    #         if not expander is widget:
-    #             expander.set_expanded(False)
-    #
-    #     # set the packing expanded value correct
-    #     for expander in self.expanders:
-    #         expand, fill, padding, pack_type = self.top_box.query_child_packing(expander)
-    #         if expander is widget:
-    #             self.top_box.set_child_packing(expander, True, fill, padding, pack_type)
-    #             paned = self.get_paned_child(widget)
-    #             if paned is not None:
-    #                 paned.set_position(200)
-    #         else:
-    #             self.top_box.set_child_packing(expander, False, fill, padding, pack_type)
-    #
-    # def get_paned_child(self, widget):
-    #     for child in widget.get_children():
-    #         if isinstance(child, gtk.VPaned):
-    #             return child
-    #         elif isinstance(child, gtk.Container):
-    #             return self.get_paned_child(child)
+    def bring_tab_to_the_top(self, tab_label):
+        """Find tab with label tab_label in list of notebook's and set it to the current page.
+
+        :param tab_label: String containing the label of the tab to be focused
+        """
+        page = self.page_dict[tab_label]
+        for notebook in self.notebook_names:
+            page_num = self[notebook].page_num(page)
+            if not page_num == -1:
+                self[notebook].set_current_page(page_num)
+                break

@@ -386,7 +386,6 @@ class ModificationsHistoryModel(ModelMT):
             return
         overview = NotificationOverview(info)
         # logger.info("meta_changed: \n{0}".format(overview))
-        overview = overview.new_overview
         # WORKAROUND: avoid multiple signals of the root_state, by comparing first and last model in overview
         if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1] or \
                 overview['meta_signal'][-1]['change'] == 'all':  # avoid strange change: 'all' TODO test why those occur
@@ -746,9 +745,6 @@ class ModificationsHistory(Observable):
     - the pointer are pointing on the next undo ... so redo is pointer + 1
     - all_actions is a type of a tree # prev_id, action, next_id, old_next_ids
     """
-    dummy_notification_overview = NotificationOverview({'before': True, 'model': None, 'method_name': None,
-                                                        'instance': None, 'prop_name': None, 'args': (), 'kwargs': {},
-                                                        'info': {}})
 
     # TODO remove explizit trail-history -> next_id is holding the same information and old_next_ids the branching
     def __init__(self):
@@ -763,7 +759,7 @@ class ModificationsHistory(Observable):
         self.with_prints = False
 
         # insert initial dummy element
-        self.insert_action(ActionDummy(self.dummy_notification_overview))
+        self.insert_action(ActionDummy())
 
     @Observable.observed
     def insert_action(self, action):
@@ -948,5 +944,5 @@ class ModificationsHistory(Observable):
         self.counter = 0
 
         # insert initial dummy element
-        self.insert_action(ActionDummy(self.dummy_notification_overview))
+        self.insert_action(ActionDummy())
 

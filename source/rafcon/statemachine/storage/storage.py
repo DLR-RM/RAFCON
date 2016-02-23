@@ -150,7 +150,7 @@ class StateMachineStorage(Observable):
                 try:
                     if not os.path.exists(source_script_file):
                             script_file = open(destination_script_file, 'w')
-                            script_file.write(state.script.script)
+                            script_file.write(state.script_text)
                             script_file.close()
                     else:
                         shutil.copyfile(source_script_file, destination_script_file)
@@ -162,14 +162,14 @@ class StateMachineStorage(Observable):
                 state.script.reload_path(self.SCRIPT_FILE)
             else:  # load text into script file
                 script_file = open(source_script_file, 'w')
-                script_file.write(state.script.script)
+                script_file.write(state.script_text)
                 script_file.close()
 
     @staticmethod
     def save_script_file(state):
         script_file_path = os.path.join(state.get_file_system_path(), state.script.filename)
         script_file = open(script_file_path, 'w')
-        script_file.write(state.script.script)
+        script_file.write(state.script_text)
         script_file.close()
 
     def save_state_recursively(self, state, parent_path, force_full_load=False):
@@ -310,7 +310,7 @@ class StateMachineStorage(Observable):
         from rafcon.statemachine.states.execution_state import ExecutionState
         if isinstance(state, ExecutionState):
             script = filesystem.read_file(state.get_file_system_path(), state.script.filename)
-            state.script.script = script
+            state.script_text = script
 
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc

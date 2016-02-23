@@ -41,7 +41,7 @@ def create_concurrency_barrier_state():
     barrier_state.add_outcome("error_outcome", 4)
 
     barrier_state.states[UNIQUE_DECIDER_STATE_ID].name = "decider_state"
-    barrier_state.states[UNIQUE_DECIDER_STATE_ID].script = Script(path=rafcon.__path__[0] + "/../test_scripts",
+    barrier_state.states[UNIQUE_DECIDER_STATE_ID]._script = Script(path=rafcon.__path__[0] + "/../test_scripts",
                                                                   filename="decider_state.py",
                                                                   check_path=True,
                                                                   state=barrier_state.states[UNIQUE_DECIDER_STATE_ID])

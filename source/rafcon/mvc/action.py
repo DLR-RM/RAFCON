@@ -9,7 +9,7 @@ import getpass
 
 import json
 from rafcon.utils.json_utils import JSONObjectDecoder, JSONObjectEncoder
-
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
 
 from rafcon.statemachine.scope import ScopedData, ScopedVariable
@@ -39,13 +39,15 @@ import rafcon.mvc.singleton as mvc_singleton
 
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
+from rafcon.mvc.utils.notification_overview import NotificationOverview
+
 logger = log.get_logger(__name__)
 
 core_object_list = [Transition, DataFlow, Outcome, InputDataPort, OutputDataPort, ScopedData, ScopedVariable, Script,
                     GlobalVariableManager, LibraryManager, StateMachine,
                     ExecutionState, HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState, LibraryState]
 
-HISTORY_DEBUG_LOG_FILE = '/tmp/{0}/test_file.txt'.format(getpass.getuser())
+HISTORY_DEBUG_LOG_FILE = RAFCON_TEMP_PATH_BASE + '/test_file.txt'
 
 
 def get_state_tuple(state, state_m=None):
@@ -118,8 +120,9 @@ def get_state_from_state_tuple(state_tuple):
                 logger.error("Could not insert DeciderState!!! while it is in NOT in already!!! {0} {1}".format(
                     UNIQUE_DECIDER_STATE_ID in state.states, child_state.state_id == UNIQUE_DECIDER_STATE_ID))
 
-    state.script = state_tuple[2]
-    state.script.script = state_tuple[5]
+    # state.script = state_tuple[2]
+    if isinstance(state, ExecutionState):
+        state.script_text = state_tuple[5]
     # print "------------- ", state
     for child_state_id, child_state_tuple in state_tuple[1].iteritems():
         child_state = get_state_from_state_tuple(child_state_tuple)
@@ -277,7 +280,7 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
     state_model.is_start = copy.deepcopy(meta_dict['is_start'])
     if state_model.is_start and not state_model.state.is_root_state:  # TODO not nice that model stuff does things in core
         if not (isinstance(state_model.parent.state, BarrierConcurrencyState) or
-                    isinstance(state_model.parent.state, PreemptiveConcurrencyState)):
+                isinstance(state_model.parent.state, PreemptiveConcurrencyState)):
             # logger.debug("set start_state_id %s" % state_model.parent.state)
             # state_model.parent.state.start_state_id = state_model.state.state_id
             pass
@@ -287,7 +290,10 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
 
 class ActionDummy:
     def __init__(self, overview=None):
-        self.before_overview = overview
+        if overview is None:
+            self.before_overview = NotificationOverview()
+        else:
+            self.before_overview = overview
         self.after_overview = None
 
     def set_after(self, overview=None):
@@ -303,6 +309,9 @@ class ActionDummy:
 class MetaAction:
 
     def __init__(self, parent_path, state_machine_model, overview):
+
+        assert isinstance(overview, NotificationOverview)
+        assert overview['type'] == 'signal'
 
         self.type = "change " + overview['meta_signal'][-1]['change']
         overview['method_name'].append("change " + overview['meta_signal'][-1]['change'])
@@ -375,7 +384,7 @@ class MetaAction:
 
 class Action:
     def __init__(self, parent_path, state_machine_model, overview):
-
+        assert isinstance(overview, NotificationOverview)
         self.type = overview['method_name'][-1]
         self.state_machine = state_machine_model.state_machine
         self.state_machine_model = state_machine_model
@@ -542,9 +551,10 @@ class Action:
                 state.remove_scoped_variable(dp_id)
 
         state.name = stored_state.name
-        state.script = stored_state.script
-        # # logger.debug("script0: " + stored_state.script.script)
-        # state.set_script_text(stored_state.script.script)
+        # state.script = stored_state.script
+        # logger.debug("script0: " + stored_state.script.script)
+        if isinstance(state, ExecutionState):
+            state.script_text = stored_state.script_text
 
         if is_root:
             for dp_id, dp in stored_state.input_data_ports.iteritems():
@@ -586,9 +596,10 @@ class Action:
                 # print "++++ new child", new_state
                 if not new_state.state_id == UNIQUE_DECIDER_STATE_ID:
                     state.add_state(new_state)
-                    state.states[new_state.state_id].script = new_state.script
-                    # # logger.debug("script1: " + new_state.script.script)
-                    # state.states[new_state.state_id].set_script_text(new_state.script.script)
+                    # state.states[new_state.state_id].script = new_state.script
+                    # logger.debug("script1: " + new_state.script_text)
+                    if isinstance(new_state, ExecutionState):
+                        state.states[new_state.state_id].script_text = new_state.script_text
                     s_path = state.states[new_state.state_id].get_file_system_path()
                     sm_id = self.state_machine.state_machine_id
                     rafcon.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id, s_path)
@@ -716,7 +727,7 @@ class StateMachineAction(Action):
         if self.with_print:
             logger.info("SM set_root_state_to_version: insert new root state")
         self.state_machine.root_state = new_state  # root_state_version_fom_storage
-        self.state_machine.root_state.script = storage_version[2]
+        # self.state_machine.root_state.script = storage_version[2]
         if self.with_print:
             logger.info("SM set_root_state_to_version: insert old meta data")
         insert_state_meta_data(meta_dict=storage_version[3], state_model=self.state_machine_model.root_state)
@@ -769,11 +780,10 @@ class AddObjectAction(Action):
 
     def set_after(self, overview):
         Action.set_after(self, overview)
-        new_overview = overview.new_overview
         # logger.info("add_object \n" + str(self.after_info))
         # get new object from respective list and create identifier
-        list_name = new_overview['method_name'][-1].replace('add_', '') + 's'
-        new_object = getattr(new_overview['args'][-1][0], list_name)[new_overview['result'][-1]]
+        list_name = overview['method_name'][-1].replace('add_', '') + 's'
+        new_object = getattr(overview['args'][-1][0], list_name)[overview['result'][-1]]
         self.added_object_identifier = CoreObjectIdentifier(new_object)
 
     def redo(self):
@@ -950,15 +960,15 @@ class RemoveObjectAction(Action):
 
     def get_object_identifier(self):
         # logger.info("remove_object \n" + str(self.before_info))
-        new_overview = self.before_overview.new_overview
+        overview = self.before_overview
         # get new object from respective list and create identifier
-        object_type_name = new_overview['method_name'][-1].replace('remove_', '')
+        object_type_name = overview['method_name'][-1].replace('remove_', '')
         list_name = object_type_name + 's'
-        if len(new_overview['args'][-1]) < 2:
-            object_id = new_overview['kwargs'][-1][object_type_name + '_id']
+        if len(overview['args'][-1]) < 2:
+            object_id = overview['kwargs'][-1][object_type_name + '_id']
         else:
-            object_id = new_overview['args'][-1][1]
-        new_object = getattr(new_overview['args'][-1][0], list_name)[object_id]
+            object_id = overview['args'][-1][1]
+        new_object = getattr(overview['args'][-1][0], list_name)[object_id]
         self.removed_object_identifier = CoreObjectIdentifier(new_object)
         # logger.info("removed_object with identifier {0}".format(self.removed_object_identifier))
 
@@ -1306,8 +1316,7 @@ class StateAction(Action):
                              'outcomes', 'input_data_ports', 'output_data_ports',  # State
                              'states', 'scoped_variables', 'data_flows', 'transitions', 'start_state_id',  # ContainerState
                              'change_state_type']
-    possible_args = ['name', 'description', 'script_text'
-                     'start_state_id']  # ContainerState
+    possible_args = ['name', 'description', 'script_text', 'start_state_id']  # ContainerState
 
     def __init__(self, parent_path, state_machine_model, overview):
         """ method_name: 'parent' is ignored
@@ -1345,28 +1354,28 @@ class StateAction(Action):
         self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
 
     def undo(self):
-        if self.action_type in ['parent', 'outcomes', 'input_data_ports', 'output_data_ports', 'script']:
+        if self.action_type in ['parent', 'outcomes', 'input_data_ports', 'output_data_ports']:
             Action.undo(self)
         elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type']:
             Action.undo(self)
         elif self.action_type in self.possible_args:
             s = self.state_machine.get_state_by_path(self.parent_path)
-            self.set_data_port_version(s, self.before_arguments)
+            self.set_attr_to_version(s, self.before_arguments)
         else:
             assert False
 
     def redo(self):
-        if self.action_type in ['outcomes', 'input_data_ports', 'output_data_ports', 'script']:
+        if self.action_type in ['outcomes', 'input_data_ports', 'output_data_ports']:
             Action.redo(self)
         elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type']:
             Action.redo(self)
         elif self.action_type in self.possible_args:
             s = self.state_machine.get_state_by_path(self.parent_path)
-            self.set_data_port_version(s, self.after_arguments)
+            self.set_attr_to_version(s, self.after_arguments)
         else:
             assert False
 
-    def set_data_port_version(self, s, arguments):
+    def set_attr_to_version(self, s, arguments):
         if self.action_type in self.possible_args:
             exec "s.{0} = arguments['{0}']".format(self.action_type)
         else:

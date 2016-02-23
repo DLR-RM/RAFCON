@@ -36,7 +36,7 @@ class HistoryTreeView(View, gtk.TreeView):
         self['history_treeview'] = self
 
 
-class StateMachineHistoryView(View, gtk.ScrolledWindow):
+class ModificationHistoryView(View, gtk.ScrolledWindow):
     top = 'history_view'
 
     def __init__(self):
@@ -59,9 +59,6 @@ class StateMachineHistoryView(View, gtk.ScrolledWindow):
         branch_checkbox = gtk.CheckButton("B")
         branch_checkbox.set_border_width(constants.BORDER_WIDTH)
         branch_checkbox.show()
-        tree_checkbox = gtk.CheckButton("T")
-        tree_checkbox.set_border_width(constants.BORDER_WIDTH)
-        tree_checkbox.show()
         folded_checkbox = gtk.CheckButton("F")
         folded_checkbox.set_border_width(constants.BORDER_WIDTH)
         folded_checkbox.show()
@@ -69,7 +66,6 @@ class StateMachineHistoryView(View, gtk.ScrolledWindow):
         button_hbox.pack_start(redo_button, False, True, 0)
         button_hbox.pack_start(reset_button, False, True, 0)
         button_hbox.pack_start(branch_checkbox, False, True, 0)
-        button_hbox.pack_start(tree_checkbox, False, True, 0)
         button_hbox.pack_start(folded_checkbox, False, True, 0)
         button_hbox.show()
         history_vbox = gtk.VBox()
@@ -88,5 +84,4 @@ class StateMachineHistoryView(View, gtk.ScrolledWindow):
         self['redo_button'] = redo_button
         self['reset_button'] = reset_button
         self['branch_checkbox'] = branch_checkbox
-        self['tree_checkbox'] = tree_checkbox
         self['folded_checkbox'] = folded_checkbox

@@ -35,7 +35,7 @@ class SourceEditorController(ExtendedController):
         view['apply_button'].connect('clicked', self.apply_clicked)
         view['cancel_button'].connect('clicked', self.cancel_clicked)
         view.get_buffer().begin_not_undoable_action()
-        view.set_text(self.model.state.script.script)
+        view.set_text(self.model.state.script_text)
         view.get_buffer().end_not_undoable_action()
 
         if isinstance(self.model.state, LibraryState):
@@ -85,14 +85,6 @@ class SourceEditorController(ExtendedController):
 
     # ===============================================================
     def code_changed(self, source):
-        # print "The text in the text_buffer changed"
-        # tbuffer = self.view.get_buffer()
-        # current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
-        # if self.model.state.script.script == current_text:
-        #     self.is_dirty = False
-        # else:
-        #     self.is_dirty = True
-        # print "script is dirty: {0} {1}".format(self.is_dirty, source)
         self.view.apply_tag('default')
 
     def apply_clicked(self, button):
@@ -163,8 +155,11 @@ class SourceEditorController(ExtendedController):
             self.set_script_text(current_text)
 
     def set_script_text(self, text):
-        self.model.state.set_script_text(text)
-        logger.debug("The script was saved")
+        if not self.model.state.script_text == text:
+            self.model.state.script_text = text
+            logger.debug("The script was saved.")
+        else:
+            logger.debug("Script is the same as in storage.")
 
     def filter_out_not_compatible_modules(self, pylint_msg):
         """This method filters out every pylint message that addresses an error of a module that is explicitly ignored
@@ -191,16 +186,10 @@ class SourceEditorController(ExtendedController):
 
         Resets the code in the editor to the last-saved code.
         """
-        self.view.set_text(self.model.state.script.script)
+        self.view.set_text(self.model.state.script_text)
 
     @ExtendedController.observe("state", after=True)
     def after_notification_of_script_text_was_changed(self, model, prop_name, info):
 
-        if hasattr(info, "method_name") and "set_script_text" == info.method_name:
-            # logger.debug('after_notification_of_script_text_was_changed' + str(info) + "\n" +
-            # self.model.state.script.script)
-            self.view.set_text(self.model.state.script.script)
-        if hasattr(info, "method_name") and "script" == info.method_name:
-            # logger.debug('after_notification_of_script_was_exchanged' + str(info) + "\n" +
-            # self.model.state.script.script)
-            self.view.set_text(self.model.state.script.script)
+        if hasattr(info, "method_name") and "script_text" == info.method_name:
+            self.view.set_text(self.model.state.script_text)

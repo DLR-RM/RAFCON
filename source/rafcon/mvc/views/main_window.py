@@ -5,7 +5,7 @@ from rafcon.mvc.views.library_tree import LibraryTreeView
 from rafcon.mvc.views.state_icons import StateIconView
 from rafcon.mvc.views.state_machine_tree import StateMachineTreeView
 from rafcon.mvc.views.global_variable_editor import GlobalVariableEditorView
-from rafcon.mvc.views.state_machine_history import StateMachineHistoryView
+from rafcon.mvc.views.modification_history import ModificationHistoryView
 from rafcon.mvc.views.execution_history import ExecutionHistoryView
 from rafcon.mvc.views.state_machines_editor import StateMachinesEditorView
 from rafcon.mvc.views.states_editor import StatesEditorView
@@ -28,6 +28,8 @@ class MainWindowView(View):
         View.__init__(self)
         # Add gui components by removing their corresponding placeholders defined in the glade file first and then
         # adding the widgets.
+        #self.notebook_names = ['upper_notebook', 'lower_notebook']
+        self.left_bar_notebooks = [self['upper_notebook'], self['lower_notebook']]
 
         ################################################
         # Undock Buttons
@@ -69,7 +71,7 @@ class MainWindowView(View):
         ######################################################
         # State Machine History
         ######################################################
-        self.state_machine_history = StateMachineHistoryView()
+        self.state_machine_history = ModificationHistoryView()
         self.state_machine_history.show()
         self['history_alignment'].add(self.state_machine_history.get_top_widget())
                                                       
@@ -83,8 +85,7 @@ class MainWindowView(View):
         ######################################################
         # rotate all tab labels by 90 degrees and make detachable
         ######################################################
-        self.rotate_and_detach_tab_labels(self['upper_notebook'])
-        self.rotate_and_detach_tab_labels(self['lower_notebook'])
+        self.rotate_and_detach_tab_labels()
 
         self['upper_notebook'].set_current_page(0)
         self['lower_notebook'].set_current_page(0)
@@ -218,8 +219,7 @@ class MainWindowView(View):
 
         self.top_window_width = self['main_window'].get_size()[0]
 
-    @staticmethod
-    def rotate_and_detach_tab_labels(notebook):
+    def rotate_and_detach_tab_labels(self):
         """Rotates tab labels of a given notebook by 90 degrees and makes them detachable.
 
         :param notebook: GTK Notebook container, whose tab labels are to be rotated and made detachable
@@ -227,13 +227,29 @@ class MainWindowView(View):
         icons = {'libraries': constants.SIGN_LIB, 'state_tree': constants.ICON_TREE,
                  'global_variables': constants.ICON_GLOB, 'history': constants.ICON_HIST,
                  'execution_history': constants.ICON_EHIST, 'network': constants.ICON_NET}
-        for i in range(notebook.get_n_pages()):
-            child = notebook.get_nth_page(i)
-            tab_label = notebook.get_tab_label(child)
-            if global_gui_config.get_config_value('USE_ICONS_AS_TAB_LABELS', True):
-                tab_label_text = tab_label.get_text()
-                notebook.set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, icons))
-            else:
-                tab_label.set_angle(90)
-            notebook.set_tab_reorderable(child, True)
-            notebook.set_tab_detachable(child, True)
+        for notebook in self.left_bar_notebooks:
+            for i in range(notebook.get_n_pages()):
+                child = notebook.get_nth_page(i)
+                tab_label = notebook.get_tab_label(child)
+                if global_gui_config.get_config_value('USE_ICONS_AS_TAB_LABELS', True):
+                    tab_label_text = tab_label.get_text()
+                    notebook.set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, icons))
+                else:
+                    tab_label.set_angle(90)
+                notebook.set_tab_reorderable(child, True)
+                notebook.set_tab_detachable(child, True)
+
+    def bring_tab_to_the_top(self, tab_label):
+        """Find tab with label tab_label in list of notebooks and set it to the current page.
+
+        :param tab_label: String containing the label of the tab to be focused
+        """
+        found = False
+        for notebook in self.left_bar_notebooks:
+            for i in range(notebook.get_n_pages()):
+                if gui_helper.get_notebook_tab_title(notebook, i) == gui_helper.get_widget_title(tab_label):
+                    found = True
+                    break
+            if found:
+                notebook.set_current_page(i)
+                break

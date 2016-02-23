@@ -801,12 +801,8 @@ def test_state_property_modifications_history(caplog):
     script_text = '\ndef execute(self, inputs, outputs, gvm):\n\tself.logger.debug("Hello World")\n\treturn 0\n'
     script_text1 = '\ndef execute(self, inputs, outputs, gvm):\n\tself.logger.debug("Hello NERD")\n\treturn 0\n'
 
-    # TODO proper checks!!!
-    # script(self, script) Script
-    script = Script(state=state_dict['Nested'])
-    script.script = script_text
-    state_dict['Nested'].script = script
-    state_dict['Nested'].script = script
+    # script(self, script) Script -> no script setter any more only script_text !!!
+    state_dict['Nested'].script_text = script_text
     sm_model.history.undo()
     sm_model.history.redo()
 
