@@ -53,10 +53,10 @@ class StateMachineModel(ModelMT):
 
         self.selection = Selection()
 
-        from rafcon.mvc.history import History
+        from rafcon.mvc.models.modification_history import ModificationsHistoryModel
         history_enabled = global_gui_config.get_config_value('HISTORY_ENABLED')
-        logger.info("is history enabled: %s" % history_enabled)
-        self.history = History(self)
+        logger.info("is modification-history enabled: %s" % history_enabled)
+        self.history = ModificationsHistoryModel(self)
         if not history_enabled:
             self.history.fake = True
 
@@ -198,27 +198,33 @@ class StateMachineModel(ModelMT):
         # After the state has been changed in the core, we create a new model for it with all information extracted
         # from the old state model
         else:  # after
-            # The new state is returned by the core state class method 'change_state_type'
-            new_state = info.result
-            # Create a new state model based on the new state and apply the extracted child models
-            child_models = self.change_root_state_type.__func__.child_models
-            new_state_m = statemachine_helper.create_state_model_for_state(new_state, child_models)
+            if isinstance(info.result, Exception):
+                # import traceback
+                # traceback.print_exc()
+                logger.error("Root state type change failed")
+            else:
+                # The new state is returned by the core state class method 'change_state_type'
+                new_state = info.result
 
-            new_state_m.register_observer(self)
-            self.root_state = new_state_m
+                # Create a new state model based on the new state and apply the extracted child models
+                child_models = self.change_root_state_type.__func__.child_models
+                new_state_m = statemachine_helper.create_state_model_for_state(new_state, child_models)
 
-            state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
+                new_state_m.register_observer(self)
+                self.root_state = new_state_m
+
+                state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
 
         self.__send_root_state_notification(model, prop_name, info)
 
     def __send_root_state_notification(self, model, prop_name, info):
         if hasattr(info, 'before') and info.before:
-            self.state_machine.root_state_before_change(model=info['model'], prop_name=info['prop_name'],
+            self.state_machine.root_state_before_change(before=True, model=info['model'], prop_name=info['prop_name'],
                                                         instance=info['instance'],
                                                         method_name=info['method_name'],
-                                                        args=info['args'], info=info['kwargs'])
+                                                        args=info['args'], kwargs=info['kwargs'])
         elif hasattr(info, 'after') and info.after:
-            self.state_machine.root_state_after_change(model=info['model'], prop_name=info['prop_name'],
+            self.state_machine.root_state_after_change(after=True, model=info['model'], prop_name=info['prop_name'],
                                                        instance=info['instance'],
                                                        method_name=info['method_name'], result=info['result'],
-                                                       args=info['args'], info=info['kwargs'])
+                                                       args=info['args'], kwargs=info['kwargs'])

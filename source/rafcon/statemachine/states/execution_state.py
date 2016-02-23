@@ -32,8 +32,7 @@ class ExecutionState(State):
                  path=None, filename=None, check_path=True):
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
-        self._script = None
-        self.script = Script(path, filename, check_path=check_path, state=self)
+        self._script = Script(path, filename, check_path=check_path, state=self)
         self.logger = log.get_logger(self.name)
         # here all persistent variables that should be available for the next state run should be stored
         self.persistent_variables = {}
@@ -58,9 +57,9 @@ class ExecutionState(State):
         """Calls the custom execute function of the script.py of the state
 
         """
-        self.script.build_module()
+        self._script.build_module()
 
-        outcome_item = self.script.execute(self, execute_inputs, execute_outputs, backward_execution)
+        outcome_item = self._script.execute(self, execute_inputs, execute_outputs, backward_execution)
 
         # in the case of backward execution the outcome is not relevant
         if backward_execution:
@@ -126,20 +125,13 @@ class ExecutionState(State):
         State.name.fset(self, name)
         self.logger = log.get_logger(self.name)
 
-    # TODO - clean the interface 5 functions for basically 2 thinks -> discussion
+    # TODO - clean the interface -> miss use of script property to set the script file_name and other attributes may should be avoided
     @property
     def script(self):
         """Property for the _script field
 
         """
         return self._script
-
-    @script.setter
-    @Observable.observed
-    def script(self, script):
-        if not isinstance(script, Script):
-            raise TypeError("script must be of type Script")
-        self._script = script
 
     @property
     def script_text(self):
@@ -149,13 +141,3 @@ class ExecutionState(State):
     @Observable.observed
     def script_text(self, text):
         self._script.script = text
-
-    def set_script_text(self, new_text):
-        """
-        Sets the text of the script. This function can be overridden to prevent setting the script under certain
-        circumstances.
-        :param new_text: The new text to replace to old text with.
-        :return: Returns True if the script was successfully set.
-        """
-        self.script.script = new_text
-        return True

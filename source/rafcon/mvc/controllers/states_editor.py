@@ -11,6 +11,7 @@ from rafcon.mvc.models.container_state import StateModel, ContainerStateModel
 from rafcon.mvc.selection import Selection
 from rafcon.mvc.config import global_gui_config
 
+from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.mvc.utils import constants
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -282,7 +283,7 @@ class StatesEditorController(ExtendedController):
         tbuffer = tab_list[state_identifier]['controller'].get_controller('source_ctrl').view.get_buffer()
         current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
         old_is_dirty = tab_list[state_identifier]['source_code_view_is_dirty']
-        if state_m.state.script.script == current_text:
+        if state_m.state.script_text == current_text:
             tab_list[state_identifier]['source_code_view_is_dirty'] = False
         else:
             tab_list[state_identifier]['source_code_view_is_dirty'] = True
@@ -525,17 +526,9 @@ class StatesEditorController(ExtendedController):
     def notify_state_name_change(self, model, prop_name, info):
         """Checks whether the name of s state was changed and changes the tab label accordingly
         """
-        # TODO in combination with state type change (remove - add -state) there exist sometimes inconsistencies
-        affected_model = None
-        # A child state is affected
-        if hasattr(info, "kwargs") and info.method_name == 'state_change':
-            if info.kwargs.method_name == 'name':
-                affected_model = info.kwargs.model
-        # The root state is affected
-        elif info.method_name == 'name':
-            affected_model = model
-        if isinstance(affected_model, StateModel):
-            self.update_tab_label(affected_model)
+        overview = NotificationOverview(info)
+        if isinstance(overview['model'][-1], StateModel) and overview['method_name'][-1] in ['name', 'script_text']:
+            self.update_tab_label(overview['model'][-1])
 
     def update_tab_label(self, state_m):
         """Update all tab labels

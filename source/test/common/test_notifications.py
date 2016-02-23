@@ -1411,12 +1411,9 @@ def test_state_property_modify_notification(caplog):
         state_m_observer.reset()
     forecast = 0
 
-    # script(self, script) Script
-    from rafcon.statemachine.script import Script
+    # script(self, script) Script -> script - setter is removed from
     if hasattr(state_dict['Nested2'], "script"):
-        state_dict['Nested2'].script = Script(state=state_dict['Nested2'])
-        forecast += 1
-        state_dict['Nested2'].script = Script(state=state_dict['Nested2'])
+        state_dict['Nested2'].script_text = state_dict['Nested2'].script_text
         forecast += 1
     check_states_notifications(states_observer_dict, sub_state_name='Nested2', forecast=forecast)
 

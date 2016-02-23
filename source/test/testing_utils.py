@@ -4,12 +4,12 @@ from os import mkdir
 from threading import Lock, Condition
 
 import rafcon
-from rafcon.utils import log
+from rafcon.utils import log, constants
 
 
 test_multithrading_lock = Lock()
 
-RAFCON_TEMP_PATH_TEST_BASE = join(tempfile.gettempdir(), 'rafcon_tests')
+RAFCON_TEMP_PATH_TEST_BASE = join(constants.RAFCON_TEMP_PATH_BASE, 'unit_tests')
 try:
     mkdir(RAFCON_TEMP_PATH_TEST_BASE)
 except OSError:  # Raised when directory is already existing, thus can be ignored

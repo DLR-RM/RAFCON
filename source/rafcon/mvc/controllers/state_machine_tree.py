@@ -4,7 +4,7 @@ import gobject
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-from rafcon.mvc.history import NotificationOverview
+from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

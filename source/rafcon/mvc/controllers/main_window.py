@@ -4,7 +4,7 @@ import threading
 from rafcon.mvc.controllers.global_variable_manager import GlobalVariableManagerController
 from rafcon.mvc.controllers.state_icons import StateIconController
 from rafcon.mvc.controllers.state_machine_tree import StateMachineTreeController
-from rafcon.mvc.controllers.state_machine_history import StateMachineHistoryController
+from rafcon.mvc.controllers.modification_history import ModificationHistoryTreeController
 from rafcon.mvc.controllers.library_tree import LibraryTreeController
 
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
@@ -110,7 +110,7 @@ class MainWindowController(ExtendedController):
         ######################################################
         # state machine edition history
         ######################################################
-        state_machine_history_controller = StateMachineHistoryController(state_machine_manager_model,
+        state_machine_history_controller = ModificationHistoryTreeController(state_machine_manager_model,
                                                                          view.state_machine_history)
         self.add_controller('state_machine_history_controller', state_machine_history_controller)
 
@@ -254,11 +254,16 @@ class MainWindowController(ExtendedController):
 
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
+        """ Highlight buttons according actual execution status. Widget execution-history page becomes top page in
+        notebook when execution starts.
+        """
+
         label_string = str(rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
         label_string = label_string.replace("STATE_MACHINE_EXECUTION_STATUS.", "")
         self.view['execution_status_label'].set_text(label_string)
 
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STARTED:
+            self.delay(100, self.get_controller('execution_history_ctrl').focus_tab)
             self.highlight_execution_of_current_sm(True)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_start_shortcut')

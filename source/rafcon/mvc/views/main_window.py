@@ -5,7 +5,7 @@ from rafcon.mvc.views.library_tree import LibraryTreeView
 from rafcon.mvc.views.state_icons import StateIconView
 from rafcon.mvc.views.state_machine_tree import StateMachineTreeView
 from rafcon.mvc.views.global_variable_editor import GlobalVariableEditorView
-from rafcon.mvc.views.state_machine_history import StateMachineHistoryView
+from rafcon.mvc.views.modification_history import ModificationHistoryView
 from rafcon.mvc.views.execution_history import ExecutionHistoryView
 from rafcon.mvc.views.state_machines_editor import StateMachinesEditorView
 from rafcon.mvc.views.states_editor import StatesEditorView
@@ -25,6 +25,8 @@ class MainWindowView(View):
         View.__init__(self)
         # Add gui components by removing their corresponding placeholders defined in the glade file first and then
         # adding the widgets.
+        self.page_dict = {}
+        self.notebook_names = ['tree_notebook_up', 'tree_notebook_down']
 
         ######################################################
         # Logging
@@ -69,7 +71,7 @@ class MainWindowView(View):
         ######################################################
         # State Machine History
         ######################################################
-        self.state_machine_history = StateMachineHistoryView()
+        self.state_machine_history = ModificationHistoryView()
         self.state_machine_history.show()
         self.replace_notebook_placeholder_with_widget('history', 'tree_notebook_down',
                                                       self.state_machine_history.get_top_widget())
@@ -299,7 +301,7 @@ class MainWindowView(View):
 
     def replace_notebook_placeholder_with_widget(self, tab_label, notebook, view):
         """Replace notebook's placeholder with widget by removing the placeholder, creating a widget, and assigning the
-        widget to the corresponding tab in the notebook.
+        widget to the corresponding tab in the notebook and remember page by page_dict.
 
         :param tab_label: String containing the label of the tab containing the placeholder to be removed
         :param notebook: Name of the notebook
@@ -310,7 +312,20 @@ class MainWindowView(View):
         self[notebook].remove_page(page_num)
         notebook_widget = self.create_notebook_widget(get_widget_title(tab_label), view,
                                                       border=constants.BORDER_WIDTH_TEXTVIEW)
-        self[notebook].insert_page(notebook_widget, gtk.Label(tab_label), page_num)
+        page_num = self[notebook].insert_page(notebook_widget, gtk.Label(tab_label), page_num)
+        self.page_dict[tab_label] = self[notebook].get_nth_page(page_num)
+
+    def bring_tab_to_the_top(self, tab_label):
+        """Find tab with label tab_label in list of notebook's and set it to the current page.
+
+        :param tab_label: String containing the label of the tab to be focused
+        """
+        page = self.page_dict[tab_label]
+        for notebook in self.notebook_names:
+            page_num = self[notebook].page_num(page)
+            if not page_num == -1:
+                self[notebook].set_current_page(page_num)
+                break
 
 
 def get_widget_title(tab_label):

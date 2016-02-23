@@ -248,10 +248,9 @@ class GraphicalEditorController(ExtendedController):
     # @ExtendedController.observe("meta_signal", signal=True)  # meta data of root_state_model changed -> not possible -> this controller is not observing the root_state
     @ExtendedController.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
     def meta_changed_notify_after(self, changed_model, prop_name, info):
-        from rafcon.mvc.history import NotificationOverview
-        default_overview = NotificationOverview(info)
-        # logger.info("meta_changed: \n{0}".format(default_overview))
-        overview = default_overview.new_overview
+        from rafcon.mvc.utils.notification_overview import NotificationOverview
+        overview = NotificationOverview(info)
+        # logger.info("meta_changed: \n{0}".format(overview))
         # try to do general update
         if 'redo' in overview['meta_signal'][-1]['origin'] or 'undo' in overview['meta_signal'][-1]['origin']:
             # logger.info("meta_changed: \n{0}".format(default_overview))
@@ -296,7 +295,11 @@ class GraphicalEditorController(ExtendedController):
             if (isinstance(result, str) and "CRASH" in result) or isinstance(result, Exception):
                 return
 
-            if method_name == 'add_state':
+            if method_name == 'state_execution_status':
+                state_v = self.canvas.get_view_for_core_element(arguments[0])
+                if state_v:
+                    self.canvas.request_update(state_v)
+            elif method_name == 'add_state':
                 if self._change_state_type:
                     return
                 new_state = arguments[1]
