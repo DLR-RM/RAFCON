@@ -286,8 +286,11 @@ class MainWindowController(ExtendedController):
             - Execution-History is put to focus any time requested (request occur at the moment when the state-machine
               is started and stopped.
             - Modification-History one time focused while and one time after execution if requested.
+
+            :param controller The controller which request to be focused.
         """
-        if not controller in self.get_child_controllers():
+        # TODO think about to may substitute Controller- by View-objects it is may the better design
+        if controller not in self.get_child_controllers():
             return
         # logger.info("focus controller {0}".format(controller))
         if not self.modification_history_was_focused and isinstance(controller, ModificationHistoryTreeController) and \

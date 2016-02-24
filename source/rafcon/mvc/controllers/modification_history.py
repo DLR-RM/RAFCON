@@ -199,9 +199,6 @@ class ModificationHistoryTreeController(ExtendedController):
                 - defines which element is marked as active
                 - generate branch labels with version-id
             """
-            if action.before_overview is None:
-                logger.error("model is  None of {1}: {0}".format(action.before_overview, type(action).__name__))
-
             model = action.before_overview['model'][-1]
             method_name = action.before_overview['method_name'][-1]
             instance = action.before_overview['instance'][-1]
