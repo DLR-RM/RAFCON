@@ -158,10 +158,13 @@ class StateTransitionsListController(ExtendedController):
         if path:
             row_number = path[0][0]
             transition_id = self.tree_store[row_number][0]
-            if self.tree_store[row_number][5]:
-                self.model.parent.state.remove_transition(int(transition_id))
-            else:
-                self.model.state.remove_transition(int(transition_id))
+            try:
+                if self.tree_store[row_number][5]:
+                    self.model.parent.state.remove_transition(int(transition_id))
+                else:
+                    self.model.state.remove_transition(int(transition_id))
+            except (AttributeError, ValueError) as e:
+                logger.error("Transition couldn't be removed: {0}".format(e))
 
             # selection to next element
             if len(self.tree_store) > 0:

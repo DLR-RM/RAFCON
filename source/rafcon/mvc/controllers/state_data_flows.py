@@ -146,6 +146,7 @@ class StateDataFlowsListController(ExtendedController):
         # print "\n\npossible internal data_flows\n %s" % possible_internal_data_flows
         # print "\n\npossible external data_flows\n %s" % possible_external_data_flows
 
+        from_key = None
         if self.view_dict['data_flows_internal'] and possible_internal_data_flows:
             # print self.from_port_internal
             from_state_id = possible_internal_data_flows[0][0]
@@ -154,9 +155,11 @@ class StateDataFlowsListController(ExtendedController):
             to_state_id = possible_internal_data_flows[0][2]
             to_key = possible_internal_data_flows[0][3]
             # print "NEW DATA_FLOW INTERNAL IS: ", from_state_id, from_key, to_state_id, to_key
-            data_flow_id = self.model.state.add_data_flow(from_state_id, from_key, to_state_id, to_key)
-            # print "NEW DATA_FLOW INTERNAL IS: ", self.model.state.data_flows[data_flow_id]
-
+            try:
+                data_flow_id = self.model.state.add_data_flow(from_state_id, from_key, to_state_id, to_key)
+                # print "NEW DATA_FLOW INTERNAL IS: ", self.model.state.data_flows[data_flow_id]
+            except (AttributeError, ValueError) as e:
+                logger.error("Data Flow couldn't be added: {0}".format(e))
         elif self.view_dict['data_flows_external'] and possible_external_data_flows:  # self.free_to_port_external:
             from_state_id = possible_external_data_flows[0][0]
             # print from_state_id, self.model.state.output_data_ports
@@ -165,8 +168,11 @@ class StateDataFlowsListController(ExtendedController):
             to_key = possible_external_data_flows[0][3]
             # print "NEW DATA_FLOW EXTERNAL IS: ", from_state_id, from_key, to_state_id, to_key, \
             #     get_state_model(self.model.parent, to_state_id).state.get_data_port_by_id(to_key)
-            data_flow_id = self.model.parent.state.add_data_flow(from_state_id, from_key, to_state_id, to_key)
-            # print "NEW DATA_FLOW EXTERNAL IS: ", self.model.parent.state.data_flows[data_flow_id]
+            try:
+                data_flow_id = self.model.parent.state.add_data_flow(from_state_id, from_key, to_state_id, to_key)
+                # print "NEW DATA_FLOW EXTERNAL IS: ", self.model.parent.state.data_flows[data_flow_id]
+            except (AttributeError, ValueError) as e:
+                logger.error("Data Flow couldn't be added: {0}".format(e))
         else:
             logger.warning("NO OPTION TO ADD DATA FLOW")
 
@@ -177,10 +183,13 @@ class StateDataFlowsListController(ExtendedController):
     def on_remove(self, button, info=None):
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
         if path:
-            if self.tree_store[path[0][0]][5]:
-                self.model.parent.state.remove_data_flow(self.tree_store[path[0][0]][0])
-            else:
-                self.model.state.remove_data_flow(self.tree_store[path[0][0]][0])
+            try:
+                if self.tree_store[path[0][0]][5]:
+                    self.model.parent.state.remove_data_flow(self.tree_store[path[0][0]][0])
+                else:
+                    self.model.state.remove_data_flow(self.tree_store[path[0][0]][0])
+            except (AttributeError, ValueError) as e:
+                logger.error("Data Flow couldn't be removed: {0}".format(e))
         else:
             logger.warning("Please select the data flow to be deleted")
             return
