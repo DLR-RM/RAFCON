@@ -108,11 +108,12 @@ class MainWindowController(ExtendedController):
         self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
 
         ######################################################
-        # state machine edition history
+        # modification history
         ######################################################
         state_machine_history_controller = ModificationHistoryTreeController(state_machine_manager_model,
                                                                          view.state_machine_history)
         self.add_controller('state_machine_history_controller', state_machine_history_controller)
+        self.modification_history_was_focused = False
 
         ######################################################
         # network controller
@@ -254,8 +255,7 @@ class MainWindowController(ExtendedController):
 
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
-        """ Highlight buttons according actual execution status. Widget execution-history page becomes top page in
-        notebook when execution starts.
+        """ Highlight buttons according actual execution status.
         """
 
         label_string = str(rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
@@ -263,25 +263,41 @@ class MainWindowController(ExtendedController):
         self.view['execution_status_label'].set_text(label_string)
 
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STARTED:
-            self.delay(100, self.get_controller('execution_history_ctrl').focus_tab)
             self.highlight_execution_of_current_sm(True)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_start_shortcut')
         elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.PAUSED:
-            self.delay(100, self.get_controller('execution_history_ctrl').update)
             self.highlight_execution_of_current_sm(True)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_pause_shortcut')
         elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED:
-            self.delay(100, self.get_controller('execution_history_ctrl').update)
             self.highlight_execution_of_current_sm(False)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_stop_shortcut')
         else:  # all step modes
-            self.delay(100, self.get_controller('execution_history_ctrl').update)
             self.highlight_execution_of_current_sm(True)
             self.view['step_buttons'].show()
             self._set_single_button_active('button_step_mode_shortcut')
+
+    def focus_notebook_page_of_controller(self, controller):
+        """ The method implements focus request of the notebooks in left side-bar of the main window. Thereby it is the
+        master-function of focus pattern of the notebooks in left side-bar.
+            Actual pattern is:
+            - Execution-History is put to focus any time requested (request occur at the moment when the state-machine
+              is started and stopped.
+            - Modification-History one time focused while and one time after execution if requested.
+        """
+        if not controller in self.get_child_controllers():
+            return
+        # logger.info("focus controller {0}".format(controller))
+        if not self.modification_history_was_focused and isinstance(controller, ModificationHistoryTreeController) and \
+                self.view is not None:
+            self.view.bring_tab_to_the_top('history')
+            self.modification_history_was_focused = True
+
+        if self.view is not None and isinstance(controller, ExecutionHistoryTreeController):
+            self.view.bring_tab_to_the_top('execution_history')
+            self.modification_history_was_focused = False
 
     def _set_single_button_active(self, active_button_name):
         for button_name in ['button_start_shortcut', 'button_pause_shortcut', 'button_step_mode_shortcut']:

@@ -1,12 +1,16 @@
 import gtk
 import gobject
+import threading
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.statemachine.state_machine_manager import StateMachineManager
 from rafcon.statemachine.execution.execution_history import ConcurrencyItem, CallItem
 from rafcon.utils import log
 
-import rafcon.mvc.singleton as mvc_singleton
+import rafcon.statemachine.singleton
+import rafcon.mvc.singleton
+
+from rafcon.statemachine.enums import StateMachineExecutionStatus
 
 logger = log.get_logger(__name__)
 
@@ -32,15 +36,12 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
 
         view['reload_button'].connect('clicked', self.reload_history)
 
+        self.observe_model(rafcon.statemachine.singleton.state_machine_execution_engine)
+
         self.update()
 
     def register_adapters(self):
         pass
-
-    def focus_tab(self):
-        # logger.info("focus execution-history")
-        if mvc_singleton.main_window_controller is not None and mvc_singleton.main_window_controller.view is not None:
-            mvc_singleton.main_window_controller.view.bring_tab_to_the_top('execution_history')
 
     def register_view(self, view):
         self.history_tree.connect('button_press_event', self.right_click)
@@ -83,6 +84,22 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
     #     #self.update()  # TODO: only update when execution mode is not RUNNING (while running history not interesting)
     #                     # TODO: update when finished RUNNING all states or other state activated
 
+    @ExtendedController.observe("execution_engine", after=True)
+    def execution_history_focus(self, model, prop_name, info):
+        """ Arranges to put execution-history widget page to become top page in notebook when execution starts and stops
+        and resets the boolean of modification_history_was_focused to False each time this notification are observed.
+        """
+        logger.info("execution_engine changed" + str(rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode))
+        if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode in \
+                [StateMachineExecutionStatus.STARTED, StateMachineExecutionStatus.STOPPED]:
+            if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):
+                # request focus -> which has not have to be satisfied
+                self.parent.focus_notebook_page_of_controller(self)
+
+        if not rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is \
+                StateMachineExecutionStatus.STARTED:
+            self.delay(100, self.update)
+
     def reload_history(self, widget, event=None):
         """Triggered when the 'Reload History' button is clicked."""
         self.update()
@@ -112,3 +129,8 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
                         self.insert_rec(tree_item, item.state_reference.name + " - Call", None, item.scoped_data)
                     else:
                         self.insert_rec(tree_item, item.state_reference.name + " - Return", None, item.scoped_data)
+
+    @staticmethod
+    def delay(milliseconds, func):
+        thread = threading.Timer(milliseconds / 1000.0, func)
+        thread.start()
