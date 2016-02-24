@@ -332,7 +332,6 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         self._draw_rect(corner1[0], corner2[0], corner1[1], corner2[1], depth, fill_color=self.frame_fill_color,
                         border_color=self.frame_border_color)
 
-
     def draw_state(self, name, pos, size, outcomes=None, input_ports_m=None, output_ports_m=None, selected=False,
                    active=False, depth=0):
         """Draw a state with the given properties
@@ -510,8 +509,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     def draw_scoped_data_port(self, port_name, port_m, pos, size, selected, depth):
         return self._draw_inner_data_port(port_name, port_m, pos, size, Direction.bottom, selected, False, depth)
 
-    def _draw_inner_data_port(self, port_name, port_m, pos, size, arrow_position, selected,
-                              inner, depth):
+    def _draw_inner_data_port(self, port_name, port_m, pos, size, arrow_position, selected, inner, depth):
         id = self.name_counter
         self.name_counter += 1
 

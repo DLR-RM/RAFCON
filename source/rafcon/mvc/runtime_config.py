@@ -7,7 +7,7 @@
 
 
 """
-
+import gtk
 from rafcon.utils.config import DefaultConfig
 from rafcon.utils import log
 
@@ -17,9 +17,7 @@ CONFIG_FILE = "runtime_config.yaml"
 
 
 class RuntimeConfig(DefaultConfig):
-    """
-    Class to hold and load the runtime configuration
-    """
+    """Class to hold and load the runtime configuration"""
 
     def __init__(self):
         super(RuntimeConfig, self).__init__("")
@@ -29,16 +27,16 @@ class RuntimeConfig(DefaultConfig):
             config_file = CONFIG_FILE
         super(RuntimeConfig, self).load(config_file, path)
 
-    def save_configuration(self, main_window_view):
-        main_window = main_window_view.get_top_widget().get_window()
-        size = main_window.get_size()
-        position = main_window.get_position()
+    def save_configuration(self, widget, title):
+        if isinstance(widget, gtk.Window):
+            size = widget.get_size()
+            logger.debug('{0} size: {1}'.format(title, size))
+            self.set_config_value('{0}_SIZE'.format(title), size)
+        position = widget.get_position()
+        logger.debug('{0} position: {1}'.format(title, position))
+        self.set_config_value('{0}_POS'.format(title), position)
         # screen = main_window.get_screen()
         # logger.debug("Main window screen:, {0}".format(screen))
-        logger.debug("Main window size: {0}".format(size))
-        logger.debug("Main window position: {0}".format(position))
-        self.set_config_value('WINDOW_SIZE', size)
-        self.set_config_value('WINDOW_POS', position)
         super(RuntimeConfig, self).save_configuration()
 
 

@@ -25,9 +25,7 @@ def config_path(path):
 
 
 class DefaultConfig(object):
-    """
-    Class to hold and load the global configurations.
-    """
+    """Class to hold and load the global configurations."""
 
     def __init__(self, default_config):
         assert isinstance(default_config, str)
@@ -76,21 +74,21 @@ class DefaultConfig(object):
         self.path = path
 
     def get_config_value(self, key, default=None):
-        """
-        Get a specific configuration value
+        """Get a specific configuration value
+
         :param key: the key to the configuration value
         :param default: what to return if the key is not found
-        :return:
+        :return: The value for the given key, if the key was found. Otherwise the default value
         """
         if key in self.__config_dict:
             return self.__config_dict[key]
         return default
 
     def set_config_value(self, key, value):
-        """
-        Get a specific configuration value
+        """Get a specific configuration value
+
         :param key: the key to the configuration value
-        :return:
+        :param value: The new value to be set for the given key
         """
         self.__config_dict[key] = value
 
@@ -101,9 +99,7 @@ class DefaultConfig(object):
 
 
 class ConfigError(Exception):
-    """
-    Exception raised for errors loading the config files
-    """
+    """Exception raised for errors loading the config files"""
     def __init__(self, msg):
         self.msg = msg
 
