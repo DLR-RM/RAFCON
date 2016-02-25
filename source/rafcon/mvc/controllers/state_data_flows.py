@@ -103,8 +103,8 @@ class StateDataFlowsListController(ExtendedController):
     def on_focus(self, widget, data=None):
         path = self.view.tree_view.get_cursor()
         # logger.debug("DATAFLOWS_LIST get new FOCUS %s" % str(path[0]))
-        self.update_internal_data_base()
-        self.update_tree_store()
+        self._update_internal_data_base()
+        self._update_tree_store()
         if path[0]:
             self.view.tree_view.set_cursor(path[0])
 
