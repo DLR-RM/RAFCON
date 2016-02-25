@@ -291,6 +291,9 @@ class MainWindowController(ExtendedController):
         notebook = self.get_controller('state_machines_editor_ctrl').view['notebook']
         page_num = self.get_controller('state_machines_editor_ctrl').view['notebook'].get_current_page()
         page = self.get_controller('state_machines_editor_ctrl').view['notebook'].get_nth_page(page_num)
+        if page is None:
+            logger.warning("No state machine open {0}".format(page_num))
+            return
         label = notebook.get_tab_label(page).get_children()[0]
         if active:
             label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_ACTIVE']))

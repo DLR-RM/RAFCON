@@ -89,7 +89,11 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
         """ Arranges to put execution-history widget page to become top page in notebook when execution starts and stops
         and resets the boolean of modification_history_was_focused to False each time this notification are observed.
         """
-        logger.info("execution_engine changed" + str(rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode))
+        from rafcon.mvc.utils.notification_overview import NotificationOverview
+        overview = NotificationOverview(info)
+        logger.info("execution_engine runs method '{1}' and has status {0}"
+                    "".format(str(rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode).split('.')[-1],
+                              overview['method_name'][-1]))
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode in \
                 [StateMachineExecutionStatus.STARTED, StateMachineExecutionStatus.STOPPED]:
             if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):
