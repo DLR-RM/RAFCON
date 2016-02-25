@@ -1,11 +1,12 @@
 import gobject
 from gtk import ListStore, TreeStore
 from rafcon.mvc.models.container_state import ContainerStateModel
+from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.utils import type_helpers
-from rafcon.utils import log
+from rafcon.utils import log, constants
 
 logger = log.get_logger(__name__)
 
@@ -21,8 +22,6 @@ class StateDataFlowsListController(ExtendedController):
     :param rafcon.mvc.models.ContainerStateModel model: The container state model containing the data
     :param rafcon.mvc.views.DataFlowListView view: The GTK view showing the data flows as a table
     """
-
-    # TODO - widget should update if parent of state has changed (e.g. because of state-type-change of parent)
 
     free_to_port_internal = None
     free_to_port_external = None
@@ -46,13 +45,14 @@ class StateDataFlowsListController(ExtendedController):
                                  'external': {}}
         self.data_flow_dict = {'internal': {},
                                'external': {}}
+        self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
 
         # register other model and fill tree_store the model of the view
         if not model.state.is_root_state:
             self.observe_model(model.parent)
 
-        self.update_internal_data_base()
-        self.update_tree_store()
+        self._update_internal_data_base()
+        self._update_tree_store()
         self.debug_log = False
 
     def register_view(self, view):
@@ -282,7 +282,11 @@ class StateDataFlowsListController(ExtendedController):
         except ValueError as e:
             logger.error("Could not change to outcome: {0}".format(e))
 
-    def update_internal_data_base(self):
+    def update(self):
+        self._update_internal_data_base()
+        self._update_tree_store()
+
+    def _update_internal_data_base(self):
         [free_to_int, free_to_ext, from_int, from_ext] = update_data_flow(self.model, self.data_flow_dict,
                                                                           self.tree_dict_combos)
         self.free_to_port_internal = free_to_int
@@ -290,7 +294,7 @@ class StateDataFlowsListController(ExtendedController):
         self.from_port_internal = from_int
         self.from_port_external = from_ext
 
-    def update_tree_store(self):
+    def _update_tree_store(self):
         self.tree_store.clear()
 
         if self.view_dict['data_flows_internal'] and hasattr(self.model.state, 'data_flows'):
@@ -328,27 +332,57 @@ class StateDataFlowsListController(ExtendedController):
                                                   True,
                                                   '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True])
 
+    @ExtendedController.observe("change_state_type", before=True)
+    @ExtendedController.observe("change_root_state_type", before=True)
+    def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
+        """ Set the no update flag to avoid updates in between of a state-type-change.
+        """
+        self.no_update = True
+
+    @ExtendedController.observe("state", after=True)
+    def after_notification_state(self, model, prop_name, info):
+        # The method causing the change raised an exception, thus nothing was changed
+        overview = NotificationOverview(info)
+        # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
+        #         isinstance(overview['result'][-1], Exception):
+        #     return
+        if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state:
+            self.update()
+
+    @ExtendedController.observe("states", after=True)
+    @ExtendedController.observe("change_state_type", after=True)
+    @ExtendedController.observe("change_root_state_type", after=True)
     @ExtendedController.observe("input_data_ports", after=True)
     @ExtendedController.observe("output_data_ports", after=True)
     @ExtendedController.observe("scoped_variables", after=True)
     @ExtendedController.observe("data_flows", after=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
+        # The method causing the change raised an exception, thus nothing was changed
+        # overview = NotificationOverview(info)
+        # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
+        #         isinstance(overview['result'][-1], Exception):
+        #     return
+
         # self.notification_logs(model, prop_name, info)
+        if self.no_update and info.method_name in ["change_state_type", "change_root_state_type"]:
+            # print "DO_UNLOCK DATA-FLOW WIDGET"
+            self.no_update = False
+
+        if self.no_update:
+            return
 
         try:
-            self.update_internal_data_base()
-            self.update_tree_store()
-        except:
+            self.update()
+        except Exception as e:
             if self.debug_log:
                 import traceback
-                from rafcon.mvc.utils.notification_overview import NotificationOverview
                 self.store_debug_log_file(NotificationOverview(info))
                 self.store_debug_log_file(str(traceback.format_exc()))
-            logger.warning("update of data_flow widget fails while detecting change in state %s %s" %
-                           (self.model.state.name, self.model.state.state_id))
+            logger.error("update of data_flow widget fails while detecting change in state %s %s" %
+                         (self.model.state.name, self.model.state.state_id))
 
     def store_debug_log_file(self, string):
-        with open('/tmp/data_flow_widget_debug_log_file.txt', 'a+') as f:
+        with open(constants.RAFCON_TEMP_PATH_BASE + '/data_flow_widget_debug_log_file.txt', 'a+') as f:
             f.write(string)
         f.closed
 
@@ -369,13 +403,13 @@ class StateDataFlowsListController(ExtendedController):
                 "%s gets notified by data_flows from %s %s" % (self.model.state.state_id, relative_str, from_state))
         elif prop_name == 'input_data_ports':
             logger.debug("%s gets notified by input_data_ports from %s %s" % (
-            self.model.state.state_id, relative_str, from_state))
+                self.model.state.state_id, relative_str, from_state))
         elif prop_name == 'output_data_ports':
             logger.debug("%s gets notified by output_data_ports from %s %s" % (
-            self.model.state.state_id, relative_str, from_state))
+                self.model.state.state_id, relative_str, from_state))
         elif prop_name == 'scoped_variables':
             logger.debug("%s gets notified by scoped_variables from %s %s" % (
-            self.model.state.state_id, relative_str, from_state))
+                self.model.state.state_id, relative_str, from_state))
         else:
             logger.debug("IP OP SV or DF !!! FAILURE !!! %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
                          (self.model.state.state_id, prop_name, info.instance, info.method_name, info.result))
@@ -767,5 +801,5 @@ class StateDataFlowsEditorController(ExtendedController):
             self.df_list_ctrl.view_dict['data_flows_internal'] = False
             button.set_active(False)
 
-        self.df_list_ctrl.update_internal_data_base()
-        self.df_list_ctrl.update_tree_store()
+        self.df_list_ctrl._update_internal_data_base()
+        self.df_list_ctrl._update_tree_store()
