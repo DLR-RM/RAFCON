@@ -164,8 +164,9 @@ def check_state_storage(state, parent_path, missing_elements, check_gui_meta_dat
     check_folder(folder_path, "state_path", missing_elements, actual_exists)
 
     # check state script exists
-    file_path = parent_path + "/" + state.state_id + "/" + "script.py"
-    check_file(file_path, "script", missing_elements, actual_exists)
+    if isinstance(state, ExecutionState):
+        file_path = parent_path + "/" + state.state_id + "/" + "script.py"
+        check_file(file_path, "script", missing_elements, actual_exists)
 
     # check state-meta data exists (transitions and so on)
     file_path = parent_path + "/" + state.state_id + "/" + "meta.yaml"
