@@ -21,6 +21,9 @@ class StateMachineTreeController(ExtendedController):
     :param rafcon.mvc.views.state_machine_tree.StateMachineTreeView view: The GTK view showing the state machine tree.
     """
 
+    # TODO hold expansion if refresh all is performed -> minor feature (use storage_path instate of state_machine_id)
+    # TODO hold expansion type changes are re- and undone -> minor feature which also depends on modification-history
+
     def __init__(self, model, view):
         """Constructor"""
         assert isinstance(model, StateMachineManagerModel)
@@ -74,7 +77,7 @@ class StateMachineTreeController(ExtendedController):
     @ExtendedController.observe("state", after=True)  # root_state
     @ExtendedController.observe("states", after=True)
     def states_update(self, model, property, info):
-        # print info
+
         overview = NotificationOverview(info, False)
 
         if overview['prop_name'][-1] == 'state' and \
@@ -83,22 +86,24 @@ class StateMachineTreeController(ExtendedController):
             # self.update(model)
             self.update_tree_store_row(overview['model'][-1])
         elif overview['prop_name'][-1] == 'state' and \
-                        overview['method_name'][-1] in ["add_state", "remove_state"]:
-            # print "do update", model.state.name, overview['method_name'][-1]
+                overview['method_name'][-1] in ["add_state", "remove_state", "change_state_type"]:
+            # self.store_expansion_state()
             self.update(model)
+            # self.redo_expansion_state(info)
             # self.update_tree_store_row(overview['model'][-1])
         else:
-            if overview['prop_name'][-1] == 'state' and \
-                            overview['method_name'][-1] in ["add_input_data_port", "remove_input_data_port",
-                                                            "add_output_data_port", "remove_output_data_port",
-                                                            "add_scoped_variable", "remove_scoped_variable",
-                                                            "add_outcome", "remove_outcome",
-                                                            "add_data_flow", "remove_data_flow",
-                                                            "add_transition", "remove_transition"]:
+            if not overview['prop_name'][-1] == 'state' or \
+                    overview['prop_name'][-1] == 'state' and \
+                    overview['method_name'][-1] in ["add_input_data_port", "remove_input_data_port",
+                                                    "add_output_data_port", "remove_output_data_port",
+                                                    "add_scoped_variable", "remove_scoped_variable",
+                                                    "add_outcome", "remove_outcome",
+                                                    "add_data_flow", "remove_data_flow",
+                                                    "add_transition", "remove_transition", "parent",
+                                                    "state_execution_status", "script_text"]:
                 return
-            self.store_expansion_state()
-            self.update()  # TODO finally the state-machine tree has to be stable without this
-            self.redo_expansion_state()
+            else:
+                logger.error(overview)
 
     @ExtendedController.observe("root_state", assign=True)
     def state_machine_notification(self, model, property, info):
@@ -118,7 +123,7 @@ class StateMachineTreeController(ExtendedController):
         self.register()
         self.assign_notification_selection(None, None, None)
         # redo expansion state
-        self.redo_expansion_state()
+        self.redo_expansion_state(info)
 
     def store_expansion_state(self):
         # print "\n\n store of state machine {0} \n\n".format(self.__my_selected_sm_id)
@@ -126,26 +131,34 @@ class StateMachineTreeController(ExtendedController):
             act_expansion_state = {}
             for state_path, state_row_iter in self.state_row_iter_dict_by_state_path.iteritems():
                 state_row_path = self.tree_store.get_path(state_row_iter)
-                act_expansion_state[state_path] = self.view.row_expanded(state_row_path)
-                # if act_expansion_state[state_path]:
-                #     print state_path
+                if state_row_path is not None:
+                    act_expansion_state[state_path] = self.view.row_expanded(state_row_path)
+                else:
+                    if self._selected_sm_model.state_machine.get_state_by_path(state_path, as_check=True):
+                        # happens if refresh all is performed -> otherwise it is a error
+                        logger.debug("State not in StateMachineTree but in StateMachine, {0}. {1}, {2}".format(state_path,
+                                                                                                            state_row_path,
+                                                                                                            state_row_iter))
             self.__expansion_state[self.__my_selected_sm_id] = act_expansion_state
         except TypeError:
-            logger.debug("expansion state of state machine {0} could not be stored".format(self.__my_selected_sm_id))
+            logger.error("expansion state of state machine {0} could not be stored".format(self.__my_selected_sm_id))
 
-    def redo_expansion_state(self):
+    def redo_expansion_state(self, info):
         if self.__my_selected_sm_id in self.__expansion_state:
-            # print "\n\n redo of state machine {0} \n\n".format(self.__my_selected_sm_id)
             try:
                 for state_path, state_row_expanded in self.__expansion_state[self.__my_selected_sm_id].iteritems():
-                    state_row_iter = self.state_row_iter_dict_by_state_path[state_path]
-                    if state_row_iter:  # may elements are missing afterwards
-                        state_row_path = self.tree_store.get_path(state_row_iter)
-                        if state_row_expanded:
-                            self.view.expand_to_path(state_row_path)
-                            # print state_path
+                    if state_path in self.state_row_iter_dict_by_state_path:
+                        state_row_iter = self.state_row_iter_dict_by_state_path[state_path]
+                        if state_row_iter:  # may elements are missing afterwards
+                            state_row_path = self.tree_store.get_path(state_row_iter)
+                            if state_row_expanded:
+                                self.view.expand_to_path(state_row_path)
+                    else:
+                        if self._selected_sm_model.state_machine.get_state_by_path(state_path, as_check=True):
+                            logger.error("State not in StateMachineTree but in StateMachine, {0}.".format(state_path))
+
             except (TypeError, KeyError):
-                logger.debug(
+                logger.error(
                     "expansion state of state machine {0} could not be re-done".format(self.__my_selected_sm_id))
 
     def update(self, changed_state_model=None, with_expand=False):
@@ -270,4 +283,4 @@ class StateMachineTreeController(ExtendedController):
                     # # work around to force selection to state-editor
                     # self._selected_sm_model.selection.set([self._selected_sm_model.selection.get_selected_state()])
             except (TypeError, KeyError):
-                logger.warning("Could not update selection")
+                logger.error("Could not update selection")
