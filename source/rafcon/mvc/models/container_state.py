@@ -101,8 +101,6 @@ class ContainerStateModel(StateModel):
                 not isinstance(model, StateModel) and model.parent is not self):  # One of the member models was changed
             changed_list = self.states
             cause = 'state_change'
-            if info.method_name in ['change_state_type', 'handled_change_state_type']:
-                cause = 'change_state_type'
         # If the change happened in one of the transitions, notify the list of all transitions
         elif isinstance(model, TransitionModel) and model.parent is self:
             changed_list = self.transitions
