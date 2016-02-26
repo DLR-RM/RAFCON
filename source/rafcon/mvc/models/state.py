@@ -56,7 +56,7 @@ class StateModel(AbstractStateModel):
 
         # mark the state machine this state belongs to as dirty
         no_save_change = info["method_name"] in ["active", "child_execution", "state_execution_status"]
-        if isinstance(model, StateModel) and prop_name == "state" and no_save_change:
+        if isinstance(model, AbstractStateModel) and prop_name == "state" and no_save_change:
             # do not track the active flag when marking the sm dirty
             pass
         else:

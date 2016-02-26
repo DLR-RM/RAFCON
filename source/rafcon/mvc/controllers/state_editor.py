@@ -95,6 +95,11 @@ class StateEditorController(ExtendedController):
             view["main_notebook_2"].set_tab_reorderable(child, True)
             view["main_notebook_2"].set_tab_detachable(child, True)
 
+        if isinstance(model.state, LibraryState):
+            view.bring_tab_to_the_top('Description')
+        else:
+            view.bring_tab_to_the_top('Linkage Overview')
+
         if isinstance(model, ContainerStateModel):
             self.get_controller('scoped_ctrl').reload_scoped_variables_list_store()
 

@@ -6,12 +6,7 @@ from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.utils import log
 
 from rafcon.mvc import singleton as mvc_singleton
-import rafcon.statemachine.singleton
-from rafcon.statemachine.enums import StateMachineExecutionStatus
 
-# import datetime
-# import os
-# from rafcon.mvc.utils.notification_overview import NotificationOverview
 
 logger = log.get_logger(__name__)
 
@@ -50,30 +45,10 @@ class ModificationHistoryTreeController(ExtendedController):
         self.next_activity_focus_self = True
 
         self.register()
-        self.observe_model(rafcon.statemachine.singleton.state_machine_execution_engine)
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):
         self.register()
-
-    @ExtendedController.observe("execution_engine", after=True)
-    def execution_engine_status_changed(self, model, prop_name, info):
-        # TODO re-organize as request to controller which holds view of Notebook modification-history could be in
-        if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED:
-            self.next_activity_focus_self = True
-
-        # log execution-engine
-        # if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STARTED:
-        #     self.list_execution = []
-        # self.list_execution.append("{0} update_execution {1}".format(datetime.datetime.now(), NotificationOverview(info)))
-        # if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED:
-        #     for elem in self.list_execution:
-        #         os.system("echo '{0}' >> /tmp/rafcon_execution_log.txt".format(elem))
-
-    def focus_tab(self):
-        # logger.info("focus my tab")
-        if mvc_singleton.main_window_controller is not None and mvc_singleton.main_window_controller.view is not None:
-            mvc_singleton.main_window_controller.view.bring_tab_to_the_top('history')
 
     def register(self):
         """
@@ -205,9 +180,9 @@ class ModificationHistoryTreeController(ExtendedController):
         It functionality is strongly depends on a consistent history-tree hold by a ChangeHistory-Class.
         """
         # logger.debug("History changed %s\n%s\n%s" % (model, prop_name, info))
-        if self.next_activity_focus_self:
-            self.focus_tab()
-            self.next_activity_focus_self = False
+        if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):
+            # request focus -> which has not have to be satisfied
+            self.parent.focus_notebook_page_of_controller(self)
 
         if self._selected_sm_model.history.fake or \
                 info is not None and info.method_name not in ["insert_action", "undo", "redo", "reset"]:
@@ -224,9 +199,6 @@ class ModificationHistoryTreeController(ExtendedController):
                 - defines which element is marked as active
                 - generate branch labels with version-id
             """
-            if action.before_overview is None:
-                logger.error("model is  None of {1}: {0}".format(action.before_overview, type(action).__name__))
-
             model = action.before_overview['model'][-1]
             method_name = action.before_overview['method_name'][-1]
             instance = action.before_overview['instance'][-1]

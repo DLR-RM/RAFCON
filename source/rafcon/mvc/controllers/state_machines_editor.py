@@ -181,6 +181,8 @@ class StateMachinesEditorController(ExtendedController):
         unsaved_changed = '*' if state_machine_m.state_machine.marked_dirty else ''
         tab_title = compose_tab_title(sm_id, state_machine_m.root_state.state.name, unsaved_changed)
         tab_label = create_tab_header(tab_title, self.on_close_clicked, state_machine_m, 'refused')
+        tab_label.set_tooltip_text('[source] {0}'.format(state_machine_m.state_machine.file_system_path))
+        # TODO get an idea how to stop tooltip to wrap its text
 
         page = graphical_editor_view['main_frame']
         self.view.notebook.append_page(page, tab_label)
@@ -251,6 +253,7 @@ class StateMachinesEditorController(ExtendedController):
             label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_children()[0]
             tab_title = compose_tab_title(sm_id, self.tabs[sm_id]["state_machine_m"].root_state.state.name)
             label.set_label(tab_title)
+            label.set_tooltip_text('[source] {0}'.format(self.tabs[sm_id]["state_machine_m"].state_machine.file_system_path))
 
     def on_close_clicked(self, event, state_machine_m, result, force=False):
         """Triggered when the close button of a state machine tab is clicked

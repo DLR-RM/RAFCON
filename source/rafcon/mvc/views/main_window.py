@@ -167,13 +167,21 @@ class MainWindowView(View):
         # --------------------------------------------------------------------------
 
         button_start_shortcut = self['button_start_shortcut']
+        button_start_shortcut.set_tooltip_text('Run')
         button_pause_shortcut = self['button_pause_shortcut']
+        button_pause_shortcut.set_tooltip_text('Pause')
         button_stop_shortcut = self['button_stop_shortcut']
+        button_stop_shortcut.set_tooltip_text('Stop')
         button_step_mode_shortcut = self['button_step_mode_shortcut']
+        button_step_mode_shortcut.set_tooltip_text('Enter Step Mode')
         button_step_in_shortcut = self['button_step_in_shortcut']
+        button_step_in_shortcut.set_tooltip_text('Step Into (One Level In -> Child-State))')
         button_step_over_shortcut = self['button_step_over_shortcut']
+        button_step_over_shortcut.set_tooltip_text('Step Over (the next Sibling-State))')
         button_step_out_shortcut = self['button_step_out_shortcut']
+        button_step_out_shortcut.set_tooltip_text('Step Out (One Level Up -> Parent-State)')
         button_step_backward_shortcut = self['button_step_backward_shortcut']
+        button_step_backward_shortcut.set_tooltip_text('Step Backward')
 
         button_start_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_START))
         button_pause_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_PAUSE))

@@ -1292,7 +1292,7 @@ def test_state_add_remove_notification(caplog):
 
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
-
+# TODO do the notification checks for the LibraryState
 def test_state_property_modify_notification(caplog):
     """ Observable Attributes of State are:
         - name        (setter-method -> 0 before and 0 after notification)
@@ -1310,6 +1310,24 @@ def test_state_property_modify_notification(caplog):
         ExecutionState
         - script
         - script_text
+        LibraryState
+        --- methods ---
+        - set_input_runtime_value
+        - set_use_input_runtime_value
+        - set_output_runtime_value
+        - set_use_output_runtime_value
+        - add_input_data_port ???
+        - remove_input_data_port ???
+        - add_output_data_port ???
+        - remove_output_data_port ???
+        --- setter ---
+        - library_path ???
+        - library_name ???
+        - version ???
+        - input_data_port_runtime_values
+        - use_runtime_value_input_data_ports
+        - output_data_port_runtime_values
+        - use_runtime_value_output_data_ports
         Observable Methods of State are:
         - change_state_type
         Observable Methods of State checked at other place:

@@ -6,6 +6,7 @@ from gtkmvc import ModelMT
 from rafcon.statemachine.states.container_state import ContainerState
 
 from rafcon.mvc.models.state import StateModel
+from rafcon.mvc.models.abstract_state import AbstractStateModel
 from rafcon.mvc.models.transition import TransitionModel
 from rafcon.mvc.models.data_flow import DataFlowModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
@@ -97,12 +98,10 @@ class ContainerStateModel(StateModel):
         changed_list = None
         cause = None
         # If the change happened in a child state, notify the list of all child states
-        if (isinstance(model, StateModel) and model is not self) or (  # The state was changed directly
-                not isinstance(model, StateModel) and model.parent is not self):  # One of the member models was changed
+        if (isinstance(model, AbstractStateModel) and model is not self) or (  # The state was changed directly
+                not isinstance(model, AbstractStateModel) and model.parent is not self):  # One of the member models was changed
             changed_list = self.states
             cause = 'state_change'
-            if info.method_name in ['change_state_type', 'handled_change_state_type']:
-                cause = 'change_state_type'
         # If the change happened in one of the transitions, notify the list of all transitions
         elif isinstance(model, TransitionModel) and model.parent is self:
             changed_list = self.transitions

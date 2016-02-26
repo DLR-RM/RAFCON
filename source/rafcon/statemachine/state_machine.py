@@ -109,22 +109,30 @@ class StateMachine(Observable):
         self.old_marked_dirty = self._marked_dirty
         self._marked_dirty = marked_dirty
 
-    def get_state_by_path(self, path):
+    def get_state_by_path(self, path, as_check=False):
         from rafcon.statemachine.states.library_state import LibraryState
+        from rafcon.statemachine.states.execution_state import ExecutionState
         path_item_list = path.split('/')
-
-        assert path_item_list.pop(0) == self.root_state.state_id
+        prev_state_id = path_item_list.pop(0)
+        assert prev_state_id == self.root_state.state_id
         state = self.root_state
         for state_id in path_item_list:
             if isinstance(state, LibraryState):
                 state = state.state_copy
                 assert state.state_id == state_id
             else:
-                try:
+                if not isinstance(state, ExecutionState) and state_id in state.states:
                     state = state.states[state_id]
-                except KeyError:
-                    logger.warning("Invalid path '{0}' for state machine '{1}'".format(path, self))
+                else:
+                    note = ''
+                    if isinstance(state, ExecutionState):
+                        note = ", hierarchy-level ends at ExecutionState '{0}'".format(prev_state_id)
+                    if not as_check:
+                        logger.warning("Invalid path '{0}' for state machine '{1}'{2}".format(path,
+                                                                                              self.state_machine_id,
+                                                                                              note))
                     return None
+            prev_state_id = state_id
         return state
 
     @Observable.observed

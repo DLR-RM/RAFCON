@@ -17,6 +17,7 @@ import testing_utils
 
 with_print = False
 
+
 class NotificationLogObserver(Observer):
     """ This observer is a abstract class to counts and store notification
     """
@@ -1017,6 +1018,7 @@ def test_add_remove_models(caplog):
 def test_state_property_modifications_history(caplog):
     ##################
     # state properties
+    # TODO the LibraryStateModel and StateModel has to be checked separately like mentioned in the notification-test
 
     # change name
 

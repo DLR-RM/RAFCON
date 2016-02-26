@@ -964,10 +964,13 @@ class RemoveObjectAction(Action):
         # get new object from respective list and create identifier
         object_type_name = overview['method_name'][-1].replace('remove_', '')
         list_name = object_type_name + 's'
-        if len(overview['args'][-1]) < 2:
+        if object_type_name + '_id' in overview['kwargs'][-1]:
             object_id = overview['kwargs'][-1][object_type_name + '_id']
         else:
-            object_id = overview['args'][-1][1]
+            if len(overview['args'][-1]) < 2:
+                logger.error("Length of args-tuple is shorter as assumed.")
+            else:
+                object_id = overview['args'][-1][1]
         new_object = getattr(overview['args'][-1][0], list_name)[object_id]
         self.removed_object_identifier = CoreObjectIdentifier(new_object)
         # logger.info("removed_object with identifier {0}".format(self.removed_object_identifier))
@@ -1315,8 +1318,21 @@ class StateAction(Action):
                              'name', 'description', 'script', 'script_text',  # State
                              'outcomes', 'input_data_ports', 'output_data_ports',  # State
                              'states', 'scoped_variables', 'data_flows', 'transitions', 'start_state_id',  # ContainerState
-                             'change_state_type']
-    possible_args = ['name', 'description', 'script_text', 'start_state_id']  # ContainerState
+                             'change_state_type',
+                             'add_input_data_port', 'remove_input_data_port',  # LibraryState
+                             'add_output_data_port', 'remove_output_data_port',
+                             'set_input_runtime_value', 'set_output_runtime_value',
+                             'set_use_input_runtime_value', 'set_use_output_runtime_value']
+    possible_args = ['name', 'description', 'script_text', 'start_state_id',  # ContainerState
+                     'library_name', 'library_path', 'version', 'state_copy',  # LibraryState
+                     'input_data_port_runtime_values', 'output_data_port_runtime_values',
+                     'use_runtime_value_input_data_ports', 'use_runtime_value_output_data_ports',
+                     'set_input_runtime_value', 'set_output_runtime_value',
+                     'set_use_input_runtime_value', 'set_use_output_runtime_value']
+    substitute_dict = {'set_input_runtime_value': 'input_data_port_runtime_values',
+                       'set_output_runtime_value': 'output_data_port_runtime_values',
+                       'set_use_input_runtime_value': 'use_runtime_value_input_data_ports',
+                       'set_use_output_runtime_value': 'use_runtime_value_output_data_ports'}
 
     def __init__(self, parent_path, state_machine_model, overview):
         """ method_name: 'parent' is ignored
@@ -1344,6 +1360,14 @@ class StateAction(Action):
     def get_set_of_arguments(s):
         if isinstance(s, ContainerState):
             return {'name': s.name, 'description': s.description, 'state_id': s.state_id, 'start_state_id': s.start_state_id}
+        elif isinstance(s, LibraryState):
+            return {'name': s.name, 'description': s.description, 'state_id': s.state_id,
+                    'library_name': s.library_name, 'library_path': s.library_path, 'version': s.version, # LibraryState
+                    'state_copy': s.state_copy,
+                    'input_data_port_runtime_values': copy.deepcopy(s.input_data_port_runtime_values),
+                    'output_data_port_runtime_values': copy.deepcopy(s.output_data_port_runtime_values),
+                    'use_runtime_value_input_data_ports': copy.deepcopy(s.use_runtime_value_input_data_ports),
+                    'use_runtime_value_output_data_ports': copy.deepcopy(s.use_runtime_value_output_data_ports)}
         else:
             return {'name': s.name, 'description': s.description, 'script_text': s.script_text, 'state_id': s.state_id}
 
@@ -1358,6 +1382,9 @@ class StateAction(Action):
             Action.undo(self)
         elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type']:
             Action.undo(self)
+        elif self.action_type in ['add_input_data_port', 'remove_input_data_port',  # LibraryState
+                                  'add_output_data_port', 'remove_output_data_port']:
+            logger.warning('undoing {0} for a LibraryState is not implemented'.format(self.action_type))
         elif self.action_type in self.possible_args:
             s = self.state_machine.get_state_by_path(self.parent_path)
             self.set_attr_to_version(s, self.before_arguments)
@@ -1369,6 +1396,9 @@ class StateAction(Action):
             Action.redo(self)
         elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type']:
             Action.redo(self)
+        elif self.action_type in ['add_input_data_port', 'remove_input_data_port',  # LibraryState
+                                  'add_output_data_port', 'remove_output_data_port']:
+            logger.warning('redoing {0} for a LibraryState is not implemented'.format(self.action_type))
         elif self.action_type in self.possible_args:
             s = self.state_machine.get_state_by_path(self.parent_path)
             self.set_attr_to_version(s, self.after_arguments)
@@ -1377,7 +1407,8 @@ class StateAction(Action):
 
     def set_attr_to_version(self, s, arguments):
         if self.action_type in self.possible_args:
-            exec "s.{0} = arguments['{0}']".format(self.action_type)
+            exec "s.{0} = copy.deepcopy(arguments['{0}'])".format(self.substitute_dict.get(self.action_type,
+                                                                                           self.action_type))
         else:
             assert False
 
