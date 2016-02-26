@@ -6,7 +6,8 @@ from rafcon.mvc.controllers.state_editor import StateEditorController
 from rafcon.mvc.views.state_editor import StateEditorView
 
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-from rafcon.mvc.models.container_state import StateModel, ContainerStateModel
+from rafcon.mvc.models.container_state import ContainerStateModel
+from rafcon.mvc.models.abstract_state import AbstractStateModel
 
 from rafcon.mvc.selection import Selection
 from rafcon.mvc.config import global_gui_config
@@ -526,7 +527,7 @@ class StatesEditorController(ExtendedController):
         """Checks whether the name of s state was changed and changes the tab label accordingly
         """
         overview = NotificationOverview(info)
-        if isinstance(overview['model'][-1], StateModel) and overview['method_name'][-1] in ['name', 'script_text']:
+        if isinstance(overview['model'][-1], AbstractStateModel) and overview['method_name'][-1] in ['name', 'script_text']:
             self.update_tab_label(overview['model'][-1])
 
     def update_tab_label(self, state_m):

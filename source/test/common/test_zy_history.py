@@ -700,6 +700,7 @@ def test_add_remove_history(caplog):
 def test_state_property_modifications_history(caplog):
     ##################
     # state properties
+    # TODO LibraryState test for properties like mentioned in the notification-test but also general for add and remove
 
     # change name
 
@@ -1936,4 +1937,4 @@ if __name__ == '__main__':
     #
     # test_type_modifications_without_gui(None)
     # test_state_machine_modifications_with_gui(True, None)
-    pytest.main([__file__])
+    pytest.main(['-s', __file__])

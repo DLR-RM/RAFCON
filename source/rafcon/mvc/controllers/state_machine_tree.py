@@ -100,7 +100,12 @@ class StateMachineTreeController(ExtendedController):
                                                     "add_outcome", "remove_outcome",
                                                     "add_data_flow", "remove_data_flow",
                                                     "add_transition", "remove_transition", "parent",
-                                                    "state_execution_status", "script_text"]:
+                                                    "state_execution_status", "script_text",  # ContainerState
+                                                    'library_name', 'library_path', 'version', 'state_copy',  # LibraryState
+                                                    'input_data_port_runtime_values', 'output_data_port_runtime_values',
+                                                    'use_runtime_value_input_data_ports', 'use_runtime_value_output_data_ports',
+                                                    'set_input_runtime_value', 'set_output_runtime_value',
+                                                    'set_use_input_runtime_value', 'set_use_output_runtime_value']:
                 return
             else:
                 logger.error(overview)

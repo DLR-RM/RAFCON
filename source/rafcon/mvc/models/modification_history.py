@@ -29,6 +29,7 @@ from rafcon.statemachine.state_machine import StateMachine
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 
 from rafcon.mvc.models.container_state import StateModel
+from rafcon.mvc.models.abstract_state import AbstractStateModel
 
 
 from rafcon.mvc.action import ActionDummy, Action, StateMachineAction, StateAction, DataPortAction, \
@@ -398,7 +399,7 @@ class ModificationsHistoryModel(ModelMT):
             self.actual_action.after_storage = self.actual_action.get_storage()
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
         else:
-            if isinstance(overview['model'][0], StateModel):
+            if isinstance(overview['model'][0], AbstractStateModel):
                 changed_parent_model = overview['model'][0]
             else:
                 changed_parent_model = overview['model'][0].parent
@@ -414,31 +415,7 @@ class ModificationsHistoryModel(ModelMT):
         pass
 
     def manual_changed_notify_after(self, change_type, changed_parent_model, changed_model, recursive_changes):
-        """
-        :param changed_parent_model rafcon.mvc.models.container_state.ContainerStateModel: model that holds the changed model
-        :param changed_model gtkmvc.Model: inherent class of gtkmvc.Model like TransitionModel, StateModel and so on
-        :param recursive_changes bool: indicates if the changes are recursive and touch multiple or all recursive childs
-        :return:
-        """
-        if change_type == 'gui_meta_data_changed' and self.with_meta_data_actions:
-            # store meta data
-
-            from rafcon.mvc.models.state import StateModel
-            from rafcon.mvc.models.container_state import ContainerState
-
-            if isinstance(changed_model, StateModel) or isinstance(changed_model, ContainerState):
-                logger.debug("state %s '%s' history got notification that Meta data has changed" %
-                             (changed_model.state.state_id, changed_model.state.name))
-                # -> in case of undo/redo overwrite Model.meta-dict
-
-                # self.actual_action = Action('meta_data_changed', changed_parent_model.state.get_path(),  # instance path of parent
-                #                             changed_model, 'meta_data_changed', {},
-                #                             state_machine_model=self.state_machine_model)
-                # b_tuple = self.actual_action.before_storage
-                # meta_dict = self.get_state_element_meta_from_tmp_storage(changed_model.state.get_path())
-                # mod_tuple = (b_tuple[0], b_tuple[1], b_tuple[2], meta_dict, b_tuple[4], b_tuple[5])
-                # self.actual_action.before_storage = mod_tuple
-                # self.finish_new_action(changed_model, 'meta_data_changed', {})
+        pass
 
     @ModelMT.observe("state_machine", before=True)
     def assign_notification_change_type_root_state_before(self, model, prop_name, info):
@@ -515,9 +492,10 @@ class ModificationsHistoryModel(ModelMT):
 
             overview = NotificationOverview(info, with_prints=self.with_prints)
             # skipped state modifications
-            if (overview['method_name'][0] == 'state_change' and overview['method_name'][-1] in ['active',
-                                                                                                 'child_execution',
-                                                                                                 'state_execution_status']) or \
+            if (overview['method_name'][0] == 'state_change' and
+                        overview['method_name'][-1] in ['active',
+                                                        'child_execution',
+                                                        'state_execution_status']) or \
                     not overview['method_name'][0] == 'state_change' or \
                     overview['method_name'][-1] == 'parent':
                 return

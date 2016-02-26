@@ -165,10 +165,16 @@ class DataPortListController(ExtendedController):
     @ExtendedController.observe("state", after=True)
     def runtime_values_changed(self, model, prop_name, info):
         # handles cases for the library runtime values
-        if "_input_runtime_value" in info.method_name and self.model is model:
+        if ("_input_runtime_value" in info.method_name or
+                info.method_name in ['use_runtime_value_input_data_ports',
+                                     'input_data_port_runtime_values']) and \
+                self.model is model:
             if self.type == "input":
                 self.input_data_ports_changed(model, prop_name, info)
-        elif "_output_runtime_value" in info.method_name and self.model is model:
+        elif ("_output_runtime_value" in info.method_name or
+                info.method_name in ['use_runtime_value_output_data_ports',
+                                     'output_data_port_runtime_values']) and \
+                self.model is model:
             if self.type == "output":
                 self.output_data_ports_changed(model, prop_name, info)
 
@@ -272,7 +278,7 @@ class DataPortListController(ExtendedController):
     def on_default_value_changed(self, widget, column_id, text):
         """Try to set the port default value to the newly entered one
         """
-        logger.info("on_default_value_changed widget: {0} path: {1} text: {2}".format(widget, column_id, text))
+        # logger.info("on_default_value_changed widget: {0} path: {1} text: {2}".format(widget, column_id, text))
         try:
             data_port_id = self.get_data_port_id_from_selection()
             if isinstance(self.model.state, LibraryState):
