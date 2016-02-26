@@ -1,16 +1,28 @@
 import gtk
 from gtk import Container, Button
 from rafcon.mvc.utils import constants
+from rafcon.mvc.config import global_gui_config
 
 
 def create_tab_header_label(tab_name, icons):
+    """Create the tab header labels for notebook tabs. If USE_ICONS_AS_TAB_LABELS is set to True in the gui_config,
+    icons are used as headers. Otherwise, the titles of the tabs are rotated by 90 degrees.
+
+    :param tab_name: The label text of the tab, written in small letters and seperated by underscores, e.g. state_tree
+    :param icons: A dict mapping each tab_name to its corresponding icon
+    :return: The GTK Eventbox holding the tab label
+    """
     tooltip_event_box = gtk.EventBox()
     tooltip_event_box.set_tooltip_text(tab_name)
     tab_label = gtk.Label()
-    tab_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
-                         (constants.ICON_FONT,
-                          constants.FONT_SIZE_BIG,
-                          icons[tab_name]))
+    if global_gui_config.get_config_value('USE_ICONS_AS_TAB_LABELS', True):
+        tab_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
+                            (constants.ICON_FONT,
+                            constants.FONT_SIZE_BIG,
+                            icons[tab_name]))
+    else:
+        tab_label.set_text(get_widget_title(tab_name))
+        tab_label.set_angle(90)
     tab_label.show()
     tooltip_event_box.add(tab_label)
     tooltip_event_box.set_visible_window(False)
@@ -52,15 +64,15 @@ def set_button_children_size_request(widget):
         return
 
 
-def get_widget_title(tab_label):
+def get_widget_title(tab_label_text):
     """Transform Notebook tab label to title by replacing underscores with white spaces and capitalizing the first
     letter of each word.
 
-    :param tab_label: The string of the tab label to be transformed
+    :param tab_label_text: The string of the tab label to be transformed
     :return: The transformed title as a string
     """
     title = ''
-    title_list = tab_label.split('_')
+    title_list = tab_label_text.split('_')
     for word in title_list:
         title += word.upper() + ' '
     title.strip()
