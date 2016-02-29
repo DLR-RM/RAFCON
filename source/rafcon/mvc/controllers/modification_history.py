@@ -184,7 +184,7 @@ class ModificationHistoryTreeController(ExtendedController):
             # request focus -> which has not have to be satisfied
             self.parent.focus_notebook_page_of_controller(self)
 
-        if self._selected_sm_model.history.fake or \
+        if self._selected_sm_model is None or self._selected_sm_model.history.fake or \
                 info is not None and info.method_name not in ["insert_action", "undo", "redo", "reset"]:
             return
 

@@ -419,7 +419,7 @@ class ModificationsHistoryModel(ModelMT):
 
     @ModelMT.observe("state_machine", before=True)
     def assign_notification_change_type_root_state_before(self, model, prop_name, info):
-        if info.method_name != "root_state_before_change":
+        if info.method_name != "root_state_change":
             return
         if self.busy:  # if proceeding undo or redo
             return
@@ -441,7 +441,7 @@ class ModificationsHistoryModel(ModelMT):
 
     @ModelMT.observe("state_machine", after=True)
     def assign_notification_change_type_root_state_after(self, model, prop_name, info):
-        if info.method_name != "root_state_after_change":
+        if info.method_name != "root_state_change":
             return
         if info.result == "CRASH in FUNCTION" or isinstance(info.result, Exception):
             if self.with_prints:
