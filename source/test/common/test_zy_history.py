@@ -1455,21 +1455,17 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
 def trigger_state_type_change_tests(*args):
     print "Wait for the gui to initialize"
     with_gui = bool(args[4])
-    if with_gui:
-        time.sleep(1.0)
+    # if with_gui:
+    #     time.sleep(1.0)
     sm_manager_model = args[0]
     main_window_controller = args[1]
     sm_m = args[2]
     state_dict = args[3]
     logger = args[5]
 
-    sleep_time_short = 3
     sleep_time_max = 5  # 0.5
 
     check_elements_ignores.append("internal_transitions")
-
-    if with_gui:
-        time.sleep(sleep_time_short)
 
     # General Type Change inside of a state machine (NO ROOT STATE) ############
     state_of_type_change = 'State3'
