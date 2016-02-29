@@ -2016,7 +2016,7 @@ def trigger_state_type_change_typical_bug_tests(*args):
     current_sm_length = len(sm_manager_model.state_machines)
     # print "1:", sm_manager_model.state_machines.keys()
     logger.debug('number of sm is : {0}'.format(sm_manager_model.state_machines.keys()))
-    root_state = HierarchyState("new root state")
+    root_state = HierarchyState("new root state", state_id="ROOT")
     state_machine = StateMachine(root_state)
 
     state_machine_path = TEST_PATH + '_state_type_change_bug_tests'
@@ -2052,10 +2052,11 @@ def trigger_state_type_change_typical_bug_tests(*args):
         h_state1.add_state(ex_state1)
     ex_state2 = ExecutionState(state_id='EXSTATE2')
     if with_gui:
-        call_gui_callback(h_state2.add_state,ex_state2)
+        call_gui_callback(h_state2.add_state, ex_state2)
     else:
         h_state2.add_state(ex_state2)
 
+    logger.info("DO_TYPE_CHANGE")
     if with_gui:
         call_gui_callback(sm_m.state_machine.root_state.change_state_type, h_state1, ExecutionState)
     else:
@@ -2073,13 +2074,18 @@ def trigger_state_type_change_typical_bug_tests(*args):
         call_gui_callback(sm_m.history.redo)
     else:
         sm_m.history.redo()
-    save_state_machine(sm_m, state_machine_path + '_before1', logger, with_gui, menubar_ctrl)
     logger.info("REDO finished")
 
+    # remove all state-machines
+    for state_machine_id in sm_manager_model.state_machine_manager.state_machines.keys():
+        if with_gui:
+            call_gui_callback(sm_manager_model.state_machine_manager.remove_state_machine, state_machine_id)
+        else:
+            sm_manager_model.state_machine_manager.remove_state_machine(state_machine_id)
 
     if with_gui:
-        # menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        save_and_quit(sm_m, TEST_PATH + '_state_type_change_bug_tests', menubar_ctrl, with_gui)
+        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+        call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
     check_elements_ignores.remove("internal_transitions")
     print check_elements_ignores
@@ -2100,4 +2106,4 @@ if __name__ == '__main__':
     # test_state_machine_modifications_with_gui(True, None)
     # test_state_type_change_bugs_with_gui(False, None)
     # test_state_type_change_bugs_with_gui(True, None)
-    # pytest.main([__file__])
+    pytest.main([__file__])

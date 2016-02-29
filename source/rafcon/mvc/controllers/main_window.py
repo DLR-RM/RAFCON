@@ -93,10 +93,11 @@ class MainWindowController(ExtendedController):
                                                     self.shortcut_manager)
         self.add_controller('state_icon_controller', state_icon_controller)
 
+        # state machine tree
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
 
-        # state editor
+        # states editor
         states_editor_ctrl = StatesEditorController(state_machine_manager_model, view.states_editor, editor_type)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
 

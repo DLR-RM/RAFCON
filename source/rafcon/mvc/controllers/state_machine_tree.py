@@ -176,7 +176,7 @@ class StateMachineTreeController(ExtendedController):
             return
 
         # define initial state-model for update
-        if not changed_state_model:
+        if changed_state_model is None:
             # reset all
             parent_row_iter = None
             self.state_row_iter_dict_by_state_path.clear()
@@ -238,10 +238,19 @@ class StateMachineTreeController(ExtendedController):
         for n in reversed(range(self.tree_store.iter_n_children(state_row_iter))):
             child_iter = self.tree_store.iter_nth_child(state_row_iter, n)
             # check if there are left over rows of old states (switch from HS or CS to S and so on)
-            if not type(state_model) is ContainerStateModel or not self.tree_store.get_value(child_iter,
-                                                                                             1) in state_model.states:
+            if not type(state_model) is ContainerStateModel or \
+                    not self.tree_store.get_value(child_iter, 1) in state_model.states:
+                self.remove_tree_childs(child_iter)
                 del self.state_row_iter_dict_by_state_path[self.tree_store.get_value(child_iter, 4)]
                 self.tree_store.remove(child_iter)
+
+    def remove_tree_childs(self, child_tree_iter):
+        for n in reversed(range(self.tree_store.iter_n_children(child_tree_iter))):
+            child_iter = self.tree_store.iter_nth_child(child_tree_iter, n)
+            if self.tree_store.iter_n_children(child_iter):
+                self.remove_tree_childs(child_iter)
+            del self.state_row_iter_dict_by_state_path[self.tree_store.get_value(child_iter, 4)]
+            # self.tree_store.remove(child_iter)
 
     def on_cursor_changed(self, widget):
         (model, row) = self.view.get_selection().get_selected()
