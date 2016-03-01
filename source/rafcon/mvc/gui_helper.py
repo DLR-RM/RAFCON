@@ -1,7 +1,9 @@
 import gtk
 from gtk import Container, Button
+
 from rafcon.mvc.utils import constants
 from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
 
 
 def create_tab_header_label(tab_name, icons):
@@ -112,3 +114,23 @@ def set_notebook_title(notebook, page_num, title_label):
     title = get_notebook_tab_title(notebook, page_num)
     title_label.set_text(title)
     return title
+
+
+def set_window_size_and_position(window, window_key):
+    """Adjust GTK Window's size and position according to the corresponding values in the runtime config file.
+
+    :param window: The GTK Window to be adjusted
+    :param window_key: The window's key stored in the runtime config file
+     """
+    size = global_runtime_config.get_config_value(window_key+'_SIZE')
+    position = global_runtime_config.get_config_value(window_key+'_POS')
+    if size:
+        window.resize(size[0], size[1])
+    if position:
+        position = (max(0, position[0]), max(0, position[1]))
+        screen_width = gtk.gdk.screen_width()
+        screen_height = gtk.gdk.screen_height()
+        if position[0] < screen_width and position[1] < screen_height:
+            window.move(position[0], position[1])
+    else:
+        window.set_position(gtk.WIN_POS_MOUSE)

@@ -251,7 +251,7 @@ class MainWindowController(ExtendedController):
         self.view['step_buttons'].hide()
 
         # Initializing Main Window Size & Position
-        self.set_window_size_and_position(view.get_top_widget(), 'MAIN_WINDOW')
+        gui_helper.set_window_size_and_position(view.get_top_widget(), 'MAIN_WINDOW')
 
         # Initializing Pane positions
         self.set_pane_position('RIGHT_BAR_DOCKED_POS', 'right_h_pane', default_pos=1000)
@@ -268,25 +268,6 @@ class MainWindowController(ExtendedController):
         """
         position = global_runtime_config.get_config_value(config_id)
         self.view[pane].set_position(position) if position else self.view[pane].set_position(default_pos)
-
-    def set_window_size_and_position(self, window, window_key):
-        """Adjust window's size and position according to the corresponding values in the runtime config file.
-
-        :param window: The GTK Window to be adjusted
-        :param window_key: The window's key stored in the runtime config file
-        """
-        size = global_runtime_config.get_config_value(window_key+'_SIZE')
-        position = global_runtime_config.get_config_value(window_key+'_POS')
-        if size:
-            window.resize(size[0], size[1])
-        if position:
-            position = (max(0, position[0]), max(0, position[1]))
-            screen_width = gtk.gdk.screen_width()
-            screen_height = gtk.gdk.screen_height()
-            if position[0] < screen_width and position[1] < screen_height:
-                window.move(position[0], position[1])
-        else:
-            window.set_position(gtk.WIN_POS_MOUSE)
 
     def highlight_execution_of_current_sm(self, active):
         if self.get_controller('state_machines_editor_ctrl').view is None:
@@ -396,7 +377,7 @@ class MainWindowController(ExtendedController):
         the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons visible in the new
         window. The new window's size and position are loaded from runtime_config, if they exist.
         """
-        self.set_window_size_and_position(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
+        gui_helper.set_window_size_and_position(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
         self.view['left_bar'].reparent(self.view.left_bar_window['central_eventbox'])
         self.get_controller('left_window_controller').show_window()
         self.view['undock_left_bar_button'].hide()
@@ -426,7 +407,7 @@ class MainWindowController(ExtendedController):
         the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons visible in the new
         window. The new window's size and position are loaded from runtime_config, if they exist.
         """
-        self.set_window_size_and_position(self.view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
+        gui_helper.set_window_size_and_position(self.view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
         self.view['right_bar'].reparent(self.view.right_bar_window['central_eventbox'])
         self.get_controller('right_window_controller').show_window()
         self.view['undock_right_bar_button'].hide()
@@ -456,7 +437,7 @@ class MainWindowController(ExtendedController):
         in the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons visible in the
         new window. The new window's size and position are loaded from runtime_config, if they exist.
         """
-        self.set_window_size_and_position(self.view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
+        gui_helper.set_window_size_and_position(self.view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
         self.view['console'].reparent(self.view.console_window['central_eventbox'])
         self.get_controller('console_window_controller').show_window()
         self.view['undock_console_button'].hide()
