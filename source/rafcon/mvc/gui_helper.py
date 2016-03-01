@@ -1,16 +1,30 @@
 import gtk
 from gtk import Container, Button
+
 from rafcon.mvc.utils import constants
+from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
 
 
 def create_tab_header_label(tab_name, icons):
+    """Create the tab header labels for notebook tabs. If USE_ICONS_AS_TAB_LABELS is set to True in the gui_config,
+    icons are used as headers. Otherwise, the titles of the tabs are rotated by 90 degrees.
+
+    :param tab_name: The label text of the tab, written in small letters and seperated by underscores, e.g. state_tree
+    :param icons: A dict mapping each tab_name to its corresponding icon
+    :return: The GTK Eventbox holding the tab label
+    """
     tooltip_event_box = gtk.EventBox()
     tooltip_event_box.set_tooltip_text(tab_name)
     tab_label = gtk.Label()
-    tab_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
-                         (constants.ICON_FONT,
-                          constants.FONT_SIZE_BIG,
-                          icons[tab_name]))
+    if global_gui_config.get_config_value('USE_ICONS_AS_TAB_LABELS', True):
+        tab_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
+                            (constants.ICON_FONT,
+                            constants.FONT_SIZE_BIG,
+                            icons[tab_name]))
+    else:
+        tab_label.set_text(get_widget_title(tab_name))
+        tab_label.set_angle(90)
     tab_label.show()
     tooltip_event_box.add(tab_label)
     tooltip_event_box.set_visible_window(False)
@@ -52,15 +66,15 @@ def set_button_children_size_request(widget):
         return
 
 
-def get_widget_title(tab_label):
+def get_widget_title(tab_label_text):
     """Transform Notebook tab label to title by replacing underscores with white spaces and capitalizing the first
     letter of each word.
 
-    :param tab_label: The string of the tab label to be transformed
+    :param tab_label_text: The string of the tab label to be transformed
     :return: The transformed title as a string
     """
     title = ''
-    title_list = tab_label.split('_')
+    title_list = tab_label_text.split('_')
     for word in title_list:
         title += word.upper() + ' '
     title.strip()
@@ -100,3 +114,23 @@ def set_notebook_title(notebook, page_num, title_label):
     title = get_notebook_tab_title(notebook, page_num)
     title_label.set_text(title)
     return title
+
+
+def set_window_size_and_position(window, window_key):
+    """Adjust GTK Window's size and position according to the corresponding values in the runtime config file.
+
+    :param window: The GTK Window to be adjusted
+    :param window_key: The window's key stored in the runtime config file
+     """
+    size = global_runtime_config.get_config_value(window_key+'_SIZE')
+    position = global_runtime_config.get_config_value(window_key+'_POS')
+    if size:
+        window.resize(size[0], size[1])
+    if position:
+        position = (max(0, position[0]), max(0, position[1]))
+        screen_width = gtk.gdk.screen_width()
+        screen_height = gtk.gdk.screen_height()
+        if position[0] < screen_width and position[1] < screen_height:
+            window.move(position[0], position[1])
+    else:
+        window.set_position(gtk.WIN_POS_MOUSE)
