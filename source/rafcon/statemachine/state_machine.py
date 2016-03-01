@@ -135,15 +135,6 @@ class StateMachine(Observable):
             prev_state_id = state_id
         return state
 
-    @Observable.observed
-    def root_state_before_change(self, **kwargs):
-        pass
-
-    @Observable.observed
-    def root_state_after_change(self, **kwargs):
-        #def root_state_after_change(self, model, prop_name, instance, method_name, result, args, kwargs):
-        pass
-
     @property
     def file_system_path(self):
         """Property for the _file_system_path field

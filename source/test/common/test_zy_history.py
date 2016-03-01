@@ -1368,7 +1368,7 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     rafcon.statemachine.singleton.library_manager.initialize()
 
     if testing_utils.sm_manager_model is None:
-            testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     print "initialize MainWindow"
     main_window_view = MainWindowView()
@@ -1399,25 +1399,73 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
+@pytest.mark.parametrize("with_gui", [True])
+def test_state_type_change_bugs_with_gui(with_gui, caplog):
+
+    print "NEW BUG TEST"
+    test_multithrading_lock.acquire()
+    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    os.chdir(rafcon.__path__[0] + "/mvc")
+    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
+    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
+    global_config.load()  # load the default config
+    global_gui_config.load()  # load the default config
+    time.sleep(1)
+    print "create model"
+    [logger, state, sm_m, state_dict] = create_models()
+    print "init libs"
+    testing_utils.remove_all_libraries()
+    rafcon.statemachine.singleton.library_manager.initialize()
+
+    if testing_utils.sm_manager_model is None:
+        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+
+    # load the meta data for the state machine
+    if with_gui:
+        print "initialize MainWindow"
+        main_window_view = MainWindowView()
+
+        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
+                                                      editor_type='LogicDataGrouped')
+
+        print "start thread"
+        thread = threading.Thread(target=trigger_state_type_change_typical_bug_tests,
+                                  args=[testing_utils.sm_manager_model, main_window_controller,
+                                        sm_m, state_dict, with_gui, logger])
+        thread.start()
+
+        if with_gui:
+            gtk.main()
+            logger.debug("Gtk main loop exited!")
+            test_multithrading_lock.release()
+
+        os.chdir(rafcon.__path__[0] + "/../test/common")
+        thread.join()
+    else:
+        testing_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
+        print "start thread"
+        trigger_state_type_change_typical_bug_tests(testing_utils.sm_manager_model, None, sm_m, state_dict, with_gui, logger)
+        os.chdir(rafcon.__path__[0] + "/../test")
+
+    testing_utils.reload_config()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
+
+
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(*args):
     print "Wait for the gui to initialize"
     with_gui = bool(args[4])
-    if with_gui:
-        time.sleep(1.0)
+    # if with_gui:
+    #     time.sleep(1.0)
     sm_manager_model = args[0]
     main_window_controller = args[1]
     sm_m = args[2]
     state_dict = args[3]
     logger = args[5]
 
-    sleep_time_short = 3
     sleep_time_max = 5  # 0.5
 
     check_elements_ignores.append("internal_transitions")
-
-    if with_gui:
-        time.sleep(sleep_time_short)
 
     # General Type Change inside of a state machine (NO ROOT STATE) ############
     state_of_type_change = 'State3'
@@ -1922,6 +1970,121 @@ def trigger_state_type_change_tests(*args):
     check_elements_ignores.remove("internal_transitions")
     print check_elements_ignores
 
+@log.log_exceptions(None, gtk_quit=True)
+def trigger_state_type_change_typical_bug_tests(*args):
+    print "Wait for the gui to initialize"
+    with_gui = bool(args[4])
+    if with_gui:
+        time.sleep(1.0)
+    sm_manager_model = args[0]
+    main_window_controller = args[1]
+    sm_m = args[2]
+    state_dict = args[3]
+    logger = args[5]
+
+    check_elements_ignores.append("internal_transitions")
+
+    # General Type Change inside of a state machine (NO ROOT STATE) ############
+    state_of_type_change = 'State3'
+    parent_of_type_change = 'Container'
+
+    # do state_type_change with gui
+    # - find state machine id
+    my_sm_id = None
+    for sm_id, state_machine in sm_manager_model.state_machine_manager.state_machines.iteritems():
+        if state_machine is sm_m.state_machine:
+            my_sm_id = sm_id
+    assert my_sm_id is not None
+
+    sm_model = sm_m  # sm_manager_model.state_machines[my_sm_id]
+    sm_model.history.modifications.reset()
+
+    state_parent_m = sm_m.get_state_model_by_path(state_dict[parent_of_type_change].get_path())
+    state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
+    print "\n\n %s \n\n" % state_m.state.name
+    # call_gui_callback(sm_m.selection.set, [state_m])
+    sm_m.selection.set([state_m])
+
+    state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
+
+    current_sm_length = len(sm_manager_model.state_machines)
+    # print "1:", sm_manager_model.state_machines.keys()
+    logger.debug('number of sm is : {0}'.format(sm_manager_model.state_machines.keys()))
+    root_state = HierarchyState("new root state", state_id="ROOT")
+    state_machine = StateMachine(root_state)
+
+    state_machine_path = TEST_PATH + '_state_type_change_bug_tests'
+    if with_gui:
+        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+        # call_gui_callback(menubar_ctrl.on_new_activate, None)
+        call_gui_callback(sm_manager_model.state_machine_manager.add_state_machine, state_machine)
+        sm_manager_model.state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
+    else:
+        menubar_ctrl = None
+        logger.debug("Creating new state-machine...")
+        sm_manager_model.state_machine_manager.add_state_machine(state_machine)
+        sm_manager_model.state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
+
+    logger.debug('number of sm is : {0}'.format(sm_manager_model.state_machines.keys()))
+    assert len(sm_manager_model.state_machines) == current_sm_length+1
+    sm_m = sm_manager_model.state_machines[sm_manager_model.state_machines.keys()[-1]]
+    save_state_machine(sm_m, state_machine_path + '_before1', logger, with_gui, menubar_ctrl)
+    h_state1 = HierarchyState(state_id='HSTATE1')
+    if with_gui:
+        call_gui_callback(sm_m.state_machine.root_state.add_state, h_state1)
+    else:
+        sm_m.state_machine.root_state.add_state(h_state1)
+    h_state2 = HierarchyState(state_id='HSTATE2')
+    if with_gui:
+        call_gui_callback(h_state1.add_state, h_state2)
+    else:
+        h_state1.add_state(h_state2)
+    ex_state1 = ExecutionState(state_id='EXSTATE1')
+    if with_gui:
+        call_gui_callback(h_state1.add_state, ex_state1)
+    else:
+        h_state1.add_state(ex_state1)
+    ex_state2 = ExecutionState(state_id='EXSTATE2')
+    if with_gui:
+        call_gui_callback(h_state2.add_state, ex_state2)
+    else:
+        h_state2.add_state(ex_state2)
+
+    logger.info("DO_TYPE_CHANGE")
+    if with_gui:
+        call_gui_callback(sm_m.state_machine.root_state.change_state_type, h_state1, ExecutionState)
+    else:
+        sm_m.state_machine.root_state.change_state_type(h_state1, ExecutionState)
+
+    logger.info("UNDO \n{0}".format(sm_m.history.modifications.single_trail_history()[-1].before_overview))
+    if with_gui:
+        call_gui_callback(sm_m.history.undo)
+    else:
+        sm_m.history.undo()
+    save_state_machine(sm_m, state_machine_path + '_before1', logger, with_gui, menubar_ctrl)
+    logger.info("UNDO finished")
+    logger.info("REDO")
+    if with_gui:
+        call_gui_callback(sm_m.history.redo)
+    else:
+        sm_m.history.redo()
+    logger.info("REDO finished")
+
+    # remove all state-machines
+    for state_machine_id in sm_manager_model.state_machine_manager.state_machines.keys():
+        if with_gui:
+            call_gui_callback(sm_manager_model.state_machine_manager.remove_state_machine, state_machine_id)
+        else:
+            sm_manager_model.state_machine_manager.remove_state_machine(state_machine_id)
+
+    if with_gui:
+        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+        call_gui_callback(menubar_ctrl.on_quit_activate, None)
+
+    check_elements_ignores.remove("internal_transitions")
+    print check_elements_ignores
 
 if __name__ == '__main__':
     # test_add_remove_history(None)
@@ -1937,4 +2100,6 @@ if __name__ == '__main__':
     #
     # test_type_modifications_without_gui(None)
     # test_state_machine_modifications_with_gui(True, None)
-    pytest.main(['-s', __file__])
+    # test_state_type_change_bugs_with_gui(False, None)
+    # test_state_type_change_bugs_with_gui(True, None)
+    pytest.main([__file__])

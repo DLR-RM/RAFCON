@@ -93,10 +93,11 @@ class MainWindowController(ExtendedController):
                                                     self.shortcut_manager)
         self.add_controller('state_icon_controller', state_icon_controller)
 
+        # state machine tree
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
 
-        # state editor
+        # states editor
         states_editor_ctrl = StatesEditorController(state_machine_manager_model, view.states_editor, editor_type)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
 
@@ -288,6 +289,9 @@ class MainWindowController(ExtendedController):
             window.set_position(gtk.WIN_POS_MOUSE)
 
     def highlight_execution_of_current_sm(self, active):
+        if self.get_controller('state_machines_editor_ctrl').view is None:
+            logger.warning("No state machines editor view")
+            return
         notebook = self.get_controller('state_machines_editor_ctrl').view['notebook']
         page_num = self.get_controller('state_machines_editor_ctrl').view['notebook'].get_current_page()
         page = self.get_controller('state_machines_editor_ctrl').view['notebook'].get_nth_page(page_num)

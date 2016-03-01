@@ -95,8 +95,6 @@ class StateMachineModel(ModelMT):
     @ModelMT.observe("input_data_ports", before=True)
     @ModelMT.observe("scoped_variables", before=True)
     def root_state_model_before_change(self, model, prop_name, info):
-        if info.method_name == 'change_root_state_type':  # Handled in method 'change_root_state_type'
-            return
         if not self._list_modified(prop_name, info):
             self.__send_root_state_notification(model, prop_name, info)
 
@@ -110,8 +108,6 @@ class StateMachineModel(ModelMT):
     @ModelMT.observe("output_data_ports", after=True)
     @ModelMT.observe("scoped_variables", after=True)
     def root_state_model_after_change(self, model, prop_name, info):
-        if info.method_name == 'change_root_state_type':  # Handled in method 'change_root_state_type'
-            return
         if not self._list_modified(prop_name, info):
             self.__send_root_state_notification(model, prop_name, info)
 
@@ -199,8 +195,6 @@ class StateMachineModel(ModelMT):
         # from the old state model
         else:  # after
             if isinstance(info.result, Exception):
-                # import traceback
-                # traceback.print_exc()
                 logger.error("Root state type change failed")
             else:
                 # The new state is returned by the core state class method 'change_state_type'
@@ -218,13 +212,8 @@ class StateMachineModel(ModelMT):
         self.__send_root_state_notification(model, prop_name, info)
 
     def __send_root_state_notification(self, model, prop_name, info):
+        cause = 'root_state_change'
         if hasattr(info, 'before') and info.before:
-            self.state_machine.root_state_before_change(before=True, model=info['model'], prop_name=info['prop_name'],
-                                                        instance=info['instance'],
-                                                        method_name=info['method_name'],
-                                                        args=info['args'], kwargs=info['kwargs'])
+            self.state_machine._notify_method_before(self.state_machine, cause, (self.state_machine, ), info)
         elif hasattr(info, 'after') and info.after:
-            self.state_machine.root_state_after_change(after=True, model=info['model'], prop_name=info['prop_name'],
-                                                       instance=info['instance'],
-                                                       method_name=info['method_name'], result=info['result'],
-                                                       args=info['args'], kwargs=info['kwargs'])
+            self.state_machine._notify_method_after(self.state_machine, cause, None, (self.state_machine, ), info)
