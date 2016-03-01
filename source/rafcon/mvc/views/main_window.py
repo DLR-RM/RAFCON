@@ -237,11 +237,8 @@ class MainWindowView(View):
             for i in range(notebook.get_n_pages()):
                 child = notebook.get_nth_page(i)
                 tab_label = notebook.get_tab_label(child)
-                if global_gui_config.get_config_value('USE_ICONS_AS_TAB_LABELS', True):
-                    tab_label_text = tab_label.get_text()
-                    notebook.set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, icons))
-                else:
-                    tab_label.set_angle(90)
+                tab_label_text = tab_label.get_text()
+                notebook.set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, icons))
                 notebook.set_tab_reorderable(child, True)
                 notebook.set_tab_detachable(child, True)
 
