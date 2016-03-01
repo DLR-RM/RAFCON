@@ -32,7 +32,8 @@ class ExecutionState(State):
                  path=None, filename=None, check_path=True):
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
-        self._script = Script(path, filename, check_path=check_path, state=self)
+        self._script = None
+        self.script = Script(path, filename, check_path=check_path, state=self)
         self.logger = log.get_logger(self.name)
         # here all persistent variables that should be available for the next state run should be stored
         self.persistent_variables = {}
@@ -125,13 +126,19 @@ class ExecutionState(State):
         State.name.fset(self, name)
         self.logger = log.get_logger(self.name)
 
-    # TODO - clean the interface -> miss use of script property to set the script file_name and other attributes may should be avoided
     @property
     def script(self):
-        """Property for the _script field
+        """Returns the property for the _script field.
 
         """
         return self._script
+
+    @script.setter
+    @Observable.observed
+    def script(self, script):
+        if script._state is not self:
+            raise AttributeError("The script of a ExecutionState has to reference the state it-self.")
+        self._script = script
 
     @property
     def script_text(self):
