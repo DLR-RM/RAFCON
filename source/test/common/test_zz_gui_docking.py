@@ -16,19 +16,22 @@ import testing_utils
 from testing_utils import call_gui_callback
 import pytest
 
+DOCKING_TEST_FOLDER = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/config_docking_test'
 
-def hide_runtime_config_file():
+
+def mirror_runtime_config_file():
     path = os.path.join(os.path.expanduser('~'), '.config', 'rafcon')
     runtime_config_file = os.path.join(path, 'runtime_config.yaml')
     if os.path.isfile(runtime_config_file):
-        os.mkdir(path + '/temp')
-        os.rename(runtime_config_file, os.path.join(path, 'temp', 'runtime_config.yaml'))
+        if not os.path.exists(DOCKING_TEST_FOLDER):
+            os.mkdir(DOCKING_TEST_FOLDER)
+        shutil.copyfile(runtime_config_file, testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/config_docking_test/runtime_config.yaml')
 
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_docking_signals(*args):
     print "Wait for the gui to initialize"
-    time.sleep(2)
+    # time.sleep(1.0)
     main_window_controller = args[0]
     menu_bar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
@@ -54,8 +57,8 @@ def test_docking(caplog):
     testing_utils.test_multithrading_lock.acquire()
     os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
-    hide_runtime_config_file()
-    global_runtime_config.load()
+    mirror_runtime_config_file()
+    global_runtime_config.load(config_file='runtime_config.yaml', path=DOCKING_TEST_FOLDER)
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
