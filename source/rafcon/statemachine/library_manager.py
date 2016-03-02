@@ -36,6 +36,7 @@ class LibraryManager(Observable):
         self._library_paths = {}
         logger.debug("Initializing Storage object ...")
         self.storage = StateMachineStorage("../")
+        self._replaced_libraries = {}
 
     def initialize(self):
         """
@@ -137,9 +138,28 @@ class LibraryManager(Observable):
         self._libraries = libraries
 
     def get_os_path_to_library(self, library_path, library_name):
-
+        """
+        This function retrieves the file system path of a library specified by a path and a name in the case that the
+        library does not exist any more at its original location. The user has to specify an alternative location.
+        :param library_path:  the path of the library, that must be relative to a library path given in the config.yaml
+        :param library_name: the name of the library
+        :return:
+        """
         path_list = library_path.split("/")
         target_lib_dict = self.libraries
+
+        original_path_and_name = library_path+library_name
+
+        if original_path_and_name in self._replaced_libraries:
+            new_path = self._replaced_libraries[original_path_and_name][0]
+            new_library_path = self._replaced_libraries[original_path_and_name][1]
+            logger.debug("The library with library path \"{0}\" and name \"{1}\" "
+                         "is automatically replaced by the library "
+                         "with file system path \"{2}\" and library path \"{3}\"".format(str(library_path),
+                                                                                 str(library_name),
+                                                                                 str(new_path),
+                                                                                 str(new_library_path)))
+            return new_path, new_library_path, library_name
 
         while True:  # until the library is found or the user aborts
 
@@ -190,4 +210,7 @@ class LibraryManager(Observable):
                 break
 
         path = target_lib_dict[library_name]
+        # save the replacement in order that for a future occurrence the correct path can be used, without asking
+        # the user for the correct path
+        self._replaced_libraries[original_path_and_name] = (path, library_path)
         return path, library_path, library_name
