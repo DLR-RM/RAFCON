@@ -18,6 +18,7 @@ from rafcon.mvc.models import GlobalVariableManagerModel
 import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
 from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.network.network_config import global_net_config
 from rafcon.statemachine.config import global_config
 
@@ -47,6 +48,7 @@ def run_sm():
     global_config.load(path=home_path)
     global_gui_config.load(path=home_path)
     global_net_config.load()
+    # global_runtime_config.load(path=home_path)
 
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     library_paths["unit_test_state_machines"] = join(join(dirname(rafcon.__path__[0]), 'test_scripts'), 'unit_test_state_machines')

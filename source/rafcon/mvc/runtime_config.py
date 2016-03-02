@@ -37,6 +37,11 @@ class RuntimeConfig(DefaultConfig):
         self.set_config_value('{0}_POS'.format(title), position)
         # screen = main_window.get_screen()
         # logger.debug("Main window screen:, {0}".format(screen))
+
+        # if the runtime_config was not loaded in some startup routine then load it explicitly (= create it)
+        if not self.config_file:
+            self.load()
+
         super(RuntimeConfig, self).save_configuration()
 
 
