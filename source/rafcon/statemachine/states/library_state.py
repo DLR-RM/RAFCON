@@ -132,6 +132,28 @@ class LibraryState(State):
         else:
             return State.add_outcome(self, name, outcome_id)
 
+    def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
+        """Overwrites the add_input_data_port method of the State class. Prevents user from adding a
+        output data port to the library state.
+
+        For further documentation, look at the State class.
+
+        """
+        if self.initialized:
+            logger.error("It is not allowed to add a input data port to a library state")
+        else:
+            return State.add_input_data_port(self, name, data_type, default_value, data_port_id)
+
+    def remove_input_data_port(self, data_port_id):
+        """
+        Overwrites the remove_input_data_prot method of the State class. Cleans up the runtime related data.
+        :param data_port_id: the id of the data port to be removed
+        :return:
+        """
+        del self._use_runtime_value_input_data_ports[data_port_id]
+        del self._input_data_port_runtime_values[data_port_id]
+        State.remove_input_data_port(data_port_id)
+
     def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
         """Overwrites the add_output_data_port method of the State class. Prevents user from adding a
         output data port to the library state.
@@ -144,17 +166,15 @@ class LibraryState(State):
         else:
             return State.add_output_data_port(self, name, data_type, default_value, data_port_id)
 
-    def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
-        """Overwrites the add_input_data_port method of the State class. Prevents user from adding a
-        output data port to the library state.
-
-        For further documentation, look at the State class.
-
+    def remove_output_data_port(self, data_port_id):
         """
-        if self.initialized:
-            logger.error("It is not allowed to add a input data port to a library state")
-        else:
-            return State.add_input_data_port(self, name, data_type, default_value, data_port_id)
+        Overwrites the remove_output_data_prot method of the State class. Cleans up the runtime related data.
+        :param data_port_id: the id of the data port to remove
+        :return:
+        """
+        del self._use_runtime_value_output_data_ports[data_port_id]
+        del self._output_data_port_runtime_values[data_port_id]
+        State.remove_output_data_port(data_port_id)
 
     def add_state(self, state):
         """Overwrites the add_state method of the ContainerState class. Prevents user from adding a state to the
@@ -197,33 +217,6 @@ class LibraryState(State):
     @Observable.observed
     def set_use_output_runtime_value(self, output_data_port_id, use_value):
         self._use_runtime_value_output_data_ports[output_data_port_id] = use_value
-
-    # overwrite data port function of State class, actually not necessary as the data ports cannot be changed
-    # from the library state, but have to be changed in the library-statemachine itself
-
-    @Observable.observed
-    def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
-        self._use_runtime_value_input_data_ports[data_port_id] = False
-        self._input_data_port_runtime_values[data_port_id] = default_value
-        return State.add_input_data_port(name, data_type, default_value, data_port_id)
-
-    @Observable.observed
-    def remove_input_data_port(self, data_port_id):
-        del self._use_runtime_value_input_data_ports[data_port_id]
-        del self._input_data_port_runtime_values[data_port_id]
-        State.remove_input_data_port(data_port_id)
-
-    @Observable.observed
-    def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
-        self._use_runtime_value_output_data_ports[data_port_id] = False
-        self._output_data_port_runtime_values[data_port_id] = default_value
-        State.add_output_data_port(name, data_type, default_value, data_port_id)
-
-    @Observable.observed
-    def remove_output_data_port(self, data_port_id):
-        del self._use_runtime_value_output_data_ports[data_port_id]
-        del self._output_data_port_runtime_values[data_port_id]
-        State.remove_output_data_port(data_port_id)
 
     @classmethod
     def from_dict(cls, dictionary):
