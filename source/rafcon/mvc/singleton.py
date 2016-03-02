@@ -43,6 +43,8 @@ def open_folder(query):
     return path
 
 
+# overwrite the open_folder_func of the interface: thus the user input is now retrieved from a dialog box and not
+# from raw input any more
 interface.open_folder_func = open_folder
 
 
@@ -70,7 +72,8 @@ def create_folder(query):
     global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
     return path
 
-
+# overwrite the create_folder_func of the interface: thus the user input is now retrieved from a dialog box and not
+# from raw input any more
 interface.create_folder_func = create_folder
 
 
@@ -83,7 +86,8 @@ def show_notice(query):
     dialog.run()
     dialog.destroy()
 
-
+# overwrite the show_notice_func of the interface: thus the user input is now retrieved from a dialog box and not
+# from raw input any more
 interface.show_notice_func = show_notice
 
 # This variable holds the global state machine manager model as long as only one StateMachineMangerModel is allowed
