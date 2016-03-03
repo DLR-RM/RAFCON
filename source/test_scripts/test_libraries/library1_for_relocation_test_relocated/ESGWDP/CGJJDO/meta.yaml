@@ -1,0 +1,12 @@
+!ExecutionState
+description: null
+input_data_ports: {}
+name: !!python/unicode 'write output'
+outcomes:
+    -2: !Outcome {name: !!python/unicode 'preempted', outcome_id: -2}
+    -1: !Outcome {name: !!python/unicode 'aborted', outcome_id: -1}
+    0: !Outcome {name: !!python/unicode 'success', outcome_id: 0}
+output_data_ports:
+    0: !OutputDataPort {data_port_id: 0, data_type: !!python/name:__builtin__.int '',
+        default_value: 0, name: !!python/unicode 'out'}
+state_id: !!python/unicode 'CGJJDO'
