@@ -377,7 +377,6 @@ class MainWindowController(ExtendedController):
         the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons visible in the new
         window. The new window's size and position are loaded from runtime_config, if they exist.
         """
-        self.get_controller('left_window_controller').show_window()
         gui_helper.set_window_size_and_position(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
         self.view['left_bar'].reparent(self.view.left_bar_window['central_eventbox'])
         self.view['undock_left_bar_button'].hide()
@@ -407,7 +406,6 @@ class MainWindowController(ExtendedController):
         the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons visible in the new
         window. The new window's size and position are loaded from runtime_config, if they exist.
         """
-        self.get_controller('right_window_controller').show_window()
         gui_helper.set_window_size_and_position(self.view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
         self.view['right_bar'].reparent(self.view.right_bar_window['central_eventbox'])
         self.view['undock_right_bar_button'].hide()
@@ -437,7 +435,6 @@ class MainWindowController(ExtendedController):
         in the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons visible in the
         new window. The new window's size and position are loaded from runtime_config, if they exist.
         """
-        self.get_controller('console_window_controller').show_window()
         gui_helper.set_window_size_and_position(self.view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
         self.view['console'].reparent(self.view.console_window['central_eventbox'])
         self.view['undock_console_button'].hide()
