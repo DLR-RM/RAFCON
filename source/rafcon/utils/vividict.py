@@ -1,3 +1,15 @@
+"""
+.. module:: preemptive_concurrency_state
+   :platform: Unix, Windows
+   :synopsis: A module to represent hierarchical dictionaries which creates a new dictionary on the fly if a request
+            uses a key that does not exist yet.
+
+.. moduleauthor:: Franz Steimetz
+
+
+"""
+
+
 from yaml import YAMLObject
 from rafcon.utils.json_utils import JSONObject
 

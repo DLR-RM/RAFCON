@@ -1,3 +1,14 @@
+"""
+.. module:: preemptive_concurrency_state
+   :platform: Unix, Windows
+   :synopsis: A module caring about the logging capability of RAFCON
+
+.. moduleauthor:: Franz Steimetz
+
+
+"""
+
+
 import logging
 import sys
 

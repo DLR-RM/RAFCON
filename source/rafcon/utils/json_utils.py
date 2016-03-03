@@ -1,3 +1,14 @@
+"""
+.. module:: preemptive_concurrency_state
+   :platform: Unix, Windows
+   :synopsis: A module holding all json related utility functions (encoders, decoders)
+
+.. moduleauthor:: Franz Steimetz
+
+
+"""
+
+
 from json.decoder import JSONDecoder
 from json.encoder import JSONEncoder
 

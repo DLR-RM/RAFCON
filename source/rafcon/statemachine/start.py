@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+"""
+.. module:: preemptive_concurrency_state
+   :platform: Unix, Windows
+   :synopsis: A module to start arbitrary state machines without the GUI and several configurations options
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
+
 from rafcon.utils import log
 logger = log.get_logger("start-no-gui")
 logger.info("initialize RAFCON ... ")

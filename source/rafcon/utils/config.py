@@ -1,3 +1,13 @@
+"""
+.. module:: preemptive_concurrency_state
+   :platform: Unix, Windows
+   :synopsis: A module to represent configurations inside RAFCON
+
+.. moduleauthor:: TODO
+
+
+"""
+
 import os
 from os.path import expanduser, expandvars, isdir
 
