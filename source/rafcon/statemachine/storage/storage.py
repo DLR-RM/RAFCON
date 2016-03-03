@@ -231,6 +231,15 @@ class StateMachineStorage(Observable):
         sm.root_state = self.load_state_recursively(parent=sm, state_path=tmp_base_path)
         sm.marked_dirty = False
 
+        hierarchy_level = 0
+        number_of_states, hierarchy_level = sm.root_state.get_states_statistics(hierarchy_level)
+        logger.debug("Loaded state machine ({1}) has {0} states. (Max hierarchy level {2})".
+                     format(number_of_states,
+                            base_path,
+                            hierarchy_level))
+        logger.debug("Loaded state machine ({1}) has {0} transitions.".format(sm.root_state.get_number_of_transitions(),
+                                                                              base_path))
+
         return [sm, version, creation_time]
 
     def load_state_from_path(self, state_path):

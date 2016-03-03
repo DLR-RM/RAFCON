@@ -636,6 +636,20 @@ class State(Observable, YAMLObject, JSONObject):
     def __str__(self):
         return "{2} with name '{0}' and id '{1}'".format(self.name, self.state_id, type(self).__name__)
 
+    def get_states_statistics(self, hierarchy_level):
+        """
+        Returns the numer of child states. As per default states do not have child states return 1.
+        :return:
+        """
+        return 1, hierarchy_level + 1
+
+    def get_number_of_transitions(self):
+        """
+        Return the number of transitions for a state. Per default states do not have transitions.
+        :return:
+        """
+        return 0
+
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
 #########################################################################
