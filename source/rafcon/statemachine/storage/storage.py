@@ -18,14 +18,18 @@ import yaml
 from gtkmvc import Observable
 
 from rafcon.statemachine.state_machine import StateMachine
-
 from rafcon.statemachine.config import global_config
+from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import filesystem
 from rafcon.utils import storage_utils
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+
+
+LIBRARY_NOT_FOUND_DUMMY_STATE_NAME = "LIBRARY NOT FOUND DUMMY STATE"
+
 
 # clean the DEFAULT_SCRIPT_PATH folder at each program start
 from rafcon.statemachine.enums import DEFAULT_SCRIPT_PATH
@@ -248,7 +252,33 @@ class StateMachineStorage(Observable):
 
         yaml_file = os.path.join(state_path, self.META_FILE_YAML)
         json_file = os.path.join(state_path, self.META_FILE_JSON)
-        state_info = self.load_appropriate_file(yaml_file, json_file)
+
+        try:
+            state_info = self.load_appropriate_file(yaml_file, json_file)
+        except Exception, e:
+            # this is the case that the user aborted the re
+            if isinstance(e, LibraryNotFoundException):
+                # import traceback
+                # logger.error("Library could not be loaded: {0}\n{1}.\n"
+                #              "Skipping library and continuing loading the state machine".format(str(e.message),
+                #                                                                                 traceback.format_exc()))
+                logger.error("Library could not be loaded: {0}\n"
+                             "Skipping library and continuing loading the state machine".format(str(e.message)))
+
+                from rafcon.statemachine.states.hierarchy_state import HierarchyState
+                state_id = self.retrieve_state_id_from_raw_file(yaml_file, json_file)
+                dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id)
+                # set parent of dummy state
+                if parent:
+                    from rafcon.statemachine.states.state import State
+                    if isinstance(parent, State):
+                        parent.add_state(dummy_state, storage_load=True)
+                    else:
+                        dummy_state.parent = parent
+                return dummy_state
+            else:
+                # just re-raise the exception in the case that it is not a LibraryNotFoundException
+                raise
 
         # Transitions and data flows are not added when loading a state, as also states are not added.
         # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
@@ -260,6 +290,7 @@ class StateMachineStorage(Observable):
             transitions = state_info[1]
             data_flows = state_info[2]
 
+        # set parent of state
         from rafcon.statemachine.states.state import State
         if parent:
             if isinstance(parent, State):
@@ -275,18 +306,58 @@ class StateMachineStorage(Observable):
             state.script.reload_path(self.SCRIPT_FILE)
             self.load_script_file(state)
 
+        one_of_my_child_states_not_found = False
+
         # load child states
         for p in os.listdir(state_path):
             child_state_path = os.path.join(state_path, p)
             if os.path.isdir(child_state_path):
-                self.load_state_recursively(state, child_state_path)
+                child_state = self.load_state_recursively(state, child_state_path)
+                if child_state.name is LIBRARY_NOT_FOUND_DUMMY_STATE_NAME:
+                    one_of_my_child_states_not_found = True
 
-        # Now we can add transitions and data flows, as all child states were added
-        if isinstance(state_info, tuple):
-            state.transitions = transitions
-            state.data_flows = data_flows
+        if one_of_my_child_states_not_found:
+            # omit adding transitions and data flows in this case
+            pass
+        else:
+            # Now we can add transitions and data flows, as all child states were added
+            if isinstance(state_info, tuple):
+                state.transitions = transitions
+                state.data_flows = data_flows
 
         return state
+
+    @staticmethod
+    def parse_state_id_from_yaml(yaml_file):
+        print "parse state from yaml"
+        with open(yaml_file) as open_yaml_file:
+            for line in open_yaml_file:
+                splitted_line = line.split()
+                if "state_id:" in splitted_line[0]:
+                    if "!!python/unicode" in splitted_line[1]:
+                        return splitted_line[2].replace("'", "") # replace "'" with empty string
+                    else:
+                        return splitted_line[1].replace("'", "")
+
+    @staticmethod
+    def parse_state_id_from_json_file(json_file):
+        content = storage_utils.load_dict_from_json(json_file, as_dict=True)
+        return content["state_id"]
+
+    def retrieve_state_id_from_raw_file(self, yaml_file, json_file):
+        if global_config.get_config_value("USE_JSON", True):
+            if os.path.exists(json_file):
+                return self.parse_state_id_from_json_file(json_file)
+            elif os.path.exists(yaml_file):
+                logger.warn("Loading YAML file, as JSON file is not existing: {0}".format(json_file))
+                return self.parse_state_id_from_yaml(yaml_file)
+        else:
+            if os.path.exists(yaml_file):
+                return self.parse_state_id_from_yaml(yaml_file)
+            elif os.path.exists(json_file):
+                logger.warn("Loading JSON file, as YAML file is not existing: {0}".format(yaml_file))
+                return self.parse_state_id_from_json_file(json_file)
+        raise ValueError("No state at specified path found: {0}".format(os.path.dirname(yaml_file)))
 
     @staticmethod
     def load_appropriate_file(yaml_file, json_file):
@@ -303,7 +374,6 @@ class StateMachineStorage(Observable):
                 logger.debug("Loading JSON file, as YAML file is not existing: {0}".format(yaml_file))
                 return storage_utils.load_dict_from_json(json_file)
         raise ValueError("No state at specified path found: {0}".format(os.path.dirname(yaml_file)))
-
 
     @staticmethod
     def load_script_file(state):

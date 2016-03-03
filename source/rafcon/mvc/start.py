@@ -4,6 +4,7 @@ import logging
 import os
 import gtk
 import signal
+import traceback
 import argparse
 from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
 
@@ -143,7 +144,10 @@ if __name__ == '__main__':
                 state_machine, version, creation_time = storage.load_statemachine_from_path(path)
                 sm_singletons.state_machine_manager.add_state_machine(state_machine)
             except Exception as e:
-                logger.error("Could not load state-machine {0}: {1}".format(path, e))
+                logger.error("Could not load state-machine {0}: {1}\n{2}".format(path,
+                                                                                 e.message,
+                                                                                 traceback.format_exc()))
+                # logger.error("Could not load state-machine {0}: {1}".format(path, e.message))
 
     if setup_config['new']:
         root_state = HierarchyState()
