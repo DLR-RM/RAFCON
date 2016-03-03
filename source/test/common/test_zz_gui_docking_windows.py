@@ -47,7 +47,7 @@ def trigger_docking_signals(*args):
 
     # Right Bar
     call_gui_callback(main_window_controller.on_right_bar_undock_clicked, None)
-    time.sleep(2*min_sleep)
+    time.sleep(min_sleep)
     window_pos = main_window_controller.view.right_bar_window.get_top_widget().get_position()
     window_size = main_window_controller.view.right_bar_window.get_top_widget().get_size()
     assert window_pos == global_runtime_config.get_config_value('RIGHT_BAR_WINDOW_POS')
