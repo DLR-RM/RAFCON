@@ -1,3 +1,13 @@
+"""
+.. module:: preemptive_concurrency_state
+   :platform: Unix, Windows
+   :synopsis: A module holding all constants of the RAFCON core
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 import tempfile
 import getpass
 import os

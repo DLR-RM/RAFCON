@@ -1,3 +1,13 @@
+"""
+.. module:: preemptive_concurrency_state
+   :platform: Unix, Windows
+   :synopsis: A module to represent an abstract state in the state machine
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 from __builtin__ import staticmethod
 import threading
 import sys

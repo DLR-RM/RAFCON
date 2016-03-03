@@ -1,3 +1,13 @@
+"""
+.. module:: preemptive_concurrency_state
+   :platform: Unix, Windows
+   :synopsis: A module holding a generic singleton abstract class
+
+.. moduleauthor:: Franz Steimetz
+
+
+"""
+
 
 class Singleton(type):
     """Meta class for classes implementing the singleton pattern
