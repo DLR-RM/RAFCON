@@ -11,7 +11,6 @@
 from gtkmvc import Observable
 
 from rafcon.statemachine.state_machine import StateMachine
-from rafcon.network.network_config import global_net_config
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -143,7 +142,3 @@ class StateMachineManager(Observable):
                 raise AttributeError("State machine not in list of all state machines")
         self._active_state_machine_id = state_machine_id
         active_state_machine = self.get_active_state_machine()
-        if active_state_machine and active_state_machine.file_system_path:
-            if global_net_config.get_config_value('NETWORK_CONNECTIONS'):
-                from rafcon.network.singleton import network_connections
-                network_connections.set_storage_base_path(active_state_machine.file_system_path)

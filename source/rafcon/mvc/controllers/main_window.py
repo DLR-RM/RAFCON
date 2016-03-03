@@ -27,25 +27,12 @@ import rafcon.statemachine.singleton
 import rafcon.statemachine.config
 from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
-from rafcon.network.network_config import global_net_config
 
 from rafcon.mvc.utils import constants
 from rafcon.mvc import gui_helper
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
-try:
-    # run if not defined or variable True
-    if global_net_config.get_config_value("NETWORK_CONNECTIONS") is None or global_net_config.get_config_value(
-            "NETWORK_CONNECTIONS"):
-        from rafcon.mvc.controllers.network_connections import NetworkController
-        from rafcon.network.singleton import network_connections
-except ImportError as e:
-    logger.warn(
-        "{1} Only local use of RAFCON will be possible due to missing network communication libraries -> {0}".format(
-            e.message, global_net_config.get_config_value("NETWORK_CONNECTIONS") is None))
-    # logger.error("%s, %s" % (e.message, traceback.format_exc()))
-    global_net_config.set_config_value('NETWORK_CONNECTIONS', False)
 
 
 class MainWindowController(ExtendedController):
@@ -117,34 +104,6 @@ class MainWindowController(ExtendedController):
                                                                          view.state_machine_history)
         self.add_controller('state_machine_history_controller', state_machine_history_controller)
         self.modification_history_was_focused = False
-
-        ######################################################
-        # network controller
-        ######################################################
-        if global_net_config.get_config_value('NETWORK_CONNECTIONS', False):
-            from rafcon.mvc.controllers.network_connections import NetworkController
-            from rafcon.network.singleton import network_connections
-            from rafcon.mvc.views.network_connections import NetworkConnectionsView
-            network_connections_view = NetworkConnectionsView()
-            network_connections_ctrl = NetworkController(state_machine_manager_model, network_connections_view)
-            network_connections.initialize()
-            self.add_controller('network_connections_ctrl', network_connections_ctrl)
-
-            network_tab = view['network_placeholder']
-            page_num = view['lower_notebook'].page_num(network_tab)
-            view['lower_notebook'].remove_page(page_num)
-
-            network_label = gtk.Label('Network')
-
-            network_notebook_widget = view.create_notebook_widget('NETWORK',  network_connections_view.get_top_widget(),
-                                                                  use_scroller=False,
-                                                                  border=constants.BORDER_WIDTH_TEXTVIEW)
-
-            view['lower_notebook'].insert_page(network_notebook_widget, network_label, page_num)
-        else:
-            network_tab = view['network_tab']
-            page_num = view['lower_notebook'].page_num(network_tab)
-            view['lower_notebook'].remove_page(page_num)
 
         ######################################################
         # state machine execution history

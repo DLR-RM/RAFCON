@@ -1,7 +1,6 @@
-from twisted.internet import gtk2reactor
-gtk2reactor.install()
-
-from twisted.internet import reactor
+# from twisted.internet import gtk2reactor
+# gtk2reactor.install()
+# from twisted.internet import reactor
 
 import logging
 
@@ -19,7 +18,6 @@ import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
-from rafcon.network.network_config import global_net_config
 from rafcon.statemachine.config import global_config
 
 
@@ -47,7 +45,6 @@ def run_sm():
     home_path = os.path.join(os.path.expanduser('~'), '.config/rafcon')
     global_config.load(path=home_path)
     global_gui_config.load(path=home_path)
-    global_net_config.load()
     # global_runtime_config.load(path=home_path)
 
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
@@ -97,7 +94,6 @@ def run_sm():
 
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, gvm_model)
 
-    reactor.run()
     gtk.main()
     logger.debug("Gtk main loop exited!")
 

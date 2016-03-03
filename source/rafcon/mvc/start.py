@@ -25,7 +25,7 @@ from rafcon.mvc.views.main_window import MainWindowView
 import rafcon.mvc.singleton as mvc_singletons
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
-from rafcon.network.network_config import global_net_config
+# from rafcon.network.network_config import global_net_config
 
 
 def setup_logger():
@@ -105,10 +105,10 @@ if __name__ == '__main__':
                         default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file gui_config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
-    parser.add_argument('-nc', '--net_config', action='store', type=config_path, metavar='path', dest='net_config_path',
-                        default=home_path, nargs='?', const=home_path,
-                        help="path to the configuration file net_config.yaml. Use 'None' to prevent the generation of "
-                             "a config file and use the default configuration. Default: {0}".format(home_path))
+    # parser.add_argument('-nc', '--net_config', action='store', type=config_path, metavar='path', dest='net_config_path',
+    #                     default=home_path, nargs='?', const=home_path,
+    #                     help="path to the configuration file net_config.yaml. Use 'None' to prevent the generation of "
+    #                          "a config file and use the default configuration. Default: {0}".format(home_path))
 
     result = parser.parse_args()
     setup_config = vars(result)
@@ -117,12 +117,12 @@ if __name__ == '__main__':
 
     global_config.load(path=setup_config['config_path'])
     global_gui_config.load(path=setup_config['gui_config_path'])
-    global_net_config.load(path=setup_config['net_config_path'])
+    # global_net_config.load(path=setup_config['net_config_path'])
     global_runtime_config.load(path=setup_config['gui_config_path'])
 
-    if global_net_config.get_config_value('NETWORK_CONNECTIONS'):
-        from rafcon.network.singleton import network_connections
-        network_connections.initialize()
+    # if global_net_config.get_config_value('NETWORK_CONNECTIONS'):
+    #     from rafcon.network.singleton import network_connections
+    #     network_connections.initialize()
 
     # Make mvc directory the working directory
     # Needed for views, which assume to be in the mvc path and import glade files relatively
@@ -164,14 +164,14 @@ if __name__ == '__main__':
     logger.info("Ready")
     logger.setLevel(level)
 
-    if global_net_config.get_config_value("NETWORK_CONNECTIONS", False):
-        from twisted.internet import reactor
-        from twisted.internet import gtk2reactor
-        # needed for glib.idle_add, and signals
-        gtk2reactor.install()
-        reactor.run()
-    else:
-        gtk.main()
+    # if global_net_config.get_config_value("NETWORK_CONNECTIONS", False):
+    #     from twisted.internet import reactor
+    #     from twisted.internet import gtk2reactor
+    #     # needed for glib.idle_add, and signals
+    #     gtk2reactor.install()
+    #     reactor.run()
+    # else:
+    gtk.main()
 
     # If there is a running state-machine, wait for it to be finished before exiting
     sm = sm_singletons.state_machine_manager.get_active_state_machine()

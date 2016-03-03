@@ -40,8 +40,8 @@ from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurre
 from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
 from rafcon.statemachine.enums import StateExecutionState
 
-from rafcon.network.network_config import global_net_config
-from rafcon.network.singleton import network_connections
+# from rafcon.network.network_config import global_net_config
+# from rafcon.network.singleton import network_connections
 
 
 def state_machine_path(path):
@@ -56,10 +56,10 @@ def state_machine_path(path):
 def start_state_machine(setup_config):
     time.sleep(1.0)
     # Note: The rafcon_server has to be started before the statemachine is launched
-    if not global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
-        network_connections.connect_tcp()
+    # if not global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
+    #     network_connections.connect_tcp()
 
-    glib.idle_add(network_connections.register_udp)
+    # glib.idle_add(network_connections.register_udp)
 
     sm = StatemachineExecutionEngine.execute_state_machine_from_path(setup_config['sm_path'],
                                                                      start_state_path=setup_config['start_state_path'],
@@ -109,10 +109,10 @@ if __name__ == '__main__':
                         default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
-    parser.add_argument('-nc', '--net_config', action='store', type=config_path, metavar='path', dest='net_config_path',
-                        default=home_path, nargs='?', const=home_path,
-                        help="path to the configuration file net_config.yaml. Use 'None' to prevent the generation of "
-                             "a config file and use the default configuration. Default: {0}".format(home_path))
+    # parser.add_argument('-nc', '--net_config', action='store', type=config_path, metavar='path', dest='net_config_path',
+    #                     default=home_path, nargs='?', const=home_path,
+    #                     help="path to the configuration file net_config.yaml. Use 'None' to prevent the generation of "
+    #                          "a config file and use the default configuration. Default: {0}".format(home_path))
     parser.add_argument('-s', '--start_state_path', action='store', metavar='path', dest='start_state_path',
                         default=None, nargs='?', help="path of to the state that should be launched")
 
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, sm_singletons.signal_handler)
 
     global_config.load(path=setup_config['config_path'])
-    global_net_config.load(path=setup_config['net_config_path'])
+    # global_net_config.load(path=setup_config['net_config_path'])
 
     # # the network connections cannot be initialized before the network configuration was loaded
     # network_connections.initialize()
