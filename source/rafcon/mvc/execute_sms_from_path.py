@@ -50,8 +50,10 @@ def run_sm():
     global_net_config.load()
     # global_runtime_config.load(path=home_path)
 
-    # library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    # library_paths["unit_test_state_machines"] = join(join(dirname(rafcon.__path__[0]), 'test_scripts'), 'unit_test_state_machines')
+    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
+    library_paths["unit_test_state_machines"] = join(join(dirname(rafcon.__path__[0]), 'test_scripts'), 'unit_test_state_machines')
+
+    print rafcon.__path__[0]
 
     rafcon.statemachine.singleton.library_manager.initialize()
 
