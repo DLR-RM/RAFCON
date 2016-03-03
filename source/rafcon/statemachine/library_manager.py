@@ -8,13 +8,13 @@
 
 """
 
-
 from gtkmvc import Observable
 import os
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
 import rafcon.statemachine.config as config
 from rafcon.statemachine import interface
 import sys
@@ -36,7 +36,10 @@ class LibraryManager(Observable):
         self._library_paths = {}
         logger.debug("Initializing Storage object ...")
         self.storage = StateMachineStorage("../")
+        # a list to hold all library state already manually replaced by the user
         self._replaced_libraries = {}
+        # a list to hold all library states that were skipped by the user during the replacement procedure
+        self._skipped_states = {}
 
     def initialize(self):
         """
@@ -150,20 +153,35 @@ class LibraryManager(Observable):
 
         original_path_and_name = library_path+library_name
 
+        # skip already skipped states
+        if original_path_and_name in self._skipped_states:
+            # if an already skipped state shall be loaded again, directly raise the exception to jump over this state
+            raise LibraryNotFoundException("Library '{0}' not found in subfolder {1}".format(library_name,
+                                                                                             library_path))
+
+        # replace already replaced states
         if original_path_and_name in self._replaced_libraries:
             new_path = self._replaced_libraries[original_path_and_name][0]
             new_library_path = self._replaced_libraries[original_path_and_name][1]
-            logger.debug("The library with library path \"{0}\" and name \"{1}\" "
-                         "is automatically replaced by the library "
-                         "with file system path \"{2}\" and library path \"{3}\"".format(str(library_path),
-                                                                                 str(library_name),
-                                                                                 str(new_path),
-                                                                                 str(new_library_path)))
+
+            # only show debug message if a state is automatically replaced by the appropriate library state
+            # chosen by the user before
+            if not self._replaced_libraries[original_path_and_name][2]:
+                logger.debug("The library with library path \"{0}\" and name \"{1}\" "
+                             "is automatically replaced by the library "
+                             "with file system path \"{2}\" and library path \"{3}\"".format(str(library_path),
+                                                                                     str(library_name),
+                                                                                     str(new_path),
+                                                                                     str(new_library_path)))
             return new_path, new_library_path, library_name
+
+        # a boolean to indicate if a state was regularly found or by the help of the user
+        regularly_found = True
 
         while True:  # until the library is found or the user aborts
 
             if target_lib_dict is None:  # This cannot happen in the first iteration
+                regularly_found = False
                 notice = "Cannot find library '{0}' in subfolder '{1}'. Please check your library path configuration." \
                             " If your library path is correct and the library was moved, please select the new root " \
                             "folder of the library. If not, please abort.".format(library_name, library_path)
@@ -172,8 +190,10 @@ class LibraryManager(Observable):
                     library_name))
                 if new_library_path is None:
                     # Cancel library search
-                    raise AttributeError("Library '{0}' not found in subfolder {1}".format(library_name,
-                                                                                           library_path))
+                    self._skipped_states[original_path_and_name] = True
+                    raise LibraryNotFoundException("Library '{0}' not found in subfolder {1}".format(library_name,
+                                                                                                     library_path))
+
                 if not os.path.exists(new_library_path):
                     logger.error('Specified path does not exist')
                     continue
@@ -212,5 +232,6 @@ class LibraryManager(Observable):
         path = target_lib_dict[library_name]
         # save the replacement in order that for a future occurrence the correct path can be used, without asking
         # the user for the correct path
-        self._replaced_libraries[original_path_and_name] = (path, library_path)
+        import copy
+        self._replaced_libraries[original_path_and_name] = (path, library_path, copy.copy(regularly_found))
         return path, library_path, library_name

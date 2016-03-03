@@ -17,15 +17,18 @@ import testing_utils
 import pytest
 
 
+TEST_LIBRARY_PATH = "/tmp/rafcon_unit_tests"
+
+
 def setup_module(module=None):
     # set the test_libraries path temporarily to the correct value
     testing_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_libraries"] = testing_utils.get_test_sm_path("test_libraries")
+    library_paths["temporary_libraries"] = TEST_LIBRARY_PATH
 
 
 def test_save_libraries(caplog):
-    s = StateMachineStorage(testing_utils.get_test_sm_path("test_libraries"))
+    s = StateMachineStorage(TEST_LIBRARY_PATH)
 
     state1 = ExecutionState("library_execution_state1", path=testing_utils.TEST_SM_PATH, filename="library_execution_state1.py")
     input_state1 = state1.add_input_data_port("data_input_port1", "float")
@@ -58,27 +61,27 @@ def test_save_libraries(caplog):
                          output_state3)
 
     # save hierarchy state as state machine
-    s.save_statemachine_to_path(StateMachine(state3), testing_utils.get_test_sm_path("test_libraries/hierarchy_library"),
+    s.save_statemachine_to_path(StateMachine(state3), testing_utils.get_test_sm_path(TEST_LIBRARY_PATH+"/hierarchy_library"),
                                 "0.1")
 
     # save execution state as state machine
-    s.save_statemachine_to_path(StateMachine(state1), testing_utils.get_test_sm_path("test_libraries/execution_library"),
+    s.save_statemachine_to_path(StateMachine(state1), testing_utils.get_test_sm_path(TEST_LIBRARY_PATH+"/execution_library"),
                                 "0.1")
 
     # save hierarchy state as nested state machines
     state3.name = "library_nested1"
     s.save_statemachine_to_path(StateMachine(state3),
-                                testing_utils.get_test_sm_path("test_libraries/library_container/library_nested1"), "0.1")
+                                testing_utils.get_test_sm_path(TEST_LIBRARY_PATH+"/library_container/library_nested1"), "0.1")
     state3.name = "library_nested2"
     s.save_statemachine_to_path(StateMachine(state3),
-                                testing_utils.get_test_sm_path("test_libraries/library_container/library_nested2"), "0.1")
-    # test_utils.assert_logger_warnings_and_errors(caplog)
+                                testing_utils.get_test_sm_path(TEST_LIBRARY_PATH+"/library_container/library_nested2"), "0.1")
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def create_execution_state_library_state_machine():
     rafcon.statemachine.singleton.library_manager.initialize()
     library_container_state = HierarchyState("libContainerState", state_id="libContainerState")
-    lib_state = LibraryState("test_libraries", "execution_library", "0.1",
+    lib_state = LibraryState("temporary_libraries", "execution_library", "0.1",
                              "library_execution_state", state_id="library_execution_state")
     library_container_state.add_state(lib_state)
     library_container_state.set_start_state(lib_state.state_id)
@@ -112,13 +115,13 @@ def test_execution_state_library(caplog):
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
     testing_utils.test_multithrading_lock.release()
-    # test_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def create_hierarchy_state_library_state_machine():
     rafcon.statemachine.singleton.library_manager.initialize()
     library_container_state = HierarchyState("libContainerState", state_id="libContainerState")
-    lib_state = LibraryState("test_libraries", "hierarchy_library", "0.1",
+    lib_state = LibraryState("temporary_libraries", "hierarchy_library", "0.1",
                              "library_hierarchy_state", state_id="library_hierarchy_state")
     library_container_state.add_state(lib_state)
     library_container_state.set_start_state(lib_state.state_id)
@@ -152,22 +155,22 @@ def test_hierarchy_state_library(caplog):
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
     testing_utils.test_multithrading_lock.release()
-    # test_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_save_nested_library_state(caplog):
     library_with_nested_library_sm = create_hierarchy_state_library_state_machine()
 
     rafcon.statemachine.singleton.global_storage.save_statemachine_to_path(
-        library_with_nested_library_sm, testing_utils.get_test_sm_path("test_libraries/library_with_nested_library"), "0.1")
-    # test_utils.assert_logger_warnings_and_errors(caplog)
+        library_with_nested_library_sm, testing_utils.get_test_sm_path(TEST_LIBRARY_PATH+"/library_with_nested_library"), "0.1")
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_nested_library_state_machine(caplog):
     testing_utils.test_multithrading_lock.acquire()
     # TODO: the library_manager is initialized a second time here
     rafcon.statemachine.singleton.library_manager.initialize()
-    nested_library_state = LibraryState("test_libraries", "library_with_nested_library", "0.1",
+    nested_library_state = LibraryState("temporary_libraries", "library_with_nested_library", "0.1",
                                         "nested_library_state_name", "nested_library_state_id")
     state_machine = StateMachine(nested_library_state)
 
@@ -180,7 +183,7 @@ def test_nested_library_state_machine(caplog):
     assert nested_library_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     testing_utils.test_multithrading_lock.release()
-    # test_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def teardown_module(module=None):
@@ -189,9 +192,9 @@ def teardown_module(module=None):
 
 if __name__ == '__main__':
     setup_module()
-    test_save_libraries(None)
-    test_execution_state_library(None)
-    test_hierarchy_state_library(None)
-    test_save_nested_library_state(None)
-    test_nested_library_state_machine(None)
-    # pytest.main([__file__])
+    # test_save_libraries(None)
+    # test_execution_state_library(None)
+    # test_hierarchy_state_library(None)
+    # test_save_nested_library_state(None)
+    # test_nested_library_state_machine(None)
+    pytest.main([__file__])
