@@ -123,9 +123,11 @@ def set_window_size_and_position(window, window_key):
     :param window_key: The window's key stored in the runtime config file
      """
     size = global_runtime_config.get_config_value(window_key+'_SIZE')
+    print "size: {0}".format(size)
     position = global_runtime_config.get_config_value(window_key+'_POS')
     if size:
         window.resize(size[0], size[1])
+    window.show()
     if position:
         position = (max(0, position[0]), max(0, position[1]))
         screen_width = gtk.gdk.screen_width()
