@@ -2,8 +2,10 @@ import gtk
 import gobject
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.statemachine_helper import insert_self_transition_meta_data
 from rafcon.statemachine.states.library_state import LibraryState
+
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -281,7 +283,7 @@ class StateOutcomesListController(ExtendedController):
                         self.dict_to_other_state[transition.from_outcome] = [to_state_name + '.' + transition.to_state,
                                                                              '',
                                                                              transition.transition_id]
-        if hasattr(model.state, 'transitions'):
+        if isinstance(model, ContainerStateModel):
             # check for "from other state" connections -> so to self-state and self-outcome "internal" transitions
             for transition_id, transition in model.state.transitions.items():
                 # print transition.from_state, transition.from_outcome, \

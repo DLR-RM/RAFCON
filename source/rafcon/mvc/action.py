@@ -69,7 +69,7 @@ def get_state_tuple(state, state_m=None):
 
     # print "++++++++++", state
     state_tuples_dict = {}
-    if hasattr(state, "states"):
+    if isinstance(state, ContainerState):
         # print state.states, "\n"
         for child_state_id, child_state in state.states.iteritems():
             # print "child_state: %s" % child_state_id, child_state, "\n"
@@ -138,7 +138,7 @@ def get_state_from_state_tuple(state_tuple):
                     "try to add state %s to state %s with states %s" % (child_state, state, state.states.keys()))
 
         def print_states(state):
-            if hasattr(state, "states"):
+            if isinstance(state, ContainerState):
                 for state_id, child_state in state.states.iteritems():
                     print child_state.get_path()
                     print_states(child_state)
@@ -449,7 +449,7 @@ class Action:
         It is a general functionality all Action*-Classes may need.
         :return: g_sm_editor -> the actual graphical viewer for further use
         """
-
+        import rafcon.mvc.controllers.graphical_editor as graphical_editor_opengl
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
         mw_ctrl = mvc_singleton.main_window_controller
         g_sm_editor = None
@@ -459,7 +459,7 @@ class Action:
                                                          with_print=False)
 
         # We are only interested in OpenGL editors, not Gaphas ones
-        if g_sm_editor and not hasattr(g_sm_editor, 'suspend_drawing'):
+        if g_sm_editor and not isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
             g_sm_editor = False
         if g_sm_editor:
             g_sm_editor.suspend_drawing = True
@@ -545,7 +545,7 @@ class Action:
             for dp_id in state.output_data_ports.keys():
                 state.remove_output_data_port(dp_id)
 
-        if hasattr(state, 'states'):
+        if isinstance(state, ContainerState):
             for dp_id in state.scoped_variables.keys():
                 # print "scoped_variable ", dp_id
                 state.remove_scoped_variable(dp_id)
@@ -566,7 +566,7 @@ class Action:
             # print " \n\n\n ########### start adding output data_ports ", state.output_data_ports.keys(), "\n\n\n"
             for dp_id, dp in stored_state.output_data_ports.iteritems():
                 scoped_str = str([])
-                if hasattr(state, "scoped_variables"):
+                if isinstance(state, ContainerState):
                     scoped_str = str(state.scoped_variables.keys())
                 # print "\n\n\n ------- ############ generate output data port", dp_id, state.input_data_ports.keys(), \
                 #     state.output_data_ports.keys(), scoped_str, "\n\n\n"
@@ -584,7 +584,7 @@ class Action:
                 # print oc_id, state.outcomes
                 assert oc_id in state.outcomes
 
-        if hasattr(state, 'states'):
+        if isinstance(state, ContainerState):
             # logger.debug("UPDATE STATES")
             for dp_id, sv in stored_state.scoped_variables.iteritems():
                 state.add_scoped_variable(sv.name, sv.data_type, sv.default_value, sv.data_port_id)
@@ -604,13 +604,13 @@ class Action:
                     sm_id = self.state_machine.state_machine_id
                     rafcon.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id, s_path)
                     # print "unmark from removal: ", s_path
-                    if hasattr(new_state, 'states'):
+                    if isinstance(new_state, ContainerState):
                         def unmark_state(state_, sm_id_):
                             spath = state_.get_file_system_path()
                             rafcon.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id_,
                                                                                                            spath)
                             # print "unmark from removal: ", spath
-                            if hasattr(state_, 'states'):
+                            if isinstance(state_, ContainerState):
                                 for child_state in state_.states.values():
                                     unmark_state(child_state, sm_id_)
                                     # do_storage_test(state_)

@@ -4,7 +4,6 @@ from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.utils import type_helpers
 from rafcon.utils import log, constants
 
@@ -297,7 +296,7 @@ class StateDataFlowsListController(ExtendedController):
     def _update_tree_store(self):
         self.tree_store.clear()
 
-        if self.view_dict['data_flows_internal'] and hasattr(self.model.state, 'data_flows'):
+        if self.view_dict['data_flows_internal'] and isinstance(self.model, ContainerStateModel):
             for data_flow in self.model.state.data_flows.values():
 
                 # print "type: ", type(data_flow)
@@ -445,7 +444,7 @@ def get_key_combos(ports, keys_store, port_type, not_key=None):
 def get_state_model(state_m, state_id):
     if state_id == state_m.state.state_id:
         return state_m
-    elif isinstance(state_m.state, ContainerState) and state_id in state_m.states:
+    elif isinstance(state_m, ContainerStateModel) and state_id in state_m.states:
         return state_m.states[state_id]
     return None
 
@@ -468,7 +467,7 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
             pass
 
     # from_state, to_key, to_state, to_key, external
-    if hasattr(model.state, 'states'):
+    if isinstance(model, ContainerStateModel):
         for data_flow in model.state.data_flows.values():  # model.data_flow_list_store:
 
             # TREE STORE LABEL
@@ -509,7 +508,7 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
             # ALL INTERNAL COMBOS
             from_states_store = ListStore(str)
             to_states_store = ListStore(str)
-            if hasattr(model, 'states'):
+            if isinstance(model, ContainerStateModel):
                 if model.state.state_id in free_to_port_internal or model.state.state_id == data_flow.to_state:
                     to_states_store.append(['self.' + model.state.name + '.' + model.state.state_id])
                 if model.state.state_id in from_ports_internal or model.state.state_id == data_flow.from_state:
@@ -527,7 +526,7 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                 # print "input_ports", model.state.input_data_ports
                 get_key_combos(model.state.input_data_ports, from_keys_store, 'input_port', data_flow.to_key)
                 # print type(model)
-                if hasattr(model, 'states'):
+                if isinstance(model, ContainerStateModel):
                     # print "scoped_variables", model.state.scoped_variables
                     get_key_combos(model.state.scoped_variables, from_keys_store, 'scoped_variable', data_flow.to_key)
             else:
@@ -540,7 +539,7 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
                 # print "output_ports", model.state.output_data_ports
                 get_key_combos(model.state.output_data_ports, to_keys_store, 'output_port', data_flow.from_key)
                 # print type(model)
-                if hasattr(model, 'states'):
+                if isinstance(model, ContainerStateModel):
                     # print "scoped_variables", model.state.scoped_variables
                     get_key_combos(model.state.scoped_variables, to_keys_store, 'scoped_variable', data_flow.from_key)
             else:
@@ -677,7 +676,7 @@ def find_free_keys(model):
     from_ports = {}
 
     # check for container state
-    if hasattr(model, 'states'):
+    if model is not None and isinstance(model, ContainerStateModel):
         free_container_ports = []
         container_from_ports = []
         nfree_container_ports = []
@@ -795,7 +794,7 @@ class StateDataFlowsEditorController(ExtendedController):
             self.df_list_ctrl.view_dict['data_flows_external'] = False
             button.set_active(False)
 
-        if name in ['data_flows_internal'] and hasattr(self.model, 'states'):
+        if name in ['data_flows_internal'] and isinstance(self.model, ContainerStateModel):
             self.df_list_ctrl.view_dict[name] = button.get_active()
         elif name not in ['data_flows_external']:
             self.df_list_ctrl.view_dict['data_flows_internal'] = False
