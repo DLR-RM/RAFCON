@@ -13,6 +13,7 @@ from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.script import Script
 from rafcon.statemachine.enums import StateType
 from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
@@ -63,7 +64,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
     print "in Removal: \n", rafcon.statemachine.singleton.global_storage._paths_to_remove_before_sm_save.values()
 
     def print_states(state):
-        if hasattr(state, "states"):
+        if isinstance(state, ContainerState):
             for state_id, child_state in state.states.iteritems():
                 print child_state.get_path()
                 print_states(child_state)
@@ -435,7 +436,7 @@ def test_add_remove_history(caplog):
         #     # state = state_m.state
         #     # print state_m
         #     print state_m.state.name  # , state_m.state.get_path()
-        #     if hasattr(state_m, 'states'):
+        #     if isinstance(state_m.state, ContainerState):
         #         for state_m in state_m.states:
         #             print_all(state_m)
 

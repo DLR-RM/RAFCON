@@ -2,6 +2,7 @@ import gtk
 from gtk import ListStore
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils import MoveAndEditWithTabKeyListFeatureController
+from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.utils import log
 
@@ -50,7 +51,7 @@ class ScopedVariableListController(ExtendedController):
 
         self.tab_edit_controller.register_view()
 
-        if hasattr(self.model, 'scoped_variables'):
+        if isinstance(self.model, ContainerStateModel):
             self.reload_scoped_variables_list_store()
 
     def register_adapters(self):
@@ -93,7 +94,7 @@ class ScopedVariableListController(ExtendedController):
 
         Create a new scoped variable with default values.
         """
-        if hasattr(self.model, 'states'):
+        if isinstance(self.model, ContainerStateModel):
             data_port_id = None
             while data_port_id is None:
                 try:
@@ -109,7 +110,7 @@ class ScopedVariableListController(ExtendedController):
         Deletes the selected scoped variable.
         """
         tree_view = self.view["scoped_variables_tree_view"]
-        if hasattr(self.model, 'states'):
+        if isinstance(self.model, ContainerStateModel):
 
             path = self.get_path()  # tree_view.get_cursor()[0][0]
             if path is not None:
@@ -181,7 +182,7 @@ class ScopedVariableListController(ExtendedController):
 
     def reload_scoped_variables_list_store(self):
         """Reloads the scoped variable list store from the data port models"""
-        if hasattr(self.model, 'scoped_variables'):
+        if isinstance(self.model, ContainerStateModel):
             tmp = ListStore(str, str, str, int)
             for sv_model in self.model.scoped_variables:
                 data_type = sv_model.scoped_variable.data_type

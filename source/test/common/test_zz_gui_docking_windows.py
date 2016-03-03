@@ -66,6 +66,7 @@ def trigger_docking_signals(*args):
 
     # Console
     call_gui_callback(main_window_controller.on_console_undock_clicked, None)
+    min_sleep = 1.0
     time.sleep(2*min_sleep)
     window_pos = main_window_controller.view.console_window.get_top_widget().get_position()
     window_size = main_window_controller.view.console_window.get_top_widget().get_size()

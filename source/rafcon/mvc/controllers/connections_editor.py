@@ -54,7 +54,7 @@ class StateConnectionsEditorController(ExtendedController):
         #     view['connected_to_t_checkbutton'].set_active(False)
         #     self.view_dict['data_flows_external'] = False
         #     view['connected_to_d_checkbutton'].set_active(False)
-        # if not hasattr(self.model, 'states'):
+        # if not isinstance(self.model, ContainerStateModel):
         #     self.view_dict['transitions_internal'] = False
         #     view['internal_t_checkbutton'].set_active(False)
         #     self.view_dict['data_flows_internal'] = False
@@ -81,7 +81,7 @@ class StateConnectionsEditorController(ExtendedController):
         #     self.view_dict['data_flows_external'] = False
         #     button.set_active(False)
         #
-        # if name in ['transitions_internal', 'data_flows_internal'] and hasattr(self.model, 'states'):
+        # if name in ['transitions_internal', 'data_flows_internal'] and isinstance(self.model, ContainerStateModel):
         #     self.view_dict[name] = button.get_active()
         #     # print(name, "was turned", self.view_dict[name])  # , "\n", self.view_dict
         # elif not name in ['transitions_external', 'data_flows_external']:

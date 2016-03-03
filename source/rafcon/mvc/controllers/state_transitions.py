@@ -381,7 +381,7 @@ class StateTransitionsListController(ExtendedController):
         self.combo['free_ext_from_outcomes_dict'] = {}
         self.combo['free_ext_from_outcomes_dict'] = {}
 
-        if hasattr(model.state, 'transitions'):
+        if isinstance(model, ContainerStateModel):
             # check for internal combos
             for transition_id, transition in model.state.transitions.items():
                 self.combo['internal'][transition_id] = {}
@@ -436,8 +436,8 @@ class StateTransitionsListController(ExtendedController):
         """
 
         self.tree_store.clear()
-        if self.view_dict['transitions_internal'] and hasattr(self.model.state, 'transitions') and \
-                        len(self.model.state.transitions) > 0:
+        if self.view_dict['transitions_internal'] and isinstance(self.model, ContainerStateModel) and \
+                len(self.model.state.transitions) > 0:
             for transition_id in self.combo['internal'].keys():
                 # print "TRANSITION_ID: ", transition_id, self.model.state.transitions
                 t = self.model.state.transitions[transition_id]
@@ -644,7 +644,7 @@ class StateTransitionsEditorController(ExtendedController):
             self.trans_list_ctrl.view_dict['transitions_external'] = False
             button.set_active(False)
 
-        if name in ['transitions_internal'] and hasattr(self.model, 'states'):
+        if name in ['transitions_internal'] and isinstance(self.model, ContainerStateModel):
             self.trans_list_ctrl.view_dict[name] = button.get_active()
         elif name not in ['transitions_external']:
             self.trans_list_ctrl.view_dict['transitions_internal'] = False

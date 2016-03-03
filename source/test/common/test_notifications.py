@@ -21,6 +21,7 @@ from gtkmvc.observer import Observer
 
 # core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
 
@@ -378,7 +379,7 @@ def setup_observer_dict_for_state_model(state_model, with_print=False):
 
     def generate_observer_dict(state_m):
         observer_dict = {state_m.state.get_path(): StateNotificationLogObserver(state_m, with_print)}
-        if hasattr(state_m, 'states'):
+        if isinstance(state_m.state, ContainerState):
             for child_state_m in state_m.states.values():
                 observer_dict.update(generate_observer_dict(child_state_m))
         return observer_dict
@@ -1430,7 +1431,7 @@ def test_state_property_modify_notification(caplog):
     forecast = 0
 
     # script(self, script) Script -> script - setter is removed from
-    if hasattr(state_dict['Nested2'], "script"):
+    if isinstance(state_dict['Nested2'], ExecutionState):
         state_dict['Nested2'].script_text = state_dict['Nested2'].script_text
         forecast += 1
     check_states_notifications(states_observer_dict, sub_state_name='Nested2', forecast=forecast)

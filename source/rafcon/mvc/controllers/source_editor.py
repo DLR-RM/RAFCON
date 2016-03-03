@@ -191,5 +191,5 @@ class SourceEditorController(ExtendedController):
     @ExtendedController.observe("state", after=True)
     def after_notification_of_script_text_was_changed(self, model, prop_name, info):
 
-        if hasattr(info, "method_name") and "script_text" == info.method_name:
+        if "method_name" in info and "script_text" == info['method_name']:
             self.view.set_text(self.model.state.script_text)
