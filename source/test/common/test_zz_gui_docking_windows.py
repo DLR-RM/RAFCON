@@ -24,7 +24,7 @@ def trigger_docking_signals(*args):
     # time.sleep(1)
     main_window_controller = args[0]
     menu_bar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    min_sleep = 0.5
+    min_sleep = 0.1
 
     # Left Bar
     call_gui_callback(main_window_controller.on_left_bar_undock_clicked, None)
@@ -66,7 +66,6 @@ def trigger_docking_signals(*args):
 
     # Console
     call_gui_callback(main_window_controller.on_console_undock_clicked, None)
-    min_sleep = 1.0
     time.sleep(2*min_sleep)
     window_pos = main_window_controller.view.console_window.get_top_widget().get_position()
     window_size = main_window_controller.view.console_window.get_top_widget().get_size()
