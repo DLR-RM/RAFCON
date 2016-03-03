@@ -266,6 +266,20 @@ class LibraryState(State):
         }
         return dict_representation
 
+    def get_states_statistics(self, hierarchy_level):
+        """
+        Returns the numer of child states. As per default states do not have child states return 1.
+        :return:
+        """
+        return self.state_copy.get_states_statistics(hierarchy_level)
+
+    def get_number_of_transitions(self):
+        """
+        Return the number of transitions for a state. Per default states do not have transitions.
+        :return:
+        """
+        return self.state_copy.get_number_of_transitions()
+
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc
     #########################################################################

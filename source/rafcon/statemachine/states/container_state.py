@@ -1166,9 +1166,39 @@ class ContainerState(State):
 
         return True, "valid"
 
-    #########################################################################
-    # Properties for all class fields that must be observed by gtkmvc
-    #########################################################################
+    # ---------------------------------------------------------------------------------------------
+    # ----------------------------------------- misc ----------------------------------------------
+    # ---------------------------------------------------------------------------------------------
+
+    def get_states_statistics(self, hierarchy_level):
+        """
+        Returns the numer of child states
+        :return:
+        """
+        number_of_all_child_states = 0
+        max_child_hierarchy_level = 0
+        for s in self.states.itervalues():
+            child_hierarchy_level = 0
+            number_of_child_states, child_hierarchy_level = s.get_states_statistics(child_hierarchy_level)
+            number_of_all_child_states += number_of_child_states
+            if child_hierarchy_level > max_child_hierarchy_level:
+                max_child_hierarchy_level = child_hierarchy_level
+
+        return number_of_all_child_states + 1, hierarchy_level + max_child_hierarchy_level + 1
+
+    def get_number_of_transitions(self):
+        """
+        Returns the numer of child states
+        :return:
+        """
+        number_of_all_transitions = 0
+        for s in self.states.itervalues():
+            number_of_all_transitions += s.get_number_of_transitions()
+        return number_of_all_transitions + len(self.transitions)
+
+    # ---------------------------------------------------------------------------------------------
+    # ------------ Properties for all class fields that must be observed by gtkmvc ----------------
+    # ---------------------------------------------------------------------------------------------
 
     @property
     def states(self):
