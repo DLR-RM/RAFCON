@@ -53,23 +53,23 @@ def start_state_machine(setup_config):
     sm = StatemachineExecutionEngine.execute_state_machine_from_path(setup_config['sm_path'],
                                                                      start_state_path=setup_config['start_state_path'],
                                                                      wait_for_execution_finished=False)
+    # sm_thread = threading.Thread(target=check_for_sm_finished, args=[sm, ])
+    # sm_thread.start()
+    return sm
 
-    sm_thread = threading.Thread(target=check_for_sm_finished, args=[sm, ])
-    sm_thread.start()
 
-
-def check_for_sm_finished(sm):
-    while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
-        try:
-            sm.root_state.concurrency_queue.get(timeout=10.0)
-        except Empty, e:
-            pass
-        # no logger output here to make it easier for the parser
-        print "RAFCON live signal"
-
-    sm.root_state.join()
-    # terminate sm
-    reactor.stop()
+# def check_for_sm_finished(sm):
+#     while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
+#         try:
+#             sm.root_state.concurrency_queue.get(timeout=10.0)
+#         except Empty, e:
+#             pass
+#         # no logger output here to make it easier for the parser
+#         print "RAFCON live signal"
+#
+#     sm.root_state.join()
+#     # terminate sm
+#     reactor.stop()
 
 
 if __name__ == '__main__':
@@ -117,8 +117,8 @@ if __name__ == '__main__':
     global_config.load(path=setup_config['config_path'])
     global_net_config.load(path=setup_config['net_config_path'])
 
-    # the network connections cannot be initialized before the network configuration was loaded
-    network_connections.initialize()
+    # # the network connections cannot be initialized before the network configuration was loaded
+    # network_connections.initialize()
 
     # Initialize libraries
     sm_singletons.library_manager.initialize()
@@ -126,13 +126,23 @@ if __name__ == '__main__':
     # Set base path of global storage
     sm_singletons.global_storage.base_path = RAFCON_TEMP_PATH_STORAGE
 
-    start_state_machine(setup_config)
+    sm = start_state_machine(setup_config)
 
-    if global_net_config.get_config_value("NETWORK_CONNECTIONS", False):
-        # TODO: needed for observer pattern in network/network_connections.py
-        import rafcon.mvc.singleton as mvc_singletons
-        from twisted.internet import reactor
-        reactor.run()
+    # TODO: old code; will be replaced after refactoring the network connections feature
+    # if global_net_config.get_config_value("NETWORK_CONNECTIONS", False):
+    #     import rafcon.mvc.singleton as mvc_singletons
+    #     from twisted.internet import reactor
+    #     reactor.run()
+
+    while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
+        try:
+            sm.root_state.concurrency_queue.get(timeout=10.0)
+        except Empty, e:
+            pass
+        # no logger output here to make it easier for the parser
+        print "RAFCON live signal"
+
+    sm.root_state.join()
 
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
     logger.info("State machine execution finished!")
