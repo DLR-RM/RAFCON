@@ -257,6 +257,7 @@ class MainWindowController(ExtendedController):
         self.set_pane_position('RIGHT_BAR_DOCKED_POS', 'right_h_pane', default_pos=1000)
         self.set_pane_position('LEFT_BAR_DOCKED_POS', 'top_level_h_pane', default_pos=300)
         self.set_pane_position('CONSOLE_DOCKED_POS', 'central_v_pane', default_pos=600)
+        self.set_pane_position('LEFT_BAR_INNER_PANE_POS', 'left_bar_pane', default_pos=400)
 
     def set_pane_position(self, config_id, pane, default_pos=100):
         """Adjusts the position of a GTK Pane to a value stored in the runtime config file. If there was no value
@@ -378,7 +379,7 @@ class MainWindowController(ExtendedController):
         window. The new window's size and position are loaded from runtime_config, if they exist.
         """
         gui_helper.set_window_size_and_position(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
-        self.view['left_bar'].reparent(self.view.left_bar_window['central_eventbox'])
+        self.view['left_bar_pane'].reparent(self.view.left_bar_window['central_eventbox'])
         self.view['undock_left_bar_button'].hide()
         self.on_left_bar_hide_clicked(None)
         self.view['left_bar_return_button'].hide()
@@ -391,7 +392,7 @@ class MainWindowController(ExtendedController):
         """
         global_runtime_config.save_configuration(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
         self.on_left_bar_return_clicked(None)
-        self.view['left_bar'].reparent(self.view['left_bar_container'])
+        self.view['left_bar_pane'].reparent(self.view['left_bar_container'])
         self.get_controller('left_window_controller').hide_window()
         self.view['undock_left_bar_button'].show()
         return True
