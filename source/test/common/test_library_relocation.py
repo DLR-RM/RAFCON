@@ -23,24 +23,19 @@ from rafcon.statemachine.enums import StateExecutionState
 
 from os.path import join, dirname
 
-request_counter = 0
-
 
 def show_notice(query):
     return ""  # just take note of the missing library
 
 
 def open_folder(query):
-    global request_counter
-
     return_value = ""
 
-    if request_counter == 0:
+    if "library2_for_relocation_test" in query:
         return_value = None  # the first relocation has to be aborted
     else:
         return_value = rafcon.__path__[0] + "/../test_scripts/test_libraries/library1_for_relocation_test_relocated"
 
-    request_counter += 1
     return return_value
 
 
@@ -88,5 +83,5 @@ def test_library_relocation(caplog):
 
 
 if __name__ == '__main__':
-    # test_library_relocation(None)
-    pytest.main([__file__])
+    test_library_relocation(None)
+    # pytest.main([__file__])
