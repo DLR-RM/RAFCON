@@ -422,6 +422,7 @@ class MenuBarController(ExtendedController):
         global_runtime_config.save_configuration(self.main_window_view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
         global_runtime_config.save_configuration(self.main_window_view['right_h_pane'], 'RIGHT_BAR_DOCKED')
         global_runtime_config.save_configuration(self.main_window_view['central_v_pane'], 'CONSOLE_DOCKED')
+        global_runtime_config.save_configuration(self.main_window_view['left_bar_pane'], 'LEFT_BAR_INNER_PANE')
 
         if self.main_window_view.left_bar_window.get_top_widget().get_property('visible'):
             global_runtime_config.save_configuration(self.main_window_view.left_bar_window.get_top_widget(),

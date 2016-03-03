@@ -83,12 +83,10 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkVPaned" id="left_bar">
+                      <object class="GtkVPaned" id="left_bar_pane">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="orientation">vertical</property>
-                        <property name="position">400</property>
-                        <property name="position_set">True</property>
                         <child>
                           <object class="GtkVBox" id="vbox1">
                             <property name="visible">True</property>
