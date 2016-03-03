@@ -87,8 +87,6 @@ class GraphicalEditorController(ExtendedController):
         element
     """
 
-    _suspend_drawing = False
-
     def __init__(self, model, view):
         """Constructor"""
         assert isinstance(model, StateMachineModel)
@@ -121,6 +119,8 @@ class GraphicalEditorController(ExtendedController):
         self.changed_models = []
         self.changes_affect_children = False
         self._last_meta_data_changed = None
+
+        self._suspend_drawing = False
 
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
