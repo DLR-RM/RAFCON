@@ -48,7 +48,7 @@ def write_back_message(datagram, address):
 def start_udp_server(name, multi_processing_queue):
     info(name)
     udp_server = UdpServer()
-    connector = reactor.listenUDP(8000, udp_server)
+    connector = reactor.listenUDP(global_config.get_config_value("SERVER_UDP_PORT"), udp_server)
     udp_server.datagram_received_function = write_back_message
 
     global server_transport

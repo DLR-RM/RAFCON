@@ -20,7 +20,8 @@ class UdpClient(CommunicationEndpoint):
         self.datagram_received_function = self.print_message
 
     def startProtocol(self):
-        self.transport.connect(global_config.get_config_value("SERVER_IP"), 8000)
+        self.transport.connect(global_config.get_config_value("SERVER_IP"),
+                               global_config.get_config_value("SERVER_UDP_PORT"))
 
     @staticmethod
     def print_message(message, address):

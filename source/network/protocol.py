@@ -1,6 +1,7 @@
 from enum import Enum
 import hashlib
 import uuid
+from config import global_config
 
 
 class MessageType(Enum):
@@ -9,10 +10,6 @@ class MessageType(Enum):
     COMMAND = 3
     REGISTER = 4
     REGISTER_WITH_ACKNOWLEDGES = 5
-
-
-HASH_LENGTH = 8
-SALT_LENGTH = 6
 
 
 sequence_number_counter = 0
@@ -84,11 +81,12 @@ class Protocol:
             raise AttributeError("Cecksum must by of type basestring")
 
     def generate_checksum(self):
-        return hashlib.md5(str(self.sequence_number) + self.salt + self.message_content).hexdigest()[:HASH_LENGTH]
+        return hashlib.md5(str(self.sequence_number) + self.salt +
+                           self.message_content).hexdigest()[:global_config.get_config_value("HASH_LENGTH")]
 
     def create_unique_checksum_and_salt(self):
         if self.salt is None:
-            self.salt = uuid.uuid4().hex[:SALT_LENGTH]
+            self.salt = uuid.uuid4().hex[:global_config.get_config_value("SALT_LENGTH")]
         self.checksum = self.generate_checksum()
         return self.checksum + ":" + self.salt
 

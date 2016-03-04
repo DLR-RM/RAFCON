@@ -11,10 +11,10 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS = 0.9
+MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS = global_config.get_config_value("MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS")
 CHECK_ACKNOWLEDGEMENTS_THREAD_MAX_WAIT_TIME = 0.1
-BURST_NUMBER = 1
-TIME_BETWEEN_BURSTS = 0.1
+BURST_NUMBER = global_config.get_config_value("BURST_NUMBER")
+TIME_BETWEEN_BURSTS = global_config.get_config_value("TIME_BETWEEN_BURSTS")
 
 
 class CommunicationEndpoint(DatagramProtocol):
