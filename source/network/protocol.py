@@ -2,15 +2,17 @@ from enum import Enum
 import hashlib
 import uuid
 
-# MessageType = Enum('MESSAGE_TYPE', 'ACK STATE_ID COMMAND')
-
 
 class MessageType(Enum):
     ACK = 1
     STATE_ID = 2
     COMMAND = 3
+    REGISTER = 4
+    REGISTER_WITH_ACKNOWLEDGES = 5
 
-HASH_LENGTH = 6
+
+HASH_LENGTH = 8
+SALT_LENGTH = 6
 
 
 sequence_number_counter = 0
@@ -28,7 +30,7 @@ def generate_sequence_number():
 
 class Protocol:
 
-    def __init__(self, message_type=None, message_content=None, datagram=None):
+    def __init__(self, message_type=None, message_content="", datagram=None):
 
         self.__checksum = None
         self.checksum = None
@@ -38,9 +40,13 @@ class Protocol:
         self.message_content = message_content
         self.__sequence_number = None
         self.sequence_number = None
+        # for multi client identification
+        self.__salt = None
+        self.salt = None
 
         if datagram is None:
             self.sequence_number = generate_sequence_number()
+            self.create_unique_checksum_and_salt()
         else:
             self.deserialize(datagram)
 
@@ -48,21 +54,23 @@ class Protocol:
         return self.serialize()
 
     def serialize(self):
-        return str(self.create_unique_checksum()) + ":" +\
+        return str(self.create_unique_checksum_and_salt()) + ":" +\
                str(self.sequence_number) + ":" +\
                str(self.message_type.value) + ":" +\
                self.message_content
 
     def deserialize(self, datagram):
         try:
-            checksum, sequence_number, message_type, message_content = datagram.split(":")
+            checksum, salt, sequence_number, message_type, message_content = datagram.split(":")
         except Exception, e:
             raise AttributeError("datagram {0} could not be deserialized".format(datagram))
 
         self.checksum = checksum
+        self.salt = salt
         self.sequence_number = int(sequence_number)
         self.message_type = MessageType(int(message_type))
         self.message_content = message_content
+        self.check_checksum(checksum)
 
     @property
     def checksum(self):
@@ -75,13 +83,17 @@ class Protocol:
         else:
             raise AttributeError("Cecksum must by of type basestring")
 
-    def create_unique_checksum(self):
-        # salt = uuid.uuid4().hex
-        return hashlib.md5(str(self.sequence_number) + self.message_content).hexdigest()[:HASH_LENGTH]
+    def generate_checksum(self):
+        return hashlib.md5(str(self.sequence_number) + self.salt + self.message_content).hexdigest()[:HASH_LENGTH]
 
-    def check_checksum(self, checksum, sequence_number):
-        current_checksum = hashlib.md5(sequence_number + self.__message_content).hexdigest()[:6]
-        return checksum == current_checksum
+    def create_unique_checksum_and_salt(self):
+        if self.salt is None:
+            self.salt = uuid.uuid4().hex[:SALT_LENGTH]
+        self.checksum = self.generate_checksum()
+        return self.checksum + ":" + self.salt
+
+    def check_checksum(self, checksum):
+        return checksum == self.generate_checksum()
 
     @property
     def message_type(self):
@@ -114,7 +126,18 @@ class Protocol:
         if isinstance(sequence_number, int) or sequence_number is None:
             self.__sequence_number = sequence_number
         else:
-            raise AttributeError("Sequence number must by of type basestring")
+            raise AttributeError("Sequence number must by of type int")
+
+    @property
+    def salt(self):
+        return self.__salt
+
+    @salt.setter
+    def salt(self, salt):
+        if isinstance(salt, basestring) or salt is None:
+            self.__salt = salt
+        else:
+            raise AttributeError("Salt must by of type basestring")
 
 
 

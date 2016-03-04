@@ -28,10 +28,9 @@ def info(title):
 
 def wait_for_test_finished(queue, udp_endpoint, connector):
     finished = queue.get()
-    print('process with id {0} will stop reactor'.format(str(os.getpid())))
+    logger.info('process with id {0} will stop reactor'.format(str(os.getpid())))
     reactor.callFromThread(reactor.stop)
-    print('process with id {0} did stop reactor'.format(str(os.getpid())))
-
+    # logger.info('process with id {0} did stop reactor'.format(str(os.getpid())))
 
 
 ##########################################################
@@ -39,31 +38,21 @@ def wait_for_test_finished(queue, udp_endpoint, connector):
 ##########################################################
 
 server_transport = None
-server_queue = None
 
 
 def write_back_message(datagram, address):
     logger.info("Server received datagram {0} from address: {1}".format(str(datagram), str(address)))
     server_transport.write(datagram, address)
-    protocol = Protocol(datagram=datagram)
-    if protocol.message_content == FINAL_MESSAGE:
-        logger.info("Server puts final message to multiprocessing queue")
-        server_queue.put(FINAL_MESSAGE)
 
 
 def start_udp_server(name, multi_processing_queue):
     info(name)
     udp_server = UdpServer()
     connector = reactor.listenUDP(8000, udp_server)
-    # print "#######################################"
-    # print connector
-    # print dir(connector)
-    # print "#######################################"
+    udp_server.datagram_received_function = write_back_message
+
     global server_transport
     server_transport = udp_server.get_transport()
-    global server_queue
-    server_queue = multi_processing_queue
-    udp_server.datagram_received_function = write_back_message
 
     wait_for_test_finish = threading.Thread(target=wait_for_test_finished, args=[multi_processing_queue,
                                                                                  udp_server,
@@ -80,17 +69,20 @@ def start_udp_server(name, multi_processing_queue):
 # client
 ##########################################################
 
+number_of_dropped_messages = 0
 
-def send_test_data(udp_client):
+
+def send_test_data(udp_client, multi_processing_queue):
     protocols = []
-    protocols.append(Protocol(MessageType.COMMAND, "This is a command"))
+    protocols.append(Protocol(MessageType.REGISTER_WITH_ACKNOWLEDGES, "Registering with acks"))
     protocols.append(Protocol(MessageType.STATE_ID, "This is a state_id"))
     protocols.append(Protocol(MessageType.COMMAND, FINAL_MESSAGE))
 
     while True:
         protocol = protocols.pop(0)
         logger.debug("For unit test send datagram: {0}".format(str(protocol)))
-        udp_client.send_message_acknowledged(protocol.serialize())
+        # TODO: how does twisted know to which endpoint the message should be sent?
+        udp_client.send_message_acknowledged(protocol)
 
         if protocol.message_content == FINAL_MESSAGE:
             break
@@ -98,13 +90,21 @@ def send_test_data(udp_client):
         time.sleep(1.0)
     logger.debug("Sender thread finished")
 
+    while udp_client.messages_to_be_acknowledged_pending():
+        time.sleep(0.5)
+
+    if udp_client.number_of_dropped_messages == 0:
+        multi_processing_queue.put("Success")
+    else:
+        multi_processing_queue.put("Failure")
+
 
 def start_udp_client(name, multi_processing_queue):
     info(name)
     udp_client = UdpClient()
     connector = reactor.listenUDP(0, udp_client)
 
-    sender_thread = threading.Thread(target=send_test_data, args=[udp_client, ])
+    sender_thread = threading.Thread(target=send_test_data, args=[udp_client, multi_processing_queue])
     sender_thread.start()
 
     wait_for_test_finish = threading.Thread(target=wait_for_test_finished, args=[multi_processing_queue,
@@ -134,12 +134,15 @@ if __name__ == '__main__':
     # client.start()
 
     data = q.get()
-    assert data == FINAL_MESSAGE
+    if data == "Success":
+        logger.info("Test successfull\n\n")
+    else:
+        logger.error("Test failed\n\n")
+
     q.put(FINAL_MESSAGE)
     q.put(FINAL_MESSAGE)
-    print "Test successfull"
 
     server.join()
     client.join()
 
-
+    assert data == "Success"

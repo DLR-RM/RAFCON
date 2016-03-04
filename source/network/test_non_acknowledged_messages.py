@@ -90,7 +90,7 @@ def send_test_data(udp_client):
     while True:
         protocol = protocols.pop(0)
         logger.debug("For unit test send datagram: {0}".format(str(protocol)))
-        udp_client.send_message_non_acknowledged(protocol.serialize())
+        udp_client.send_message_non_acknowledged(protocol)
 
         if protocol.message_content == FINAL_MESSAGE:
             break
@@ -126,11 +126,11 @@ if __name__ == '__main__':
     server = Process(target=start_udp_server, args=("udp_server", q))
     server.start()
 
-    client = Process(target=start_udp_client, args=("udp_client", q))
+    client = Process(target=start_udp_client, args=("udp_client1", q))
     client.start()
 
-    # working with arbitrary number of clients
-    # client = Process(target=start_udp_client, args=("udp_client", q))
+    # #working with arbitrary number of clients
+    # client = Process(target=start_udp_client, args=("udp_client2", q))
     # client.start()
 
     data = q.get()
