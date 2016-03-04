@@ -31,23 +31,29 @@ def mirror_runtime_config_file():
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_docking_signals(*args):
     print "Wait for the gui to initialize"
-    # time.sleep(1.0)
     main_window_controller = args[0]
     menu_bar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+    min_sleep = 0.1
 
     call_gui_callback(main_window_controller.on_left_bar_undock_clicked, None)
+    time.sleep(min_sleep)
     assert main_window_controller.view.left_bar_window.get_top_widget().get_property('visible') == True
     call_gui_callback(main_window_controller.on_left_bar_dock_clicked, None)
+    time.sleep(min_sleep)
     assert main_window_controller.view.left_bar_window.get_top_widget().get_property('visible') == False
 
     call_gui_callback(main_window_controller.on_right_bar_undock_clicked, None)
+    time.sleep(min_sleep)
     assert main_window_controller.view.right_bar_window.get_top_widget().get_property('visible') == True
     call_gui_callback(main_window_controller.on_right_bar_dock_clicked, None)
+    time.sleep(min_sleep)
     assert main_window_controller.view.right_bar_window.get_top_widget().get_property('visible') == False
 
     call_gui_callback(main_window_controller.on_console_undock_clicked, None)
+    time.sleep(min_sleep)
     assert main_window_controller.view.console_window.get_top_widget().get_property('visible') == True
     call_gui_callback(main_window_controller.on_console_dock_clicked, None)
+    time.sleep(min_sleep)
     assert main_window_controller.view.console_window.get_top_widget().get_property('visible') == False
 
     call_gui_callback(menu_bar_ctrl.on_quit_activate, None)
