@@ -307,9 +307,9 @@ class ContainerStateModel(StateModel):
 
         :param source_state_m: State model to load the meta data from
         """
-        for scoped_variable_m in self.data_flows:
+        for scoped_variable_m in self.scoped_variables:
             source_scoped_variable_m = source_state_m.get_scoped_variable_m(
-                scoped_variable_m.scoped_variable.data_flow_id)
+                scoped_variable_m.scoped_variable.data_port_id)
             scoped_variable_m.meta = deepcopy(source_scoped_variable_m.meta)
 
         for transition_m in self.transitions:
