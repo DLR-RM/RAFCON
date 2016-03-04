@@ -528,7 +528,7 @@ class ModificationsHistoryModel(ModelMT):
         """
         if self.with_prints:
             print "states_after: ", model, prop_name, info
-        if hasattr(info, "kwargs") and info.kwargs and \
+        if info.kwargs and \
                 (info.kwargs['result'] == "CRASH in FUNCTION" or isinstance(info.kwargs['result'], Exception)):
             if self.with_prints:
                 logger.warning("function crash detected states_after")

@@ -51,7 +51,7 @@ class StateModel(AbstractStateModel):
         # logger.info("STATEMODEL {0} {1}".format(0,1)) if 'after' in info else logger.info("STATEMODEL {0} {1}".format(1,0))
         # If this model has been changed (and not one of its child states), then we have to update all child models
         # This must be done before notifying anybody else, because other may relay on the updated models
-        if hasattr(info, 'after') and info['after'] and self.state == info['instance']:
+        if 'after' in info and self.state == info['instance']:
             self.update_models(model, prop_name, info)
 
         # mark the state machine this state belongs to as dirty
@@ -85,9 +85,9 @@ class StateModel(AbstractStateModel):
             cause = "outcome_change"
 
         if not (cause is None or changed_list is None):
-            if hasattr(info, 'before') and info['before']:
+            if 'before' in info:
                 changed_list._notify_method_before(self.state, cause, (self.state,), info)
-            elif hasattr(info, 'after') and info['after']:
+            elif 'after' in info:
                 changed_list._notify_method_after(self.state, cause, None, (self.state,), info)
 
         # Notifies parent state

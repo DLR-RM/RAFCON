@@ -176,13 +176,17 @@ class StateMachineModel(ModelMT):
             return
         from rafcon.mvc import statemachine_helper
 
-        new_state_class = info.args[1]
-
         state_m = self.root_state
 
         # Before the root state type is actually changed, we extract the information from the old state model and remove
         # the model from the selection
-        if hasattr(info, 'before') and info['before']:
+        if 'before' in info:
+            # robust check for new_state_class-argument
+            if len(info.args) > 1:
+                new_state_class = info.args[1]
+            else:
+                new_state_class = info.kwargs['new_state_class']
+
             state_m.unregister_observer(self)
             self.selection.remove(state_m)
 
@@ -213,7 +217,7 @@ class StateMachineModel(ModelMT):
 
     def __send_root_state_notification(self, model, prop_name, info):
         cause = 'root_state_change'
-        if hasattr(info, 'before') and info.before:
+        if 'before' in info:
             self.state_machine._notify_method_before(self.state_machine, cause, (self.state_machine, ), info)
-        elif hasattr(info, 'after') and info.after:
+        elif 'after' in info:
             self.state_machine._notify_method_after(self.state_machine, cause, None, (self.state_machine, ), info)
