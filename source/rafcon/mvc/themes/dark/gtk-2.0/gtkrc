@@ -288,8 +288,8 @@ style "notebook" {
     bg[PRELIGHT]      = @accent
     bg[SELECTED]      = @accent
 }
-widget "*tree_notebook_up" style : highest "notebook"
-widget "*tree_notebook_down" style : highest "notebook"
+widget "*upper_notebook" style : highest "notebook"
+widget "*lower_notebook" style : highest "notebook"
 widget "*main_notebook_1" style : highest "notebook"
 widget "*main_notebook_2" style : highest "notebook"
 widget "*ports_notebook" style : highest "notebook"
