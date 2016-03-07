@@ -3,6 +3,7 @@ from time import gmtime, strftime
 import time
 from config import global_config
 from protocol import Protocol, MessageType
+import collections
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
@@ -30,6 +31,9 @@ class CommunicationEndpoint(DatagramProtocol):
         self._registered_endpoints = {}
         self._registered_endpoints_for_acknowledgements = []
         self.number_of_dropped_messages = 0
+        self._message_history = collections.deque(maxlen=global_config.get_config_value("HISTORY_LENGTH"))
+        # this is only to speed up memory access times
+        self._message_history_dictionary = {}
 
         self.check_acknowledgements_thread = threading.Thread(target=self.check_acknowledgements)
 
@@ -70,10 +74,14 @@ class CommunicationEndpoint(DatagramProtocol):
                     messages_to_be_droped.append(key)
 
             for key in messages_to_be_droped:
-                logger.warn("Message {0} dropped because of timeout".format(self._messages_to_be_acknowledged[key]))
-                del self._messages_to_be_acknowledged[key]
-                del self._messages_to_be_acknowledged_timeout[key]
-                self.number_of_dropped_messages += 1
+                # this is not the right strategy:
+                # logger.warn("Message {0} dropped because of timeout".format(self._messages_to_be_acknowledged[key]))
+                # del self._messages_to_be_acknowledged[key]
+                # del self._messages_to_be_acknowledged_timeout[key]
+                # self.number_of_dropped_messages += 1
+                logger.warn("Message {0} is going to be resent as no acknowledge was received yet".
+                            format(self._messages_to_be_acknowledged[key]))
+                self.send_message_acknowledged(self._messages_to_be_acknowledged[key])
 
     def datagramReceived(self, datagram, address):
 
@@ -83,6 +91,21 @@ class CommunicationEndpoint(DatagramProtocol):
         except Exception, e:
             import traceback
             logger.error("Received message could not be deserialized: {0} {1}".format(e.message, traceback.format_exc()))
+
+        # throwing away messages that were received before
+        if protocol.checksum not in self._message_history_dictionary.iterkeys():
+            # check if ringbuffer is already full
+            if len(self._message_history) == self._message_history.maxlen:
+                oldest_history_element = self._message_history.popleft()
+                del self._message_history_dictionary[protocol.checksum]
+            self._message_history.append(protocol.checksum)
+            self._message_history_dictionary[protocol.checksum] = protocol
+
+            # custom function
+            self.datagram_received_function(datagram, address)
+        else:
+            # logger.info("Message was already received!")
+            return
 
         # registering endpoints
         if protocol.message_type is MessageType.REGISTER \
@@ -99,15 +122,12 @@ class CommunicationEndpoint(DatagramProtocol):
             self._acknowledge_messages_address_couples.append((protocol, address))
             self._new_message_cv.notify()
             self._new_message_cv.release()
-
-        # acknowledge message if endpoint registered for acknowledgements
-        if address in self._registered_endpoints_for_acknowledgements:
-            if protocol.message_type is not MessageType.ACK: # ACK messages are not acknowledged!
+        else:  # acknowledge message if endpoint registered for acknowledgements
+            if address in self._registered_endpoints_for_acknowledgements:
                 ack_message = Protocol(MessageType.ACK, protocol.checksum)
                 self.send_message_non_acknowledged(ack_message, address)
-
-        # custom function
-        self.datagram_received_function(datagram, address)
+            else:
+                pass
 
     def send_message_non_acknowledged(self, message, address=None):
         for i in range(0, BURST_NUMBER):

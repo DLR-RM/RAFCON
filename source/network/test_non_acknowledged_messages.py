@@ -46,6 +46,8 @@ def write_back_message(datagram, address):
     logger.info("Server received datagram {0} from address: {1}".format(str(datagram), str(address)))
     server_transport.write(datagram, address)
     protocol = Protocol(datagram=datagram)
+    # small sleep to let burst send all messages
+    time.sleep(0.1)
     if protocol.message_content == FINAL_MESSAGE:
         logger.info("Server puts final message to multiprocessing queue")
         server_queue.put(FINAL_MESSAGE)
@@ -92,7 +94,7 @@ def send_test_data(udp_client):
         logger.debug("For unit test send datagram: {0}".format(str(protocol)))
         udp_client.send_message_non_acknowledged(protocol)
 
-        if protocol.message_content == FINAL_MESSAGE:
+        if protocol.message_content is FINAL_MESSAGE:
             break
 
         time.sleep(1.0)
