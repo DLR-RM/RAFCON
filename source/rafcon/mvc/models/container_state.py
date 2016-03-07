@@ -116,9 +116,9 @@ class ContainerStateModel(StateModel):
             cause = 'scoped_variable_change'
 
         if not (cause is None or changed_list is None):
-            if hasattr(info, 'before') and info['before']:
+            if 'before' in info:
                 changed_list._notify_method_before(self.state, cause, (self.state,), info)
-            elif hasattr(info, 'after') and info['after']:
+            elif 'after' in info:
                 changed_list._notify_method_after(self.state, cause, None, (self.state,), info)
 
         # Finally call the method of the base class, to forward changes in ports and outcomes
@@ -201,7 +201,7 @@ class ContainerStateModel(StateModel):
 
         # Before the state type is actually changed, we extract the information from the old state model and remove
         # the model from the selection
-        if hasattr(info, 'before') and info['before']:
+        if 'before' in info:
             # remove selection from StateMachineModel.selection -> find state machine model
             from rafcon.mvc.singleton import state_machine_manager_model
             state_machine_m = state_machine_manager_model.get_sm_m_for_state_model(state_m)
@@ -307,9 +307,9 @@ class ContainerStateModel(StateModel):
 
         :param source_state_m: State model to load the meta data from
         """
-        for scoped_variable_m in self.data_flows:
+        for scoped_variable_m in self.scoped_variables:
             source_scoped_variable_m = source_state_m.get_scoped_variable_m(
-                scoped_variable_m.scoped_variable.data_flow_id)
+                scoped_variable_m.scoped_variable.data_port_id)
             scoped_variable_m.meta = deepcopy(source_scoped_variable_m.meta)
 
         for transition_m in self.transitions:

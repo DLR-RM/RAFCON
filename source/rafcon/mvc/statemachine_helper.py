@@ -253,7 +253,7 @@ def create_state_model_for_state(new_state, state_element_models):
 
     # by default all transitions are left out if the new and original state are container states
     # -> because Barrier, Preemptive or Hierarchy has always different rules
-    if hasattr(state_element_models, 'transitions'):
+    if isinstance(state_element_models, ContainerStateModel):
         state_element_models['transitions'] = []
 
     # insert and link original state model attributes (child-models) into/with new state model (the new parent)

@@ -15,16 +15,15 @@ import testing_utils
 from testing_utils import call_gui_callback
 import pytest
 
-from test_zz_gui_docking import mirror_runtime_config_file, DOCKING_TEST_FOLDER
+from test_zz_gui_docking import DOCKING_TEST_FOLDER
 
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_docking_signals(*args):
     print "Wait for the gui to initialize"
-    # time.sleep(1)
     main_window_controller = args[0]
     menu_bar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    min_sleep = 0.5
+    min_sleep = 0.1
 
     # Left Bar
     call_gui_callback(main_window_controller.on_left_bar_undock_clicked, None)
@@ -47,7 +46,7 @@ def trigger_docking_signals(*args):
 
     # Right Bar
     call_gui_callback(main_window_controller.on_right_bar_undock_clicked, None)
-    time.sleep(2*min_sleep)
+    time.sleep(min_sleep)
     window_pos = main_window_controller.view.right_bar_window.get_top_widget().get_position()
     window_size = main_window_controller.view.right_bar_window.get_top_widget().get_size()
     assert window_pos == global_runtime_config.get_config_value('RIGHT_BAR_WINDOW_POS')
@@ -66,7 +65,6 @@ def trigger_docking_signals(*args):
 
     # Console
     call_gui_callback(main_window_controller.on_console_undock_clicked, None)
-    min_sleep = 1.0
     time.sleep(2*min_sleep)
     window_pos = main_window_controller.view.console_window.get_top_widget().get_position()
     window_size = main_window_controller.view.console_window.get_top_widget().get_size()
@@ -91,7 +89,6 @@ def test_window_positions(caplog):
     testing_utils.test_multithrading_lock.acquire()
     os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
-    mirror_runtime_config_file()
     global_runtime_config.load(config_file='runtime_config.yaml', path=DOCKING_TEST_FOLDER)
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
