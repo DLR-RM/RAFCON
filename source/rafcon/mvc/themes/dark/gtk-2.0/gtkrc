@@ -324,7 +324,7 @@ widget "*left_bar_return_button" style : highest "sidebar-hide-button"
 widget "*right_bar_hide_button" style : highest "sidebar-hide-button"
 widget "*console_hide_button" style : highest "sidebar-hide-button"
 
-style "logger" {
+style "scrollable_input" {
     bg[ACTIVE]        = @input_background
     bg[INSENSITIVE]   = @input_background
     bg[NORMAL]        = @input_background
@@ -337,7 +337,8 @@ style "logger" {
     base[SELECTED]    = @input_background
 }
 
-widget "*console_scroller.*" style : highest "logger"
+widget "*console_scroller.*" style : highest "scrollable_input"
+widget "*description_scroller.*" style : highest "scrollable_input"
 
 style "inner-widget" {
     bg[ACTIVE]        = @background_widgets
@@ -359,7 +360,9 @@ widget "*outcomes_viewport*.*widget_title*" style : highest "widget-title"
 widget "*data_ports_box*.*widget_title*" style : highest "widget-title"
 widget "*transitions_viewport*.*widget_title*" style : highest "widget-title"
 widget "*data_flows_viewport*.*widget_title*" style : highest "widget-title"
-widget "*description_scroller*.*widget_title*" style : highest "widget-title"
+widget "*description_viewport*.*widget_title*" style : highest "widget-title"
+widget "*linkage_container*.*widget_title*" style : highest "widget-title"
+widget "*linkage_container*.*widget_title2*" style : highest "widget-title"
 
 #widget "*sticky_button*" style : highest "test-style"
 

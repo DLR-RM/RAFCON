@@ -1,5 +1,6 @@
 from gtkmvc import View
 from rafcon.mvc.utils import constants
+from rafcon.mvc import gui_helper
 
 
 class StateDataFlowsListView(View):
@@ -72,10 +73,13 @@ class StateDataFlowsListView(View):
 
 class StateDataFlowsEditorView(View):
     builder = './glade/state_data_flows_widget.glade'
-    top = 'vbox1'
+    top = 'data_flows_container'
 
     def __init__(self):
         View.__init__(self)
+
+        gui_helper.set_label_markup(self['data_flows_label'], 'DATA FLOWS', letter_spacing=constants.LETTER_SPACING_1PT)
+
         self.data_flows_listView = StateDataFlowsListView()
         self['dataflows_scroller'].add(self.data_flows_listView.get_top_widget())
 

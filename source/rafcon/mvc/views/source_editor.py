@@ -2,6 +2,7 @@ import gtk
 from gtkmvc import View
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.utils import constants
+from rafcon.mvc import gui_helper
 
 try:
     import gtksourceview2
@@ -28,7 +29,8 @@ class SourceEditorView(View):
         hbox.set_border_width(constants.BORDER_WIDTH)
         hbox.set_name('widget_title')
 
-        source_label = gtk.Label("Source Editor")
+        source_label = gui_helper.create_label_with_text_and_spacing('SOURCE EDITOR',
+                                                                     letter_spacing=constants.LETTER_SPACING_1PT)
         source_label.set_alignment(0.0, 0.5)
         source_box = gtk.EventBox()
         source_box.set_name('widget_title')

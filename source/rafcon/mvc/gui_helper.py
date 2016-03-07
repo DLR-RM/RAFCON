@@ -35,7 +35,7 @@ def create_tab_header_label(tab_name, icons):
 def create_label_with_text_and_spacing(text, font=constants.INTERFACE_FONT, font_size=constants.FONT_SIZE_NORMAL,
                                        letter_spacing=constants.LETTER_SPACING_NONE):
     label = gtk.Label()
-    label.set_markup('<span font_desc="%s %s" letter_spacing="%s">%s</span>' % (font, font_size, letter_spacing, text))
+    set_label_markup(label, text, font, font_size, letter_spacing)
     label.show()
     return label
 
@@ -48,7 +48,7 @@ def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
     :return: The created label
     """
     label = gtk.Label()
-    label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, font_size, icon))
+    set_label_markup(label, '&#x' + icon + ';', constants.ICON_FONT, font_size)
     label.show()
     return label
 
@@ -111,9 +111,16 @@ def set_notebook_title(notebook, page_num, title_label):
     :param title_label: The GTK label holding the notebook's title
     :return: The new title of the notebook
     """
-    title = get_notebook_tab_title(notebook, page_num)
-    title_label.set_text(title)
-    return title
+    text = get_notebook_tab_title(notebook, page_num)
+    set_label_markup(title_label, text, constants.INTERFACE_FONT, constants.FONT_SIZE_BIG, constants.LETTER_SPACING_1PT)
+    return text
+
+
+def set_label_markup(label, text, font=constants.INTERFACE_FONT, font_size=constants.FONT_SIZE_NORMAL,
+                     letter_spacing=constants.LETTER_SPACING_NONE):
+    label.set_markup('<span font_desc="{0} {1}" letter_spacing="{2}">{3}</span>'.format(font, font_size,
+                                                                                        letter_spacing, text))
+
 
 
 def set_window_size_and_position(window, window_key):

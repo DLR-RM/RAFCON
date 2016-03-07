@@ -102,7 +102,7 @@ class MainWindowView(View):
                                                                                font_size=constants.FONT_SIZE_BIG,
                                                                                letter_spacing=constants.
                                                                                LETTER_SPACING_1PT)
-        graphical_editor_label.set_alignment(.05, .5)
+        graphical_editor_label.set_alignment(0, .5)
         self['graphical_editor_label_event_box'].add(graphical_editor_label)
 
         ######################################################
