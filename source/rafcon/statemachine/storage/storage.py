@@ -264,30 +264,25 @@ class StateMachineStorage(Observable):
 
         try:
             state_info = self.load_appropriate_file(yaml_file, json_file)
-        except Exception, e:
-            # this is the case that the user aborted the re
-            if isinstance(e, LibraryNotFoundException):
-                # import traceback
-                # logger.error("Library could not be loaded: {0}\n{1}.\n"
-                #              "Skipping library and continuing loading the state machine".format(str(e.message),
-                #                                                                                 traceback.format_exc()))
-                logger.error("Library could not be loaded: {0}\n"
-                             "Skipping library and continuing loading the state machine".format(str(e.message)))
+        except LibraryNotFoundException, e:
+            # import traceback
+            # logger.error("Library could not be loaded: {0}\n{1}.\n"
+            #              "Skipping library and continuing loading the state machine".format(str(e.message),
+            #                                                                                 traceback.format_exc()))
+            logger.error("Library could not be loaded: {0}\n"
+                         "Skipping library and continuing loading the state machine".format(str(e.message)))
 
-                from rafcon.statemachine.states.hierarchy_state import HierarchyState
-                state_id = self.retrieve_state_id_from_raw_file(yaml_file, json_file)
-                dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id)
-                # set parent of dummy state
-                if parent:
-                    from rafcon.statemachine.states.state import State
-                    if isinstance(parent, State):
-                        parent.add_state(dummy_state, storage_load=True)
-                    else:
-                        dummy_state.parent = parent
-                return dummy_state
-            else:
-                # just re-raise the exception in the case that it is not a LibraryNotFoundException
-                raise
+            from rafcon.statemachine.states.hierarchy_state import HierarchyState
+            state_id = self.retrieve_state_id_from_raw_file(yaml_file, json_file)
+            dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id)
+            # set parent of dummy state
+            if parent:
+                from rafcon.statemachine.states.state import State
+                if isinstance(parent, State):
+                    parent.add_state(dummy_state, storage_load=True)
+                else:
+                    dummy_state.parent = parent
+            return dummy_state
 
         # Transitions and data flows are not added when loading a state, as also states are not added.
         # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
@@ -338,7 +333,6 @@ class StateMachineStorage(Observable):
 
     @staticmethod
     def parse_state_id_from_yaml(yaml_file):
-        print "parse state from yaml"
         with open(yaml_file) as open_yaml_file:
             for line in open_yaml_file:
                 splitted_line = line.split()
