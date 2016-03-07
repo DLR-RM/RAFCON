@@ -1,5 +1,5 @@
 """
-.. module:: preemptive_concurrency_state
+.. module:: filesystem
    :platform: Unix, Windows
    :synopsis: A module to hold all filesystem specific utility functions
 

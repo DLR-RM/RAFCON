@@ -1,5 +1,5 @@
 """
-.. module:: preemptive_concurrency_state
+.. module:: geometry
    :platform: Unix, Windows
    :synopsis: A module holding all utility functions concerning geometric drawing
 

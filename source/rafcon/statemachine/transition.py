@@ -1,5 +1,5 @@
 """
-.. module:: preemptive_concurrency_state
+.. module:: transition
    :platform: Unix, Windows
    :synopsis: A module to represent a transition in the state machine
 

@@ -96,11 +96,6 @@ A module to view the data flow of a respective state (internal, external)
 
 .. automodule:: rafcon.mvc.views.state_data_flows
 
-StateDataportEditorView (in state_data_port_editor)
----------------------------------------------------
-
-.. automodule:: rafcon.mvc.views.state_data_port_editor
-
 StateEditorView (in state_editor)
 ---------------------------------
 

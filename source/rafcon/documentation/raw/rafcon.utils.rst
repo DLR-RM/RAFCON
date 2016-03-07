@@ -12,9 +12,9 @@ constants
 ---------
 .. automodule:: rafcon.utils.constants
 
-dialog
-------
-.. automodule:: rafcon.utils.dialog
+filesystem
+----------
+.. automodule:: rafcon.utils.filesystem
 
 geometry
 --------

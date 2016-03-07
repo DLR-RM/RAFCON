@@ -1,5 +1,5 @@
 """
-.. module:: preemptive_concurrency_state
+.. module:: outcome
    :platform: Unix, Windows
    :synopsis: A module to represent an outcome in the state machine
 

@@ -1,5 +1,5 @@
 """
-.. module:: preemptive_concurrency_state
+.. module:: config_base
    :platform: Unix, Windows
    :synopsis: A module to represent configurations inside RAFCON
 
