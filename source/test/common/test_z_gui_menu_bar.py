@@ -13,6 +13,7 @@ from rafcon.utils import log
 # core elements
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.state_machine import StateMachine
 
 # mvc elements
@@ -21,6 +22,8 @@ from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.graphical_editor import GraphicalEditor as OpenGLEditor
 from rafcon.mvc.mygaphas.view import ExtendedGtkView as GaphasEditor
 from rafcon.mvc.views.main_window import MainWindowView
+
+import rafcon.mvc.statemachine_helper as statemachine_helper
 
 # singleton elements
 import rafcon.mvc.singleton
@@ -37,8 +40,9 @@ def setup_module(module):
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     print "File: ", dirname(__file__), dirname(dirname(__file__))
 
-    library_paths["ros"] = join(rafcon.__path__[0] + "/..", "test_scripts", "ros_libraries")
-    library_paths["turtle_libraries"] = join(rafcon.__path__[0] + "/..", "test_scripts", "turtle_libraries")
+    library_paths["ros"] = rafcon.__path__[0] + "/../test_scripts/ros_libraries"
+    library_paths["turtle_libraries"] = rafcon.__path__[0] + "/../test_scripts/turtle_libraries"
+    library_paths["generic"] = rafcon.__path__[0] + "/../libraries/generic"
 
 
 def teardown_module(module):
@@ -191,7 +195,7 @@ def trigger_gui_signals(*args):
     #########################################################
     # select a execution state -> and paste it some where
 
-    state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/UEPNNW')
+    state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')  # /UEPNNW
     print "\n\n %s \n\n" % state_m.state.name
     # print "set"
     call_gui_callback(sm_m.selection.set, [state_m])
@@ -293,6 +297,43 @@ def trigger_gui_signals(*args):
     # IN CASE OF ASSERTION SECURE FOCUS FOR MAIN MAIN WINDOW !!!!
     assert len(state_m.state.states) == old_child_state_count + 1
     ##########################################################
+
+    # complex state with all elements
+    lib_state = LibraryState("generic/dialog", "Dialog [3 options]", "0.1", "Dialog [3 options]")
+    call_gui_callback(statemachine_helper.insert_state, lib_state, True)
+    assert len(state_m.state.states) == old_child_state_count + 2
+
+    for state in state_m.state.states.values():
+        if state.name == "Dialog [3 options]":
+            break
+    new_template_state = state
+    # print new_template_state
+    call_gui_callback(new_template_state.add_scoped_variable, 'scoopy', float, 0.3)
+
+    state_m_to_copy = sm_m.get_state_model_by_path('CDMJPK/' + new_template_state.state_id)
+    call_gui_callback(sm_m.selection.set, [state_m_to_copy])
+    focus_graphical_editor_in_page(page)
+    call_gui_callback(menubar_ctrl.on_copy_selection_activate, None, None)
+
+    # paste in it-self
+    old_child_state_count = len(state_m_to_copy.state.states)
+    call_gui_callback(sm_m.selection.set, [state_m_to_copy])
+    focus_graphical_editor_in_page(page)
+    call_gui_callback(menubar_ctrl.on_paste_clipboard_activate, None, None)
+    assert len(state_m_to_copy.state.states) == old_child_state_count + 1
+
+    # increase complexity by doing it twice
+    state_m_to_copy = sm_m.get_state_model_by_path('CDMJPK/' + new_template_state.state_id)
+    call_gui_callback(sm_m.selection.set, [state_m_to_copy])
+    focus_graphical_editor_in_page(page)
+    call_gui_callback(menubar_ctrl.on_copy_selection_activate, None, None)
+
+    # paste in it-self
+    old_child_state_count = len(state_m_to_copy.state.states)
+    call_gui_callback(sm_m.selection.set, [state_m_to_copy])
+    focus_graphical_editor_in_page(page)
+    call_gui_callback(menubar_ctrl.on_paste_clipboard_activate, None, None)
+    assert len(state_m_to_copy.state.states) == old_child_state_count + 1
 
     call_gui_callback(menubar_ctrl.on_refresh_libraries_activate, None)
     call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)

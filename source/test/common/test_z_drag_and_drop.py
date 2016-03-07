@@ -95,7 +95,7 @@ def trigger_drag_and_drop_tests(*args):
 
     selection_data = StructHelper(0, 0, None)
 
-    # insert state in rootstate
+    # insert state in root_state
     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 200, 200, None)
     call_gui_callback(library_tree_controller.on_drag_data_get, library_tree_controller.view, None, selection_data, 0, None)
     call_gui_callback(graphical_editor_controller.on_drag_data_received, None, None, 200, 200, selection_data, None, None)
@@ -143,13 +143,12 @@ def test_drag_and_drop_test(caplog):
 
     testing_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_libraries"] = testing_utils.get_test_sm_path("test_libraries")
+    library_paths["unit_test_state_machines"] = testing_utils.get_test_sm_path("unit_test_state_machines")
 
     rafcon.statemachine.singleton.library_manager.initialize()
 
-
     if testing_utils.sm_manager_model is None:
-            testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     main_window_view = MainWindowView()
 
@@ -157,7 +156,7 @@ def test_drag_and_drop_test(caplog):
     testing_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                      editor_type='LogicDataGrouped')
+                                                  editor_type='LogicDataGrouped')
 
     thread = threading.Thread(target=trigger_drag_and_drop_tests,
                               args=[testing_utils.sm_manager_model, main_window_controller, logger])

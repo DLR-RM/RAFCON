@@ -54,13 +54,16 @@ def write_dict_to_json(dictionary, path, **kwargs):
     f.close()
 
 
-def load_dict_from_json(path):
+def load_dict_from_json(path, as_dict=False):
     """Loads a dictionary from a json file.
 
     :param path: The relative path of the json file.
     :return: The dictionary specified in the json file
     """
     f = file(path, 'r')
-    result = json.load(f, cls=JSONObjectDecoder)
+    if as_dict:
+        result = json.load(f)
+    else:
+        result = json.load(f, cls=JSONObjectDecoder)
     f.close()
     return result

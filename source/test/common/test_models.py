@@ -4,6 +4,7 @@ from gtkmvc.observer import Observer
 from rafcon.statemachine.script import Script
 from rafcon.statemachine.enums import StateType
 from rafcon.statemachine.states.state import State
+from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
@@ -16,6 +17,7 @@ import pytest
 import testing_utils
 
 with_print = False
+
 
 class NotificationLogObserver(Observer):
     """ This observer is a abstract class to counts and store notification
@@ -301,7 +303,7 @@ def store_state_elements(state, state_m):
     # print state_elements['outcomes'], state.outcomes
 
     # collect scoped_variables
-    if hasattr(state, 'scoped_variables'):
+    if isinstance(state, ContainerState):
         state_elements['scoped_variables'] = []
         for sv_id, sv, in state.scoped_variables.iteritems():
             state_elements['scoped_variables'].append(sv_id)
@@ -317,7 +319,7 @@ def store_state_elements(state, state_m):
             assert sv_id in model_id_store
 
     # collect states
-    if hasattr(state, 'states'):
+    if isinstance(state, ContainerState):
         state_elements['states'] = []
         for s_id, s in state.states.iteritems():
             state_elements['states'].append(s_id)
@@ -325,8 +327,8 @@ def store_state_elements(state, state_m):
         model_id_store = []
         # state_m_elements['states_meta'] = {}
         for s_m_id, s_m in state_m.states.iteritems():
-            if not hasattr(s_m, "state"):
-                print s_m
+            # if not hasattr(s_m, "state"):
+            #     print s_m
             assert s_m_id == s_m.state.state_id
             assert s_m_id in state_elements['states']
             assert s_m.state.state_id in state_elements['states']
@@ -337,7 +339,7 @@ def store_state_elements(state, state_m):
             assert s_id in model_id_store
 
     # collect data_flows
-    if hasattr(state, 'data_flows'):
+    if isinstance(state, ContainerState):
         state_elements['data_flows'] = []
         for df_id, df in state.data_flows.iteritems():
             state_elements['data_flows'].append(df_id)
@@ -353,7 +355,7 @@ def store_state_elements(state, state_m):
             assert df_id in model_id_store
 
     # collect transitions
-    if hasattr(state, 'transitions'):
+    if isinstance(state, ContainerState):
         state_elements['transitions'] = []
         for t_id, t in state.transitions.iteritems():
             state_elements['transitions'].append(t_id)
@@ -374,7 +376,7 @@ def store_state_elements(state, state_m):
     def is_related_data_flow(parent, state_id, df):
         return df.from_state == state_id or df.to_state == state_id
 
-    if hasattr(state, 'parent') and state.parent is not None and isinstance(state.parent, State):
+    if isinstance(state, State) and state.parent is not None and isinstance(state.parent, State):
         # collect transitions of parent related and not related to me
         state_elements['transitions_external'] = []
         state_elements['transitions_external_not_related'] = []
@@ -481,8 +483,8 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
         # - check if the right models are there and only those
         model_id_store = []
         for s_m_id, s_m in state_m.states.iteritems():
-            if not hasattr(s_m, "state"):
-                print s_m
+            # if not hasattr(s_m, "state"):
+            #     print s_m
             assert s_m_id == s_m.state.state_id
             assert s_m_id in stored_state_elements['states']
             assert s_m.state.state_id in stored_state_elements['states']
@@ -493,7 +495,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
         for s_id in stored_state_elements['states']:
             assert s_id in model_id_store
     else:
-        assert not hasattr(state, 'states')
+        assert not isinstance(state, ContainerState)
     # exit(0)
 
     # check scoped_variables
@@ -510,7 +512,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
         for sv_id in stored_state_elements['scoped_variables']:
             assert sv_id in model_id_store
     else:
-        assert not hasattr(state, 'scoped_variables')
+        assert not isinstance(state, ContainerState)
 
     # check transitions internal
     if 'transitions_internal' in check_list:
@@ -526,7 +528,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
         for t_id in stored_state_elements['transitions']:
             assert t_id in model_id_store
     else:
-        assert not hasattr(state, 'transitions')
+        assert not isinstance(state, ContainerState)
 
     def is_related_transition(parent, state_id, t):
         return t.from_state == state_id or t.to_state == state_id
@@ -567,7 +569,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
         for df_id in stored_state_elements['data_flows']:
             assert df_id in model_id_store
     else:
-        assert not hasattr(state, 'data_flows')
+        assert not isinstance(state, ContainerState)
 
     def is_related_data_flow(parent, state_id, df):
         return df.from_state == state_id or df.to_state == state_id
@@ -626,20 +628,20 @@ def check_state_for_all_models(state, state_m):
         assert oc_m.outcome.outcome_id in core_id_store
 
     # check states
-    if hasattr(state, 'states'):
+    if isinstance(state, ContainerState):
         core_id_store = []
         for s_id, s in state.states.iteritems():
             core_id_store.append(s_id)
         # - check if the right models are there and only those
         for s_m_id, s_m in state_m.states.iteritems():
-            if not hasattr(s_m, "state"):
-                print s_m
+            # if not hasattr(s_m, "state"):
+            #     print s_m
             assert s_m_id == s_m.state.state_id
             assert s_m_id in core_id_store
             assert s_m.state.state_id in core_id_store
 
     # check scoped_variables
-    if hasattr(state, 'scoped_variables'):
+    if isinstance(state, ContainerState):
         core_id_store = []
         for sv_id, sv, in state.scoped_variables.iteritems():
             core_id_store.append(sv_id)
@@ -647,7 +649,7 @@ def check_state_for_all_models(state, state_m):
         for sv_m in state_m.scoped_variables:
             assert sv_m.scoped_variable.data_port_id in core_id_store
 
-    if hasattr(state, 'transitions'):
+    if isinstance(state, ContainerState):
         # check transitions internal
         core_id_store = []
         for t_id, t in state.transitions.iteritems():
@@ -678,7 +680,7 @@ def check_state_for_all_models(state, state_m):
         else:
             pass  # paren should be state_machine
 
-    if hasattr(state, 'data_flows'):
+    if isinstance(state, ContainerState):
         # check data_flows internal
         core_id_store = []
         for df_id, df in state.data_flows.iteritems():
@@ -801,7 +803,7 @@ def test_add_remove_models(caplog):
                       'path': state.get_path(),
                       'script': script, 'name': state.name, 'description': state.description}
 
-        if hasattr(state, 'states'):
+        if isinstance(state, ContainerState):
             for s_id, child_state in state.states.iteritems():
                 state_dict['states'][s_id] = print_all_states_with_path_and_name(child_state)
             for dp_id, dp in state.input_data_ports.iteritems():
@@ -828,7 +830,7 @@ def test_add_remove_models(caplog):
                 everything_right = everything_right and check_if_all_states_there(state.states[s_id], s_dict)
             else:
                 everything_right = False
-        if hasattr(state, 'states'):
+        if isinstance(state, ContainerState):
             for s_id, s in state.states.iteritems():
                 everything_right = everything_right and s_id in state_dict['states']
                 if not s_id in state_dict['states']:
@@ -1017,6 +1019,7 @@ def test_add_remove_models(caplog):
 def test_state_property_modifications_history(caplog):
     ##################
     # state properties
+    # TODO the LibraryStateModel and StateModel has to be checked separately like mentioned in the notification-test
 
     # change name
 

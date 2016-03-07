@@ -30,8 +30,6 @@ class StateOverviewController(ExtendedController, Model):
     :param rafcon.mvc.views.SourceEditorView view: The GTK view showing the data as a table
     """
 
-    # TODO Missing functions
-
     def __init__(self, model, view):
         """Constructor
         """

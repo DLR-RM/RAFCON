@@ -4,6 +4,7 @@ import logging
 import os
 import gtk
 import signal
+import traceback
 import argparse
 from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
 
@@ -143,7 +144,10 @@ if __name__ == '__main__':
                 state_machine, version, creation_time = storage.load_statemachine_from_path(path)
                 sm_singletons.state_machine_manager.add_state_machine(state_machine)
             except Exception as e:
-                logger.error("Could not load state-machine {0}: {1}".format(path, e))
+                logger.error("Could not load state-machine {0}: {1}\n{2}".format(path,
+                                                                                 e.message,
+                                                                                 traceback.format_exc()))
+                # logger.error("Could not load state-machine {0}: {1}".format(path, e.message))
 
     if setup_config['new']:
         root_state = HierarchyState()
@@ -152,21 +156,9 @@ if __name__ == '__main__':
 
     sm_manager_model = mvc_singletons.state_machine_manager_model
 
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type="LogicDataGrouped")
-    main_window = main_window_view.get_top_widget()
-    size = global_runtime_config.get_config_value("WINDOW_SIZE", None)
-    position = global_runtime_config.get_config_value("WINDOW_POS", None)
-    if size:
-        main_window.resize(size[0], size[1])
-    if position:
-        position = (max(0, position[0]), max(0, position[1]))
-        screen_width = gtk.gdk.screen_width()
-        screen_height = gtk.gdk.screen_height()
-        if position[0] < screen_width and position[1] < screen_height:
-            main_window.move(position[0], position[1])
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type='LogicDataGrouped')
 
-
-# Ensure that the next message is being printed (needed for LN manager to detect finished startup)
+    # Ensure that the next message is being printed (needed for LN manager to detect finished startup)
     level = logger.level
     logger.setLevel(logging.INFO)
     logger.info("Ready")

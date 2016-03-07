@@ -269,6 +269,15 @@ class GraphicalEditorController(ExtendedController):
             state_v = self.canvas.get_view_for_model(state_m)
             self.canvas.request_update(state_v, matrix=False)
 
+    @ExtendedController.observe("state_machine", before=True)
+    def state_machine_change(self, model, prop_name, info):
+        if 'method_name' in info and info['method_name'] == 'root_state_change':
+            method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
+
+            if method_name == 'change_state_type':
+                self._change_state_type = True
+                return
+
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change(self, model, prop_name, info):
         """Called on any change within th state machine
@@ -281,14 +290,7 @@ class GraphicalEditorController(ExtendedController):
         :param dict info: Information about the change
         """
 
-        if 'method_name' in info and info['method_name'] == 'root_state_before_change':
-            method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
-
-            if method_name == 'change_state_type':
-                self._change_state_type = True
-                return
-
-        if 'method_name' in info and info['method_name'] == 'root_state_after_change':
+        if 'method_name' in info and info['method_name'] == 'root_state_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
             # The method causing the change raised an exception, thus nothing was changed

@@ -1,6 +1,7 @@
 import gtk
 from gtkmvc import View
 from rafcon.mvc.utils import constants
+from rafcon.mvc import gui_helper
 
 
 class TopToolBarView(View):
@@ -13,20 +14,18 @@ class TopToolBarView(View):
         self.get_top_widget().set_events(gtk.gdk.POINTER_MOTION_MASK | gtk.gdk.POINTER_MOTION_HINT_MASK |
                                          gtk.gdk.BUTTON_PRESS_MASK)
 
-        cb = self['close_button']
-        maxb = self['maximize_button']
-        minb = self['minimize_button']
+        close_button = self['close_button']
+        maximize_button = self['maximize_button']
+        minimize_button = self['minimize_button']
+        redock_button = self['redock_button']
 
-        label = gtk.Label()
-        label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
-                                                                    constants.FONT_SIZE_BIG,
-                                                                    constants.BUTTON_CLOSE))  # close button sign
-        cb.set_label_widget(label)
+        close_label = gui_helper.create_button_label(constants.BUTTON_CLOSE)
+        close_button.set_label_widget(close_label)
 
-        label = gtk.Label()
-        label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT,
-                                                                    constants.FONT_SIZE_BIG,
-                                                                    constants.BUTTON_EXP))  # expand button sign
-        maxb.set_label_widget(label)
+        maximize_label = gui_helper.create_button_label(constants.BUTTON_EXP)
+        maximize_button.set_label_widget(maximize_label)
 
-        minb.set_label("_")
+        minimize_button.set_label('_')
+
+        redock_label = gui_helper.create_button_label(constants.BUTTON_UNDOCK)
+        redock_button.set_label_widget(redock_label)

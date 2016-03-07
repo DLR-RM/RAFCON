@@ -87,8 +87,6 @@ class GraphicalEditorController(ExtendedController):
         element
     """
 
-    _suspend_drawing = False
-
     def __init__(self, model, view):
         """Constructor"""
         assert isinstance(model, StateMachineModel)
@@ -121,6 +119,8 @@ class GraphicalEditorController(ExtendedController):
         self.changed_models = []
         self.changes_affect_children = False
         self._last_meta_data_changed = None
+
+        self._suspend_drawing = False
 
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
@@ -175,7 +175,7 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_machine", before=True)
     def state_machine_before_change(self, model, prop_name, info):
-        if 'method_name' in info and info['method_name'] == 'root_state_before_change':
+        if 'method_name' in info and info['method_name'] == 'root_state_change':
             if info['kwargs']['method_name'] in ['change_state_type', 'change_root_state_type']:
                 self.suspend_drawing = True
 
@@ -194,7 +194,7 @@ class GraphicalEditorController(ExtendedController):
         """
         if 'method_name' in info:
             if self.suspend_drawing:
-                if info['method_name'] == 'root_state_after_change':
+                if info['method_name'] == 'root_state_change':
                     if info['kwargs']['method_name'] in ['change_state_type', 'change_root_state_type']:
                         self.suspend_drawing = False
                         self._redraw()

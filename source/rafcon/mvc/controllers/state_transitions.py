@@ -3,6 +3,8 @@ import gobject
 
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.utils.notification_overview import NotificationOverview
+
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.utils import log
@@ -22,8 +24,6 @@ class StateTransitionsListController(ExtendedController):
     :param rafcon.mvc.views.TransitionListView view: The GTK view showing the transitions as a table
     """
 
-    # TODO - widget should update if parent of state has changed (e.g. because of state-type-change of parent)
-
     def __init__(self, model, view):
         """Constructor
         """
@@ -35,7 +35,7 @@ class StateTransitionsListController(ExtendedController):
         self.tree_store = gtk.TreeStore(int, str, str, str, str, bool,
                                         str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
         self.combo = {}
-        self.no_update = False  # reduce the updating of the widget to the moment it becomes focused, what seems to be enought
+        self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
 
         if not self.model.state.is_root_state:
             self.observe_model(self.model.parent)
@@ -87,7 +87,6 @@ class StateTransitionsListController(ExtendedController):
         view['to_outcome_combo'].connect("edited", self.on_combo_changed_to_outcome)
 
         # view['external_toggle'].set_radio(True)
-        view['external_toggle'].connect("toggled", self.on_external_toggled)
         view.tree_view.connect("grab-focus", self.on_focus)
 
     def register_adapters(self):
@@ -100,15 +99,6 @@ class StateTransitionsListController(ExtendedController):
         if path[0]:
             self.view.tree_view.set_cursor(path[0])
 
-    # TODO mach es trotzdem es ist fuer faelschliche interne aber alls externe gewollte ganz nuetzlich
-    def on_external_toggled(self, widget, path):
-        """ Changes the transition from internal transition to a external ??? But does not make sense to do so or??
-        :param widget:
-        :param path:
-        :return:
-        """
-        pass
-
     def on_add(self, button, info=None):
 
         free_outcomes = None
@@ -117,9 +107,8 @@ class StateTransitionsListController(ExtendedController):
             from_state_id = self.combo['free_from_outcomes_dict'].keys()[0]
             free_outcomes = self.combo['free_from_outcomes_dict'][from_state_id]
             responsible_parent = self.model.state
-
         elif self.view_dict['transitions_external'] and self.combo['free_ext_from_outcomes_dict'] and \
-                        self.model.state.state_id in self.combo['free_ext_from_outcomes_dict']:
+                self.model.state.state_id in self.combo['free_ext_from_outcomes_dict']:
             from_state_id = self.model.state.state_id
             free_outcomes = self.combo['free_ext_from_outcomes_dict'][from_state_id]
             responsible_parent = self.model.parent.state
@@ -138,6 +127,8 @@ class StateTransitionsListController(ExtendedController):
         # print "NEW TRANSITION IS: ", from_state_id, from_outcome, to_state_id, to_outcome
 
         try:
+            if from_state_id == responsible_parent.state_id:
+                from_state_id = None
             t_id = responsible_parent.add_transition(from_state_id, from_outcome, to_state_id, to_outcome)
             # Set the selection to the new transition
             ctr = 0
@@ -147,20 +138,21 @@ class StateTransitionsListController(ExtendedController):
                     self.view.tree_view.set_cursor(ctr)
                     break
                 ctr += 1
-        except AttributeError as e:
-            logger.debug("Transition couldn't be added: {0}".format(e))
-        except Exception as e:
-            logger.error("Unexpected exception while creating transition: {0}".format(e))
+        except (AttributeError, ValueError) as e:
+            logger.error("Transition couldn't be added: {0}".format(e))
 
     def on_remove(self, button, info=None):
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
         if path:
             row_number = path[0][0]
             transition_id = self.tree_store[row_number][0]
-            if self.tree_store[row_number][5]:
-                self.model.parent.state.remove_transition(int(transition_id))
-            else:
-                self.model.state.remove_transition(int(transition_id))
+            try:
+                if self.tree_store[row_number][5]:
+                    self.model.parent.state.remove_transition(int(transition_id))
+                else:
+                    self.model.state.remove_transition(int(transition_id))
+            except (AttributeError, ValueError) as e:
+                logger.error("Transition couldn't be removed: {0}".format(e))
 
             # selection to next element
             if len(self.tree_store) > 0:
@@ -286,21 +278,21 @@ class StateTransitionsListController(ExtendedController):
         # for from-outcome-combo filter all outcome already used
         from_state = None
         if trans is not None and trans.from_state is not None:
-            from_state = model.states[trans.from_state].state
+            from_state = model.state.states[trans.from_state]
         free_from_outcomes_dict = {}
-        for state_model in model.states.values():
-            from_o_combo = state_model.state.outcomes.values()
+        for state in model.state.states.values():
+            from_o_combo = state.outcomes.values()
             # print from_o_combo
 
             # print [o.outcome_id for o in from_o_combo], state_model.state.state_id
             for transition in trans_dict.values():
                 # print transition, [[o.outcome_id == transition.from_outcome, transition.from_state == state_model.state.state_id] for o in from_o_combo]
                 from_o_combo = filter(lambda o: not (o.outcome_id == transition.from_outcome and
-                                                     transition.from_state == state_model.state.state_id), from_o_combo)
+                                                     transition.from_state == state.state_id), from_o_combo)
                 # print [o.outcome_id for o in from_o_combo]
 
             if len(from_o_combo) > 0:
-                free_from_outcomes_dict[state_model.state.state_id] = from_o_combo
+                free_from_outcomes_dict[state.state_id] = from_o_combo
         # if transition.from_state == self_model.state.state_id:
         #     free_from_outcomes_dict[state_model.state.state_id].append(None)
         if model.state.start_state_id is None:
@@ -308,7 +300,7 @@ class StateTransitionsListController(ExtendedController):
 
         if from_state is not None and from_state.state_id in free_from_outcomes_dict:
             for outcome in free_from_outcomes_dict[from_state.state_id]:
-                state = model.states[from_state.state_id].state
+                state = model.state.states[from_state.state_id]
                 if outcome is None:
                     from_outcome_combo.append(["None"])
                 elif from_state.state_id == self_model.state.state_id:
@@ -318,30 +310,30 @@ class StateTransitionsListController(ExtendedController):
 
         # for from-state-combo us all states with free outcomes and from_state
         # print "model.states: ", model.states, free_from_outcomes_dict
-        free_from_state_models = filter(lambda smodel: smodel.state.state_id in free_from_outcomes_dict.keys(),
-                                        model.states.values())
+        free_from_states = filter(lambda state: state.state_id in free_from_outcomes_dict.keys(),
+                                        model.state.states.values())
         if trans is None:
-            return None, None, None, None, free_from_state_models, free_from_outcomes_dict
+            return None, None, None, None, free_from_states, free_from_outcomes_dict
         if from_state is not None and from_state.state_id not in free_from_outcomes_dict.keys():
             if from_state.state_id == self_model.state.state_id:
                 from_state_combo.append(['self (' + from_state.name + ')', from_state.state_id])
             else:
                 from_state_combo.append([from_state.name, from_state.state_id])
-        for state_model in free_from_state_models:
-            if state_model.state.state_id == self_model.state.state_id:
-                from_state_combo.append(['self (' + state_model.state.name + ')', state_model.state.state_id])
+        for state in free_from_states:
+            if state.state_id == self_model.state.state_id:
+                from_state_combo.append(['self (' + state.name + ')', state.state_id])
             else:
-                from_state_combo.append([state_model.state.name, state_model.state.state_id])
+                from_state_combo.append([state.name, state.state_id])
         if not is_external and model.state.start_state_id is None:
             from_state_combo.append(['self (' + model.state.name + ')', model.state.state_id])
 
         # for to-state-combo filter from_state ... put it at the end
-        to_state_models = filter(lambda s: not s.state.state_id == trans.from_state, model.states.values())
-        for state_model in to_state_models:
-            if state_model.state.state_id == self_model.state.state_id:
-                to_state_combo.append(["self." + state_model.state.state_id])
+        to_states = filter(lambda s: not s.state_id == trans.from_state, model.state.states.values())
+        for state in to_states:
+            if state.state_id == self_model.state.state_id:
+                to_state_combo.append(["self." + state.state_id])
             else:
-                to_state_combo.append([state_model.state.name + '.' + state_model.state.state_id])
+                to_state_combo.append([state.name + '.' + state.state_id])
         if from_state is not None:
             to_state_combo.append([from_state.name + '.' + from_state.state_id])
 
@@ -353,13 +345,16 @@ class StateTransitionsListController(ExtendedController):
             else:
                 to_outcome_combo.append(['self.' + outcome.name + "." + str(outcome.outcome_id)])
 
-        return from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_state_models, free_from_outcomes_dict
+        return from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_states, free_from_outcomes_dict
 
     def update(self):
         self._update_internal_data_base()
         self._update_tree_store()
 
     def _update_internal_data_base(self):
+        """ Updates Internal combo knowledge for any actual transition by calling  get_possible_combos_for_transition-
+        function for those.
+        """
 
         model = self.model
 
@@ -381,19 +376,19 @@ class StateTransitionsListController(ExtendedController):
         # external -> state -> outcome combos
         self.combo['internal'] = {}
         self.combo['external'] = {}
-        self.combo['free_from_state_models'] = {}
+        self.combo['free_from_states'] = {}
         self.combo['free_from_outcomes_dict'] = {}
         self.combo['free_ext_from_outcomes_dict'] = {}
         self.combo['free_ext_from_outcomes_dict'] = {}
 
-        if hasattr(model.state, 'transitions'):
+        if isinstance(model, ContainerStateModel):
             # check for internal combos
             for transition_id, transition in model.state.transitions.items():
                 self.combo['internal'][transition_id] = {}
 
                 [from_state_combo, from_outcome_combo,
                  to_state_combo, to_outcome_combo,
-                 free_from_state_models, free_from_outcomes_dict] = \
+                 free_from_states, free_from_outcomes_dict] = \
                     self.get_possible_combos_for_transition(transition, self.model, self.model)
 
                 self.combo['internal'][transition_id]['from_state'] = from_state_combo
@@ -401,13 +396,13 @@ class StateTransitionsListController(ExtendedController):
                 self.combo['internal'][transition_id]['to_state'] = to_state_combo
                 self.combo['internal'][transition_id]['to_outcome'] = to_outcome_combo
 
-                self.combo['free_from_state_models'] = free_from_state_models
+                self.combo['free_from_states'] = free_from_states
                 self.combo['free_from_outcomes_dict'] = free_from_outcomes_dict
 
             if not model.state.transitions:
-                [x, y, z, v, free_from_state_models, free_from_outcomes_dict] = \
+                [x, y, z, v, free_from_states, free_from_outcomes_dict] = \
                     self.get_possible_combos_for_transition(None, self.model, self.model)
-                self.combo['free_from_state_models'] = free_from_state_models
+                self.combo['free_from_states'] = free_from_states
                 self.combo['free_from_outcomes_dict'] = free_from_outcomes_dict
 
         if not self.model.state.is_root_state:
@@ -418,7 +413,7 @@ class StateTransitionsListController(ExtendedController):
 
                     [from_state_combo, from_outcome_combo,
                      to_state_combo, to_outcome_combo,
-                     free_from_state_models, free_from_outcomes_dict] = \
+                     free_from_states, free_from_outcomes_dict] = \
                         self.get_possible_combos_for_transition(transition, self.model.parent, self.model, True)
 
                     self.combo['external'][transition_id]['from_state'] = from_state_combo
@@ -426,26 +421,29 @@ class StateTransitionsListController(ExtendedController):
                     self.combo['external'][transition_id]['to_state'] = to_state_combo
                     self.combo['external'][transition_id]['to_outcome'] = to_outcome_combo
 
-                    self.combo['free_ext_from_state_models'] = free_from_state_models
+                    self.combo['free_ext_from_states'] = free_from_states
                     self.combo['free_ext_from_outcomes_dict'] = free_from_outcomes_dict
 
             if not model.parent.state.transitions:
-                [x, y, z, v, free_from_state_models, free_from_outcomes_dict] = \
+                [x, y, z, v, free_from_states, free_from_outcomes_dict] = \
                     self.get_possible_combos_for_transition(None, self.model.parent, self.model, True)
-                self.combo['free_ext_from_state_models'] = free_from_state_models
+                self.combo['free_ext_from_states'] = free_from_states
                 self.combo['free_ext_from_outcomes_dict'] = free_from_outcomes_dict
 
     def _update_tree_store(self):
+        """ Updates TreeStore of the gtk.ListView according internal combo knowledge gained by
+        _update_internal_data_base function call.
+        """
 
         self.tree_store.clear()
-        if self.view_dict['transitions_internal'] and hasattr(self.model.state, 'transitions') and \
-                        len(self.model.state.transitions) > 0:
+        if self.view_dict['transitions_internal'] and isinstance(self.model, ContainerStateModel) and \
+                len(self.model.state.transitions) > 0:
             for transition_id in self.combo['internal'].keys():
                 # print "TRANSITION_ID: ", transition_id, self.model.state.transitions
                 t = self.model.state.transitions[transition_id]
 
                 if t.from_state is not None:
-                    from_state = self.model.states[t.from_state].state
+                    from_state = self.model.state.states[t.from_state]
                     from_state_label = from_state.name
                     from_outcome_label = from_state.outcomes[t.from_outcome].name
                 else:
@@ -461,7 +459,7 @@ class StateTransitionsListController(ExtendedController):
                     if t.to_state == self.model.state.state_id:
                         to_state_label = "self (" + self.model.state.name + ")"
                     else:
-                        to_state_label = self.model.states[t.to_state].state.name
+                        to_state_label = self.model.state.states[t.to_state].name
                     to_outcome_label = None
 
                 self.tree_store.append(None, [transition_id,  # id
@@ -473,7 +471,7 @@ class StateTransitionsListController(ExtendedController):
                                               '#f0E5C7', '#f0E5c7', t, self.model.state, True])
 
         if self.view_dict['transitions_external'] and self.model.parent and \
-                        len(self.model.parent.state.transitions) > 0:
+                len(self.model.parent.state.transitions) > 0:
             for transition_id in self.combo['external'].keys():
                 # print "TRANSITION_ID: ", transition_id, self.model.parent.state.transitions
                 t = self.model.parent.state.transitions[transition_id]
@@ -498,7 +496,7 @@ class StateTransitionsListController(ExtendedController):
                     if t.to_state == self.model.state.state_id:
                         to_state_label = "self (" + self.model.state.name + ")"
                     else:
-                        to_state_label = self.model.parent.states[t.to_state].state.name
+                        to_state_label = self.model.parent.state.states[t.to_state].name
                     to_outcome_label = None
 
                 self.tree_store.append(None, [transition_id,  # id
@@ -512,10 +510,19 @@ class StateTransitionsListController(ExtendedController):
     @ExtendedController.observe("change_root_state_type", before=True)
     @ExtendedController.observe("change_state_type", before=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
-        # self.notification_logs(model, prop_name, info)
-        # print "DO_LOCK TRANSITION WIDGET"
+        """ Set the no update flag to avoid updates in between of a state-type-change.
+        """
         self.no_update = True
-        self.combo = {}
+
+    @ExtendedController.observe("state", after=True)
+    def after_notification_state(self, model, prop_name, info):
+        # The method causing the change raised an exception, thus nothing was changed
+        overview = NotificationOverview(info)
+        # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
+        #         isinstance(overview['result'][-1], Exception):
+        #     return
+        if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state:
+            self.update()
 
     @ExtendedController.observe("states", after=True)
     @ExtendedController.observe("transitions", after=True)
@@ -523,26 +530,28 @@ class StateTransitionsListController(ExtendedController):
     @ExtendedController.observe("change_root_state_type", after=True)
     @ExtendedController.observe("change_state_type", after=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
+        """ Activates the update after a state-type-change happend and triggers update if outcomes, transitions or
+        states list has been changed.
+        """
         # The method causing the change raised an exception, thus nothing was changed
-        if 'result' in info['kwargs']:
-            if (isinstance(info['kwargs']['result'], str) and "CRASH" in info['kwargs']['result']) or \
-                    isinstance(info['kwargs']['result'], Exception):
-                return
+        # overview = NotificationOverview(info)
+        # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
+        #         isinstance(overview['result'][-1], Exception):
+        #     return
+
         # self.notification_logs(model, prop_name, info)
-        if self.no_update and info.method_name in ["change_state_type" and "change_root_state_type"]:
+        if self.no_update and info.method_name in ["change_state_type", "change_root_state_type"]:
             # print "DO_UNLOCK TRANSITION WIDGET"
             self.no_update = False
-            self.combo = {}
 
         if self.no_update:
             return
-        # print "DO_UPDATE TRANSITION WIDGET"
+
         try:
             self.update()
-        except:
-            # logger.warning("update of transition widget fails while detecting list change state %s %s" %
-            #               (self.model.state.name, self.model.state.state_id))
-            pass
+        except KeyError as e:
+            logger.error("update of transition widget fails while detecting list change of state %s %s" %
+                         (self.model.state.name, self.model.state.state_id))
 
     def notification_logs(self, model, prop_name, info):
         # logger.debug("IP OP SV or DF %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
@@ -635,7 +644,7 @@ class StateTransitionsEditorController(ExtendedController):
             self.trans_list_ctrl.view_dict['transitions_external'] = False
             button.set_active(False)
 
-        if name in ['transitions_internal'] and hasattr(self.model, 'states'):
+        if name in ['transitions_internal'] and isinstance(self.model, ContainerStateModel):
             self.trans_list_ctrl.view_dict[name] = button.get_active()
         elif name not in ['transitions_external']:
             self.trans_list_ctrl.view_dict['transitions_internal'] = False

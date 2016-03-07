@@ -1,3 +1,14 @@
+"""
+.. module:: preemptive_concurrency_state
+   :platform: Unix, Windows
+   :synopsis: A module to represent an abstract state element in the state machine
+
+.. moduleauthor:: Franz Steinmetz
+
+
+"""
+
+
 from gtkmvc import Observable
 from yaml import YAMLObject
 from weakref import ref

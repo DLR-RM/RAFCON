@@ -3,7 +3,7 @@
    :platform: Unix, Windows
    :synopsis: A module to generate different kinds of state machine ids
 
-.. moduleauthor:: TODO
+.. moduleauthor:: Sebastian Brunner
 
 
 """

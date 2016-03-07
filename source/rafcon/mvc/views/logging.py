@@ -23,7 +23,7 @@ class LoggingView(View):
 
         self.text_view.set_buffer(self.filtered_buffer)
 
-        self.text_view.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+        self.text_view.set_border_width(0)
 
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)

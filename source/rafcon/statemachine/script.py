@@ -137,7 +137,7 @@ class Script(Observable, yaml.YAMLObject):
             raise IOError("The compilation of the script module failed - error message: %s" % str(e))
 
         # return the module
-        self._compiled_module = tmp_module
+        self.compiled_module = tmp_module
 
     # def get_path(self):
     #     """

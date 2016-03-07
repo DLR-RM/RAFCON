@@ -40,6 +40,17 @@
       </packing>
     </child>
     <child>
+      <object class="GtkToolButton" id="redock_button">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">r</property>
+        <property name="stock_id">gtk-remove</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
       <object class="GtkToolButton" id="close_button">
         <property name="visible">True</property>
         <property name="label" translatable="yes">c</property>

@@ -12,6 +12,7 @@ class ExtendedController(Controller):
         self.__action_registered_controllers = []
         self.__child_controllers = dict()
         self.__shortcut_manager = None
+        self.__parent = None
 
     def add_controller(self, key, controller):
         """Add child controller
@@ -23,6 +24,7 @@ class ExtendedController(Controller):
         :param ExtendedController controller: Controller to be added as child
         """
         assert isinstance(controller, ExtendedController)
+        controller.parent = self
         self.__child_controllers[key] = controller
         if self.__shortcut_manager is not None and controller not in self.__action_registered_controllers:
             controller.register_actions(self.__shortcut_manager)
@@ -85,6 +87,23 @@ class ExtendedController(Controller):
         :rtype: list
         """
         return self.__child_controllers.values()
+
+    @property
+    def parent(self):
+        """Return the parent controller for which this controller is registered as a child.
+
+        :return: The parent controller
+        :rtype: ExtendedController
+        """
+        return self.__parent
+
+    @parent.setter
+    def parent(self, controller):
+        """Set the parent controller for which this controller is registered as a child.
+
+        """
+        assert isinstance(controller, ExtendedController)
+        self.__parent = controller
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions in all child controllers.

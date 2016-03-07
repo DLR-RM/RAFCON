@@ -1,3 +1,14 @@
+"""
+.. module:: preemptive_concurrency_state
+   :platform: Unix, Windows
+   :synopsis: A module to represent a transition in the state machine
+
+.. moduleauthor:: Franz Steinmetz
+
+
+"""
+
+
 from gtkmvc import Observable
 
 from rafcon.statemachine.state_element import StateElement

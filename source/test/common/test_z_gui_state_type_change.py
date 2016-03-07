@@ -11,6 +11,7 @@ from rafcon.utils import log
 # core elements
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
@@ -187,7 +188,7 @@ def store_state_elements(state, state_m):
     # print state_elements['outcomes'], state.outcomes
 
     # collect scoped_variables
-    if hasattr(state, 'scoped_variables'):
+    if isinstance(state, ContainerState):
         state_elements['scoped_variables'] = []
         for sv_id, sv, in state.scoped_variables.iteritems():
             state_elements['scoped_variables'].append(sv_id)
@@ -203,7 +204,7 @@ def store_state_elements(state, state_m):
             assert sv_id in model_id_store
 
     # collect states
-    if hasattr(state, 'states'):
+    if isinstance(state, ContainerState):
         state_elements['states'] = []
         for s_id, s in state.states.iteritems():
             state_elements['states'].append(s_id)
@@ -212,8 +213,8 @@ def store_state_elements(state, state_m):
         state_m_elements['states_meta'] = {}
         print state_m.states.keys()
         for s_m_id, s_m in state_m.states.iteritems():
-            if not hasattr(s_m, "state"):
-                print s_m
+            # if not hasattr(s_m, "state"):
+            #     print s_m
             assert s_m_id == s_m.state.state_id
             assert s_m_id in state_elements['states']
             assert s_m.state.state_id in state_elements['states']
@@ -230,7 +231,7 @@ def store_state_elements(state, state_m):
                 print "skip unique_state_id for model check"
 
     # collect data_flows
-    if hasattr(state, 'data_flows'):
+    if isinstance(state, ContainerState):
         state_elements['data_flows'] = []
         for df_id, df in state.data_flows.iteritems():
             state_elements['data_flows'].append(df_id)
@@ -246,7 +247,7 @@ def store_state_elements(state, state_m):
             assert df_id in model_id_store
 
     # collect transitions
-    if hasattr(state, 'transitions'):
+    if isinstance(state, ContainerState):
         state_elements['transitions'] = []
         for t_id, t in state.transitions.iteritems():
             state_elements['transitions'].append(t_id)
@@ -272,7 +273,7 @@ def store_state_elements(state, state_m):
         return df.from_state == state_id or df.to_state == state_id
 
     # LOOKOUT: root states have their state machine as parent
-    if hasattr(state, 'parent') and state.parent is not None and isinstance(state.parent, State):
+    if isinstance(state, State) and state.parent is not None and isinstance(state.parent, State):
         # collect transitions of parent related and not related to me
         state_elements['transitions_external'] = []
         state_elements['transitions_external_not_related'] = []
@@ -379,15 +380,15 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
         print "given model is not linked with given state"
         print "State-Model State-Type: ", state_m.state
         print "State-Type: ", state
-    if 'states' in check_list and hasattr(state, "states"):  # TODO last element of condition has to be deleted again
+    if 'states' in check_list and isinstance(state, ContainerState):  # TODO last element of condition has to be deleted again
         for s_id, s in state.states.iteritems():
             if not s_id == UNIQUE_DECIDER_STATE_ID:
                 assert s_id in stored_state_elements['states']
         # - check if the right models are there and only those
         model_id_store = []
         for s_m_id, s_m in state_m.states.iteritems():
-            if not hasattr(s_m, "state"):
-                print s_m
+            # if not hasattr(s_m, "state"):
+            #     print s_m
             assert s_m_id == s_m.state.state_id
             if not s_m_id == UNIQUE_DECIDER_STATE_ID:
                 if not s_m_id in stored_state_elements['states']:
@@ -403,13 +404,13 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
             if not s_id == UNIQUE_DECIDER_STATE_ID:
                 assert s_id in model_id_store
     else:
-        if hasattr(state, 'states'):
-            print state, state.states
-        assert not hasattr(state, 'states')
+        # if isinstance(state, ContainerState):
+        #     print state, state.states
+        assert not isinstance(state, ContainerState)
     # exit(0)
 
     # check scoped_variables
-    if 'scoped_variables' in check_list and hasattr(state, 'scoped_variables'):  # TODO last element of condition has to be deleted again:
+    if 'scoped_variables' in check_list and isinstance(state, ContainerState):  # TODO last element of condition has to be deleted again:
         for sv_id, sv, in state.scoped_variables.iteritems():
             assert sv_id in stored_state_elements['scoped_variables']
         # - check if the right models are there and only those
@@ -422,7 +423,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
         for sv_id in stored_state_elements['scoped_variables']:
             assert sv_id in model_id_store
     else:
-        assert not hasattr(state, 'scoped_variables')
+        assert not isinstance(state, ContainerState)
 
     print "ignore internal_transitions in check: ", "internal_transitions" in check_elements_ignores
     if "internal_transitions" not in check_elements_ignores:
@@ -441,7 +442,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
             for t_id in stored_state_elements['transitions']:
                 assert t_id in model_id_store
         else:
-            assert not hasattr(state, 'transitions')
+            assert not isinstance(state, ContainerState)
 
         def is_related_transition(parent, state_id, t):
             return t.from_state == state_id or t.to_state == state_id
@@ -469,7 +470,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
             assert state.parent is None
 
     # check data_flows internal
-    if 'data_flows_internal' in check_list and hasattr(state, 'data_flows'):  # TODO last element of condition has to be deleted again::
+    if 'data_flows_internal' in check_list and isinstance(state, ContainerState):  # TODO last element of condition has to be deleted again::
         # - all data_flows in the actual state should be in the stored_state_elements, too
         for df_id, df in state.data_flows.iteritems():
             assert df_id in stored_state_elements['data_flows']
@@ -485,7 +486,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
         for df_id in stored_state_elements['data_flows']:
             assert df_id in model_id_store
     else:
-        assert not hasattr(state, 'data_flows')
+        assert not isinstance(state, ContainerState)
 
     def is_related_data_flow(parent, state_id, df):
         return df.from_state == state_id or df.to_state == state_id

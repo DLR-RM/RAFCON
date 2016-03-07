@@ -9,8 +9,12 @@ from rafcon.utils import log
 
 # core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
+
+from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements
 import rafcon.statemachine.singleton
@@ -18,7 +22,7 @@ import rafcon.mvc.singleton
 
 # test environment elements
 import testing_utils
-from testing_utils import call_gui_callback, get_unique_temp_path
+from testing_utils import test_multithrading_lock, call_gui_callback, get_unique_temp_path
 import pytest
 
 
@@ -117,18 +121,18 @@ def on_save_activate(state_machine_m, logger):
 
 
 def save_state_machine(sm_model, path, logger, with_gui, menubar_ctrl):
-    sleep_time_short = 4
+    # sleep_time_short = 0.5
     if with_gui:
         sm_model.state_machine.base_path = path
-        time.sleep(sleep_time_short)
-        call_gui_callback(menubar_ctrl.on_save_activate, None)
-        time.sleep(sleep_time_short)
+        # time.sleep(sleep_time_short)
+        call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, sm_model.state_machine.base_path)
+        # time.sleep(sleep_time_short)
+        call_gui_callback(menubar_ctrl.on_quit_activate, None)
     else:
         sm_model.state_machine.base_path = path
-        time.sleep(sleep_time_short)
-        # glib.idle_add(menubar_ctrl.on_save_activate, None)
+        # time.sleep(sleep_time_short)
         on_save_activate(sm_model, logger)
-        time.sleep(sleep_time_short)
+        # time.sleep(sleep_time_short)
 
 
 def check_file(file_path, kind, missing_elements=None, actual_exists=None):
@@ -164,8 +168,9 @@ def check_state_storage(state, parent_path, missing_elements, check_gui_meta_dat
     check_folder(folder_path, "state_path", missing_elements, actual_exists)
 
     # check state script exists
-    file_path = parent_path + "/" + state.state_id + "/" + "script.py"
-    check_file(file_path, "script", missing_elements, actual_exists)
+    if isinstance(state, ExecutionState):
+        file_path = parent_path + "/" + state.state_id + "/" + "script.py"
+        check_file(file_path, "script", missing_elements, actual_exists)
 
     # check state-meta data exists (transitions and so on)
     file_path = parent_path + "/" + state.state_id + "/" + "meta.yaml"
@@ -177,7 +182,7 @@ def check_state_storage(state, parent_path, missing_elements, check_gui_meta_dat
         file_path = parent_path + "/" + state.state_id + "/" + "gtk_meta.yaml"
         check_file(file_path, "gtk_gui_meta.yaml", missing_elements, actual_exists)
 
-    if hasattr(state, "states"):
+    if isinstance(state, ContainerState):
         for key, child_state in state.states.iteritems():
             check_state_storage(child_state, folder_path, missing_elements, check_gui_meta_data, actual_exists)
 
@@ -214,7 +219,6 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_gui_meta_data=Fal
 def test_storage_without_gui(caplog):
     with_gui=False
 
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
@@ -228,11 +232,12 @@ def test_storage_without_gui(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def _test_storage_with_gui(caplog):
+def test_storage_with_gui(caplog):
     with_gui = True
 
+    test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(rafcon.__path__[0] + "/mvc/")
+    os.chdir(rafcon.__path__[0] + "/mvc")
     gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     print "create model"
@@ -240,8 +245,27 @@ def _test_storage_with_gui(caplog):
     print "init libs"
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    save_state_machine(sm_model=sm_m, path=get_unique_temp_path(), logger=logger, with_gui=with_gui,
-                       menubar_ctrl=None)
+    if testing_utils.sm_manager_model is None:
+        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    print "initialize MainWindow"
+    main_window_view = MainWindowView()
+
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
+                                                  editor_type='LogicDataGrouped')
+
+    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+    print "start thread"
+    import threading
+    thread = threading.Thread(target=save_state_machine,
+                              args=[sm_m, get_unique_temp_path(), logger, with_gui, menubar_ctrl])
+    thread.start()
+
+    if with_gui:
+        gtk.main()
+        logger.debug("Gtk main loop exited!")
+        test_multithrading_lock.release()
+
+    thread.join()
 
     missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
     os.chdir(rafcon.__path__[0] + "/../test/common")
