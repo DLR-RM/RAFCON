@@ -498,9 +498,8 @@ class StatesEditorController(ExtendedController):
             return False
 
         # A child state of a root-state child is affected
-        if hasattr(info, "kwargs") and info.method_name == 'state_change':
+        if info.method_name == 'state_change':
             if info.kwargs.method_name == 'remove_state':
-                # logger.warn("child child remove is triggered %s" % info)
                 state_id = info.kwargs.args[1]
                 parent_state_m = info.kwargs.model
                 # logger.debug("remove %s %s %s" % (parent_state_m, parent_state_m.state.state_id, state_id))

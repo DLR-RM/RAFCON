@@ -122,9 +122,10 @@ class StateElement(Observable, YAMLObject, JSONObject):
         :return: validity and messages
         :rtype: bool, str
         """
+        from rafcon.statemachine.states.state import State
+
         if not self.parent:
             return True, "no parent"
-        if not hasattr(self.parent, 'check_child_validity') or \
-                not callable(getattr(self.parent, 'check_child_validity')):
+        if not isinstance(self.parent, State):
             return True, "no parental check"
         return self.parent.check_child_validity(self)
