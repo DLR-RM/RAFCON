@@ -20,14 +20,13 @@ class SourceEditorView(View):
         hbox = gtk.HBox()
         apply_button = gtk.Button("Apply")
         apply_button.set_focus_on_click(False)
-        apply_button.set_size_request(90, 30)
+        apply_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
         cancel_button = gtk.Button("Cancel")
         cancel_button.set_focus_on_click(False)
-        cancel_button.set_size_request(90, 30)
+        cancel_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
         hbox.pack_end(cancel_button, False, True, constants.PADDING)
         hbox.pack_end(apply_button, False, True, constants.PADDING)
         hbox.set_border_width(constants.BORDER_WIDTH)
-        hbox.set_name('widget_title')
 
         source_label = gui_helper.create_label_with_text_and_spacing('SOURCE EDITOR',
                                                                      letter_spacing=constants.LETTER_SPACING_1PT)

@@ -335,7 +335,6 @@ style "inner-widget" {
     bg[SELECTED]      = @background_widgets
 }
 
-#widget_class "*GtkNotebook*GtkEventBox" style : highest "test-style"
 widget_class "*GtkNotebook*GtkEventBox" style : highest "inner-widget"
 
 
