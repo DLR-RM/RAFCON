@@ -170,3 +170,8 @@ class ExtendedController(Controller):
         models = [model for model in self.__registered_models]
         map(self.relieve_model, models)
         self.__registered_models.clear()
+
+    def get_root_window(self):
+        if self.__parent:
+            return self.__parent.get_root_window()
+        return self.view.get_top_widget()

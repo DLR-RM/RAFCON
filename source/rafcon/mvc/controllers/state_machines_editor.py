@@ -277,7 +277,7 @@ class StateMachinesEditorController(ExtendedController):
             from rafcon.mvc.utils.dialog import RAFCONDialog
             sm_id = get_state_machine_id(state_machine_m)
             root_state_name = state_machine_m.root_state.state.name
-            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
+            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             message_string = "There are unsaved changed in the state machine '{0}' with id {1}. Do you want to close " \
                              "the state machine anyway?".format(root_state_name, sm_id)
             dialog.set_markup(message_string)

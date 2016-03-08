@@ -246,22 +246,9 @@ widget "*.toolbar*" style : highest "toolbar"
 
 style "button"
 {
-    # Background color. This is the background color of windows and buttons.
     bg[INSENSITIVE]   = @button_background_inactive
     bg[NORMAL]        = @button_background
     base[NORMAL]      = @input_background
-    #bg[PRELIGHT]      = @green
-    #bg[SELECTED]      = @green
-    #bg[ACTIVE]        = @green
-    #base[ACTIVE]      = @red
-    #base[INSENSITIVE] = @red
-    #base[NORMAL]      = @red
-    #base[PRELIGHT]    = @red
-    #base[SELECTED]    = @red
-    GtkButton::default-border = {5, 5, 5, 5}
-    GtkButton::default-outside-border = {5, 5, 5, 5}
-    GtkButton::inner-border = {5, 5, 5, 5}
-    GtkButton::relief = GTK_RELIEF_NORMAL
 }
 class "GtkButton" style : highest "button"
 
