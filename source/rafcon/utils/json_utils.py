@@ -1,5 +1,5 @@
 """
-.. module:: preemptive_concurrency_state
+.. module:: json_utils
    :platform: Unix, Windows
    :synopsis: A module holding all json related utility functions (encoders, decoders)
 

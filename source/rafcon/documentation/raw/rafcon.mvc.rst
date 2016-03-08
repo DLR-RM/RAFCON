@@ -14,9 +14,9 @@ Subpackages
     rafcon.mvc.views
     rafcon.mvc.mygaphas
 
-main
-----
-.. automodule:: rafcon.mvc.main
+action
+------
+.. automodule:: rafcon.mvc.action
     :members:
     :undoc-members:
     :show-inheritance:

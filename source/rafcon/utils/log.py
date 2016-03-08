@@ -1,5 +1,5 @@
 """
-.. module:: preemptive_concurrency_state
+.. module:: log
    :platform: Unix, Windows
    :synopsis: A module caring about the logging capability of RAFCON
 

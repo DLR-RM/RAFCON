@@ -1,5 +1,5 @@
 """
-.. module:: preemptive_concurrency_state
+.. module:: type_helpers
    :platform: Unix, Windows
    :synopsis: A module holding all utility functions for converting types
 
