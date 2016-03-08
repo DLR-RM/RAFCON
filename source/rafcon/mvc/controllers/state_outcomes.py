@@ -45,6 +45,7 @@ class StateOutcomesListController(ExtendedController):
         # initiate data base and tree
         self.update_internal_data_base()
         self.update_tree_store()
+        self._actual_entry = None
 
     def register_view(self, view):
         """Called when the View was registered
@@ -88,8 +89,36 @@ class StateOutcomesListController(ExtendedController):
             view['to_state_combo'].connect("edited", self.on_to_state_modification)
             view['to_outcome_combo'].connect("edited", self.on_to_outcome_modification)
 
-        view['name_cell'].connect('edited', self.on_name_modification)
+        view['name_cell'].connect('edited', self.on_name_changed)
+        view['name_cell'].connect('editing-started', self.editing_started)
+        view['name_cell'].connect('editing-canceled', self.editing_canceled)
         view.tree_view.connect("grab-focus", self.on_focus)
+
+    def editing_started(self, renderer, editable, path):
+        """ Callback method to connect entry-widget focus-out-event to the respective change-method.
+        """
+        # logger.info("CONNECT editable: {0} path: {1}".format(editable, path))
+        if self.view['name_cell'] is renderer:
+            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_name))
+        else:
+            logger.error("Not registered Renderer was used")
+
+    def editing_canceled(self, event):
+        """ Callback method to disconnect entry-widget focus-out-event to the respective change-method.
+        """
+        # logger.info("DISCONNECT text: {1} event: {0}".format(event, event.get_property('text')))
+        if self._actual_entry is not None:
+            self._actual_entry[0].disconnect(self._actual_entry[1])
+            self._actual_entry = None
+
+    def change_name(self, entry, event):
+        """ Change-name-method to set the name of actual selected (row) data-port.
+        """
+        # logger.info("FOCUS_OUT NAME entry: {0} event: {1}".format(entry, event))
+        if self.view.tree_view.get_cursor()[0] is None:
+            return
+
+        self.on_name_changed(entry, self.view.tree_view.get_cursor()[0], text=entry.get_text())
 
     def on_focus(self, widget, data=None):
         # logger.debug("OUTCOMES_LIST get new FOCUS")
@@ -102,7 +131,7 @@ class StateOutcomesListController(ExtendedController):
         if path[0]:  # if valid -> is possible as long as set_cursor does not trigger on_focus again
             self.view.tree_view.set_cursor(path[0])
 
-    def on_name_modification(self, widget, path, text):
+    def on_name_changed(self, widget, path, text):
         outcome_id = self.tree_store[path][6].outcome_id
         outcome = self.model.state.outcomes[outcome_id]
         try:
@@ -159,6 +188,8 @@ class StateOutcomesListController(ExtendedController):
 
     def on_to_outcome_modification(self, widget, path, text):
         # logger.debug("on_to_outcome_modification %s, %s, %s" % (widget, path, text))
+        if self.model.parent is None:
+            return
         outcome_id = int(self.tree_store[path][0])
         transition_parent_state = self.model.parent.state
         if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
@@ -178,6 +209,7 @@ class StateOutcomesListController(ExtendedController):
                     except ValueError as e:
                         logger.warn("The target of transition couldn't be modified: {0}".format(e))
             else:
+
                 transition_parent_state.remove_transition(t_id)
         else:  # there is no transition till now
             if text is not None:
