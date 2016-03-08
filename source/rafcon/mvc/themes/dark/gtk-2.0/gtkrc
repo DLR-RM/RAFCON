@@ -324,7 +324,7 @@ widget "*left_bar_return_button" style : highest "sidebar-hide-button"
 widget "*right_bar_hide_button" style : highest "sidebar-hide-button"
 widget "*console_hide_button" style : highest "sidebar-hide-button"
 
-style "scrollable_input" {
+style "text_view" {
     bg[ACTIVE]        = @input_background
     bg[INSENSITIVE]   = @input_background
     bg[NORMAL]        = @input_background
@@ -337,8 +337,8 @@ style "scrollable_input" {
     base[SELECTED]    = @input_background
 }
 
-widget "*console_scroller.*" style : highest "scrollable_input"
-widget "*description_scroller.*" style : highest "scrollable_input"
+widget "*console_scroller.GtkTextView" style : highest "text_view"
+widget "*description_scroller.GtkTextView" style : highest "text_view"
 
 style "inner-widget" {
     bg[ACTIVE]        = @background_widgets
