@@ -10,7 +10,6 @@ Hereby the branching of the edit process is stored and should be accessible, too
 import sys
 import traceback
 import copy
-import getpass
 
 from gtkmvc import ModelMT, Observable
 
@@ -27,6 +26,7 @@ from rafcon.statemachine.data_port import InputDataPort, OutputDataPort
 from rafcon.statemachine.state_machine import StateMachine
 
 from rafcon.mvc.utils.notification_overview import NotificationOverview
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
 from rafcon.mvc.models.container_state import StateModel
 from rafcon.mvc.models.abstract_state import AbstractStateModel
@@ -38,7 +38,7 @@ from rafcon.mvc.action import ActionDummy, Action, StateMachineAction, StateActi
 
 logger = log.get_logger(__name__)
 
-HISTORY_DEBUG_LOG_FILE = '/tmp/{0}/test_file.txt'.format(getpass.getuser())
+HISTORY_DEBUG_LOG_FILE = RAFCON_TEMP_PATH_BASE + '../test_file.txt'
 
 
 class ModificationsHistoryModel(ModelMT):
@@ -423,7 +423,7 @@ class ModificationsHistoryModel(ModelMT):
             return
         if self.busy:  # if proceeding undo or redo
             return
-        # print model, prop_name, info
+
         if info['kwargs']['method_name'] == "change_root_state_type":
             if self.with_prints:
                 print "ROOT_STATE is NEW", model, prop_name, info
@@ -450,15 +450,14 @@ class ModificationsHistoryModel(ModelMT):
 
         if self.busy:  # if proceeding undo or redo
             return
-        # print model, prop_name, info
+
         if info['kwargs']['method_name'] == "change_root_state_type":
             overview = NotificationOverview(info)
-            if overview['method_name'][-1] == 'parent':
-                return
             assert overview['method_name'][-1] == "change_root_state_type"
-            # logger.debug("History state_machine_AFTER")
             if self.with_prints:
-                print "ROOT_STATE is NEW", model, prop_name, info
+                print "History state_machine_AFTER {0}".format(overview)
+
+            # decrease counter and finish action if count_before = 0
             if self.locked:
                 self.count_before -= 1
                 if self.with_prints:
@@ -467,19 +466,12 @@ class ModificationsHistoryModel(ModelMT):
                     self.locked = False
                     if self.with_prints:
                         print "IN HISTORY", model, prop_name, info
-                    if prop_name == "states" and \
-                            (info.kwargs.result == "CRASH in FUNCTION" or isinstance(info.kwargs.result, Exception)):
-                        if self.with_prints:
-                            print "HISTORY COUNT WAS 0 AND RESET FAILURE to the previous version of the state machine"
-                        self.actual_action.undo()
-                    else:
-                        self.finish_new_action(overview)
-                        self._re_initiate_observation()
-                        if self.with_prints:
-                            print "HISTORY COUNT WAS OF SUCCESS"
+                    self.finish_new_action(overview)
+                    self._re_initiate_observation()
+                    if self.with_prints:
+                        print "HISTORY COUNT WAS OF SUCCESS"
             else:
-                if self.with_prints:
-                    print "HISTORY after not count"
+                logger.error("HISTORY after not count [state_machine] -> For every before there should be a after.")
 
     @ModelMT.observe("states", before=True)
     def assign_notification_states_before(self, model, prop_name, info):
@@ -488,19 +480,19 @@ class ModificationsHistoryModel(ModelMT):
         if self.busy:  # if proceeding undo or redo
             return
         else:
-            # logger.debug("History states_BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
-
             overview = NotificationOverview(info, with_prints=self.with_prints)
+            # logger.debug("History states_BEFORE {0}".format(overview)
+
             # skipped state modifications
             if (overview['method_name'][0] == 'state_change' and
-                        overview['method_name'][-1] in ['active',
-                                                        'child_execution',
-                                                        'state_execution_status']) or \
+                    overview['method_name'][-1] in ['active',
+                                                    'child_execution',
+                                                    'state_execution_status']) or \
                     not overview['method_name'][0] == 'state_change' or \
                     overview['method_name'][-1] == 'parent':
                 return
 
-            # lock modifications
+            # increase counter and generate new action if not locked by action that is performed
             if self.locked:
                 self.count_before += 1
                 if self.with_prints:
@@ -514,8 +506,7 @@ class ModificationsHistoryModel(ModelMT):
                         print "LOCKED count up", self.count_before
                     self.locked = True
                 else:
-                    if self.with_prints:
-                        print "FAILED to start NEW HISTORY ELEMENT"
+                    logger.error("FAILED to start NEW HISTORY ELEMENT [states]")
 
     @ModelMT.observe("states", after=True)
     def assign_notification_states_after(self, model, prop_name, info):
@@ -528,11 +519,6 @@ class ModificationsHistoryModel(ModelMT):
         """
         if self.with_prints:
             print "states_after: ", model, prop_name, info
-        if info.kwargs and \
-                (info.kwargs['result'] == "CRASH in FUNCTION" or isinstance(info.kwargs['result'], Exception)):
-            if self.with_prints:
-                logger.warning("function crash detected states_after")
-            return self._interrupt_actual_action()
 
         if self.busy or info.method_name == 'state_change' and \
                 info.kwargs.prop_name == 'state' and \
@@ -542,6 +528,12 @@ class ModificationsHistoryModel(ModelMT):
             # logger.debug("History states_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             overview = NotificationOverview(info, with_prints=self.with_prints)
+            # handle interrupts of action caused by exceptions
+            if overview['result'][-1] == "CRASH in FUNCTION" or isinstance(overview['result'][-1], Exception):
+                if self.with_prints:
+                    logger.warning("function crash detected states_after")
+                return self._interrupt_actual_action()
+
             # modifications of parent are not observed
             if overview['method_name'][0] == 'state_change' and \
                     overview['method_name'][-1] in ['active', 'child_execution', 'state_execution_status'] or \
@@ -551,6 +543,7 @@ class ModificationsHistoryModel(ModelMT):
                     print overview['method_name']
                 return
 
+            # decrease counter and finish action if count_before = 0
             if self.locked:
                 self.count_before -= 1
                 if self.with_prints:
@@ -561,11 +554,11 @@ class ModificationsHistoryModel(ModelMT):
                         print "IN HISTORY", model, prop_name, info
 
                     self.finish_new_action(overview)
+
                     if self.with_prints:
                         print "HISTORY COUNT WAS OF SUCCESS"
             else:
-                if self.with_prints:
-                    print "HISTORY after not count"
+                logger.error("HISTORY after not count [states] -> For every before there should be a after.")
 
 
     @ModelMT.observe("state", before=True)
@@ -577,23 +570,27 @@ class ModificationsHistoryModel(ModelMT):
     @ModelMT.observe("output_data_ports", before=True)
     @ModelMT.observe("scoped_variables", before=True)
     def assign_notification_root_state_before(self, model, prop_name, info):
+
         if self.with_prints:
-            print "root_state_before: ", model, prop_name, info
+            print "root_state_before: ", NotificationOverview(info), "\n"
+
+        # execution_status-changes are not observed
         if self.busy or info.method_name in ['active', 'child_execution', 'state_execution_status']:
             return
         # first element should be prop_name="state_machine", instance=StateMachine and model=StateMachineModel
         # second element should be Prop_name="states" if root_state child elements are changed
         # --- for root_state elements it has to be prop_name in ["data_flows", "transitions", "input_data_ports",
         #                                                        "output_data_ports", "scoped_variables"]
-        # third (and last element) should be prop_name in ["data_flow", "transition",
+        # third (and last element) should be prop_name in ["data_flow", "transition", ...
         else:
-            # logger.debug("History BEFORE")  # \n%s \n%s \n%s" % (model, prop_name, info))
-
             overview = NotificationOverview(info, with_prints=self.with_prints)
+            # logger.debug("History BEFORE {0}".format(overview))  # \n%s \n%s \n%s" % (model, prop_name, info))
+
             # modifications of parent are not observed
             if overview['method_name'][-1] == 'parent':
                 return
 
+            # increase counter and generate new action if not locked by action that is performed
             if self.locked:
                 self.count_before += 1
                 if self.with_prints:
@@ -608,8 +605,7 @@ class ModificationsHistoryModel(ModelMT):
                         print "LOCKED count up", self.count_before
                     self.locked = True
                 else:
-                    if self.with_prints:
-                        print "FAILED to start NEW HISTORY ELEMENT"
+                    logger.error("FAILED to start NEW HISTORY ELEMENT [root_state]")
 
     @ModelMT.observe("state", after=True)
     @ModelMT.observe("outcomes", after=True)
@@ -628,23 +624,26 @@ class ModificationsHistoryModel(ModelMT):
         :param info: Information about the change
         """
         if self.with_prints:
-            print "root_state_after: ", model, prop_name, info
+            print "root_state_after: ", NotificationOverview(info)
 
-        if info.result == "CRASH in FUNCTION" or isinstance(info.result, Exception):
-            if self.with_prints:
-                logger.warning("function crash detected state_after")
-            return self._interrupt_actual_action()
-
+        # execution_status-changes are not observed
         if self.busy or info.method_name in ['active', 'child_execution', 'state_execution_status']:
             return
         else:
-            # logger.debug("History state_AFTER")  # \n%s \n%s \n%s" % (model, prop_name, info))
-
             overview = NotificationOverview(info, with_prints=self.with_prints)
+            # logger.debug("History state_AFTER {0}".format(overview))
+
+            # handle interrupts of action caused by exceptions
+            if overview['result'][-1] == "CRASH in FUNCTION" or isinstance(overview['result'][-1], Exception):
+                if self.with_prints:
+                    logger.warning("function crash detected state_after")
+                return self._interrupt_actual_action()
+
             # modifications of parent are not observed
             if overview['method_name'][-1] == 'parent':
                 return
 
+            # decrease counter and finish action when reaching count=0
             if self.locked:
                 self.count_before -= 1
                 if self.with_prints:
@@ -653,18 +652,13 @@ class ModificationsHistoryModel(ModelMT):
                     self.locked = False
                     if self.with_prints:
                         print "IN HISTORY", model, prop_name, info
-                    if prop_name == "states" and \
-                            (info.kwargs.result == "CRASH in FUNCTION" or isinstance(info.kwargs['result'], Exception)):
-                        if self.with_prints:
-                            print "HISTORY COUNT WAS 0 AND RESET FAILURE to the previous version of the state machine"
-                        self.actual_action.undo()
-                    else:
-                        self.finish_new_action(overview)
-                        if self.with_prints:
-                            print "HISTORY COUNT WAS OF SUCCESS"
+
+                    self.finish_new_action(overview)
+
+                    if self.with_prints:
+                        print "HISTORY COUNT WAS OF SUCCESS"
             else:
-                if self.with_prints:
-                    print "HISTORY after not count"
+                logger.error("HISTORY after not count [root_state] -> For every before there should be a after.")
 
 
 class HistoryTreeElement(object):
