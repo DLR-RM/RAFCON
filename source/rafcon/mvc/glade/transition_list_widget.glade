@@ -9,7 +9,7 @@
     <property name="headers_clickable">False</property>
     <child>
       <object class="GtkTreeViewColumn" id="from_state_col">
-        <property name="title">From-State</property>
+        <property name="title">Source State</property>
         <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererCombo" id="from_state_combo">
@@ -24,7 +24,7 @@
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="from_outcome_col">
-        <property name="title">From-Outcome</property>
+        <property name="title">Source Outcome</property>
         <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererCombo" id="from_outcome_combo">
@@ -39,7 +39,7 @@
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="to_state_col">
-        <property name="title">To-State</property>
+        <property name="title">Target State</property>
         <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererCombo" id="to_state_combo">
@@ -54,7 +54,7 @@
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="to_outcome_col">
-        <property name="title">To-Outcome</property>
+        <property name="title">Target Outcome</property>
         <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererCombo" id="to_outcome_combo">

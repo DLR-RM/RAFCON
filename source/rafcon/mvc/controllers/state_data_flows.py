@@ -64,19 +64,19 @@ class StateDataFlowsListController(ExtendedController):
             in_external = 'internal'
             if model.get_value(iter, 5):
                 in_external = 'external'
-            if column.get_title() == 'From-State':
+            if column.get_title() == 'Source State':
                 cell_renderer.set_property("model", self.tree_dict_combos[in_external][df_id]['from_state'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-            elif column.get_title() == 'From-Key':
+            elif column.get_title() == 'Source Port':
                 cell_renderer.set_property("model", self.tree_dict_combos[in_external][df_id]['from_key'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-            elif column.get_title() == 'To-State':
+            elif column.get_title() == 'Target State':
                 cell_renderer.set_property("model", self.tree_dict_combos[in_external][df_id]['to_state'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-            elif column.get_title() == 'To-Key':
+            elif column.get_title() == 'Target Port':
                 cell_renderer.set_property("model", self.tree_dict_combos[in_external][df_id]['to_key'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)

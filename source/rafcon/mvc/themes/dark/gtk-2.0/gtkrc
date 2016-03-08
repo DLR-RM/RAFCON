@@ -114,7 +114,7 @@ style "basic_layout"
     GtkTreeView::allow-rules                     = 1
     #GtkTreeView::even-row-color                 = 11
     #GtkTreeView::odd-row-color                  = 11
-    GtkTreeView::expander-size                   = 12
+    GtkTreeView::expander-size                   = 0
     GtkTreeView::grid-line-pattern               = "\1\1"
     GtkTreeView::grid-line-width                 = 1
     GtkTreeView::indent-expanders                = 1
@@ -358,3 +358,10 @@ style "icons" {
 }
 
 class "*IconView" style : highest "icons"
+
+style "libraries" {
+    GtkTreeView::expander-size                   = 12
+    #GtkTreeView::grid-line-pattern               = "\777\1"
+}
+
+widget "*library_tree" style : highest "libraries"

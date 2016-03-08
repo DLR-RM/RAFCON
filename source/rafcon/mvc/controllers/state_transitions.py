@@ -55,19 +55,19 @@ class StateTransitionsListController(ExtendedController):
             if model.get_value(iter, 5):
                 in_external = 'external'
             # print t_id, in_external, self.combo[in_external]
-            if column.get_title() == 'From-State':
+            if column.get_title() == 'Source State':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['from_state'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-            elif column.get_title() == 'From-Outcome':
+            elif column.get_title() == 'Source Outcome':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['from_outcome'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-            elif column.get_title() == 'To-State':
+            elif column.get_title() == 'Target State':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['to_state'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-            elif column.get_title() == 'To-Outcome':
+            elif column.get_title() == 'Target Outcome':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['to_outcome'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
