@@ -340,10 +340,11 @@ class StateTransitionsListController(ExtendedController):
         # for to-outcome-combo use parent combos
         to_outcome = model.state.outcomes.values()
         for outcome in to_outcome:
-            if is_external:
-                to_outcome_combo.append(['parent.' + outcome.name + "." + str(outcome.outcome_id)])
-            else:
-                to_outcome_combo.append(['self.' + outcome.name + "." + str(outcome.outcome_id)])
+            if not (trans.to_outcome == outcome.outcome_id and trans.to_state == model.state.state_id):
+                if is_external:
+                    to_outcome_combo.append(['parent.' + outcome.name + "." + str(outcome.outcome_id)])
+                else:
+                    to_outcome_combo.append(['self.' + outcome.name + "." + str(outcome.outcome_id)])
 
         return from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_states, free_from_outcomes_dict
 
@@ -458,9 +459,10 @@ class StateTransitionsListController(ExtendedController):
                     # print t.to_state, self.model.states
                     if t.to_state == self.model.state.state_id:
                         to_state_label = "self (" + self.model.state.name + ")"
+                        to_outcome_label = self.model.state.outcomes[t.to_outcome].name
                     else:
                         to_state_label = self.model.state.states[t.to_state].name
-                    to_outcome_label = None
+                        to_outcome_label = None
 
                 self.tree_store.append(None, [transition_id,  # id
                                               from_state_label,  # from-state
