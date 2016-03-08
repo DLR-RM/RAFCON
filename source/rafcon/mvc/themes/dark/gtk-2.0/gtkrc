@@ -43,8 +43,8 @@ style "basic_layout"
     GtkButton::image-spacing                     = 0
     GtkButton::focus-line-pattern                = "\1\1"
 
-    GtkCheckButton::indicator-size               = 10
-    GtkCheckButton::indicator-spacing            = 10
+    GtkCheckButton::indicator-size               = 13
+    GtkCheckButton::indicator-spacing            = 5
 
     GtkRadioButton::indicator-size               = 10
     GtkRadioButton::indicator-spacing            = 10
