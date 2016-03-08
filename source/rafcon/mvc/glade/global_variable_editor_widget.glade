@@ -7,47 +7,6 @@
     <property name="visible">True</property>
     <property name="orientation">vertical</property>
     <child>
-      <object class="GtkHBox" id="hbox1">
-        <property name="visible">True</property>
-        <child>
-          <object class="GtkButton" id="new_global_variable_button">
-            <property name="label" translatable="yes">New</property>
-            <property name="width_request">90</property>
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="receives_default">False</property>
-            <property name="border_width">5</property>
-            <property name="focus_on_click">False</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="pack_type">end</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkButton" id="delete_global_variable_button">
-            <property name="label" translatable="yes">Delete</property>
-            <property name="width_request">90</property>
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="receives_default">False</property>
-            <property name="border_width">5</property>
-            <property name="focus_on_click">False</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="pack_type">end</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="position">0</property>
-      </packing>
-    </child>
-    <child>
       <object class="GtkScrolledWindow" id="scrolledwindow1">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
@@ -87,6 +46,47 @@
         </child>
       </object>
       <packing>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkHBox" id="hbox1">
+        <property name="visible">True</property>
+        <child>
+          <object class="GtkButton" id="new_global_variable_button">
+            <property name="label" translatable="yes">New</property>
+            <property name="width_request">90</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="receives_default">False</property>
+            <property name="border_width">5</property>
+            <property name="focus_on_click">False</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="delete_global_variable_button">
+            <property name="label" translatable="yes">Delete</property>
+            <property name="width_request">90</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="receives_default">False</property>
+            <property name="border_width">5</property>
+            <property name="focus_on_click">False</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
         <property name="position">1</property>
       </packing>
     </child>
