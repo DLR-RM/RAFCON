@@ -31,8 +31,8 @@ style "basic_layout"
 
     GtkButtonBox::child-internal-pad-x           = 0
     GtkButtonBox::child-internal-pad-y           = 0
-    GtkButtonBox::child-min-heigth               = 20
-    GtkButtonBox::child-min-width                = 20
+    GtkButtonBox::child-min-heigth               = 40
+    GtkButtonBox::child-min-width                = 40
 
     GtkButton::child-displacement-x              = 0
     GtkButton::child-displacement-y              = 1
