@@ -365,3 +365,8 @@ style "libraries" {
 }
 
 widget "*library_tree" style : highest "libraries"
+
+style "active-dropdown-entry" {
+    base[SELECTED]    = @accent
+}
+widget_class "GtkWindow.GtkScrolledWindow*GtkTreeView" style : highest "active-dropdown-entry"

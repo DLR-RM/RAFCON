@@ -14,6 +14,8 @@ from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.models.abstract_state import MetaSignalMsg
 
 from rafcon.utils import log
+from rafcon.mvc.utils import constants
+from rafcon.mvc.gui_helper import format_cell
 
 logger = log.get_logger(__name__)
 
@@ -63,11 +65,12 @@ class StateOverviewController(ExtendedController, Model):
             view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
 
+        cell = gtk.CellRendererText()
+        format_cell(cell, constants.BUTTON_MIN_HEIGHT, constants.GRID_SIZE)
         l_store = gtk.ListStore(str)
         combo = gtk.ComboBox()
         combo.set_focus_on_click(False)
         combo.set_model(l_store)
-        cell = gtk.CellRendererText()
         combo.pack_start(cell, True)
         combo.add_attribute(cell, 'text', 0)
         combo.show_all()
