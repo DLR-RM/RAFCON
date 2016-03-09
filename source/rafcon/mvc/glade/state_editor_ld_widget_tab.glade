@@ -2,36 +2,6 @@
 <interface>
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
-  <object class="GtkAdjustment" id="adjustment1">
-    <property name="upper">78</property>
-    <property name="step_increment">7.8000000000000007</property>
-    <property name="page_increment">70.200000000000003</property>
-    <property name="page_size">78</property>
-  </object>
-  <object class="GtkAdjustment" id="adjustment2">
-    <property name="upper">78</property>
-    <property name="step_increment">7.8000000000000007</property>
-    <property name="page_increment">70.200000000000003</property>
-    <property name="page_size">78</property>
-  </object>
-  <object class="GtkAdjustment" id="adjustment3">
-    <property name="upper">78</property>
-    <property name="step_increment">7.8000000000000007</property>
-    <property name="page_increment">70.200000000000003</property>
-    <property name="page_size">78</property>
-  </object>
-  <object class="GtkAdjustment" id="adjustment4">
-    <property name="upper">78</property>
-    <property name="step_increment">7.8000000000000007</property>
-    <property name="page_increment">70.200000000000003</property>
-    <property name="page_size">78</property>
-  </object>
-  <object class="GtkAdjustment" id="adjustment5">
-    <property name="upper">78</property>
-    <property name="step_increment">7.8000000000000007</property>
-    <property name="page_increment">70.200000000000003</property>
-    <property name="page_size">78</property>
-  </object>
   <object class="GtkVBox" id="main_frame_vbox">
     <property name="visible">True</property>
     <property name="orientation">vertical</property>
