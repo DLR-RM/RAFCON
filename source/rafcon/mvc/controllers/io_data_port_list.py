@@ -39,6 +39,7 @@ class DataPortListController(ExtendedController):
         else:
             self.data_port_list_store = ListStore(str, str, str, int, bool, str)
         self.reload_data_port_list_store()
+        self._actual_entry = None
 
     def default_value_renderer(self, tree_view_column, cell, model, iter):
         """

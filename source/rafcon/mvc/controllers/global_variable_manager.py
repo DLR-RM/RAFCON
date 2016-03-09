@@ -24,45 +24,32 @@ class GlobalVariableManagerController(ExtendedController):
     def __init__(self, model, view):
         """Constructor"""
         ExtendedController.__init__(self, model, view)
-        # self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view['global_variable_tree_view'])
+        self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view['global_variable_tree_view'])
 
         self.global_variable_counter = 0
-        self.global_variables_list_store = ListStore(gobject.TYPE_PYOBJECT)
+        self.global_variables_list_store = ListStore(str, str, str)
+        self.list_store_iterators = {}
         self._actual_entry = None
+        self._locked = False
 
     def register_view(self, view):
         """Called when the View was registered"""
-        def cell_text(column, cell_renderer, model, iter, gvm_model):
-            col = column.get_name()
-            global_variable = model.get_value(iter, 0)
-            if col == 'name_col':
-                cell_renderer.set_property('text', global_variable[0])
-            elif col == 'value_col':
-                cell_renderer.set_property('text', global_variable[1])
-            elif col == 'locked_col':
-                locked = gvm_model.global_variable_manager.is_locked(global_variable[0])
-                cell_renderer.set_property('text', locked)
-            else:
-                logger.error("Unknown column '{col:s}' in GlobalVariableManagerView".format(col=col))
 
         view['global_variable_tree_view'].set_model(self.global_variables_list_store)
 
-        view['name_col'].set_cell_data_func(view['name_text'], cell_text, self.model)
         view['name_text'].set_property('editable', True)
-        view['value_col'].set_cell_data_func(view['value_text'], cell_text, self.model)
         view['value_text'].set_property('editable', True)
-        view['locked_col'].set_cell_data_func(view['locked_text'], cell_text, self.model)
 
         view['name_text'].connect('edited', self.on_name_changed)
-        # view['name_text'].connect('editing-started', self.editing_started)
-        # view['name_text'].connect('editing-canceled', self.editing_canceled)
+        view['name_text'].connect('editing-started', self.editing_started)
+        view['name_text'].connect('editing-canceled', self.editing_canceled)
         view['value_text'].connect('edited', self.on_value_changed)
-        # view['value_text'].connect('editing-started', self.editing_started)
-        # view['value_text'].connect('editing-canceled', self.editing_canceled)
+        view['value_text'].connect('editing-started', self.editing_started)
+        view['value_text'].connect('editing-canceled', self.editing_canceled)
         view['new_global_variable_button'].connect('clicked', self.on_new_global_variable_button_clicked)
         view['delete_global_variable_button'].connect('clicked', self.on_delete_global_variable_button_clicked)
 
-        # self.tab_edit_controller.register_view()
+        self.tab_edit_controller.register_view()
 
     def register_adapters(self):
         """Adapters should be registered in this method call"""
@@ -97,6 +84,7 @@ class GlobalVariableManagerController(ExtendedController):
     def change_name(self, entry, event):
         """ Change-name-method to set the name of actual selected (row) global variable.
         """
+        # logger.info("change name")
         if self.view['global_variable_tree_view'].get_cursor()[0] is None or \
                 not self.view['global_variable_tree_view'].get_cursor()[0][0]:
             return
@@ -105,6 +93,7 @@ class GlobalVariableManagerController(ExtendedController):
     def change_value(self, entry, event):
         """ Change-value-method to set the value of actual selected (row) global variable.
         """
+        # logger.info("change value {0}".format(event.type))
         if self.view['global_variable_tree_view'].get_cursor()[0] is None or \
                 not self.view['global_variable_tree_view'].get_cursor()[0][0]:
             return
@@ -113,78 +102,113 @@ class GlobalVariableManagerController(ExtendedController):
     def on_new_global_variable_button_clicked(self, *args):
         """Triggered when the New button in the Global Variables tab is clicked
 
-        Creates a new global variable with default values.
+        Creates a new global variable with default values and selects its row.
         """
-        if self.view['global_variable_tree_view'].is_focus():
-            new_global_variable = "new_global_%s" % self.global_variable_counter
-            self.global_variable_counter += 1
-            self.model.global_variable_manager.set_variable(new_global_variable, "value")
-            for row_num, iter_elem in enumerate(self.global_variables_list_store):
-                if iter_elem[0][0] == new_global_variable:
-                    self.view['global_variable_tree_view'].set_cursor(row_num)
-                    break
+        new_global_variable = "new_global_%s" % self.global_variable_counter
+        self.global_variable_counter += 1
+        self.model.global_variable_manager.set_variable(new_global_variable, "value")
+        for row_num, iter_elem in enumerate(self.global_variables_list_store):
+            if iter_elem[0] == new_global_variable:
+                self.view['global_variable_tree_view'].set_cursor(row_num)
+                break
 
     def on_delete_global_variable_button_clicked(self, *args):
         """Triggered when the Delete button in the Global Variables tab is clicked
 
-        Deletes the selected global variable.
+        Deletes the selected global variable and re-selects next variable's row.
         """
         if self.view['global_variable_tree_view'].is_focus():
             path = self.view["global_variable_tree_view"].get_cursor()[0]
             if path is not None:
-                key = self.global_variables_list_store[int(path[0])][0][0]
+                key = self.global_variables_list_store[int(path[0])][0]
                 try:
                     self.model.global_variable_manager.delete_variable(key)
                 except AttributeError as e:
                     logger.warning("Delete of globale variable '{0}' failed".format(key))
             if len(self.global_variables_list_store) > 0:
-                self.view['global_variable_tree_view'].set_cursor(min(path, len(self.global_variables_list_store) - 1))
+                self.view['global_variable_tree_view'].set_cursor(min(path[0], len(self.global_variables_list_store) - 1))
 
     def on_name_changed(self, widget, path, text):
         """Triggered when a global variable's name is edited
 
-        Updates the global variable's name.
+        Updates the global variable's name only if different and already in list store.
 
         :param path: The path identifying the edited variable
         :param text: New variable name
         """
-        old_key = self.global_variables_list_store[int(path)][0][0]
-        old_value = self.global_variables_list_store[int(path)][0][1]
-        self.model.global_variable_manager.delete_variable(old_key)
-        self.model.global_variable_manager.set_variable(text, old_value)
+        # logger.info("changing name")
+        old_key = self.global_variables_list_store[int(path)][0]
+        if old_key == text or not old_key in self.list_store_iterators:
+            return
+        old_value = self.global_variables_list_store[int(path)][1]
+        self._locked = True
+        try:
+            self.model.global_variable_manager.delete_variable(old_key)
+            self.model.global_variable_manager.set_variable(text, old_value)
+        except (AttributeError, RuntimeError) as e:
+            logger.warning(str(e))
+        self._locked = False
         self.update_global_variables_list_store()
 
     def on_value_changed(self, widget, path, text):
         """Triggered when a global variable's value is edited.
 
-        Updates the global variable's value.
+        Updates the global variable's value only if different.
 
         :param path: The path identifying the edited variable
         :param text: New variable value
         """
-        old_key = self.global_variables_list_store[int(path)][0][0]
-        self.model.global_variable_manager.set_variable(old_key, text)
-        self.update_global_variables_list_store()
+        # logger.info("changing value")
+        if self.global_variables_list_store[int(path)][1] == text:
+            return
+        old_key = self.global_variables_list_store[int(path)][0]
+        try:
+            if not self.model.global_variable_manager.is_locked(old_key):
+                self.model.global_variable_manager.set_variable(old_key, text)
+        except RuntimeError as e:
+            logger.exception(e)
 
     @ExtendedController.observe("global_variable_manager", after=True)
     def assign_notification_state(self, model, prop_name, info):
-        """Triggered when a change occurs in the Global Variable Manager."""
-        self.update_global_variables_list_store()
+        """Triggered when a change occurs in the Global Variable Manager.
+
+        Calls update of hole list store in case new variable was added. Avoids to run updates without reasonable change.
+        Holds tree store and updates row elements if is-locked or variable-value changes.
+        """
+
+        if info['method_name'] in ['set_locked_variable'] or self._locked or \
+                info['result'] is Exception:
+            # logger.info("skip")
+            return
+
+        if info['method_name'] in ['lock_variable', 'unlock_variable']:
+            key = info.kwargs.get('key', info.args[1]) if len(info.args) > 1 else info.kwargs['key']
+            if key in self.list_store_iterators:
+                gv_row_path = self.global_variables_list_store.get_path(self.list_store_iterators[key])
+                self.global_variables_list_store[gv_row_path][2] = self.model.global_variable_manager.is_locked(key)
+        elif info['method_name'] in ['set_variable', 'delete_variable']:
+            if info['method_name'] == 'set_variable':
+                key = info.kwargs.get('key', info.args[1]) if len(info.args) > 1 else info.kwargs['key']
+                if key in self.list_store_iterators:
+                    gv_row_path = self.global_variables_list_store.get_path(self.list_store_iterators[key])
+                    self.global_variables_list_store[gv_row_path][1] = self.model.global_variable_manager.get_representation(key)
+                    return
+            self.update_global_variables_list_store()
+        else:
+            logger.warning('Notification that is not handled')
 
     def update_global_variables_list_store(self):
-        """Triggered after creation, deletion, or update of a variables has taken place
+        """Triggered after creation or deletion of a variable has taken place
 
         Updates the list of global variables.
         """
-        tmp = ListStore(gobject.TYPE_PYOBJECT)
-        keys = self.model.global_variable_manager.get_all_keys()
-        for key in keys:
-            tmp.append([[key, self.model.global_variable_manager.get_representation(key)]])
-        tms = gtk.TreeModelSort(tmp)
-        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        tms.set_sort_func(0, compare_variables)
-        tms.sort_column_changed()
-        tmp = tms
+        # logger.info("update")
+        self.list_store_iterators = {}
         self.global_variables_list_store.clear()
-        for elem in tmp:
-            self.global_variables_list_store.append(elem)
+        keys = self.model.global_variable_manager.get_all_keys()
+        keys.sort()
+        for key in keys:
+            iter = self.global_variables_list_store.append([key,
+                                                            self.model.global_variable_manager.get_representation(key),
+                                                            self.model.global_variable_manager.is_locked(key)])
+            self.list_store_iterators[key] = iter
