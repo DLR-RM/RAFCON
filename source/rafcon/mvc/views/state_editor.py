@@ -45,22 +45,22 @@ class StateEditorView(View):
         self['data_flows_viewport'].add(self['data_flows_view'].get_top_widget())
         self['linkage_overview_viewport'].add(self['linkage_overview'].get_top_widget())
 
-        self['data_vpaned'].set_position(175)
-        self['logic_vpaned'].set_position(175)
+        self['data_vpaned'].set_position(190)
+        self['logic_vpaned'].set_position(190)
 
         self['main_notebook_1'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['main_notebook_1'].set_tab_vborder(constants.BORDER_WIDTH * 3)
         self['main_notebook_2'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['main_notebook_2'].set_tab_vborder(constants.BORDER_WIDTH * 3)
         self.page_dict["Source"] = self['main_notebook_1'].get_nth_page(0)
-        self.page_dict["Data Linkage"] = self['main_notebook_1'].get_nth_page(1)
-        self.page_dict["Logical Linkage"] = self['main_notebook_1'].get_nth_page(2)
+        self.page_dict["Logical Linkage"] = self['main_notebook_1'].get_nth_page(1)
+        self.page_dict["Data Linkage"] = self['main_notebook_1'].get_nth_page(2)
         self.page_dict["Linkage Overview"] = self['main_notebook_2'].get_nth_page(0)
         self.page_dict["Description"] = self['main_notebook_2'].get_nth_page(1)
         self['main_notebook_1'].set_current_page(self['main_notebook_1'].page_num(self.page_dict["Source"]))
         self['main_notebook_2'].set_current_page(self['main_notebook_2'].page_num(self.page_dict["Description"]))
 
-        self['vpaned'].set_position(425)
+        self['vpaned'].set_position(450)
 
         self['new_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
