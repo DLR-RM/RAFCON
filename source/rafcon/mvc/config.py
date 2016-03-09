@@ -115,8 +115,10 @@ class GuiConfig(DefaultConfig):
             lines = f.readlines()
 
         for line in lines:
-            if re.match("\s*color", line):
+            if re.match("\s*gtk_color_scheme", line):
                 color = re.findall(r'"(.*?)"', line)
+                color = color[0]
+                color = color.split(':')
                 self.colors[color[0].upper()] = color[1]
                 self.gtk_colors[color[0].upper()] = gtk.gdk.Color(color[1])
 
