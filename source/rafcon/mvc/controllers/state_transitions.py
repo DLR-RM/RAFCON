@@ -8,6 +8,7 @@ from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.utils import log
+from rafcon.mvc.gui_helper import format_cell
 
 logger = log.get_logger(__name__)
 
@@ -33,7 +34,7 @@ class StateTransitionsListController(ExtendedController):
         #                   name-color, to-state-color, transition-object, state-object, is_editable
         self.view_dict = {'transitions_internal': True, 'transitions_external': True}
         self.tree_store = gtk.TreeStore(int, str, str, str, str, bool,
-                                        str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
+                                        gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
         self.combo = {}
         self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
 
@@ -47,6 +48,10 @@ class StateTransitionsListController(ExtendedController):
         """Called when the View was registered
         """
 
+        format_cell(view['from_state_combo'], None, 0)
+        format_cell(view['to_state_combo'], None, 0)
+        format_cell(view['from_outcome_combo'], None, 0)
+        format_cell(view['to_outcome_combo'], None, 0)
         def cell_text(column, cell_renderer, model, iter, container_model):
 
             t_id = model.get_value(iter, 0)
@@ -468,7 +473,8 @@ class StateTransitionsListController(ExtendedController):
                                               to_state_label,  # to-state
                                               to_outcome_label,  # to-outcome
                                               False,  # is_external
-                                              '#f0E5C7', '#f0E5c7', t, self.model.state, True])
+                                              t,
+                                              self.model.state, True])
 
         if self.view_dict['transitions_external'] and self.model.parent and \
                 len(self.model.parent.state.transitions) > 0:
@@ -505,7 +511,7 @@ class StateTransitionsListController(ExtendedController):
                                               to_state_label,  # to-state
                                               to_outcome_label,  # to-outcome
                                               True,  # is_external
-                                              '#f0E5C7', '#f0E5c7', t, self.model.state, True])
+                                              t, self.model.state, True])
 
     @ExtendedController.observe("change_root_state_type", before=True)
     @ExtendedController.observe("change_state_type", before=True)

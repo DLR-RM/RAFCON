@@ -5,7 +5,6 @@
   <object class="GtkTreeView" id="tree_view">
     <property name="visible">True</property>
     <property name="can_focus">True</property>
-    <property name="border_width">331</property>
     <property name="headers_clickable">False</property>
     <child>
       <object class="GtkTreeViewColumn" id="from_state_col">

@@ -150,8 +150,10 @@ gtk_color_scheme = "text_default:#ffffff"
 gtk_color_scheme = "text_title:#ffffff"
 gtk_color_scheme = "text_inactive:#8f9194"
 gtk_color_scheme = "text_label:#7e8184"
+gtk_color_scheme = "text_inverted:#1d2227"
 
 gtk_color_scheme = "input_background:#44494d"
+gtk_color_scheme = "input_background_active:#7c858c"
 gtk_color_scheme = "input_border:#3a3e43"
 
 gtk_color_scheme = "button_background:#3a3e43"
@@ -170,17 +172,17 @@ gtk_color_scheme = "scrollbar_scroller_active_decent:#44494d"
 gtk_color_scheme = "red:#dd0000"
 gtk_color_scheme = "green:#00dd00"
 gtk_color_scheme = "blue:#0000dd"
-gtk_color_scheme = "yellow:#00dddd"
+gtk_color_scheme = "yellow:#dddd00"
 
 
 style "basic_colors"
 {
     # Background color of text widgets and lists.
-    base[ACTIVE]      = @input_background
+    base[ACTIVE]      = @input_background_active
     base[INSENSITIVE] = @input_background
     base[NORMAL]      = @input_background
     base[PRELIGHT]    = @input_background
-    base[SELECTED]    = @input_background
+    base[SELECTED]    = @accent
 
     # Background color. This is the background color of windows and buttons.
     bg[ACTIVE]        = @accent
@@ -238,11 +240,12 @@ style "test-style"
     text[SELECTED]    = @yellow
 }
 
+
 style "toolbar" {
     bg[NORMAL]        = @background_space
 }
-
 widget "*.toolbar*" style : highest "toolbar"
+
 
 style "button"
 {
@@ -251,6 +254,7 @@ style "button"
     base[NORMAL]      = @input_background
 }
 class "GtkButton" style : highest "button"
+
 
 style "scrollbar" {
     bg[INSENSITIVE]   = @scrollbar_background
@@ -261,12 +265,12 @@ style "scrollbar" {
 }
 class "GtkScrollbar" style : highest "scrollbar"
 
+
 style "scrollbar-decent" = "scrollbar" {
     bg[PRELIGHT]      = @scrollbar_scroller_active_decent
 }
 widget "*graphical_editor_vbox.*.GtkScrolledWindow*" style : highest "scrollbar-decent"
 
-#widget "*graphical_editor_vbox.*Box*" style : highest "test-style"
 
 style "notebook" {
     bg[ACTIVE]        = @button_background
@@ -290,8 +294,8 @@ style "pane" {
     bg[PRELIGHT]      = @pane
     bg[SELECTED]      = @pane
 }
-
 class "*Pane*"  style : highest "pane"
+
 
 style "sidebar-hide-button" {
     GtkButton::child-displacement-x              = 0
@@ -305,27 +309,18 @@ style "sidebar-hide-button" {
     bg[SELECTED]      = @accent
 
 }
-
 widget "*left_bar_hide_button" style : highest "sidebar-hide-button"
 widget "*left_bar_return_button" style : highest "sidebar-hide-button"
 widget "*right_bar_hide_button" style : highest "sidebar-hide-button"
 widget "*console_hide_button" style : highest "sidebar-hide-button"
 
-style "text_view" {
-    bg[ACTIVE]        = @input_background
-    bg[INSENSITIVE]   = @input_background
-    bg[NORMAL]        = @input_background
-    bg[PRELIGHT]      = @input_background
-    bg[SELECTED]      = @input_background
-    base[ACTIVE]      = @input_background
-    base[INSENSITIVE] = @input_background
-    base[NORMAL]      = @input_background
-    base[PRELIGHT]    = @input_background
-    base[SELECTED]    = @input_background
-}
 
-widget "*console_scroller.GtkTextView" style : highest "text_view"
-widget "*description_scroller.GtkTextView" style : highest "text_view"
+style "text-view-background" {
+    bg[NORMAL]        = @input_background
+    base[NORMAL]      = @input_background
+}
+widget "*console_scroller.GtkTextView" style : highest "text-view-background"
+widget "*description_scroller.GtkTextView" style : highest "text-view-background"
 
 style "inner-widget" {
     bg[ACTIVE]        = @background_widgets
@@ -334,7 +329,6 @@ style "inner-widget" {
     bg[PRELIGHT]      = @background_widgets
     bg[SELECTED]      = @background_widgets
 }
-
 widget_class "*GtkNotebook*GtkEventBox" style : highest "inner-widget"
 
 
@@ -350,23 +344,27 @@ widget "*description_viewport*.*widget_title*" style : highest "widget-title"
 widget "*linkage_container*.*widget_title*" style : highest "widget-title"
 widget "*linkage_container*.*widget_title2*" style : highest "widget-title"
 
-#widget "*sticky_button*" style : highest "test-style"
 
 style "icons" {
     base[INSENSITIVE] = @background_menu
     base[NORMAL]      = @background_menu
 }
-
 class "*IconView" style : highest "icons"
+
 
 style "libraries" {
     GtkTreeView::expander-size                   = 12
     #GtkTreeView::grid-line-pattern               = "\777\1"
 }
-
 widget "*library_tree" style : highest "libraries"
+
 
 style "active-dropdown-entry" {
     base[SELECTED]    = @accent
+    text[ACTIVE]      = @text_inverted
+    text[INSENSITIVE] = @text_inverted
+    text[NORMAL]      = @text_inverted
+    text[PRELIGHT]    = @text_inverted
+    text[SELECTED]    = @text_default
 }
 widget_class "GtkWindow.GtkScrolledWindow*GtkTreeView" style : highest "active-dropdown-entry"
