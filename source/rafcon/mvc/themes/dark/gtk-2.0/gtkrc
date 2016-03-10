@@ -368,3 +368,16 @@ style "active-dropdown-entry" {
     text[SELECTED]    = @text_default
 }
 widget_class "GtkWindow.GtkScrolledWindow*GtkTreeView" style : highest "active-dropdown-entry"
+
+style "tab-button" {
+    bg[ACTIVE]        = @input_background
+    bg[PRELIGHT]      = @input_background
+    bg[SELECTED]      = @input_background
+}
+widget "*tab_label.*" style : highest "tab-button"
+
+style "tab-with-button" = "test-style" {
+
+}
+widget "*tab_label" style : highest "tab-button"
+

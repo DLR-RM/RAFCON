@@ -14,9 +14,9 @@ class StatesEditorView(View):
         self.notebook = gtk.Notebook()
         self.notebook.set_scrollable(True)
         self.notebook.set_name('states_editor_notebook')
+        self.notebook.set_tab_hborder(constants.BORDER_WIDTH)
+        self.notebook.set_tab_vborder(constants.BORDER_WIDTH)
         self.notebook.show()
-        self.notebook.set_tab_hborder(constants.BORDER_WIDTH * 2)
-        self.notebook.set_tab_vborder(constants.BORDER_WIDTH * 2)
 
         self.notebook.connect("button_press_event", self.button_released)
 
