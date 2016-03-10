@@ -48,6 +48,7 @@ class StateDataFlowsListController(ExtendedController):
         self.data_flow_dict = {'internal': {},
                                'external': {}}
         self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
+        self.debug_log = False
 
         # register other model and fill tree_store the model of the view
         if not model.state.is_root_state:
@@ -55,7 +56,6 @@ class StateDataFlowsListController(ExtendedController):
 
         self._update_internal_data_base()
         self._update_tree_store()
-        self.debug_log = False
 
     def register_view(self, view):
         """Called when the View was registered
@@ -293,7 +293,7 @@ class StateDataFlowsListController(ExtendedController):
         self._update_tree_store()
 
     def _update_internal_data_base(self):
-        [free_to_int, free_to_ext, from_int, from_ext] = update_data_flow(self.model, self.data_flow_dict,
+        [free_to_int, free_to_ext, from_int, from_ext] = update_data_flows(self.model, self.data_flow_dict,
                                                                           self.tree_dict_combos)
         self.free_to_port_internal = free_to_int
         self.free_to_port_external = free_to_ext
@@ -448,7 +448,14 @@ def get_state_model(state_m, state_id):
     return None
 
 
-def update_data_flow(model, data_flow_dict, tree_dict_combos):
+def update_data_flows(model, data_flow_dict, tree_dict_combos):
+    """ Updates data flow dictionary and combo dictionary of the widget according handed model.
+
+    :param model: model for which the data_flow_dict and tree_dict_combos should be updated
+    :param data_flow_dict: dictionary that holds all internal and external data-flows and those respective row labels
+    :param tree_dict_combos: dictionary that holds all internal and external data-flow-adaptation-combos
+    :return:
+    """
     data_flow_dict['internal'] = {}
     data_flow_dict['external'] = {}
     tree_dict_combos['internal'] = {}
@@ -472,39 +479,41 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
             # TREE STORE LABEL
             # check if from Self_state
             if data_flow.from_state == model.state.state_id:
-                fstate = model.state
-                from_state = 'self.' + model.state.name + '.' + data_flow.from_state
+                from_state = model.state
+                from_state_label = 'self.' + model.state.name + '.' + data_flow.from_state
             else:
                 if take_from_dict(model.states, data_flow.from_state):
-                    fstate = take_from_dict(model.states, data_flow.from_state).state
-                    from_state = fstate.name + '.' + data_flow.from_state
+                    from_state = take_from_dict(model.states, data_flow.from_state).state
+                    from_state_label = from_state.name + '.' + data_flow.from_state
                 else:
                     # print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                    logger.warning("DO break in ctrl/data_flow.py -1")
                     break
             # check if to Self_state
             if data_flow.to_state == model.state.state_id:
-                tstate = model.state
-                to_state = 'self.' + model.state.name + '.' + data_flow.to_state
+                to_state = model.state
+                to_state_label = 'self.' + model.state.name + '.' + data_flow.to_state
             else:
                 if take_from_dict(model.states, data_flow.to_state):
-                    tstate = take_from_dict(model.states, data_flow.to_state).state
-                    to_state = tstate.name + '.' + data_flow.to_state
+                    to_state = take_from_dict(model.states, data_flow.to_state).state
+                    to_state_label = to_state.name + '.' + data_flow.to_state
                 else:
                     # print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                    logger.warning("DO break in ctrl/data_flow.py 0")
                     break
 
-            from_key_port = fstate.get_data_port_by_id(data_flow.from_key)
+            from_key_port = from_state.get_data_port_by_id(data_flow.from_key)
             from_key_label = PORT_TYPE_TAG.get(type(from_key_port), 'None') + '.' + \
                              from_key_port.data_type.__name__ + '.' + \
                              from_key_port.name
-            to_key_port = tstate.get_data_port_by_id(data_flow.to_key)
 
+            to_key_port = to_state.get_data_port_by_id(data_flow.to_key)
             to_key_label = PORT_TYPE_TAG.get(type(to_key_port), 'None') + '.' + \
                            (to_key_port.data_type.__name__ or 'None') + '.' + \
                            to_key_port.name
-            data_flow_dict['internal'][data_flow.data_flow_id] = {'from_state': from_state,
+            data_flow_dict['internal'][data_flow.data_flow_id] = {'from_state': from_state_label,
                                                                   'from_key': from_key_label,
-                                                                  'to_state': to_state,
+                                                                  'to_state': to_state_label,
                                                                   'to_key': to_key_label}
 
             # ALL INTERNAL COMBOS
@@ -568,16 +577,16 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
             # TREE STORE LABEL
             # check if from Self_state
             if model.state.state_id == data_flow.from_state:
-                fstate = model.state
-                from_state = 'self.' + model.state.name + '.' + data_flow.from_state
+                from_state = model.state
+                from_state_label = 'self.' + model.state.name + '.' + data_flow.from_state
             else:
                 if model.parent.state.state_id == data_flow.from_state:
-                    fstate = model.parent.state
-                    from_state = 'parent.' + model.parent.state.name + '.' + data_flow.from_state
+                    from_state = model.parent.state
+                    from_state_label = 'parent.' + model.parent.state.name + '.' + data_flow.from_state
                 else:
                     if take_from_dict(model.parent.states, data_flow.from_state):
-                        fstate = take_from_dict(model.parent.states, data_flow.from_state).state
-                        from_state = fstate.name + '.' + data_flow.from_state
+                        from_state = take_from_dict(model.parent.states, data_flow.from_state).state
+                        from_state_label = from_state.name + '.' + data_flow.from_state
                     else:
                         # print "#", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
                         logger.warning("DO break in ctrl/data_flow.py 1")
@@ -585,32 +594,32 @@ def update_data_flow(model, data_flow_dict, tree_dict_combos):
 
             # check if to Self_state
             if model.state.state_id == data_flow.to_state:
-                tstate = model.state
-                to_state = 'self.' + model.state.name + '.' + data_flow.to_state
+                to_state = model.state
+                to_state_label = 'self.' + model.state.name + '.' + data_flow.to_state
             else:
                 if model.parent.state.state_id == data_flow.to_state:
-                    tstate = model.parent.state
-                    to_state = 'parent.' + model.parent.state.name + '.' + data_flow.to_state
+                    to_state = model.parent.state
+                    to_state_label = 'parent.' + model.parent.state.name + '.' + data_flow.to_state
                 else:
                     if take_from_dict(model.parent.states, data_flow.to_state):
-                        tstate = take_from_dict(model.parent.states, data_flow.to_state).state
-                        to_state = fstate.name + '.' + data_flow.to_state
+                        to_state = take_from_dict(model.parent.states, data_flow.to_state).state
+                        to_state_label = to_state.name + '.' + data_flow.to_state
                     else:
                         # print "##", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
                         logger.warning("DO break in ctrl/data_flow.py 2")
                         break
             if model.state.state_id in [data_flow.from_state, data_flow.to_state]:
-                from_key_port = fstate.get_data_port_by_id(data_flow.from_key)
+                from_key_port = from_state.get_data_port_by_id(data_flow.from_key)
                 from_key_label = PORT_TYPE_TAG.get(type(from_key_port), 'None') + '.' + \
                                  from_key_port.data_type.__name__ + '.' + \
                                  from_key_port.name
-                to_key_port = tstate.get_data_port_by_id(data_flow.to_key)
+                to_key_port = to_state.get_data_port_by_id(data_flow.to_key)
                 to_key_label = PORT_TYPE_TAG.get(type(to_key_port), 'None') + '.' + \
                                to_key_port.data_type.__name__ + '.' + \
                                to_key_port.name
-                data_flow_dict['external'][data_flow.data_flow_id] = {'from_state': from_state,
+                data_flow_dict['external'][data_flow.data_flow_id] = {'from_state': from_state_label,
                                                                       'from_key': from_key_label,
-                                                                      'to_state': to_state,
+                                                                      'to_state': to_state_label,
                                                                       'to_key': to_key_label}
 
             # ALL EXTERNAL COMBOS
