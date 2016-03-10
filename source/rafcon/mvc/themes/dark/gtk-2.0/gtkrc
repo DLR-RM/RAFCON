@@ -381,3 +381,10 @@ style "tab-with-button" = "test-style" {
 }
 widget "*tab_label" style : highest "tab-button"
 
+style "file-manager" {
+    text[INSENSITIVE] = @text_label      # files
+    text[NORMAL]      = @text_inverted     # folder
+    text[SELECTED]    = @text_default       # folder selected
+}
+widget_class "*Dialog*.*Tree*" style : highest "file-manager"
+
