@@ -100,7 +100,7 @@ class StateMachineTreeController(ExtendedController):
                                                     "add_outcome", "remove_outcome",
                                                     "add_data_flow", "remove_data_flow",
                                                     "add_transition", "remove_transition", "parent",
-                                                    "input_data_ports", "output_data_ports", "outcomes",
+                                                    "input_data_ports", "output_data_ports", "outcomes", "description",
                                                     "scoped_variables", "data_flows", "transitions",  # ContainerState
                                                     "state_execution_status", "script_text",
                                                     'library_name', 'library_path', 'version', 'state_copy',  # LibraryState
