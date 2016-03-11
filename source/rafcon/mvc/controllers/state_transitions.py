@@ -268,7 +268,6 @@ class StateTransitionsListController(ExtendedController):
             new_to_outcome = transition_parent_state.outcomes[0].outcome_id
 
         try:
-            logger.info(new_to_state_id + '   ' + str(new_to_outcome))
             transition_parent_state.transitions[transition_id].modify_target(to_state=new_to_state_id,
                                                                              to_outcome=new_to_outcome)
         except ValueError as e:
@@ -540,7 +539,7 @@ class StateTransitionsListController(ExtendedController):
             for transition_id in self.combo['external'].keys():
                 # print "TRANSITION_ID: ", transition_id, self.model.parent.state.transitions
                 t = self.model.parent.state.transitions[transition_id]
-                logger.info(str(t))
+                # logger.info(str(t))
                 from_state = None
                 if t.from_state is not None:
                     from_state = self.model.parent.states[t.from_state].state
