@@ -7,13 +7,16 @@
 
 
 """
+from os.path import expanduser
+
+from rafcon.statemachine import interface
 from rafcon.statemachine.singleton import state_machine_manager
 from rafcon.statemachine.singleton import global_variable_manager
+
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.global_variable_manager import GlobalVariableManagerModel
-from rafcon.statemachine import interface
 from rafcon.mvc.runtime_config import global_runtime_config
-from os.path import expanduser
+
 
 global_focus = None
 
@@ -29,6 +32,8 @@ def open_folder(query):
                                    gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
                                    (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                                     gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+    if main_window_controller:
+        dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_current_folder(last_path)
     response = dialog.run()
 
@@ -59,6 +64,8 @@ def create_folder(query):
                                    gtk.FILE_CHOOSER_ACTION_CREATE_FOLDER,
                                    (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                                     gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+    if main_window_controller:
+        dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_current_folder(last_path)
     response = dialog.run()
 
@@ -81,6 +88,8 @@ def show_notice(query):
     import gtk
     from rafcon.mvc.gui_helper import set_button_children_size_request
     dialog = gtk.MessageDialog(flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
+    if main_window_controller:
+        dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_markup(query)
     set_button_children_size_request(dialog)
     dialog.run()
