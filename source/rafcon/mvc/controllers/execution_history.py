@@ -1,3 +1,14 @@
+"""
+.. module:: execution_history
+   :platform: Unix, Windows
+   :synopsis: A module holds a controller for ExecutionHistoryView (list/tree) and offers information about the
+   execution.
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 import gtk
 import gobject
 import threading

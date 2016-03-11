@@ -1,3 +1,13 @@
+"""
+.. module:: graphical_editor_gaphas
+   :platform: Unix, Windows
+   :synopsis: A module that holds the controller to graphically edit a state machine by the gaphas library.
+
+.. moduleauthor:: Franz Steinmetz
+
+
+"""
+
 from functools import partial
 
 from rafcon.statemachine.enums import StateType

@@ -1,3 +1,13 @@
+"""
+.. module:: io_data_port_list
+   :platform: Unix, Windows
+   :synopsis: A module that holds the controller to list and access the modification-history.
+
+.. moduleauthor:: Rico Belder
+
+
+"""
+
 import gtk
 import gobject
 

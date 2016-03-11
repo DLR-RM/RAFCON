@@ -1,3 +1,13 @@
+"""
+.. module:: extended_controller
+   :platform: Unix, Windows
+   :synopsis: A module that holds all extensions in respect to the gtkmvc.Controller that are used in rafcon.mvc.
+
+.. moduleauthor:: Franz Steinmetz
+
+
+"""
+
 from gtkmvc import Controller
 
 from rafcon.mvc.shortcut_manager import ShortcutManager

@@ -1,3 +1,14 @@
+"""
+.. module:: state_outcomes
+   :platform: Unix, Windows
+   :synopsis: A module that holds the controller to list and edit outcomes of a state and to add-remove or edit
+   outcome-related transitions.
+
+.. moduleauthor:: Rico Belder
+
+
+"""
+
 import gtk
 import gobject
 

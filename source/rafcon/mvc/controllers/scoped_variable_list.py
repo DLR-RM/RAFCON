@@ -1,3 +1,13 @@
+"""
+.. module:: io_data_port_list
+   :platform: Unix, Windows
+   :synopsis: A module that holds the controller to list and edit all scoped_variables of a state.
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 import gtk
 from gtk import ListStore
 from rafcon.mvc.controllers.extended_controller import ExtendedController

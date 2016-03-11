@@ -1,3 +1,14 @@
+"""
+.. module:: library_tree
+   :platform: Unix, Windows
+   :synopsis: The module holds controller tree overview of all mounted libraries and access to general
+   functionalities to add element or templates of those to a state-machine.
+
+.. moduleauthor:: Rico Belder, Sebastain Brunner, Franz Steinmetz
+
+
+"""
+
 import gtk
 import gobject
 from functools import partial

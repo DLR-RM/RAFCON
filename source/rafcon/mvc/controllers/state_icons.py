@@ -1,3 +1,13 @@
+"""
+.. module:: state_icons
+   :platform: Unix, Windows
+   :synopsis: A module that holds the state icon controller with its add-state and drag & drop functionalities.
+
+.. moduleauthor:: Annika Wollschlaeger
+
+
+"""
+
 import gtk
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
