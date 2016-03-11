@@ -112,8 +112,6 @@ style "basic_layout"
     GtkToolbar::space-style                      = GTK_TOOLBAR_SPACE_NONE
 
     GtkTreeView::allow-rules                     = 1
-    #GtkTreeView::even-row-color                 = 11
-    #GtkTreeView::odd-row-color                  = 11
     GtkTreeView::expander-size                   = 0
     GtkTreeView::grid-line-pattern               = "\1\1"
     GtkTreeView::grid-line-width                 = 1
@@ -381,10 +379,11 @@ style "tab-with-button" = "test-style" {
 }
 widget "*tab_label" style : highest "tab-button"
 
-style "file-manager" {
+style "tree-views" {
     text[INSENSITIVE] = @text_label      # files
-    text[NORMAL]      = @text_inverted     # folder
-    text[SELECTED]    = @text_default       # folder selected
+    text[NORMAL]      = @text_default    # folder
+    text[SELECTED]    = @text_default    # folder selected
+    GtkTreeView::even-row-color = @input_background
+    GtkTreeView::odd-row-color  = @input_background_active
 }
-widget_class "*Dialog*.*Tree*" style : highest "file-manager"
-
+widget_class "*Tree*" style : highest "tree-views"
