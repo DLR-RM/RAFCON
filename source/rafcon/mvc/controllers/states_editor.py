@@ -15,10 +15,12 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.mvc.utils import constants
 from rafcon.mvc.utils import helpers
+
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 STATE_NAME_MAX_CHARS = 16
+
 
 def create_button(toggle, font, font_size, icon_code, release_callback=None, *additional_parameters):
     if toggle:
@@ -79,7 +81,7 @@ def set_tab_label_texts(label, state_m, unsaved_changes=False):
     state_machine_id = state_m.state.get_sm_for_state().state_machine_id
     state_name = state_m.state.name
     state_name_trimmed = helpers.limit_string(state_name, STATE_NAME_MAX_CHARS)
-    label_text = "{0}&#8226;{1}".format(state_machine_id, state_name_trimmed)
+    label_text = "{0}&#8201;&#8226;&#8201;{1}".format(state_machine_id, state_name_trimmed)
     tooltip_text = state_name
     if unsaved_changes:
         label_text += '&#8201;*'
