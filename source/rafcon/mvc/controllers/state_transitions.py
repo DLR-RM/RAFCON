@@ -386,7 +386,6 @@ class StateTransitionsListController(ExtendedController):
                 to_state_combo.append(['parent.' + possible_state.state_id])
             else:
                 to_state_combo.append([possible_state.name + '.' + possible_state.state_id])
-            print state
 
         to_states = [model.state] if is_external else [self_model.state]
         to_states.extend(model.state.states.values())
