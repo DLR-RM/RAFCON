@@ -19,11 +19,6 @@ MyAboutDialog (in about_dialog)
 
 .. automodule:: rafcon.mvc.views.about_dialog
 
-StateConnectionsEditorView (in connections_editor)
---------------------------------------------------
-
-.. automodule:: rafcon.mvc.views.connections_editor
-
 ExecutionHistoryTreeView (in execution_history)
 -----------------------------------------------
 
@@ -74,6 +69,11 @@ MenuBarView (in menu_bar)
 
 .. automodule:: rafcon.mvc.views.menu_bar
 
+ModificationHistoryView (in modification_history)
+-------------------------------------------------
+
+.. automodule:: rafcon.mvc.views.modification_history
+
 NetworkConnectionsView (in network_connections)
 -----------------------------------------------
 
@@ -102,11 +102,6 @@ StateEditorView (in state_editor)
 A module to view the all aspects of a respective state.
 
 .. automodule:: rafcon.mvc.views.state_editor
-
-StateMachineHistoryView (in state_machine_history)
---------------------------------------------------
-
-.. automodule:: rafcon.mvc.views.state_machine_history
 
 StateMachineTreeView (in state_machine_tree)
 --------------------------------------------
