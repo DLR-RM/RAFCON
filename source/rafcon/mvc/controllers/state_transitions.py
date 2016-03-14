@@ -19,6 +19,7 @@ from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.utils import log
+from rafcon.mvc.gui_helper import format_cell
 
 logger = log.get_logger(__name__)
 
@@ -44,7 +45,7 @@ class StateTransitionsListController(ExtendedController):
         #                   name-color, to-state-color, transition-object, state-object, is_editable
         self.view_dict = {'transitions_internal': True, 'transitions_external': True}
         self.tree_store = gtk.TreeStore(int, str, str, str, str, bool,
-                                        str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
+                                        gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
         self.combo = {}
         self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
 
@@ -58,6 +59,10 @@ class StateTransitionsListController(ExtendedController):
         """Called when the View was registered
         """
 
+        format_cell(view['from_state_combo'], None, 0)
+        format_cell(view['to_state_combo'], None, 0)
+        format_cell(view['from_outcome_combo'], None, 0)
+        format_cell(view['to_outcome_combo'], None, 0)
         def cell_text(column, cell_renderer, model, iter, container_model):
 
             t_id = model.get_value(iter, 0)
@@ -66,19 +71,19 @@ class StateTransitionsListController(ExtendedController):
             if model.get_value(iter, 5):
                 in_external = 'external'
             # print t_id, in_external, self.combo[in_external]
-            if column.get_title() == 'From-State':
+            if column.get_title() == 'Source State':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['from_state'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-            elif column.get_title() == 'From-Outcome':
+            elif column.get_title() == 'Source Outcome':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['from_outcome'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-            elif column.get_title() == 'To-State':
+            elif column.get_title() == 'Target State':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['to_state'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-            elif column.get_title() == 'To-Outcome':
+            elif column.get_title() == 'Target Outcome':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['to_outcome'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
@@ -531,7 +536,8 @@ class StateTransitionsListController(ExtendedController):
                                               to_state_label,  # to-state
                                               to_outcome_label,  # to-outcome
                                               False,  # is_external
-                                              '#f0E5C7', '#f0E5c7', t, self.model.state, True])
+                                              t,
+                                              self.model.state, True])
 
         if self.view_dict['transitions_external'] and self.model.parent and \
                 len(self.model.parent.state.transitions) > 0:
@@ -569,7 +575,7 @@ class StateTransitionsListController(ExtendedController):
                                               to_state_label,  # to-state
                                               to_outcome_label,  # to-outcome
                                               True,  # is_external
-                                              '#f0E5C7', '#f0E5c7', t, self.model.state, True])
+                                              t, self.model.state, True])
 
     @ExtendedController.observe("change_root_state_type", before=True)
     @ExtendedController.observe("change_state_type", before=True)

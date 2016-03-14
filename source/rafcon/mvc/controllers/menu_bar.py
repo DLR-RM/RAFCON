@@ -229,7 +229,7 @@ class MenuBarController(ExtendedController):
                     logger.debug("Source script in editing is ignored while saving")
                     widget.destroy()
 
-            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
+            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             message_string = "Are you sure you want to store the state machine without storing source Code in " \
                              "editing?\n\n" \
                              "The changes of state: %s name: %s have to be stored or ignored while saving. " % \
@@ -294,7 +294,7 @@ class MenuBarController(ExtendedController):
                         logger.debug("Refresh canceled")
                     widget.destroy()
 
-                dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
+                dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
                 message_string = "Are you sure you want to reload the libraries and all state machines?\n\n" \
                                  "The following elements have been modified and not saved. " \
                                  "These changes will get lost:"
@@ -376,7 +376,7 @@ class MenuBarController(ExtendedController):
                     logger.debug("Close main window canceled")
                     widget.destroy()
 
-            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
+            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             message_string = "Are you sure you want to exit RAFCON?\n\n" \
                              "The following state machines have been modified and not saved. " \
                              "These changes will get lost:"
@@ -408,7 +408,7 @@ class MenuBarController(ExtendedController):
                     # the signal handler does not trigger any more
                     # self.destroy(None)
 
-            dialog = RAFCONDialog(type=gtk.MESSAGE_QUESTION)
+            dialog = RAFCONDialog(type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
             message_string = "The state machine is still running. Do you want to stop the state machine before closing?"
             dialog.set_markup(message_string)
             dialog.add_button("Stop state machine", 42)

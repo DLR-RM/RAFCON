@@ -5,11 +5,10 @@
   <object class="GtkTreeView" id="tree_view">
     <property name="visible">True</property>
     <property name="can_focus">True</property>
-    <property name="border_width">331</property>
     <property name="headers_clickable">False</property>
     <child>
       <object class="GtkTreeViewColumn" id="from_state_col">
-        <property name="title">From-State</property>
+        <property name="title">Source State</property>
         <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererCombo" id="from_state_combo">
@@ -24,7 +23,7 @@
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="from_key_col">
-        <property name="title">From-Key</property>
+        <property name="title">Source Port</property>
         <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererCombo" id="from_key_combo">
@@ -39,7 +38,7 @@
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="to_state_col">
-        <property name="title">To-State</property>
+        <property name="title">Target State</property>
         <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererCombo" id="to_state_combo">
@@ -54,7 +53,7 @@
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="to_key_col">
-        <property name="title">To-Key</property>
+        <property name="title">Target Port</property>
         <property name="expand">True</property>
         <child>
           <object class="GtkCellRendererCombo" id="to_key_combo">

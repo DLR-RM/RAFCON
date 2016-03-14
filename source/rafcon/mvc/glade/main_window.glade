@@ -4,7 +4,6 @@
   <!-- interface-naming-policy project-wide -->
   <object class="GtkWindow" id="main_window">
     <property name="visible">True</property>
-    <property name="border_width">3</property>
     <property name="title" translatable="yes">RAFCON</property>
     <property name="window_position">center</property>
     <property name="default_width">1800</property>
@@ -16,35 +15,29 @@
           <object class="GtkVBox" id="top_level_vbox">
             <property name="visible">True</property>
             <property name="orientation">vertical</property>
-            <property name="spacing">4</property>
             <child>
-              <object class="GtkEventBox" id="eventbox2">
+              <object class="GtkHBox" id="top_menu_hbox">
                 <property name="visible">True</property>
                 <child>
-                  <object class="GtkHBox" id="top_menu_hbox">
+                  <object class="GtkLabel" id="menu_bar_placeholder">
                     <property name="visible">True</property>
-                    <child>
-                      <object class="GtkLabel" id="menu_bar_placeholder">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">menu_bar_placeholder</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="top_tool_bar_placeholder">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">top_tool_bar_placeholder</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="pack_type">end</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
+                    <property name="label" translatable="yes">menu_bar_placeholder</property>
                   </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="top_tool_bar_placeholder">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">top_tool_bar_placeholder</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="pack_type">end</property>
+                    <property name="position">1</property>
+                  </packing>
                 </child>
               </object>
               <packing>
@@ -71,7 +64,7 @@
                     <property name="visible">True</property>
                     <child>
                       <object class="GtkButton" id="left_bar_hide_button">
-                        <property name="width_request">10</property>
+                        <property name="width_request">15</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -88,7 +81,7 @@
                         <property name="can_focus">True</property>
                         <property name="orientation">vertical</property>
                         <child>
-                          <object class="GtkVBox" id="vbox1">
+                          <object class="GtkVBox" id="upper_left_sidebar">
                             <property name="visible">True</property>
                             <property name="orientation">vertical</property>
                             <child>
@@ -136,11 +129,12 @@
                               <object class="GtkNotebook" id="upper_notebook">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
-                                <property name="border_width">5</property>
                                 <property name="tab_pos">left</property>
                                 <property name="show_border">False</property>
                                 <property name="scrollable">True</property>
-                                <property name="tab_vborder">6</property>
+                                <property name="tab_border">0</property>
+                                <property name="tab_hborder">0</property>
+                                <property name="tab_vborder">0</property>
                                 <property name="group_id">1</property>
                                 <child>
                                   <object class="GtkScrolledWindow" id="libraries_scrolledwindow">
@@ -157,7 +151,6 @@
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
                                             <property name="yalign">0</property>
-                                            <property name="left_padding">10</property>
                                             <child>
                                               <placeholder/>
                                             </child>
@@ -191,7 +184,6 @@
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
                                             <property name="yalign">0</property>
-                                            <property name="left_padding">10</property>
                                             <child>
                                               <placeholder/>
                                             </child>
@@ -229,7 +221,6 @@
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
                                             <property name="yalign">0</property>
-                                            <property name="left_padding">10</property>
                                             <child>
                                               <placeholder/>
                                             </child>
@@ -265,7 +256,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkVBox" id="vbox2">
+                          <object class="GtkVBox" id="lower_left_sidebar">
                             <property name="visible">True</property>
                             <property name="orientation">vertical</property>
                             <child>
@@ -274,6 +265,7 @@
                                 <child>
                                   <object class="GtkHBox" id="hbox4">
                                     <property name="visible">True</property>
+                                    <property name="border_width">10</property>
                                     <child>
                                       <object class="GtkLabel" id="lower_notebook_title">
                                         <property name="visible">True</property>
@@ -301,7 +293,11 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="tab_pos">left</property>
-                                <property name="tab_vborder">6</property>
+                                <property name="show_border">False</property>
+                                <property name="scrollable">True</property>
+                                <property name="tab_border">0</property>
+                                <property name="tab_hborder">0</property>
+                                <property name="tab_vborder">0</property>
                                 <property name="group_id">1</property>
                                 <child>
                                   <object class="GtkScrolledWindow" id="history_scrolledwindow">
@@ -317,7 +313,6 @@
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
                                             <property name="yalign">0</property>
-                                            <property name="left_padding">10</property>
                                             <child>
                                               <placeholder/>
                                             </child>
@@ -351,7 +346,6 @@
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
                                             <property name="yalign">0</property>
-                                            <property name="left_padding">10</property>
                                             <child>
                                               <placeholder/>
                                             </child>
@@ -389,7 +383,6 @@
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
                                             <property name="yalign">0</property>
-                                            <property name="left_padding">10</property>
                                             <child>
                                               <placeholder/>
                                             </child>
@@ -444,7 +437,7 @@
                         <property name="visible">True</property>
                         <child>
                           <object class="GtkButton" id="left_bar_return_button">
-                            <property name="width_request">10</property>
+                            <property name="width_request">15</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                           </object>
@@ -770,7 +763,7 @@
                                         </child>
                                         <child>
                                           <object class="GtkButton" id="console_return_button">
-                                            <property name="height_request">10</property>
+                                            <property name="height_request">15</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
                                           </object>
@@ -806,12 +799,11 @@
                                         <child>
                                           <object class="GtkHBox" id="debug_label_hbox">
                                             <property name="visible">True</property>
-                                            <property name="border_width">10</property>
                                             <child>
                                               <object class="GtkLabel" id="debug_console_label">
                                                 <property name="visible">True</property>
                                                 <property name="xalign">0</property>
-                                                <property name="label" translatable="yes">DEBUG CONSOLE</property>
+                                                <property name="label" translatable="yes"> DEBUG CONSOLE</property>
                                               </object>
                                               <packing>
                                                 <property name="position">0</property>
@@ -917,14 +909,7 @@
                                         </child>
                                         <child>
                                           <object class="GtkScrolledWindow" id="console_scroller">
-                                            <property name="height_request">150</property>
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">True</property>
-                                            <property name="hscrollbar_policy">automatic</property>
-                                            <property name="vscrollbar_policy">automatic</property>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
+                                            <property name="can_focus">False</property>
                                           </object>
                                           <packing>
                                             <property name="position">1</property>
@@ -937,7 +922,7 @@
                                     </child>
                                     <child>
                                       <object class="GtkButton" id="console_hide_button">
-                                        <property name="height_request">10</property>
+                                        <property name="height_request">15</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
@@ -964,7 +949,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="right_bar_return_button">
-                            <property name="width_request">10</property>
+                            <property name="width_request">15</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                           </object>
@@ -990,13 +975,18 @@
                               <object class="GtkEventBox" id="eventbox1">
                                 <property name="visible">True</property>
                                 <child>
-                                  <object class="GtkHBox" id="state_editor_label_hbox">
+                                  <object class="GtkHBox" id="state_editor_top_bar">
                                     <property name="visible">True</property>
                                     <child>
-                                      <object class="GtkLabel" id="state_editor_label">
+                                      <object class="GtkEventBox" id="state_editor_label_hbox">
                                         <property name="visible">True</property>
-                                        <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">STATE EDITOR</property>
+                                        <child>
+                                          <object class="GtkLabel" id="state_editor_label">
+                                            <property name="visible">True</property>
+                                            <property name="xalign">0</property>
+                                            <property name="label" translatable="yes">STATE EDITOR</property>
+                                          </object>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="position">0</property>
@@ -1044,7 +1034,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="right_bar_hide_button">
-                            <property name="width_request">10</property>
+                            <property name="width_request">15</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -1071,16 +1061,6 @@
               </object>
               <packing>
                 <property name="position">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkStatusbar" id="statusbar1">
-                <property name="height_request">5</property>
-                <property name="visible">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="position">3</property>
               </packing>
             </child>
           </object>
