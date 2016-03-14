@@ -32,17 +32,19 @@ class SourceEditorView(View):
                                                                      letter_spacing=constants.LETTER_SPACING_1PT)
         source_label.set_alignment(0.0, 0.5)
         source_box = gtk.EventBox()
-        source_box.set_name('widget_title')
+        source_box.set_name('label_wrapper')
         source_box.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
         source_box.add(source_label)
-        source_box.show_all()
+
+        title_viewport = gtk.Viewport()
+        title_viewport.set_name("source_editor_title_wrapper")
+        title_viewport.add(source_box)
+        title_viewport.show_all()
 
         editor_frame = gtk.Frame()
-        vbox.pack_start(source_box, False, True, 0)
+        vbox.pack_start(title_viewport, False, True, 0)
         vbox.pack_start(editor_frame, expand=True, fill=True)
         vbox.pack_start(hbox, expand=False, fill=True)
-        # l = gtk.Label()
-        # vbox.pack_start(l, expand=False, fill=False)
 
         # create textview
         self.textview = None

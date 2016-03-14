@@ -82,14 +82,14 @@ class StateEditorView(View):
         self['description_text_view'] = textview
 
         description_title_box = gtk.EventBox()
-        description_title_box.set_name("widget_title")
+        description_title_box.set_name("label_wrapper")
         description_title_box.set_border_width(constants.GRID_SIZE)
         description_title_box.add(description_label)
-        description_title_box.show_all()
 
-        # description_textview_box = gtk.EventBox()
-        # description_textview_box.set_border_width(constants.GRID_SIZE)
-        # description_textview_box.add(textview)
+        title_viewport = gtk.Viewport()
+        title_viewport.set_name("description_title_wrapper")
+        title_viewport.add(description_title_box)
+        title_viewport.show_all()
 
         description_scroller = gtk.ScrolledWindow()
         description_scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -97,7 +97,7 @@ class StateEditorView(View):
         description_scroller.add(textview)
         self['description_scroller'] = description_scroller
 
-        description_container.pack_start(description_title_box, False, True, 0)
+        description_container.pack_start(title_viewport, False, True, 0)
         description_container.pack_start(description_scroller, True, True, 0)
         description_container.show()
 

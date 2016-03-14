@@ -138,10 +138,10 @@ style "basic_layout"
 
 widget_class "*" style "basic_layout"
 
-gtk_color_scheme = "background_space:#1d2227"
-gtk_color_scheme = "background_menu:#13181d"
-gtk_color_scheme = "background_widgets:#272c31"
-gtk_color_scheme = "background_inner_widgets:#2f3439"
+gtk_color_scheme = "background_space:#1e2328"
+gtk_color_scheme = "background_menu:#191e23"
+gtk_color_scheme = "background_widgets:#282d32"
+gtk_color_scheme = "background_inner_widgets:#30353a"
 gtk_color_scheme = "background_table_widgets:#383d42"
 
 gtk_color_scheme = "text_default:#ffffff"
@@ -171,40 +171,6 @@ gtk_color_scheme = "red:#dd0000"
 gtk_color_scheme = "green:#00dd00"
 gtk_color_scheme = "blue:#0000dd"
 gtk_color_scheme = "yellow:#dddd00"
-
-
-style "basic_colors"
-{
-    # Background color of text widgets and lists.
-    base[ACTIVE]      = @input_background_active
-    base[INSENSITIVE] = @input_background
-    base[NORMAL]      = @input_background
-    base[PRELIGHT]    = @input_background
-    base[SELECTED]    = @accent
-
-    # Background color. This is the background color of windows and buttons.
-    bg[ACTIVE]        = @accent
-    bg[INSENSITIVE]   = @background_menu
-    bg[NORMAL]        = @background_menu
-    bg[PRELIGHT]      = @accent
-    bg[SELECTED]      = @accent
-
-    # Foreground color. Used for text on buttons. Also used for the button borders in some engines.
-    fg[ACTIVE]        = @text_default
-    fg[INSENSITIVE]   = @text_default
-    fg[NORMAL]        = @text_default
-    fg[PRELIGHT]      = @text_default
-    fg[SELECTED]      = @text_default
-
-    # Text color for text input widgets and lists
-    text[ACTIVE]      = @text_default
-    text[INSENSITIVE] = @text_inactive
-    text[NORMAL]      = @text_default
-    text[PRELIGHT]    = @text_default
-    text[SELECTED]    = @text_default
-}
-
-class "GtkWidget" style : highest "basic_colors"
 
 
 style "test-style"
@@ -239,51 +205,62 @@ style "test-style"
 }
 
 
+style "basic-colors"
+{
+    # Background color of text widgets and lists.
+    base[ACTIVE]      = @input_background_active
+    base[INSENSITIVE] = @input_background
+    base[NORMAL]      = @input_background
+    base[PRELIGHT]    = @input_background
+    base[SELECTED]    = @accent
+
+    # Background color. This is the background color of windows and buttons.
+    bg[ACTIVE]        = @background_widgets
+    bg[INSENSITIVE]   = @background_widgets
+    bg[NORMAL]        = @background_widgets
+    bg[PRELIGHT]      = @background_widgets
+    #bg[SELECTED]      = @background_widgets
+
+    # Foreground color. Used for text on buttons. Also used for the button borders in some engines.
+    fg[ACTIVE]        = @text_default
+    fg[INSENSITIVE]   = @text_default
+    fg[NORMAL]        = @text_default
+    fg[PRELIGHT]      = @text_default
+    fg[SELECTED]      = @text_default
+
+    # Text color for text input widgets and lists
+    text[ACTIVE]      = @text_default
+    text[INSENSITIVE] = @text_inactive
+    text[NORMAL]      = @text_default
+    text[PRELIGHT]    = @text_default
+    text[SELECTED]    = @text_default
+}
+
+widget_class "*" style : highest "basic-colors"
+
+
 style "toolbar" {
-    bg[NORMAL]        = @background_space
+    bg[NORMAL]        = @background_menu
 }
 widget "*.toolbar*" style : highest "toolbar"
+widget "*.top_menu_hbox.*" style : highest "toolbar"
 
 
-style "button"
-{
-    bg[INSENSITIVE]   = @button_background_inactive
-    bg[NORMAL]        = @button_background
-    base[NORMAL]      = @input_background
+style "widget-colors" {
+    bg[INSENSITIVE]   = @background_inner_widgets
+    bg[NORMAL]        = @background_inner_widgets
 }
-class "GtkButton" style : highest "button"
-
-
-style "scrollbar" {
-    bg[INSENSITIVE]   = @scrollbar_background
-    bg[ACTIVE]        = @scrollbar_background
-    bg[NORMAL]        = @scrollbar_scroller
-    bg[PRELIGHT]      = @scrollbar_scroller_active
-    bg[SELECTED]      = @scrollbar_background
-}
-class "GtkScrollbar" style : highest "scrollbar"
-
-
-style "scrollbar-decent" = "scrollbar" {
-    bg[PRELIGHT]      = @scrollbar_scroller_active_decent
-}
-widget "*graphical_editor_vbox.*.GtkScrolledWindow*" style : highest "scrollbar-decent"
+widget_class "*.<GtkNotebook>.*" style : highest "widget-colors"
 
 
 style "notebook" {
-    bg[ACTIVE]        = @button_background
+    bg[ACTIVE]        = @background_widgets
     bg[INSENSITIVE]   = @button_background_inactive
     bg[NORMAL]        = @accent
     bg[PRELIGHT]      = @accent
     bg[SELECTED]      = @accent
 }
-widget "*upper_notebook" style : highest "notebook"
-widget "*lower_notebook" style : highest "notebook"
-widget "*main_notebook_1" style : highest "notebook"
-widget "*main_notebook_2" style : highest "notebook"
-widget "*ports_notebook" style : highest "notebook"
-widget "*state_machines_notebook" style : highest "notebook"
-widget "*states_editor_notebook" style : highest "notebook"
+widget_class "*Notebook" style : highest "notebook"
 
 style "pane" {
     bg[ACTIVE]        = @pane
@@ -292,7 +269,39 @@ style "pane" {
     bg[PRELIGHT]      = @pane
     bg[SELECTED]      = @pane
 }
-class "*Pane*"  style : highest "pane"
+widget_class "*Paned"  style : highest "pane"
+widget "*logic_vpaned"  style : highest "pane"
+widget "*data_vpaned"  style : highest "pane"
+
+
+style "button"
+{
+    bg[INSENSITIVE]   = @button_background_inactive
+    bg[NORMAL]        = @button_background
+    bg[SELECTED]        = @accent
+    bg[PRELIGHT]        = @accent
+    bg[ACTIVE]        = @accent
+    base[INSENSITIVE]      = @button_background_inactive
+    base[NORMAL]      = @button_background
+    base[SELECTED]      = @input_background_active
+    base[PRELIGHT]      = @input_background_active
+    base[ACTIVE]      = @input_background_active
+}
+widget_class "*.<GtkButton>" style : highest "button"
+widget_class "*GtkMenu*" style : highest "button"
+
+
+style "icons" = "test-style"{
+    base[NORMAL] = @background_widgets
+    bg[ACTIVE] = @accent
+    bg[SELECTED] = @accent
+    bg[PRELIGHT] = @accent
+    text[NORMAL] = @text_default
+    text[ACTIVE] = @text_default
+    text[PRELIGHT] = @text_default
+    text[SELECTED] = @text_default
+}
+widget_class "*IconView*" style : highest "icons"
 
 
 style "sidebar-hide-button" {
@@ -305,12 +314,29 @@ style "sidebar-hide-button" {
     bg[NORMAL]        = @background_space
     bg[PRELIGHT]      = @accent
     bg[SELECTED]      = @accent
-
 }
 widget "*left_bar_hide_button" style : highest "sidebar-hide-button"
 widget "*left_bar_return_button" style : highest "sidebar-hide-button"
 widget "*right_bar_hide_button" style : highest "sidebar-hide-button"
+widget "*right_bar_return_button" style : highest "sidebar-hide-button"
 widget "*console_hide_button" style : highest "sidebar-hide-button"
+widget "*console_return_button" style : highest "sidebar-hide-button"
+
+
+style "scrollbar" {
+    bg[INSENSITIVE]   = @scrollbar_background
+    bg[ACTIVE]        = @scrollbar_background
+    bg[NORMAL]        = @scrollbar_scroller
+    bg[PRELIGHT]      = @scrollbar_scroller_active
+    bg[SELECTED]      = @scrollbar_background
+}
+widget_class "*Scrollbar*" style : highest "scrollbar"
+
+
+style "scrollbar-decent" = "scrollbar" {
+    bg[PRELIGHT]      = @scrollbar_scroller_active_decent
+}
+widget "*graphical_editor_vbox.*.GtkScrolledWindow*" style : highest "scrollbar-decent"
 
 
 style "text-view-background" {
@@ -320,34 +346,20 @@ style "text-view-background" {
 widget "*console_scroller.GtkTextView" style : highest "text-view-background"
 widget "*description_scroller.GtkTextView" style : highest "text-view-background"
 
-style "inner-widget" {
-    bg[ACTIVE]        = @background_widgets
-    bg[INSENSITIVE]   = @background_widgets
-    bg[NORMAL]        = @background_widgets
-    bg[PRELIGHT]      = @background_widgets
-    bg[SELECTED]      = @background_widgets
-}
-widget_class "*GtkNotebook*GtkEventBox" style : highest "inner-widget"
-
 
 style "widget-title" {
     bg[NORMAL]        = @background_menu
 }
-widget "*source_viewport*.*widget_title*" style : highest "widget-title"
-widget "*outcomes_viewport*.*widget_title*" style : highest "widget-title"
-widget "*data_ports_box*.*widget_title*" style : highest "widget-title"
-widget "*transitions_viewport*.*widget_title*" style : highest "widget-title"
-widget "*data_flows_viewport*.*widget_title*" style : highest "widget-title"
-widget "*description_viewport*.*widget_title*" style : highest "widget-title"
-widget "*linkage_container*.*widget_title*" style : highest "widget-title"
-widget "*linkage_container*.*widget_title2*" style : highest "widget-title"
-
-
-style "icons" {
-    base[INSENSITIVE] = @background_menu
-    base[NORMAL]      = @background_menu
-}
-class "*IconView" style : highest "icons"
+widget "*.label_wrapper" style : highest "widget-title"
+widget "*.label_wrapper?" style : highest "widget-title"
+widget "*.source_editor_title_wrapper" style : highest "widget-title"
+widget "*.outcomes_title_wrapper" style : highest "widget-title"
+widget "*.transitions_title_wrapper" style : highest "widget-title"
+widget "*.data_ports_title_wrapper" style : highest "widget-title"
+widget "*.data_flows_title_wrapper" style : highest "widget-title"
+widget "*.data_linkage_title_wrapper" style : highest "widget-title"
+widget "*.logical_linkage_title_wrapper" style : highest "widget-title"
+widget "*.description_title_wrapper" style : highest "widget-title"
 
 
 style "libraries" {
@@ -374,10 +386,6 @@ style "tab-button" {
 }
 widget "*tab_label.*" style : highest "tab-button"
 
-style "tab-with-button" = "test-style" {
-
-}
-widget "*tab_label" style : highest "tab-button"
 
 style "tree-views" {
     text[INSENSITIVE] = @text_label      # files

@@ -87,15 +87,18 @@ class StateOutcomesEditorView(View):
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrollable.add(self.treeView['tree_view'])
 
-        eventbox = gtk.EventBox()
-        eventbox.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
-        eventbox.set_name('widget_title')
         outcomes_label = gui_helper.create_label_with_text_and_spacing("OUTCOMES",
                                                                        letter_spacing=constants.LETTER_SPACING_1PT)
         outcomes_label.set_alignment(0.0, 0.5)
+        eventbox = gtk.EventBox()
+        eventbox.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
+        eventbox.set_name('label_wrapper')
         eventbox.add(outcomes_label)
+        title_viewport = gtk.Viewport()
+        title_viewport.set_name("outcomes_title_wrapper")
+        title_viewport.add(eventbox)
 
-        self.vbox.pack_start(eventbox, False, True, 0)
+        self.vbox.pack_start(title_viewport, False, True, 0)
         self.vbox.pack_start(scrollable, True, True, 0)
         self.vbox.pack_start(self.Hbox, expand=False, fill=True)
         self.vbox.show_all()

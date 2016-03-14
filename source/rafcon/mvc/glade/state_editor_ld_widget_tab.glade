@@ -27,7 +27,7 @@
             <property name="can_focus">True</property>
             <property name="orientation">vertical</property>
             <child>
-              <object class="GtkVBox" id="vbox1">
+              <object class="GtkVBox" id="upper_right_sidebar">
                 <property name="visible">True</property>
                 <property name="orientation">vertical</property>
                 <child>
@@ -116,7 +116,6 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="orientation">vertical</property>
-                        <property name="position">2</property>
                         <child>
                           <object class="GtkEventBox" id="data_ports_box">
                             <property name="visible">True</property>
@@ -125,10 +124,11 @@
                                 <property name="visible">True</property>
                                 <property name="orientation">vertical</property>
                                 <child>
-                                  <object class="GtkEventBox" id="widget_title">
+                                  <object class="GtkViewport" id="data_ports_title_wrapper">
                                     <property name="visible">True</property>
+                                    <property name="resize_mode">queue</property>
                                     <child>
-                                      <object class="GtkEventBox" id="eventbox3">
+                                      <object class="GtkEventBox" id="label_wrapper">
                                         <property name="visible">True</property>
                                         <property name="border_width">10</property>
                                         <child>

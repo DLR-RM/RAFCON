@@ -47,9 +47,6 @@ class LinkageOverviewView(View):
         self['scoped_scroller'].add(self['scope_view'].get_top_widget())
         self['outcomes_scroller'].add(self['outcomes_view'].get_top_widget())
 
-        self['widget_title'].set_border_width(constants.GRID_SIZE)
-        self['widget_title2'].set_border_width(constants.GRID_SIZE)
-
         gui_helper.set_label_markup(self['data_linkage_label'], 'DATA LINKAGE',
                                     letter_spacing=constants.LETTER_SPACING_1PT)
         gui_helper.set_label_markup(self['logical_linkage_label'], 'LOGICAL LINKAGE',
