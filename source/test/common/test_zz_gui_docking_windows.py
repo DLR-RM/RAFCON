@@ -17,7 +17,7 @@ import testing_utils
 from testing_utils import call_gui_callback
 import pytest
 
-from test_zz_gui_docking import DOCKING_TEST_FOLDER
+DOCKING_TEST_FOLDER = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/config_docking_test'
 
 
 def mirror_runtime_config_file():
