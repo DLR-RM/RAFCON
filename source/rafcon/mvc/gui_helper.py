@@ -117,16 +117,19 @@ def set_notebook_title(notebook, page_num, title_label):
 
 
 def set_window_size_and_position(window, window_key):
-    """Adjust GTK Window's size and position according to the corresponding values in the runtime config file.
+    """Adjust GTK Window's size and position according to the corresponding values in the runtime_config file. If the
+    runtime_config does not exist, or the corresponding values are missing in the file, default values for the window
+    size are used, and the mouse position is used to adjust the window's position.
 
     :param window: The GTK Window to be adjusted
     :param window_key: The window's key stored in the runtime config file
      """
     size = global_runtime_config.get_config_value(window_key+'_SIZE')
     position = global_runtime_config.get_config_value(window_key+'_POS')
-    if size:
-        window.resize(size[0], size[1])
-    window.show()
+    if not size:
+        size = constants.WINDOW_SIZE[window_key]
+    window.resize(size[0], size[1])
+
     if position:
         position = (max(0, position[0]), max(0, position[1]))
         screen_width = gtk.gdk.screen_width()
@@ -135,3 +138,4 @@ def set_window_size_and_position(window, window_key):
             window.move(position[0], position[1])
     else:
         window.set_position(gtk.WIN_POS_MOUSE)
+    window.show()
