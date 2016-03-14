@@ -50,12 +50,12 @@ class DefaultConfig(object):
 
     def load(self, config_file, path=None):
         assert isinstance(config_file, str)
-
         if path is None:
             path = os.path.join(os.path.expanduser('~'), '.config', 'rafcon')
 
         if not os.path.exists(path):
-            logger.warn('No configuration found, using temporary default config and create path on file system.')
+            logger.warn('No configuration found at {0}, using temporary default config and create path on file system.'
+                        ''.format(path))
             os.makedirs(path)
 
         config_file_path = os.path.join(path, config_file)

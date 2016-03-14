@@ -75,7 +75,8 @@ class LibraryManager(Observable):
                 else:
                     self._libraries[lib_key] = dict(sorted(self._libraries[lib_key].items()))
             else:
-                logger.warn("Wrong path in config for LibraryManager: Path %s does not exist", lib_path)
+                logger.warn("Wrong path in config for library with name: '{0}' because path {1} does not exist"
+                            "".format(lib_key, lib_path))
         if not sys.version_info < (2, 7):
             self._libraries = OrderedDict(sorted(self._libraries.items()))
         else:

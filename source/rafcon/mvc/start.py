@@ -113,6 +113,10 @@ if __name__ == '__main__':
     result = parser.parse_args()
     setup_config = vars(result)
 
+    # Make mvc directory the working directory
+    # Needed for views, which assume to be in the mvc path and import glade files relatively
+    os.chdir(join(rafcon_root_path, 'mvc'))
+
     # Create the GUI-View
     main_window_view = MainWindowView()
 
@@ -127,10 +131,6 @@ if __name__ == '__main__':
     if global_net_config.get_config_value('NETWORK_CONNECTIONS'):
         from rafcon.network.singleton import network_connections
         network_connections.initialize()
-
-    # Make mvc directory the working directory
-    # Needed for views, which assume to be in the mvc path and import glade files relatively
-    os.chdir(join(rafcon_root_path, 'mvc'))
 
     # Initialize library
     sm_singletons.library_manager.initialize()
