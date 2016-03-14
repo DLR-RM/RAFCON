@@ -1,3 +1,13 @@
+"""
+.. module:: utils
+   :platform: Unix, Windows
+   :synopsis: A module that holds a collection of classes and methods which are used by rafcon.mvc.controllers-modules.
+
+.. moduleauthor:: Rico Belder
+
+
+"""
+
 from gtk import TreeView
 from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 

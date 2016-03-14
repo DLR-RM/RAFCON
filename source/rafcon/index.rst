@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 RAFCON -- RMC awesome flow control
-==================================================================
+==================================
 
 RAFCON (RMC awesome [or advanced] Flow Control, new name, aka Awesome tool) is an effort of DLR RMC to create a new
 flow control tool, based on existing ones. The target of this software is to combine the advantages and features of

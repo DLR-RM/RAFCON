@@ -1,3 +1,13 @@
+"""
+.. module:: io_data_port_list
+   :platform: Unix, Windows
+   :synopsis: A module that holds the controller to list and edit all input- and output-data-ports of a state.
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 import gtk
 from gtk import ListStore
 from gtk import TreeViewColumn, CellRendererToggle

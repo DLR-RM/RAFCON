@@ -57,7 +57,7 @@
         </child>
         <child>
           <object class="GtkCheckButton" id="connected_to_t_checkbutton">
-            <property name="label" translatable="yes">Connected to</property>
+            <property name="label" translatable="yes">External</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>

@@ -1,3 +1,13 @@
+"""
+.. module:: linkage_overview
+   :platform: Unix, Windows
+   :synopsis: A module that holds the controller giving footage to the linkage overview.
+
+.. moduleauthor:: Rico Belder
+
+
+"""
+
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from gtkmvc import Model
 

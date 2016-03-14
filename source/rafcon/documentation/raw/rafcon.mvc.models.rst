@@ -69,6 +69,11 @@ StateMachineModel (in state_machine)
 
 .. automodule:: rafcon.mvc.models.state_machine
 
+ModificationsHistoryModel (in modification_history)
+---------------------------------------------------
+
+.. automodule:: rafcon.mvc.models.modification_history
+
 
 StateMachineManagerModel (in state_machine_manager)
 ---------------------------------------------------

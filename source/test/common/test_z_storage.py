@@ -243,6 +243,7 @@ def test_storage_with_gui(caplog):
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
+    testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
 
     if testing_utils.sm_manager_model is None:

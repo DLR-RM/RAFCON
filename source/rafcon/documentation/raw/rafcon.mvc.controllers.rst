@@ -39,11 +39,6 @@ StateMachinesEditorController (in state_machines_editor)
 
 .. automodule:: rafcon.mvc.controllers.state_machines_editor
 
-StateConnectionsEditorController (in connections_editor)
---------------------------------------------------------
-
-.. automodule:: rafcon.mvc.controllers.connections_editor
-
 ExecutionHistoryTreeController (in execution_history)
 -----------------------------------------------------
 
@@ -60,7 +55,7 @@ DataPortListController (in io_data_port_list)
 .. automodule:: rafcon.mvc.controllers.io_data_port_list
 
 LibraryTreeController (in library_tree)
-------------------------------------------------------------
+---------------------------------------
 
 .. automodule:: rafcon.mvc.controllers.library_tree
 
@@ -70,17 +65,17 @@ LinkageOverviewController (in linkage_overview)
 .. automodule:: rafcon.mvc.controllers.linkage_overview
 
 MenuBarController (in menu_bar)
-------------------------------------------------------------
+-------------------------------
 
 .. automodule:: rafcon.mvc.controllers.menu_bar
 
 NetworkController (in network_connections)
-------------------------------------------------------------
+------------------------------------------
 
 .. automodule:: rafcon.mvc.controllers.network_connections
 
 ScopedVariableListController (in scoped_variable_list)
--------------------------------------------------------
+------------------------------------------------------
 
 .. automodule:: rafcon.mvc.controllers.scoped_variable_list
 
@@ -104,10 +99,10 @@ StateEditorController (in state_editor)
 
 .. automodule:: rafcon.mvc.controllers.state_editor
 
-StateMachineHistoryController (in state_machine_history)
---------------------------------------------------------
+ModificationHistoryTreeController (in modification_history)
+-----------------------------------------------------------
 
-.. automodule:: rafcon.mvc.controllers.state_machine_history
+.. automodule:: rafcon.mvc.controllers.modification_history
 
 StateMachineTreeController (in state_machine_tree)
 --------------------------------------------------

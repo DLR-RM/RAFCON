@@ -1,3 +1,13 @@
+"""
+.. module:: tool_bar
+   :platform: Unix, Windows
+   :synopsis: A module that holds the tool bar controller with respective functionalities or links for each button.
+
+.. moduleauthor:: Franz Steinmetz
+
+
+"""
+
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc import singleton as mvc_singleton
 from rafcon.utils import log

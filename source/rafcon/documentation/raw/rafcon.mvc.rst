@@ -28,13 +28,6 @@ clipboard
     :undoc-members:
     :show-inheritance:
 
-history
--------
-.. automodule:: rafcon.mvc.history
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 selection
 ---------
 .. automodule:: rafcon.mvc.selection

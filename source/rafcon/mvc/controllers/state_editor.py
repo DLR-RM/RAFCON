@@ -1,6 +1,16 @@
+"""
+.. module:: state_editor
+   :platform: Unix, Windows
+   :synopsis: A module that holds the state editor controller which provides footage all sub-state-element-controllers.
+
+.. moduleauthor:: Rico Belder
+
+
+"""
+
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers.state_overview import StateOverviewController
-from rafcon.mvc.controllers.source_editor import  SourceEditorController
+from rafcon.mvc.controllers.source_editor import SourceEditorController
 from rafcon.mvc.controllers.io_data_port_list import DataPortListController
 from rafcon.mvc.controllers.scoped_variable_list import ScopedVariableListController
 from rafcon.mvc.controllers.state_outcomes import StateOutcomesEditorController
