@@ -113,8 +113,12 @@ if __name__ == '__main__':
     result = parser.parse_args()
     setup_config = vars(result)
 
+    # Create the GUI-View
+    main_window_view = MainWindowView()
+
     signal.signal(signal.SIGINT, sm_singletons.signal_handler)
 
+    # load configuration files
     global_config.load(path=setup_config['config_path'])
     global_gui_config.load(path=setup_config['gui_config_path'])
     global_net_config.load(path=setup_config['net_config_path'])
@@ -133,9 +137,6 @@ if __name__ == '__main__':
 
     # Set base path of global storage
     sm_singletons.global_storage.base_path = RAFCON_TEMP_PATH_STORAGE
-
-    # Create the GUI
-    main_window_view = MainWindowView()
 
     if setup_config['sm_paths']:
         storage = StateMachineStorage()
