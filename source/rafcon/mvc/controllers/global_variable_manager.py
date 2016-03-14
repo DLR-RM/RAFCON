@@ -13,7 +13,6 @@ from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
-import gobject
 from gtk import ListStore
 import gtk
 
@@ -115,20 +114,22 @@ class GlobalVariableManagerController(ExtendedController):
 
         Creates a new global variable with default values and selects its row.
         """
-        new_global_variable = "new_global_%s" % self.global_variable_counter
-        self.global_variable_counter += 1
-        self.model.global_variable_manager.set_variable(new_global_variable, "value")
-        for row_num, iter_elem in enumerate(self.global_variables_list_store):
-            if iter_elem[0] == new_global_variable:
-                self.view['global_variable_tree_view'].set_cursor(row_num)
-                break
+        if isinstance(args[0], gtk.Button) or self.view['global_variable_tree_view'].is_focus():
+            new_global_variable = "new_global_%s" % self.global_variable_counter
+            self.global_variable_counter += 1
+            self.model.global_variable_manager.set_variable(new_global_variable, "value")
+            for row_num, iter_elem in enumerate(self.global_variables_list_store):
+                if iter_elem[0] == new_global_variable:
+                    self.view['global_variable_tree_view'].set_cursor(row_num)
+                    break
+            return True
 
     def on_delete_global_variable_button_clicked(self, *args):
         """Triggered when the Delete button in the Global Variables tab is clicked
 
         Deletes the selected global variable and re-selects next variable's row.
         """
-        if self.view['global_variable_tree_view'].is_focus():
+        if isinstance(args[0], gtk.Button) or self.view['global_variable_tree_view'].is_focus():
             path = self.view["global_variable_tree_view"].get_cursor()[0]
             if path is not None:
                 key = self.global_variables_list_store[int(path[0])][0]
@@ -138,6 +139,7 @@ class GlobalVariableManagerController(ExtendedController):
                     logger.warning("Delete of globale variable '{0}' failed".format(key))
             if len(self.global_variables_list_store) > 0:
                 self.view['global_variable_tree_view'].set_cursor(min(path[0], len(self.global_variables_list_store) - 1))
+            return True
 
     def on_name_changed(self, widget, path, text):
         """Triggered when a global variable's name is edited
