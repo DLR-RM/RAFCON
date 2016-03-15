@@ -1,7 +1,7 @@
 from enum import Enum
 import hashlib
 import uuid
-from config import global_config
+from config import global_network_config
 
 
 class MessageType(Enum):
@@ -11,6 +11,7 @@ class MessageType(Enum):
     REGISTER = 4
     REGISTER_WITH_ACKNOWLEDGES = 5
 
+STATE_EXECUTION_STATUS_SEPARATOR = "@"
 
 sequence_number_counter = 0
 
@@ -82,11 +83,11 @@ class Protocol:
 
     def generate_checksum(self):
         return hashlib.md5(str(self.sequence_number) + self.salt +
-                           self.message_content).hexdigest()[:global_config.get_config_value("HASH_LENGTH")]
+                           self.message_content).hexdigest()[:global_network_config.get_config_value("HASH_LENGTH")]
 
     def create_unique_checksum_and_salt(self):
         if self.salt is None:
-            self.salt = uuid.uuid4().hex[:global_config.get_config_value("SALT_LENGTH")]
+            self.salt = uuid.uuid4().hex[:global_network_config.get_config_value("SALT_LENGTH")]
         self.checksum = self.generate_checksum()
         return self.checksum + ":" + self.salt
 

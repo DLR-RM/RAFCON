@@ -38,4 +38,4 @@ class Config(DefaultConfig):
 
 
 # This variable holds the global configuration parameters for the statemachine
-global_config = Config()
+global_network_config = Config()

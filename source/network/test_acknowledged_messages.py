@@ -8,7 +8,7 @@ from twisted.internet import reactor
 
 from udp_client import UdpClient
 from udp_server import UdpServer
-from config import global_config
+from config import global_network_config
 from protocol import Protocol, MessageType
 
 from rafcon.utils import log
@@ -42,13 +42,13 @@ server_transport = None
 
 def write_back_message(datagram, address):
     logger.info("Server received datagram {0} from address: {1}".format(str(datagram), str(address)))
-    server_transport.write(datagram, address)
+    # server_transport.write(datagram, address)
 
 
 def start_udp_server(name, multi_processing_queue):
     info(name)
     udp_server = UdpServer()
-    connector = reactor.listenUDP(global_config.get_config_value("SERVER_UDP_PORT"), udp_server)
+    connector = reactor.listenUDP(global_network_config.get_config_value("SERVER_UDP_PORT"), udp_server)
     udp_server.datagram_received_function = write_back_message
 
     global server_transport
@@ -74,6 +74,14 @@ number_of_dropped_messages = 0
 
 def send_test_data(udp_client, multi_processing_queue):
     protocols = []
+
+    # Here just register messages are sent: as register messages are acknowledged per default
+    # send_message_acknowledged should be successful
+    protocols.append(Protocol(MessageType.REGISTER, "registering_with_acks"))
+    protocols.append(Protocol(MessageType.REGISTER, "this_is_a_state_id"))
+    protocols.append(Protocol(MessageType.REGISTER, "not_the_final_message"))
+
+    # register for acknowledges in the first message, all subsequent message should then be acknowledged
     protocols.append(Protocol(MessageType.REGISTER_WITH_ACKNOWLEDGES, "Registering with acks"))
     protocols.append(Protocol(MessageType.STATE_ID, "This is a state_id"))
     protocols.append(Protocol(MessageType.COMMAND, FINAL_MESSAGE))
@@ -82,7 +90,10 @@ def send_test_data(udp_client, multi_processing_queue):
         protocol = protocols.pop(0)
         logger.debug("For unit test send datagram: {0}".format(str(protocol)))
         # TODO: how does twisted know to which endpoint the message should be sent?
-        udp_client.send_message_acknowledged(protocol)
+        udp_client.send_message_acknowledged(protocol,
+                                             (global_network_config.get_config_value("SERVER_IP"),
+                                              global_network_config.get_config_value("SERVER_UDP_PORT")),
+                                             blocking=True)
 
         if protocol.message_content == FINAL_MESSAGE:
             break

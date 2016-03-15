@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
 import threading
-from config import global_config
+from config import global_network_config
 from protocol import Protocol, MessageType
 
 from twisted.internet.protocol import DatagramProtocol
-from twisted.internet import reactor
 from multiprocessing import Queue
 from communication_endpoint import CommunicationEndpoint
 from rafcon.utils import log
@@ -20,8 +19,14 @@ class UdpClient(CommunicationEndpoint):
         self.datagram_received_function = self.print_message
 
     def startProtocol(self):
-        self.transport.connect(global_config.get_config_value("SERVER_IP"),
-                               global_config.get_config_value("SERVER_UDP_PORT"))
+        CommunicationEndpoint.startProtocol(self)
+        self.transport.connect(global_network_config.get_config_value("SERVER_IP"),
+                               global_network_config.get_config_value("SERVER_UDP_PORT"))
+        logger.info("Protocol started")
+
+    def stopProtocol(self):
+        CommunicationEndpoint.stopProtocol(self)
+        logger.warn("Protocol stopped")
 
     @staticmethod
     def print_message(message, address):

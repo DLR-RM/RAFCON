@@ -8,7 +8,7 @@ from twisted.internet import reactor
 
 from udp_client import UdpClient
 from udp_server import UdpServer
-from config import global_config
+from config import global_network_config
 from protocol import Protocol, MessageType
 
 from rafcon.utils import log
@@ -56,11 +56,7 @@ def write_back_message(datagram, address):
 def start_udp_server(name, multi_processing_queue):
     info(name)
     udp_server = UdpServer()
-    connector = reactor.listenUDP(global_config.get_config_value("SERVER_UDP_PORT"), udp_server)
-    # print "#######################################"
-    # print connector
-    # print dir(connector)
-    # print "#######################################"
+    connector = reactor.listenUDP(global_network_config.get_config_value("SERVER_UDP_PORT"), udp_server)
     global server_transport
     server_transport = udp_server.get_transport()
     global server_queue

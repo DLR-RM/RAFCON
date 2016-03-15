@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from twisted.internet.protocol import DatagramProtocol
-from twisted.internet import reactor
 from communication_endpoint import CommunicationEndpoint
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -14,6 +13,14 @@ class UdpServer(CommunicationEndpoint):
         CommunicationEndpoint.__init__(self)
         self.datagram_received_function = self.print_message
         # self.check_acknowledgements_thread.start()
+
+    def startProtocol(self):
+        CommunicationEndpoint.startProtocol(self)
+        logger.info("Protocol started")
+
+    def stopProtocol(self):
+        CommunicationEndpoint.stopProtocol(self)
+        logger.warn("Protocol stopped")
 
     @staticmethod
     def print_message(message, address):

@@ -1,21 +1,21 @@
 import threading
 from time import gmtime, strftime
 import time
-from config import global_config
+from config import global_network_config
 from protocol import Protocol, MessageType
 import collections
 
 from twisted.internet.protocol import DatagramProtocol
-from twisted.internet import reactor
 from multiprocessing import Queue
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS = global_config.get_config_value("MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS")
+MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_RESEND = 3.0  # global_network_config.get_config_value("MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS")
+MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_FAIL = MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_RESEND * 10
 CHECK_ACKNOWLEDGEMENTS_THREAD_MAX_WAIT_TIME = 0.1
-BURST_NUMBER = global_config.get_config_value("BURST_NUMBER")
-TIME_BETWEEN_BURSTS = global_config.get_config_value("TIME_BETWEEN_BURSTS")
+BURST_NUMBER = 1  # global_network_config.get_config_value("BURST_NUMBER")
+TIME_BETWEEN_BURSTS = global_network_config.get_config_value("TIME_BETWEEN_BURSTS")
 
 
 class CommunicationEndpoint(DatagramProtocol):
@@ -31,17 +31,26 @@ class CommunicationEndpoint(DatagramProtocol):
         self._registered_endpoints = {}
         self._registered_endpoints_for_acknowledgements = []
         self.number_of_dropped_messages = 0
-        self._message_history = collections.deque(maxlen=global_config.get_config_value("HISTORY_LENGTH"))
+        self._message_history = collections.deque(maxlen=global_network_config.get_config_value("HISTORY_LENGTH"))
         # this is only to speed up memory access times
         self._message_history_dictionary = {}
+        self._message_events = {}
 
+        self._not_acknowledged_messages_counter = 0
+
+        self.__shutdown = False
         self.check_acknowledgements_thread = threading.Thread(target=self.check_acknowledgements)
 
     def check_acknowledgements(self):
 
         while True:
             next_message = None
-            logger.debug("Check_acknowledgements thread looping")
+            # logger.debug("Check_acknowledgements thread looping")
+
+            # return if shutdown requested
+            if self.__shutdown:
+                logger.info("Shutdown requested!")
+                return
 
             # get new message thread safe
             self._new_message_cv.acquire()
@@ -70,9 +79,10 @@ class CommunicationEndpoint(DatagramProtocol):
             messages_to_be_droped = []
             for key, message in self._messages_to_be_acknowledged.iteritems():
                 self._messages_to_be_acknowledged_timeout[key] += CHECK_ACKNOWLEDGEMENTS_THREAD_MAX_WAIT_TIME
-                if self._messages_to_be_acknowledged_timeout[key] > MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS:
+                if self._messages_to_be_acknowledged_timeout[key] > MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_RESEND:
                     messages_to_be_droped.append(key)
 
+            # message timeout handling
             for key in messages_to_be_droped:
                 # this is not the right strategy:
                 # logger.warn("Message {0} dropped because of timeout".format(self._messages_to_be_acknowledged[key]))
@@ -92,6 +102,8 @@ class CommunicationEndpoint(DatagramProtocol):
             import traceback
             logger.error("Received message could not be deserialized: {0} {1}".format(e.message, traceback.format_exc()))
 
+        logger.info(" -------------------------- receiving message {0} from address {1}".format(str(protocol), str(address)))
+
         # throwing away messages that were received before
         if protocol.checksum not in self._message_history_dictionary.iterkeys():
             # check if ringbuffer is already full
@@ -108,18 +120,24 @@ class CommunicationEndpoint(DatagramProtocol):
             return
 
         # registering endpoints
-        if protocol.message_type is MessageType.REGISTER \
-                or protocol.message_type is MessageType.REGISTER_WITH_ACKNOWLEDGES:
+        if protocol.message_type is MessageType.REGISTER or protocol.message_type is MessageType.REGISTER_WITH_ACKNOWLEDGES:
             if address not in self._registered_endpoints:
                 logger.info("Endpoint with address {0} registered".format(str(address)))
                 self._registered_endpoints[address] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-                if protocol.message_type is MessageType.REGISTER_WITH_ACKNOWLEDGES:
-                    self._registered_endpoints_for_acknowledgements.append(address)
+
+            if protocol.message_type is MessageType.REGISTER_WITH_ACKNOWLEDGES and address not in self._registered_endpoints_for_acknowledgements:
+                self._registered_endpoints_for_acknowledgements.append(address)
+            # always acknowledge register messages
+            ack_message = Protocol(MessageType.ACK, protocol.checksum)
+            self.send_message_non_acknowledged(ack_message, address)
 
         # add the acknowledge message to its responsible list and wake up the thread checking the acknowledgements
         if protocol.message_type is MessageType.ACK:
             self._new_message_cv.acquire()
             self._acknowledge_messages_address_couples.append((protocol, address))
+            # the message that is acknowledged is in the message_content field
+            if protocol.message_content in self._message_events.iterkeys():
+                self._message_events[protocol.message_content].set()
             self._new_message_cv.notify()
             self._new_message_cv.release()
         else:  # acknowledge message if endpoint registered for acknowledgements
@@ -130,15 +148,42 @@ class CommunicationEndpoint(DatagramProtocol):
                 pass
 
     def send_message_non_acknowledged(self, message, address=None):
-        for i in range(0, BURST_NUMBER):
-            self.transport.write(message.serialize(), address)
-            time.sleep(TIME_BETWEEN_BURSTS)
+        if self.transport:
+            for i in range(0, BURST_NUMBER):
+                logger.info(" -------------------------- sending message {0} from address {1}".format(str(message), str(address)))
+                self.transport.write(message.serialize(), address)
+                time.sleep(TIME_BETWEEN_BURSTS)
+        else:
+            logger.error("self.transport is not set up yet")
 
-    def send_message_acknowledged(self, message):
-        assert isinstance(message, Protocol)
-        self._messages_to_be_acknowledged[message.checksum] = message
-        self._messages_to_be_acknowledged_timeout[message.checksum] = 0
-        self.send_message_non_acknowledged(message)
+    def send_message_acknowledged(self, message, address=None, blocking=False):
+        # check if endpoint is already connected
+        if self.transport:
+            assert isinstance(message, Protocol)
+            self._messages_to_be_acknowledged[message.checksum] = message
+            self._messages_to_be_acknowledged_timeout[message.checksum] = 0
+        else:
+            logger.error("self.transport is not set up yet")
+
+        if blocking:
+            self._message_events[message.checksum] = threading.Event()
+            print "creating threading event for message " + str(message)
+            # make sure that the threading event is created before the message is sent out, else there will be race condition
+            self.send_message_non_acknowledged(message, address)
+            return_value = self._message_events[message.checksum].wait(MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_FAIL)
+            del self._message_events[message.checksum]
+            if return_value:
+                # successful
+                return
+            else:
+                if message.checksum in self._messages_to_be_acknowledged:
+                    del self._messages_to_be_acknowledged[message.checksum]
+                if message.checksum in self._messages_to_be_acknowledged_timeout:
+                    del self._messages_to_be_acknowledged_timeout[message.checksum]
+                self._not_acknowledged_messages_counter += 1
+                logger.info("timeout occurred for waiting for acknowledgement")
+        else:
+            self.send_message_non_acknowledged(message, address)
 
     def get_transport(self):
         return self.transport
@@ -152,3 +197,15 @@ class CommunicationEndpoint(DatagramProtocol):
     @staticmethod
     def print_message(message, address):
         logger.info("Received datagram {0} from address: {1}".format(str(message), str(address)))
+
+    def get_registered_endpoints(self):
+        return self._registered_endpoints
+
+    def startProtocol(self):
+        pass
+
+    def stopProtocol(self):
+        pass
+
+    def shutdown(self):
+        self.__shutdown = True
