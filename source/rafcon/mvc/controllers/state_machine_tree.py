@@ -212,11 +212,11 @@ class StateMachineTreeController(ExtendedController):
         # print "check for update row of state: ", state_model.state.get_path()
         state_row_path = self.tree_store.get_path(state_row_iter)
 
-        if not type(state_model.state) == self.tree_store[state_row_path][2] or \
+        if not type(state_model.state).__name__ == self.tree_store[state_row_path][2] or \
                 not state_model.state.name == self.tree_store[state_row_path][0]:
             # print "update row of state: ", state_model.state.get_path()
             self.tree_store[state_row_path][0] = state_model.state.name
-            self.tree_store[state_row_path][2] = type(state_model.state)
+            self.tree_store[state_row_path][2] = type(state_model.state).__name__
             self.tree_store[state_row_path][3] = state_model
             self.tree_store.row_changed(state_row_path, state_row_iter)
 
@@ -228,7 +228,7 @@ class StateMachineTreeController(ExtendedController):
             state_row_iter = self.tree_store.insert_before(parent=parent_iter, sibling=None,
                                                            row=(state_model.state.name,
                                                                 state_model.state.state_id,
-                                                                type(state_model.state),
+                                                                type(state_model.state).__name__,
                                                                 state_model,
                                                                 state_model.state.get_path()))
             self.state_row_iter_dict_by_state_path[state_path] = state_row_iter
