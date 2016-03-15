@@ -140,7 +140,11 @@ class ExtendedController(Controller):
         for controller_name in controller_names:
             self.remove_controller(controller_name)
         self.relieve_all_models()
-        self.view.get_top_widget().destroy()
+        # try:
+        #     self.view.get_top_widget().destroy()
+        # except Exception as e:
+        #     import traceback
+        #     print "Exception in destroy extended controller {0} {1}".format(e.message, traceback.format_exc())
 
     def observe_model(self, model):
         """Make this model observable within the controller

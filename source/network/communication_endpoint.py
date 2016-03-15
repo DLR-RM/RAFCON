@@ -12,7 +12,7 @@ logger = log.get_logger(__name__)
 
 
 MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_RESEND = 3.0  # global_network_config.get_config_value("MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS")
-MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_FAIL = MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_RESEND * 10
+MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_FAIL = MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_RESEND * 3
 CHECK_ACKNOWLEDGEMENTS_THREAD_MAX_WAIT_TIME = 0.1
 BURST_NUMBER = 1  # global_network_config.get_config_value("BURST_NUMBER")
 TIME_BETWEEN_BURSTS = global_network_config.get_config_value("TIME_BETWEEN_BURSTS")
@@ -77,7 +77,7 @@ class CommunicationEndpoint(DatagramProtocol):
             # check messages for timeout
             # logger.debug("check_acknowledgements checking for messages timeout")
             messages_to_be_droped = []
-            for key, message in self._messages_to_be_acknowledged.iteritems():
+            for key, (message, address) in self._messages_to_be_acknowledged.iteritems():
                 self._messages_to_be_acknowledged_timeout[key] += CHECK_ACKNOWLEDGEMENTS_THREAD_MAX_WAIT_TIME
                 if self._messages_to_be_acknowledged_timeout[key] > MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_RESEND:
                     messages_to_be_droped.append(key)
@@ -90,8 +90,9 @@ class CommunicationEndpoint(DatagramProtocol):
                 # del self._messages_to_be_acknowledged_timeout[key]
                 # self.number_of_dropped_messages += 1
                 logger.warn("Message {0} is going to be resent as no acknowledge was received yet".
-                            format(self._messages_to_be_acknowledged[key]))
-                self.send_message_acknowledged(self._messages_to_be_acknowledged[key])
+                            format(self._messages_to_be_acknowledged[key][0]))
+                self.send_message_acknowledged(self._messages_to_be_acknowledged[key][0],
+                                               self._messages_to_be_acknowledged[key][1])
 
     def datagramReceived(self, datagram, address):
 
@@ -150,7 +151,7 @@ class CommunicationEndpoint(DatagramProtocol):
     def send_message_non_acknowledged(self, message, address=None):
         if self.transport:
             for i in range(0, BURST_NUMBER):
-                logger.info(" -------------------------- sending message {0} from address {1}".format(str(message), str(address)))
+                logger.info(" -------------------------- sending message {0} to address {1}".format(str(message), str(address)))
                 self.transport.write(message.serialize(), address)
                 time.sleep(TIME_BETWEEN_BURSTS)
         else:
@@ -160,7 +161,7 @@ class CommunicationEndpoint(DatagramProtocol):
         # check if endpoint is already connected
         if self.transport:
             assert isinstance(message, Protocol)
-            self._messages_to_be_acknowledged[message.checksum] = message
+            self._messages_to_be_acknowledged[message.checksum] = (message, address)
             self._messages_to_be_acknowledged_timeout[message.checksum] = 0
         else:
             logger.error("self.transport is not set up yet")
@@ -172,9 +173,10 @@ class CommunicationEndpoint(DatagramProtocol):
             self.send_message_non_acknowledged(message, address)
             return_value = self._message_events[message.checksum].wait(MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_FAIL)
             del self._message_events[message.checksum]
+
             if return_value:
                 # successful
-                return
+                return True
             else:
                 if message.checksum in self._messages_to_be_acknowledged:
                     del self._messages_to_be_acknowledged[message.checksum]
@@ -182,8 +184,11 @@ class CommunicationEndpoint(DatagramProtocol):
                     del self._messages_to_be_acknowledged_timeout[message.checksum]
                 self._not_acknowledged_messages_counter += 1
                 logger.info("timeout occurred for waiting for acknowledgement")
+                return False
+
         else:
             self.send_message_non_acknowledged(message, address)
+            return True
 
     def get_transport(self):
         return self.transport

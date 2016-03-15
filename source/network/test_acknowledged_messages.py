@@ -80,6 +80,7 @@ def send_test_data(udp_client, multi_processing_queue):
     protocols.append(Protocol(MessageType.REGISTER, "registering_with_acks"))
     protocols.append(Protocol(MessageType.REGISTER, "this_is_a_state_id"))
     protocols.append(Protocol(MessageType.REGISTER, "not_the_final_message"))
+    # protocols.append(Protocol(MessageType.REGISTER, FINAL_MESSAGE))
 
     # register for acknowledges in the first message, all subsequent message should then be acknowledged
     protocols.append(Protocol(MessageType.REGISTER_WITH_ACKNOWLEDGES, "Registering with acks"))
@@ -98,7 +99,7 @@ def send_test_data(udp_client, multi_processing_queue):
         if protocol.message_content == FINAL_MESSAGE:
             break
 
-        time.sleep(1.0)
+        time.sleep(0.5)
     logger.debug("Sender thread finished")
 
     while udp_client.messages_to_be_acknowledged_pending():

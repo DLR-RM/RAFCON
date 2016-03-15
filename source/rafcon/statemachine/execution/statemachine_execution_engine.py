@@ -102,7 +102,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     def stop(self):
         """Set the execution mode to stopped
         """
-        logger.debug("Force execution stop...")
+        logger.debug("Stop the state machine execution ...")
         if self.state_machine_manager.get_active_state_machine() is not None:
             self.state_machine_manager.get_active_state_machine().root_state.recursively_preempt_states()
         self.set_execution_mode_to_stopped()

@@ -1,6 +1,6 @@
 import gtk
 from functools import partial
-from twisted.internet import reactor
+# from twisted.internet import reactor
 
 from rafcon.statemachine import interface
 from rafcon.statemachine.enums import StateMachineExecutionStatus
@@ -43,6 +43,7 @@ class MenuBarController(ExtendedController):
         self.shortcut_manager = shortcut_manager
         self.logging_view = view.logging_view
         self.main_window_view = view
+        self._destroyed = False
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -408,10 +409,34 @@ class MenuBarController(ExtendedController):
         return False
 
     def on_destroy(self, widget, data=None):
-        import glib
-        logger.debug("Closing main window!")
-        self.main_window_view.hide()
-        glib.idle_add(gtk.main_quit)
+
+        # stop state machine
+        try:
+            if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+                state_machine_execution_engine.stop()
+                active_sm_id = state_machine_execution_engine.state_machine_manager.active_state_machine_id
+                state_machine_execution_engine.state_machine_manager.state_machines[active_sm_id].root_state.join()
+        except Exception as e:
+            import traceback
+            logger.exception("Could not stop state machine!")
+
+        # stop twisted if loaded
+        try:
+            from plugins.monitoring.monitoring_manager import global_monitoring_manager
+            logger.info("Shutting down twisted from gtk and thus gtk itself")
+            from twisted.internet import reactor
+            logger.info("Shutting down monitoring manager")
+            global_monitoring_manager.shutdown()
+            logger.info("Shutting down twisted")
+            # the plugin may be installed but no reactor is running
+            if reactor.running:
+                reactor.callFromThread(reactor.stop)
+        except ImportError, e:
+            # stop gtk if twisted is not imported
+            import glib
+            logger.debug("Closing main window!")
+            self.main_window_view.hide()
+            glib.idle_add(gtk.main_quit)
 
     def _prepare_destruction(self):
         """Saves current configuration of windows and panes to the runtime config file, before RAFCON is closed."""
@@ -447,8 +472,6 @@ class MenuBarController(ExtendedController):
         gui_singletons.main_window_controller.destroy()
         self.logging_view.quit_flag = True
         glib.idle_add(log.unregister_logging_view, 'main')
-        if reactor.running:
-            glib.idle_add(reactor.stop)
 
     ######################################################
     # menu bar functionality - Edit

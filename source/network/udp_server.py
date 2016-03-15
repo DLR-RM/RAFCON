@@ -11,8 +11,8 @@ class UdpServer(CommunicationEndpoint):
 
     def __init__(self):
         CommunicationEndpoint.__init__(self)
+        self.check_acknowledgements_thread.start()
         self.datagram_received_function = self.print_message
-        # self.check_acknowledgements_thread.start()
 
     def startProtocol(self):
         CommunicationEndpoint.startProtocol(self)

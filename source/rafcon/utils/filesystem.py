@@ -11,6 +11,7 @@
 
 import os
 import shutil
+from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
 
 
 def create_path(path):
@@ -83,3 +84,11 @@ def read_file(path, filename):
         file_pointer.close()
 
     return file_content
+
+
+def get_home_path():
+    home_path = expanduser('~')
+    if home_path:
+        home_path = join(home_path, ".config", "rafcon")
+    else:
+        home_path = 'None'

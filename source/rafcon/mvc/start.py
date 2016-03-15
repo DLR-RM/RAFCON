@@ -9,9 +9,10 @@ import argparse
 from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
 
 import rafcon
-
+from rafcon.utils.config import config_path
 from rafcon.utils import log
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
+import rafcon.utils.filesystem as filesystem
 
 from rafcon.statemachine.config import global_config
 from rafcon.statemachine.storage.storage import StateMachineStorage
@@ -21,11 +22,20 @@ import rafcon.statemachine.singleton as sm_singletons
 
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-
 import rafcon.mvc.singleton as mvc_singletons
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
-# from rafcon.network.network_config import global_net_config
+
+from plugins import *
+
+try:
+    from plugins.monitoring.monitoring_manager import global_monitoring_manager
+    from twisted.internet import gtk2reactor
+    # needed for glib.idle_add, and signals
+    gtk2reactor.install()
+    from twisted.internet import reactor
+except ImportError, e:
+    print "Monitoring plugin not found"
 
 
 def setup_logger():
@@ -40,10 +50,6 @@ def setup_logger():
     stdout.setLevel(logging.DEBUG)
     logging.getLogger('gtkmvc').addHandler(stdout)
 
-    # Set logging level
-    # logging.getLogger('statemachine.state').setLevel(logging.DEBUG)
-    # logging.getLogger('controllers.state_properties').setLevel(logging.DEBUG)
-
 
 def state_machine_path(path):
     sm_root_file = join(path, StateMachineStorage.STATEMACHINE_FILE)
@@ -52,21 +58,6 @@ def state_machine_path(path):
     else:
         raise argparse.ArgumentTypeError("Failed to open {0}: {1} not found in path".format(path,
                                                                                 StateMachineStorage.STATEMACHINE_FILE))
-
-
-def config_path(path):
-    if not path or path == 'None':
-        return None
-    # replace ~ with /home/user
-    path = expanduser(path)
-    # e.g. replace ${RAFCON_PATH} with the root path of RAFCON
-    path = expandvars(path)
-    if not isdir(path):
-        raise argparse.ArgumentTypeError("{0} is not a valid path".format(path))
-    if os.access(path, os.R_OK):
-        return path
-    else:
-        raise argparse.ArgumentTypeError("{0} is not a readable dir".format(path))
 
 
 if __name__ == '__main__':
@@ -84,13 +75,9 @@ if __name__ == '__main__':
         # set env variable RAFCON_LIB_PATH to the library directory of RAFCON (when not using RMPM)
         os.environ['RAFCON_LIB_PATH'] = join(dirname(rafcon_root_path), 'libraries')
 
-    home_path = expanduser('~')
-    if home_path:
-        home_path = join(home_path, ".config", "rafcon")
-    else:
-        home_path = 'None'
+    home_path = filesystem.get_home_path()
 
-    parser = argparse.ArgumentParser(description='Start RAFCON')
+    parser = sm_singletons.argument_parser
 
     parser.add_argument('-n', '--new', action='store_true', help="whether to create a new state-machine")
     parser.add_argument('-o', '--open', action='store', nargs='*', type=state_machine_path, dest='sm_paths',
@@ -105,10 +92,6 @@ if __name__ == '__main__':
                         default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file gui_config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
-    # parser.add_argument('-nc', '--net_config', action='store', type=config_path, metavar='path', dest='net_config_path',
-    #                     default=home_path, nargs='?', const=home_path,
-    #                     help="path to the configuration file net_config.yaml. Use 'None' to prevent the generation of "
-    #                          "a config file and use the default configuration. Default: {0}".format(home_path))
 
     result = parser.parse_args()
     setup_config = vars(result)
@@ -117,12 +100,7 @@ if __name__ == '__main__':
 
     global_config.load(path=setup_config['config_path'])
     global_gui_config.load(path=setup_config['gui_config_path'])
-    # global_net_config.load(path=setup_config['net_config_path'])
     global_runtime_config.load(path=setup_config['gui_config_path'])
-
-    # if global_net_config.get_config_value('NETWORK_CONNECTIONS'):
-    #     from rafcon.network.singleton import network_connections
-    #     network_connections.initialize()
 
     # Make mvc directory the working directory
     # Needed for views, which assume to be in the mvc path and import glade files relatively
@@ -147,7 +125,6 @@ if __name__ == '__main__':
                 logger.error("Could not load state-machine {0}: {1}\n{2}".format(path,
                                                                                  e.message,
                                                                                  traceback.format_exc()))
-                # logger.error("Could not load state-machine {0}: {1}".format(path, e.message))
 
     if setup_config['new']:
         root_state = HierarchyState()
@@ -164,16 +141,45 @@ if __name__ == '__main__':
     logger.info("Ready")
     logger.setLevel(level)
 
-    # if global_net_config.get_config_value("NETWORK_CONNECTIONS", False):
-    #     from twisted.internet import reactor
-    #     from twisted.internet import gtk2reactor
-    #     # needed for glib.idle_add, and signals
-    #     gtk2reactor.install()
-    #     reactor.run()
-    # else:
-    gtk.main()
+    try:
+        # check if monitoring plugin is loaded
+        from plugins.monitoring.monitoring_manager import global_monitoring_manager
+
+        main_window_view.hide()
+        gtk.gdk.flush()
+
+        def initialize_monitoring_manager(some_value):
+
+            global_monitoring_manager.initialize(setup_config)
+
+            main_window_view.show()
+            gtk.gdk.flush()
+
+        import threading
+        init_thread = threading.Thread(target=initialize_monitoring_manager, args=[5.0, ])
+        init_thread.start()
+        # reactor.callLater(2.0, initialize_monitoring_manager)
+
+        if global_monitoring_manager.networking_enabled():
+            # gtk.main()
+            reactor.run()
+        else:
+            gtk.main()
+
+    except ImportError, e:
+        logger.info("Monitoring plugin not found: executing the GUI directly")
+        # plugin not found
+        gtk.main()
+
+    logger.info("Joined root state")
 
     # If there is a running state-machine, wait for it to be finished before exiting
     sm = sm_singletons.state_machine_manager.get_active_state_machine()
     if sm:
         sm.root_state.join()
+
+    logger.info("Exiting ...")
+
+    # this is a ugly process shutdown method but works if gtk or twisted process are still blocking
+    import os
+    os._exit(0)
