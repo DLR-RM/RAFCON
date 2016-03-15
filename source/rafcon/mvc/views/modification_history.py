@@ -44,9 +44,8 @@ class ModificationHistoryView(View, gtk.ScrolledWindow):
         gtk.ScrolledWindow.__init__(self)
 
         history_tree = HistoryTreeView()
-        history_tree.show()
+        history_tree.set_name('history_tree')
 
-        button_hbox = gtk.HBox()
         undo_button = gtk.Button("Undo")
         undo_button.set_border_width(constants.BORDER_WIDTH)
         redo_button = gtk.Button("Redo")
@@ -59,11 +58,14 @@ class ModificationHistoryView(View, gtk.ScrolledWindow):
         folded_checkbox = gtk.CheckButton("F")
         folded_checkbox.set_tooltip_text('Fold branches')
         folded_checkbox.set_border_width(constants.BORDER_WIDTH)
+
+        button_hbox = gtk.HBox()
         button_hbox.pack_end(folded_checkbox, False, True, 0)
         button_hbox.pack_end(branch_checkbox, False, True, 0)
         button_hbox.pack_end(reset_button, False, True, 0)
         button_hbox.pack_end(redo_button, False, True, 0)
         button_hbox.pack_end(undo_button, False, True, 0)
+
         history_vbox = gtk.VBox()
         history_vbox.pack_start(self, True, True, 0)
         history_vbox.pack_start(button_hbox, False, True, 0)

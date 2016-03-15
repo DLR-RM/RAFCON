@@ -362,11 +362,13 @@ widget "*.logical_linkage_title_wrapper" style : highest "widget-title"
 widget "*.description_title_wrapper" style : highest "widget-title"
 
 
-style "libraries" {
+style "trees" {
     GtkTreeView::expander-size                   = 12
     #GtkTreeView::grid-line-pattern               = "\777\1"
 }
-widget "*library_tree" style : highest "libraries"
+widget "*.library_tree" style : highest "trees"
+widget "*.history_tree" style : highest "trees"
+widget "*.state_machine_tree" style : highest "trees"
 
 
 style "active-dropdown-entry" {
