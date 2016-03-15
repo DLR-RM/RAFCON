@@ -262,16 +262,17 @@ style "notebook" {
 }
 widget_class "*Notebook" style : highest "notebook"
 
-style "pane" {
+style "space" {
     bg[ACTIVE]        = @pane
     bg[INSENSITIVE]   = @background_space
     bg[NORMAL]        = @background_space
     bg[PRELIGHT]      = @pane
     bg[SELECTED]      = @pane
 }
-widget_class "*Paned"  style : highest "pane"
-widget "*logic_vpaned"  style : highest "pane"
-widget "*data_vpaned"  style : highest "pane"
+widget_class "*Paned"  style : highest "space"
+widget "*logic_vpaned"  style : highest "space"
+widget "*data_vpaned"  style : highest "space"
+widget_class "*GtkWindow"  style : highest "space"
 
 
 style "button"
@@ -346,6 +347,12 @@ style "text-view-background" {
 widget "*console_scroller.GtkTextView" style : highest "text-view-background"
 widget "*description_scroller.GtkTextView" style : highest "text-view-background"
 
+
+style "main-widget-background" {
+    bg[NORMAL]        = @background_widgets
+}
+widget "*.graphical_editor_title_wrapper" style : highest "main-widget-background"
+widget "*.left_sidebar_viewport" style : highest "main-widget-background"
 
 style "widget-title" {
     bg[NORMAL]        = @background_menu
