@@ -10,6 +10,8 @@ Hereby the branching of the edit process is stored and should be accessible, too
 import sys
 import traceback
 import copy
+import time
+import threading
 
 from gtkmvc import ModelMT, Observable
 
@@ -28,6 +30,7 @@ from rafcon.statemachine.state_machine import StateMachine
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
+from rafcon.statemachine.singleton import global_storage
 from rafcon.mvc.models.container_state import StateModel
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 
@@ -74,6 +77,18 @@ class ModificationsHistoryModel(ModelMT):
         self.with_debug_logs = False
         self.with_meta_data_actions = True
 
+        self.with_temp_storage = True
+        self.temp_storage_interval = 5
+        self.last_storage_time = time.time()
+        # self.check_for_temp_storage(force=True)
+    #     self.timer_request_time = None
+    #     self.tmp_storage_timed_thread = None
+    #
+    # def __destroy__(self):
+    #     logger.info("destroy history")
+    #     if self.tmp_storage_timed_thread is not None:
+    #         self.tmp_storage_timed_thread.cancel()
+
     def get_state_element_meta_from_tmp_storage(self, state_path):
         path_elements = state_path.split('/')
         path_elements.pop(0)
@@ -104,6 +119,7 @@ class ModificationsHistoryModel(ModelMT):
                 self._redo(elem[0])
 
         self.modifications.reorganize_trail_history_for_version_id(pointer_on_version_to_recover)
+        self.check_for_temp_storage(force=True)
 
     def _undo(self, version_id):
         self.busy = True
@@ -114,6 +130,7 @@ class ModificationsHistoryModel(ModelMT):
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
             # logger.debug("StateMachineAction Undo")
             self._re_initiate_observation()
+        self.check_for_temp_storage()
 
     def undo(self):
         if not self.modifications.trail_history or self.modifications.trail_pointer == 0 \
@@ -128,6 +145,7 @@ class ModificationsHistoryModel(ModelMT):
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
             # logger.debug("StateMachineAction Undo")
             self._re_initiate_observation()
+        self.check_for_temp_storage()
 
     def _redo(self, version_id):
         self.busy = True
@@ -140,6 +158,7 @@ class ModificationsHistoryModel(ModelMT):
                 and isinstance(self.modifications.trail_history[self.modifications.trail_pointer], StateMachineAction):
             # logger.debug("StateMachineAction Redo")
             self._re_initiate_observation()
+        self.check_for_temp_storage()
 
     def redo(self):
         if not self.modifications.trail_history or self.modifications.trail_history and not self.modifications.trail_pointer + 1 < len(
@@ -154,6 +173,7 @@ class ModificationsHistoryModel(ModelMT):
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer], StateMachineAction):
             # logger.debug("StateMachineAction Redo")
             self._re_initiate_observation()
+        self.check_for_temp_storage()
 
     def _interrupt_actual_action(self):
         # self.busy = True
@@ -377,8 +397,40 @@ class ModificationsHistoryModel(ModelMT):
             # logger.debug("history is now: %s" % self.state_machine_model.history.modifications.single_trail_history())
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
         except:
-            logger.debug("Failure occurred while finishing action")
-            traceback.print_exc(file=sys.stdout)
+            logger.exception("Failure occurred while finishing action")
+            # traceback.print_exc(file=sys.stdout)
+
+        self.check_for_temp_storage()
+
+    # def check_for_auto_temp_storage(self):
+    #     if self.last_storage_time < self.timer_request_time:
+    #         logger.info("Perform timed auto storage to tmp-folder.")
+    #         self.check_for_temp_storage(force=True)
+    #         self.timer_request_time = None
+    #         self.tmp_storage_timed_thread = None
+    #     else:
+    #         actual_duration_to_wait = self.timer_request_time - self.last_storage_time
+    #         self.tmp_storage_timed_thread = threading.Timer(actual_duration_to_wait, self.check_for_auto_temp_storage)
+    #         self.tmp_storage_timed_thread.start()
+
+    def check_for_temp_storage(self, force=False):
+        sm = self.state_machine_model.state_machine
+        if sm.marked_dirty and time.time() - self.last_storage_time > self.temp_storage_interval or force:
+            if sm.file_system_path is None:
+                tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/not_stored_' + str(sm.state_machine_id)
+            else:
+                tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/' + sm.file_system_path
+            global_storage.save_statemachine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=False,
+                                                     save_as=True, temporary_storage=True)
+            self.state_machine_model.root_state.store_meta_data(temp_path=tmp_sm_system_path)
+            self.last_storage_time = time.time()
+        # else:
+        #     if self.timer_request_time is None:
+        #         self.timer_request_time = time.time()
+        #         self.tmp_storage_timed_thread = threading.Timer(self.temp_storage_interval, self.check_for_auto_temp_storage)
+        #         self.tmp_storage_timed_thread.start()
+        #     else:
+        #         self.timer_request_time = time.time()
 
     @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state_model changed
     # @ModelMT.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
