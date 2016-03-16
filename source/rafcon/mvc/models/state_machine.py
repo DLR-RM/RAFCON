@@ -72,6 +72,8 @@ class StateMachineModel(ModelMT):
 
     @ModelMT.observe("state_machine", after=True)
     def marked_dirty_flag_changed(self, model, prop_name, info):
+        if info.method_name != 'marked_dirty':
+            return
         if not self.state_machine.old_marked_dirty == self.state_machine.marked_dirty:
             if self.state_machine.marked_dirty:
                 self.sm_manager_model.state_machine_mark_dirty = self.state_machine.state_machine_id
