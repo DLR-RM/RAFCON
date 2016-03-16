@@ -17,7 +17,7 @@ import testing_utils
 import pytest
 
 
-TEST_LIBRARY_PATH = "/tmp/rafcon_unit_tests"
+TEST_LIBRARY_PATH = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + "/test_libraries"
 
 
 def setup_module(module=None):
