@@ -281,7 +281,8 @@ class MainWindowController(ExtendedController):
         self.view[pane].set_position(position) if position else self.view[pane].set_position(default_pos)
 
     def highlight_execution_of_current_sm(self, active):
-        if self.get_controller('state_machines_editor_ctrl').view is None:
+        if self.get_controller('state_machines_editor_ctrl') is None or \
+                self.get_controller('state_machines_editor_ctrl').view is None:
             logger.warning("No state machines editor view")
             return
         notebook = self.get_controller('state_machines_editor_ctrl').view['notebook']
