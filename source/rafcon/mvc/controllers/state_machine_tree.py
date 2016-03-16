@@ -11,11 +11,15 @@
 import gtk
 import gobject
 
+from rafcon.statemachine.enums import StateType
+from functools import partial
+
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.utils import log
+from rafcon.mvc import statemachine_helper
 
 logger = log.get_logger(__name__)
 
@@ -64,6 +68,16 @@ class StateMachineTreeController(ExtendedController):
     def register_adapters(self):
         pass
 
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
+        """
+        shortcut_manager.add_callback_for_action("delete", self._delete_selection)
+        shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))
+        shortcut_manager.add_callback_for_action("add2", partial(self._add_new_state, state_type=StateType.HIERARCHY))
+
     def register(self):
         """Change the state machine that is observed for new selected states to the selected state machine."""
         # print "state_machine_tree register state_machine"
@@ -83,6 +97,20 @@ class StateMachineTreeController(ExtendedController):
             self.update()
         else:
             self.tree_store.clear()
+
+    def _add_new_state(self, *args, **kwargs):
+        """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
+
+        Adds a new state only if the the state machine tree is in focus.
+        """
+        if not self.view['state_machine_tree_view'].is_focus():
+            return
+        state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
+        return statemachine_helper.add_new_state(self._selected_sm_model, state_type)
+
+    def _delete_selection(self, *args):
+        if self.view['state_machine_tree_view'].is_focus():
+            statemachine_helper.delete_selected_elements(self._selected_sm_model)
 
     @ExtendedController.observe("state", after=True)  # root_state
     @ExtendedController.observe("states", after=True)

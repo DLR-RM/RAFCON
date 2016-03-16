@@ -13,6 +13,8 @@ from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveCo
 from rafcon.statemachine.enums import StateType
 from rafcon.mvc.models import StateModel, AbstractStateModel, ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.data_port import DataPortModel
+from rafcon.mvc.models.outcome import OutcomeModel
+from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.statemachine.singleton import library_manager
 import rafcon.mvc.singleton
@@ -118,6 +120,12 @@ def delete_models(models, raise_exceptions=False):
     return num_deleted
 
 
+def delete_selected_elements(state_machine_m):
+    if len(state_machine_m.selection.get_all()) > 0:
+        delete_models(state_machine_m.selection.get_all())
+        state_machine_m.selection.clear()
+
+
 def add_state(container_state_m, state_type):
     """Add a state to a container state
 
@@ -152,6 +160,30 @@ def add_state(container_state_m, state_type):
 
     container_state_m.state.add_state(new_state)
     return True
+
+
+def add_new_state(state_machine_m, state_type):
+    """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
+
+    Adds a new state only if the parent state (selected state) is a container state, and if the graphical editor or
+    the state machine tree are in focus.
+    """
+    assert isinstance(state_machine_m, StateMachineModel)
+
+    if state_type not in list(StateType):
+        state_type = StateType.EXECUTION
+
+    selection = state_machine_m.selection.get_all()
+    if not selection:
+        logger.warn("Please select the desired parent state, before adding a new state")
+        return
+    model = selection[0]
+
+    if isinstance(model, StateModel):
+        return add_state(model, state_type)
+    if isinstance(model, (TransitionModel, DataFlowModel)) or \
+            isinstance(model, (DataPortModel, OutcomeModel)) and isinstance(model.parent, ContainerStateModel):
+        return add_state(model.parent, state_type)
 
 
 def create_new_state_from_state_with_type(source_state, target_state_class):
