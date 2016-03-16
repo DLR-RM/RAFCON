@@ -414,6 +414,8 @@ class ModificationsHistoryModel(ModelMT):
     #         self.tmp_storage_timed_thread.start()
 
     def check_for_temp_storage(self, force=False):
+        if not self.with_temp_storage:
+            return
         sm = self.state_machine_model.state_machine
         if sm.marked_dirty and time.time() - self.last_storage_time > self.temp_storage_interval or force:
             if sm.file_system_path is None:
