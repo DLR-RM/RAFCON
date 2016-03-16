@@ -7,10 +7,11 @@
 
 
 """
-from rafcon.statemachine.singleton import state_machine_manager
-from rafcon.statemachine.singleton import global_variable_manager
+from rafcon.statemachine.singleton import state_machine_manager,\
+    global_variable_manager, state_machine_execution_engine
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.global_variable_manager import GlobalVariableManagerModel
+from rafcon.mvc.models.state_machine_execution_engine import StateMachineExecutionEngineModel
 from rafcon.statemachine import interface
 from rafcon.mvc.runtime_config import global_runtime_config
 from os.path import expanduser
@@ -92,6 +93,8 @@ interface.show_notice_func = show_notice
 
 # This variable holds the global state machine manager model as long as only one StateMachineMangerModel is allowed
 state_machine_manager_model = StateMachineManagerModel(state_machine_manager)
+
+state_machine_execution_manager_model = StateMachineExecutionEngineModel(state_machine_execution_engine)
 
 global_variable_manager_model = GlobalVariableManagerModel(global_variable_manager)
 

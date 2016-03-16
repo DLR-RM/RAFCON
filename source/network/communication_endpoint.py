@@ -13,7 +13,7 @@ logger = log.get_logger(__name__)
 
 MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_RESEND = 3.0  # global_network_config.get_config_value("MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS")
 MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_FAIL = MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_RESEND * 3
-CHECK_ACKNOWLEDGEMENTS_THREAD_MAX_WAIT_TIME = 0.1
+CHECK_ACKNOWLEDGEMENTS_THREAD_MAX_WAIT_TIME = 0.2
 BURST_NUMBER = 1  # global_network_config.get_config_value("BURST_NUMBER")
 TIME_BETWEEN_BURSTS = global_network_config.get_config_value("TIME_BETWEEN_BURSTS")
 
@@ -91,8 +91,8 @@ class CommunicationEndpoint(DatagramProtocol):
                 # self.number_of_dropped_messages += 1
                 logger.warn("Message {0} is going to be resent as no acknowledge was received yet".
                             format(self._messages_to_be_acknowledged[key][0]))
-                self.send_message_acknowledged(self._messages_to_be_acknowledged[key][0],
-                                               self._messages_to_be_acknowledged[key][1])
+                self.send_message_non_acknowledged(self._messages_to_be_acknowledged[key][0],
+                                                   self._messages_to_be_acknowledged[key][1])
 
     def datagramReceived(self, datagram, address):
 
@@ -103,7 +103,7 @@ class CommunicationEndpoint(DatagramProtocol):
             import traceback
             logger.error("Received message could not be deserialized: {0} {1}".format(e.message, traceback.format_exc()))
 
-        logger.info(" -------------------------- receiving message {0} from address {1}".format(str(protocol), str(address)))
+        # logger.info(" -------------------------- receiving message {0} from address {1}".format(str(protocol), str(address)))
 
         # throwing away messages that were received before
         if protocol.checksum not in self._message_history_dictionary.iterkeys():
@@ -115,7 +115,7 @@ class CommunicationEndpoint(DatagramProtocol):
             self._message_history_dictionary[protocol.checksum] = protocol
 
             # custom function
-            self.datagram_received_function(datagram, address)
+            self.datagram_received_function(protocol, address)
         else:
             # logger.info("Message was already received!")
             return
@@ -151,7 +151,7 @@ class CommunicationEndpoint(DatagramProtocol):
     def send_message_non_acknowledged(self, message, address=None):
         if self.transport:
             for i in range(0, BURST_NUMBER):
-                logger.info(" -------------------------- sending message {0} to address {1}".format(str(message), str(address)))
+                # logger.info(" -------------------------- sending message {0} to address {1}".format(str(message), str(address)))
                 self.transport.write(message.serialize(), address)
                 time.sleep(TIME_BETWEEN_BURSTS)
         else:
@@ -168,7 +168,7 @@ class CommunicationEndpoint(DatagramProtocol):
 
         if blocking:
             self._message_events[message.checksum] = threading.Event()
-            print "creating threading event for message " + str(message)
+            # print " -------------------------- creating threading event for message " + str(message)
             # make sure that the threading event is created before the message is sent out, else there will be race condition
             self.send_message_non_acknowledged(message, address)
             return_value = self._message_events[message.checksum].wait(MAX_TIME_WAITING_FOR_ACKNOWLEDGEMENTS_FAIL)

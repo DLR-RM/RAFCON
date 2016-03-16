@@ -38,14 +38,13 @@ def wait_for_test_finished(queue, udp_endpoint, connector):
 # server
 ##########################################################
 
-server_transport = None
+global_udp_server = None
 server_queue = None
 
 
-def write_back_message(datagram, address):
-    logger.info("Server received datagram {0} from address: {1}".format(str(datagram), str(address)))
-    server_transport.write(datagram, address)
-    protocol = Protocol(datagram=datagram)
+def write_back_message(protocol, address):
+    logger.info("Server received datagram {0} from address: {1}".format(str(protocol), str(address)))
+    global_udp_server.send_message_non_acknowledged(protocol, address)
     # small sleep to let burst send all messages
     time.sleep(0.1)
     if protocol.message_content == FINAL_MESSAGE:
@@ -57,8 +56,8 @@ def start_udp_server(name, multi_processing_queue):
     info(name)
     udp_server = UdpServer()
     connector = reactor.listenUDP(global_network_config.get_config_value("SERVER_UDP_PORT"), udp_server)
-    global server_transport
-    server_transport = udp_server.get_transport()
+    global global_udp_server
+    global_udp_server = udp_server
     global server_queue
     server_queue = multi_processing_queue
     udp_server.datagram_received_function = write_back_message

@@ -1,5 +1,4 @@
 from gtkmvc.observable import Observable
-from gtkmvc.slim_observer import SlimObserver
 import testing_utils
 import pytest
 
@@ -24,27 +23,34 @@ class ObservableTest(Observable):
     def complex_method(self, param1, param2, param3):
         print param3
         self.observable_test_var = param1 + param2
+        return 20
 
 
-class ObserverTest(SlimObserver):
+class ObserverTest():
 
     def __init__(self):
-        SlimObserver.__init__(self)
         self.test_observable = ObservableTest()
         self.test_observable.add_observer(self, "first_var", self.on_first_var_changed_before,
                                           self.on_first_var_changed_after)
-        self.test_observable.add_observer(self, "complex_method", self.on_complex_method_changed_before)
+        self.test_observable.add_observer(self, "complex_method",
+                                          self.on_complex_method_changed_before,
+                                          self.on_complex_method_changed_after)
         self.test_value = 0
         self.test_value2 = 0
+        self.test_value3 = 0
 
     def on_first_var_changed_before(self, observable, args):
         self.test_value = args[1]
 
-    def on_first_var_changed_after(self, observable, args):
+    def on_first_var_changed_after(self, observable, return_value, args):
         pass
 
     def on_complex_method_changed_before(self, observable, args):
         self.test_value2 = args[1] + args[2]
+
+    def on_complex_method_changed_after(self, observable, return_value, args):
+        self.test_value3 = return_value + 10
+
 
 def test_slim_observer(caplog):
     test_observer = ObserverTest()
@@ -54,10 +60,11 @@ def test_slim_observer(caplog):
     test_observer.test_observable.complex_method(1, 3, "Hello world")
     assert test_observer.test_observable.observable_test_var == 4
     assert test_observer.test_value2 == 4
+    assert test_observer.test_value3 == 30
 
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':
-    # test_slim_observer(None)
-    pytest.main([__file__])
+    test_slim_observer(None)
+    # pytest.main([__file__])

@@ -145,15 +145,21 @@ if __name__ == '__main__':
         # check if monitoring plugin is loaded
         from plugins.monitoring.monitoring_manager import global_monitoring_manager
 
-        main_window_view.hide()
-        gtk.gdk.flush()
+        # main_window_view.hide()
+        # gtk.gdk.flush()
 
         def initialize_monitoring_manager(some_value):
 
-            global_monitoring_manager.initialize(setup_config)
+            monitoring_manager_initialized = False
 
-            main_window_view.show()
-            gtk.gdk.flush()
+            while not monitoring_manager_initialized:
+                logger.info("Try to initialize the global monitoring manager and setup the connection to the server!")
+                succeeded = global_monitoring_manager.initialize(setup_config)
+                if succeeded:
+                    monitoring_manager_initialized = True
+
+            # main_window_view.show()
+            # gtk.gdk.flush()
 
         import threading
         init_thread = threading.Thread(target=initialize_monitoring_manager, args=[5.0, ])

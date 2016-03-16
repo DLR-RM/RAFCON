@@ -12,8 +12,6 @@ from plugins.monitoring.client import MonitoringClient
 from plugins.monitoring.server import MonitoringServer
 from network.config import global_network_config
 
-from gtkmvc.slim_observer import SlimObserver
-
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.execution_state import ExecutionState
@@ -28,7 +26,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class MonitoringManager(SlimObserver):
+class MonitoringManager():
 
     def __init__(self):
 
@@ -48,10 +46,10 @@ class MonitoringManager(SlimObserver):
 
         if global_network_config.get_config_value("SERVER", True):
             self.endpoint = MonitoringServer()
-            self.endpoint.connect()
+            return self.endpoint.connect()
         else:
             self.endpoint = MonitoringClient()
-            self.endpoint.connect()
+            return self.endpoint.connect()
 
     def shutdown(self):
         if self.endpoint:

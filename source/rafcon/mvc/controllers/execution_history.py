@@ -36,7 +36,7 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
 
         view['reload_button'].connect('clicked', self.reload_history)
 
-        self.observe_model(rafcon.statemachine.singleton.state_machine_execution_engine)
+        self.observe_model(rafcon.mvc.singleton.state_machine_execution_manager_model)
 
         self.update()
 
@@ -91,9 +91,9 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
         """
         from rafcon.mvc.utils.notification_overview import NotificationOverview
         overview = NotificationOverview(info)
-        logger.info("execution_engine runs method '{1}' and has status {0}"
-                    "".format(str(rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode).split('.')[-1],
-                              overview['method_name'][-1]))
+        # logger.info("execution_engine runs method '{1}' and has status {0}"
+        #             "".format(str(rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode).split('.')[-1],
+        #                       overview['method_name'][-1]))
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode in \
                 [StateMachineExecutionStatus.STARTED, StateMachineExecutionStatus.STOPPED]:
             if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):

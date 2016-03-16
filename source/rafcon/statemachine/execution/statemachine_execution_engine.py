@@ -14,7 +14,6 @@ import Queue
 from threading import Lock
 
 from gtkmvc import Observable
-from gtkmvc import ModelMT
 from rafcon.statemachine.execution.statemachine_status import StateMachineStatus
 from rafcon.utils import log
 
@@ -22,7 +21,7 @@ logger = log.get_logger(__name__)
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
 
-class StatemachineExecutionEngine(ModelMT, Observable):
+class StatemachineExecutionEngine(Observable):
     """A class that cares for the execution of the statemachine
 
     :ivar state_machine_manager: holds the state machine manager of all states that can be executed
@@ -40,7 +39,6 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     __observables__ = ("execution_engine",)
 
     def __init__(self, state_machine_manager):
-        ModelMT.__init__(self)
         Observable.__init__(self)
         self.state_machine_manager = state_machine_manager
         self.execution_engine = self
@@ -331,6 +329,18 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             sm.root_state.join()
             rafcon.statemachine.singleton.state_machine_execution_engine.stop()
         return sm
+
+    @Observable.observed
+    def set_execution_mode(self, execution_mode):
+        """
+        An observed setter for the execution mode of the state machine status. This is necessary for the
+        monitoring client to update the local state machine in the same way as the root state machine of the server.
+        :param execution_mode: the new execution mode of the state machine
+        :return:
+        """
+        if not isinstance(execution_mode, StateMachineExecutionStatus):
+            raise TypeError("status must be of type StateMachineStatus")
+        self._status.execution_mode = execution_mode
 
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc

@@ -9,6 +9,7 @@ from rafcon.mvc.controllers.library_tree import LibraryTreeController
 
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.library_manager import LibraryManagerModel
+from rafcon.mvc.models.state_machine_execution_engine import StateMachineExecutionEngineModel
 from rafcon.mvc.shortcut_manager import ShortcutManager
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
@@ -23,6 +24,7 @@ from rafcon.mvc.controllers.undocked_window import UndockedWindowController
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
 from rafcon.mvc.singleton import global_variable_manager_model as gvm_model
+from rafcon.mvc.singleton import state_machine_execution_manager_model
 import rafcon.statemachine.singleton
 import rafcon.statemachine.config
 from rafcon.mvc.config import global_gui_config as gui_config
@@ -56,10 +58,9 @@ class MainWindowController(ExtendedController):
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         state_machine_manager = state_machine_manager_model.state_machine_manager
 
-        # execution engine
-        self.state_machine_execution_engine = rafcon.statemachine.singleton.state_machine_execution_engine
-        self.observe_model(self.state_machine_execution_engine)
-        self.state_machine_execution_engine.register_observer(self)
+        self.state_machine_execution_engine_model = state_machine_execution_manager_model
+        self.observe_model(self.state_machine_execution_engine_model)
+        self.state_machine_execution_engine_model.register_observer(self)
 
         # shortcut manager
         self.shortcut_manager = ShortcutManager(view['main_window'])
