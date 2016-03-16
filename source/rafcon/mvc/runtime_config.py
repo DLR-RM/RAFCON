@@ -27,7 +27,13 @@ class RuntimeConfig(DefaultConfig):
             config_file = CONFIG_FILE
         super(RuntimeConfig, self).load(config_file, path)
 
-    def save_configuration(self, widget, title):
+    def store_widget_properties(self, widget, title):
+        """Sets configuration values for widgets. If the widget is a window, then the size and position are stored. If
+        the widget is a pane, then only the position is stored.
+
+        :param widget: The widget, for which the position (and possibly the size) will be stored.
+        :param title: The title of the widget, which constitutes a part of its key in the configuration file.
+        """
         if isinstance(widget, gtk.Window):
             size = widget.get_size()
             logger.debug('{0} size: {1}'.format(title, size))
@@ -35,6 +41,8 @@ class RuntimeConfig(DefaultConfig):
         position = widget.get_position()
         logger.debug('{0} position: {1}'.format(title, position))
         self.set_config_value('{0}_POS'.format(title), position)
+
+    def save_configuration(self):
         # screen = main_window.get_screen()
         # logger.debug("Main window screen:, {0}".format(screen))
 

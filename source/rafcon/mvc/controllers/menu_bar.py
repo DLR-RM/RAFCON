@@ -427,24 +427,26 @@ class MenuBarController(ExtendedController):
         """Saves current configuration of windows and panes to the runtime config file, before RAFCON is closed."""
         logger.debug("Saving runtime config")
 
-        global_runtime_config.save_configuration(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
+        global_runtime_config.store_widget_properties(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
 
-        global_runtime_config.save_configuration(self.main_window_view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
-        global_runtime_config.save_configuration(self.main_window_view['right_h_pane'], 'RIGHT_BAR_DOCKED')
-        global_runtime_config.save_configuration(self.main_window_view['central_v_pane'], 'CONSOLE_DOCKED')
-        global_runtime_config.save_configuration(self.main_window_view['left_bar_pane'], 'LEFT_BAR_INNER_PANE')
+        global_runtime_config.store_widget_properties(self.main_window_view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
+        global_runtime_config.store_widget_properties(self.main_window_view['right_h_pane'], 'RIGHT_BAR_DOCKED')
+        global_runtime_config.store_widget_properties(self.main_window_view['central_v_pane'], 'CONSOLE_DOCKED')
+        global_runtime_config.store_widget_properties(self.main_window_view['left_bar_pane'], 'LEFT_BAR_INNER_PANE')
 
         if self.main_window_view.left_bar_window.get_top_widget().get_property('visible'):
-            global_runtime_config.save_configuration(self.main_window_view.left_bar_window.get_top_widget(),
-                                                     'LEFT_BAR_WINDOW')
+            global_runtime_config.store_widget_properties(
+                self.main_window_view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
 
         if self.main_window_view.right_bar_window.get_top_widget().get_property('visible'):
-            global_runtime_config.save_configuration(self.main_window_view.right_bar_window.get_top_widget(),
-                                                     'RIGHT_BAR_WINDOW')
+            global_runtime_config.store_widget_properties(
+                self.main_window_view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
 
         if self.main_window_view.console_window.get_top_widget().get_property('visible'):
-            global_runtime_config.save_configuration(self.main_window_view.console_window.get_top_widget(),
-                                                     'CONSOLE_WINDOW')
+            global_runtime_config.store_widget_properties(
+                self.main_window_view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
+
+        global_runtime_config.save_configuration()
 
         import glib
 

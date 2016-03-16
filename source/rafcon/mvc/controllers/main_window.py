@@ -400,7 +400,7 @@ class MainWindowController(ExtendedController):
         The size & position of the open window are saved to the runtime_config file, and the left-bar is re-docked back
         to the main-window, and the left-bar window is hidden. The un-dock button of the bar is made visible again.
         """
-        global_runtime_config.save_configuration(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
+        global_runtime_config.store_widget_properties(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
         self.on_left_bar_return_clicked(None)
         self.view['left_bar_pane'].reparent(self.view['left_bar_container'])
         self.get_controller('left_window_controller').hide_window()
@@ -429,7 +429,7 @@ class MainWindowController(ExtendedController):
         The size & position of the open window is saved to the runtime_config file, and the right-bar is re-docked back
         to the main-window, and the right-bar window is hidden. The un-dock button of the bar is made visible again.
         """
-        global_runtime_config.save_configuration(self.view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
+        global_runtime_config.store_widget_properties(self.view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
         self.on_right_bar_return_clicked(None)
         self.view['right_bar'].reparent(self.view['right_bar_container'])
         self.get_controller('right_window_controller').hide_window()
@@ -458,7 +458,7 @@ class MainWindowController(ExtendedController):
         The size & position of the open window is saved to the runtime_config file, and the console is re-docked back
         to the main-window, and the console window is hidden. The un-dock button of the bar is made visible again.
         """
-        global_runtime_config.save_configuration(self.view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
+        global_runtime_config.store_widget_properties(self.view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
         self.on_console_return_clicked(None)
         self.view['console'].reparent(self.view['console_container'])
         self.get_controller('console_window_controller').hide_window()
