@@ -437,7 +437,7 @@
                 </child>
               </object>
               <packing>
-                <property name="resize">False</property>
+                <property name="resize">True</property>
                 <property name="shrink">False</property>
               </packing>
             </child>
@@ -966,7 +966,6 @@
                         </child>
                       </object>
                       <packing>
-                        <property name="pack_type">start</property>
                         <property name="position">2</property>
                       </packing>
                     </child>
@@ -978,13 +977,12 @@
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="pack_type">start</property>
                         <property name="position">3</property>
                       </packing>
                     </child>
                   </object>
                   <packing>
-                    <property name="resize">False</property>
+                    <property name="resize">True</property>
                     <property name="shrink">False</property>
                   </packing>
                 </child>

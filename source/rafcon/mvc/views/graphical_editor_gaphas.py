@@ -1,18 +1,20 @@
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
-
 import gtk
 import gobject
 
 from gtkmvc import View
+
 from gaphas import tool
 from gaphas import painter
+
 from rafcon.mvc.mygaphas.view import ExtendedGtkView
 from rafcon.mvc.mygaphas.tools import ConnectHandleMoveTool, HoverItemTool, RemoveItemTool, MoveItemTool, \
     MultiselectionTool
 from rafcon.mvc.mygaphas.painter import StateCornerHandlePainter, NameCornerHandlePainter
 
+from rafcon.mvc.config import global_gui_config
+from rafcon.utils import log
+
+logger = log.get_logger(__name__)
 
 class GraphicalEditorView(View, gobject.GObject):
     top = 'main_frame'
@@ -28,8 +30,9 @@ class GraphicalEditorView(View, gobject.GObject):
 
         self.v_box = gtk.VBox()
         self.scroller = gtk.ScrolledWindow()
+        self.scroller.set_name('graphical_editor_scroller')
         self.editor = ExtendedGtkView()
-        self.editor.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#272c36'))
+        self.editor.modify_bg(gtk.STATE_NORMAL, global_gui_config.gtk_colors['INPUT_BACKGROUND'])
         self.editor.tool = tool.ToolChain(self.editor). \
             append(HoverItemTool()). \
             append(ConnectHandleMoveTool(self)). \
@@ -52,7 +55,7 @@ class GraphicalEditorView(View, gobject.GObject):
     def setup_canvas(self, canvas, zoom):
         self.editor.canvas = canvas
         self.editor.zoom(zoom)
-        self.editor.set_size_request(500, 500)
+        self.editor.set_size_request(0, 0)
 
 
 gobject.type_register(GraphicalEditorView)
