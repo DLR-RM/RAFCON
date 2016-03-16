@@ -4,7 +4,6 @@
   <!-- interface-naming-policy project-wide -->
   <object class="GtkToolbar" id="toolbar">
     <property name="visible">True</property>
-    <property name="border_width">5</property>
     <property name="toolbar_style">text</property>
     <property name="icon_size_set">True</property>
     <child>

@@ -8,6 +8,7 @@ class StateMachineTreeView(View, gtk.TreeView):
     def __init__(self):
         View.__init__(self)
         gtk.TreeView.__init__(self)
+        self.set_name('state_machine_tree')
 
         tvcolumn = gtk.TreeViewColumn('Name')
         # tvcolumn.set_min_width(150)

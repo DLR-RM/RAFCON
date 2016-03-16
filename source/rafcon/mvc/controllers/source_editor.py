@@ -150,7 +150,7 @@ class SourceEditorController(ExtendedController):
                 widget.destroy()
 
             from rafcon.mvc.utils.dialog import RAFCONDialog
-            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
+            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             message_string = "Are you sure that you want to save this file?\n\nThe following errors were found:"
             for elem in pylint_stdout_data:
                 if "error" in elem:

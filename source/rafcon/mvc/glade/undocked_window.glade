@@ -67,9 +67,4 @@
       </object>
     </child>
   </object>
-  <object class="GtkToggleAction" id="toggleaction1"/>
-  <object class="GtkAction" id="action1"/>
-  <object class="GtkAction" id="action2"/>
-  <object class="GtkToggleAction" id="toggleaction2"/>
-  <object class="GtkAction" id="action3"/>
 </interface>

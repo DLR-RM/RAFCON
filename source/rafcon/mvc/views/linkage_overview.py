@@ -2,6 +2,7 @@ import gtk
 import gobject
 from gtkmvc import View
 from rafcon.mvc.utils import constants
+from rafcon.mvc import gui_helper
 
 
 class LinkageOverviewDataView(View):
@@ -31,7 +32,7 @@ class LinkageOverviewLogicView(View):
 
 class LinkageOverviewView(View):
     builder = './glade/linkage_overview.glade'
-    top = 'vbox1'
+    top = 'linkage_container'
 
     def __init__(self):
         View.__init__(self)
@@ -46,5 +47,7 @@ class LinkageOverviewView(View):
         self['scoped_scroller'].add(self['scope_view'].get_top_widget())
         self['outcomes_scroller'].add(self['outcomes_view'].get_top_widget())
 
-        self['eventbox3'].set_border_width(constants.BORDER_WIDTH)
-        self['eventbox4'].set_border_width(constants.BORDER_WIDTH)
+        gui_helper.set_label_markup(self['data_linkage_label'], 'DATA LINKAGE',
+                                    letter_spacing=constants.LETTER_SPACING_1PT)
+        gui_helper.set_label_markup(self['logical_linkage_label'], 'LOGICAL LINKAGE',
+                                    letter_spacing=constants.LETTER_SPACING_1PT)

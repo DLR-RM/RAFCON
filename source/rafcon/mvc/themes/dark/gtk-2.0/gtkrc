@@ -1,423 +1,407 @@
-# Created July 2006
-# Modified Dec. 2006
-# Modified Jan. 2007
-# Modified Jul. 2008 for xfce 4.6
-# Modified Feb. 2009 for xfce 4.6
-# Olivier Fourdan <fourdan@xfce.org>
-# Released under the GPL license
 
-style "my_default"
+style "basic_layout"
 {
-    GtkWidget::focus-line-width                  = 0
-    GtkWidget::focus_padding                     = 0
-    GtkWidget::interior_focus                    = 0
-    GtkWidget::internal_padding                  = 0
-
-    GtkButton::child_displacement_x              = 0
-    GtkButton::child_displacement_y              = 1
-    GtkButton::default_border                    = {0, 0, 0, 0}
-    GtkButton::default_outside_border            = {0, 0, 0, 0}
-    GtkButton::focus_line_pattern                = "\0"
-
-    GtkButtonBox::child_internal_pad_x           = 0
-    GtkButtonBox::child_internal_pad_y           = 0
-    GtkButtonBox::child_min_heigth               = 0
-    GtkButtonBox::child_min_width                = 0
-
-    GtkCheckButton::indicator_size               = 12
-    GtkCheckButton::focus-line-pattern           = "\1\1"
-
-    GtkEntry::focus-line-pattern                 = "\0"
-
-    GtkRadioButton::indicator_size               = 12
-    GtkRadioButton::focus-line-pattern           = "\1\1"
-
-    GtkExpander::expander-size                   = 11
-    GtkExpander::expander_spacing                = 0
-
-    GtkMenuBar::internal-padding                 = 0
-
-    GtkMenu::horizontal-padding                  = 0
-    GtkMenu::vertical-padding                    = 0
-
-    GtkMenuItem::internal_padding                = 2
-    GtkMenuItem::selected_shadow_type            = etched-in
-
-    GtkOptionMenu::indicator_size                = {0, 0}
-    GtkOptionMenu::indicator_spacing             = {0, 0, 0, 0}
-
-    GtkPaned::handle_full_size                   = 1
-    GtkPaned::handle_size                        = 3
-
-    GtkRange::slider_width                       = 15
-    GtkRange::stepper_size                       = 15
-    GtkRange::stepper_spacing                    = 0
-    GtkRange::stepper_spacing                    = 0
-    GtkRange::trough_border                      = 0
-    GtkRange::trough-border                      = 0
-
-    GtkScale::trough-side-details                = 1
-    GtkScale::value_spacing                      = 0
-
-    GtkScrollbar::has_forward_stepper            = 0
-    GtkScrollbar::has_backward_stepper           = 0
-    GtkScrollbar::min_slider_length              = 20
-    GtkScrollbar::trough-border 		 = 5
-
-    GtkScrolledWindow::scrollbar_spacing         = 0
-    GtkScrolledWindow::scrollbar_within_bevel    = 1
-
-    GtkTextView::focus-line-pattern              = "\0"
-
-    GtkToolbar::internal-padding                 = 0
-    GtkToolbar::space-size                       = 10
-    GtkTreeView::expander-size                   = 11
-
-    GtkTreeView::horizontal-separator            = 0
-    GtkTreeView::vertical-separator              = 0
-
-    ExoIconBar::focus_padding                    = 1
-
-    xthickness = 1
-    ythickness = 1
-
-    #-------------------------COLOR DEFINITIONS-------------------------
-    color["black"]			= "#000000"
-    color["very_dark_gray"]		= "#343d46"
-    color["dark_gray"]			= "#4f5b66"
-    color["medium_gray"]		= "#65737e"
-    color["light_gray"]			= "#a7adba"
-    color["very_light_gray"]		= "#c0c5ce"
-    color["white"]			= "#ffffff"
-
-    color["top_bar_background_black"]	= "#0A0F19"
-    color["background_black"]		= "#131822"
-    color["widget_background"]		= "#1D222C"
-    color["tab_not_active_background"]	= "#202020"
-    color["widget_active_background"]	= "#272C36"
-    color["scrollbar_background"]	= "#313640"
-    color["text_background"]		= "#383d42"
-    color["text_color"]			= "#fefefe"
-    color["text_color_dark"]		= "#8f9195"
-
-    color["button_active"]		= "#278bfe"
-    #-------------------------------------------------------------------
+    xthickness = 0
+    ythickness = 0
 
     font_name = "DIN Next LT Pro 12"
 
-    base[ACTIVE]      = @widget_active_background
-    base[INSENSITIVE] = @widget_active_background
-    base[NORMAL]      = @widget_active_background
-    base[PRELIGHT]    = @widget_active_background
-    base[SELECTED]    = @widget_active_background
+    GtkWidget::focus-line-width                  = 1
+    GtkWidget::focus-padding                     = 1
+    GtkWidget::focus-line-pattern                = "\1\1"
+    GtkWidget::interior-focus                    = 1
+    GtkWidget::internal-padding                  = 0
+    GtkWidget::draw-border                       = {0, 0, 0, 0}
+    GtkWidget::scroll-arrow-hlength              = 20
+    GtkWidget::scroll-arrow-vlength              = 20
+    GtkWidget::separator-height                  = 20
+    GtkWidget::separator-width                   = 20
+    GtkWidget::wide-separators                   = 0
 
-    bg[ACTIVE]        = @background_black
-    bg[INSENSITIVE]   = @background_black
-    bg[NORMAL]        = @background_black
-    bg[PRELIGHT]      = @background_black
-    bg[SELECTED]      = @background_black
+    GtkScrolledWindow::scrollbar-spacing         = 0
+    GtkScrolledWindow::scrollbars-within-bevel   = 0
 
-    fg[ACTIVE]        = @text_color
-    fg[INSENSITIVE]   = @text_color
-    fg[NORMAL]        = @text_color
-    fg[PRELIGHT]      = @text_color
-    fg[SELECTED]      = @text_color
+    GtkDialog::action-area-border                = 0
+    GtkDialog::button-spacing                    = 10
+    GtkDialog::content-area-border               = 0
+    GtkDialog::content-area-spacing              = 0
 
-    text[ACTIVE]      = @text_color
-    text[INSENSITIVE] = @text_color
-    text[NORMAL]      = @text_color
-    text[PRELIGHT]    = @text_color
-    text[SELECTED]    = @text_color
+    GtkMessageDialog::message-border             = 20
+    GtkMessageDialog::use-separator              = 0
+
+    GtkButtonBox::child-internal-pad-x           = 0
+    GtkButtonBox::child-internal-pad-y           = 0
+    GtkButtonBox::child-min-heigth               = 40
+    GtkButtonBox::child-min-width                = 40
+
+    GtkButton::child-displacement-x              = 0
+    GtkButton::child-displacement-y              = 1
+    GtkButton::default-border                    = {0, 0, 0, 0}
+    GtkButton::default-outside-border            = {0, 0, 0, 0}
+    GtkButton::inner-border                      = {5, 5, 5, 5}
+    GtkButton::displace-focus                    = 0
+    GtkButton::image-spacing                     = 0
+    GtkButton::focus-line-pattern                = "\1\1"
+
+    GtkCheckButton::indicator-size               = 13
+    GtkCheckButton::indicator-spacing            = 5
+
+    GtkRadioButton::indicator-size               = 10
+    GtkRadioButton::indicator-spacing            = 10
+
+    GtkSpinButton::shadow-type                   = GTK_SHADOW_NONE
+
+    GtkToolButton::icon-spacing                  = 5
+
+    GtkEntry::icon-prelight                      = 1
+    GtkEntry::inner-border                       = {10, 10, 10, 10}
+    #GtkEntry::invisible-char                    = ""
+    GtkEntry::progress-border                    = {5, 5, 5, 5}
+    GtkEntry::state-hint                         = 1
+
+    GtkExpander::expander-size                   = 10
+    GtkExpander::expander-spacing                = 10
+
+    GtkMenuBar::internal-padding                 = 0
+    GtkMenuBar::shadow-type                      = GTK_SHADOW_NONE
+
+    GtkMenu::horizontal-padding                  = 0
+    GtkMenu::vertical-padding                    = 5
+    GtkMenu::horizontal-offset                   = 0
+    GtkMenu::vertical-offset                     = 0
+    GtkMenu::double-arrows                       = 1
+    GtkMenu::arrow-placement                     = GTK_ARROWS_BOTH
+    GtkMenu::arrow-scaling                       = 0.7
+
+    GtkMenuItem::horizontal-padding              = 10
+    GtkMenuItem::toggle-spacing                  = 10
+    GtkMenuItem::selected-shadow-type            = GTK_SHADOW_NONE
+
+    GtkCheckMenuItem::indicator-size             = 20
+
+    GtkOptionMenu::indicator-size                = {20, 20}
+    GtkOptionMenu::indicator-spacing             = {10, 10, 10, 10}
+
+    GtkComboBox::appears-as-list                 = 1
+    GtkComboBox::arrow-size                      = 20
+    GtkComboBox::shadow-type                     = GTK_SHADOW_NONE
+
+    GtkPaned::handle-size                        = 10
+
+    GtkScrollbar::has-forward-stepper            = 0
+    GtkScrollbar::has-backward-stepper           = 0
+    GtkScrollbar::has-secondary-forward-stepper  = 0
+    GtkScrollbar::has-secondary-backward-stepper = 0
+    GtkScrollbar::min-slider-width               = 20
+    GtkScrollbar::min-slider-length              = 20
+    GtkScrollbar::trough-border 		         = 0
+    GtkScrollbar::activate-slider 		         = 0
+
+    GtkScrolledWindow::scrollbar-spacing         = 0
+    GtkScrolledWindow::scrollbar-within-bevel    = 1
+    GtkScrolledWindow::shadow-type               = GTK_SHADOW_NONE
+
+    GtkStatusbar::shadow-type                    = GTK_SHADOW_NONE
+
+    GtkTextView::focus-line-pattern              = "\0"
+
+    GtkToolbar::button-relief                    = GTK_RELIEF_NONE
+    GtkToolbar::internal-padding                 = 0
+    GtkToolbar::shadow-type                      = GTK_SHADOW_NONE
+    GtkToolbar::space-size                       = 10
+    GtkToolbar::space-style                      = GTK_TOOLBAR_SPACE_NONE
+
+    GtkTreeView::allow-rules                     = 1
+    GtkTreeView::expander-size                   = 0
+    GtkTreeView::grid-line-pattern               = "\1\1"
+    GtkTreeView::grid-line-width                 = 1
+    GtkTreeView::indent-expanders                = 1
+    GtkTreeView::tree-line-pattern               = "\1\1"
+    GtkTreeView::tree-line-width                 = 1
+    GtkTreeView::horizontal-separator            = 5
+    GtkTreeView::vertical-separator              = 5
+
+    GtkArrow::arrow-scaling = 0.7
+
+    GtkNotebook::arrow-spacing                   = 0
+    GtkNotebook::has-backward-stepper            = 1
+    GtkNotebook::has-forward-stepper             = 1
+    GtkNotebook::has-secondary-backward-stepper  = 0
+    GtkNotebook::has-secondary-forward-stepper   = 0
+    GtkNotebook::tab-curvature                   = 0
+    GtkNotebook::tab-overlap                     = 0
+
+    engine "" {
+        # engine specific settings go here
+    }
 }
-widget_class "*"                   			style "my_default"
+
+class "GtkWidget" style : highest "basic_layout"
+
+gtk_color_scheme = "background_space:#1e2328"
+gtk_color_scheme = "background_menu:#191e23"
+gtk_color_scheme = "background_widgets:#282d32"
+gtk_color_scheme = "background_inner_widgets:#30353a"
+gtk_color_scheme = "background_table_widgets:#383d42"
+
+gtk_color_scheme = "text_default:#ffffff"
+gtk_color_scheme = "text_title:#ffffff"
+gtk_color_scheme = "text_inactive:#8f9194"
+gtk_color_scheme = "text_label:#7e8184"
+gtk_color_scheme = "text_inverted:#1d2227"
+
+gtk_color_scheme = "input_background:#44494d"
+gtk_color_scheme = "input_background_active:#7c858c"
+gtk_color_scheme = "input_border:#3a3e43"
+
+gtk_color_scheme = "button_background:#3a3e43"
+gtk_color_scheme = "button_background_inactive:#44494d"
+gtk_color_scheme = "button_border:#626569"
+
+gtk_color_scheme = "pane:#454a4e"
+
+gtk_color_scheme = "accent:#2c90ff"
+
+gtk_color_scheme = "scrollbar_background:#454a4e"
+gtk_color_scheme = "scrollbar_scroller:#282d32"
+gtk_color_scheme = "scrollbar_scroller_active:#2c90ff"
+gtk_color_scheme = "scrollbar_scroller_active_decent:#44494d"
+
+gtk_color_scheme = "red:#dd0000"
+gtk_color_scheme = "green:#00dd00"
+gtk_color_scheme = "blue:#0000dd"
+gtk_color_scheme = "yellow:#dddd00"
 
 
-
-style "indicator_label" = "my_default"
+style "test-style"
 {
-    font_name 		= "DIN Next LT Pro 15"
-    fg[ACTIVE]      	= @text_color_dark
-    fg[INSENSITIVE] 	= @text_color_dark
-    fg[NORMAL]      	= @text_color_dark
-    fg[PRELIGHT]    	= @text_color_dark
-    fg[SELECTED]    	= @text_color_dark
+    # Background color of text widgets and lists.
+    base[ACTIVE]      = @red
+    base[INSENSITIVE] = @red
+    base[NORMAL]      = @red
+    base[PRELIGHT]    = @red
+    base[SELECTED]    = @red
+
+    # Background color. This is the background color of windows and buttons.
+    bg[ACTIVE]        = @green
+    bg[INSENSITIVE]   = @green
+    bg[NORMAL]        = @green
+    bg[PRELIGHT]      = @green
+    bg[SELECTED]      = @green
+
+    # Foreground color. Used for text on buttons. Also used for the button borders in some engines.
+    fg[ACTIVE]        = @blue
+    fg[INSENSITIVE]   = @blue
+    fg[NORMAL]        = @blue
+    fg[PRELIGHT]      = @blue
+    fg[SELECTED]      = @blue
+
+    # Text color for text input widgets and lists
+    text[ACTIVE]      = @yellow
+    text[INSENSITIVE] = @yellow
+    text[NORMAL]      = @yellow
+    text[PRELIGHT]    = @yellow
+    text[SELECTED]    = @yellow
 }
-widget_class "*Paned.GtkFrame.GtkLabel"			style "indicator_label"
-widget_class "*GtkVBox.GtkEventBox.GtkEventBox.GtkLabel"	style "indicator_label"
-widget_class "*EventBox.GtkHBox.GtkLabel"			style "indicator_label"
-widget_class "*EventBox.GtkVBox.GtkHBox.GtkLabel"		style "indicator_label"
 
 
-
-# ----------TEXT ENTRY--------------
-style "text_entry" = "my_default"
+style "basic-colors"
 {
-    base[ACTIVE]      = @dark_gray
-    base[SELECTED]    = @dark_gray
+    # Background color of text widgets and lists.
+    base[ACTIVE]      = @input_background_active
+    base[INSENSITIVE] = @input_background
+    base[NORMAL]      = @input_background
+    base[PRELIGHT]    = @input_background
+    base[SELECTED]    = @accent
+
+    # Background color. This is the background color of windows and buttons.
+    bg[ACTIVE]        = @background_widgets
+    bg[INSENSITIVE]   = @background_widgets
+    bg[NORMAL]        = @background_widgets
+    bg[PRELIGHT]      = @background_widgets
+    #bg[SELECTED]      = @background_widgets
+
+    # Foreground color. Used for text on buttons. Also used for the button borders in some engines.
+    fg[ACTIVE]        = @text_default
+    fg[INSENSITIVE]   = @text_default
+    fg[NORMAL]        = @text_default
+    fg[PRELIGHT]      = @text_default
+    fg[SELECTED]      = @text_default
+
+    # Text color for text input widgets and lists
+    text[ACTIVE]      = @text_default
+    text[INSENSITIVE] = @text_inactive
+    text[NORMAL]      = @text_default
+    text[PRELIGHT]    = @text_default
+    text[SELECTED]    = @text_default
 }
-widget_class "*Entry"					style "text_entry"
-widget_class "*TextView"					style "text_entry"
+
+class "GtkWidget" style : highest "basic-colors"
 
 
+style "toolbar" {
+    bg[NORMAL]        = @background_menu
+}
+widget "*.toolbar*" style : highest "toolbar"
+widget "*.top_menu_hbox.*" style : highest "toolbar"
 
-style "state_overview_text_entry" = "my_default"
+
+style "widget-colors" {
+    bg[INSENSITIVE]   = @background_inner_widgets
+    bg[NORMAL]        = @background_inner_widgets
+}
+widget_class "*.<GtkNotebook>.*" style : highest "widget-colors"
+
+
+style "notebook" {
+    bg[ACTIVE]        = @background_widgets
+    bg[INSENSITIVE]   = @button_background_inactive
+    bg[NORMAL]        = @accent
+    bg[PRELIGHT]      = @accent
+    bg[SELECTED]      = @accent
+}
+widget_class "*Notebook" style : highest "notebook"
+
+style "space" {
+    bg[ACTIVE]        = @pane
+    bg[INSENSITIVE]   = @background_space
+    bg[NORMAL]        = @background_space
+    bg[PRELIGHT]      = @pane
+    bg[SELECTED]      = @pane
+}
+widget_class "*Paned"  style : highest "space"
+widget "*logic_vpaned"  style : highest "space"
+widget "*data_vpaned"  style : highest "space"
+class "GtkWindow"  style : highest "space"
+
+
+style "button"
 {
-    base[NORMAL]      = @text_background
-    base[SELECTED]    = @medium_gray
+    bg[INSENSITIVE]   = @button_background_inactive
+    bg[NORMAL]        = @button_background
+    bg[SELECTED]        = @accent
+    bg[PRELIGHT]        = @accent
+    bg[ACTIVE]        = @accent
+    base[INSENSITIVE]      = @button_background_inactive
+    base[NORMAL]      = @button_background
+    base[SELECTED]      = @input_background_active
+    base[PRELIGHT]      = @input_background_active
+    base[ACTIVE]      = @input_background_active
 }
-widget_class "*Table.GtkEntry"				style "state_overview_text_entry"
-#----------------------------------
+class "GtkButton" style : highest "button"
+widget_class "*GtkMenu*" style : highest "button"
 
 
-
-#-----------EVENTBOX---------------
-style "event_box" = "my_default"
-{
-    bg[NORMAL]		= @widget_background
+style "icons" = "test-style"{
+    base[NORMAL] = @background_widgets
+    bg[ACTIVE] = @accent
+    bg[SELECTED] = @accent
+    bg[PRELIGHT] = @accent
+    text[NORMAL] = @text_default
+    text[ACTIVE] = @text_default
+    text[PRELIGHT] = @text_default
+    text[SELECTED] = @text_default
 }
-widget_class "*VPaned.GtkEventBox"			style "event_box"
-widget_class "*VBox.GtkEventBox"				style "event_box"
-widget_class "*EventBox.GtkEventBox"			style "event_box"
-widget_class "*HBox.GtkEventBox"				style "event_box"
-widget_class "*HBox.GtkToolbar"				style "event_box"
-widget_class "*Notebook.GtkEventBox"			style "event_box"
+widget_class "*IconView*" style : highest "icons"
 
 
+style "sidebar-hide-button" {
+    GtkButton::child-displacement-x              = 0
+    GtkButton::child-displacement-y              = 0
+    GtkButton::inner-border                      = {0, 0, 0, 0}
 
-style "label_event_box" = "my_default"
-{
-	bg[NORMAL]	= @widget_active_background
+    bg[ACTIVE]        = @accent
+    bg[INSENSITIVE]   = @background_space
+    bg[NORMAL]        = @background_space
+    bg[PRELIGHT]      = @accent
+    bg[SELECTED]      = @accent
 }
-widget_class "*Viewport.GtkVBox.GtkEventBox"		style "label_event_box"
-widget_class "*VBox.GtkEventBox.GtkEventBox"		style "label_event_box"
-widget_class "*VPaned.GtkEventBox.GtkVBox.GtkEventBox"	style "label_event_box"
-widget_class "*Notebook.GtkEventBox.GtkVPaned.GtkEventBox"	style "label_event_box"
+widget "*left_bar_hide_button" style : highest "sidebar-hide-button"
+widget "*left_bar_return_button" style : highest "sidebar-hide-button"
+widget "*right_bar_hide_button" style : highest "sidebar-hide-button"
+widget "*right_bar_return_button" style : highest "sidebar-hide-button"
+widget "*console_hide_button" style : highest "sidebar-hide-button"
+widget "*console_return_button" style : highest "sidebar-hide-button"
 
 
-
-style "top_label_event_box" = "my_default"
-{
-	bg[NORMAL]	= @widget_background
+style "scrollbar" {
+    bg[INSENSITIVE]   = @scrollbar_background
+    bg[ACTIVE]        = @scrollbar_background
+    bg[NORMAL]        = @scrollbar_scroller
+    bg[PRELIGHT]      = @scrollbar_scroller_active
+    bg[SELECTED]      = @scrollbar_background
 }
-widget_class "*VBox.GtkHBox.GtkVPaned.GtkVBox.GtkEventBox.GtkEventBox" style "top_label_event_box"
-#----------------------------------
+widget_class "*Scrollbar*" style : highest "scrollbar"
 
 
-
-#----------BUTTONS-----------
-style "button" = "my_default"
-{
-    bg[ACTIVE]        = @button_active
-    bg[NORMAL]        = @text_background
-    bg[PRELIGHT]      = @medium_gray
-    bg[SELECTED]      = @button_active
-    bg[INSENSITIVE]   = @widget_background
-
-    fg[ACTIVE]        = @white
-    fg[SELECTED]      = @white
-    fg[INSENSITIVE]   = @dark_gray
+style "scrollbar-decent" = "scrollbar" {
+    #bg[PRELIGHT]      = @scrollbar_scroller_active_decent
+    bg[PRELIGHT]      = shade(0.5, @scrollbar_scroller_active_decent)
 }
-widget_class "*Button*"					style "button"
-widget_class "*ComboBox*"				style "button"
+widget "*graphical_editor_scroller*" style : highest "scrollbar-decent"
 
 
-
-style "check_button" = "my_default"
-{
-    bg[NORMAL]        = @text_color
-    bg[SELECTED]      = @button_active
+style "text-view-background" {
+    bg[NORMAL]        = @input_background
+    base[NORMAL]      = @input_background
 }
-widget_class "*CheckButton*"				style "check_button"
+widget "*console_scroller.GtkTextView" style : highest "text-view-background"
+widget "*description_scroller.GtkTextView" style : highest "text-view-background"
 
 
-
-style "dialog_button" = "my_default"
-{
-    GtkButton::size_request = 90
-   
-    bg[ACTIVE]        = @button_active
-    bg[NORMAL]        = @text_background
-    bg[PRELIGHT]      = @medium_gray
-    bg[SELECTED]      = @button_active
-    bg[INSENSITIVE]   = @widget_background
-
-    fg[ACTIVE]        = @white
-    fg[SELECTED]      = @white
-    fg[INSENSITIVE]   = @dark_gray
+style "main-widget-background" {
+    bg[NORMAL]        = @background_widgets
 }
-widget_class "*Dialog*Button*"				style "dialog_button"
-#----------------------------
+widget "*.graphical_editor_title_wrapper" style : highest "main-widget-background"
+widget "*.left_sidebar_viewport" style : highest "main-widget-background"
 
-
-
-#---------NOTEBOOKS----------
-style "notebook" = "my_default"
-{
-    xthickness = 0
-    ythickness = 0
-
-    bg[ACTIVE]	        = @text_background
-    bg[NORMAL]		= @widget_active_background
-
-    fg[INSENSITIVE]	= @very_dark_gray
-
+style "widget-title" {
+    bg[NORMAL]        = @background_menu
 }
-widget_class "*VBox.GtkEventBox*Notebook"			style "notebook"
-widget_class "*Notebook*Notebook"				style "notebook"
-widget_class "*Notebook*Viewport"				style "notebook"
+widget "*.label_wrapper" style : highest "widget-title"
+widget "*.label_wrapper?" style : highest "widget-title"
+widget "*.source_editor_title_wrapper" style : highest "widget-title"
+widget "*.outcomes_title_wrapper" style : highest "widget-title"
+widget "*.transitions_title_wrapper" style : highest "widget-title"
+widget "*.data_ports_title_wrapper" style : highest "widget-title"
+widget "*.data_flows_title_wrapper" style : highest "widget-title"
+widget "*.data_linkage_title_wrapper" style : highest "widget-title"
+widget "*.logical_linkage_title_wrapper" style : highest "widget-title"
+widget "*.description_title_wrapper" style : highest "widget-title"
 
 
-
-style "notebook_blue" = "my_default"
-{
-    xthickness = 0
-    ythickness = 0
-
-    bg[ACTIVE]	        = @widget_active_background
-    bg[NORMAL]		= @button_active
-
-    fg[INSENSITIVE]	= @very_dark_gray
-
+style "trees" {
+    GtkTreeView::expander-size                   = 12
+    #GtkTreeView::grid-line-pattern               = "\777\1"
 }
-widget_class "*VPaned.GtkNotebook"			style "notebook_blue"
-widget_class "*VBox.GtkNotebook"				style "notebook_blue"
-
-widget_class "*Notebook.GtkVBox.GtkEventBox"		style "my_default"
-#----------------------------
+widget "*.library_tree" style : highest "trees"
+widget "*.history_tree" style : highest "trees"
+widget "*.state_machine_tree" style : highest "trees"
 
 
-
-style "expander" = "my_default"
-{
-    bg[ACTIVE]		= @widget_background
-    bg[NORMAL]		= @widget_active_background
-    bg[PRELIGHT]	= @medium_gray
+style "active-dropdown-entry" {
+    base[SELECTED]    = @accent
+    text[ACTIVE]      = @text_inverted
+    text[INSENSITIVE] = @text_inverted
+    text[NORMAL]      = @text_inverted
+    text[PRELIGHT]    = @text_inverted
+    text[SELECTED]    = @text_default
 }
-widget_class "*Expander"					style "expander"
+widget_class "GtkWindow.GtkScrolledWindow.GtkTreeView" style : highest "active-dropdown-entry"
 
-
-
-style "window" = "my_default"
-{
-    bg[NORMAL]		= @very_dark_gray
+style "tab-button" {
+    bg[ACTIVE]        = @input_background
+    bg[PRELIGHT]      = @input_background
+    bg[SELECTED]      = @input_background
 }
-widget_class "*Window"					style "window"
+widget "*tab_label.*" style : highest "tab-button"
 
 
-
-style "file_chooser_dialog" = "my_default"
-{
-    bg[PRELIGHT]	= @widget_active_background
-
-    fg[INSENSITIVE]	= @medium_gray
+style "tree-views" {
+    text[INSENSITIVE] = @text_label      # files
+    text[NORMAL]      = @text_default    # folder
+    text[SELECTED]    = @text_default    # folder selected
+    GtkTreeView::even-row-color = @input_background
+    GtkTreeView::odd-row-color  = @input_background_active
 }
-widget_class "*FileChooserDialog"				style "file_chooser_dialog"
-
-
-
-style "paned" = "my_default"
-{
-    bg[NORMAL]		= @medium_gray
-    bg[PRELIGHT]	= @text_background
-}
-widget_class "*Paned"					style "paned"
-
-
-
-#---------MENU BAR-----------
-style "menu_bar" = "my_default"
-{
-    bg[SELECTED]	= @button_active
-
-    fg[PRELIGHT]	= @white
-}
-widget_class "*Menu*"					style "menu_bar"
-
-
-
-style "menu_separator" = "my_default"
-{
-    bg[NORMAL]        = @text_color
-}
-widget_class "*SeparatorMenuItem"				style "menu_separator"
-#----------------------------
-
-
-
-style "scrolled_window" = "my_default"
-{
-    bg[NORMAL]		= @widget_active_background
-}
-
-
-
-style "treeview" = "my_default"
-{
-    font_name 				= "DIN Next LT Pro 11"
-    bg[ACTIVE]				= @text_background
-    bg[NORMAL]				= @widget_active_background
-    bg[SELECTED]			= @widget_background
-
-    fg[SELECTED]			= @widget_background
-
-    base[ACTIVE]			= @medium_gray
-    base[SELECTED]			= @button_active
-
-    text[SELECTED]			= @white
-}
-
-
-style "iconview" = "my_default"
-{
-    bg[SELECTED]			= @medium_gray
-    base[NORMAL]            = @widget_background
-}
-
-
-style "chooser_treeview" = "my_default"
-{
-    font_name 				= "DIN Next LT Pro 11"
-
-    GtkTreeView::even_row_color	= @text_background
-    GtkTreeView::odd_row_color		= @text_background
-
-    bg[ACTIVE]				= @text_background
-    bg[NORMAL]				= @text_background
-    bg[SELECTED]			= @widget_background
-
-    fg[SELECTED]			= @widget_background
-
-    base[ACTIVE]			= @medium_gray
-    base[SELECTED]			= @button_active
-    base[NORMAL]			= @widget_active_background
-
-    text[SELECTED]			= @white
-    text[INSENSITIVE]			= @very_dark_gray
-}
-
-widget_class "*GtkEventBox.GtkVBox.GtkScrolledWindow*"	style "scrolled_window"
-widget_class "*Tree*"					style "treeview"
-widget_class "*Icon*"                   style "iconview"
-widget_class "*FileChooserDialog*Tree*"			style "chooser_treeview"
-
-
-
-style "top_bar" = "my_default"
-{
-    bg[NORMAL]		= @top_bar_background_black
-    bg[SELECTED]	= @button_active
-
-    fg[PRELIGHT]	= @white
-}
-widget_class "GtkWindow.GtkEventBox.GtkVBox.GtkEventBox"		style "top_bar"
-widget_class "GtkWindow.GtkEventBox.GtkVBox.GtkEventBox*Menu*"	style "top_bar"
-widget_class "GtkWindow.GtkEventBox.GtkVBox.GtkEventBox*Toolbar"	style "top_bar"
-
-
-
-style "scrollbar" = "my_default"
-{
-    bg[NORMAL]        = @scrollbar_background
-    bg[SELECTED]      = @widget_background
-}
-widget_class "*Scrollbar"				style "scrollbar"
+widget_class "*Tree*" style : highest "tree-views"
