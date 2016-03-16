@@ -124,6 +124,7 @@ def delete_selected_elements(state_machine_m):
     if len(state_machine_m.selection.get_all()) > 0:
         delete_models(state_machine_m.selection.get_all())
         state_machine_m.selection.clear()
+        return True
 
 
 def add_state(container_state_m, state_type):

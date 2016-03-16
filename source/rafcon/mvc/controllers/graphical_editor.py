@@ -2088,7 +2088,7 @@ class GraphicalEditorController(ExtendedController):
 
     def _delete_selection(self, *args):
         if self.view.editor.is_focus():
-            statemachine_helper.delete_selected_elements(self.model)
+            return statemachine_helper.delete_selected_elements(self.model)
 
     def _add_new_state(self, *args, **kwargs):
         """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
@@ -2098,7 +2098,7 @@ class GraphicalEditorController(ExtendedController):
         if not self.view.editor.is_focus():
             return
         state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-        statemachine_helper.add_new_state(self.model, state_type)
+        return statemachine_helper.add_new_state(self.model, state_type)
 
     def _toggle_data_flow_visibility(self, *args):
         if self.view.editor.is_focus():

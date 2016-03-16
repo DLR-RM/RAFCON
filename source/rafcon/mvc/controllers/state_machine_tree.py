@@ -110,7 +110,7 @@ class StateMachineTreeController(ExtendedController):
 
     def _delete_selection(self, *args):
         if self.view['state_machine_tree_view'].is_focus():
-            statemachine_helper.delete_selected_elements(self._selected_sm_model)
+            return statemachine_helper.delete_selected_elements(self._selected_sm_model)
 
     @ExtendedController.observe("state", after=True)  # root_state
     @ExtendedController.observe("states", after=True)

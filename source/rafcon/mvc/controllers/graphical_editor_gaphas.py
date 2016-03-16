@@ -152,7 +152,7 @@ class GraphicalEditorController(ExtendedController):
         if not self.view.editor.is_focus():
             return
         state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-        statemachine_helper.add_new_state(self.model, state_type)
+        return statemachine_helper.add_new_state(self.model, state_type)
 
     def _copy_selection(self, *args):
         """Copies the current selection to the clipboard.
@@ -702,7 +702,7 @@ class GraphicalEditorController(ExtendedController):
                                 hierarchy_level=new_state_hierarchy_level)
 
     def _remove_state_view(self, view):
-        statemachine_helper.delete_selected_elements(self.model)
+        return statemachine_helper.delete_selected_elements(self.model)
 
     def setup_canvas(self):
 
