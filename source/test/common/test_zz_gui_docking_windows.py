@@ -18,9 +18,11 @@ from testing_utils import call_gui_callback
 import pytest
 
 DOCKING_TEST_FOLDER = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/config_docking_test'
+warnings = 0
 
 
 def mirror_runtime_config_file():
+    global warnings
     path = os.path.join(os.path.expanduser('~'), '.config', 'rafcon')
     runtime_config_file = os.path.join(path, 'runtime_config.yaml')
     if os.path.isfile(runtime_config_file):
@@ -28,6 +30,8 @@ def mirror_runtime_config_file():
             os.mkdir(DOCKING_TEST_FOLDER)
         shutil.copyfile(runtime_config_file,
                         testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/config_docking_test/runtime_config.yaml')
+    else:
+        warnings += 1
 
 
 @log.log_exceptions(None, gtk_quit=True)
@@ -39,7 +43,6 @@ def trigger_docking_signals(*args):
 
     # Left Bar
     call_gui_callback(main_window_controller.on_left_bar_undock_clicked, None)
-    time.sleep(min_sleep)
     assert main_window_controller.view.left_bar_window.get_top_widget().get_property('visible') == True
     window_pos = main_window_controller.view.left_bar_window.get_top_widget().get_position()
     window_size = main_window_controller.view.left_bar_window.get_top_widget().get_size()
@@ -63,7 +66,6 @@ def trigger_docking_signals(*args):
 
     # Right Bar
     call_gui_callback(main_window_controller.on_right_bar_undock_clicked, None)
-    time.sleep(min_sleep)
     assert main_window_controller.view.right_bar_window.get_top_widget().get_property('visible') == True
     window_pos = main_window_controller.view.right_bar_window.get_top_widget().get_position()
     window_size = main_window_controller.view.right_bar_window.get_top_widget().get_size()
@@ -87,7 +89,6 @@ def trigger_docking_signals(*args):
 
     # Console
     call_gui_callback(main_window_controller.on_console_undock_clicked, None)
-    time.sleep(min_sleep)
     assert main_window_controller.view.console_window.get_top_widget().get_property('visible') == True
     window_pos = main_window_controller.view.console_window.get_top_widget().get_position()
     window_size = main_window_controller.view.console_window.get_top_widget().get_size()
@@ -129,7 +130,7 @@ def test_window_positions(caplog):
     thread.join()
     os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
     testing_utils.test_multithrading_lock.release()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=warnings)
 
 
 if __name__ == '__main__':

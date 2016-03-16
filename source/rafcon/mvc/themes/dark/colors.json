@@ -1,6 +1,6 @@
 {
     "GLOBAL_BACKGROUND": "#272c36",
-    "TEXT": "#fefefe",
+    "TEXT": "#ffffff",
     "TEXT_DARK": "#8f9195",
     "BLACK": "#000",
     "LABEL": "#fff",
@@ -16,7 +16,7 @@
     "DATA_LINE_SELECTED": "#dec17c",
     "DATA_VALUE_BACKGROUND": "#ced3dc",
     "SCOPED_VARIABLE_TEXT": "#121921",
-    "STATE_BACKGROUND": "#383d47",
+    "STATE_BACKGROUND": "#383d42",
     "STATE_BORDER": "#50555f",
     "STATE_SELECTED": "#466e97",
     "STATE_SELECTED_OUTER_BOUNDARY": "#2e9aff",

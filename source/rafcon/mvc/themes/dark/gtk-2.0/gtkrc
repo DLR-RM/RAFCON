@@ -136,7 +136,7 @@ style "basic_layout"
     }
 }
 
-widget_class "*" style "basic_layout"
+class "GtkWidget" style : highest "basic_layout"
 
 gtk_color_scheme = "background_space:#1e2328"
 gtk_color_scheme = "background_menu:#191e23"
@@ -236,7 +236,7 @@ style "basic-colors"
     text[SELECTED]    = @text_default
 }
 
-widget_class "*" style : highest "basic-colors"
+class "GtkWidget" style : highest "basic-colors"
 
 
 style "toolbar" {
@@ -272,7 +272,7 @@ style "space" {
 widget_class "*Paned"  style : highest "space"
 widget "*logic_vpaned"  style : highest "space"
 widget "*data_vpaned"  style : highest "space"
-widget_class "*GtkWindow"  style : highest "space"
+class "GtkWindow"  style : highest "space"
 
 
 style "button"
@@ -288,7 +288,7 @@ style "button"
     base[PRELIGHT]      = @input_background_active
     base[ACTIVE]      = @input_background_active
 }
-widget_class "*.<GtkButton>" style : highest "button"
+class "GtkButton" style : highest "button"
 widget_class "*GtkMenu*" style : highest "button"
 
 
@@ -335,9 +335,10 @@ widget_class "*Scrollbar*" style : highest "scrollbar"
 
 
 style "scrollbar-decent" = "scrollbar" {
-    bg[PRELIGHT]      = @scrollbar_scroller_active_decent
+    #bg[PRELIGHT]      = @scrollbar_scroller_active_decent
+    bg[PRELIGHT]      = shade(0.5, @scrollbar_scroller_active_decent)
 }
-widget "*graphical_editor_vbox.*.GtkScrolledWindow*" style : highest "scrollbar-decent"
+widget "*graphical_editor_scroller*" style : highest "scrollbar-decent"
 
 
 style "text-view-background" {
@@ -386,7 +387,7 @@ style "active-dropdown-entry" {
     text[PRELIGHT]    = @text_inverted
     text[SELECTED]    = @text_default
 }
-widget_class "GtkWindow.GtkScrolledWindow*GtkTreeView" style : highest "active-dropdown-entry"
+widget_class "GtkWindow.GtkScrolledWindow.GtkTreeView" style : highest "active-dropdown-entry"
 
 style "tab-button" {
     bg[ACTIVE]        = @input_background
