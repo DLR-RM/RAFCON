@@ -257,14 +257,20 @@ class AbstractStateModel(ModelMT):
             self.meta = tmp_meta
             self.meta_signal.emit(MetaSignalMsg("load_meta_data", "all", True))
 
-    def store_meta_data(self):
+    def store_meta_data(self, temp_path=None):
         """Save meta data of state model to the file system
 
         This method generates a dictionary of the meta data of the state together with the meta data of all state
         elements (data ports, outcomes, etc.) and stores it on the filesystem.
         """
-        meta_file_yaml = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE_YAML)
-        meta_file_json = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE_JSON)
+        if temp_path:
+            meta_file_yaml = os.path.join(temp_path + '/' + self.state.get_path(),
+                                          StateMachineStorage.GRAPHICS_FILE_YAML)
+            meta_file_json = os.path.join(temp_path + '/' + self.state.get_path(),
+                                          StateMachineStorage.GRAPHICS_FILE_JSON)
+        else:
+            meta_file_yaml = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE_YAML)
+            meta_file_json = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE_JSON)
         meta_data = deepcopy(self.meta)
         self._generate_element_meta_data(meta_data)
         storage_utils.write_dict_to_yaml(meta_data, meta_file_yaml)

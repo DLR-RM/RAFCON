@@ -91,7 +91,8 @@ class StateMachineStorage(Observable):
             if path in self._paths_to_remove_before_sm_save[state_machine_id]:
                 self._paths_to_remove_before_sm_save[state_machine_id].remove(path)
 
-    def save_statemachine_to_path(self, statemachine, base_path, version=None, delete_old_state_machine=False, save_as=False):
+    def save_statemachine_to_path(self, statemachine, base_path, version=None, delete_old_state_machine=False,
+                                  save_as=False, temporary_storage=False):
         """
         Saves a root state to a yaml file.
         :param statemachine: the statemachine to be saved
@@ -102,15 +103,16 @@ class StateMachineStorage(Observable):
         if base_path is not None:
             self.base_path = base_path
 
-        if save_as:
-            if statemachine.state_machine_id in self._paths_to_remove_before_sm_save.iterkeys():
-                self._paths_to_remove_before_sm_save[statemachine.state_machine_id] = {}
-        else:
-            # remove all paths that were marked to be removed
-            if statemachine.state_machine_id in self._paths_to_remove_before_sm_save.iterkeys():
-                for path in self._paths_to_remove_before_sm_save[statemachine.state_machine_id]:
-                    if os.path.exists(path):
-                        filesystem.remove_path(path)
+        if not temporary_storage:
+            if save_as:
+                if statemachine.state_machine_id in self._paths_to_remove_before_sm_save.iterkeys():
+                    self._paths_to_remove_before_sm_save[statemachine.state_machine_id] = {}
+            else:
+                # remove all paths that were marked to be removed
+                if statemachine.state_machine_id in self._paths_to_remove_before_sm_save.iterkeys():
+                    for path in self._paths_to_remove_before_sm_save[statemachine.state_machine_id]:
+                        if os.path.exists(path):
+                            filesystem.remove_path(path)
 
         root_state = statemachine.root_state
         # clean old path first
@@ -129,12 +131,14 @@ class StateMachineStorage(Observable):
         yaml.dump(yaml.load(statemachine_content), f, indent=4)
         f.close()
         # set the file_system_path of the state machine
-        statemachine.file_system_path = copy.copy(base_path)
+        if not temporary_storage:
+            statemachine.file_system_path = copy.copy(base_path)
         # add root state recursively
         self.save_state_recursively(root_state, "")
-        if statemachine.marked_dirty:
+        if statemachine.marked_dirty and not temporary_storage:
             statemachine.marked_dirty = False
-        statemachine.file_system_path = self.base_path
+        if not temporary_storage:
+            statemachine.file_system_path = self.base_path
         logger.debug("Successfully saved statemachine!")
 
     def save_script_file_for_state_and_source_path(self, state, state_path):

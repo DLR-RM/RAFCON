@@ -61,7 +61,7 @@ class StateModel(AbstractStateModel):
             pass
         else:
             # if the state_execution state is changed the sm must not be marked dirty
-            if info["method_name"] != "state_execution_status":
+            if "after" in info and info["method_name"] != "state_execution_status":
                 self._mark_state_machine_as_dirty()
 
         # TODO the modify observation to notify the list has to be changed in the manner, that the element-models
