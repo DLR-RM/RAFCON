@@ -208,7 +208,7 @@ class GraphicalEditorController(ExtendedController):
                     if info['kwargs']['method_name'] in ['change_state_type', 'change_root_state_type']:
                         self.suspend_drawing = False
                         self._redraw()
-            if info['method_name'] == 'root_state_after_change':
+            if info['method_name'] == 'root_state_change':
                 self._redraw()
             elif info['method_name'] == 'marked_dirty' and info['args'][1]:
                 self._redraw()
