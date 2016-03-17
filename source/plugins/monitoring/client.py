@@ -33,7 +33,7 @@ class MonitoringClient(UdpClient):
         self.initialized = False
         self.server_address = None
         # self.datagram_received_function = self.print_message
-        self.datagram_received_function = self.client_monitoring_data_received_function
+        self.datagram_received_function = self.monitoring_data_received_function
 
     def connect(self):
         # replace GUI menu bar with own subclassed version
@@ -68,7 +68,7 @@ class MonitoringClient(UdpClient):
     def print_message(self, message, address):
         logger.info("Received datagram {0} from address: {1}".format(str(message), str(address)))
 
-    def client_monitoring_data_received_function(self, message, address):
+    def monitoring_data_received_function(self, message, address):
         assert isinstance(message, Protocol)
         if message.message_type is MessageType.STATE_ID:
             (state_path, execution_status) = message.message_content.split("@")
@@ -85,12 +85,16 @@ class MonitoringClient(UdpClient):
                                                     notify_after_function=self.on_execution_mode_changed_after)
 
     def send_current_execution_mode(self):
-        protocol = Protocol(MessageType.STATE_ID, str(state_machine_execution_engine.status.execution_mode.value))
-        print protocol
+        if state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.RUN_TO_SELECTED_STATE:
+            # add the path of the state to run to to the message
+            protocol = Protocol(MessageType.COMMAND, str(state_machine_execution_engine.status.execution_mode.value) +
+                                "@" + state_machine_execution_engine.run_to_states[0])
+        else:
+            protocol = Protocol(MessageType.COMMAND, str(state_machine_execution_engine.status.execution_mode.value))
+        logger.info("The current execution mode is going to be sent: {0}".format(protocol))
         self.send_message_non_acknowledged(protocol, self.server_address)
 
     def on_execution_mode_changed_after(self, observable, return_value, args):
-        logger.info("This is naice!")
         self.send_current_execution_mode()
 
 

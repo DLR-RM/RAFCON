@@ -16,7 +16,9 @@ from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.states.state import State
-from rafcon.statemachine.singleton import state_machine_manager
+from rafcon.statemachine.singleton import state_machine_manager, state_machine_execution_engine
+from rafcon.statemachine.enums import StateMachineExecutionStatus
+
 
 from network.config import global_network_config
 from network.protocol import Protocol, MessageType, STATE_EXECUTION_STATUS_SEPARATOR
@@ -33,7 +35,8 @@ class MonitoringServer(UdpServer):
         self.initialized = False
         self.register_to_new_state_machines()
         self.register_all_statemachines()
-        self.datagram_received_function = self.print_message
+        # self.datagram_received_function = self.print_message
+        self.datagram_received_function = self.monitoring_data_received_function
 
     def connect(self):
         from twisted.internet import reactor
@@ -85,7 +88,34 @@ class MonitoringServer(UdpServer):
         else:
             print "not initialized yet"
 
+    def monitoring_data_received_function(self, message, address):
+        logger.info("Received datagram {0} from address: {1}".format(str(message), str(address)))
+
+        assert isinstance(message, Protocol)
+        if message.message_type is MessageType.COMMAND:
+            received_command = message.message_content.split("@")
+
+            execution_mode = StateMachineExecutionStatus(int(received_command[0]))
+            print execution_mode
+
+            if execution_mode is StateMachineExecutionStatus.STARTED:
+                state_machine_execution_engine.start()
+            elif execution_mode is StateMachineExecutionStatus.STOPPED:
+                state_machine_execution_engine.stop()
+            elif execution_mode is StateMachineExecutionStatus.PAUSED:
+                state_machine_execution_engine.pause()
+            elif execution_mode is StateMachineExecutionStatus.FORWARD_INTO:
+                state_machine_execution_engine.step_into()
+            elif execution_mode is StateMachineExecutionStatus.FORWARD_OVER:
+                state_machine_execution_engine.step_over()
+            elif execution_mode is StateMachineExecutionStatus.FORWARD_OUT:
+                state_machine_execution_engine.step_out()
+            elif execution_mode is StateMachineExecutionStatus.BACKWARD:
+                state_machine_execution_engine.backward_step()
+            elif execution_mode is StateMachineExecutionStatus.RUN_TO_SELECTED_STATE:
+                state_machine_execution_engine.run_to_selected_state(received_command[1])
+
+
     def print_message(self, message, address):
         logger.info("Received datagram {0} from address: {1}".format(str(message), str(address)))
-        logger.info("If the datagram is a command message in will be forwarded to the execution engine")
 
