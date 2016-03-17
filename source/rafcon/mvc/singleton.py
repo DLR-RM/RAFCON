@@ -32,6 +32,8 @@ def open_folder(query):
                                    gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
                                    (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                                     gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+    # Allows confirming with Enter and double-click
+    dialog.set_default_response(gtk.RESPONSE_OK)
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_current_folder(last_path)
@@ -64,6 +66,8 @@ def create_folder(query):
                                    gtk.FILE_CHOOSER_ACTION_CREATE_FOLDER,
                                    (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                                     gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+    # Allows confirming with Enter and double-click
+    dialog.set_default_response(gtk.RESPONSE_OK)
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_current_folder(last_path)
