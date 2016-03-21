@@ -1,5 +1,5 @@
 """
-.. module:: preemptive_concurrency_state
+.. module:: state
    :platform: Unix, Windows
    :synopsis: A module to represent an abstract state in the state machine
 

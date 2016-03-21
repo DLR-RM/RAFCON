@@ -36,8 +36,12 @@ class StateMachineExecutionEngineModel(ModelMT, Observable):
             self.meta = Vividict()
 
         # check if the sm_manager_model exists several times
-        self.__class__.__sm_execution_engine_counter+= 1
-        if self.__class__.__sm_execution_engine_counter == 2:
-            logger.error("Sm_manager_model exists several times!")
-            import os
-            os._exit(0)
+        # this is obsolete as the monitoring plugin creates its own state machine execution engine and thus
+        # also a new model
+
+        # self.__class__.__sm_execution_engine_counter+= 1
+        # if self.__class__.__sm_execution_engine_counter == 2:
+        #     logger.error("Sm_manager_model exists several times!")
+        #     import os
+        #     os._exit(0)
+

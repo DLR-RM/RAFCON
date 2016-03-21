@@ -148,7 +148,7 @@ if __name__ == '__main__':
         # main_window_view.hide()
         # gtk.gdk.flush()
 
-        def initialize_monitoring_manager(some_value):
+        def initialize_monitoring_manager():
 
             monitoring_manager_initialized = False
 
@@ -162,7 +162,7 @@ if __name__ == '__main__':
             # gtk.gdk.flush()
 
         import threading
-        init_thread = threading.Thread(target=initialize_monitoring_manager, args=[5.0, ])
+        init_thread = threading.Thread(target=initialize_monitoring_manager)
         init_thread.start()
         # reactor.callLater(2.0, initialize_monitoring_manager)
 

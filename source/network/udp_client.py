@@ -22,11 +22,13 @@ class UdpClient(CommunicationEndpoint):
         CommunicationEndpoint.startProtocol(self)
         self.transport.connect(global_network_config.get_config_value("SERVER_IP"),
                                global_network_config.get_config_value("SERVER_UDP_PORT"))
+        logger.info("self.transport {0}".format(str(self.transport)))
         logger.info("Protocol started")
 
     def stopProtocol(self):
-        CommunicationEndpoint.stopProtocol(self)
-        logger.warn("Protocol stopped")
+        pass
+        # CommunicationEndpoint.stopProtocol(self)
+        # logger.warn("Protocol stopped")
 
     @staticmethod
     def print_message(message, address):

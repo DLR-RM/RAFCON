@@ -1,7 +1,7 @@
 """
-.. module:: singleton
+.. module:: monitoring manager
    :platform: Unix, Windows
-   :synopsis: A module to hold all singletons of the state machine
+   :synopsis: A module to hold all execution monitoring functionality
 
 .. moduleauthor:: Sebastian Brunner
 
@@ -26,7 +26,11 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class MonitoringManager():
+class MonitoringManager:
+    """
+    This class holds all monitoring relevant objects. It is configured via a config via given on startup or loaded
+    from the default RAFCON config location.
+    """
 
     def __init__(self):
 
@@ -41,23 +45,37 @@ class MonitoringManager():
         self.endpoint = None
 
     def initialize(self, setup_config):
-
+        """
+        The is an initialization function, which is called when the connection finally is set up.
+        :param setup_config: the setup configuration for the networking
+        :return:
+        """
         global_network_config.load(path=setup_config['net_config_path'])
 
         if global_network_config.get_config_value("SERVER", True):
-            self.endpoint = MonitoringServer()
+            if not self.endpoint:
+                self.endpoint = MonitoringServer()
             return self.endpoint.connect()
         else:
-            self.endpoint = MonitoringClient()
+            if not self.endpoint:
+                self.endpoint = MonitoringClient()
             return self.endpoint.connect()
 
     def shutdown(self):
+        """
+        A function to shutdown the communication endpoint
+        :return:
+        """
         if self.endpoint:
             self.endpoint.shutdown()
 
     @staticmethod
     def networking_enabled():
+        """
+        A method to check if the monitoring capability is globally enabled.
+        :return:
+        """
         return global_network_config.get_config_value("ENABLED", False)
 
-
+# this variable is always created when the this module is imported, this is our common way to integrate plugins
 global_monitoring_manager = MonitoringManager()

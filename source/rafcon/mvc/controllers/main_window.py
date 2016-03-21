@@ -24,7 +24,7 @@ from rafcon.mvc.controllers.undocked_window import UndockedWindowController
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
 from rafcon.mvc.singleton import global_variable_manager_model as gvm_model
-from rafcon.mvc.singleton import state_machine_execution_manager_model
+from rafcon.mvc.singleton import state_machine_execution_model
 import rafcon.statemachine.singleton
 import rafcon.statemachine.config
 from rafcon.mvc.config import global_gui_config as gui_config
@@ -53,14 +53,15 @@ class MainWindowController(ExtendedController):
         self.state_machine_manager_model = state_machine_manager_model
         self.editor_type = editor_type
         self.shortcut_manager = None
+        self.handler_ids = {}
 
         # state machine manager
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         state_machine_manager = state_machine_manager_model.state_machine_manager
 
-        self.state_machine_execution_engine_model = state_machine_execution_manager_model
-        self.observe_model(self.state_machine_execution_engine_model)
-        self.state_machine_execution_engine_model.register_observer(self)
+        self.state_machine_execution_model = state_machine_execution_model
+        self.observe_model(self.state_machine_execution_model)
+        self.state_machine_execution_model.register_observer(self)
 
         # shortcut manager
         self.shortcut_manager = ShortcutManager(view['main_window'])
@@ -116,7 +117,8 @@ class MainWindowController(ExtendedController):
         ######################################################
         # menu bar
         ######################################################
-        menu_bar_controller = MenuBarController(state_machine_manager_model, view, self.shortcut_manager)
+        menu_bar_controller = MenuBarController(state_machine_manager_model, view, self.shortcut_manager,
+                                                rafcon.statemachine.singleton.state_machine_execution_engine)
         self.add_controller('menu_bar_controller', menu_bar_controller)
 
         ######################################################
@@ -168,39 +170,60 @@ class MainWindowController(ExtendedController):
 
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
-        view['main_window'].connect('delete_event', self.get_controller('menu_bar_controller').on_delete_event)
-        view['main_window'].connect('destroy', self.get_controller('menu_bar_controller').on_destroy)
+
+        # using helper function to connect functions to GUI elements to be able to access the handler id later on
+
+        self.connect_button_to_function('main_window',
+                                        "delete_event",
+                                        self.get_controller('menu_bar_controller').on_delete_event)
+        self.connect_button_to_function('main_window',
+                                        "destroy",
+                                        self.get_controller('menu_bar_controller').on_destroy)
 
         # connect left bar, right bar and console hide buttons' signals to their corresponding methods
-        view['left_bar_hide_button'].connect('clicked', self.on_left_bar_hide_clicked)
-        view['right_bar_hide_button'].connect('clicked', self.on_right_bar_hide_clicked)
-        view['console_hide_button'].connect('clicked', self.on_console_hide_clicked)
+        self.connect_button_to_function('left_bar_hide_button', "clicked", self.on_left_bar_hide_clicked)
+        self.connect_button_to_function('right_bar_hide_button', "clicked", self.on_right_bar_hide_clicked)
+        self.connect_button_to_function('console_hide_button', "clicked", self.on_console_hide_clicked)
+
+        self.connect_button_to_function('left_bar_hide_button', "clicked", self.on_left_bar_hide_clicked)
+        self.connect_button_to_function('right_bar_hide_button', "clicked", self.on_right_bar_hide_clicked)
+        self.connect_button_to_function('console_hide_button', "clicked", self.on_console_hide_clicked)
 
         # Connect left bar, right bar and console return buttons' signals to their corresponding methods
-        view['left_bar_return_button'].connect('clicked', self.on_left_bar_return_clicked)
-        view['right_bar_return_button'].connect('clicked', self.on_right_bar_return_clicked)
-        view['console_return_button'].connect('clicked', self.on_console_return_clicked)
+        self.connect_button_to_function('left_bar_return_button', "clicked", self.on_left_bar_return_clicked)
+        self.connect_button_to_function('right_bar_return_button', "clicked", self.on_right_bar_return_clicked)
+        self.connect_button_to_function('console_return_button', "clicked", self.on_console_return_clicked)
 
         # Connect undock buttons' signals
-        view['undock_left_bar_button'].connect('clicked', self.on_left_bar_undock_clicked)
-        view['undock_right_bar_button'].connect('clicked', self.on_right_bar_undock_clicked)
-        view['undock_console_button'].connect('clicked', self.on_console_undock_clicked)
+        self.connect_button_to_function('undock_left_bar_button', "clicked", self.on_left_bar_undock_clicked)
+        self.connect_button_to_function('undock_right_bar_button', "clicked", self.on_right_bar_undock_clicked)
+        self.connect_button_to_function('undock_console_button', "clicked", self.on_console_undock_clicked)
 
         # Connect Shortcut buttons' signals to their corresponding methods
-        view['button_start_shortcut'].connect('toggled', self.on_button_start_shortcut_toggled)
-        view['button_stop_shortcut'].connect('clicked', self.on_button_stop_shortcut_clicked)
-        view['button_pause_shortcut'].connect('toggled', self.on_button_pause_shortcut_toggled)
-        view['button_step_mode_shortcut'].connect('toggled', self.on_button_step_mode_shortcut_toggled)
-        view['button_step_in_shortcut'].connect('clicked', self.on_button_step_in_shortcut_clicked)
-        view['button_step_over_shortcut'].connect('clicked', self.on_button_step_over_shortcut_clicked)
-        view['button_step_out_shortcut'].connect('clicked', self.on_button_step_out_shortcut_clicked)
-        view['button_step_backward_shortcut'].connect('clicked', self.on_button_step_backward_shortcut_clicked)
+        self.connect_button_to_function('button_start_shortcut', "toggled", self.on_button_start_shortcut_toggled)
+        self.connect_button_to_function('button_stop_shortcut', "clicked", self.on_button_stop_shortcut_clicked)
+        self.connect_button_to_function('button_pause_shortcut', "toggled", self.on_button_pause_shortcut_toggled)
+        self.connect_button_to_function('button_step_mode_shortcut',
+                                        "toggled",
+                                        self.on_button_step_mode_shortcut_toggled)
+        self.connect_button_to_function('button_step_in_shortcut',
+                                        "clicked",
+                                        self.on_button_step_in_shortcut_clicked)
+        self.connect_button_to_function('button_step_over_shortcut',
+                                        "clicked",
+                                        self.on_button_step_over_shortcut_clicked)
+        self.connect_button_to_function('button_step_out_shortcut',
+                                        "clicked",
+                                        self.on_button_step_out_shortcut_clicked)
+        self.connect_button_to_function('button_step_backward_shortcut',
+                                        "clicked",
+                                        self.on_button_step_backward_shortcut_clicked)
 
         # Connect Debug console buttons' signals to their corresponding methods
-        view['button_show_debug'].connect('toggled', self.on_debug_content_change)
-        view['button_show_info'].connect('toggled', self.on_debug_content_change)
-        view['button_show_warning'].connect('toggled', self.on_debug_content_change)
-        view['button_show_error'].connect('toggled', self.on_debug_content_change)
+        self.connect_button_to_function('button_show_debug', "toggled", self.on_debug_content_change)
+        self.connect_button_to_function('button_show_info', "toggled", self.on_debug_content_change)
+        self.connect_button_to_function('button_show_warning', "toggled", self.on_debug_content_change)
+        self.connect_button_to_function('button_show_error', "toggled", self.on_debug_content_change)
 
         view['upper_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['upper_notebook_title'],
                                        view.left_bar_window, 'upper')
@@ -217,6 +240,23 @@ class MainWindowController(ExtendedController):
         self.set_pane_position('RIGHT_BAR_DOCKED_POS', 'right_h_pane', default_pos=1000)
         self.set_pane_position('LEFT_BAR_DOCKED_POS', 'top_level_h_pane', default_pos=300)
         self.set_pane_position('CONSOLE_DOCKED_POS', 'central_v_pane', default_pos=600)
+
+    def connect_button_to_function(self, view_index, button_state, function):
+        handler_id = self.view[view_index].connect(button_state, function)
+        self.handler_ids[view_index] = handler_id
+
+    def switch_state_machine_execution_engine(self, new_state_machine_execution_engine):
+        """
+        Switch the state machine execution engine the main window controller listens to.
+        :param new_state_machine_execution_engine: the new state machine execution engine for this controller
+        :return:
+        """
+        # relieve old one
+        self.relieve_model(self.state_machine_execution_model)
+
+        # register new
+        self.state_machine_execution_model = new_state_machine_execution_engine
+        self.observe_model(self.state_machine_execution_model)
 
     def set_pane_position(self, config_id, pane, default_pos=100):
         """Adjusts the position of a GTK Pane to a value stored in the runtime config file. If there was no value
@@ -271,6 +311,25 @@ class MainWindowController(ExtendedController):
             self.view['step_buttons'].show()
             self._set_single_button_active('button_step_mode_shortcut')
 
+    def _set_single_button_active(self, active_button_name):
+
+        # do not let the buttons trigger the action another time => block the respective signal handlers
+
+        button_names = ['button_start_shortcut', 'button_pause_shortcut', 'button_step_mode_shortcut']
+
+        for button_name in button_names:
+            if active_button_name == button_name:
+                if not self.view[button_name].get_active():
+                    # block the handler before setting the button active
+                    self.view[button_name].handler_block(self.handler_ids[button_name])
+                    self.view[button_name].set_active(True)
+                    self.view[button_name].handler_unblock(self.handler_ids[button_name])
+            else:
+                if self.view[button_name].get_active():
+                    self.view[button_name].handler_block(self.handler_ids[button_name])
+                    self.view[button_name].set_active(False)
+                    self.view[button_name].handler_unblock(self.handler_ids[button_name])
+
     def focus_notebook_page_of_controller(self, controller):
         """ The method implements focus request of the notebooks in left side-bar of the main window. Thereby it is the
         master-function of focus pattern of the notebooks in left side-bar.
@@ -293,15 +352,6 @@ class MainWindowController(ExtendedController):
         if self.view is not None and isinstance(controller, ExecutionHistoryTreeController):
             self.view.bring_tab_to_the_top('execution_history')
             self.modification_history_was_focused = False
-
-    def _set_single_button_active(self, active_button_name):
-        for button_name in ['button_start_shortcut', 'button_pause_shortcut', 'button_step_mode_shortcut']:
-            if active_button_name == button_name:
-                if not self.view[button_name].get_active():
-                    self.view[button_name].set_active(True)
-            else:
-                if self.view[button_name].get_active():
-                    self.view[button_name].set_active(False)
 
     def on_left_bar_return_clicked(self, widget, event=None):
         self.view['left_bar_return_button'].hide()

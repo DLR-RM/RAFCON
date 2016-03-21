@@ -92,7 +92,7 @@ def send_test_data(udp_client):
         if protocol.message_content is FINAL_MESSAGE:
             break
 
-        time.sleep(1.0)
+        time.sleep(0.2)
     logger.debug("Sender thread finished")
 
 

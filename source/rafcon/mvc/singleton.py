@@ -94,7 +94,7 @@ interface.show_notice_func = show_notice
 # This variable holds the global state machine manager model as long as only one StateMachineMangerModel is allowed
 state_machine_manager_model = StateMachineManagerModel(state_machine_manager)
 
-state_machine_execution_manager_model = StateMachineExecutionEngineModel(state_machine_execution_engine)
+state_machine_execution_model = StateMachineExecutionEngineModel(state_machine_execution_engine)
 
 global_variable_manager_model = GlobalVariableManagerModel(global_variable_manager)
 
