@@ -1,9 +1,0 @@
-LIBRARY_PATHS:
-    manipulation: /home/brun_sb/USERSTORE/lru/statemachines/manipulation
-    navigation: /home/brun_sb/USERSTORE/lru/statemachines/navigation
-    ros: /home/brun_sb/USERSTORE/lru/statemachines/ros
-    spacebotcup: /home/brun_sb/USERSTORE/lru/statemachines/spacebotcup
-    turtle_libraries: /home_local/brun_sb/develop/rafcon/source/test_scripts/turtle_libraries
-    vision: /home/brun_sb/USERSTORE/lru/statemachines/vision
-    world: /home/brun_sb/USERSTORE/lru/statemachines/world
-TYPE: SM_CONFIG

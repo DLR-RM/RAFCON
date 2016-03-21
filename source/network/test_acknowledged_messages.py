@@ -99,7 +99,7 @@ def send_test_data(udp_client, multi_processing_queue):
         if protocol.message_content == FINAL_MESSAGE:
             break
 
-        time.sleep(0.2)
+        time.sleep(0.1)
     logger.debug("Sender thread finished")
 
     while udp_client.messages_to_be_acknowledged_pending():
