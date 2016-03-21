@@ -195,6 +195,19 @@ class StatesEditorController(ExtendedController):
             if selection.get_num_states() > 0:
                 self.activate_state_tab(selection.get_states()[0])
 
+    def clean_up_tabs(self):
+        """ Method remove state-tabs for those no state machine exists anymore.
+        """
+        tabs_to_close = []
+        for state_identifier, tab_dict in self.tabs.iteritems():
+            if tab_dict['sm_id'] not in self.model.state_machine_manager.state_machines:
+                tabs_to_close.append(state_identifier)
+        for state_identifier, tab_dict in self.closed_tabs.iteritems():
+            if tab_dict['sm_id'] not in self.model.state_machine_manager.state_machines:
+                tabs_to_close.append(state_identifier)
+        for state_identifier in tabs_to_close:
+            self.close_page(state_identifier, delete=True)
+
     @ExtendedController.observe("state_machines", before=True)
     def state_machines_notification(self, model, prop_name, info):
         """Check for closed state machine and close according states
@@ -213,13 +226,7 @@ class StatesEditorController(ExtendedController):
                 self.relieve_model(state_machine_m.root_state)
             except KeyError:
                 pass
-            states_to_be_removed = []
-            for state_identifier, tab_info in self.tabs.iteritems():
-                if tab_info['sm_id'] not in self.model.state_machines:
-                    states_to_be_removed.append(state_identifier)
-
-            for state_identifier in states_to_be_removed:
-                self.close_page(state_identifier, delete=True)
+            self.clean_up_tabs()
 
     def add_state_editor(self, state_m, editor_type=None):
         """Triggered whenever a state is selected.
