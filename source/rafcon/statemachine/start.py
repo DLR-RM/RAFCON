@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-.. module:: preemptive_concurrency_state
+.. module: a module to enable state machine execution from the command line
    :platform: Unix, Windows
    :synopsis: A module to start arbitrary state machines without the GUI and several configurations options
 
@@ -75,6 +75,7 @@ def check_for_sm_finished(sm, monitoring_manager=None):
 
     # stop the networking if the monitoring plugin is enabled
     if monitoring_manager:
+        from twisted.internet import reactor
         reactor.callFromThread(reactor.stop)
 
 

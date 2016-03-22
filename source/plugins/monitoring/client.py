@@ -35,7 +35,6 @@ class MonitoringClient(UdpClient):
         UdpClient.__init__(self)
         self.connector = None
         self.server_address = None
-        # self.datagram_received_function = self.print_message
         self.datagram_received_function = self.monitoring_data_received_function
         self.execution_engine_replaced = False
         self.registered_to_execution_engine = False

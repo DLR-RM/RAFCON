@@ -185,16 +185,25 @@ class StatemachineExecutionEngine(Observable):
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
 
-    def run_to_selected_state(self, path):
+    def run_to_selected_state(self, path, state_machine_id=None):
         """Take a forward step (out) for all active states in the state machine
         """
-        logger.debug("Run to selected state ...")
-        self._status.execution_mode = StateMachineExecutionStatus.RUN_TO_SELECTED_STATE
-        self.run_to_states = []
-        self.run_to_states.append(path)
-        self._status.execution_condition_variable.acquire()
-        self._status.execution_condition_variable.notify_all()
-        self._status.execution_condition_variable.release()
+        if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+            logger.debug("Resume execution engine and run to selected state!")
+            self.run_to_states = []
+            self.run_to_states.append(path)
+            self._status.execution_mode = StateMachineExecutionStatus.RUN_TO_SELECTED_STATE
+            self._status.execution_condition_variable.acquire()
+            self._status.execution_condition_variable.notify_all()
+            self._status.execution_condition_variable.release()
+        else:
+            logger.debug("Start execution engine and run to selected state!")
+            self._status.execution_mode = StateMachineExecutionStatus.RUN_TO_SELECTED_STATE
+            if state_machine_id is not None:
+                self.state_machine_manager.active_state_machine_id = state_machine_id
+            self.run_to_states = []
+            self.run_to_states.append(path)
+            self._run_active_state_machine()
 
     # depending on the execution state wait for the execution condition variable to be notified
     # list all execution modes to keep the overview

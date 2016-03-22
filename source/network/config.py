@@ -16,6 +16,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 CONFIG_FILE = "network_config.yaml"
+# DEFAULT is a string and equals the content of the ./network_config.yaml
 DEFAULT_CONFIG = filesystem.read_file(path.dirname(__file__), CONFIG_FILE)
 
 

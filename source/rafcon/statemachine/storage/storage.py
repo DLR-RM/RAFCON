@@ -338,7 +338,6 @@ class StateMachineStorage(Observable):
 
     @staticmethod
     def parse_state_id_from_yaml(yaml_file):
-        print "parse state from yaml"
         with open(yaml_file) as open_yaml_file:
             for line in open_yaml_file:
                 splitted_line = line.split()

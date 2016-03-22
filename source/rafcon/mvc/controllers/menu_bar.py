@@ -641,17 +641,14 @@ class MenuBarController(ExtendedController):
 
     def on_run_to_selected_state_activate(self, widget, data=None):
         logger.debug("Run to selected state ...")
-        # is state machine is not already started or pause, start it
-        if self.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED \
-                or self.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.PAUSED:
-            self.state_machine_execution_engine.start(self.model.selected_state_machine_id)
 
         sel = state_machine_manager_model.get_selected_state_machine_model().selection
         state_list = sel.get_states()
         if len(state_list) is not 1:
             logger.error("Exactly one state must be selected!")
         else:
-            self.state_machine_execution_engine.run_to_selected_state(state_list[0].state.get_path())
+            self.state_machine_execution_engine.run_to_selected_state(state_list[0].state.get_path(),
+                                                                      self.model.selected_state_machine_id)
 
     ######################################################
     # menu bar functionality - Help

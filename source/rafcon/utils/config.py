@@ -39,7 +39,7 @@ class DefaultConfig(object):
 
     def __init__(self, default_config):
         assert isinstance(default_config, str)
-        self.config_file = None
+        self.config_file_path = None
         self.default_config = default_config
         self.path = None
 
@@ -66,7 +66,7 @@ class DefaultConfig(object):
                 if not os.path.exists(path):
                     os.makedirs(path)
                 storage_utils.write_dict_to_yaml(self.__config_dict, config_file_path, width=80, default_flow_style=False)
-                self.config_file = config_file_path
+                self.config_file_path = config_file_path
                 logger.debug("Created config file {0}".format(config_file_path))
             except Exception as e:
                 logger.error('Could not write to config {0}, using temporary default configuration. '
@@ -75,8 +75,8 @@ class DefaultConfig(object):
         else:
             try:
                 self.__config_dict = storage_utils.load_dict_from_yaml(config_file_path)
-                self.config_file = config_file_path
-                logger.debug("Configuration loaded from {0}".format(config_file_path))
+                self.config_file_path = config_file_path
+                logger.debug("Configuration loaded from {0}".format(os.path.abspath(config_file_path)))
             except Exception as e:
                 logger.error('Could not read from config {0}, using temporary default configuration. '
                              'Error: {1}'.format(config_file_path, e))
@@ -103,9 +103,9 @@ class DefaultConfig(object):
         self.__config_dict[key] = value
 
     def save_configuration(self):
-        if self.config_file:
-            storage_utils.write_dict_to_yaml(self.__config_dict, self.config_file, width=80, default_flow_style=False)
-            logger.debug("Saved configuration to {0}".format(self.config_file))
+        if self.config_file_path:
+            storage_utils.write_dict_to_yaml(self.__config_dict, self.config_file_path, width=80, default_flow_style=False)
+            logger.debug("Saved configuration to {0}".format(self.config_file_path))
 
 
 class ConfigError(Exception):

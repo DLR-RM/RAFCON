@@ -37,7 +37,6 @@ class MonitoringServer(UdpServer):
         self.initialized = False
         self.register_to_new_state_machines()
         self.register_all_statemachines()
-        # self.datagram_received_function = self.print_message
         self.datagram_received_function = self.monitoring_data_received_function
 
     def connect(self):
@@ -115,15 +114,14 @@ class MonitoringServer(UdpServer):
         """
         assert isinstance(observable, State)
         message = observable.get_path() + STATE_EXECUTION_STATUS_SEPARATOR + str(observable.state_execution_status.value)
-        print message
         protocol = Protocol(MessageType.STATE_ID, message)
         if len(self.get_registered_endpoints()) == 0:
-            print "no endpoint registered yet"
+            logger.warn("No endpoint registered yet")
         if self.initialized:
             for address in self.get_registered_endpoints():
                 self.send_message_non_acknowledged(protocol, address)
         else:
-            print "not initialized yet"
+            logger.warn("Not initialized yet")
 
     def monitoring_data_received_function(self, message, address):
         """
@@ -139,7 +137,6 @@ class MonitoringServer(UdpServer):
             received_command = message.message_content.split("@")
 
             execution_mode = StateMachineExecutionStatus(int(received_command[0]))
-            print execution_mode
 
             if execution_mode is StateMachineExecutionStatus.STARTED:
                 # as there is no dedicated RUN_TO_STATE execution status the message has to be checked for an optional

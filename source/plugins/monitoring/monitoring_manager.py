@@ -43,6 +43,7 @@ class MonitoringManager:
                  "a config file and use the default configuration. Default: {0}".format(home_path))
 
         self.endpoint = None
+        self.endpoint_initialized = False
 
     def initialize(self, setup_config):
         """
@@ -55,11 +56,13 @@ class MonitoringManager:
         if global_network_config.get_config_value("SERVER", True):
             if not self.endpoint:
                 self.endpoint = MonitoringServer()
-            return self.endpoint.connect()
+            self.endpoint_initialized = self.endpoint.connect()
         else:
             if not self.endpoint:
                 self.endpoint = MonitoringClient()
-            return self.endpoint.connect()
+            self.endpoint_initialized = self.endpoint.connect()
+
+        return self.endpoint_initialized
 
     def shutdown(self):
         """
