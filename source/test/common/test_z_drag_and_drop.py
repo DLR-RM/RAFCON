@@ -59,9 +59,6 @@ def create_models(*args, **kargs):
     state_dict = {'Container': ctr_state, 'State1': state1}
     sm = StateMachine(ctr_state)
 
-    # remove existing state machines
-    for sm_id in rafcon.statemachine.singleton.state_machine_manager.state_machines.keys():
-        rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_id)
     # add new state machine
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
     # select state machine
@@ -86,9 +83,11 @@ def trigger_drag_and_drop_tests(*args):
 
     states_machines_editor_controller = main_window_controller.get_controller('state_machines_editor_ctrl')
     library_tree_controller = main_window_controller.get_controller('library_controller')
-    time.sleep(1.0)
-    graphical_editor_controller = states_machines_editor_controller.get_child_controllers()[0]
     state_icon_controller = main_window_controller.get_controller('state_icon_controller')
+    graphical_editor_controller = states_machines_editor_controller.get_child_controllers()[0]
+    time.sleep(1)
+    graphical_editor_controller.view.editor.set_size_request(500, 500)
+    time.sleep(1)
 
     library_tree_controller.view.expand_all()
     library_tree_controller.view.get_selection().select_path((0, 0))
@@ -96,12 +95,14 @@ def trigger_drag_and_drop_tests(*args):
     selection_data = StructHelper(0, 0, None)
 
     # insert state in root_state
+    print "insert state in root_state"
     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 200, 200, None)
     call_gui_callback(library_tree_controller.on_drag_data_get, library_tree_controller.view, None, selection_data, 0, None)
     call_gui_callback(graphical_editor_controller.on_drag_data_received, None, None, 200, 200, selection_data, None, None)
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 2
 
     # insert state from IconView
+    print "insert state from IconView"
     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 300, 300, None)
     call_gui_callback(state_icon_controller.on_mouse_motion, None, StructHelper(30, 15, None))
     call_gui_callback(state_icon_controller.on_drag_data_get, None, None, selection_data, None, None)
@@ -109,19 +110,28 @@ def trigger_drag_and_drop_tests(*args):
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 3
 
     # insert state next to root state
-    call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 700, 300, None)
+    print "insert state next to root state"
+    # Position (0, 0) in left above the root state
+    call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 0, 0, None)
     call_gui_callback(state_icon_controller.on_mouse_motion, None, StructHelper(30, 15, None))
     call_gui_callback(state_icon_controller.on_drag_data_get, None, None, selection_data, None, None)
 
     # insert state in state1
-    if isinstance(graphical_editor_controller, GraphicalEditorGaphasController):
-        call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 100, 100, None)
-    else:
-        call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 150, 150, None)
+    print "insert state in state1"
+    state_machine_m = sm_manager_model.get_selected_state_machine_model()
+    state_m = state_machine_m.root_state.states['State1']
+    call_gui_callback(state_machine_m.selection.set, [state_m])
+    # Selecting a state using the drag_motion event is too unreliable, as the exact position depends on the size of
+    # the editor. Therefore, it is now selected using the selection object directly
+    # if isinstance(graphical_editor_controller, GraphicalEditorGaphasController):
+    #     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 100, 100, None)
+    # else:
+    #     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 150, 150, None)
     call_gui_callback(library_tree_controller.on_drag_data_get, library_tree_controller.view, None, selection_data, 0, None)
     call_gui_callback(graphical_editor_controller.on_drag_data_received, None, None, 20, 20, selection_data, None, None)
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states['State1'].states) == 1
 
+    print "quitting"
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
     menubar_ctrl.model.get_selected_state_machine_model().state_machine.file_system_path = get_unique_temp_path()
@@ -178,4 +188,4 @@ def test_drag_and_drop_test(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    pytest.main([__file__, '-xs'])
