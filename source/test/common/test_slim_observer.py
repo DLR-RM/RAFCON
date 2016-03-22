@@ -66,5 +66,5 @@ def test_slim_observer(caplog):
 
 
 if __name__ == '__main__':
-    test_slim_observer(None)
-    # pytest.main([__file__])
+    # test_slim_observer(None)
+    pytest.main([__file__])
