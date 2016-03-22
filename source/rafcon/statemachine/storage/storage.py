@@ -57,7 +57,6 @@ class StateMachineStorage(Observable):
     FILE_NAME_CORE_DATA_OLD = 'meta.json'
     SCRIPT_FILE = 'script.py'
     STATEMACHINE_FILE = 'statemachine.yaml'
-    LIBRARY_FILE = 'library.yaml'
 
     def __init__(self, base_path=RAFCON_TEMP_PATH_STORAGE):
         Observable.__init__(self)
