@@ -483,19 +483,15 @@ class MainWindowController(ExtendedController):
 
     def on_button_step_in_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_step_into_activate(None)
-        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_over_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_step_over_activate(None)
-        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_out_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_step_out_activate(None)
-        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_backward_step_activate(None)
-        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_debug_content_change(self, widget, data=None):
         if self.view['button_show_info'].get_active():
@@ -531,8 +527,3 @@ class MainWindowController(ExtendedController):
         """
         title = gui_helper.set_notebook_title(notebook, page_num, title_label)
         window.reset_title(title, notebook_identifier)
-
-    @staticmethod
-    def delay(milliseconds, func):
-        thread = threading.Timer(milliseconds / 1000.0, func)
-        thread.start()
