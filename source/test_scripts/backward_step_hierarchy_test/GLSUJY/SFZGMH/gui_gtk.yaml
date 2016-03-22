@@ -1,5 +1,13 @@
 !Vividict
 gui:
+    editor_gaphas:
+        income:
+            rel_pos: !!python/tuple [0, 6.25]
+        name:
+            rel_pos: !!python/tuple [0, 0]
+            size: !!python/tuple [33.449412026251444, 11.075852325847144]
+        rel_pos: !!python/tuple [153.01326777966108, 38.176342059303]
+        size: !!python/tuple [41.81176503281431, 27.68963081461786]
     editor_opengl:
         outcome_pos:
             '-1': !!python/tuple [2101.8084290256147, -391.96846092300973]
@@ -10,14 +18,24 @@ gui:
         size: !!python/tuple [41.81176503281431, 27.68963081461786]
 input_data_port35:
     gui:
+        editor_gaphas:
+            rel_pos: !!python/tuple [0, 21.43963081461786]
         editor_opengl:
             outer_connector_pos: !!python/tuple [1799.3931658303773, -963.5025593263772]
             outer_connector_radius: 10.824509439457715
 outcome-1:
-    gui: {}
+    gui:
+        editor_gaphas:
+            rel_pos: !!python/tuple [35.56176503281431, 0]
 outcome-2:
-    gui: {}
+    gui:
+        editor_gaphas:
+            rel_pos: !!python/tuple [30.561765032814307, 0]
 outcome0:
-    gui: {}
+    gui:
+        editor_gaphas:
+            rel_pos: !!python/tuple [41.81176503281431, 6.25]
 outcome1:
-    gui: {}
+    gui:
+        editor_gaphas:
+            rel_pos: !!python/tuple [41.81176503281431, 11.25]
