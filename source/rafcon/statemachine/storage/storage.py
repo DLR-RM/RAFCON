@@ -216,7 +216,12 @@ class StateMachineStorage(Observable):
         try:
             stream = file(os.path.join(self.base_path, self.STATEMACHINE_FILE), 'r')
         except IOError:
-            raise AttributeError("Provided path doesn't contain a valid state-machine: {0}".format(base_path))
+            try:
+                # Also accept path of root state
+                stream = file(os.path.join(os.path.dirname(self.base_path), self.STATEMACHINE_FILE), 'r')
+                self.base_path = os.path.dirname(self.base_path)
+            except IOError:
+                raise AttributeError("Provided path doesn't contain a valid state machine: {0}".format(self.base_path))
         tmp_dict = yaml.load(stream)
         root_state_id = tmp_dict['root_state']
         version = tmp_dict['version']
