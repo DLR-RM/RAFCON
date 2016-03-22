@@ -1,0 +1,45 @@
+{
+    "gui": {
+        "editor_opengl": {
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    47.0874200426439, 
+                    -27.070362473347558
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    20.0, 
+                    20.0
+                ]
+            }
+        }, 
+        "show_content": {}
+    }, 
+    "input_data_port1": {
+        "gui": {}
+    }, 
+    "input_data_port2": {
+        "gui": {}
+    }, 
+    "input_data_port3": {
+        "gui": {}
+    }, 
+    "input_data_port5": {
+        "gui": {}
+    }, 
+    "outcome-1": {
+        "gui": {}
+    }, 
+    "outcome-2": {
+        "gui": {}
+    }, 
+    "outcome0": {
+        "gui": {}
+    }, 
+    "output_data_port4": {
+        "gui": {}
+    }
+}

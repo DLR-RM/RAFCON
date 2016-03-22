@@ -4,16 +4,13 @@
             "size": {
                 "__jsonqualname__": "__builtin__.tuple", 
                 "items": [
-                    100, 
-                    100
+                    86.95095948827293, 
+                    84.136460554371
                 ]
             }
         }
     }, 
-    "input_data_port1": {
-        "gui": {}
-    }, 
-    "input_data_port2": {
+    "input_data_port27": {
         "gui": {}
     }, 
     "outcome-1": {

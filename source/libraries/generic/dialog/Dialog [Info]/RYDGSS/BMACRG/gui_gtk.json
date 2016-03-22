@@ -1,19 +1,23 @@
 {
     "gui": {
         "editor_opengl": {
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    19.81236673773987, 
+                    -27.530916844349676
+                ]
+            }, 
             "size": {
                 "__jsonqualname__": "__builtin__.tuple", 
                 "items": [
-                    100, 
-                    100
+                    20.0, 
+                    20.0
                 ]
             }
         }
     }, 
-    "input_data_port1": {
-        "gui": {}
-    }, 
-    "input_data_port2": {
+    "input_data_port4": {
         "gui": {}
     }, 
     "outcome-1": {
@@ -23,6 +27,9 @@
         "gui": {}
     }, 
     "outcome0": {
+        "gui": {}
+    }, 
+    "output_data_port5": {
         "gui": {}
     }
 }

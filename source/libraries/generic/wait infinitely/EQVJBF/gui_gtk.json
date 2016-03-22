@@ -10,12 +10,6 @@
             }
         }
     }, 
-    "input_data_port1": {
-        "gui": {}
-    }, 
-    "input_data_port2": {
-        "gui": {}
-    }, 
     "outcome-1": {
         "gui": {}
     }, 
