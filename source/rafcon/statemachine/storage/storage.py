@@ -51,10 +51,10 @@ class StateMachineStorage(Observable):
     :ivar ids_of_modified_state_machines: each state machine has a flag if it was modified since the last saving
     """
 
-    GRAPHICS_FILE_YAML = 'gui_gtk.yaml'
-    GRAPHICS_FILE_JSON = 'gui_gtk.json'
-    META_FILE_YAML = 'meta.yaml'
-    META_FILE_JSON = 'meta.json'
+    FILE_NAME_META_DATA = 'meta_data.json'
+    FILE_NAME_META_DATA_OLD = 'gui_gtk.json'
+    FILE_NAME_CORE_DATA = 'core_data.json'
+    FILE_NAME_CORE_DATA_OLD = 'meta.json'
     SCRIPT_FILE = 'script.py'
     STATEMACHINE_FILE = 'statemachine.yaml'
     LIBRARY_FILE = 'library.yaml'
@@ -195,8 +195,7 @@ class StateMachineStorage(Observable):
         if isinstance(state, ExecutionState):
             self.save_script_file_for_state_and_source_path(state, state_path)
 
-        storage_utils.write_dict_to_yaml(state, os.path.join(state_path_full, self.META_FILE_YAML))
-        storage_utils.write_dict_to_json(state, os.path.join(state_path_full, self.META_FILE_JSON))
+        storage_utils.write_dict_to_json(state, os.path.join(state_path_full, self.FILE_NAME_CORE_DATA))
 
         # create yaml files for all children
         if isinstance(state, ContainerState):
@@ -263,21 +262,20 @@ class StateMachineStorage(Observable):
         :return:
         """
 
-        yaml_file = os.path.join(state_path, self.META_FILE_YAML)
-        json_file = os.path.join(state_path, self.META_FILE_JSON)
+        path_core_data = os.path.join(state_path, self.FILE_NAME_CORE_DATA)
+
+        # TODO: Should be removed with next minor release
+        if not os.path.exists(path_core_data):
+            path_core_data = os.path.join(state_path, self.FILE_NAME_CORE_DATA_OLD)
 
         try:
-            state_info = self.load_appropriate_file(yaml_file, json_file)
+            state_info = self.load_data_file(path_core_data)
         except LibraryNotFoundException, e:
-            # import traceback
-            # logger.error("Library could not be loaded: {0}\n{1}.\n"
-            #              "Skipping library and continuing loading the state machine".format(str(e.message),
-            #                                                                                 traceback.format_exc()))
             logger.error("Library could not be loaded: {0}\n"
                          "Skipping library and continuing loading the state machine".format(str(e.message)))
 
             from rafcon.statemachine.states.hierarchy_state import HierarchyState
-            state_id = self.retrieve_state_id_from_raw_file(yaml_file, json_file)
+            state_id = self.retrieve_state_id_core_data_file(path_core_data)
             dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id)
             # set parent of dummy state
             if parent:
@@ -336,51 +334,17 @@ class StateMachineStorage(Observable):
         return state
 
     @staticmethod
-    def parse_state_id_from_yaml(yaml_file):
-        with open(yaml_file) as open_yaml_file:
-            for line in open_yaml_file:
-                splitted_line = line.split()
-                if "state_id:" in splitted_line[0]:
-                    if "!!python/unicode" in splitted_line[1]:
-                        return splitted_line[2].replace("'", "") # replace "'" with empty string
-                    else:
-                        return splitted_line[1].replace("'", "")
+    def retrieve_state_id_core_data_file(filename):
+        if os.path.exists(filename):
+            content = storage_utils.load_dict_from_json(filename, as_dict=True)
+            return content["state_id"]
+        raise ValueError("Data file not found: {0}".format(filename))
 
     @staticmethod
-    def parse_state_id_from_json_file(json_file):
-        content = storage_utils.load_dict_from_json(json_file, as_dict=True)
-        return content["state_id"]
-
-    def retrieve_state_id_from_raw_file(self, yaml_file, json_file):
-        if global_config.get_config_value("USE_JSON", True):
-            if os.path.exists(json_file):
-                return self.parse_state_id_from_json_file(json_file)
-            elif os.path.exists(yaml_file):
-                logger.warn("Loading YAML file, as JSON file is not existing: {0}".format(json_file))
-                return self.parse_state_id_from_yaml(yaml_file)
-        else:
-            if os.path.exists(yaml_file):
-                return self.parse_state_id_from_yaml(yaml_file)
-            elif os.path.exists(json_file):
-                logger.warn("Loading JSON file, as YAML file is not existing: {0}".format(yaml_file))
-                return self.parse_state_id_from_json_file(json_file)
-        raise ValueError("No state at specified path found: {0}".format(os.path.dirname(yaml_file)))
-
-    @staticmethod
-    def load_appropriate_file(yaml_file, json_file):
-        if global_config.get_config_value("USE_JSON", True):
-            if os.path.exists(json_file):
-                return storage_utils.load_dict_from_json(json_file)
-            elif os.path.exists(yaml_file):
-                logger.debug("Loading YAML file, as JSON file is not existing: {0}".format(json_file))
-                return storage_utils.load_dict_from_yaml(yaml_file)
-        else:
-            if os.path.exists(yaml_file):
-                return storage_utils.load_dict_from_yaml(yaml_file)
-            elif os.path.exists(json_file):
-                logger.debug("Loading JSON file, as YAML file is not existing: {0}".format(yaml_file))
-                return storage_utils.load_dict_from_json(json_file)
-        raise ValueError("No state at specified path found: {0}".format(os.path.dirname(yaml_file)))
+    def load_data_file(filename):
+        if os.path.exists(filename):
+            return storage_utils.load_dict_from_json(filename)
+        raise ValueError("Data file not found: {0}".format(filename))
 
     @staticmethod
     def load_script_file(state):
