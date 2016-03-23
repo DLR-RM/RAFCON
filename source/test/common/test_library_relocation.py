@@ -64,7 +64,7 @@ def test_library_relocation(caplog):
     # Set base path of global storage
     sm_singletons.global_storage.base_path = RAFCON_TEMP_PATH_STORAGE
 
-    [state_machine, version, creation_time] = rafcon.statemachine.singleton.global_storage.load_statemachine_from_path(
+    state_machine = rafcon.statemachine.singleton.global_storage.load_statemachine_from_path(
         rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/library_relocation_test")
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)

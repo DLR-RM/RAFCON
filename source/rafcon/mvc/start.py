@@ -128,7 +128,7 @@ if __name__ == '__main__':
         storage = StateMachineStorage()
         for path in setup_config['sm_paths']:
             try:
-                state_machine, version, creation_time = storage.load_statemachine_from_path(path)
+                state_machine = storage.load_statemachine_from_path(path)
                 sm_singletons.state_machine_manager.add_state_machine(state_machine)
             except Exception as e:
                 logger.exception("Could not load state-machine {0}".format(path))

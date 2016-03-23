@@ -255,7 +255,7 @@ class StateMachineStorage(Observable):
         logger.debug("Loaded state machine ({1}) has {0} transitions.".format(
             state_machine.root_state.get_number_of_transitions(), base_path))
 
-        return [state_machine, version, creation_time]
+        return state_machine
 
     def load_state_from_path(self, state_path):
         """

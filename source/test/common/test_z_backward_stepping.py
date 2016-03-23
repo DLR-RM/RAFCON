@@ -94,7 +94,7 @@ def test_backward_stepping(caplog):
 
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    [state_machine, version, creation_time] = rafcon.statemachine.singleton.\
+    state_machine = rafcon.statemachine.singleton.\
         global_storage.load_statemachine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/backward_step_barrier_test"))
 
     main_window_view = MainWindowView()

@@ -201,7 +201,7 @@ class LibraryTreeController(ExtendedController):
         library_path = model[row][1]
 
         logger.debug("Opening library as state-machine from path '{0}'".format(library_path))
-        state_machine, version, creation_time = global_storage.load_statemachine_from_path(library_path)
+        state_machine = global_storage.load_statemachine_from_path(library_path)
 
         smm_m.state_machine_manager.add_state_machine(state_machine)
         return state_machine

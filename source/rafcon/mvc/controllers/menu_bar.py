@@ -192,7 +192,7 @@ class MenuBarController(ExtendedController):
             load_path = path
 
         try:
-            [state_machine, version, creation_time] = global_storage.load_statemachine_from_path(load_path)
+            state_machine = global_storage.load_statemachine_from_path(load_path)
             state_machine_manager.add_state_machine(state_machine)
         except (ValueError, IOError) as e:
             logger.error('Error while trying to open state machine: {0}'.format(e))
