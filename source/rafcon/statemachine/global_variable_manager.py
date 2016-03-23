@@ -106,7 +106,7 @@ class GlobalVariableManager(Observable):
                 self.unlock_variable(key, access_key)
             return return_value
         else:
-            logger.warn("Global variable '{0}' not existing, returning default value".format(key))
+            # logger.warn("Global variable '{0}' not existing, returning default value".format(key))
             return default
 
     def variable_can_be_referenced(self, key):

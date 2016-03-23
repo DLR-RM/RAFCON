@@ -1,0 +1,226 @@
+{
+    "gui": {
+        "editor_gaphas": {
+            "income": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        1.5625
+                    ]
+                }
+            }, 
+            "name": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        0
+                    ]
+                }, 
+                "size": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        4.866820971924476, 
+                        2.3330156092396943
+                    ]
+                }
+            }, 
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    23.91976560638659, 
+                    12.035012182027444
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    6.083526214905594, 
+                    5.832539023099235
+                ]
+            }
+        }, 
+        "editor_opengl": {
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    26.6359323519857, 
+                    -11.233161238896841
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    6.924413686068874, 
+                    5.613563443761585
+                ]
+            }
+        }, 
+        "show_content": {}
+    }, 
+    "income": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.3125, 
+                        1.2062345755774544
+                    ]
+                }
+            }
+        }
+    }, 
+    "input6": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.3125, 
+                        4.228590791746945
+                    ]
+                }
+            }
+        }
+    }, 
+    "input7": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.3125, 
+                        3.864057102803243
+                    ]
+                }
+            }
+        }
+    }, 
+    "input8": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.3125, 
+                        4.9576581696343505
+                    ]
+                }
+            }
+        }
+    }, 
+    "input9": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.3125, 
+                        4.593124480690647
+                    ]
+                }
+            }
+        }
+    }, 
+    "input_data_port6": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        1.770039023099235
+                    ]
+                }
+            }
+        }
+    }, 
+    "input_data_port7": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        1.5625
+                    ]
+                }
+            }
+        }
+    }, 
+    "input_data_port8": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        4.270039023099235
+                    ]
+                }
+            }
+        }
+    }, 
+    "input_data_port9": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        3.020039023099235
+                    ]
+                }
+            }
+        }
+    }, 
+    "name": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {}, 
+                "size": {}
+            }
+        }
+    }, 
+    "outcome-1": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        5.771026214905594, 
+                        1.6039482313522895
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome-2": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        5.771026214905594, 
+                        1.2394145424085876
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome0": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        5.771026214905594, 
+                        1.2062345755774544
+                    ]
+                }
+            }
+        }
+    }
+}

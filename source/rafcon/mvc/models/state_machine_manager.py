@@ -60,7 +60,8 @@ class StateMachineManagerModel(ModelMT, Observable):
         self.__class__.__sm_manager_creation_counter += 1
         if self.__class__.__sm_manager_creation_counter == 2:
             logger.error("Sm_manager_model exists several times!")
-            exit(1)
+            import os
+            os._exit(0)
 
     def delete_state_machine_models(self):
         self.state_machines.clear()

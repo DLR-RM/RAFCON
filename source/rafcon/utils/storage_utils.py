@@ -9,10 +9,14 @@
 """
 
 import json
-
 import yaml
+from time import gmtime, strftime
 
 from rafcon.utils.json_utils import JSONObjectDecoder, JSONObjectEncoder
+
+
+def get_current_time_string():
+    return strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
 
 def write_dict_to_yaml(dictionary, path, **kwargs):

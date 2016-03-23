@@ -75,6 +75,19 @@ class ShortcutManager:
                 return True
         return False
 
+    def remove_callback_for_action(self, action, callback, *parameters):
+        """
+        Remove a callback for a specific action. This is mainly for cleanup purposes or a plugin that replaces a
+        GUI widget.
+        :param action: the cation of which the callback is going to be remove
+        :param callback: the callback to be removed
+        :param parameters:
+        :return:
+        """
+        if action in self.__action_to_callbacks:
+            if callback in self.__action_to_callbacks[action]:
+                self.__action_to_callbacks[action].remove(callback)
+
     def get_shortcut_for_action(self, action):
         """Get the shortcut(s) for the specified action
         :param action: An action like 'add', 'copy', 'info'
@@ -95,8 +108,13 @@ class ShortcutManager:
         """
         res = False
         if action in self.__action_to_callbacks:
+            if len(self.__action_to_callbacks[action]) > 1:
+                logger.warn("Several actions callbacks registered for action {0}: {1}".format(
+                    str(action),
+                    str(self.__action_to_callbacks[action])))
             for callback_function in self.__action_to_callbacks[action]:
                 try:
+                    logger.debug("call action {0}".format(str(action)))
                     ret = callback_function(key_value, modifier_mask)
                     # If at least one controller returns True, the whole result becomes True
                     res |= (False if ret is None else ret)

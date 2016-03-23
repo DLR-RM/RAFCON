@@ -1,0 +1,108 @@
+{
+    "gui": {
+        "editor_gaphas": {
+            "income": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        6.25
+                    ]
+                }
+            }, 
+            "name": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        0
+                    ]
+                }, 
+                "size": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        16.0, 
+                        8.0
+                    ]
+                }
+            }, 
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    4.0, 
+                    24.0
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    20.0, 
+                    20.0
+                ]
+            }
+        }, 
+        "editor_opengl": {
+            "rel_pos": {}, 
+            "size": {}
+        }
+    }, 
+    "outcome-1": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        13.75, 
+                        0
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome-2": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        8.75, 
+                        0
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome0": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        20.0, 
+                        6.25
+                    ]
+                }
+            }
+        }
+    }, 
+    "transition5": {
+        "gui": {
+            "editor_gaphas": {
+                "waypoints": {}
+            }, 
+            "editor_opengl": {
+                "waypoints": {}
+            }
+        }
+    }, 
+    "transition6": {
+        "gui": {
+            "editor_gaphas": {
+                "waypoints": {}
+            }, 
+            "editor_opengl": {
+                "waypoints": {}
+            }
+        }
+    }
+}

@@ -1,5 +1,5 @@
 """
-.. module:: state
+.. module:: state_helper
    :platform: Unix, Windows
    :synopsis: A module to represent a state in the statemachine
 

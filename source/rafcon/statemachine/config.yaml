@@ -1,4 +1,3 @@
 TYPE: SM_CONFIG
 
 LIBRARY_PATHS: {"generic": "${RAFCON_LIB_PATH}/generic"}
-USE_JSON: True

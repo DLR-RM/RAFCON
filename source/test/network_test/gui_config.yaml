@@ -1,0 +1,65 @@
+ENABLE_CACHING: true
+GAPHAS_EDITOR: true
+HISTORY_ENABLED: false
+KEEP_ONLY_STICKY_STATES_OPEN: true
+LOGGING_SHOW_DEBUG: false
+LOGGING_SHOW_ERROR: true
+LOGGING_SHOW_INFO: true
+LOGGING_SHOW_WARNING: true
+MAX_VISIBLE_LIBRARY_HIERARCHY: 2
+MINIMUM_SIZE_FOR_CONTENT: 30
+PORT_SNAP_DISTANCE: 5
+ROTATE_NAMES_ON_CONNECTIONS: false
+SHORTCUTS:
+    abort: Escape
+    add: <Control>A
+    add2: <Control><Shift>A
+    backward_step: F9
+    close: <Control>W
+    copy: <Control>C
+    cut: <Control>X
+    data_flow_mode: <Control><Shift>D
+    delete: Delete
+    down:
+    - <Control>Down
+    - <Control><Shift>Down
+    entry: <Control>E
+    fit: <Control>space
+    group: <Control>G
+    info: <Control>I
+    left:
+    - <Control>Left
+    - <Control><Shift>Left
+    new: <Control>N
+    open: <Control>O
+    paste: <Control>V
+    pause: F7
+    quit: <Control>Q
+    redo:
+    - <Control>Y
+    - <Control><Shift>Z
+    reload: <Shift>F5
+    rename: F2
+    right:
+    - <Control>Right
+    - <Control><Shift>Right
+    save: <Control>S
+    save_as: <Control><Shift>S
+    show_aborted_preempted: <Control>P
+    show_data_flows: <Control>D
+    show_data_values: <Control>L
+    start: F5
+    step: F4
+    step_mode: F6
+    stop: F8
+    undo: <Control>Z
+    ungroup: <Control>U
+    up:
+    - <Control>Up
+    - <Control><Shift>Up
+SOURCE_EDITOR_STYLE: rafcon-dark
+TYPE: GUI_CONFIG
+USE_ICONS_AS_TAB_LABELS: true
+WAYPOINT_SNAP_ANGLE: 45
+WAYPOINT_SNAP_MAX_DIFF_ANGLE: 10
+WAYPOINT_SNAP_MAX_DIFF_PIXEL: 50

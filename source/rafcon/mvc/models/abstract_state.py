@@ -207,18 +207,6 @@ class AbstractStateModel(ModelMT):
             msg = msg._replace(change='sm_notification_' + msg.change)
             self.meta_signal.emit(msg)
 
-    @staticmethod
-    def overwrite_editor_meta(meta):
-        """
-        This function is for backward compatibility for state machines that still uses the "editor" key in their meta
-        :param meta:
-        :return:
-        """
-        if "editor" in meta['gui']:
-            if "editor_opengl" not in meta['gui']:
-                meta['gui']['editor_opengl'] = deepcopy(meta['gui']['editor'])
-            del meta['gui']['editor']
-
     def _mark_state_machine_as_dirty(self):
         state_machine = self.state.get_sm_for_state()
         if state_machine:
@@ -235,23 +223,28 @@ class AbstractStateModel(ModelMT):
         The meta data of the state model is loaded from the file system and stored in the meta property of the model.
         Existing meta data is removed. Also the meta data of all state elements (data ports, outcomes,
         etc) are loaded, as it is stored in the same file as the meta data of the state.
+
+        :param str path: Optional path to the meta data file. If not given, the path will be derived from the state's
+            path on the filesystem
         """
         if not path:
             path = self.state.get_file_system_path()
 
-        meta_file_yaml = os.path.join(path, StateMachineStorage.GRAPHICS_FILE_YAML)
-        meta_file_json = os.path.join(path, StateMachineStorage.GRAPHICS_FILE_JSON)
+        path_meta_data = os.path.join(path, StateMachineStorage.FILE_NAME_META_DATA)
+
+        # TODO: Should be removed with next minor release
+        if not os.path.exists(path_meta_data):
+            path_meta_data = os.path.join(path, StateMachineStorage.FILE_NAME_META_DATA_OLD)
+
         try:
-            tmp_meta = StateMachineStorage.load_appropriate_file(meta_file_yaml, meta_file_json)
-        except ValueError:  # No meta file existing
-            return
+            tmp_meta = StateMachineStorage.load_data_file(path_meta_data)
+        except ValueError:
+            tmp_meta = {}
 
         # JSON returns a dict, which must be converted to a Vividict
         tmp_meta = Vividict(tmp_meta)
 
         if tmp_meta:
-            # For backwards compatibility: move all meta data from editor to editor_opengl
-            self.overwrite_editor_meta(tmp_meta)
             self._parse_for_element_meta_data(tmp_meta)
             # assign the meta data to the state
             self.meta = tmp_meta
@@ -264,16 +257,12 @@ class AbstractStateModel(ModelMT):
         elements (data ports, outcomes, etc.) and stores it on the filesystem.
         """
         if temp_path:
-            meta_file_yaml = os.path.join(temp_path + '/' + self.state.get_path(),
-                                          StateMachineStorage.GRAPHICS_FILE_YAML)
             meta_file_json = os.path.join(temp_path + '/' + self.state.get_path(),
-                                          StateMachineStorage.GRAPHICS_FILE_JSON)
+                                          StateMachineStorage.FILE_NAME_META_DATA)
         else:
-            meta_file_yaml = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE_YAML)
-            meta_file_json = os.path.join(self.state.get_file_system_path(), StateMachineStorage.GRAPHICS_FILE_JSON)
+            meta_file_json = os.path.join(self.state.get_file_system_path(), StateMachineStorage.FILE_NAME_META_DATA)
         meta_data = deepcopy(self.meta)
         self._generate_element_meta_data(meta_data)
-        storage_utils.write_dict_to_yaml(meta_data, meta_file_yaml)
         storage_utils.write_dict_to_json(meta_data, meta_file_json)
 
     def copy_meta_data_from_state_m(self, source_state_m):
@@ -332,7 +321,6 @@ class AbstractStateModel(ModelMT):
         """
         meta_data_element_id = element_name + str(element_id)
         meta_data_element = meta_data[meta_data_element_id]
-        AbstractStateModel.overwrite_editor_meta(meta_data_element)
         element_m.meta = meta_data_element
         del meta_data[meta_data_element_id]
 
