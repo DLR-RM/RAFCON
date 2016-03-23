@@ -1,5 +1,5 @@
 """
-.. module:: preemptive_concurrency_state
+.. module:: singleton
    :platform: Unix, Windows
    :synopsis: A module holding a generic singleton abstract class
 

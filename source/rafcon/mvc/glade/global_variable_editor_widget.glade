@@ -7,6 +7,61 @@
     <property name="visible">True</property>
     <property name="orientation">vertical</property>
     <child>
+      <object class="GtkScrolledWindow" id="scrolledwindow1">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="hscrollbar_policy">automatic</property>
+        <property name="vscrollbar_policy">automatic</property>
+        <child>
+          <object class="GtkTreeView" id="global_variable_tree_view">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="model">liststore1</property>
+            <property name="headers_clickable">False</property>
+            <child>
+              <object class="GtkTreeViewColumn" id="name_col">
+                <property name="title">Name</property>
+                <property name="expand">True</property>
+                <child>
+                  <object class="GtkCellRendererText" id="name_text"/>
+                  <attributes>
+                    <attribute name="text">0</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="value_col">
+                <property name="title">Value</property>
+                <property name="expand">True</property>
+                <child>
+                  <object class="GtkCellRendererText" id="value_text"/>
+                  <attributes>
+                    <attribute name="text">1</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="locked_col">
+                <property name="title">Locked</property>
+                <property name="expand">True</property>
+                <child>
+                  <object class="GtkCellRendererText" id="locked_text"/>
+                  <attributes>
+                    <attribute name="text">2</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+      <packing>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
       <object class="GtkHBox" id="hbox1">
         <property name="visible">True</property>
         <child>
@@ -44,49 +99,6 @@
       </object>
       <packing>
         <property name="expand">False</property>
-        <property name="position">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkScrolledWindow" id="scrolledwindow1">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="hscrollbar_policy">automatic</property>
-        <property name="vscrollbar_policy">automatic</property>
-        <child>
-          <object class="GtkTreeView" id="global_variable_tree_view">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="model">liststore1</property>
-            <property name="headers_clickable">False</property>
-            <child>
-              <object class="GtkTreeViewColumn" id="name_col">
-                <property name="title">Name</property>
-                <child>
-                  <object class="GtkCellRendererText" id="name_text"/>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkTreeViewColumn" id="value_col">
-                <property name="title">Value</property>
-                <child>
-                  <object class="GtkCellRendererText" id="value_text"/>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkTreeViewColumn" id="locked_col">
-                <property name="title">Locked</property>
-                <child>
-                  <object class="GtkCellRendererText" id="locked_text"/>
-                </child>
-              </object>
-            </child>
-          </object>
-        </child>
-      </object>
-      <packing>
         <property name="position">1</property>
       </packing>
     </child>

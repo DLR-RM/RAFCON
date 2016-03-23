@@ -1,5 +1,5 @@
 """
-.. module:: preemptive_concurrency_state
+.. module:: data_port
    :platform: Unix, Windows
    :synopsis: A module to represent data ports the state machine
 

@@ -1,3 +1,13 @@
+"""
+.. module:: main_window
+   :platform: Unix, Windows
+   :synopsis: The module holds the main window controller giving footage to the overall gui.
+
+.. moduleauthor:: Franz Steinmetz
+
+
+"""
+
 import gtk
 import threading
 
@@ -240,6 +250,7 @@ class MainWindowController(ExtendedController):
         self.set_pane_position('RIGHT_BAR_DOCKED_POS', 'right_h_pane', default_pos=1000)
         self.set_pane_position('LEFT_BAR_DOCKED_POS', 'top_level_h_pane', default_pos=300)
         self.set_pane_position('CONSOLE_DOCKED_POS', 'central_v_pane', default_pos=600)
+        self.set_pane_position('LEFT_BAR_INNER_PANE_POS', 'left_bar_pane', default_pos=400)
 
     def connect_button_to_function(self, view_index, button_state, function):
         handler_id = self.view[view_index].connect(button_state, function)
@@ -270,7 +281,8 @@ class MainWindowController(ExtendedController):
         self.view[pane].set_position(position) if position else self.view[pane].set_position(default_pos)
 
     def highlight_execution_of_current_sm(self, active):
-        if self.get_controller('state_machines_editor_ctrl').view is None:
+        if self.get_controller('state_machines_editor_ctrl') is None or \
+                self.get_controller('state_machines_editor_ctrl').view is None:
             logger.warning("No state machines editor view")
             return
         notebook = self.get_controller('state_machines_editor_ctrl').view['notebook']
@@ -388,7 +400,7 @@ class MainWindowController(ExtendedController):
         window. The new window's size and position are loaded from runtime_config, if they exist.
         """
         gui_helper.set_window_size_and_position(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
-        self.view['left_bar'].reparent(self.view.left_bar_window['central_eventbox'])
+        self.view['left_bar_pane'].reparent(self.view.left_bar_window['central_eventbox'])
         self.view['undock_left_bar_button'].hide()
         self.on_left_bar_hide_clicked(None)
         self.view['left_bar_return_button'].hide()
@@ -399,9 +411,9 @@ class MainWindowController(ExtendedController):
         The size & position of the open window are saved to the runtime_config file, and the left-bar is re-docked back
         to the main-window, and the left-bar window is hidden. The un-dock button of the bar is made visible again.
         """
-        global_runtime_config.save_configuration(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
+        global_runtime_config.store_widget_properties(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
         self.on_left_bar_return_clicked(None)
-        self.view['left_bar'].reparent(self.view['left_bar_container'])
+        self.view['left_bar_pane'].reparent(self.view['left_bar_container'])
         self.get_controller('left_window_controller').hide_window()
         self.view['undock_left_bar_button'].show()
         return True
@@ -428,7 +440,7 @@ class MainWindowController(ExtendedController):
         The size & position of the open window is saved to the runtime_config file, and the right-bar is re-docked back
         to the main-window, and the right-bar window is hidden. The un-dock button of the bar is made visible again.
         """
-        global_runtime_config.save_configuration(self.view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
+        global_runtime_config.store_widget_properties(self.view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
         self.on_right_bar_return_clicked(None)
         self.view['right_bar'].reparent(self.view['right_bar_container'])
         self.get_controller('right_window_controller').hide_window()
@@ -457,7 +469,7 @@ class MainWindowController(ExtendedController):
         The size & position of the open window is saved to the runtime_config file, and the console is re-docked back
         to the main-window, and the console window is hidden. The un-dock button of the bar is made visible again.
         """
-        global_runtime_config.save_configuration(self.view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
+        global_runtime_config.store_widget_properties(self.view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
         self.on_console_return_clicked(None)
         self.view['console'].reparent(self.view['console_container'])
         self.get_controller('console_window_controller').hide_window()
@@ -481,19 +493,15 @@ class MainWindowController(ExtendedController):
 
     def on_button_step_in_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_step_into_activate(None)
-        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_over_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_step_over_activate(None)
-        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_out_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_step_out_activate(None)
-        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_backward_step_activate(None)
-        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_debug_content_change(self, widget, data=None):
         if self.view['button_show_info'].get_active():
@@ -529,8 +537,3 @@ class MainWindowController(ExtendedController):
         """
         title = gui_helper.set_notebook_title(notebook, page_num, title_label)
         window.reset_title(title, notebook_identifier)
-
-    @staticmethod
-    def delay(milliseconds, func):
-        thread = threading.Timer(milliseconds / 1000.0, func)
-        thread.start()

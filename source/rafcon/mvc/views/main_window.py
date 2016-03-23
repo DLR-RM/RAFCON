@@ -57,8 +57,6 @@ class MainWindowView(View):
         self.state_machine_tree.show()
         self['state_tree_alignment'].add(self.state_machine_tree)
 
-        # TODO: this is not always the active state machine
-
         ######################################################
         # Global Variable Manager
         ######################################################
@@ -97,11 +95,12 @@ class MainWindowView(View):
         self['graphical_editor_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 0)
 
         self['graphical_editor_label_event_box'].remove(self['graphical_editor_label'])
+        self['graphical_editor_label_event_box'].set_border_width(constants.GRID_SIZE)
         graphical_editor_label = gui_helper.create_label_with_text_and_spacing('GRAPHICAL EDITOR',
                                                                                font_size=constants.FONT_SIZE_BIG,
                                                                                letter_spacing=constants.
                                                                                LETTER_SPACING_1PT)
-        graphical_editor_label.set_alignment(.05, .5)
+        graphical_editor_label.set_alignment(0, .5)
         self['graphical_editor_label_event_box'].add(graphical_editor_label)
 
         ######################################################
@@ -112,12 +111,12 @@ class MainWindowView(View):
         self.states_editor.show()
 
         self['state_editor_label_hbox'].remove(self['state_editor_label'])
+        self['state_editor_label_hbox'].set_border_width(constants.GRID_SIZE)
         state_editor_label = gui_helper.create_label_with_text_and_spacing('STATE EDITOR',
                                                                            font_size=constants.FONT_SIZE_BIG,
                                                                            letter_spacing=constants.LETTER_SPACING_1PT)
         state_editor_label.set_alignment(0., 0.)
-        self['state_editor_label_hbox'].pack_start(state_editor_label, expand=True, fill=True, padding=0)
-        self['state_editor_label_hbox'].reorder_child(state_editor_label, 0)
+        self['state_editor_label_hbox'].add(state_editor_label)
 
         ######################################################
         # Logging
@@ -196,21 +195,13 @@ class MainWindowView(View):
 
         self.get_top_widget().set_decorated(False)
 
-        self['main_window'].set_border_width(constants.MAIN_WINDOW_BORDER_WIDTH)
-
-        self['top_menu_hbox'].set_border_width(constants.BORDER_WIDTH)
-
-        self['upper_notebook'].set_border_width(0)
         self['upper_notebook'].set_tab_hborder(constants.BORDER_WIDTH*2)
         self['upper_notebook'].set_tab_vborder(constants.BORDER_WIDTH*3)
 
-        self['lower_notebook'].set_border_width(0)
         self['lower_notebook'].set_tab_hborder(constants.BORDER_WIDTH*2)
         self['lower_notebook'].set_tab_vborder(constants.BORDER_WIDTH*3)
 
         self['debug_eventbox'].set_border_width(0)
-        self['debug_label_hbox'].set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
-        self['right_bar'].set_border_width(0)
 
         self['button_show_info'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_INFO', True))
         self['button_show_debug'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True))
@@ -222,8 +213,6 @@ class MainWindowView(View):
         self.left_bar_window = UndockedWindowView('left_bar_window')
         self.right_bar_window = UndockedWindowView('right_bar_window')
         self.console_window = UndockedWindowView('console_window')
-
-        self.top_window_width = self['main_window'].get_size()[0]
 
     def rotate_and_detach_tab_labels(self):
         """Rotates tab labels of a given notebook by 90 degrees and makes them detachable.

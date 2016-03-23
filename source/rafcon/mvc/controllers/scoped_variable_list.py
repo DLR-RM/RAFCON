@@ -1,3 +1,13 @@
+"""
+.. module:: io_data_port_list
+   :platform: Unix, Windows
+   :synopsis: A module that holds the controller to list and edit all scoped_variables of a state.
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 import gtk
 from gtk import ListStore
 from rafcon.mvc.controllers.extended_controller import ExtendedController
@@ -29,6 +39,7 @@ class ScopedVariableListController(ExtendedController):
         self.next_focus_column = {}
         self.prev_focus_column = {}
         self.scoped_variables_list_store = ListStore(str, str, str, int)
+        self._actual_entry = None
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -45,9 +56,15 @@ class ScopedVariableListController(ExtendedController):
             if not isinstance(self.model.state, LibraryState):
                 view['default_value_text'].set_property("editable", True)
             view['default_value_text'].connect("edited", self.on_default_value_changed)
+            view['default_value_text'].connect('editing-started', self.editing_started)
+            view['default_value_text'].connect('editing-canceled', self.editing_canceled)
 
         view['name_text'].connect("edited", self.on_name_changed)
+        view['name_text'].connect('editing-started', self.editing_started)
+        view['name_text'].connect('editing-canceled', self.editing_canceled)
         view['data_type_text'].connect("edited", self.on_data_type_changed)
+        view['data_type_text'].connect('editing-started', self.editing_started)
+        view['data_type_text'].connect('editing-canceled', self.editing_canceled)
 
         self.tab_edit_controller.register_view()
 
@@ -74,6 +91,54 @@ class ScopedVariableListController(ExtendedController):
     def remove_port(self, *_):
         if self.view[self.view.top].is_focus():
             self.on_delete_scoped_variable_button_clicked(None)
+
+    def editing_started(self, renderer, editable, path):
+        """ Callback method to connect entry-widget focus-out-event to the respective change-method.
+        """
+        # logger.info("CONNECT editable: {0} path: {1}".format(editable, path))
+        if self.view['name_text'] is renderer:
+            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_name))
+        elif self.view['data_type_text'] is renderer:
+            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_data_type))
+        elif self.view['default_value_text'] is renderer:
+            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_value))
+        else:
+            logger.error("Not registered Renderer was used")
+
+    def editing_canceled(self, event):
+        """ Callback method to disconnect entry-widget focus-out-event to the respective change-method.
+        """
+        # logger.info("DISCONNECT text: {1} event: {0}".format(event, event.get_property('text')))
+        if self._actual_entry is not None:
+            self._actual_entry[0].disconnect(self._actual_entry[1])
+            self._actual_entry = None
+
+    def change_name(self, entry, event):
+        """ Change-name-method to set the name of actual selected (row) data-port.
+        """
+        # logger.info("FOCUS_OUT NAME entry: {0} event: {1}".format(entry, event))
+        if self.get_data_port_id_from_selection() is None:
+            return
+
+        self.on_name_changed(entry, None, text=entry.get_text())
+
+    def change_data_type(self, entry, event):
+        """ Change-data-type-method to set the data_type of actual selected (row) data-port.
+        """
+        # logger.info("FOCUS_OUT TYPE entry: {0} event: {1}".format(entry, event))
+        if self.get_data_port_id_from_selection() is None:
+            return
+
+        self.on_data_type_changed(entry, None, text=entry.get_text())
+
+    def change_value(self, entry, event):
+        """ Change-value-method to set the default_value of actual selected (row) data-port.
+        """
+        # logger.info("FOCUS_OUT VALUE entry: {0} event: {1}".format(entry, event))
+        if self.get_data_port_id_from_selection() is None:
+            return
+
+        self.on_default_value_changed(entry, None, text=entry.get_text())
 
     @ExtendedController.observe("scoped_variables", after=True)
     def scoped_variables_changed(self, model, prop_name, info):
@@ -128,9 +193,10 @@ class ScopedVariableListController(ExtendedController):
         :param path: The path identifying the edited variable
         :param text: New variable's name
         """
-        scoped_variable_id = self.scoped_variables_list_store[int(path)][3]
+        data_port_id = self.get_data_port_id_from_selection()
         try:
-            self.model.state.scoped_variables[scoped_variable_id].name = text
+            if self.model.state.scoped_variables[data_port_id].name != text:
+                self.model.state.scoped_variables[data_port_id].name = text
         except TypeError as e:
             logger.error("Error while changing port name: {0}".format(e))
 
@@ -142,9 +208,10 @@ class ScopedVariableListController(ExtendedController):
         :param path: The path identifying the edited variable
         :param text: New variable's data type
         """
-        data_port_id = self.scoped_variables_list_store[int(path)][3]
+        data_port_id = self.get_data_port_id_from_selection()
         try:
-            self.model.state.scoped_variables[data_port_id].change_data_type(text, None)
+            if self.model.state.scoped_variables[data_port_id].data_type.__name__ != text:
+                self.model.state.scoped_variables[data_port_id].change_data_type(text)
         except ValueError as e:
             logger.error("Error while changing data type: {0}".format(e))
 
@@ -156,21 +223,28 @@ class ScopedVariableListController(ExtendedController):
         :param path: The path identifying the edited variable
         :param text: New variable's value
         """
-        data_port_id = self.scoped_variables_list_store[int(path)][3]
+        data_port_id = self.get_data_port_id_from_selection()
         try:
-            self.model.state.scoped_variables[data_port_id].default_value = text
+            if str(self.model.state.scoped_variables[data_port_id].default_value) != text:
+                self.model.state.scoped_variables[data_port_id].default_value = text
         except (TypeError, AttributeError) as e:
             logger.error("Error while changing default value: {0}".format(e))
 
+    def get_data_port_id_from_selection(self):
+        """Returns the data_port_id of the currently selected port entry"""
+        path = self.get_path()
+        if path is not None:
+            data_port_id = self.scoped_variables_list_store[int(path)][3]
+            return data_port_id
+        return None
+
     def select_entry(self, data_port_id):
         """Selects the port entry belonging to the given data_port_id"""
-        ctr = 0
-        for data_port_entry in self.scoped_variables_list_store:
+        for row_num, data_port_entry in enumerate(self.scoped_variables_list_store):
             # Compare transition ids
             if data_port_entry[3] == data_port_id:
-                self.view[self.view.top].set_cursor(ctr)
+                self.view[self.view.top].set_cursor(row_num)
                 break
-            ctr += 1
 
     def get_path(self):
         """Returns the path/index to the currently selected port entry"""

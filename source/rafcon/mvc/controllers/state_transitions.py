@@ -1,3 +1,14 @@
+"""
+.. module:: state_transitions
+   :platform: Unix, Windows
+   :synopsis: A module that holds the controller to list and edit all internal and related external transitions of a
+   state.
+
+.. moduleauthor:: Rico Belder
+
+
+"""
+
 import gtk
 import gobject
 
@@ -8,6 +19,7 @@ from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.utils import log
+from rafcon.mvc.gui_helper import format_cell
 
 logger = log.get_logger(__name__)
 
@@ -33,7 +45,7 @@ class StateTransitionsListController(ExtendedController):
         #                   name-color, to-state-color, transition-object, state-object, is_editable
         self.view_dict = {'transitions_internal': True, 'transitions_external': True}
         self.tree_store = gtk.TreeStore(int, str, str, str, str, bool,
-                                        str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
+                                        gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
         self.combo = {}
         self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
 
@@ -47,6 +59,10 @@ class StateTransitionsListController(ExtendedController):
         """Called when the View was registered
         """
 
+        format_cell(view['from_state_combo'], None, 0)
+        format_cell(view['to_state_combo'], None, 0)
+        format_cell(view['from_outcome_combo'], None, 0)
+        format_cell(view['to_outcome_combo'], None, 0)
         def cell_text(column, cell_renderer, model, iter, container_model):
 
             t_id = model.get_value(iter, 0)
@@ -55,19 +71,19 @@ class StateTransitionsListController(ExtendedController):
             if model.get_value(iter, 5):
                 in_external = 'external'
             # print t_id, in_external, self.combo[in_external]
-            if column.get_title() == 'From-State':
+            if column.get_title() == 'Source State':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['from_state'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-            elif column.get_title() == 'From-Outcome':
+            elif column.get_title() == 'Source Outcome':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['from_outcome'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-            elif column.get_title() == 'To-State':
+            elif column.get_title() == 'Target State':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['to_state'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-            elif column.get_title() == 'To-Outcome':
+            elif column.get_title() == 'Target Outcome':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['to_outcome'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
@@ -163,16 +179,30 @@ class StateTransitionsListController(ExtendedController):
 
     def on_combo_changed_from_state(self, widget, path, text):
         # Check whether the from state was changed or the combo entry is empty
-        if self.tree_store[path][1] == text or text is None:
+        t_id = self.tree_store[path][0]
+        if text is None:
             return
 
         # corresponding transition id
-        transition_id = self.tree_store[path][0]
+
         is_external = self.tree_store[path][5]
-        from_state_combo = self.combo['external' if is_external else 'internal'][transition_id]['from_state']
-        # get selected combo entry by comparing the state names
-        from_state_entry = reduce(lambda s1, s2: s1 if s1[0] == text else s2, from_state_combo)
-        new_from_state_id = from_state_entry[1]
+        from_state_combo = self.combo['external' if is_external else 'internal'][t_id]['from_state']
+        # get selected combo entry by comparing the state names or by state_id
+        if text.split('.')[0] in ['self', 'parent']:
+            new_from_state_id = self.model.state.state_id if text.split('.')[0] == 'self' else self.model.state.parent.state_id
+        else:
+            if is_external and text.split('.')[-1] in self.model.state.parent.states or \
+                    isinstance(self.model, ContainerStateModel) and text.split('.')[-1] in self.model.state.states:
+                new_from_state_id = text.split('.')[-1]
+            else:
+                from_state_entry = reduce(lambda s1, s2: s1 if s1[0] == text else s2, from_state_combo)
+                new_from_state_id = from_state_entry[1]
+
+        if self.tree_store[path][5] and self.model.parent.state.transitions[t_id].from_state == text.split('.')[-1] or \
+                isinstance(self.model, ContainerStateModel) and \
+                (self.model.state.transitions[t_id].from_state == new_from_state_id or \
+                self.model.state.transitions[t_id].from_state is None and self.model.state.state_id == new_from_state_id):
+            return
 
         if is_external:  # is external
             responsible_state_m = self.model.parent
@@ -181,7 +211,7 @@ class StateTransitionsListController(ExtendedController):
             responsible_state_m = self.model
             free_outcomes = self.combo['free_from_outcomes_dict'][new_from_state_id]
 
-        current_from_outcome = responsible_state_m.state.transitions[transition_id].from_outcome
+        current_from_outcome = responsible_state_m.state.transitions[t_id].from_outcome
         free_outcome_ids = map(lambda outcome_m: None if outcome_m is None else outcome_m.outcome_id, free_outcomes)
         if len(free_outcomes) == 0:
             logger.warning('There is no free outcome for the chosen state')
@@ -193,13 +223,13 @@ class StateTransitionsListController(ExtendedController):
         if responsible_state_m.state.state_id == new_from_state_id:
             new_from_state_id = None
         try:
-            responsible_state_m.state.transitions[transition_id].modify_origin(new_from_state_id, new_from_outcome_id)
+            responsible_state_m.state.transitions[t_id].modify_origin(new_from_state_id, new_from_outcome_id)
         except ValueError as e:
             logger.error("Could not change transition from state: {0}".format(e))
 
     def on_combo_changed_from_outcome(self, widget, path, text):
         # check if the outcome may has not changed or combo is empty
-        if self.tree_store[path][2] == text or text is None:
+        if self.tree_store[path][2] == text.split('.')[0] or text is None:
             return
 
         # transition gets modified
@@ -219,7 +249,7 @@ class StateTransitionsListController(ExtendedController):
 
     def on_combo_changed_to_state(self, widget, path, text):
         # check if the state may has not changed or combo is empty
-        if self.tree_store[path][3] == text or text is None:
+        if text is None:
             return
 
         # transition gets modified
@@ -232,10 +262,15 @@ class StateTransitionsListController(ExtendedController):
         else:
             transition_parent_state = self.model.state
 
-        if self.model.parent is None or not new_to_state_id == self.model.parent.state.state_id:
+        if transition_parent_state.transitions[transition_id].to_state is None and \
+                transition_parent_state.state_id == new_to_state_id or \
+                transition_parent_state.transitions[transition_id].to_state == new_to_state_id:
+            return
+
+        if not new_to_state_id == transition_parent_state.state_id:
             new_to_outcome = None
         else:
-            new_to_outcome = self.model.parent.state.outcomes[0].outcome_id
+            new_to_outcome = transition_parent_state.outcomes[0].outcome_id
 
         try:
             transition_parent_state.transitions[transition_id].modify_target(to_state=new_to_state_id,
@@ -245,7 +280,7 @@ class StateTransitionsListController(ExtendedController):
 
     def on_combo_changed_to_outcome(self, widget, path, text):
         # check if the outcome may has not changed or combo is empty
-        if self.tree_store[path][4] == text or text is None:
+        if self.tree_store[path][4] == text.split('.')[1] or text is None:
             return
 
         # transition gets modified
@@ -268,6 +303,14 @@ class StateTransitionsListController(ExtendedController):
 
     @staticmethod
     def get_possible_combos_for_transition(trans, model, self_model, is_external=False):
+        """ The function provides combos for a transition and its respective
+
+        :param trans:
+        :param model:
+        :param self_model:
+        :param is_external:
+        :return:
+        """
         from_state_combo = gtk.ListStore(str, str)
         from_outcome_combo = gtk.ListStore(str)
         to_state_combo = gtk.ListStore(str)
@@ -275,75 +318,99 @@ class StateTransitionsListController(ExtendedController):
 
         trans_dict = model.state.transitions
 
-        # for from-outcome-combo filter all outcome already used
-        from_state = None
-        if trans is not None and trans.from_state is not None:
+        # get from state
+        if trans is None:
+            from_state = None
+        elif trans.from_state is not None:
             from_state = model.state.states[trans.from_state]
+        else:
+            from_state = model.state if is_external else self_model.state
+
+        # collect all free from-outcome-combo and from_state which are still valid -> filter all outcome already in use
         free_from_outcomes_dict = {}
         for state in model.state.states.values():
             from_o_combo = state.outcomes.values()
-            # print from_o_combo
-
             # print [o.outcome_id for o in from_o_combo], state_model.state.state_id
             for transition in trans_dict.values():
                 # print transition, [[o.outcome_id == transition.from_outcome, transition.from_state == state_model.state.state_id] for o in from_o_combo]
                 from_o_combo = filter(lambda o: not (o.outcome_id == transition.from_outcome and
                                                      transition.from_state == state.state_id), from_o_combo)
                 # print [o.outcome_id for o in from_o_combo]
-
             if len(from_o_combo) > 0:
                 free_from_outcomes_dict[state.state_id] = from_o_combo
-        # if transition.from_state == self_model.state.state_id:
-        #     free_from_outcomes_dict[state_model.state.state_id].append(None)
+        # check if parent has start_state
         if model.state.start_state_id is None:
             free_from_outcomes_dict[model.state.state_id] = [None]
 
-        if from_state is not None and from_state.state_id in free_from_outcomes_dict:
-            for outcome in free_from_outcomes_dict[from_state.state_id]:
-                state = model.state.states[from_state.state_id]
-                if outcome is None:
-                    from_outcome_combo.append(["None"])
-                elif from_state.state_id == self_model.state.state_id:
-                    from_outcome_combo.append(["self." + outcome.name + "." + str(outcome.outcome_id)])
-                else:
-                    from_outcome_combo.append([state.name + "." + outcome.name + "." + str(outcome.outcome_id)])
+        # for from-state-combo use all states with free outcomes and from_state
+        combined_states = [model.state] if is_external else [self_model.state]
+        combined_states.extend(model.state.states.values())
+        free_from_states = filter(lambda state: state.state_id in free_from_outcomes_dict.keys(), combined_states)
 
-        # for from-state-combo us all states with free outcomes and from_state
-        # print "model.states: ", model.states, free_from_outcomes_dict
-        free_from_states = filter(lambda state: state.state_id in free_from_outcomes_dict.keys(),
-                                        model.state.states.values())
         if trans is None:
             return None, None, None, None, free_from_states, free_from_outcomes_dict
-        if from_state is not None and from_state.state_id not in free_from_outcomes_dict.keys():
-            if from_state.state_id == self_model.state.state_id:
-                from_state_combo.append(['self (' + from_state.name + ')', from_state.state_id])
+
+        def append_from_state_combo(possible_state):
+            if possible_state.state_id == self_model.state.state_id:
+                from_state_combo.append(['self.' + possible_state.state_id, possible_state.state_id])
+            elif is_external and from_state.state_id == model.state.state_id:
+                from_state_combo.append(['parent.' + possible_state.state_id, possible_state.state_id])
             else:
-                from_state_combo.append([from_state.name, from_state.state_id])
+                from_state_combo.append([possible_state.name + '.' + possible_state.state_id, possible_state.state_id])
+
+        append_from_state_combo(from_state)
         for state in free_from_states:
-            if state.state_id == self_model.state.state_id:
-                from_state_combo.append(['self (' + state.name + ')', state.state_id])
-            else:
-                from_state_combo.append([state.name, state.state_id])
-        if not is_external and model.state.start_state_id is None:
-            from_state_combo.append(['self (' + model.state.name + ')', model.state.state_id])
+            if from_state is not state:
+                append_from_state_combo(state)
 
-        # for to-state-combo filter from_state ... put it at the end
-        to_states = filter(lambda s: not s.state_id == trans.from_state, model.state.states.values())
+        # for from-outcome-combo collect all combos for actual transition
+        # -> actual outcome + free outcomes of actual from_state.state_id
+        if trans is not None:
+            if trans.from_outcome is None:
+                from_outcome_combo.append(["None"])
+            else:
+                outcome = from_state.outcomes[trans.from_outcome]
+                from_outcome_combo.append([outcome.name + "." + str(outcome.outcome_id)])
+            for outcome in free_from_outcomes_dict.get(from_state.state_id, []):
+                if outcome is None:
+                    from_outcome_combo.append(["None"])
+                else:
+                    from_outcome_combo.append([outcome.name + "." + str(outcome.outcome_id)])
+
+        # get to state
+        if trans.to_state == model.state.state_id:
+            to_state = model.state if is_external else self_model.state
+        else:
+            to_state = model.state.states[trans.to_state]
+
+        # for to-state-combo filter from_state -> first actual to_state + other optional states
+        def generate_to_state_combo(possible_state):
+            if possible_state.state_id == self_model.state.state_id:
+                to_state_combo.append(["self." + possible_state.state_id])
+            elif is_external and possible_state.state_id == model.state.state_id:
+                to_state_combo.append(['parent.' + possible_state.state_id])
+            else:
+                to_state_combo.append([possible_state.name + '.' + possible_state.state_id])
+
+        to_states = [model.state] if is_external else [self_model.state]
+        to_states.extend(model.state.states.values())
+        generate_to_state_combo(to_state)
         for state in to_states:
-            if state.state_id == self_model.state.state_id:
-                to_state_combo.append(["self." + state.state_id])
-            else:
-                to_state_combo.append([state.name + '.' + state.state_id])
-        if from_state is not None:
-            to_state_combo.append([from_state.name + '.' + from_state.state_id])
+            if not to_state.state_id == state.state_id:
+                generate_to_state_combo(state)
 
-        # for to-outcome-combo use parent combos
-        to_outcome = model.state.outcomes.values()
-        for outcome in to_outcome:
+        # for to-outcome-combo use parent combos -> first actual outcome + other outcome
+        def append_to_outcome_combo(possible_outcome):
             if is_external:
-                to_outcome_combo.append(['parent.' + outcome.name + "." + str(outcome.outcome_id)])
+                to_outcome_combo.append(['parent.' + possible_outcome.name + "." + str(possible_outcome.outcome_id)])
             else:
-                to_outcome_combo.append(['self.' + outcome.name + "." + str(outcome.outcome_id)])
+                to_outcome_combo.append(['self.' + possible_outcome.name + "." + str(possible_outcome.outcome_id)])
+
+        if trans.to_outcome is not None:
+            append_to_outcome_combo(model.state.outcomes[trans.to_outcome])
+        for outcome in model.state.outcomes.values():
+            if not (trans.to_outcome == outcome.outcome_id and trans.to_state == model.state.state_id):
+                append_to_outcome_combo(outcome)
 
         return from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_states, free_from_outcomes_dict
 
@@ -458,9 +525,10 @@ class StateTransitionsListController(ExtendedController):
                     # print t.to_state, self.model.states
                     if t.to_state == self.model.state.state_id:
                         to_state_label = "self (" + self.model.state.name + ")"
+                        to_outcome_label = self.model.state.outcomes[t.to_outcome].name
                     else:
                         to_state_label = self.model.state.states[t.to_state].name
-                    to_outcome_label = None
+                        to_outcome_label = None
 
                 self.tree_store.append(None, [transition_id,  # id
                                               from_state_label,  # from-state
@@ -468,19 +536,21 @@ class StateTransitionsListController(ExtendedController):
                                               to_state_label,  # to-state
                                               to_outcome_label,  # to-outcome
                                               False,  # is_external
-                                              '#f0E5C7', '#f0E5c7', t, self.model.state, True])
+                                              t,
+                                              self.model.state, True])
 
         if self.view_dict['transitions_external'] and self.model.parent and \
                 len(self.model.parent.state.transitions) > 0:
             for transition_id in self.combo['external'].keys():
                 # print "TRANSITION_ID: ", transition_id, self.model.parent.state.transitions
                 t = self.model.parent.state.transitions[transition_id]
+                # logger.info(str(t))
                 from_state = None
                 if t.from_state is not None:
                     from_state = self.model.parent.states[t.from_state].state
 
                 if from_state is None:
-                    from_state_label = "self (" + self.model.state.name + ")"
+                    from_state_label = "parent (" + self.model.state.parent.name + ")"
                     from_outcome_label = ""
                 elif from_state.state_id == self.model.state.state_id:
                     from_state_label = "self (" + from_state.name + ")"
@@ -505,7 +575,7 @@ class StateTransitionsListController(ExtendedController):
                                               to_state_label,  # to-state
                                               to_outcome_label,  # to-outcome
                                               True,  # is_external
-                                              '#f0E5C7', '#f0E5c7', t, self.model.state, True])
+                                              t, self.model.state, True])
 
     @ExtendedController.observe("change_root_state_type", before=True)
     @ExtendedController.observe("change_state_type", before=True)

@@ -10,6 +10,7 @@ from rafcon.mvc.views.state_transitions import StateTransitionsEditorView
 from rafcon.mvc.views.state_data_flows import StateDataFlowsEditorView
 from rafcon.mvc.views.linkage_overview import LinkageOverviewView
 from rafcon.mvc.utils import constants
+from rafcon.mvc import gui_helper
 
 
 class StateEditorView(View):
@@ -22,6 +23,8 @@ class StateEditorView(View):
         self.page_dict = {}
         self.notebook_names = ['main_notebook_1', 'main_notebook_2']
 
+        gui_helper.set_label_markup(self['data_ports_label'], 'DATA PORTS', letter_spacing=constants.LETTER_SPACING_1PT)
+
         self['properties_view'] = StateOverviewView()
         self['inputs_view'] = InputPortsListView()
         self['outputs_view'] = OutputPortsListView()
@@ -31,8 +34,6 @@ class StateEditorView(View):
         self['transitions_view'] = StateTransitionsEditorView()
         self['data_flows_view'] = StateDataFlowsEditorView()
         self['linkage_overview'] = LinkageOverviewView()
-
-        self['properties_viewport'].set_border_width(constants.BORDER_WIDTH)
 
         self['properties_viewport'].add(self['properties_view'].get_top_widget())
         self['input_ports_scroller'].add(self['inputs_view'].get_top_widget())
@@ -44,22 +45,22 @@ class StateEditorView(View):
         self['data_flows_viewport'].add(self['data_flows_view'].get_top_widget())
         self['linkage_overview_viewport'].add(self['linkage_overview'].get_top_widget())
 
-        self['data_vpaned'].set_position(175)
-        self['logic_vpaned'].set_position(175)
+        self['data_vpaned'].set_position(190)
+        self['logic_vpaned'].set_position(190)
 
         self['main_notebook_1'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['main_notebook_1'].set_tab_vborder(constants.BORDER_WIDTH * 3)
         self['main_notebook_2'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['main_notebook_2'].set_tab_vborder(constants.BORDER_WIDTH * 3)
         self.page_dict["Source"] = self['main_notebook_1'].get_nth_page(0)
-        self.page_dict["Data Linkage"] = self['main_notebook_1'].get_nth_page(1)
-        self.page_dict["Logical Linkage"] = self['main_notebook_1'].get_nth_page(2)
+        self.page_dict["Logical Linkage"] = self['main_notebook_1'].get_nth_page(1)
+        self.page_dict["Data Linkage"] = self['main_notebook_1'].get_nth_page(2)
         self.page_dict["Linkage Overview"] = self['main_notebook_2'].get_nth_page(0)
         self.page_dict["Description"] = self['main_notebook_2'].get_nth_page(1)
         self['main_notebook_1'].set_current_page(self['main_notebook_1'].page_num(self.page_dict["Source"]))
         self['main_notebook_2'].set_current_page(self['main_notebook_2'].page_num(self.page_dict["Description"]))
 
-        self['vpaned'].set_position(425)
+        self['vpaned'].set_position(450)
 
         self['new_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
@@ -68,27 +69,39 @@ class StateEditorView(View):
         self['new_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
 
-        self['top_spacing_alignment'].set_size_request(0, constants.BORDER_WIDTH)
-        self['bottom_spacing_alignment'].set_size_request(0, constants.BORDER_WIDTH)
+        description_container = gtk.VBox()
+        description_container.set_name('description_container')
+        description_label = gui_helper.create_label_with_text_and_spacing('DESCRIPTION',
+                                                                          letter_spacing=constants.LETTER_SPACING_1PT)
+        description_label.set_alignment(0.0, 0.5)
 
         textview = gtk.TextView()
         textview.set_accepts_tab(False)
         textview.set_wrap_mode(gtk.WRAP_WORD)
-        textview.set_left_margin(constants.BORDER_WIDTH_TEXTVIEW)
+        textview.set_border_width(10)
         self['description_text_view'] = textview
 
-        vbox = gtk.VBox()
-        description_label = gtk.Label("Description")
-        description_label.set_alignment(0.0, 0.5)
-        description_box = gtk.EventBox()
-        description_box.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
-        description_box.add(description_label)
-        description_box.show_all()
-        vbox.pack_start(description_box, False, True, 0)
-        vbox.pack_start(textview, True, True, constants.BORDER_WIDTH_TEXTVIEW)
-        vbox.show()
+        description_title_box = gtk.EventBox()
+        description_title_box.set_name("label_wrapper")
+        description_title_box.set_border_width(constants.GRID_SIZE)
+        description_title_box.add(description_label)
 
-        self['description_scroller'].add_with_viewport(vbox)
+        title_viewport = gtk.Viewport()
+        title_viewport.set_name("description_title_wrapper")
+        title_viewport.add(description_title_box)
+        title_viewport.show_all()
+
+        description_scroller = gtk.ScrolledWindow()
+        description_scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        description_scroller.set_name('description_scroller')
+        description_scroller.add(textview)
+        self['description_scroller'] = description_scroller
+
+        description_container.pack_start(title_viewport, False, True, 0)
+        description_container.pack_start(description_scroller, True, True, 0)
+        description_container.show()
+
+        self['description_viewport'].add(description_container)
 
     def bring_tab_to_the_top(self, tab_label):
         """Find tab with label tab_label in list of notebook's and set it to the current page.

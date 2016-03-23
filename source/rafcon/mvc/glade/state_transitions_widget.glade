@@ -6,14 +6,19 @@
     <property name="visible">True</property>
     <property name="orientation">vertical</property>
     <child>
-      <object class="GtkEventBox" id="eventbox1">
+      <object class="GtkViewport" id="transitions_title_wrapper">
         <property name="visible">True</property>
-        <property name="border_width">10</property>
         <child>
-          <object class="GtkLabel" id="label1">
+          <object class="GtkEventBox" id="label_wrapper">
             <property name="visible">True</property>
-            <property name="xalign">0</property>
-            <property name="label" translatable="yes">Transitions</property>
+            <property name="border_width">10</property>
+            <child>
+              <object class="GtkLabel" id="transitions_label">
+                <property name="visible">True</property>
+                <property name="xalign">0</property>
+                <property name="label" translatable="yes">Transitions</property>
+              </object>
+            </child>
           </object>
         </child>
       </object>
@@ -57,7 +62,7 @@
         </child>
         <child>
           <object class="GtkCheckButton" id="connected_to_t_checkbutton">
-            <property name="label" translatable="yes">Connected to</property>
+            <property name="label" translatable="yes">External</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>

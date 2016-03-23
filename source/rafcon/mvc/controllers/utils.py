@@ -1,3 +1,13 @@
+"""
+.. module:: utils
+   :platform: Unix, Windows
+   :synopsis: A module that holds a collection of classes and methods which are used by rafcon.mvc.controllers-modules.
+
+.. moduleauthor:: Rico Belder
+
+
+"""
+
 from gtk import TreeView
 from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 
@@ -64,23 +74,22 @@ class MoveAndEditWithTabKeyListFeatureController:
             # get next row_id for focus
             if direction < 0 and focus_column is self.widget_columns[0] \
                     or direction > 0 and focus_column is self.widget_columns[-1]:
-                if direction < 0 < path[0] or direction > 0 and not path[0] + 1 > len(self.view.get_model()):
+                if direction < 0 < path[0] or direction > 0 and not path[0] + 1 > len(self.widget_columns):
                     next_row = path[0] + direction
                 else:
                     return False
             else:
                 next_row = path[0]
-
             # get next column_id for focus
             focus_column_id = self.widget_columns.index(focus_column)
             if focus_column_id is not None:
                 # search all columns for next editable cell renderer
-                for index in range(len(self.widget_columns)):
+                for index in range(len(self.view.get_model())):
                     test_id = focus_column_id + direction * index + direction
                     next_focus_column_id = test_id % len(self.widget_columns)
-                    if test_id > len(self.widget_columns) or test_id < 0:
+                    if test_id > len(self.widget_columns) - 1 or test_id < 0:
                         next_row = path[0] + direction
-                        if next_row < 0 or next_row > len(self.widget_columns):
+                        if next_row < 0 or next_row > len(self.view.get_model()) - 1:
                             return False
 
                     if self.widget_columns[next_focus_column_id].get_cell_renderers()[0].get_property('editable'):

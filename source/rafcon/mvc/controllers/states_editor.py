@@ -1,3 +1,14 @@
+"""
+.. module:: states_editor
+   :platform: Unix, Windows
+   :synopsis: A module that holds the controller with the interface to the states editor notebook and controls
+   showing and organization of selected and hold state editors.
+
+.. moduleauthor:: Rico Belder
+
+
+"""
+
 import gtk
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
@@ -14,8 +25,12 @@ from rafcon.mvc.config import global_gui_config
 
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.mvc.utils import constants
+from rafcon.mvc.utils import helpers
+
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+
+STATE_NAME_MAX_CHARS = 16
 
 
 def create_button(toggle, font, font_size, icon_code, release_callback=None, *additional_parameters):
@@ -26,12 +41,7 @@ def create_button(toggle, font, font_size, icon_code, release_callback=None, *ad
 
     button.set_relief(gtk.RELIEF_NONE)
     button.set_focus_on_click(False)
-    button.set_size_request(width=18, height=18)
-
-    style = gtk.RcStyle()
-    style.xthickness = 0
-    style.ythickness = 0
-    button.modify_style(style)
+    button.set_size_request(width=constants.GRID_SIZE*3, height=constants.GRID_SIZE*3)
 
     label = gtk.Label()
     label.set_markup("<span font_desc='{0} {1}'>&#x{2};</span>".format(font, font_size, icon_code))
@@ -59,37 +69,35 @@ def create_sticky_button(callback, *additional_parameters):
 
 def create_tab_header(title, close_callback, sticky_callback, *additional_parameters):
     hbox = gtk.HBox()
-    hbox.set_size_request(width=-1, height=20)  # safe two pixel
+    hbox.set_name("tab_label")
 
+    sticky_button = None
     if global_gui_config.get_config_value('KEEP_ONLY_STICKY_STATES_OPEN', True):
         sticky_button = create_sticky_button(sticky_callback, *additional_parameters)
+        sticky_button.set_name('sticky_button')
         hbox.pack_start(sticky_button, expand=False, fill=False, padding=0)
-    else:
-        sticky_button = None
 
-    label = generate_tab_label(title)
-    hbox.pack_start(label, expand=True, fill=True, padding=0)
-
-    # add close button
+    label = gtk.Label()
+    label.set_max_width_chars(STATE_NAME_MAX_CHARS)
     close_button = create_tab_close_button(close_callback, *additional_parameters)
+
+    hbox.pack_start(label, expand=True, fill=True, padding=0)
     hbox.pack_start(close_button, expand=False, fill=False, padding=0)
     hbox.show_all()
 
     return hbox, label, sticky_button
 
 
-def limit_tab_label_text(text):
-    tab_label_text = text
-    if not text or len(text) > 10:
-        tab_label_text = text[:5] + '~' + text[-5:]
-
-    return tab_label_text
-
-
-def generate_tab_label(title):
-    label = gtk.Label(title)
-
-    return label
+def set_tab_label_texts(label, state_m, unsaved_changes=False):
+    state_machine_id = state_m.state.get_sm_for_state().state_machine_id
+    state_name = state_m.state.name
+    state_name_trimmed = helpers.limit_string(state_name, STATE_NAME_MAX_CHARS)
+    label_text = "{0}&#8201;&#8226;&#8201;{1}".format(state_machine_id, state_name_trimmed)
+    tooltip_text = state_name
+    if unsaved_changes:
+        label_text += '&#8201;*'
+    label.set_markup(label_text)
+    label.set_tooltip_text(tooltip_text)
 
 
 class StatesEditorController(ExtendedController):
@@ -237,14 +245,9 @@ class StatesEditorController(ExtendedController):
                 handler_id = None
             source_code_view_is_dirty = False
 
-        tab_label_text = self.get_state_tab_name(state_m)
-        tab_label_text_trimmed = limit_tab_label_text(tab_label_text)
-        if source_code_view_is_dirty:
-            tab_label_text_trimmed += '*'
-
-        (tab, inner_label, sticky_button) = create_tab_header(tab_label_text_trimmed, self.on_tab_close_clicked,
+        (tab, inner_label, sticky_button) = create_tab_header('', self.on_tab_close_clicked,
                                                               self.on_toggle_sticky_clicked, state_m)
-        inner_label.set_tooltip_text(tab_label_text)
+        set_tab_label_texts(inner_label, state_m, source_code_view_is_dirty)
 
         state_editor_view.get_top_widget().title_label = inner_label
         state_editor_view.get_top_widget().sticky_button = sticky_button
@@ -464,12 +467,6 @@ class StatesEditorController(ExtendedController):
         """
         def close_state_of_parent(parent_state_m, state_id):
 
-            # logger.debug("tabs before are:")
-            # for tab in self.tabs.itervalues():
-            #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
-            # logger.debug("closed_tabs are:")
-            # for tab in self.closed_tabs.itervalues():
-            #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
             for tab_info in self.tabs.itervalues():
                 state_m = tab_info['state_m']
                 # The state id is only unique within the parent
@@ -489,21 +486,14 @@ class StatesEditorController(ExtendedController):
                     state_identifier = self.get_state_identifier(state_m)
                     self.close_page(state_identifier, delete=True)
                     return True
-            # logger.debug("tabs after are:")
-            # for tab in self.tabs.itervalues():
-            #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
-            # logger.debug("closed_tabs are:")
-            # for tab in self.closed_tabs.itervalues():
-            #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
+
             return False
 
         # A child state of a root-state child is affected
-        if hasattr(info, "kwargs") and info.method_name == 'state_change':
+        if info.method_name == 'state_change':
             if info.kwargs.method_name == 'remove_state':
-                # logger.warn("child child remove is triggered %s" % info)
                 state_id = info.kwargs.args[1]
                 parent_state_m = info.kwargs.model
-                # logger.debug("remove %s %s %s" % (parent_state_m, parent_state_m.state.state_id, state_id))
                 close_state_of_parent(parent_state_m, state_id)
         # A root-state child is affected
         # -> does the same as the states-model-list observation below IS A BACKUP AT THE MOMENT
@@ -512,7 +502,6 @@ class StatesEditorController(ExtendedController):
             # logger.warn("remove is triggered %s" % info)
             state_id = info.args[1]
             parent_state_m = info.model  # should be root_state
-            # logger.debug("remove %s %s %s" % (parent_state_m, parent_state_m.state.state_id, state_id))
             close_state_of_parent(parent_state_m, state_id)
         # for the case that a StateModel gets removed from states-list of root-state-model
         elif info.method_name in ['__delitem__']:
@@ -527,22 +516,22 @@ class StatesEditorController(ExtendedController):
         """Checks whether the name of s state was changed and changes the tab label accordingly
         """
         overview = NotificationOverview(info)
-        if isinstance(overview['model'][-1], AbstractStateModel) and overview['method_name'][-1] in ['name', 'script_text']:
-            self.update_tab_label(overview['model'][-1])
+        changed_model = overview['model'][-1]
+        method_name = overview['method_name'][-1]
+        if isinstance(changed_model, AbstractStateModel) and method_name in ['name', 'script_text']:
+            self.update_tab_label(changed_model)
 
     def update_tab_label(self, state_m):
         """Update all tab labels
+
+        :param rafcon.statemachone.states.state.State state_m: State model who's tab label is to be updated
         """
         state_identifier = self.get_state_identifier(state_m)
         if state_identifier not in self.tabs:
             return
-        page = self.tabs[state_identifier]['page']
-        tab_label_text = self.get_state_tab_name(state_m)
-        tab_label_text_trimmed = limit_tab_label_text(tab_label_text)
-        if self.tabs[state_identifier]['source_code_view_is_dirty']:
-            tab_label_text_trimmed += '*'
-        page.title_label.set_text(tab_label_text_trimmed)
-        page.title_label.set_tooltip_text(tab_label_text)
+        tab_info = self.tabs[state_identifier]
+        page = tab_info['page']
+        set_tab_label_texts(page.title_label, state_m, tab_info['source_code_view_is_dirty'])
 
     def get_state_identifier_for_page(self, page):
         """Return the state identifier for a given page

@@ -1,3 +1,13 @@
+"""
+.. module:: io_data_port_list
+   :platform: Unix, Windows
+   :synopsis: A module that holds the controller to list and edit all input- and output-data-ports of a state.
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 import gtk
 from gtk import ListStore
 from gtk import TreeViewColumn, CellRendererToggle
@@ -39,6 +49,7 @@ class DataPortListController(ExtendedController):
         else:
             self.data_port_list_store = ListStore(str, str, str, int, bool, str)
         self.reload_data_port_list_store()
+        self._actual_entry = None
 
     def default_value_renderer(self, tree_view_column, cell, model, iter):
         """
@@ -79,12 +90,18 @@ class DataPortListController(ExtendedController):
             # if not isinstance(self.model.state, LibraryState):
             view['default_value_text'].set_property("editable", True)
             view['default_value_text'].connect("edited", self.on_default_value_changed)
+            view['default_value_text'].connect('editing-started', self.editing_started)
+            view['default_value_text'].connect('editing-canceled', self.editing_canceled)
             if isinstance(self.model.state, LibraryState):
                 view['default_value_col'].set_title("Used value")
             view['default_value_col'].set_cell_data_func(view['default_value_text'], self.default_value_renderer)
 
         view['name_text'].connect("edited", self.on_name_changed)
+        view['name_text'].connect('editing-started', self.editing_started)
+        view['name_text'].connect('editing-canceled', self.editing_canceled)
         view['data_type_text'].connect("edited", self.on_data_type_changed)
+        view['data_type_text'].connect('editing-started', self.editing_started)
+        view['data_type_text'].connect('editing-canceled', self.editing_canceled)
 
         if isinstance(self.model.state, LibraryState):
             view['use_runtime_value_toggle'] = CellRendererToggle()
@@ -129,6 +146,54 @@ class DataPortListController(ExtendedController):
         """
         if self.view[self.view.top].is_focus():
             self.on_delete_port_button_clicked(None)
+
+    def editing_started(self, renderer, editable, path):
+        """ Callback method to connect entry-widget focus-out-event to the respective change-method.
+        """
+        # logger.info("CONNECT editable: {0} path: {1}".format(editable, path))
+        if self.view['name_text'] is renderer:
+            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_name))
+        elif self.view['data_type_text'] is renderer:
+            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_data_type))
+        elif self.view['default_value_text'] is renderer:
+            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_value))
+        else:
+            logger.error("Not registered Renderer was used")
+
+    def editing_canceled(self, event):
+        """ Callback method to disconnect entry-widget focus-out-event to the respective change-method.
+        """
+        # logger.info("DISCONNECT text: {1} event: {0}".format(event, event.get_property('text')))
+        if self._actual_entry is not None:
+            self._actual_entry[0].disconnect(self._actual_entry[1])
+            self._actual_entry = None
+
+    def change_name(self, entry, event):
+        """ Change-name-method to set the name of actual selected (row) data-port.
+        """
+        # logger.info("FOCUS_OUT NAME entry: {0} event: {1}".format(entry, event))
+        if self.get_data_port_id_from_selection() is None:
+            return
+
+        self.on_name_changed(entry, None, text=entry.get_text())
+
+    def change_data_type(self, entry, event):
+        """ Change-data-type-method to set the data_type of actual selected (row) data-port.
+        """
+        # logger.info("FOCUS_OUT TYPE entry: {0} event: {1}".format(entry, event))
+        if self.get_data_port_id_from_selection() is None:
+            return
+
+        self.on_data_type_changed(entry, None, text=entry.get_text())
+
+    def change_value(self, entry, event):
+        """ Change-value-method to set the default_value or runtime_value of actual selected (row) data-port.
+        """
+        # logger.info("FOCUS_OUT VALUE entry: {0} event: {1}".format(entry, event))
+        if self.get_data_port_id_from_selection() is None:
+            return
+
+        self.on_default_value_changed(entry, None, text=entry.get_text())
 
     @ExtendedController.observe("input_data_ports", after=True)
     def input_data_ports_changed(self, model, prop_name, info):
@@ -224,13 +289,11 @@ class DataPortListController(ExtendedController):
 
     def select_entry(self, data_port_id):
         """Selects the port entry belonging to the given data_port_id"""
-        ctr = 0
-        for data_port_entry in self.data_port_list_store:
+        for row_num, data_port_entry in enumerate(self.data_port_list_store):
             # Compare transition ids
             if data_port_entry[3] == data_port_id:
-                self.view[self.view.top].set_cursor(ctr)
+                self.view[self.view.top].set_cursor(row_num)
                 break
-            ctr += 1
 
     def get_path(self):
         """Returns the path/index to the currently selected port entry"""
@@ -261,7 +324,8 @@ class DataPortListController(ExtendedController):
         # logger.info("on_name_changed widget: {0} path: {1} text: {2}".format(widget, column_id, text))
         try:
             data_port_id = self.get_data_port_id_from_selection()
-            self.state_data_port_dict[data_port_id].name = text
+            if self.state_data_port_dict[data_port_id].name != text:
+                self.state_data_port_dict[data_port_id].name = text
         except TypeError as e:
             logger.error("Error while trying to change the port name: {0}".format(e))
 
@@ -271,7 +335,8 @@ class DataPortListController(ExtendedController):
         # logger.info("on_data_type_changed widget: {0} path: {1} text: {2}".format(widget, column_id, text))
         try:
             data_port_id = self.get_data_port_id_from_selection()
-            self.state_data_port_dict[data_port_id].change_data_type(text)
+            if self.state_data_port_dict[data_port_id].data_type.__name__ != text:
+                self.state_data_port_dict[data_port_id].change_data_type(text)
         except ValueError as e:
             logger.error("Error while changing data type: {0}".format(e))
 
@@ -286,11 +351,14 @@ class DataPortListController(ExtendedController):
                 # if the use_runtime_value flag is True
                 if self.get_use_runtime_value_from_selection():
                     if self.type == "input":
-                        self.model.state.set_input_runtime_value(data_port_id, text)
+                        if str(self.model.state.input_data_port_runtime_values[data_port_id]) != text:
+                            self.model.state.set_input_runtime_value(data_port_id, text)
                     else:
-                        self.model.state.set_output_runtime_value(data_port_id, text)
+                        if str(self.model.state.output_data_port_runtime_values[data_port_id]) != text:
+                            self.model.state.set_output_runtime_value(data_port_id, text)
             else:
-                self.state_data_port_dict[data_port_id].default_value = text
+                if str(self.state_data_port_dict[data_port_id].default_value) != text:
+                    self.state_data_port_dict[data_port_id].default_value = text
         except (TypeError, AttributeError) as e:
             logger.error("Error while changing default value: {0}".format(e))
 

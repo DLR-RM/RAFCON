@@ -51,7 +51,7 @@ def test_default_values_of_data_ports(caplog):
     sm = create_statemachine()
 
     test_storage.save_statemachine_to_path(sm, storage_path)
-    [sm_loaded, version, creation_time] = test_storage.load_statemachine_from_path()
+    [sm_loaded, version, creation_time] = test_storage.load_statemachine_from_path(storage_path)
 
     root_state = sm_loaded.root_state
 

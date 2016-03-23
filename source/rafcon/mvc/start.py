@@ -4,9 +4,8 @@ import logging
 import os
 import gtk
 import signal
-import traceback
 import argparse
-from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
+from os.path import realpath, dirname, join, expanduser, expandvars, isdir
 
 import rafcon
 from rafcon.utils.config import config_path
@@ -14,6 +13,7 @@ from rafcon.utils import log
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 import rafcon.utils.filesystem as filesystem
 
+from rafcon.statemachine.start import state_machine_path
 from rafcon.statemachine.config import global_config
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.state_machine import StateMachine
@@ -40,8 +40,6 @@ except ImportError, e:
 
 def setup_logger():
     import sys
-    # Set the views for the loggers
-
     # Apply defaults to logger of gtkmvc
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
@@ -49,15 +47,6 @@ def setup_logger():
     stdout.setFormatter(logging.Formatter("%(asctime)s: %(levelname)-8s - %(name)s:  %(message)s"))
     stdout.setLevel(logging.DEBUG)
     logging.getLogger('gtkmvc').addHandler(stdout)
-
-
-def state_machine_path(path):
-    sm_root_file = join(path, StateMachineStorage.STATEMACHINE_FILE)
-    if exists(sm_root_file):
-        return path
-    else:
-        raise argparse.ArgumentTypeError("Failed to open {0}: {1} not found in path".format(path,
-                                                                                StateMachineStorage.STATEMACHINE_FILE))
 
 
 if __name__ == '__main__':
@@ -96,24 +85,25 @@ if __name__ == '__main__':
     result = parser.parse_args()
     setup_config = vars(result)
 
-    signal.signal(signal.SIGINT, sm_singletons.signal_handler)
-
-    global_config.load(path=setup_config['config_path'])
-    global_gui_config.load(path=setup_config['gui_config_path'])
-    global_runtime_config.load(path=setup_config['gui_config_path'])
-
     # Make mvc directory the working directory
     # Needed for views, which assume to be in the mvc path and import glade files relatively
     os.chdir(join(rafcon_root_path, 'mvc'))
+
+    # Create the GUI-View
+    main_window_view = MainWindowView()
+
+    signal.signal(signal.SIGINT, sm_singletons.signal_handler)
+
+    # load configuration files
+    global_config.load(path=setup_config['config_path'])
+    global_gui_config.load(path=setup_config['gui_config_path'])
+    global_runtime_config.load(path=setup_config['gui_config_path'])
 
     # Initialize library
     sm_singletons.library_manager.initialize()
 
     # Set base path of global storage
     sm_singletons.global_storage.base_path = RAFCON_TEMP_PATH_STORAGE
-
-    # Create the GUI
-    main_window_view = MainWindowView()
 
     if setup_config['sm_paths']:
         storage = StateMachineStorage()
@@ -122,9 +112,7 @@ if __name__ == '__main__':
                 state_machine, version, creation_time = storage.load_statemachine_from_path(path)
                 sm_singletons.state_machine_manager.add_state_machine(state_machine)
             except Exception as e:
-                logger.error("Could not load state-machine {0}: {1}\n{2}".format(path,
-                                                                                 e.message,
-                                                                                 traceback.format_exc()))
+                logger.exception("Could not load state-machine {0}".format(path))
 
     if setup_config['new']:
         root_state = HierarchyState()

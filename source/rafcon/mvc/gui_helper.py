@@ -35,7 +35,7 @@ def create_tab_header_label(tab_name, icons):
 def create_label_with_text_and_spacing(text, font=constants.INTERFACE_FONT, font_size=constants.FONT_SIZE_NORMAL,
                                        letter_spacing=constants.LETTER_SPACING_NONE):
     label = gtk.Label()
-    label.set_markup('<span font_desc="%s %s" letter_spacing="%s">%s</span>' % (font, font_size, letter_spacing, text))
+    set_label_markup(label, text, font, font_size, letter_spacing)
     label.show()
     return label
 
@@ -48,7 +48,7 @@ def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
     :return: The created label
     """
     label = gtk.Label()
-    label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, font_size, icon))
+    set_label_markup(label, '&#x' + icon + ';', constants.ICON_FONT, font_size)
     label.show()
     return label
 
@@ -111,23 +111,44 @@ def set_notebook_title(notebook, page_num, title_label):
     :param title_label: The GTK label holding the notebook's title
     :return: The new title of the notebook
     """
-    title = get_notebook_tab_title(notebook, page_num)
-    title_label.set_text(title)
-    return title
+    text = get_notebook_tab_title(notebook, page_num)
+    set_label_markup(title_label, text, constants.INTERFACE_FONT, constants.FONT_SIZE_BIG, constants.LETTER_SPACING_1PT)
+    return text
+
+
+def set_label_markup(label, text, font=constants.INTERFACE_FONT, font_size=constants.FONT_SIZE_NORMAL,
+                     letter_spacing=constants.LETTER_SPACING_NONE):
+    label.set_markup('<span font_desc="{0} {1}" letter_spacing="{2}">{3}</span>'.format(font, font_size,
+                                                                                        letter_spacing, text))
+
+
+def format_cell(cell, height=None, padding=None):
+    cell.set_property("cell-background-set", True)
+    cell.set_property("cell-background-gdk", global_gui_config.gtk_colors['INPUT_BACKGROUND'])
+    cell.set_property("background-set", True)
+    cell.set_property("background-gdk", global_gui_config.gtk_colors['INPUT_BACKGROUND'])
+    cell.set_property("foreground-set", True)
+    cell.set_property("foreground-gdk", global_gui_config.gtk_colors['TEXT_DEFAULT'])
+    if height:
+        cell.set_property("height", height)
+    if padding:
+        cell.set_padding(padding, padding)
 
 
 def set_window_size_and_position(window, window_key):
-    """Adjust GTK Window's size and position according to the corresponding values in the runtime config file.
+    """Adjust GTK Window's size and position according to the corresponding values in the runtime_config file. If the
+    runtime_config does not exist, or the corresponding values are missing in the file, default values for the window
+    size are used, and the mouse position is used to adjust the window's position.
 
     :param window: The GTK Window to be adjusted
     :param window_key: The window's key stored in the runtime config file
      """
     size = global_runtime_config.get_config_value(window_key+'_SIZE')
-    print "size: {0}".format(size)
     position = global_runtime_config.get_config_value(window_key+'_POS')
-    if size:
-        window.resize(size[0], size[1])
-    window.show()
+    if not size:
+        size = constants.WINDOW_SIZE[window_key]
+    window.resize(size[0], size[1])
+
     if position:
         position = (max(0, position[0]), max(0, position[1]))
         screen_width = gtk.gdk.screen_width()
@@ -136,3 +157,4 @@ def set_window_size_and_position(window, window_key):
             window.move(position[0], position[1])
     else:
         window.set_position(gtk.WIN_POS_MOUSE)
+    window.show()

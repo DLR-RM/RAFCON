@@ -431,7 +431,7 @@ class State(Observable, YAMLObject, JSONObject):
             if self._file_system_path:
                 return self._file_system_path
             else:
-                return RAFCON_TEMP_PATH_STORAGE + str(self.get_path())
+                return RAFCON_TEMP_PATH_STORAGE + "/" + str(self.get_path())
         else:
             return self.get_sm_for_state().file_system_path + "/" + self.get_path()
 

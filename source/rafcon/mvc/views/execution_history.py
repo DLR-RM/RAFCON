@@ -28,16 +28,15 @@ class ExecutionHistoryView(View):
         history_vbox = gtk.VBox()
         reload_button = gtk.Button("Reload history")
         reload_button.set_border_width(constants.BORDER_WIDTH)
-        reload_button.show()
+        reload_button_box = gtk.HBox()
+        reload_button_box.pack_end(reload_button, False, True)
         history_tree = ExecutionHistoryTreeView()
-        history_tree.show()
         scroller = gtk.ScrolledWindow()
         scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scroller.add(history_tree)
-        scroller.show()
-        history_vbox.pack_start(reload_button, False, True, 0)
         history_vbox.pack_start(scroller, True, True, 0)
-        history_vbox.show()
+        history_vbox.pack_start(reload_button_box, False, True, 0)
+        history_vbox.show_all()
 
         self['history_vbox'] = history_vbox
         self['reload_button'] = reload_button

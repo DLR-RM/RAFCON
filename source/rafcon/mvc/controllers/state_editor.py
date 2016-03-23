@@ -1,6 +1,16 @@
+"""
+.. module:: state_editor
+   :platform: Unix, Windows
+   :synopsis: A module that holds the state editor controller which provides footage all sub-state-element-controllers.
+
+.. moduleauthor:: Rico Belder
+
+
+"""
+
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers.state_overview import StateOverviewController
-from rafcon.mvc.controllers.source_editor import  SourceEditorController
+from rafcon.mvc.controllers.source_editor import SourceEditorController
 from rafcon.mvc.controllers.io_data_port_list import DataPortListController
 from rafcon.mvc.controllers.scoped_variable_list import ScopedVariableListController
 from rafcon.mvc.controllers.state_outcomes import StateOutcomesEditorController
@@ -71,29 +81,18 @@ class StateEditorController(ExtendedController):
         view['description_text_view'].connect('focus-out-event', self.change_description)
         view['description_text_view'].connect('size-allocate', self.scroll_to_bottom)
 
-        for i in range(view["main_notebook_1"].get_n_pages()):
-            child = view["main_notebook_1"].get_nth_page(i)
-            tab_label = view["main_notebook_1"].get_tab_label(child)
-            if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
-                tab_label_text = tab_label.get_text()
-                view["main_notebook_1"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
-                                                                                                self.icons))
-            else:
-                tab_label.set_angle(270)
-            view["main_notebook_1"].set_tab_reorderable(child, True)
-            view["main_notebook_1"].set_tab_detachable(child, True)
-
-        for i in range(view["main_notebook_2"].get_n_pages()):
-            child = view["main_notebook_2"].get_nth_page(i)
-            tab_label = view["main_notebook_2"].get_tab_label(child)
-            if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
-                tab_label_text = tab_label.get_text()
-                view["main_notebook_2"].set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text,
-                                                                                                self.icons))
-            else:
-                tab_label.set_angle(270)
-            view["main_notebook_2"].set_tab_reorderable(child, True)
-            view["main_notebook_2"].set_tab_detachable(child, True)
+        for notebook_name in view.notebook_names:
+            notebook = view[notebook_name]
+            for i in xrange(notebook.get_n_pages()):
+                child = notebook.get_nth_page(i)
+                tab_label = notebook.get_tab_label(child)
+                if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
+                    tab_label_text = tab_label.get_text()
+                    notebook.set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, self.icons))
+                else:
+                    tab_label.set_angle(270)
+                notebook.set_tab_reorderable(child, True)
+                notebook.set_tab_detachable(child, True)
 
         if isinstance(model.state, LibraryState):
             view.bring_tab_to_the_top('Description')

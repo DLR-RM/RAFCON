@@ -1,3 +1,13 @@
+"""
+.. module:: tool_bar
+   :platform: Unix, Windows
+   :synopsis: A module that holds the menu bar controller with respective functionalities for each menu element.
+
+.. moduleauthor:: Franz Steinmetz
+
+
+"""
+
 import gtk
 from functools import partial
 # from twisted.internet import reactor
@@ -219,7 +229,7 @@ class MenuBarController(ExtendedController):
             if interface.open_folder_func is None:
                 logger.error("No function defined for opening a folder")
                 return
-            load_path = interface.open_folder_func("Please choose the folder of the state-machine")
+            load_path = interface.open_folder_func("Please choose the folder of the state machine")
             if load_path is None:
                 return
         else:
@@ -228,10 +238,8 @@ class MenuBarController(ExtendedController):
         try:
             [state_machine, version, creation_time] = global_storage.load_statemachine_from_path(load_path)
             state_machine_manager.add_state_machine(state_machine)
-        except AttributeError as e:
-            logger.error('Error while trying to open state-machine: {0}'.format(e))
-            import traceback
-            logger.error("Traceback: {0}".format(str(traceback.format_exc())))
+        except (ValueError, IOError) as e:
+            logger.error('Error while trying to open state machine: {0}'.format(e))
 
     def on_save_activate(self, widget, data=None, save_as=False):
         state_machine_m = self.model.get_selected_state_machine_model()
@@ -263,7 +271,7 @@ class MenuBarController(ExtendedController):
                     logger.debug("Source script in editing is ignored while saving")
                     widget.destroy()
 
-            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
+            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             message_string = "Are you sure you want to store the state machine without storing source Code in " \
                              "editing?\n\n" \
                              "The changes of state: %s name: %s have to be stored or ignored while saving. " % \
@@ -328,7 +336,7 @@ class MenuBarController(ExtendedController):
                         logger.debug("Refresh canceled")
                     widget.destroy()
 
-                dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
+                dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
                 message_string = "Are you sure you want to reload the libraries and all state machines?\n\n" \
                                  "The following elements have been modified and not saved. " \
                                  "These changes will get lost:"
@@ -410,7 +418,7 @@ class MenuBarController(ExtendedController):
                     logger.debug("Close main window canceled")
                     widget.destroy()
 
-            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
+            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             message_string = "Are you sure you want to exit RAFCON?\n\n" \
                              "The following state machines have been modified and not saved. " \
                              "These changes will get lost:"
@@ -442,7 +450,7 @@ class MenuBarController(ExtendedController):
                     # the signal handler does not trigger any more
                     # self.destroy(None)
 
-            dialog = RAFCONDialog(type=gtk.MESSAGE_QUESTION)
+            dialog = RAFCONDialog(type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
             message_string = "The state machine is still running. Do you want to stop the state machine before closing?"
             dialog.set_markup(message_string)
             dialog.add_button("Stop state machine", 42)
@@ -490,23 +498,26 @@ class MenuBarController(ExtendedController):
         """Saves current configuration of windows and panes to the runtime config file, before RAFCON is closed."""
         logger.debug("Saving runtime config")
 
-        global_runtime_config.save_configuration(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
+        global_runtime_config.store_widget_properties(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
 
-        global_runtime_config.save_configuration(self.main_window_view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
-        global_runtime_config.save_configuration(self.main_window_view['right_h_pane'], 'RIGHT_BAR_DOCKED')
-        global_runtime_config.save_configuration(self.main_window_view['central_v_pane'], 'CONSOLE_DOCKED')
+        global_runtime_config.store_widget_properties(self.main_window_view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
+        global_runtime_config.store_widget_properties(self.main_window_view['right_h_pane'], 'RIGHT_BAR_DOCKED')
+        global_runtime_config.store_widget_properties(self.main_window_view['central_v_pane'], 'CONSOLE_DOCKED')
+        global_runtime_config.store_widget_properties(self.main_window_view['left_bar_pane'], 'LEFT_BAR_INNER_PANE')
 
         if self.main_window_view.left_bar_window.get_top_widget().get_property('visible'):
-            global_runtime_config.save_configuration(self.main_window_view.left_bar_window.get_top_widget(),
-                                                     'LEFT_BAR_WINDOW')
+            global_runtime_config.store_widget_properties(
+                self.main_window_view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
 
         if self.main_window_view.right_bar_window.get_top_widget().get_property('visible'):
-            global_runtime_config.save_configuration(self.main_window_view.right_bar_window.get_top_widget(),
-                                                     'RIGHT_BAR_WINDOW')
+            global_runtime_config.store_widget_properties(
+                self.main_window_view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
 
         if self.main_window_view.console_window.get_top_widget().get_property('visible'):
-            global_runtime_config.save_configuration(self.main_window_view.console_window.get_top_widget(),
-                                                     'CONSOLE_WINDOW')
+            global_runtime_config.store_widget_properties(
+                self.main_window_view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
+
+        global_runtime_config.save_configuration()
 
         import glib
 

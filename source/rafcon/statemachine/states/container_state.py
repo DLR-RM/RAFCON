@@ -998,10 +998,6 @@ class ContainerState(State):
             if to_data_port_id not in to_data_port.parent.input_data_ports:
                 return False, "Data flow target port must be an input port, when the data flow goes to a child state"
 
-        # Check, whether origin and target are the same child state (which would be not allowed)
-        if from_state_id == to_state_id and from_state_id != self.state_id:
-            return False, "Data flow target state cannot be the origin state"
-
         # Check, whether the target port is already connected
         for existing_data_flow in self.data_flows.itervalues():
             to_data_port_existing = self.get_data_port(existing_data_flow.to_state, existing_data_flow.to_key)

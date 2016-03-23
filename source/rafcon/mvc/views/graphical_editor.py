@@ -141,10 +141,9 @@ class GraphicalEditorView(View):
         self.editor = GraphicalEditor(glconfig)
         self.editor.add_events(gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
                                gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
-        self.editor.set_size_request(500, 500)
+        self.editor.set_size_request(0, 0)
         self.editor.set_flags(gtk.CAN_FOCUS)
 
-        # self.v_box.pack_start(self.test_label)
         self.v_box.pack_end(self.editor)
 
         self['main_frame'] = self.v_box

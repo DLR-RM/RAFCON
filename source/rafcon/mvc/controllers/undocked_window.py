@@ -1,3 +1,13 @@
+"""
+.. module:: undocked_window
+   :platform: Unix, Windows
+   :synopsis: A module that holds the controller un-docked windows as part of the un- and re-dock feature.
+
+.. moduleauthor:: Mahmoud Akl
+
+
+"""
+
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.controllers.top_tool_bar import TopToolBarUndockedWindowController
 

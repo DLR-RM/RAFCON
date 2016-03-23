@@ -1,11 +1,25 @@
+"""
+.. module:: state_machine_tree
+   :platform: Unix, Windows
+   :synopsis: A module that holds the controller to access a state machine overview by a TreeView.
+
+.. moduleauthor:: Rico Belder
+
+
+"""
+
 import gtk
 import gobject
+
+from rafcon.statemachine.enums import StateType
+from functools import partial
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.utils import log
+from rafcon.mvc import statemachine_helper
 
 logger = log.get_logger(__name__)
 
@@ -54,6 +68,16 @@ class StateMachineTreeController(ExtendedController):
     def register_adapters(self):
         pass
 
+    def register_actions(self, shortcut_manager):
+        """Register callback methods for triggered actions
+
+        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
+            between shortcuts and actions.
+        """
+        shortcut_manager.add_callback_for_action("delete", self._delete_selection)
+        shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))
+        shortcut_manager.add_callback_for_action("add2", partial(self._add_new_state, state_type=StateType.HIERARCHY))
+
     def register(self):
         """Change the state machine that is observed for new selected states to the selected state machine."""
         # print "state_machine_tree register state_machine"
@@ -73,6 +97,20 @@ class StateMachineTreeController(ExtendedController):
             self.update()
         else:
             self.tree_store.clear()
+
+    def _add_new_state(self, *args, **kwargs):
+        """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
+
+        Adds a new state only if the the state machine tree is in focus.
+        """
+        if not self.view['state_machine_tree_view'].is_focus():
+            return
+        state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
+        return statemachine_helper.add_new_state(self._selected_sm_model, state_type)
+
+    def _delete_selection(self, *args):
+        if self.view['state_machine_tree_view'].is_focus():
+            return statemachine_helper.delete_selected_elements(self._selected_sm_model)
 
     @ExtendedController.observe("state", after=True)  # root_state
     @ExtendedController.observe("states", after=True)
@@ -100,7 +138,9 @@ class StateMachineTreeController(ExtendedController):
                                                     "add_outcome", "remove_outcome",
                                                     "add_data_flow", "remove_data_flow",
                                                     "add_transition", "remove_transition", "parent",
-                                                    "state_execution_status", "script_text",  # ContainerState
+                                                    "input_data_ports", "output_data_ports", "outcomes", "description",
+                                                    "scoped_variables", "data_flows", "transitions",  # ContainerState
+                                                    "state_execution_status", "script_text",
                                                     'library_name', 'library_path', 'version', 'state_copy',  # LibraryState
                                                     'input_data_port_runtime_values', 'output_data_port_runtime_values',
                                                     'use_runtime_value_input_data_ports', 'use_runtime_value_output_data_ports',
@@ -200,11 +240,11 @@ class StateMachineTreeController(ExtendedController):
         # print "check for update row of state: ", state_model.state.get_path()
         state_row_path = self.tree_store.get_path(state_row_iter)
 
-        if not type(state_model.state) == self.tree_store[state_row_path][2] or \
+        if not type(state_model.state).__name__ == self.tree_store[state_row_path][2] or \
                 not state_model.state.name == self.tree_store[state_row_path][0]:
             # print "update row of state: ", state_model.state.get_path()
             self.tree_store[state_row_path][0] = state_model.state.name
-            self.tree_store[state_row_path][2] = type(state_model.state)
+            self.tree_store[state_row_path][2] = type(state_model.state).__name__
             self.tree_store[state_row_path][3] = state_model
             self.tree_store.row_changed(state_row_path, state_row_iter)
 
@@ -216,7 +256,7 @@ class StateMachineTreeController(ExtendedController):
             state_row_iter = self.tree_store.insert_before(parent=parent_iter, sibling=None,
                                                            row=(state_model.state.name,
                                                                 state_model.state.state_id,
-                                                                type(state_model.state),
+                                                                type(state_model.state).__name__,
                                                                 state_model,
                                                                 state_model.state.get_path()))
             self.state_row_iter_dict_by_state_path[state_path] = state_row_iter

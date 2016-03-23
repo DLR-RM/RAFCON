@@ -26,7 +26,7 @@ class ToolBarView(View):
         button_refresh_libs = self['button_refresh_libs']
         button_refresh_libs.set_label_widget(self.get_label_widget(constants.BUTTON_REFR, "Refresh Libraries"))
 
-        self.get_top_widget().set_border_width(constants.BORDER_WIDTH)
+        # self.get_top_widget().set_border_width(constants.BORDER_WIDTH)
 
     @staticmethod
     def get_label_widget(icon, text):

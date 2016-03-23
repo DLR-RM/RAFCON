@@ -14,9 +14,9 @@ Subpackages
     rafcon.mvc.views
     rafcon.mvc.mygaphas
 
-main
-----
-.. automodule:: rafcon.mvc.main
+action
+------
+.. automodule:: rafcon.mvc.action
     :members:
     :undoc-members:
     :show-inheritance:
@@ -24,13 +24,6 @@ main
 clipboard
 ---------
 .. automodule:: rafcon.mvc.clipboard
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-history
--------
-.. automodule:: rafcon.mvc.history
     :members:
     :undoc-members:
     :show-inheritance:

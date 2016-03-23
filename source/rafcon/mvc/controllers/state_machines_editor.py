@@ -1,17 +1,29 @@
+"""
+.. module:: state_machines_editor
+   :platform: Unix, Windows
+   :synopsis: A module that holds the controller with the interface to the state machines notebook.
+
+.. moduleauthor:: Franz Steinmetz
+
+
+"""
+
 import gtk
 import copy
 import collections
 
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+import rafcon.statemachine.singleton
+
 from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.views.graphical_editor import GraphicalEditorView
 from rafcon.mvc.controllers.graphical_editor import GraphicalEditorController
+from rafcon.mvc.views.graphical_editor import GraphicalEditorView
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.state_machine import StateMachineModel, StateMachine
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
-import rafcon.statemachine.singleton
-from rafcon.mvc.utils import constants
 from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.utils import constants
+from rafcon.mvc.utils import helpers
 
 from rafcon.utils import log
 
@@ -23,25 +35,21 @@ try:
     from rafcon.mvc.controllers.graphical_editor_gaphas import GraphicalEditorController as \
         GraphicalEditorGaphasController
 except ImportError as e:
-    logger.warn("The Gaphas graphical editor is not supported due to missing libraries -> {0}".format(e.message))
-    # logger.error("%s, %s" % (e.message, traceback.format_exc()))
+    logger.warn("The Gaphas graphical editor is not supported due to missing libraries: {0}".format(e.message))
     GAPHAS_AVAILABLE = False
+
+ROOT_STATE_NAME_MAX_CHARS = 25
 
 
 def create_tab_close_button(callback, *additional_parameters):
-    close_button = gtk.Button()
-    close_button.set_size_request(width=18, height=18)
     close_label = gtk.Label()
     close_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, constants.FONT_SIZE_SMALL,
                                                                       constants.BUTTON_CLOSE))
+    close_button = gtk.Button()
+    close_button.set_size_request(width=constants.GRID_SIZE*3, height=constants.GRID_SIZE*3)
     close_button.set_relief(gtk.RELIEF_NONE)
     close_button.set_focus_on_click(True)
     close_button.add(close_label)
-
-    style = gtk.RcStyle()
-    style.xthickness = 0
-    style.ythickness = 0
-    close_button.modify_style(style)
 
     close_button.connect('released', callback, *additional_parameters)
 
@@ -49,23 +57,30 @@ def create_tab_close_button(callback, *additional_parameters):
 
 
 def create_tab_header(title, close_callback, *additional_parameters):
-    hbox = gtk.HBox()
-    hbox.set_size_request(width=-1, height=20)  # safe two pixel
     label = gtk.Label(title)
-    hbox.add(label)
-
-    # add close button
     close_button = create_tab_close_button(close_callback, *additional_parameters)
-    hbox.add(close_button)
+
+    hbox = gtk.HBox()
+    hbox.set_name("tab_label")
+
+    hbox.pack_start(label, expand=True, fill=True, padding=constants.GRID_SIZE)
+    hbox.pack_start(close_button, expand=False, fill=False, padding=0)
     hbox.show_all()
 
-    return hbox
+    return hbox, label
 
 
-def compose_tab_title(state_machine_id, root_state_name, appendix=''):
-    title = "{0}|{1} {2}".format(state_machine_id, root_state_name, appendix)
-    title.strip()
-    return title
+def set_tab_label_texts(label, state_machine_m, unsaved_changes=False):
+    state_machine_id = state_machine_m.state_machine.state_machine_id
+    root_state_name = state_machine_m.root_state.state.name
+    root_state_name_trimmed = helpers.limit_string(root_state_name, ROOT_STATE_NAME_MAX_CHARS)
+    state_machine_path = state_machine_m.state_machine.file_system_path or "[not yet saved]"
+    label_text = "{0}&#8201;&#8226;&#8201;{1}".format(state_machine_id, root_state_name_trimmed)
+    tooltip_text = root_state_name + "\n\nPath: " + state_machine_path
+    if unsaved_changes:
+        label_text += '&#8201;*'
+    label.set_markup(label_text)
+    label.set_tooltip_text(tooltip_text)
 
 
 def get_state_machine_id(state_machine_m):
@@ -178,14 +193,11 @@ class StateMachinesEditorController(ExtendedController):
 
         self.add_controller(sm_id, graphical_editor_ctrl)
 
-        unsaved_changed = '*' if state_machine_m.state_machine.marked_dirty else ''
-        tab_title = compose_tab_title(sm_id, state_machine_m.root_state.state.name, unsaved_changed)
-        tab_label = create_tab_header(tab_title, self.on_close_clicked, state_machine_m, 'refused')
-        tab_label.set_tooltip_text('[source] {0}'.format(state_machine_m.state_machine.file_system_path))
-        # TODO get an idea how to stop tooltip to wrap its text
+        tab, tab_label = create_tab_header('', self.on_close_clicked, state_machine_m, 'refused')
+        set_tab_label_texts(tab_label, state_machine_m, state_machine_m.state_machine.marked_dirty)
 
         page = graphical_editor_view['main_frame']
-        self.view.notebook.append_page(page, tab_label)
+        self.view.notebook.append_page(page, tab)
         self.view.notebook.set_tab_reorderable(page, True)
         page.show_all()
 
@@ -243,17 +255,14 @@ class StateMachinesEditorController(ExtendedController):
         sm_id = self.model.state_machine_mark_dirty
         if sm_id in self.model.state_machine_manager.state_machines:
             label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_children()[0]
-            tab_title = compose_tab_title(sm_id, self.tabs[sm_id]["state_machine_m"].root_state.state.name, '*')
-            label.set_label(tab_title)
+            set_tab_label_texts(label, self.tabs[sm_id]["state_machine_m"], True)
 
     @ExtendedController.observe("state_machine_un_mark_dirty", assign=True)
     def sm_un_marked_dirty(self, model, prop_name, info):
         sm_id = self.model.state_machine_un_mark_dirty
         if sm_id in self.model.state_machine_manager.state_machines:
             label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_children()[0]
-            tab_title = compose_tab_title(sm_id, self.tabs[sm_id]["state_machine_m"].root_state.state.name)
-            label.set_label(tab_title)
-            label.set_tooltip_text('[source] {0}'.format(self.tabs[sm_id]["state_machine_m"].state_machine.file_system_path))
+            set_tab_label_texts(label, self.tabs[sm_id]["state_machine_m"], False)
 
     def on_close_clicked(self, event, state_machine_m, result, force=False):
         """Triggered when the close button of a state machine tab is clicked
@@ -277,7 +286,7 @@ class StateMachinesEditorController(ExtendedController):
             from rafcon.mvc.utils.dialog import RAFCONDialog
             sm_id = get_state_machine_id(state_machine_m)
             root_state_name = state_machine_m.root_state.state.name
-            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING)
+            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             message_string = "There are unsaved changed in the state machine '{0}' with id {1}. Do you want to close " \
                              "the state machine anyway?".format(root_state_name, sm_id)
             dialog.set_markup(message_string)

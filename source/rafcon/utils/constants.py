@@ -1,5 +1,5 @@
 """
-.. module:: preemptive_concurrency_state
+.. module:: constants
    :platform: Unix, Windows
    :synopsis: A module holding all constants of the RAFCON core
 
