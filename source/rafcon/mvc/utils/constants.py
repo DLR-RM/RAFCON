@@ -36,7 +36,7 @@ ICON_SIZE_IN_PIXEL = 20
 ICON_MARGIN = 10
 
 WINDOW_SIZE = {'MAIN_WINDOW': (1800, 900), 'LEFT_BAR_WINDOW': (300, 800), 'RIGHT_BAR_WINDOW': (300, 800),
-               'CONSOLE_WINDOW': (800, 300)}
+               'CONSOLE_BAR_WINDOW': (800, 300)}
 
 # The codes written down here are the codes provided on the font_awesome website
 BUTTON_EXP = "f065"
