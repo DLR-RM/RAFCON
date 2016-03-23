@@ -89,23 +89,23 @@ def trigger_docking_signals(*args):
 
 
 def test_window_positions(caplog):
-        testing_utils.test_multithrading_lock.acquire()
-        os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
-        gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
-        mirror_runtime_config_file()
-        global_runtime_config.load(config_file='runtime_config.yaml', path=DOCKING_TEST_FOLDER)
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
-        main_window_view = MainWindowView()
-        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                      editor_type='LogicDataGrouped')
-        thread = threading.Thread(target=trigger_docking_signals, args=[main_window_controller])
-        thread.start()
+    testing_utils.test_multithrading_lock.acquire()
+    os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
+    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
+    mirror_runtime_config_file()
+    global_runtime_config.load(config_file='runtime_config.yaml', path=DOCKING_TEST_FOLDER)
+    testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    main_window_view = MainWindowView()
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
+                                                  editor_type='LogicDataGrouped')
+    thread = threading.Thread(target=trigger_docking_signals, args=[main_window_controller])
+    thread.start()
 
-        gtk.main()
-        thread.join()
-        os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
-        testing_utils.test_multithrading_lock.release()
-        testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=warnings)
+    gtk.main()
+    thread.join()
+    os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=warnings)
 
 
 if __name__ == '__main__':
