@@ -32,6 +32,8 @@ class StateEditorController(ExtendedController):
     """Controller handles the organization of the Logic-Data oriented State-Editor.
     Widgets concerning logic flow (outcomes and transitions) are grouped in the Logic Linkage expander.
     Widgets concerning data flow (data-ports and data-flows) are grouped in the data linkage expander.
+
+    :param rafcon.mvc.models.state.StateModel model: The state model
     """
 
     icons = {
@@ -170,7 +172,7 @@ class StateEditorController(ExtendedController):
     def state_type_changed(self, model, prop_name, info):
         """Reopen state editor when state type is changed
 
-        When the type of the observed state changes, a new model is created. The look of this controller'S view
+        When the type of the observed state changes, a new model is created. The look of this controller's view
         depends on the kind of model. Therefore, we have to destroy this editor and open a new one with the new model.
         """
         from rafcon.mvc.singleton import main_window_controller

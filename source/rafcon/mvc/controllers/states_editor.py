@@ -103,7 +103,7 @@ def set_tab_label_texts(label, state_m, unsaved_changes=False):
 class StatesEditorController(ExtendedController):
     """Controller handling the states editor
 
-    :param rafcon.mvc.controllers.state_machine_manager.StateMachineManagerModel model: The state machine manager model,
+    :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel model: The state machine manager model,
         holding data regarding state machines.
     :param rafcon.mvc.views.states_editor.StatesEditorView view: The GTK view showing state editor tabs.
     :param editor_type:
@@ -267,9 +267,11 @@ class StatesEditorController(ExtendedController):
         return page_id
 
     def recreate_state_editor(self, old_state_m, new_state_m):
+        selection = self.current_state_machine_m.selection
         old_state_identifier = self.get_state_identifier(old_state_m)
         self.close_page(old_state_identifier, delete=True)
         self.add_state_editor(new_state_m)
+        selection.add(new_state_m)
 
     def script_text_changed(self, source, state_m):
         state_identifier = self.get_state_identifier(state_m)

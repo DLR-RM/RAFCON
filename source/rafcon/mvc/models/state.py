@@ -18,7 +18,7 @@ class StateModel(AbstractStateModel):
     :param rafcon.statemachine.states.state.State state: The state to be managed
     :param AbstractStateModel parent: The state to be managed
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state
-     """
+    """
 
     def __init__(self, state, parent=None, meta=None, load_meta_data=True):
         """Constructor"""
