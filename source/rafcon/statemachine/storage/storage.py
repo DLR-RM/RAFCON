@@ -270,6 +270,8 @@ def load_state_recursively(parent, state_path=None):
     :param state_path: the path on the filesystem where to find eht meta file for the state
     :return:
     """
+    from rafcon.statemachine.states.state import State
+    from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
     path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA)
 
@@ -279,20 +281,19 @@ def load_state_recursively(parent, state_path=None):
 
     try:
         state_info = load_data_file(path_core_data)
+    except ValueError, e:
+        logger.exception("Error while loading state data: {0}".format(e))
     except LibraryNotFoundException, e:
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(str(e.message)))
 
-        from rafcon.statemachine.states.hierarchy_state import HierarchyState
-        state_id = retrieve_state_id_core_data_file(path_core_data)
+        state_id = state_info["state_id"]
         dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id)
         # set parent of dummy state
-        if parent:
-            from rafcon.statemachine.states.state import State
-            if isinstance(parent, State):
-                parent.add_state(dummy_state, storage_load=True)
-            else:
-                dummy_state.parent = parent
+        if isinstance(parent, State):
+            parent.add_state(dummy_state, storage_load=True)
+        else:
+            dummy_state.parent = parent
         return dummy_state
 
     # Transitions and data flows are not added when loading a state, as also states are not added.
@@ -306,7 +307,6 @@ def load_state_recursively(parent, state_path=None):
         data_flows = state_info[2]
 
     # set parent of state
-    from rafcon.statemachine.states.state import State
     if parent:
         if isinstance(parent, State):
             parent.add_state(state, storage_load=True)
@@ -319,7 +319,8 @@ def load_state_recursively(parent, state_path=None):
     from rafcon.statemachine.states.execution_state import ExecutionState
     if isinstance(state, ExecutionState):
         state.script.reload_path(SCRIPT_FILE)
-        load_script_file(state)
+        script = read_file(state.get_file_system_path(), state.script.filename)
+        state.script_text = script
 
     one_of_my_child_states_not_found = False
 
@@ -343,21 +344,7 @@ def load_state_recursively(parent, state_path=None):
     return state
 
 
-def retrieve_state_id_core_data_file(filename):
-    if os.path.exists(filename):
-        content = storage_utils.load_dict_from_json(filename, as_dict=True)
-        return content["state_id"]
-    raise ValueError("Data file not found: {0}".format(filename))
-
-
 def load_data_file(filename):
     if os.path.exists(filename):
         return storage_utils.load_dict_from_json(filename)
     raise ValueError("Data file not found: {0}".format(filename))
-
-
-def load_script_file(state):
-    from rafcon.statemachine.states.execution_state import ExecutionState
-    if isinstance(state, ExecutionState):
-        script = read_file(state.get_file_system_path(), state.script.filename)
-        state.script_text = script
