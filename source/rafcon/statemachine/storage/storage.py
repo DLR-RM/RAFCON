@@ -45,7 +45,7 @@ if os.path.exists(DEFAULT_SCRIPT_PATH):
 _paths_to_remove_before_sm_save = {}
 
 
-def mark_path_for_removal_for_sm_id( state_machine_id, path):
+def mark_path_for_removal_for_sm_id(state_machine_id, path):
     """Mark path for removal
 
     The path is removed when the state machine of the specified state machine id is saved.
@@ -71,6 +71,26 @@ def unmark_path_for_removal_for_sm_id(state_machine_id, path):
             _paths_to_remove_before_sm_save[state_machine_id].remove(path)
 
 
+def remove_state_machine_paths(state_machine_id):
+    """Removes all paths marked for removal for the given state machine
+
+    :param int state_machine_id: ID of the state machine whos paths are to be deleted
+    """
+    if state_machine_id in _paths_to_remove_before_sm_save:
+        for path in _paths_to_remove_before_sm_save[state_machine_id]:
+            if os.path.exists(path):
+                shutil.rmtree(path)
+
+
+def clean_state_machine_paths(state_machine_id):
+    """Empties the list of paths marked for removal for the given state machine
+
+    :param int state_machine_id: ID of the state machine whos paths are to be emptied
+    """
+    if state_machine_id in _paths_to_remove_before_sm_save:
+        del _paths_to_remove_before_sm_save[state_machine_id]
+
+
 def save_statemachine_to_path(state_machine, base_path, delete_old_state_machine=False, save_as=False,
                               temporary_storage=False):
     """Saves a state machine recursively to the file system
@@ -84,14 +104,13 @@ def save_statemachine_to_path(state_machine, base_path, delete_old_state_machine
 
     if not temporary_storage:
         if save_as:
-            if state_machine.state_machine_id in _paths_to_remove_before_sm_save:
-                _paths_to_remove_before_sm_save[state_machine.state_machine_id] = {}
+            # A copy of the state machine is created at a new place in the filesystem. Therefore, there are no paths
+            # to be removed
+            clean_state_machine_paths(state_machine.state_machine_id)
         else:
-            # remove all paths that were marked to be removed
-            if state_machine.state_machine_id in _paths_to_remove_before_sm_save:
-                for path in _paths_to_remove_before_sm_save[state_machine.state_machine_id]:
-                    if os.path.exists(path):
-                        shutil.rmtree(path)
+            # When saving the state machine, all changed made by the user should finally take affect on the
+            # filesystem. This includes the removal of all information about deleted states.
+            remove_state_machine_paths(state_machine.state_machine_id)
 
     root_state = state_machine.root_state
 

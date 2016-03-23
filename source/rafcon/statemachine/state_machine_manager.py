@@ -11,6 +11,7 @@
 from gtkmvc import Observable
 
 from rafcon.statemachine.state_machine import StateMachine
+from rafcon.statemachine.storage import storage
 from rafcon.network.network_config import global_net_config
 
 from rafcon.utils import log
@@ -99,6 +100,7 @@ class StateMachineManager(Observable):
         """
         if state_machine_id in self._state_machines:
             del self._state_machines[state_machine_id]
+            storage.clean_state_machine_paths(state_machine_id)
         else:
             logger.error("There is no state_machine with state_machine_id: %s" % state_machine_id)
 
