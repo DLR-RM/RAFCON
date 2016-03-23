@@ -16,7 +16,7 @@ from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
 from rafcon.statemachine.enums import DEFAULT_SCRIPT_PATH
 
-from rafcon.utils.filesystem import read_file
+from rafcon.utils.filesystem import read_file, write_file
 from rafcon.utils import storage_utils
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -157,28 +157,22 @@ def save_script_file_for_state_and_source_path(state, base_path, state_path):
         if not source_script_file == destination_script_file:
             try:
                 if not os.path.exists(source_script_file):
-                        script_file = open(destination_script_file, 'w')
-                        script_file.write(state.script_text)
-                        script_file.close()
+                    write_file(destination_script_file, state.script_text)
                 else:
                     shutil.copyfile(source_script_file, destination_script_file)
             except Exception:
-                logger.warning("Copy of script file failed: {0} -> {1}".format(source_script_file,
+                logger.exception("Copy of script file failed: {0} -> {1}".format(source_script_file,
                                                                                destination_script_file))
                 raise
 
             state.script.reload_path(SCRIPT_FILE)
         else:  # load text into script file
-            script_file = open(source_script_file, 'w')
-            script_file.write(state.script_text)
-            script_file.close()
+            write_file(source_script_file, state.script_text)
 
 
 def save_script_file(state):
     script_file_path = os.path.join(state.get_file_system_path(), state.script.filename)
-    script_file = open(script_file_path, 'w')
-    script_file.write(state.script_text)
-    script_file.close()
+    write_file(script_file_path, state.script_text)
 
 
 def save_state_recursively(state, base_path, parent_path, force_full_load=False):

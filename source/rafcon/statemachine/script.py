@@ -60,9 +60,7 @@ class Script(Observable, yaml.YAMLObject):
                 os.makedirs(self._path)
             if not filename:
                 self._filename = "Script_%s.file" % str(self._script_id)
-            script_file = open(os.path.join(self._path, self._filename), "w")
-            script_file.write(self.script)
-            script_file.close()
+            filesystem.write_file(os.path.join(self._path, self._filename), self.script)
 
         if check_path:
             if not os.path.exists(self._path):
@@ -106,18 +104,12 @@ class Script(Observable, yaml.YAMLObject):
     def load_script(self):
         """Loads and builds the module given by the path and the filename
         """
-        script_path = os.path.join(self._path, self._filename)
+        script_text = filesystem.read_file(self._path, self._filename)
 
-        try:
-            script_file = open(script_path, 'r')
-        except:
-            logger.error("The script file could not be opened (path: %s)" % str(script_path))
-            raise IOError("Script file could not be opened!")
-
-        # reset script
-        self.script = None
-        self.script = script_file.read()
-        script_file.close()
+        if not script_text:
+            raise IOError("Script file could not be opened or was empty: {0}".format(os.path.join(self._path,
+                                                                                                  self._filename)))
+        self.script = script_text
 
     def build_module(self):
         """Loads and builds the module given by the path and the filename
