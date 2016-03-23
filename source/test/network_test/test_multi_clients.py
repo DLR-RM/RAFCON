@@ -13,6 +13,7 @@ import multiprocessing
 import threading
 import time
 import os
+import pytest
 
 FINAL_MESSAGE = "final_message"
 CLIENT1_QUEUE = "client1"
@@ -277,8 +278,7 @@ def launch_server(interacting_function_handle_server_, multiprocessing_queue_dic
     return server
 
 
-if __name__ == '__main__':
-
+def test_multi_clients():
     test_successful = True
 
     queue_dict = dict()
@@ -331,3 +331,6 @@ if __name__ == '__main__':
 
     assert test_successful is True
 
+if __name__ == '__main__':
+    test_multi_clients()
+    # pytest.main([__file__])

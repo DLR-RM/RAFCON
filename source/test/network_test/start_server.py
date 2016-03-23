@@ -57,7 +57,7 @@ def start_server(interacting_function, queue_dict):
 
     signal.signal(signal.SIGINT, sm_singletons.signal_handler)
 
-    global_config.load(path=".")
+    global_config.load(path=os.path.dirname(os.path.abspath(__file__)))
 
     # Initialize libraries
     sm_singletons.library_manager.initialize()
@@ -73,7 +73,7 @@ def start_server(interacting_function, queue_dict):
     sm_thread.start()
 
     setup_config = dict()
-    setup_config["net_config_path"] = os.path.abspath("./server")
+    setup_config["net_config_path"] = os.path.abspath(path=os.path.dirname(os.path.abspath(__file__))+"/server")
 
     try:
         # check if monitoring plugin is loaded

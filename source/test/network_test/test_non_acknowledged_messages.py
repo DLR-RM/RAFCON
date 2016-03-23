@@ -2,6 +2,8 @@ from multiprocessing import Process, Queue
 import os
 import threading
 import time
+import pytest
+
 from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
@@ -109,7 +111,6 @@ def start_udp_client(name, multi_processing_queue):
                                                                                  connector])
     wait_for_test_finish.start()
 
-    # reactor.addSystemEventTrigger('before', 'shutdown', udp_client.disconnect)
     reactor.run()
 
     sender_thread.join()
@@ -118,17 +119,13 @@ def start_udp_client(name, multi_processing_queue):
     logger.info("Client joint wait_for_test_finish")
 
 
-if __name__ == '__main__':
+def test_non_acknowledged_messages():
     q = Queue()
     server = Process(target=start_udp_server, args=("udp_server", q))
     server.start()
 
     client = Process(target=start_udp_client, args=("udp_client1", q))
     client.start()
-
-    # #working with arbitrary number of clients
-    # client = Process(target=start_udp_client, args=("udp_client2", q))
-    # client.start()
 
     data = q.get()
     assert data == FINAL_MESSAGE
@@ -140,3 +137,6 @@ if __name__ == '__main__':
     client.join()
 
 
+if __name__ == '__main__':
+    # test_non_acknowledged_messages()
+    pytest.main([__file__])

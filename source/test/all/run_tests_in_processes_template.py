@@ -19,7 +19,7 @@ def run_pytest_on_module(filename, unit_test_message_queue):
     unit_test_message_queue.put([filename, return_value])
 
 
-def test_run_unit_tests_in_processes():
+def run_unit_tests_in_processes(path_with_test_modules):
     """
     This is the actual unit test
     :return:
@@ -31,6 +31,7 @@ def test_run_unit_tests_in_processes():
     process_list = []
 
     def run_tests_in_path(path):
+        print os.listdir(path)
         for file_name in os.listdir(path):
             abs_path = os.path.join(path, file_name)
             if os.path.isfile(abs_path) and file_name.startswith("test_") and file_name.endswith(".py"):
@@ -46,7 +47,7 @@ def test_run_unit_tests_in_processes():
                 # Recursively go through all directories to search for tests
                 run_tests_in_path(abs_path)
 
-    run_tests_in_path(test_path)
+    run_tests_in_path(os.path.join(test_path, path_with_test_modules))
 
     for process in process_list:
         return_value = unit_test_message_queue.get()
@@ -55,5 +56,5 @@ def test_run_unit_tests_in_processes():
         process.join()
 
 if __name__ == '__main__':
-    # test_run_unit_tests_in_processes()
-    pytest.main([__file__])
+    # run_unit_tests_in_processes("network_test")
+    run_unit_tests_in_processes("common")

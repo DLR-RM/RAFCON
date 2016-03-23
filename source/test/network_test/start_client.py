@@ -74,12 +74,12 @@ def start_client(interacting_function, queue_dict):
 
     signal.signal(signal.SIGINT, sm_singletons.signal_handler)
 
-    global_config.load(path=".")
-    global_gui_config.load(path=".")
-    global_runtime_config.load(path=".")
+    global_config.load(path=os.path.dirname(os.path.abspath(__file__)))
+    global_gui_config.load(path=os.path.dirname(os.path.abspath(__file__)))
+    global_runtime_config.load(path=os.path.dirname(os.path.abspath(__file__)))
 
     setup_config = dict()
-    setup_config["net_config_path"] = os.path.abspath("./client")
+    setup_config["net_config_path"] = os.path.abspath(path=os.path.dirname(os.path.abspath(__file__))+"/client")
 
     # Make mvc directory the working directory
     # Needed for views, which assume to be in the mvc path and import glade files relatively
