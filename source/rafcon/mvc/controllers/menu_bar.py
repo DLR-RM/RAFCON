@@ -442,9 +442,9 @@ class MenuBarController(ExtendedController):
             global_runtime_config.store_widget_properties(
                 self.main_window_view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
 
-        if self.main_window_view.console_window.get_top_widget().get_property('visible'):
+        if self.main_window_view.console_bar_window.get_top_widget().get_property('visible'):
             global_runtime_config.store_widget_properties(
-                self.main_window_view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
+                self.main_window_view.console_bar_window.get_top_widget(), 'CONSOLE_BAR_WINDOW')
 
         global_runtime_config.save_configuration()
 

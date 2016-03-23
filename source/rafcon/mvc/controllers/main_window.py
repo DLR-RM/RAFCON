@@ -191,7 +191,8 @@ class MainWindowController(ExtendedController):
         right_undocked_window_controller = UndockedWindowController(state_machine_manager_model, view.right_bar_window)
         self.add_controller('right_window_controller', right_undocked_window_controller)
 
-        console_undocked_window_controller = UndockedWindowController(state_machine_manager_model, view.console_window)
+        console_undocked_window_controller = UndockedWindowController(state_machine_manager_model,
+                                                                      view.console_bar_window)
         self.add_controller('console_window_controller', console_undocked_window_controller)
 
         self.left_bar_child = view['top_level_h_pane'].get_child1()
@@ -214,7 +215,7 @@ class MainWindowController(ExtendedController):
         # Initialize the Left-Bar un-docked window title
         view.left_bar_window.initialize_title(gui_helper.create_left_bar_window_title(upper_title, lower_title))
         view.right_bar_window.initialize_title('STATE EDITOR')
-        view.console_window.initialize_title('CONSOLE')
+        view.console_bar_window.initialize_title('CONSOLE')
 
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
@@ -234,7 +235,7 @@ class MainWindowController(ExtendedController):
         # Connect undock buttons' signals
         view['undock_left_bar_button'].connect('clicked', self.on_left_bar_undock_clicked)
         view['undock_right_bar_button'].connect('clicked', self.on_right_bar_undock_clicked)
-        view['undock_console_button'].connect('clicked', self.on_console_undock_clicked)
+        view['undock_console_button'].connect('clicked', self.on_console_bar_undock_clicked)
 
         # Connect Shortcut buttons' signals to their corresponding methods
         view['button_start_shortcut'].connect('toggled', self.on_button_start_shortcut_toggled)
@@ -436,7 +437,7 @@ class MainWindowController(ExtendedController):
         self.docked['right_bar'] = True
         self.view['undock_right_bar_button'].show()
 
-    def on_console_undock_clicked(self, widget, event=None):
+    def on_console_bar_undock_clicked(self, widget, event=None):
         """Triggered when the un-dock button of the console is clicked.
 
         The console is un-docked into a separate new window, and the console is hidden from the main-window by
@@ -446,19 +447,19 @@ class MainWindowController(ExtendedController):
         in the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons visible in the
         new window. The new window's size and position are loaded from runtime_config, if they exist.
         """
-        gui_helper.set_window_size_and_position(self.view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
-        self.view['console'].reparent(self.view.console_window['central_eventbox'])
+        gui_helper.set_window_size_and_position(self.view.console_bar_window.get_top_widget(), 'CONSOLE_BAR_WINDOW')
+        self.view['console'].reparent(self.view.console_bar_window['central_eventbox'])
         self.view['undock_console_button'].hide()
         self.on_console_hide_clicked(None)
         self.view['console_return_button'].hide()
 
-    def on_console_dock_clicked(self, widget, event=None):
+    def on_console_bar_dock_clicked(self, widget, event=None):
         """Triggered when the re-dock button of the console window is clicked.
 
         The size & position of the open window is saved to the runtime_config file, and the console is re-docked back
         to the main-window, and the console window is hidden. The un-dock button of the bar is made visible again.
         """
-        global_runtime_config.store_widget_properties(self.view.console_window.get_top_widget(), 'CONSOLE_WINDOW')
+        global_runtime_config.store_widget_properties(self.view.console_bar_window.get_top_widget(), 'CONSOLE_BAR_WINDOW')
         self.on_console_return_clicked(None)
         self.view['console'].reparent(self.view['console_container'])
         self.get_controller('console_window_controller').hide_window()
