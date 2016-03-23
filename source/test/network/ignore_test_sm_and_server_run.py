@@ -64,7 +64,6 @@ def start_rafcon(name, q):
     from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
     from rafcon.statemachine.states.execution_state import ExecutionState
     from rafcon.statemachine.states.hierarchy_state import HierarchyState
-    from rafcon.statemachine.storage.storage import StateMachineStorage
     from rafcon.statemachine.config import global_config
 
     # rafcon.utils
@@ -95,9 +94,6 @@ def start_rafcon(name, q):
 
     # Initialize libraries
     rafcon.statemachine.singleton.library_manager.initialize()
-
-    # Set base path of global storage
-    rafcon.statemachine.singleton.global_storage.base_path = "/tmp"
 
     start_state_machine(reactor,
                         network_connections,
@@ -134,6 +130,7 @@ def start_rafcon_server(name, q, execution_signal_queue):
     import rafcon.mvc.singleton as mvc_singletons
     import rafcon.statemachine.singleton
     from rafcon.network.singleton import network_connections
+    from rafcon.statemachine.storage import storage
     # rafcon server imports
     from rafcon_server.mvc.views.debug_view import DebugView
     from rafcon_server.mvc.controller.debug_view import DebugViewController
@@ -144,7 +141,6 @@ def start_rafcon_server(name, q, execution_signal_queue):
     from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
     from rafcon.statemachine.states.execution_state import ExecutionState
     from rafcon.statemachine.states.hierarchy_state import HierarchyState
-    from rafcon.statemachine.storage.storage import StateMachineStorage
     from rafcon.statemachine.config import global_config
 
     # rafcon.utils
@@ -179,7 +175,7 @@ def start_rafcon_server(name, q, execution_signal_queue):
 
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    state_machine = rafcon.statemachine.singleton.global_storage.load_statemachine_from_path(setup_config['sm_path'])
+    state_machine = storage.load_statemachine_from_path(setup_config['sm_path'])
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
 
     logger.debug("The following statemachine was loaded: {0}".

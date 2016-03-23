@@ -10,8 +10,8 @@ import testing_utils
 from rafcon.utils import log
 logger = log.get_logger("start-no-gui")
 logger.info("initialize RAFCON ... ")
-from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 
+from rafcon.statemachine.storage import storage
 import rafcon.statemachine.singleton as sm_singletons
 # needed for yaml parsing
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
@@ -61,11 +61,8 @@ def test_library_relocation(caplog):
     # Initialize libraries
     sm_singletons.library_manager.initialize()
 
-    # Set base path of global storage
-    sm_singletons.global_storage.base_path = RAFCON_TEMP_PATH_STORAGE
-
-    state_machine = rafcon.statemachine.singleton.global_storage.load_statemachine_from_path(
-        rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/library_relocation_test")
+    state_machine = storage.load_statemachine_from_path(rafcon.__path__[0] +
+                                                        "/../test_scripts/unit_test_state_machines/library_relocation_test")
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
 

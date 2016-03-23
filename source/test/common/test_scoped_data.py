@@ -4,7 +4,7 @@ import os
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.state import DataPortType
-from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 
 # singleton elements
@@ -54,12 +54,11 @@ def create_statemachine():
 # states)
 def test_scoped_data(caplog):
     storage_path = testing_utils.get_unique_temp_path()
-    s = StateMachineStorage(storage_path)
 
     sm = create_statemachine()
 
-    s.save_statemachine_to_path(sm, storage_path)
-    sm_loaded = s.load_statemachine_from_path(storage_path)
+    storage.save_statemachine_to_path(sm, storage_path)
+    sm_loaded = storage.load_statemachine_from_path(storage_path)
 
     state_machine = StateMachine(sm_loaded.root_state)
 

@@ -14,7 +14,7 @@ from rafcon.mvc.models import GlobalVariableManagerModel
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
-# singleton elements
+from rafcon.statemachine.storage import storage
 import rafcon.mvc.singleton
 
 # test environment elements
@@ -94,8 +94,7 @@ def test_backward_stepping(caplog):
 
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    state_machine = rafcon.statemachine.singleton.\
-        global_storage.load_statemachine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/backward_step_barrier_test"))
+    state_machine = storage.load_statemachine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/backward_step_barrier_test"))
 
     main_window_view = MainWindowView()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)

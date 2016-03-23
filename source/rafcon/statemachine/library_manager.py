@@ -13,7 +13,7 @@ import os
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.storage import storage
 from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
 import rafcon.statemachine.config as config
 from rafcon.statemachine import interface
@@ -35,7 +35,6 @@ class LibraryManager(Observable):
         self._libraries = {}
         self._library_paths = {}
         logger.debug("Initializing Storage object ...")
-        self.storage = StateMachineStorage("../")
         # a list to hold all library state already manually replaced by the user
         self._replaced_libraries = {}
         # a list to hold all library states that were skipped by the user during the replacement procedure
@@ -93,9 +92,8 @@ class LibraryManager(Observable):
         """
         for lib in os.listdir(lib_path):
             if os.path.isdir(os.path.join(lib_path, lib)) and not '.' == lib[0]:
-                if os.path.exists(os.path.join(os.path.join(lib_path, lib), StateMachineStorage.STATEMACHINE_FILE)) \
-                        or os.path.exists(os.path.join(os.path.join(lib_path, lib),
-                                                       StateMachineStorage.STATEMACHINE_FILE_OLD)):
+                if os.path.exists(os.path.join(os.path.join(lib_path, lib), storage.STATEMACHINE_FILE)) \
+                        or os.path.exists(os.path.join(os.path.join(lib_path, lib), storage.STATEMACHINE_FILE_OLD)):
                     self.add_library(lib, lib_path, target_dict)
                 else:
                     target_dict[lib] = {}
@@ -113,7 +111,6 @@ class LibraryManager(Observable):
         :param target_dict: the library dictionary to save the loaded library to
         :return:
         """
-        self.storage.base_path = lib_path
         target_dict[lib] = os.path.join(lib_path, lib)
 
     @Observable.observed

@@ -14,16 +14,14 @@
 from rafcon.utils import log
 logger = log.get_logger("start-no-gui")
 logger.info("initialize RAFCON ... ")
-from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 
 import os
 import glib
 import argparse
-from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
+from os.path import realpath, dirname, join, exists, expanduser
 import signal
 import time
 from Queue import Empty
-import threading
 
 import rafcon
 from rafcon.utils.config import config_path
@@ -31,7 +29,7 @@ from rafcon.utils.config import config_path
 
 from rafcon.statemachine.config import global_config
 import rafcon.statemachine.singleton as sm_singletons
-from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.storage import storage
 # needed for yaml parsing
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.execution_state import ExecutionState
@@ -45,15 +43,15 @@ from rafcon.network.singleton import network_connections
 
 
 def state_machine_path(path):
-    sm_root_file = join(path, StateMachineStorage.STATEMACHINE_FILE)
+    sm_root_file = join(path, storage.STATEMACHINE_FILE)
     if exists(sm_root_file):
         return path
     else:
-        sm_root_file = join(path, StateMachineStorage.STATEMACHINE_FILE_OLD)
+        sm_root_file = join(path, storage.STATEMACHINE_FILE_OLD)
         if exists(sm_root_file):
             return path
         raise argparse.ArgumentTypeError("Failed to open {0}: {1} not found in path".format(path,
-                                                                                StateMachineStorage.STATEMACHINE_FILE))
+                                                                                            storage.STATEMACHINE_FILE))
 
 
 def start_state_machine(setup_config):
@@ -136,9 +134,6 @@ if __name__ == '__main__':
 
     # Initialize libraries
     sm_singletons.library_manager.initialize()
-
-    # Set base path of global storage
-    sm_singletons.global_storage.base_path = RAFCON_TEMP_PATH_STORAGE
 
     sm = start_state_machine(setup_config)
 

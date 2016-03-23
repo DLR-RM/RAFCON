@@ -16,7 +16,8 @@ from rafcon.statemachine import interface
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.singleton import state_machine_execution_engine, state_machine_manager, global_storage, \
+from rafcon.statemachine.storage import storage
+from rafcon.statemachine.singleton import state_machine_execution_engine, state_machine_manager, \
     library_manager
 
 import rafcon.statemachine.singleton as core_singletons
@@ -192,7 +193,7 @@ class MenuBarController(ExtendedController):
             load_path = path
 
         try:
-            state_machine = global_storage.load_statemachine_from_path(load_path)
+            state_machine = storage.load_statemachine_from_path(load_path)
             state_machine_manager.add_state_machine(state_machine)
         except (ValueError, IOError) as e:
             logger.error('Error while trying to open state machine: {0}'.format(e))
@@ -238,10 +239,9 @@ class MenuBarController(ExtendedController):
             dialog.grab_focus()
             dialog.finalize(on_message_dialog_response_signal)
 
-        global_storage.save_statemachine_to_path(
-            self.model.get_selected_state_machine_model().state_machine,
-            self.model.get_selected_state_machine_model().state_machine.file_system_path,
-            delete_old_state_machine=False, save_as=save_as)
+        state_machine = self.model.get_selected_state_machine_model().state_machine
+        storage.save_statemachine_to_path(state_machine, state_machine.file_system_path,
+                                          delete_old_state_machine=False, save_as=save_as)
 
         self.model.get_selected_state_machine_model().root_state.store_meta_data()
         logger.debug("Successfully saved graphics meta data.")

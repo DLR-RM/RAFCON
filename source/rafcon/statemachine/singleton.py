@@ -11,7 +11,6 @@
 from rafcon.statemachine.global_variable_manager import GlobalVariableManager
 from rafcon.statemachine.library_manager import LibraryManager
 from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
-from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.state_machine_manager import StateMachineManager
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
@@ -40,5 +39,3 @@ state_machine_manager = StateMachineManager()
 # This variable holds the execution engine singleton
 state_machine_execution_engine = StatemachineExecutionEngine(state_machine_manager)
 
-# This variable holds a global storage object
-global_storage = StateMachineStorage("")

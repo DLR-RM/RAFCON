@@ -4,10 +4,8 @@ This general Action (one procedure for all possible edition) procedure is expans
 to define specific Action-*-Classes for simple/specific edit actions.
 """
 import copy
-
-import getpass
-
 import json
+
 from rafcon.utils.json_utils import JSONObjectDecoder, JSONObjectEncoder
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
@@ -29,17 +27,17 @@ from rafcon.statemachine.data_port import InputDataPort, OutputDataPort
 from rafcon.statemachine.global_variable_manager import GlobalVariableManager
 from rafcon.statemachine.library_manager import LibraryManager
 from rafcon.statemachine.state_machine import StateMachine
+from rafcon.statemachine.storage import storage
+from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
-from rafcon.mvc.models.container_state import ContainerState, ContainerStateModel, StateModel
+from rafcon.mvc.models.container_state import ContainerState, ContainerStateModel
 from rafcon.mvc.models.abstract_state import MetaSignalMsg
 
 import rafcon.mvc.statemachine_helper
-
 import rafcon.mvc.singleton as mvc_singleton
-
-from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
-
 from rafcon.mvc.utils.notification_overview import NotificationOverview
+
+
 
 logger = log.get_logger(__name__)
 
@@ -602,13 +600,12 @@ class Action:
                         state.states[new_state.state_id].script_text = new_state.script_text
                     s_path = state.states[new_state.state_id].get_file_system_path()
                     sm_id = self.state_machine.state_machine_id
-                    rafcon.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id, s_path)
+                    storage.unmark_path_for_removal_for_sm_id(sm_id, s_path)
                     # print "unmark from removal: ", s_path
                     if isinstance(new_state, ContainerState):
                         def unmark_state(state_, sm_id_):
                             spath = state_.get_file_system_path()
-                            rafcon.statemachine.singleton.global_storage.unmark_path_for_removal_for_sm_id(sm_id_,
-                                                                                                           spath)
+                            storage.unmark_path_for_removal_for_sm_id(sm_id_, spath)
                             # print "unmark from removal: ", spath
                             if isinstance(state_, ContainerState):
                                 for child_state in state_.states.values():

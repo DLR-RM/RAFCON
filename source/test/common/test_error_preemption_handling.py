@@ -5,9 +5,10 @@ import testing_utils
 import rafcon.statemachine.states.execution_state
 import rafcon.statemachine.states.hierarchy_state
 import rafcon.statemachine.states.preemptive_concurrency_state
+from rafcon.statemachine.storage import storage
 
 from rafcon.statemachine.singleton import global_variable_manager as gvm
-from rafcon.statemachine.singleton import global_storage, state_machine_manager, state_machine_execution_engine
+from rafcon.statemachine.singleton import state_machine_manager, state_machine_execution_engine
 
 
 def assert_gvm(key, value=True):
@@ -27,8 +28,8 @@ class TestErrorPreemptionHandling():
     def setup_class(cls):
         # This methods runs on class creation and creates the state machine
         testing_utils.test_multithrading_lock.acquire()
-        state_machine = global_storage.load_statemachine_from_path(rafcon.__path__[0] +
-                                                                   "/../test_scripts/action_block_execution_test")
+        state_machine = storage.load_statemachine_from_path(rafcon.__path__[0] +
+                                                            "/../test_scripts/action_block_execution_test")
         cls.state_machine = state_machine
         state_machine_manager.add_state_machine(state_machine)
         state_machine_manager.active_state_machine_id = state_machine.state_machine_id
