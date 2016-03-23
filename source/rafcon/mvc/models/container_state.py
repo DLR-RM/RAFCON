@@ -290,14 +290,14 @@ class ContainerStateModel(StateModel):
             child_path = None if not path else join(path, state_key)
             state_m.load_meta_data(child_path)
 
-    def store_meta_data(self):
+    def store_meta_data(self, temp_path=None):
         """Store meta data of container states to the filesystem
 
         Recursively stores meta data of child states.
         """
-        super(ContainerStateModel, self).store_meta_data()
+        super(ContainerStateModel, self).store_meta_data(temp_path)
         for state_key, state in self.states.iteritems():
-            state.store_meta_data()
+            state.store_meta_data(temp_path)
 
     def copy_meta_data_from_state_m(self, source_state_m):
         """Dismiss current meta data and copy meta data from given state model

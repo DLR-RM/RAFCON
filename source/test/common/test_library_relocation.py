@@ -83,5 +83,4 @@ def test_library_relocation(caplog):
 
 
 if __name__ == '__main__':
-    test_library_relocation(None)
-    # pytest.main([__file__])
+    pytest.main([__file__])

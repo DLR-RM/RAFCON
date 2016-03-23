@@ -282,7 +282,8 @@ class MainWindowController(ExtendedController):
         self.view[pane].set_position(position) if position else self.view[pane].set_position(default_pos)
 
     def highlight_execution_of_current_sm(self, active):
-        if self.get_controller('state_machines_editor_ctrl').view is None:
+        if self.get_controller('state_machines_editor_ctrl') is None or \
+                self.get_controller('state_machines_editor_ctrl').view is None:
             logger.warning("No state machines editor view")
             return
         notebook = self.get_controller('state_machines_editor_ctrl').view['notebook']
@@ -483,19 +484,15 @@ class MainWindowController(ExtendedController):
 
     def on_button_step_in_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_step_into_activate(None)
-        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_over_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_step_over_activate(None)
-        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_out_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_step_out_activate(None)
-        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_backward_step_activate(None)
-        self.delay(100, self.get_controller('execution_history_ctrl').update)
 
     def on_debug_content_change(self, widget, data=None):
         if self.view['button_show_info'].get_active():
@@ -531,8 +528,3 @@ class MainWindowController(ExtendedController):
         """
         title = gui_helper.set_notebook_title(notebook, page_num, title_label)
         window.reset_title(title, notebook_identifier)
-
-    @staticmethod
-    def delay(milliseconds, func):
-        thread = threading.Timer(milliseconds / 1000.0, func)
-        thread.start()

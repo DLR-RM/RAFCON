@@ -4,15 +4,15 @@ import logging
 import os
 import gtk
 import signal
-import traceback
 import argparse
-from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
+from os.path import realpath, dirname, join, expanduser, expandvars, isdir
 
 import rafcon
 
 from rafcon.utils import log
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 
+from rafcon.statemachine.start import state_machine_path
 from rafcon.statemachine.config import global_config
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.state_machine import StateMachine
@@ -30,8 +30,6 @@ from rafcon.network.network_config import global_net_config
 
 def setup_logger():
     import sys
-    # Set the views for the loggers
-
     # Apply defaults to logger of gtkmvc
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
@@ -39,19 +37,6 @@ def setup_logger():
     stdout.setFormatter(logging.Formatter("%(asctime)s: %(levelname)-8s - %(name)s:  %(message)s"))
     stdout.setLevel(logging.DEBUG)
     logging.getLogger('gtkmvc').addHandler(stdout)
-
-    # Set logging level
-    # logging.getLogger('statemachine.state').setLevel(logging.DEBUG)
-    # logging.getLogger('controllers.state_properties').setLevel(logging.DEBUG)
-
-
-def state_machine_path(path):
-    sm_root_file = join(path, StateMachineStorage.STATEMACHINE_FILE)
-    if exists(sm_root_file):
-        return path
-    else:
-        raise argparse.ArgumentTypeError("Failed to open {0}: {1} not found in path".format(path,
-                                                                                StateMachineStorage.STATEMACHINE_FILE))
 
 
 def config_path(path):
@@ -130,6 +115,7 @@ if __name__ == '__main__':
 
     if global_net_config.get_config_value('NETWORK_CONNECTIONS'):
         from rafcon.network.singleton import network_connections
+
         network_connections.initialize()
 
     # Initialize library
@@ -165,6 +151,7 @@ if __name__ == '__main__':
     if global_net_config.get_config_value("NETWORK_CONNECTIONS", False):
         from twisted.internet import reactor
         from twisted.internet import gtk2reactor
+
         # needed for glib.idle_add, and signals
         gtk2reactor.install()
         reactor.run()

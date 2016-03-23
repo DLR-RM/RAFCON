@@ -18,8 +18,7 @@ from rafcon.statemachine.state_machine_manager import StateMachineManager
 from rafcon.statemachine.execution.execution_history import ConcurrencyItem, CallItem
 from rafcon.utils import log
 
-import rafcon.statemachine.singleton
-import rafcon.mvc.singleton
+from rafcon.statemachine.singleton import state_machine_execution_engine
 
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
@@ -47,7 +46,7 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
 
         view['reload_button'].connect('clicked', self.reload_history)
 
-        self.observe_model(rafcon.statemachine.singleton.state_machine_execution_engine)
+        self.observe_model(state_machine_execution_engine)
 
         self.update()
 
@@ -103,17 +102,16 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
         from rafcon.mvc.utils.notification_overview import NotificationOverview
         overview = NotificationOverview(info)
         logger.info("execution_engine runs method '{1}' and has status {0}"
-                    "".format(str(rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode).split('.')[-1],
+                    "".format(str(state_machine_execution_engine.status.execution_mode).split('.')[-1],
                               overview['method_name'][-1]))
-        if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode in \
+        if state_machine_execution_engine.status.execution_mode in \
                 [StateMachineExecutionStatus.STARTED, StateMachineExecutionStatus.STOPPED]:
             if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):
                 # request focus -> which has not have to be satisfied
                 self.parent.focus_notebook_page_of_controller(self)
 
-        if not rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is \
-                StateMachineExecutionStatus.STARTED:
-            self.delay(100, self.update)
+        if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
+            self.update()
 
     def reload_history(self, widget, event=None):
         """Triggered when the 'Reload History' button is clicked."""
@@ -144,8 +142,3 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
                         self.insert_rec(tree_item, item.state_reference.name + " - Call", None, item.scoped_data)
                     else:
                         self.insert_rec(tree_item, item.state_reference.name + " - Return", None, item.scoped_data)
-
-    @staticmethod
-    def delay(milliseconds, func):
-        thread = threading.Timer(milliseconds / 1000.0, func)
-        thread.start()

@@ -147,26 +147,12 @@ class GraphicalEditorController(ExtendedController):
     def _add_new_state(self, *args, **kwargs):
         """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
 
-        Adds a new state only if the parent state (selected state) is a container state, and if the graphical editor or
-        the state machine tree are in focus.
+        Adds a new state only if the graphical editor is in focus.
         """
-        state_machine_tree_ctrl = mvc_singleton.main_window_controller.get_controller('state_machine_tree_controller')
-        if not self.view.editor.is_focus() and not state_machine_tree_ctrl.view['state_machine_tree_view'].is_focus():
-            # or singleton.global_focus is self:
+        if not self.view.editor.is_focus():
             return
-
-        if 'state_type' not in kwargs or kwargs['state_type'] not in list(StateType):
-            state_type = StateType.EXECUTION
-        else:
-            state_type = kwargs['state_type']
-
-        selection = self.model.selection.get_all()
-        model = selection[0]
-
-        if isinstance(model, StateModel):
-            statemachine_helper.add_state(model, state_type)
-        if isinstance(model, (TransitionModel, DataFlowModel)):
-            statemachine_helper.add_state(model.parent, state_type)
+        state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
+        return statemachine_helper.add_new_state(self.model, state_type)
 
     def _copy_selection(self, *args):
         """Copies the current selection to the clipboard.
@@ -716,10 +702,7 @@ class GraphicalEditorController(ExtendedController):
                                 hierarchy_level=new_state_hierarchy_level)
 
     def _remove_state_view(self, view):
-        selection = self.model.selection.get_all()
-        if len(selection) > 0:
-            statemachine_helper.delete_models(selection)
-            self.model.selection.clear()
+        return statemachine_helper.delete_selected_elements(self.model)
 
     def setup_canvas(self):
 

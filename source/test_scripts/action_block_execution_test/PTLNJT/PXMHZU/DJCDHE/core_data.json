@@ -1,0 +1,50 @@
+{
+    "__jsonqualname__": "rafcon.statemachine.states.preemptive_concurrency_state.PreemptiveConcurrencyState", 
+    "data_flows": {}, 
+    "description": null, 
+    "input_data_ports": {}, 
+    "name": "Inner Action Block", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }, 
+        "1": {
+            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "name": "success2", 
+            "outcome_id": 1
+        }
+    }, 
+    "output_data_ports": {}, 
+    "scoped_variables": {}, 
+    "state_id": "DJCDHE", 
+    "transitions": {
+        "15": {
+            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "TXOTLO", 
+            "to_outcome": 0, 
+            "to_state": "DJCDHE", 
+            "transition_id": 15
+        }, 
+        "16": {
+            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "TBJQYC", 
+            "to_outcome": 1, 
+            "to_state": "DJCDHE", 
+            "transition_id": 16
+        }
+    }
+}

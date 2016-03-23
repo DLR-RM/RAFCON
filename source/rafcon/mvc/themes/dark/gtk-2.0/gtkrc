@@ -288,7 +288,7 @@ style "button"
     base[PRELIGHT]      = @input_background_active
     base[ACTIVE]      = @input_background_active
 }
-class "GtkButton" style : highest "button"
+widget_class "*.<GtkButton>" style : highest "button"
 widget_class "*GtkMenu*" style : highest "button"
 
 
