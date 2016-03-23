@@ -14,8 +14,6 @@ import glob
 import copy
 import yaml
 
-from gtkmvc import Observable
-
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
 
@@ -37,7 +35,7 @@ if os.path.exists(DEFAULT_SCRIPT_PATH):
         shutil.rmtree(f)
 
 
-class StateMachineStorage(Observable):
+class StateMachineStorage():
 
     """This class implements the Storage interface by using a file system on the disk.
 
@@ -58,8 +56,6 @@ class StateMachineStorage(Observable):
     STATEMACHINE_FILE_OLD = 'statemachine.yaml'
 
     def __init__(self, base_path=RAFCON_TEMP_PATH_STORAGE):
-        Observable.__init__(self)
-
         self._base_path = None
         self.base_path = os.path.abspath(base_path)
         logger.debug("Storage class initialized!")
@@ -377,7 +373,6 @@ class StateMachineStorage(Observable):
         return self._base_path
 
     @base_path.setter
-    @Observable.observed
     def base_path(self, base_path):
         if not isinstance(base_path, basestring):
             raise TypeError("base_path must be of type str")
