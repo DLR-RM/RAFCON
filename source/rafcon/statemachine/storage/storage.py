@@ -170,11 +170,6 @@ def save_script_file_for_state_and_source_path(state, base_path, state_path):
             write_file(source_script_file, state.script_text)
 
 
-def save_script_file(state):
-    script_file_path = os.path.join(state.get_file_system_path(), state.script.filename)
-    write_file(script_file_path, state.script_text)
-
-
 def save_state_recursively(state, base_path, parent_path, force_full_load=False):
     """Recursively saves a state to a yaml file
 
