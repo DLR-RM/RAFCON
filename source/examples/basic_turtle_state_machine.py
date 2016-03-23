@@ -1,7 +1,5 @@
 from twisted.internet import gtk2reactor
-
 gtk2reactor.install()
-
 from twisted.internet import reactor
 
 import logging
@@ -20,7 +18,7 @@ import rafcon.statemachine.singleton
 import rafcon.mvc.singleton
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
-from rafcon.network.network_config import global_net_config
+# from rafcon.network.network_config import global_net_config
 from rafcon.statemachine.config import global_config
 from rafcon.statemachine.states.library_state import LibraryState
 
@@ -148,7 +146,7 @@ def run_turtle_demo():
     home_path = os.path.join(os.path.expanduser('~'), '.config/rafcon')
     global_config.load(path=home_path)
     global_gui_config.load(path=home_path)
-    global_net_config.load()
+    # global_net_config.load()
     global_runtime_config.load(path=home_path)
 
     rafcon.statemachine.singleton.library_manager.initialize()
@@ -170,7 +168,7 @@ def run_turtle_demo():
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type="LogicDataGrouped")
     # main_window_controller = MainWindowController(sm_manager_model, main_window_view, emm_model, gvm_model)
 
-    reactor.run()
+    # reactor.run()
     gtk.main()
     logger.debug("Gtk main loop exited!")
 

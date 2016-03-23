@@ -19,6 +19,7 @@ from rafcon.mvc.controllers.library_tree import LibraryTreeController
 
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.library_manager import LibraryManagerModel
+from rafcon.mvc.models.state_machine_execution_engine import StateMachineExecutionEngineModel
 from rafcon.mvc.shortcut_manager import ShortcutManager
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
@@ -33,29 +34,17 @@ from rafcon.mvc.controllers.undocked_window import UndockedWindowController
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
 from rafcon.mvc.singleton import global_variable_manager_model as gvm_model
+from rafcon.mvc.singleton import state_machine_execution_model
 import rafcon.statemachine.singleton
 import rafcon.statemachine.config
 from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
-from rafcon.network.network_config import global_net_config
 
 from rafcon.mvc.utils import constants
 from rafcon.mvc import gui_helper
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
-try:
-    # run if not defined or variable True
-    if global_net_config.get_config_value("NETWORK_CONNECTIONS") is None or global_net_config.get_config_value(
-            "NETWORK_CONNECTIONS"):
-        from rafcon.mvc.controllers.network_connections import NetworkController
-        from rafcon.network.singleton import network_connections
-except ImportError as e:
-    logger.warn(
-        "{1} Only local use of RAFCON will be possible due to missing network communication libraries -> {0}".format(
-            e.message, global_net_config.get_config_value("NETWORK_CONNECTIONS") is None))
-    # logger.error("%s, %s" % (e.message, traceback.format_exc()))
-    global_net_config.set_config_value('NETWORK_CONNECTIONS', False)
 
 
 class MainWindowController(ExtendedController):
@@ -74,15 +63,15 @@ class MainWindowController(ExtendedController):
         self.state_machine_manager_model = state_machine_manager_model
         self.editor_type = editor_type
         self.shortcut_manager = None
+        self.handler_ids = {}
 
         # state machine manager
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         state_machine_manager = state_machine_manager_model.state_machine_manager
 
-        # execution engine
-        self.state_machine_execution_engine = rafcon.statemachine.singleton.state_machine_execution_engine
-        self.observe_model(self.state_machine_execution_engine)
-        self.state_machine_execution_engine.register_observer(self)
+        self.state_machine_execution_model = state_machine_execution_model
+        self.observe_model(self.state_machine_execution_model)
+        self.state_machine_execution_model.register_observer(self)
 
         # shortcut manager
         self.shortcut_manager = ShortcutManager(view['main_window'])
@@ -129,34 +118,6 @@ class MainWindowController(ExtendedController):
         self.modification_history_was_focused = False
 
         ######################################################
-        # network controller
-        ######################################################
-        if global_net_config.get_config_value('NETWORK_CONNECTIONS', False):
-            from rafcon.mvc.controllers.network_connections import NetworkController
-            from rafcon.network.singleton import network_connections
-            from rafcon.mvc.views.network_connections import NetworkConnectionsView
-            network_connections_view = NetworkConnectionsView()
-            network_connections_ctrl = NetworkController(state_machine_manager_model, network_connections_view)
-            network_connections.initialize()
-            self.add_controller('network_connections_ctrl', network_connections_ctrl)
-
-            network_tab = view['network_placeholder']
-            page_num = view['lower_notebook'].page_num(network_tab)
-            view['lower_notebook'].remove_page(page_num)
-
-            network_label = gtk.Label('Network')
-
-            network_notebook_widget = view.create_notebook_widget('NETWORK',  network_connections_view.get_top_widget(),
-                                                                  use_scroller=False,
-                                                                  border=constants.BORDER_WIDTH_TEXTVIEW)
-
-            view['lower_notebook'].insert_page(network_notebook_widget, network_label, page_num)
-        else:
-            network_tab = view['network_tab']
-            page_num = view['lower_notebook'].page_num(network_tab)
-            view['lower_notebook'].remove_page(page_num)
-
-        ######################################################
         # state machine execution history
         ######################################################
         execution_history_ctrl = ExecutionHistoryTreeController(state_machine_manager_model, view.execution_history,
@@ -166,7 +127,8 @@ class MainWindowController(ExtendedController):
         ######################################################
         # menu bar
         ######################################################
-        menu_bar_controller = MenuBarController(state_machine_manager_model, view, self.shortcut_manager)
+        menu_bar_controller = MenuBarController(state_machine_manager_model, view, self.shortcut_manager,
+                                                rafcon.statemachine.singleton.state_machine_execution_engine)
         self.add_controller('menu_bar_controller', menu_bar_controller)
 
         ######################################################
@@ -219,39 +181,60 @@ class MainWindowController(ExtendedController):
 
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
-        view['main_window'].connect('delete_event', self.get_controller('menu_bar_controller').on_delete_event)
-        view['main_window'].connect('destroy', self.get_controller('menu_bar_controller').on_destroy)
+
+        # using helper function to connect functions to GUI elements to be able to access the handler id later on
+
+        self.connect_button_to_function('main_window',
+                                        "delete_event",
+                                        self.get_controller('menu_bar_controller').on_delete_event)
+        self.connect_button_to_function('main_window',
+                                        "destroy",
+                                        self.get_controller('menu_bar_controller').on_destroy)
 
         # connect left bar, right bar and console hide buttons' signals to their corresponding methods
-        view['left_bar_hide_button'].connect('clicked', self.on_left_bar_hide_clicked)
-        view['right_bar_hide_button'].connect('clicked', self.on_right_bar_hide_clicked)
-        view['console_hide_button'].connect('clicked', self.on_console_hide_clicked)
+        self.connect_button_to_function('left_bar_hide_button', "clicked", self.on_left_bar_hide_clicked)
+        self.connect_button_to_function('right_bar_hide_button', "clicked", self.on_right_bar_hide_clicked)
+        self.connect_button_to_function('console_hide_button', "clicked", self.on_console_hide_clicked)
+
+        self.connect_button_to_function('left_bar_hide_button', "clicked", self.on_left_bar_hide_clicked)
+        self.connect_button_to_function('right_bar_hide_button', "clicked", self.on_right_bar_hide_clicked)
+        self.connect_button_to_function('console_hide_button', "clicked", self.on_console_hide_clicked)
 
         # Connect left bar, right bar and console return buttons' signals to their corresponding methods
-        view['left_bar_return_button'].connect('clicked', self.on_left_bar_return_clicked)
-        view['right_bar_return_button'].connect('clicked', self.on_right_bar_return_clicked)
-        view['console_return_button'].connect('clicked', self.on_console_return_clicked)
+        self.connect_button_to_function('left_bar_return_button', "clicked", self.on_left_bar_return_clicked)
+        self.connect_button_to_function('right_bar_return_button', "clicked", self.on_right_bar_return_clicked)
+        self.connect_button_to_function('console_return_button', "clicked", self.on_console_return_clicked)
 
         # Connect undock buttons' signals
-        view['undock_left_bar_button'].connect('clicked', self.on_left_bar_undock_clicked)
-        view['undock_right_bar_button'].connect('clicked', self.on_right_bar_undock_clicked)
-        view['undock_console_button'].connect('clicked', self.on_console_bar_undock_clicked)
+        self.connect_button_to_function('undock_left_bar_button', "clicked", self.on_left_bar_undock_clicked)
+        self.connect_button_to_function('undock_right_bar_button', "clicked", self.on_right_bar_undock_clicked)
+        self.connect_button_to_function('undock_console_button', "clicked", self.on_console_bar_undock_clicked)
 
         # Connect Shortcut buttons' signals to their corresponding methods
-        view['button_start_shortcut'].connect('toggled', self.on_button_start_shortcut_toggled)
-        view['button_stop_shortcut'].connect('clicked', self.on_button_stop_shortcut_clicked)
-        view['button_pause_shortcut'].connect('toggled', self.on_button_pause_shortcut_toggled)
-        view['button_step_mode_shortcut'].connect('toggled', self.on_button_step_mode_shortcut_toggled)
-        view['button_step_in_shortcut'].connect('clicked', self.on_button_step_in_shortcut_clicked)
-        view['button_step_over_shortcut'].connect('clicked', self.on_button_step_over_shortcut_clicked)
-        view['button_step_out_shortcut'].connect('clicked', self.on_button_step_out_shortcut_clicked)
-        view['button_step_backward_shortcut'].connect('clicked', self.on_button_step_backward_shortcut_clicked)
+        self.connect_button_to_function('button_start_shortcut', "toggled", self.on_button_start_shortcut_toggled)
+        self.connect_button_to_function('button_stop_shortcut', "clicked", self.on_button_stop_shortcut_clicked)
+        self.connect_button_to_function('button_pause_shortcut', "toggled", self.on_button_pause_shortcut_toggled)
+        self.connect_button_to_function('button_step_mode_shortcut',
+                                        "toggled",
+                                        self.on_button_step_mode_shortcut_toggled)
+        self.connect_button_to_function('button_step_in_shortcut',
+                                        "clicked",
+                                        self.on_button_step_in_shortcut_clicked)
+        self.connect_button_to_function('button_step_over_shortcut',
+                                        "clicked",
+                                        self.on_button_step_over_shortcut_clicked)
+        self.connect_button_to_function('button_step_out_shortcut',
+                                        "clicked",
+                                        self.on_button_step_out_shortcut_clicked)
+        self.connect_button_to_function('button_step_backward_shortcut',
+                                        "clicked",
+                                        self.on_button_step_backward_shortcut_clicked)
 
         # Connect Debug console buttons' signals to their corresponding methods
-        view['button_show_debug'].connect('toggled', self.on_debug_content_change)
-        view['button_show_info'].connect('toggled', self.on_debug_content_change)
-        view['button_show_warning'].connect('toggled', self.on_debug_content_change)
-        view['button_show_error'].connect('toggled', self.on_debug_content_change)
+        self.connect_button_to_function('button_show_debug', "toggled", self.on_debug_content_change)
+        self.connect_button_to_function('button_show_info', "toggled", self.on_debug_content_change)
+        self.connect_button_to_function('button_show_warning', "toggled", self.on_debug_content_change)
+        self.connect_button_to_function('button_show_error', "toggled", self.on_debug_content_change)
 
         view['upper_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['upper_notebook_title'],
                                        view.left_bar_window, 'upper')
@@ -269,6 +252,23 @@ class MainWindowController(ExtendedController):
         self.set_pane_position('LEFT_BAR_DOCKED_POS', 'top_level_h_pane', default_pos=300)
         self.set_pane_position('CONSOLE_DOCKED_POS', 'central_v_pane', default_pos=600)
         self.set_pane_position('LEFT_BAR_INNER_PANE_POS', 'left_bar_pane', default_pos=400)
+
+    def connect_button_to_function(self, view_index, button_state, function):
+        handler_id = self.view[view_index].connect(button_state, function)
+        self.handler_ids[view_index] = handler_id
+
+    def switch_state_machine_execution_engine(self, new_state_machine_execution_engine):
+        """
+        Switch the state machine execution engine the main window controller listens to.
+        :param new_state_machine_execution_engine: the new state machine execution engine for this controller
+        :return:
+        """
+        # relieve old one
+        self.relieve_model(self.state_machine_execution_model)
+
+        # register new
+        self.state_machine_execution_model = new_state_machine_execution_engine
+        self.observe_model(self.state_machine_execution_model)
 
     def set_pane_position(self, config_id, pane, default_pos=100):
         """Adjusts the position of a GTK Pane to a value stored in the runtime config file. If there was no value
@@ -324,6 +324,25 @@ class MainWindowController(ExtendedController):
             self.view['step_buttons'].show()
             self._set_single_button_active('button_step_mode_shortcut')
 
+    def _set_single_button_active(self, active_button_name):
+
+        # do not let the buttons trigger the action another time => block the respective signal handlers
+
+        button_names = ['button_start_shortcut', 'button_pause_shortcut', 'button_step_mode_shortcut']
+
+        for button_name in button_names:
+            if active_button_name == button_name:
+                if not self.view[button_name].get_active():
+                    # block the handler before setting the button active
+                    self.view[button_name].handler_block(self.handler_ids[button_name])
+                    self.view[button_name].set_active(True)
+                    self.view[button_name].handler_unblock(self.handler_ids[button_name])
+            else:
+                if self.view[button_name].get_active():
+                    self.view[button_name].handler_block(self.handler_ids[button_name])
+                    self.view[button_name].set_active(False)
+                    self.view[button_name].handler_unblock(self.handler_ids[button_name])
+
     def focus_notebook_page_of_controller(self, controller):
         """ The method implements focus request of the notebooks in left side-bar of the main window. Thereby it is the
         master-function of focus pattern of the notebooks in left side-bar.
@@ -346,15 +365,6 @@ class MainWindowController(ExtendedController):
         if self.view is not None and isinstance(controller, ExecutionHistoryTreeController):
             self.view.bring_tab_to_the_top('execution_history')
             self.modification_history_was_focused = False
-
-    def _set_single_button_active(self, active_button_name):
-        for button_name in ['button_start_shortcut', 'button_pause_shortcut', 'button_step_mode_shortcut']:
-            if active_button_name == button_name:
-                if not self.view[button_name].get_active():
-                    self.view[button_name].set_active(True)
-            else:
-                if self.view[button_name].get_active():
-                    self.view[button_name].set_active(False)
 
     def on_left_bar_return_clicked(self, widget, event=None):
         self.view['left_bar_return_button'].hide()

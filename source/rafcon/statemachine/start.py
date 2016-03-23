@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-.. module:: preemptive_concurrency_state
+.. module: a module to enable state machine execution from the command line
    :platform: Unix, Windows
    :synopsis: A module to start arbitrary state machines without the GUI and several configurations options
 
@@ -10,16 +10,12 @@
 
 """
 
-
-from rafcon.utils import log
-logger = log.get_logger("start-no-gui")
-logger.info("initialize RAFCON ... ")
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 
 import os
 import glib
 import argparse
-from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
+from os.path import realpath, dirname, join, exists
 import signal
 import time
 from Queue import Empty
@@ -27,7 +23,7 @@ import threading
 
 import rafcon
 from rafcon.utils.config import config_path
-
+import rafcon.utils.filesystem as filesystem
 
 from rafcon.statemachine.config import global_config
 import rafcon.statemachine.singleton as sm_singletons
@@ -40,8 +36,11 @@ from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurre
 from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
 from rafcon.statemachine.enums import StateExecutionState
 
-from rafcon.network.network_config import global_net_config
-from rafcon.network.singleton import network_connections
+from plugins import *
+
+from rafcon.utils import log
+logger = log.get_logger("start-no-gui")
+logger.info("initialize RAFCON ... ")
 
 
 def state_machine_path(path):
@@ -58,32 +57,29 @@ def state_machine_path(path):
 
 def start_state_machine(setup_config):
     time.sleep(1.0)
-    # Note: The rafcon_server has to be started before the statemachine is launched
-    if not global_net_config.get_config_value("SPACEBOT_CUP_MODE"):
-        network_connections.connect_tcp()
-
-    glib.idle_add(network_connections.register_udp)
-
     sm = StatemachineExecutionEngine.execute_state_machine_from_path(setup_config['sm_path'],
                                                                      start_state_path=setup_config['start_state_path'],
                                                                      wait_for_execution_finished=False)
-    # sm_thread = threading.Thread(target=check_for_sm_finished, args=[sm, ])
-    # sm_thread.start()
+    sm_thread = threading.Thread(target=check_for_sm_finished, args=[sm, ])
+    sm_thread.start()
     return sm
 
 
-# def check_for_sm_finished(sm):
-#     while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
-#         try:
-#             sm.root_state.concurrency_queue.get(timeout=10.0)
-#         except Empty, e:
-#             pass
-#         # no logger output here to make it easier for the parser
-#         print "RAFCON live signal"
-#
-#     sm.root_state.join()
-#     # terminate sm
-#     reactor.stop()
+def check_for_sm_finished(sm, monitoring_manager=None):
+    while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
+        try:
+            sm.root_state.concurrency_queue.get(timeout=10.0)
+        except Empty, e:
+            pass
+        # no logger output here to make it easier for the parser
+        print "RAFCON live signal"
+
+    sm.root_state.join()
+
+    # stop the networking if the monitoring plugin is enabled
+    if monitoring_manager:
+        from twisted.internet import reactor
+        reactor.callFromThread(reactor.stop)
 
 
 if __name__ == '__main__':
@@ -97,24 +93,16 @@ if __name__ == '__main__':
         # set env variable RAFCON_LIB_PATH to the library directory of RAFCON (when not using RMPM)
         os.environ['RAFCON_LIB_PATH'] = join(dirname(rafcon_root_path), 'libraries')
 
-    home_path = expanduser('~')
-    if home_path:
-        home_path = join(home_path, ".config", "rafcon")
-    else:
-        home_path = 'None'
+    home_path = filesystem.get_home_path()
 
     logger.info("parse arguments ... ")
-    parser = argparse.ArgumentParser(description='Start RAFCON')
+    parser = sm_singletons.argument_parser
     parser.add_argument('-o', '--open', action='store', type=state_machine_path, dest='sm_path', metavar='path',
                         help="specify a directory of a state-machine that shall be opened and started. The path must contain a "
                              "statemachine.yaml file")
     parser.add_argument('-c', '--config', action='store', type=config_path, metavar='path', dest='config_path',
                         default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "
-                             "a config file and use the default configuration. Default: {0}".format(home_path))
-    parser.add_argument('-nc', '--net_config', action='store', type=config_path, metavar='path', dest='net_config_path',
-                        default=home_path, nargs='?', const=home_path,
-                        help="path to the configuration file net_config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
     parser.add_argument('-s', '--start_state_path', action='store', metavar='path', dest='start_state_path',
                         default=None, nargs='?', help="path of to the state that should be launched")
@@ -129,10 +117,6 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, sm_singletons.signal_handler)
 
     global_config.load(path=setup_config['config_path'])
-    global_net_config.load(path=setup_config['net_config_path'])
-
-    # # the network connections cannot be initialized before the network configuration was loaded
-    # network_connections.initialize()
 
     # Initialize libraries
     sm_singletons.library_manager.initialize()
@@ -142,19 +126,16 @@ if __name__ == '__main__':
 
     sm = start_state_machine(setup_config)
 
-    # TODO: old code; will be replaced after refactoring the network connections feature
-    # if global_net_config.get_config_value("NETWORK_CONNECTIONS", False):
-    #     import rafcon.mvc.singleton as mvc_singletons
-    #     from twisted.internet import reactor
-    #     reactor.run()
-
-    while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
-        try:
-            sm.root_state.concurrency_queue.get(timeout=10.0)
-        except Empty, e:
-            pass
-        # no logger output here to make it easier for the parser
-        print "RAFCON live signal"
+    try:
+        # check if monitoring plugin is loaded
+        from plugins.monitoring.monitoring_manager import global_monitoring_manager
+        if global_monitoring_manager.networking_enabled():
+            global_monitoring_manager.initialize(setup_config)
+            from twisted.internet import reactor
+            reactor.run()
+    except ImportError, e:
+        # plugin not found
+        pass
 
     sm.root_state.join()
 

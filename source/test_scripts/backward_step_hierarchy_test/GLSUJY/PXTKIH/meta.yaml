@@ -1,0 +1,12 @@
+!ExecutionState
+description: null
+input_data_ports:
+    37: !InputDataPort {data_port_id: 37, data_type: !!python/name:__builtin__.int '',
+        default_value: 99, name: !!python/unicode 'bottles'}
+name: !!python/unicode 'Sing'
+outcomes:
+    -2: !Outcome {name: !!python/unicode 'preempted', outcome_id: -2}
+    -1: !Outcome {name: !!python/unicode 'aborted', outcome_id: -1}
+    0: !Outcome {name: !!python/unicode 'done', outcome_id: 0}
+output_data_ports: {}
+state_id: !!python/unicode 'PXTKIH'

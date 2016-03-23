@@ -13,6 +13,7 @@ import gtk
 import gobject
 import threading
 
+import rafcon
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.statemachine.state_machine_manager import StateMachineManager
 from rafcon.statemachine.execution.execution_history import ConcurrencyItem, CallItem
@@ -46,7 +47,8 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
 
         view['reload_button'].connect('clicked', self.reload_history)
 
-        self.observe_model(state_machine_execution_engine)
+        self.state_machine_execution_model = rafcon.mvc.singleton.state_machine_execution_model
+        self.observe_model(self.state_machine_execution_model)
 
         self.update()
 
@@ -55,6 +57,16 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
 
     def register_view(self, view):
         self.history_tree.connect('button_press_event', self.right_click)
+
+    def switch_state_machine_execution_manager_model(self, new_state_machine_execution_engine):
+        """
+        Switch the state machine execution engine model to observe.
+        :param new_state_machine_execution_engine: the new sm execution engine manager model
+        :return:
+        """
+        self.relieve_model(self.state_machine_execution_model)
+        self.state_machine_execution_model = new_state_machine_execution_engine
+        self.observe_model(self.state_machine_execution_model)
 
     def right_click(self, widget, event=None):
         """Triggered when right click is pressed in the history tree.
@@ -101,9 +113,9 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
         """
         from rafcon.mvc.utils.notification_overview import NotificationOverview
         overview = NotificationOverview(info)
-        logger.info("execution_engine runs method '{1}' and has status {0}"
-                    "".format(str(state_machine_execution_engine.status.execution_mode).split('.')[-1],
-                              overview['method_name'][-1]))
+        # logger.info("execution_engine runs method '{1}' and has status {0}"
+        #             "".format(str(state_machine_execution_engine.status.execution_mode).split('.')[-1],
+        #                       overview['method_name'][-1]))
         if state_machine_execution_engine.status.execution_mode in \
                 [StateMachineExecutionStatus.STARTED, StateMachineExecutionStatus.STOPPED]:
             if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):

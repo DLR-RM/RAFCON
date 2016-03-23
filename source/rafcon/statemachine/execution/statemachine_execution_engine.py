@@ -9,20 +9,19 @@
 """
 import copy
 import threading
-
+import time
 import Queue
 from threading import Lock
 
 from gtkmvc import Observable
-from gtkmvc import ModelMT
 from rafcon.statemachine.execution.statemachine_status import StateMachineStatus
+from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
-from rafcon.statemachine.enums import StateMachineExecutionStatus
 
 
-class StatemachineExecutionEngine(ModelMT, Observable):
+class StatemachineExecutionEngine(Observable):
     """A class that cares for the execution of the statemachine
 
     :ivar state_machine_manager: holds the state machine manager of all states that can be executed
@@ -40,7 +39,6 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     __observables__ = ("execution_engine",)
 
     def __init__(self, state_machine_manager):
-        ModelMT.__init__(self)
         Observable.__init__(self)
         self.state_machine_manager = state_machine_manager
         self.execution_engine = self
@@ -54,6 +52,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self.execution_engine_lock = Lock()
         self._run_to_states = []
         self.run_to_states = []
+        self.state_machine_running = False
 
     # TODO: pause all external modules
     @Observable.observed
@@ -71,6 +70,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         :param start_state_path: The path of the state in the state machine, from which the execution will start
         :return:
         """
+
         if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
             self._status.execution_mode = StateMachineExecutionStatus.STARTED
             logger.debug("Resume execution engine ...")
@@ -79,6 +79,9 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             self._status.execution_condition_variable.notify_all()
             self._status.execution_condition_variable.release()
         else:
+            # do not start another state machine before the old one did not finish its execution
+            while self.state_machine_running:
+                time.sleep(1.0)
             self._status.execution_mode = StateMachineExecutionStatus.STARTED
             logger.debug("Start execution engine ...")
             if state_machine_id is not None:
@@ -102,7 +105,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
     def stop(self):
         """Set the execution mode to stopped
         """
-        logger.debug("Force execution stop...")
+        logger.debug("Stop the state machine execution ...")
         if self.state_machine_manager.get_active_state_machine() is not None:
             self.state_machine_manager.get_active_state_machine().root_state.recursively_preempt_states()
         self.set_execution_mode_to_stopped()
@@ -128,6 +131,9 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         logger.debug("Activate step mode")
         if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
             self._status.execution_mode = StateMachineExecutionStatus.FORWARD_INTO
+            self._status.execution_condition_variable.acquire()
+            self._status.execution_condition_variable.notify_all()
+            self._status.execution_condition_variable.release()
         else:
             self._status.execution_mode = StateMachineExecutionStatus.FORWARD_INTO
             self._run_active_state_machine()
@@ -137,6 +143,7 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         """Store running state machine and observe its status"""
         self.__running_state_machine = self.state_machine_manager.state_machines[
             self.state_machine_manager.active_state_machine_id]
+
         self.__running_state_machine.start()
 
         self.__wait_for_finishing_thread = threading.Thread(target=self._wait_for_finishing)
@@ -144,8 +151,11 @@ class StatemachineExecutionEngine(ModelMT, Observable):
 
     def _wait_for_finishing(self):
         """Observe running state machine and stop engine if execution has finished"""
+        self.state_machine_running = True
         self.__running_state_machine.join()
+        print "Joined currently running hierarchy state"
         self.set_execution_mode_to_stopped()
+        self.state_machine_running = False
 
     def backward_step(self):
         """Take a backward step for all active states in the state machine
@@ -187,16 +197,25 @@ class StatemachineExecutionEngine(ModelMT, Observable):
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
 
-    def run_to_selected_state(self, path):
+    def run_to_selected_state(self, path, state_machine_id=None):
         """Take a forward step (out) for all active states in the state machine
         """
-        logger.debug("Run to selected state ...")
-        self._status.execution_mode = StateMachineExecutionStatus.RUN_TO_SELECTED_STATE
-        self.run_to_states = []
-        self.run_to_states.append(path)
-        self._status.execution_condition_variable.acquire()
-        self._status.execution_condition_variable.notify_all()
-        self._status.execution_condition_variable.release()
+        if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+            logger.debug("Resume execution engine and run to selected state!")
+            self.run_to_states = []
+            self.run_to_states.append(path)
+            self._status.execution_mode = StateMachineExecutionStatus.RUN_TO_SELECTED_STATE
+            self._status.execution_condition_variable.acquire()
+            self._status.execution_condition_variable.notify_all()
+            self._status.execution_condition_variable.release()
+        else:
+            logger.debug("Start execution engine and run to selected state!")
+            self._status.execution_mode = StateMachineExecutionStatus.RUN_TO_SELECTED_STATE
+            if state_machine_id is not None:
+                self.state_machine_manager.active_state_machine_id = state_machine_id
+            self.run_to_states = []
+            self.run_to_states.append(path)
+            self._run_active_state_machine()
 
     # depending on the execution state wait for the execution condition variable to be notified
     # list all execution modes to keep the overview
@@ -331,6 +350,18 @@ class StatemachineExecutionEngine(ModelMT, Observable):
             sm.root_state.join()
             rafcon.statemachine.singleton.state_machine_execution_engine.stop()
         return sm
+
+    @Observable.observed
+    def set_execution_mode(self, execution_mode):
+        """
+        An observed setter for the execution mode of the state machine status. This is necessary for the
+        monitoring client to update the local state machine in the same way as the root state machine of the server.
+        :param execution_mode: the new execution mode of the state machine
+        :return:
+        """
+        if not isinstance(execution_mode, StateMachineExecutionStatus):
+            raise TypeError("status must be of type StateMachineStatus")
+        self._status.execution_mode = execution_mode
 
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc
