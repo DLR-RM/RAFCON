@@ -11,6 +11,7 @@ from gtkmvc import Observable
 
 from rafcon.statemachine.enums import StateExecutionState
 from rafcon.statemachine.states.state import State
+from rafcon.statemachine.storage import storage
 from rafcon.statemachine.singleton import library_manager
 from rafcon.utils import log
 from rafcon.utils.type_helpers import convert_string_value_to_type_value
@@ -65,7 +66,8 @@ class LibraryState(State):
             logger.info("Old library name '{0}' was located at {1}".format(library_name, library_path))
             logger.info("New library name '{0}' is located at {1}".format(new_library_name, new_library_path))
 
-        state_machine, lib_version, creation_time = library_manager.storage.load_statemachine_from_path(lib_os_path)
+        state_machine = storage.load_statemachine_from_path(lib_os_path)
+        lib_version = state_machine.version
         self.state_copy = state_machine.root_state
         self.state_copy.parent = self
         if not str(lib_version) == version and not str(lib_version) == "None":

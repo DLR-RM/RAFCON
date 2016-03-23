@@ -12,6 +12,7 @@ from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
+from rafcon.statemachine.storage import storage
 
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
@@ -112,7 +113,7 @@ def on_save_activate(state_machine_m, logger):
             return
 
         logger.debug("Saving state machine to {0}".format(save_path))
-        rafcon.statemachine.singleton.global_storage.save_statemachine_to_path(
+        storage.save_statemachine_to_path(
             state_machine_m.state_machine,
             state_machine_m.state_machine.base_path, delete_old_state_machine=False)
 

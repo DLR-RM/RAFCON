@@ -3,7 +3,6 @@ import time
 # core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.state_machine import StateMachine
 
 # singleton elements
