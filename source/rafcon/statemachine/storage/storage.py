@@ -286,7 +286,7 @@ def load_state_recursively(parent, state_path=None):
     except LibraryNotFoundException, e:
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(str(e.message)))
-
+        state_info = storage_utils.load_dict_from_json(path_core_data, as_dict=True)
         state_id = state_info["state_id"]
         dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id)
         # set parent of dummy state
