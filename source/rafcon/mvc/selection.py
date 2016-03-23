@@ -17,9 +17,7 @@ def reduce_to_parent_states(models):
 
 
 class Selection(Observable):
-    """
-    This class contains the selected item (States, Transitions and Data Flows)
-    of a state_machine
+    """This class contains the selected item (States, Transitions and Data Flows) of a state_machine
 
     :param set __selected: The state machine elements selected
     """
