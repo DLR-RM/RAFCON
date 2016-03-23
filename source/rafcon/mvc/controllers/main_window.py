@@ -404,7 +404,7 @@ class MainWindowController(ExtendedController):
         """
         global_runtime_config.store_widget_properties(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
         self.on_left_bar_return_clicked(None)
-        self.view['left_bar_pane'].reparent(self.view['left_bar_container'])
+        self.view['left_bar_pane'].reparent(self.view['left_sidebar_viewport'])
         self.get_controller('left_window_controller').hide_window()
         self.view['undock_left_bar_button'].show()
         return True
