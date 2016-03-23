@@ -170,7 +170,7 @@ def save_script_file_for_state_and_source_path(state, base_path, state_path):
             write_file(source_script_file, state.script_text)
 
 
-def save_state_recursively(state, base_path, parent_path, force_full_load=False):
+def save_state_recursively(state, base_path, parent_path):
     """Recursively saves a state to a yaml file
 
     It calls this method on all its substates.
@@ -195,7 +195,7 @@ def save_state_recursively(state, base_path, parent_path, force_full_load=False)
     # create yaml files for all children
     if isinstance(state, ContainerState):
         for state in state.states.itervalues():
-            save_state_recursively(state, base_path, state_path, force_full_load)
+            save_state_recursively(state, base_path, state_path)
 
 
 def load_statemachine_from_path(base_path):

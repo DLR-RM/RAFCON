@@ -32,7 +32,7 @@ class StateHelper(object):
         temporary_storage_path = RAFCON_TEMP_PATH_STORAGE+"/state_copy_tmp_folder"
         if not os.path.exists(temporary_storage_path):
             os.makedirs(temporary_storage_path)
-        storage.save_state_recursively(source_state, temporary_storage_path, "", True)
+        storage.save_state_recursively(source_state, temporary_storage_path, "")
         state_copy = storage.load_state_from_path(os.path.join(temporary_storage_path, source_state.state_id))
 
         from rafcon.statemachine.states.execution_state import ExecutionState
