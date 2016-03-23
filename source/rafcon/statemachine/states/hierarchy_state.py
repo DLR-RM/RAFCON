@@ -35,6 +35,7 @@ class HierarchyState(ContainerState):
 
         ContainerState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, states,
                                 transitions, data_flows, start_state_id, scoped_variables, v_checker)
+        self.handling_execution_mode = False
 
     def run(self):
         """ This defines the sequence of actions that are taken when the hierarchy is executed
@@ -76,8 +77,10 @@ class HierarchyState(ContainerState):
             # TODO: while True would fit here as well as all exit conditions break explicitly from this loop
             while child_state is not self:
 
+                self.handling_execution_mode = True
                 # depending on the execution mode pause execution
                 execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, child_state)
+                self.handling_execution_mode = False
 
                 self.backward_execution = False
                 if self.preempted:

@@ -31,7 +31,6 @@ class MonitoringExecutionEngine(StatemachineExecutionEngine):
         self.communication_endpoint = communication_endpoint
 
     # overwrite all execution functions
-
     def start(self,  state_machine_id=None, start_state_path=None):
         self.set_execution_mode(StateMachineExecutionStatus.STARTED)
         if start_state_path:

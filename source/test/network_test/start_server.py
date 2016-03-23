@@ -1,9 +1,7 @@
-#!/usr/bin/env python
-
 """
-.. module:: preemptive_concurrency_state
+.. module:: start server
    :platform: Unix, Windows
-   :synopsis: A module to start arbitrary state machines without the GUI and several configurations options
+   :synopsis: A module to start an unit test RAFCON server instance
 
 .. moduleauthor:: Sebastian Brunner
 
@@ -11,10 +9,7 @@
 """
 
 import os
-import glib
-import argparse
 import signal
-import time
 from Queue import Empty
 import threading
 
@@ -54,7 +49,7 @@ def start_server(interacting_function, queue_dict):
     from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
     from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
 
-    from plugins import *
+    from plugins import monitoring
 
     from rafcon.utils import log
     logger = log.get_logger("start-no-gui")

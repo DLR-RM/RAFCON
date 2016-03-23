@@ -10,7 +10,7 @@ def execute(self, inputs, outputs, gvm):
     self.logger.info(str(bottles) + " bottles of beer on the wall, " + str(bottles) + " bottles of beer.")
     bottles -= 1
     self.logger.info("Take one down and pass it around, " + str(bottles) + " bottles of beer on the wall.")
-    time.sleep(0.1)
+    time.sleep(0.01)
     if not gvm.variable_exists("sing_counter"):
         gvm.set_variable("sing_counter", 1)
     else:

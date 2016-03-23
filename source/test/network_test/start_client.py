@@ -1,10 +1,16 @@
-#!/usr/bin/env python
+"""
+.. module:: start client
+   :platform: Unix, Windows
+   :synopsis: A module to start a unit test RAFCON client instance
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 import logging
-import os
 import gtk
 import signal
-import traceback
-import argparse
 from os.path import realpath, dirname, join
 
 

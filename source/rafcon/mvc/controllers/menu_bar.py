@@ -474,6 +474,11 @@ class MenuBarController(ExtendedController):
             # the plugin may be installed but no reactor is running
             if reactor.running:
                 reactor.callFromThread(reactor.stop)
+
+            # shutdown gtk
+            self.main_window_view.hide()
+            import glib
+            glib.idle_add(gtk.main_quit)
         except ImportError, e:
             # stop gtk if twisted is not imported
             import glib

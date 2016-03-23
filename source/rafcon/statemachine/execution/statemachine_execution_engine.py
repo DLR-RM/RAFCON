@@ -9,16 +9,16 @@
 """
 import copy
 import threading
-
+import time
 import Queue
 from threading import Lock
 
 from gtkmvc import Observable
 from rafcon.statemachine.execution.statemachine_status import StateMachineStatus
+from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
-from rafcon.statemachine.enums import StateMachineExecutionStatus
 
 
 class StatemachineExecutionEngine(Observable):
@@ -52,6 +52,7 @@ class StatemachineExecutionEngine(Observable):
         self.execution_engine_lock = Lock()
         self._run_to_states = []
         self.run_to_states = []
+        self.state_machine_running = False
 
     # TODO: pause all external modules
     @Observable.observed
@@ -69,6 +70,7 @@ class StatemachineExecutionEngine(Observable):
         :param start_state_path: The path of the state in the state machine, from which the execution will start
         :return:
         """
+
         if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
             self._status.execution_mode = StateMachineExecutionStatus.STARTED
             logger.debug("Resume execution engine ...")
@@ -77,6 +79,9 @@ class StatemachineExecutionEngine(Observable):
             self._status.execution_condition_variable.notify_all()
             self._status.execution_condition_variable.release()
         else:
+            # do not start another state machine before the old one did not finish its execution
+            while self.state_machine_running:
+                time.sleep(1.0)
             self._status.execution_mode = StateMachineExecutionStatus.STARTED
             logger.debug("Start execution engine ...")
             if state_machine_id is not None:
@@ -126,6 +131,9 @@ class StatemachineExecutionEngine(Observable):
         logger.debug("Activate step mode")
         if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
             self._status.execution_mode = StateMachineExecutionStatus.FORWARD_INTO
+            self._status.execution_condition_variable.acquire()
+            self._status.execution_condition_variable.notify_all()
+            self._status.execution_condition_variable.release()
         else:
             self._status.execution_mode = StateMachineExecutionStatus.FORWARD_INTO
             self._run_active_state_machine()
@@ -135,6 +143,7 @@ class StatemachineExecutionEngine(Observable):
         """Store running state machine and observe its status"""
         self.__running_state_machine = self.state_machine_manager.state_machines[
             self.state_machine_manager.active_state_machine_id]
+
         self.__running_state_machine.start()
 
         self.__wait_for_finishing_thread = threading.Thread(target=self._wait_for_finishing)
@@ -142,8 +151,11 @@ class StatemachineExecutionEngine(Observable):
 
     def _wait_for_finishing(self):
         """Observe running state machine and stop engine if execution has finished"""
+        self.state_machine_running = True
         self.__running_state_machine.join()
+        print "Joined currently running hierarchy state"
         self.set_execution_mode_to_stopped()
+        self.state_machine_running = False
 
     def backward_step(self):
         """Take a backward step for all active states in the state machine

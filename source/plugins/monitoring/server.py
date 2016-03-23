@@ -142,6 +142,7 @@ class MonitoringServer(UdpServer):
                 # as there is no dedicated RUN_TO_STATE execution status the message has to be checked for an optional
                 # start state path
                 if len(received_command) == 2:
+                    print "start state machine from state " + received_command[1]
                     state_machine_execution_engine.start(start_state_path=received_command[1])
                 else:
                     state_machine_execution_engine.start()
