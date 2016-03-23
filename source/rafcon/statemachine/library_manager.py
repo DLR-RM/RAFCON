@@ -173,7 +173,6 @@ class LibraryManager(Observable):
                                                                                      str(library_name),
                                                                                      str(new_path),
                                                                                      str(new_library_path)))
-            print "RETURN", new_path, new_library_path, library_name
             return new_path, new_library_path, library_name
 
         # a boolean to indicate if a state was regularly found or by the help of the user
@@ -235,5 +234,4 @@ class LibraryManager(Observable):
         # the user for the correct path
         import copy
         self._replaced_libraries[original_path_and_name] = (path, library_path, copy.copy(regularly_found))
-        print "return end", path, library_path, library_name
         return path, library_path, library_name
