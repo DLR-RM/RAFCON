@@ -10,12 +10,11 @@ from os.path import realpath, dirname, join, expanduser, expandvars, isdir
 import rafcon
 from rafcon.utils.config import config_path
 from rafcon.utils import log
-from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 import rafcon.utils.filesystem as filesystem
 
 from rafcon.statemachine.start import state_machine_path
 from rafcon.statemachine.config import global_config
-from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton as sm_singletons
@@ -102,14 +101,10 @@ if __name__ == '__main__':
     # Initialize library
     sm_singletons.library_manager.initialize()
 
-    # Set base path of global storage
-    sm_singletons.global_storage.base_path = RAFCON_TEMP_PATH_STORAGE
-
     if setup_config['sm_paths']:
-        storage = StateMachineStorage()
         for path in setup_config['sm_paths']:
             try:
-                state_machine, version, creation_time = storage.load_statemachine_from_path(path)
+                state_machine = storage.load_statemachine_from_path(path)
                 sm_singletons.state_machine_manager.add_state_machine(state_machine)
             except Exception as e:
                 logger.exception("Could not load state-machine {0}".format(path))

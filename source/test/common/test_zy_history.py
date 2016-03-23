@@ -17,6 +17,7 @@ from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.statemachine.storage import storage
 
 # mvc elements
 from gtkmvc.observer import Observer
@@ -52,7 +53,7 @@ def on_save_activate(state_machine_m, logger):
         return
 
     logger.debug("Saving state machine to {0}".format(save_path))
-    rafcon.statemachine.singleton.global_storage.save_statemachine_to_path(
+    storage.save_statemachine_to_path(
         state_machine_m.state_machine,
         state_machine_m.state_machine.file_system_path, delete_old_state_machine=True)
 
@@ -61,7 +62,7 @@ def on_save_activate(state_machine_m, logger):
 
 
 def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None):
-    print "in Removal: \n", rafcon.statemachine.singleton.global_storage._paths_to_remove_before_sm_save.values()
+    print "in Removal: \n", storage._paths_to_remove_before_sm_save.values()
 
     def print_states(state):
         if isinstance(state, ContainerState):
@@ -380,10 +381,7 @@ def test_add_remove_history(caplog):
     save_state_machine(sm_model, state_machine_path + '_before', logger, with_gui=False, menubar_ctrl=None)
 
     def store_state_machine(sm_model, path):
-        rafcon.statemachine.singleton.global_storage.save_statemachine_to_path(
-            sm_model.state_machine,
-            path,
-            delete_old_state_machine=True)
+        storage.save_statemachine_to_path(sm_model.state_machine, path, delete_old_state_machine=True)
         sm_model.root_state.store_meta_data()
 
     sm_history = sm_model.history

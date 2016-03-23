@@ -5,7 +5,7 @@ from rafcon.statemachine.execution.statemachine_execution_engine import Statemac
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
-# singleton elements
+from rafcon.statemachine.storage import storage
 import rafcon.statemachine.singleton
 
 # test environment elements
@@ -27,8 +27,8 @@ def test_custom_entry_point(caplog):
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    [state_machine, version, creation_time] = rafcon.statemachine.singleton.global_storage.load_statemachine_from_path(
-        testing_utils.get_test_sm_path("unit_test_state_machines/stepping_test"))
+    state_machine = storage.load_statemachine_from_path(testing_utils.get_test_sm_path(
+        "unit_test_state_machines/stepping_test"))
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
 

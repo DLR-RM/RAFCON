@@ -3,7 +3,7 @@ import os
 # core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 
 # singleton elements
@@ -57,12 +57,11 @@ def test_concurrency_preemption_save_load(caplog):
     testing_utils.test_multithrading_lock.acquire()
 
     storage_path = testing_utils.get_unique_temp_path()
-    s = StateMachineStorage(storage_path)
 
     preemption_state_sm = create_preemption_statemachine()
 
-    s.save_statemachine_to_path(preemption_state_sm, storage_path)
-    [root_state, version, creation_time] = s.load_statemachine_from_path(storage_path)
+    storage.save_statemachine_to_path(preemption_state_sm, storage_path)
+    storage.load_statemachine_from_path(storage_path)
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id

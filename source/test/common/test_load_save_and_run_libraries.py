@@ -5,7 +5,7 @@ from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.states.state import DataPortType
-from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 
 # singleton elements
@@ -28,7 +28,7 @@ def setup_module(module=None):
 
 
 def test_save_libraries(caplog):
-    s = StateMachineStorage(TEST_LIBRARY_PATH)
+    s = storage
 
     state1 = ExecutionState("library_execution_state1", path=testing_utils.TEST_SM_PATH, filename="library_execution_state1.py")
     input_state1 = state1.add_input_data_port("data_input_port1", "float")
@@ -161,8 +161,8 @@ def test_hierarchy_state_library(caplog):
 def test_save_nested_library_state(caplog):
     library_with_nested_library_sm = create_hierarchy_state_library_state_machine()
 
-    rafcon.statemachine.singleton.global_storage.save_statemachine_to_path(
-        library_with_nested_library_sm, testing_utils.get_test_sm_path(TEST_LIBRARY_PATH+"/library_with_nested_library"), "0.1")
+    storage.save_statemachine_to_path(library_with_nested_library_sm, testing_utils.get_test_sm_path(
+        TEST_LIBRARY_PATH+"/library_with_nested_library"), "0.1")
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 

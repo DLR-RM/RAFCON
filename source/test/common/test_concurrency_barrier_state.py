@@ -1,7 +1,7 @@
 # core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.script import Script
 
@@ -58,10 +58,9 @@ def test_concurrency_barrier_save_load(caplog):
     concurrency_barrier_state = create_concurrency_barrier_state()
 
     state_machine = StateMachine(concurrency_barrier_state)
-    test_storage = StateMachineStorage(testing_utils.get_test_sm_path("decider_test_statemachine"))
     test_path = testing_utils.get_unique_temp_path()
-    test_storage.save_statemachine_to_path(state_machine, test_path)
-    sm_loaded, version, creation_time = test_storage.load_statemachine_from_path(test_path)
+    storage.save_statemachine_to_path(state_machine, test_path)
+    sm_loaded = storage.load_statemachine_from_path(test_path)
 
     root_state = sm_loaded.root_state
     input_data = {"input_data_port1": 0.1, "input_data_port2": 0.1}

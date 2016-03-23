@@ -5,7 +5,7 @@ from weakref import ref
 
 from gtkmvc import ModelMT, Signal
 
-from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.storage import storage
 
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.container_state import ContainerState
@@ -230,14 +230,14 @@ class AbstractStateModel(ModelMT):
         if not path:
             path = self.state.get_file_system_path()
 
-        path_meta_data = os.path.join(path, StateMachineStorage.FILE_NAME_META_DATA)
+        path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA)
 
         # TODO: Should be removed with next minor release
         if not os.path.exists(path_meta_data):
-            path_meta_data = os.path.join(path, StateMachineStorage.FILE_NAME_META_DATA_OLD)
+            path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA_OLD)
 
         try:
-            tmp_meta = StateMachineStorage.load_data_file(path_meta_data)
+            tmp_meta = storage.load_data_file(path_meta_data)
         except ValueError:
             tmp_meta = {}
 
@@ -257,10 +257,9 @@ class AbstractStateModel(ModelMT):
         elements (data ports, outcomes, etc.) and stores it on the filesystem.
         """
         if temp_path:
-            meta_file_json = os.path.join(temp_path + '/' + self.state.get_path(),
-                                          StateMachineStorage.FILE_NAME_META_DATA)
+            meta_file_json = os.path.join(temp_path + '/' + self.state.get_path(), storage.FILE_NAME_META_DATA)
         else:
-            meta_file_json = os.path.join(self.state.get_file_system_path(), StateMachineStorage.FILE_NAME_META_DATA)
+            meta_file_json = os.path.join(self.state.get_file_system_path(), storage.FILE_NAME_META_DATA)
         meta_data = deepcopy(self.meta)
         self._generate_element_meta_data(meta_data)
         storage_utils.write_dict_to_json(meta_data, meta_file_json)
