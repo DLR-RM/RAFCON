@@ -14,11 +14,13 @@ from rafcon.statemachine.id_generator import generate_state_machine_id
 from rafcon.statemachine.execution.execution_history import ExecutionHistory
 from rafcon.statemachine.enums import StateExecutionState
 
+from rafcon.utils.storage_utils import get_current_time_string
+from rafcon.utils.json_utils import JSONObject
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateMachine(Observable):
+class StateMachine(Observable, JSONObject):
     """A class for to organizing all main components of a state machine
 
     It inherits from Observable to make a change of its fields observable.
@@ -29,18 +31,57 @@ class StateMachine(Observable):
 
     """
 
+    state_machine_id = None
+    version = None
+
     old_marked_dirty = True
 
     _root_state = None
     _marked_dirty = True
     _file_system_path = None
 
-    def __init__(self, root_state=None):
+    def __init__(self, root_state=None, version=None, creation_time=None, last_update=None):
         Observable.__init__(self)
 
         self.state_machine_id = generate_state_machine_id()
-        self.root_state = root_state
+
+        if root_state:
+            self.root_state = root_state
+
+        if version:
+            self.version = version
+
+        if creation_time:
+            self.creation_time = creation_time
+        else:
+            self.creation_time = get_current_time_string()
+
+        if last_update:
+            self.last_update = last_update
+        else:
+            self.last_update = get_current_time_string()
+
         self.execution_history = ExecutionHistory()
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        version = dictionary['version']
+        creation_time = dictionary['creation_time']
+        last_update = dictionary['last_update']
+        return cls(None, version, creation_time, last_update)
+
+    def to_dict(self):
+        return self.state_machine_to_dict(self)
+
+    @staticmethod
+    def state_machine_to_dict(state_machine):
+        dict_representation = {
+            'root_state_id': state_machine.root_state.state_id,
+            'version': state_machine.version,
+            'creation_time': state_machine.creation_time,
+            'last_update': state_machine.last_update,
+        }
+        return dict_representation
 
     def start(self):
         """
