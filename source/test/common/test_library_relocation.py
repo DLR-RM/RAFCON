@@ -34,7 +34,7 @@ def open_folder(query):
     if "library2_for_relocation_test" in query:
         return_value = None  # the first relocation has to be aborted
     else:
-        return_value = rafcon.__path__[0] + "/../test_scripts/test_libraries/library1_for_relocation_test_relocated"
+        return_value = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/library_relocation_test_source/library1_for_relocation_test_relocated"
 
     return return_value
 
