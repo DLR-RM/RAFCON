@@ -115,7 +115,7 @@ def test_backward_stepping(caplog):
 
     testing_utils.reload_config()
     testing_utils.test_multithrading_lock.release()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog, 1)
 
 
 if __name__ == '__main__':
