@@ -278,8 +278,8 @@ class MainWindowController(ExtendedController):
         :param pane: The corresponding pane for which the position is to be adjusted
         :param default_pos: A default value for the pane's position in case it was not stored in the runtime config
         """
-        position = global_runtime_config.get_config_value(config_id)
-        self.view[pane].set_position(position) if position else self.view[pane].set_position(default_pos)
+        position = global_runtime_config.get_config_value(config_id, default_pos)
+        self.view[pane].set_position(position)
 
     def highlight_execution_of_current_sm(self, active):
         if self.get_controller('state_machines_editor_ctrl') is None or \

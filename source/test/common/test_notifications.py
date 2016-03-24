@@ -1561,9 +1561,6 @@ def test_state_property_modify_notification(caplog):
 # - unlock_variable     (method 1 before and 1 after notification)
 # - set_locked_variable (method 1 before and 1 after notification)
 
-# StateMachineStorage
-# - base_path           (setter 1 before and 1 after notification)
-
 # NetworkStorageReader
 # - base_path           (setter 1 before and 1 after notification)
 

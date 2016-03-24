@@ -5,9 +5,10 @@ import testing_utils
 import rafcon.statemachine.states.execution_state
 import rafcon.statemachine.states.hierarchy_state
 import rafcon.statemachine.states.preemptive_concurrency_state
+from rafcon.statemachine.storage import storage
 
 from rafcon.statemachine.singleton import global_variable_manager as gvm
-from rafcon.statemachine.singleton import global_storage, state_machine_manager, state_machine_execution_engine
+from rafcon.statemachine.singleton import state_machine_manager, state_machine_execution_engine
 
 
 def assert_gvm(key, value=True):

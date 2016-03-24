@@ -7,31 +7,27 @@ ModificationsHistory-Class.
 The HistoryChanges-Class provides the functionalities to organize and access all actions of the edit process.
 Hereby the branching of the edit process is stored and should be accessible, too.
 """
-import sys
-import traceback
 import copy
 import time
-import threading
 
 from gtkmvc import ModelMT, Observable
 
 from rafcon.utils import log
 
-from rafcon.statemachine.scope import ScopedData, ScopedVariable
+from rafcon.statemachine.scope import ScopedVariable
 from rafcon.statemachine.outcome import Outcome
 from rafcon.statemachine.data_flow import DataFlow
 from rafcon.statemachine.transition import Transition
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.data_port import DataPort
 
-from rafcon.statemachine.data_port import InputDataPort, OutputDataPort
+from rafcon.statemachine.data_port import InputDataPort
 from rafcon.statemachine.state_machine import StateMachine
 
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
-from rafcon.statemachine.singleton import global_storage
-from rafcon.mvc.models.container_state import StateModel
+from rafcon.statemachine.storage import storage
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 
 
@@ -422,7 +418,7 @@ class ModificationsHistoryModel(ModelMT):
                 tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/not_stored_' + str(sm.state_machine_id)
             else:
                 tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/' + sm.file_system_path
-            global_storage.save_statemachine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=False,
+            storage.save_statemachine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=False,
                                                      save_as=True, temporary_storage=True)
             self.state_machine_model.root_state.store_meta_data(temp_path=tmp_sm_system_path)
             self.last_storage_time = time.time()

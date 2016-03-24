@@ -74,18 +74,25 @@ def copy_file_if_update_required(source_file, target_file):
         shutil.copy(source_file, target_file)
 
 
-def read_file(path, filename):
-    file_path = os.path.join(os.path.realpath(path), filename)
+def read_file(file_path, filename=None):
+    file_path = os.path.realpath(file_path)
+    if filename:
+        file_path = os.path.join(file_path, filename)
 
     file_content = ""
     if os.path.isfile(file_path):
-        file_pointer = open(file_path, 'r')
-        file_content = file_pointer.read()
-        file_pointer.close()
+        with open(file_path, 'r') as file_pointer:
+            file_content = file_pointer.read()
 
     return file_content
 
-
+    
+def write_file(file_path, content):
+    file_path = os.path.realpath(file_path)
+    with open(file_path, 'w') as file_pointer:
+        file_pointer.write(content)
+    
+        
 def get_home_path():
     home_path = expanduser('~')
     if home_path:

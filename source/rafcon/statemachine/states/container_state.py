@@ -19,7 +19,8 @@ from rafcon.statemachine.data_flow import DataFlow
 from rafcon.statemachine.scope import ScopedData, ScopedVariable
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.validity_check.validity_checker import ValidityChecker
-from rafcon.statemachine.singleton import global_storage, state_machine_execution_engine
+from rafcon.statemachine.storage import storage
+from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.utils.type_helpers import type_inherits_of_type
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -231,7 +232,7 @@ class ContainerState(State):
             if self.get_sm_for_state():
                 own_sm_id = self.get_sm_for_state().state_machine_id
                 if own_sm_id is not None:
-                    global_storage.unmark_path_for_removal_for_sm_id(own_sm_id, state.get_file_system_path())
+                    storage.unmark_path_for_removal_for_sm_id(own_sm_id, state.get_file_system_path())
 
         return state.state_id
 
@@ -256,7 +257,7 @@ class ContainerState(State):
                 logger.warn("Something is going wrong during state removal. State does not belong to "
                             "a state machine!")
             else:
-                global_storage.mark_path_for_removal_for_sm_id(own_sm_id, self.states[state_id].get_file_system_path())
+                storage.mark_path_for_removal_for_sm_id(own_sm_id, self.states[state_id].get_file_system_path())
 
         # first delete all transitions and data_flows, which are connected to the state to be deleted
         keys_to_delete = []

@@ -55,6 +55,7 @@
             <property name="visible">True</property>
             <property name="ypad">5</property>
             <property name="label" translatable="yes">xyz</property>
+            <property name="selectable">True</property>
           </object>
           <packing>
             <property name="left_attach">4</property>

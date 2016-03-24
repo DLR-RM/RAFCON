@@ -195,13 +195,13 @@ class LibraryTreeController(ExtendedController):
         state_machine_execution_engine.start(state_machine.state_machine_id)
 
     def open_library_as_state_machine(self):
-        from rafcon.statemachine.singleton import global_storage
+        from rafcon.statemachine.storage import storage
         smm_m = self.state_machine_manager_model
         (model, row) = self.view.get_selection().get_selected()
         library_path = model[row][1]
 
         logger.debug("Opening library as state-machine from path '{0}'".format(library_path))
-        state_machine, version, creation_time = global_storage.load_statemachine_from_path(library_path)
+        state_machine = storage.load_statemachine_from_path(library_path)
 
         smm_m.state_machine_manager.add_state_machine(state_machine)
         return state_machine

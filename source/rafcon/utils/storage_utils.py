@@ -26,9 +26,8 @@ def write_dict_to_yaml(dictionary, path, **kwargs):
     :param path: the absolute path of the target yaml file
     :param kwargs: optional additional parameters for dumper
     """
-    f = open(path, 'w')
-    yaml.dump(dictionary, f, indent=4, **kwargs)
-    f.close()
+    with open(path, 'w') as f:
+        yaml.dump(dictionary, f, indent=4, **kwargs)
 
 
 def load_dict_from_yaml(path):
@@ -50,12 +49,11 @@ def write_dict_to_json(dictionary, path, **kwargs):
     :param dictionary: The dictionary to get saved
     :param kwargs: optional additional parameters for dumper
     """
-    f = open(path, 'w')
-    # We cannot write directly to the file, as otherwise the 'encode' method wouldn't be called
     result_string = json.dumps(dictionary, cls=JSONObjectEncoder, indent=4, check_circular=False, sort_keys=True,
                                                                                                             **kwargs)
-    f.write(result_string)
-    f.close()
+    with open(path, 'w') as f:
+        # We cannot write directly to the file, as otherwise the 'encode' method wouldn't be called
+        f.write(result_string)
 
 
 def load_dict_from_json(path, as_dict=False):

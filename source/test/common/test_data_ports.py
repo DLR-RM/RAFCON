@@ -6,7 +6,7 @@ from pytest import raises
 # core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.storage.storage import StateMachineStorage
+from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 
 # singleton elements
@@ -46,12 +46,11 @@ def test_default_values_of_data_ports(caplog):
 
     storage_path = testing_utils.get_unique_temp_path()
     print storage_path
-    test_storage = StateMachineStorage(storage_path)
 
     sm = create_statemachine()
 
-    test_storage.save_statemachine_to_path(sm, storage_path)
-    [sm_loaded, version, creation_time] = test_storage.load_statemachine_from_path(storage_path)
+    storage.save_statemachine_to_path(sm, storage_path)
+    sm_loaded = storage.load_statemachine_from_path(storage_path)
 
     root_state = sm_loaded.root_state
 
