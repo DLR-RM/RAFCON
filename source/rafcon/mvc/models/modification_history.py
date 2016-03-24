@@ -127,6 +127,7 @@ class ModificationsHistoryModel(ModelMT):
             # logger.debug("StateMachineAction Undo")
             self._re_initiate_observation()
         self.check_for_temp_storage()
+        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
 
     def undo(self):
         if not self.modifications.trail_history or self.modifications.trail_pointer == 0 \
@@ -142,6 +143,7 @@ class ModificationsHistoryModel(ModelMT):
             # logger.debug("StateMachineAction Undo")
             self._re_initiate_observation()
         self.check_for_temp_storage()
+        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
 
     def _redo(self, version_id):
         self.busy = True
@@ -155,6 +157,7 @@ class ModificationsHistoryModel(ModelMT):
             # logger.debug("StateMachineAction Redo")
             self._re_initiate_observation()
         self.check_for_temp_storage()
+        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
 
     def redo(self):
         if not self.modifications.trail_history or self.modifications.trail_history and not self.modifications.trail_pointer + 1 < len(
@@ -170,6 +173,7 @@ class ModificationsHistoryModel(ModelMT):
             # logger.debug("StateMachineAction Redo")
             self._re_initiate_observation()
         self.check_for_temp_storage()
+        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
 
     def _interrupt_actual_action(self):
         # self.busy = True
@@ -410,6 +414,11 @@ class ModificationsHistoryModel(ModelMT):
     #         self.tmp_storage_timed_thread.start()
 
     def check_for_temp_storage(self, force=False):
+        """ Method implements the checks for possible temporary backup of the state-machine according duration till
+        the last change.
+        :param force: is a flag that force the temporary backup of the state-machine to the tmp-folder
+        :return:
+        """
         if not self.with_temp_storage:
             return
         sm = self.state_machine_model.state_machine
@@ -419,7 +428,7 @@ class ModificationsHistoryModel(ModelMT):
             else:
                 tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/' + sm.file_system_path
             storage.save_statemachine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=False,
-                                                     save_as=True, temporary_storage=True)
+                                              save_as=True, temporary_storage=True)
             self.state_machine_model.root_state.store_meta_data(temp_path=tmp_sm_system_path)
             self.last_storage_time = time.time()
         # else:
