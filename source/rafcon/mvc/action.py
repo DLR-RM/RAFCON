@@ -33,10 +33,8 @@ from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 from rafcon.mvc.models.container_state import ContainerState, ContainerStateModel
 from rafcon.mvc.models.abstract_state import MetaSignalMsg
 
-import rafcon.mvc.statemachine_helper
 import rafcon.mvc.singleton as mvc_singleton
 from rafcon.mvc.utils.notification_overview import NotificationOverview
-
 
 
 logger = log.get_logger(__name__)
@@ -178,63 +176,87 @@ def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=Fa
     for elem in state_model.input_data_ports:
         meta_dict['input_data_ports'][elem.data_port.data_port_id] = copy.deepcopy(elem.meta)
         if with_prints:
-            print "input: ", elem.data_port.data_port_id, elem.parent.state.input_data_ports.keys(), meta_dict[
-                'input_data_ports'].keys()
+            print "input: ", elem.data_port.data_port_id, elem.parent.state.input_data_ports.keys(), \
+                meta_dict['input_data_ports'].keys()
     for elem in state_model.output_data_ports:
         meta_dict['output_data_ports'][elem.data_port.data_port_id] = copy.deepcopy(elem.meta)
         if with_prints:
-            print "output: ", elem.data_port.data_port_id, elem.parent.state.output_data_ports.keys(), meta_dict[
-                'output_data_ports'].keys()
+            print "output: ", elem.data_port.data_port_id, elem.parent.state.output_data_ports.keys(), \
+                meta_dict['output_data_ports'].keys()
 
     meta_dict['state'] = copy.deepcopy(state_model.meta)
     if isinstance(state_model, ContainerStateModel):
         for state_id, state_m in state_model.states.iteritems():
             meta_dict['states'][state_m.state.state_id] = get_state_element_meta(state_m, with_parent_linkage)
             if with_prints:
-                print "FINISHED STORE META for STATE: ", state_id, meta_dict[
-                    'states'].keys(), state_model.state.state_id
+                print "FINISHED STORE META for STATE: ", state_id, meta_dict['states'].keys(), \
+                    state_model.state.state_id
         for elem in state_model.transitions:
             meta_dict['transitions'][elem.transition.transition_id] = copy.deepcopy(elem.meta)
             if with_prints:
-                print "transition: ", elem.transition.transition_id, elem.parent.state.transitions.keys(), meta_dict[
-                    'transitions'].keys(), elem.parent.state.state_id
+                print "transition: ", elem.transition.transition_id, elem.parent.state.transitions.keys(), \
+                    meta_dict['transitions'].keys(), elem.parent.state.state_id
         for elem in state_model.data_flows:
             meta_dict['data_flows'][elem.data_flow.data_flow_id] = copy.deepcopy(elem.meta)
             if with_prints:
-                print "data_flow: ", elem.data_flow.data_flow_id, elem.parent.state.data_flows.keys(), meta_dict[
-                    'data_flows'].keys()
+                print "data_flow: ", elem.data_flow.data_flow_id, elem.parent.state.data_flows.keys(), \
+                    meta_dict['data_flows'].keys()
         for elem in state_model.scoped_variables:
             meta_dict['scoped_variables'][elem.scoped_variable.data_port_id] = copy.deepcopy(elem.meta)
             if with_prints:
-                print "scoped_variable: ", elem.scoped_variable.data_port_id, elem.parent.state.scoped_variables.keys(), \
-                meta_dict['scoped_variables'].keys()
+                print "scoped_variable: ", elem.scoped_variable.data_port_id, \
+                    elem.parent.state.scoped_variables.keys(), meta_dict['scoped_variables'].keys()
     return meta_dict
+
+
+def check_state_model_for_is_start_state(state_model):
+        if state_model.is_start and not state_model.state.is_root_state and state_model.state.parent.get_start_state() \
+                and not state_model.state.parent.get_start_state().state_id == state_model.state.state_id:
+            if not (isinstance(state_model.parent.state, BarrierConcurrencyState) or
+                    isinstance(state_model.parent.state, PreemptiveConcurrencyState)):
+                logger.warning("start_state_id of {0} is not consistent with is_start_state in state-model of {1} "
+                               "{2}!={3}".format(state_model.parent.state, state_model.state,
+                                                 state_model.state.parent.get_start_state().state_id,
+                                                 state_model.state.state_id))
 
 
 def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None):
     # meta_dict = {'state': state_model.meta, 'data_flows': {}, 'transitions': {}, 'outcomes': {},
     #              'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}}
 
+    def missing_meta_data_warning(state_model, elem, meta_dict, dict_key, existing_model_list):
+        logger.warning("Storage Dict seems to miss Meta-Data of {5} in State: {0} {1} for {5}:"
+                       " {2}\nreal: {3}\nstorage: {4}".format(state_model.state.state_id,
+                                                              state_model.state.name,
+                                                              elem,
+                                                              existing_model_list,
+                                                              meta_dict[dict_key],
+                                                              dict_key[:-1].replace('_', '-')))
+
     state_model.meta = copy.deepcopy(meta_dict['state'])
     if with_prints:
         print "INSERT META for STATE: ", state_model.state.state_id, state_model.state.name
 
     for elem in state_model.outcomes:
-        if with_prints:
-            print "outcome: ", elem.outcome.outcome_id, meta_dict['outcomes'].keys()
-        assert elem.outcome.outcome_id in meta_dict['outcomes']
-        elem.meta = copy.deepcopy(meta_dict['outcomes'][elem.outcome.outcome_id])
+        if elem.outcome.outcome_id in meta_dict['outcomes']:
+            elem.meta = copy.deepcopy(meta_dict['outcomes'][elem.outcome.outcome_id])
+        else:
+            missing_meta_data_warning(state_model, elem.outcome, meta_dict, 'outcomes',
+                                      [oc_m.outcome.outcome_id for oc_m in state_model.outcomes])
     for elem in state_model.input_data_ports:
-        if with_prints:
-            print "input: ", elem.data_port.data_port_id, meta_dict['input_data_ports'].keys()
-        assert elem.data_port.data_port_id in meta_dict['input_data_ports']
-        elem.meta = copy.deepcopy(meta_dict['input_data_ports'][elem.data_port.data_port_id])
+        if elem.data_port.data_port_id in meta_dict['input_data_ports']:
+            elem.meta = copy.deepcopy(meta_dict['input_data_ports'][elem.data_port.data_port_id])
+        else:
+            missing_meta_data_warning(state_model, elem.data_port, meta_dict, 'input_data_ports',
+                                      [ip_m.data_port.data_port_id for ip_m in state_model.input_data_ports])
 
     for elem in state_model.output_data_ports:
-        if with_prints:
-            print "output: ", elem.data_port.data_port_id, meta_dict['output_data_ports'].keys()
-        assert elem.data_port.data_port_id in meta_dict['output_data_ports']
-        elem.meta = copy.deepcopy(meta_dict['output_data_ports'][elem.data_port.data_port_id])
+        if elem.data_port.data_port_id in meta_dict['output_data_ports']:
+            elem.meta = copy.deepcopy(meta_dict['output_data_ports'][elem.data_port.data_port_id])
+        else:
+            missing_meta_data_warning(state_model, elem.data_port, meta_dict, 'output_data_ports',
+                                      [op_m.data_port.data_port_id for op_m in state_model.output_data_ports])
+
     if isinstance(state_model, ContainerStateModel):
         for state_id, state_m in state_model.states.iteritems():
             if with_prints:
@@ -252,38 +274,28 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
             if with_prints:
                 print "FINISHED META for STATE: ", state_m.state.state_id
         for elem in state_model.transitions:
-            if with_prints:
-                print "transition: ", elem.transition.transition_id, meta_dict[
-                    'transitions'].keys(), elem.parent.state.transitions.keys(), elem.parent.state.state_id
-            # assert elem.transition.transition_id in meta_dict['transitions']
             if elem.transition.transition_id in meta_dict['transitions']:
                 elem.meta = copy.deepcopy(meta_dict['transitions'][elem.transition.transition_id])
             else:
-                logger.warning("Storage Dict seems to miss Meta-Data of Transition in State: {0} {1} for transition:"
-                            " {2}\nreal: {3}\nstorage: {4}".format(state_model.state.state_id,
-                                                                   state_model.state.name,
-                                                                   elem.transition,
-                                                                   [t_m.transition.transition_id for t_m in state_model.transitions],
-                                                                   meta_dict['transitions']))
+                missing_meta_data_warning(state_model, elem.transition, meta_dict, 'transitions',
+                                          [t_m.transition.transition_id for t_m in state_model.transitions])
+
         for elem in state_model.data_flows:
-            if with_prints:
-                print "data_flow: ", elem.data_flow.data_flow_id, meta_dict['data_flows'].keys()
-            assert elem.data_flow.data_flow_id in meta_dict['data_flows']
-            elem.meta = copy.deepcopy(meta_dict['data_flows'][elem.data_flow.data_flow_id])
+            if elem.data_flow.data_flow_id in meta_dict['data_flows']:
+                elem.meta = copy.deepcopy(meta_dict['data_flows'][elem.data_flow.data_flow_id])
+            else:
+                missing_meta_data_warning(state_model, elem.data_flow, meta_dict, 'data_flows',
+                                          [df_m.data_flow.data_flow_id for df_m in state_model.data_flows])
+
         for elem in state_model.scoped_variables:
-            if with_prints:
-                print "scoped: ", elem.scoped_variable.data_port_id, meta_dict['scoped_variables'].keys()
-            assert elem.scoped_variable.data_port_id in meta_dict['scoped_variables']
-            elem.meta = copy.deepcopy(meta_dict['scoped_variables'][elem.scoped_variable.data_port_id])
-    state_model.is_start = copy.deepcopy(meta_dict['is_start'])
-    if state_model.is_start and not state_model.state.is_root_state:  # TODO not nice that model stuff does things in core
-        if not (isinstance(state_model.parent.state, BarrierConcurrencyState) or
-                isinstance(state_model.parent.state, PreemptiveConcurrencyState)):
-            # logger.debug("set start_state_id %s" % state_model.parent.state)
-            # state_model.parent.state.start_state_id = state_model.state.state_id
-            pass
-        else:
-            state_model.is_start = False
+            if elem.scoped_variable.data_port_id in meta_dict['scoped_variables']:
+                elem.meta = copy.deepcopy(meta_dict['scoped_variables'][elem.scoped_variable.data_port_id])
+            else:
+                missing_meta_data_warning(state_model, elem.scoped_variable, meta_dict, 'scoped_variables',
+                                          [sv_m.scoped_variable.data_port_id for sv_m in state_model.scoped_variables])
+
+    # state_model.is_start = copy.deepcopy(meta_dict['is_start'])
+    check_state_model_for_is_start_state(state_model)
 
 
 class ActionDummy:
