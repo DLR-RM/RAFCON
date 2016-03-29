@@ -19,7 +19,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkEventBox" id="eventbox1">
+      <object class="GtkEventBox" id="lower_right_sidebar">
         <property name="visible">True</property>
         <child>
           <object class="GtkVPaned" id="vpaned">
