@@ -15,6 +15,9 @@ import time
 import os
 import pytest
 
+from rafcon.utils import log
+logger = log.get_logger(__name__)
+
 FINAL_MESSAGE = "final_message"
 CLIENT1_QUEUE = "client1"
 CLIENT2_QUEUE = "client2"
@@ -336,11 +339,14 @@ def test_multi_clients():
 
     if server.is_alive():
         server.terminate()
+        logger.error("Server is still alive")
     if client1.is_alive():
         client1.terminate()
+        logger.error("Client1 is still alive")
     if client2.is_alive():
         client2.terminate()
+        logger.error("Client2 is still alive")
 
 if __name__ == '__main__':
-    test_multi_clients()
-    # pytest.main([__file__])
+    # test_multi_clients()
+    pytest.main([__file__])
