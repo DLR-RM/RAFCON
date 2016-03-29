@@ -33,6 +33,7 @@ def wait_for_test_finished(queue, udp_endpoint, connector):
     print('process with id {0} will stop reactor'.format(str(os.getpid())))
     reactor.callFromThread(reactor.stop)
     print('process with id {0} did stop reactor'.format(str(os.getpid())))
+    os._exit(0)
 
 
 
@@ -138,16 +139,9 @@ def test_non_acknowledged_messages():
     assert not server.is_alive(), "Server is still alive"
     assert not client.is_alive(), "Client is still alive"
 
-    if server.is_alive():
-        server.terminate()
-        logger.error("Server is still alive")
-    if client.is_alive():
-        client.terminate()
-        logger.error("Client is still alive")
-
     print "Test successful"
 
 
 if __name__ == '__main__':
-    # test_non_acknowledged_messages()
-    pytest.main([__file__])
+    test_non_acknowledged_messages()
+    # pytest.main([__file__])

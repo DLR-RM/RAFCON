@@ -31,8 +31,9 @@ def info(title):
 def wait_for_test_finished(queue, udp_endpoint, connector):
     finished = queue.get()
     logger.info('process with id {0} will stop reactor'.format(str(os.getpid())))
+    udp_endpoint.shutdown()
     reactor.callFromThread(reactor.stop)
-    # logger.info('process with id {0} did stop reactor'.format(str(os.getpid())))
+    os._exit(0)
 
 
 ##########################################################
@@ -64,8 +65,9 @@ def start_udp_server(name, multi_processing_queue):
     # reactor.addSystemEventTrigger('before', 'shutdown', udp_server.disconnect)
     reactor.run()
 
-    wait_for_test_finish.join()
-    logger.info("Server joined wait_for_test_finish")
+    # wait_for_test_finish.join()
+    # logger.info("Server joined wait_for_test_finish")
+
 
 ##########################################################
 # client
@@ -128,10 +130,10 @@ def start_udp_client(name, multi_processing_queue):
 
     reactor.run()
 
-    sender_thread.join()
-    logger.info("Client joined sender_thread")
-    wait_for_test_finish.join()
-    logger.info("Client joint wait_for_test_finish")
+    # sender_thread.join()
+    # logger.info("Client joined sender_thread")
+    # wait_for_test_finish.join()
+    # logger.info("Client joint wait_for_test_finish")
 
 
 def test_acknowledged_messages():
@@ -158,13 +160,6 @@ def test_acknowledged_messages():
     assert not client.is_alive(), "Client is still alive"
     assert data == "Success"
 
-    if server.is_alive():
-        server.terminate()
-        logger.error("Server is still alive")
-    if client.is_alive():
-        client.terminate()
-        logger.error("Client is still alive")
-
 if __name__ == '__main__':
-    # test_acknowledged_messages()
-    pytest.main([__file__])
+    test_acknowledged_messages()
+    # pytest.main([__file__])

@@ -337,15 +337,6 @@ def test_multi_clients():
     assert not client2.is_alive(), "Client2 is still alive"
     assert test_successful is True
 
-    if server.is_alive():
-        server.terminate()
-        logger.error("Server is still alive")
-    if client1.is_alive():
-        client1.terminate()
-        logger.error("Client1 is still alive")
-    if client2.is_alive():
-        client2.terminate()
-        logger.error("Client2 is still alive")
 
 if __name__ == '__main__':
     # test_multi_clients()
