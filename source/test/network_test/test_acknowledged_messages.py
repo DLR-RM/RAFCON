@@ -160,13 +160,6 @@ def test_acknowledged_messages():
     assert not client.is_alive(), "Client is still alive"
     assert data == "Success"
 
-    if server.is_alive():
-        server.terminate()
-        logger.error("Server is still alive")
-    if client.is_alive():
-        client.terminate()
-        logger.error("Client is still alive")
-
 if __name__ == '__main__':
     test_acknowledged_messages()
     # pytest.main([__file__])

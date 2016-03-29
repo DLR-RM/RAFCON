@@ -138,13 +138,6 @@ def test_non_acknowledged_messages():
     assert not server.is_alive(), "Server is still alive"
     assert not client.is_alive(), "Client is still alive"
 
-    if server.is_alive():
-        server.terminate()
-        logger.error("Server is still alive")
-    if client.is_alive():
-        client.terminate()
-        logger.error("Client is still alive")
-
     print "Test successful"
 
 
