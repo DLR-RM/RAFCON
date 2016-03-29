@@ -69,9 +69,8 @@ if __name__ == '__main__':
 
     parser.add_argument('-n', '--new', action='store_true', help="whether to create a new state-machine")
     parser.add_argument('-o', '--open', action='store', nargs='*', type=state_machine_path, dest='sm_paths',
-                        metavar='path',
-                        help="specify directories of state-machines that shall be opened. Paths must contain a "
-                             "statemachine.yaml file")
+                        metavar='path', help="specify directories of state-machines that shall be opened. Paths must "
+                                             "contain a statemachine.yaml file")
     parser.add_argument('-c', '--config', action='store', type=config_path, metavar='path', dest='config_path',
                         default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "

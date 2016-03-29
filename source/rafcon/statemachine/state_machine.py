@@ -28,7 +28,6 @@ class StateMachine(Observable, JSONObject):
     :ivar state_machine_id: the id of the state machine
     :ivar root_state: the root state of the state machine
     :ivar base_path: the path, where to save the state machine
-
     """
 
     state_machine_id = None
@@ -84,9 +83,7 @@ class StateMachine(Observable, JSONObject):
         return dict_representation
 
     def start(self):
-        """
-        Starts the execution of the root state.
-        :return:
+        """Starts the execution of the root state.
         """
         # load default input data for the state
         self._root_state.input_data = self._root_state.get_default_input_values_for_state(self._root_state)
@@ -105,7 +102,6 @@ class StateMachine(Observable, JSONObject):
     @property
     def root_state(self):
         """Property for the _root_state field
-
         """
         return self._root_state
 
@@ -137,7 +133,6 @@ class StateMachine(Observable, JSONObject):
     @property
     def marked_dirty(self):
         """Property for the _marked_dirty field
-
         """
         return self._marked_dirty
 
@@ -179,7 +174,6 @@ class StateMachine(Observable, JSONObject):
     @property
     def file_system_path(self):
         """Property for the _file_system_path field
-
         """
         return self._file_system_path
 
