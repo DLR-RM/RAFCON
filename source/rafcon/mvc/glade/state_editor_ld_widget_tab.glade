@@ -480,14 +480,15 @@
                       </object>
                     </child>
                     <child type="tab">
-                      <object class="GtkLabel" id="description_label">
+                      <object class="GtkLabel" id="variables_overview">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Description</property>
+                        <property name="label" translatable="yes">Linkage Overview</property>
                         <property name="angle">270</property>
                       </object>
                       <packing>
-                        <property name="position">1</property>
                         <property name="tab_fill">False</property>
+                        <property name="reorderable">True</property>
+                        <property name="detachable">True</property>
                       </packing>
                     </child>
                     <child>
@@ -503,16 +504,14 @@
                       </packing>
                     </child>
                     <child type="tab">
-                      <object class="GtkLabel" id="variables_overview">
+                      <object class="GtkLabel" id="description_label">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Linkage Overview</property>
+                        <property name="label" translatable="yes">Description</property>
                         <property name="angle">270</property>
                       </object>
                       <packing>
                         <property name="position">1</property>
                         <property name="tab_fill">False</property>
-                        <property name="reorderable">True</property>
-                        <property name="detachable">True</property>
                       </packing>
                     </child>
                   </object>
