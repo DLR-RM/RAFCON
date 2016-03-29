@@ -212,6 +212,7 @@ class StateMachineModel(ModelMT):
 
                 new_state_m.register_observer(self)
                 self.root_state = new_state_m
+                self.selection.add(new_state_m)
 
                 state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
 
