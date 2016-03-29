@@ -156,8 +156,12 @@ def test_acknowledged_messages():
 
     assert not server.is_alive(), "Server is still alive"
     assert not client.is_alive(), "Client is still alive"
-
     assert data == "Success"
+
+    if server.is_alive():
+        server.terminate()
+    if client.is_alive():
+        client.terminate()
 
 if __name__ == '__main__':
     # test_acknowledged_messages()
