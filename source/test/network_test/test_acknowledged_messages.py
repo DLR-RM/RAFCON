@@ -31,8 +31,9 @@ def info(title):
 def wait_for_test_finished(queue, udp_endpoint, connector):
     finished = queue.get()
     logger.info('process with id {0} will stop reactor'.format(str(os.getpid())))
+    udp_endpoint.shutdown()
     reactor.callFromThread(reactor.stop)
-    # logger.info('process with id {0} did stop reactor'.format(str(os.getpid())))
+    os._exit(0)
 
 
 ##########################################################
@@ -64,8 +65,9 @@ def start_udp_server(name, multi_processing_queue):
     # reactor.addSystemEventTrigger('before', 'shutdown', udp_server.disconnect)
     reactor.run()
 
-    wait_for_test_finish.join()
-    logger.info("Server joined wait_for_test_finish")
+    # wait_for_test_finish.join()
+    # logger.info("Server joined wait_for_test_finish")
+
 
 ##########################################################
 # client
@@ -128,10 +130,10 @@ def start_udp_client(name, multi_processing_queue):
 
     reactor.run()
 
-    sender_thread.join()
-    logger.info("Client joined sender_thread")
-    wait_for_test_finish.join()
-    logger.info("Client joint wait_for_test_finish")
+    # sender_thread.join()
+    # logger.info("Client joined sender_thread")
+    # wait_for_test_finish.join()
+    # logger.info("Client joint wait_for_test_finish")
 
 
 def test_acknowledged_messages():
@@ -142,20 +144,22 @@ def test_acknowledged_messages():
     client = Process(target=start_udp_client, args=("udp_client", q))
     client.start()
 
-    data = q.get()
+    data = q.get(timeout=30)
     if data == "Success":
-        logger.info("Test successfull\n\n")
+        logger.info("Test successful\n\n")
     else:
         logger.error("Test failed\n\n")
 
-    q.put(FINAL_MESSAGE)
-    q.put(FINAL_MESSAGE)
+    q.put(FINAL_MESSAGE, timeout=30)
+    q.put(FINAL_MESSAGE, timeout=30)
 
-    server.join()
-    client.join()
+    server.join(30)
+    client.join(30)
 
+    assert not server.is_alive(), "Server is still alive"
+    assert not client.is_alive(), "Client is still alive"
     assert data == "Success"
 
 if __name__ == '__main__':
-    # test_acknowledged_messages()
-    pytest.main([__file__])
+    test_acknowledged_messages()
+    # pytest.main([__file__])

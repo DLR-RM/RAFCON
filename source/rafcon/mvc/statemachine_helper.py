@@ -188,7 +188,7 @@ def add_new_state(state_machine_m, state_type):
 
 
 def create_new_state_from_state_with_type(source_state, target_state_class):
-    """ The function duplicates/transforms a state to a new state type. If the source state type and the new state
+    """The function duplicates/transforms a state to a new state type. If the source state type and the new state
     type both are ContainerStates the new state will have not transitions to force the user to explicitly re-order
     the logical flow according the paradigm of the new state type.
 

@@ -36,7 +36,7 @@ def start_client(interacting_function, queue_dict):
     import rafcon.utils.filesystem as filesystem
 
     from rafcon.statemachine.config import global_config
-    from rafcon.statemachine.storage.storage import StateMachineStorage
+    from rafcon.statemachine.storage import storage as global_storage
     from rafcon.statemachine.state_machine import StateMachine
     from rafcon.statemachine.states.hierarchy_state import HierarchyState
     import rafcon.statemachine.singleton as sm_singletons
@@ -88,15 +88,12 @@ def start_client(interacting_function, queue_dict):
     # Initialize library
     sm_singletons.library_manager.initialize()
 
-    # Set base path of global storage
-    sm_singletons.global_storage.base_path = RAFCON_TEMP_PATH_STORAGE
-
     # Create the GUI
     main_window_view = MainWindowView()
 
-    storage = StateMachineStorage()
-    state_machine, version, creation_time = storage.load_statemachine_from_path(
-        "../../test_scripts/unit_test_state_machines/99_bottles_of_beer_monitoring")
+    state_machine = global_storage.load_statemachine_from_path(
+            rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/99_bottles_of_beer_monitoring")
+
     sm_singletons.state_machine_manager.add_state_machine(state_machine)
 
     sm_manager_model = mvc_singletons.state_machine_manager_model

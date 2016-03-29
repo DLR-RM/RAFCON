@@ -354,6 +354,8 @@ style "main-widget-background" {
 }
 widget "*.graphical_editor_title_wrapper" style : highest "main-widget-background"
 widget "*.left_sidebar_viewport" style : highest "main-widget-background"
+widget "*.state_editor_eventbox" style : highest "main-widget-background"
+widget "*.lower_right_sidebar" style : highest "main-widget-background"
 
 style "widget-title" {
     bg[NORMAL]        = @background_menu

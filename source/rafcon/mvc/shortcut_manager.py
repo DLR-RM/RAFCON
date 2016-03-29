@@ -114,7 +114,7 @@ class ShortcutManager:
                     str(self.__action_to_callbacks[action])))
             for callback_function in self.__action_to_callbacks[action]:
                 try:
-                    logger.debug("call action {0}".format(str(action)))
+                    # logger.debug("call action {0}".format(str(action)))
                     ret = callback_function(key_value, modifier_mask)
                     # If at least one controller returns True, the whole result becomes True
                     res |= (False if ret is None else ret)

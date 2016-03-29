@@ -33,6 +33,7 @@ def wait_for_test_finished(queue, udp_endpoint, connector):
     print('process with id {0} will stop reactor'.format(str(os.getpid())))
     reactor.callFromThread(reactor.stop)
     print('process with id {0} did stop reactor'.format(str(os.getpid())))
+    os._exit(0)
 
 
 
@@ -127,16 +128,20 @@ def test_non_acknowledged_messages():
     client = Process(target=start_udp_client, args=("udp_client1", q))
     client.start()
 
-    data = q.get()
+    data = q.get(timeout=30)
     assert data == FINAL_MESSAGE
+    q.put(FINAL_MESSAGE, timeout=30)
     q.put(FINAL_MESSAGE)
-    q.put(FINAL_MESSAGE)
-    print "Test successfull"
 
-    server.join()
-    client.join()
+    server.join(30)
+    client.join(30)
+
+    assert not server.is_alive(), "Server is still alive"
+    assert not client.is_alive(), "Client is still alive"
+
+    print "Test successful"
 
 
 if __name__ == '__main__':
-    # test_non_acknowledged_messages()
-    pytest.main([__file__])
+    test_non_acknowledged_messages()
+    # pytest.main([__file__])

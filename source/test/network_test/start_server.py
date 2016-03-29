@@ -41,7 +41,7 @@ def start_server(interacting_function, queue_dict):
 
     from rafcon.statemachine.config import global_config
     import rafcon.statemachine.singleton as sm_singletons
-    from rafcon.statemachine.storage.storage import StateMachineStorage
+    from rafcon.statemachine.storage import storage as global_storage
     # needed for yaml parsing
     from rafcon.statemachine.states.hierarchy_state import HierarchyState
     from rafcon.statemachine.states.execution_state import ExecutionState
@@ -62,11 +62,8 @@ def start_server(interacting_function, queue_dict):
     # Initialize libraries
     sm_singletons.library_manager.initialize()
 
-    # Set base path of global storage
-    sm_singletons.global_storage.base_path = RAFCON_TEMP_PATH_STORAGE
-
-    [state_machine, version, creation_time] = rafcon.statemachine.singleton.global_storage.\
-        load_statemachine_from_path("../../test_scripts/unit_test_state_machines/99_bottles_of_beer_monitoring")
+    state_machine = global_storage.load_statemachine_from_path(
+            rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/99_bottles_of_beer_monitoring")
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
 
     sm_thread = threading.Thread(target=check_for_sm_finished, args=[state_machine, ])
