@@ -11,7 +11,7 @@ from udp_server import UdpServer
 from config import global_network_config
 from protocol import Protocol, MessageType
 
-from rafcon.utils import log
+import log
 logger = log.get_logger(__name__)
 
 
@@ -30,8 +30,7 @@ def wait_for_test_finished(queue, udp_endpoint, connector):
     finished = queue.get()
     print('process with id {0} will stop reactor'.format(str(os.getpid())))
     reactor.callFromThread(reactor.stop)
-    print('process with id {0} did stop reactor'.format(str(os.getpid())))
-
+    # os._exit(0)
 
 
 ##########################################################
