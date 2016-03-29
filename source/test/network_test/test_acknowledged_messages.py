@@ -142,17 +142,20 @@ def test_acknowledged_messages():
     client = Process(target=start_udp_client, args=("udp_client", q))
     client.start()
 
-    data = q.get()
+    data = q.get(timeout=30)
     if data == "Success":
-        logger.info("Test successfull\n\n")
+        logger.info("Test successful\n\n")
     else:
         logger.error("Test failed\n\n")
 
-    q.put(FINAL_MESSAGE)
-    q.put(FINAL_MESSAGE)
+    q.put(FINAL_MESSAGE, timeout=30)
+    q.put(FINAL_MESSAGE, timeout=30)
 
-    server.join()
-    client.join()
+    server.join(30)
+    client.join(30)
+
+    assert not server.is_alive(), "Server is still alive"
+    assert not client.is_alive(), "Client is still alive"
 
     assert data == "Success"
 

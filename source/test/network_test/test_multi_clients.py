@@ -300,19 +300,19 @@ def test_multi_clients():
     client2 = Process(target=launch_client, args=(interacting_function_client2, queue_dict))
     client2.start()
 
-    data = queue_dict[MAIN_QUEUE].get()
+    data = queue_dict[MAIN_QUEUE].get(timeout=30)
     assert data == STEPPING_SUCCESSFUL
 
-    data = queue_dict[MAIN_QUEUE].get()
+    data = queue_dict[MAIN_QUEUE].get(timeout=30)
     assert data == STOP_START_SUCCESSFUL
 
-    data = queue_dict[MAIN_QUEUE].get()
+    data = queue_dict[MAIN_QUEUE].get(timeout=30)
     assert data == RUN_UNTIL_SUCCESSFUL
 
-    data = queue_dict[MAIN_QUEUE].get()
+    data = queue_dict[MAIN_QUEUE].get(timeout=30)
     assert data == START_FROM_SUCCESSFUL
 
-    data = queue_dict[MAIN_QUEUE].get()
+    data = queue_dict[MAIN_QUEUE].get(timeout=30)
     try:
         assert data == START_PAUSE_RESUME_SUCCESSFUL
         print "Test successful"
@@ -320,14 +320,18 @@ def test_multi_clients():
         print "Test not successful"
         test_successful = False
 
-    queue_dict[KILL_SERVER_QUEUE].put("Kill")
-    queue_dict[KILL_CLIENT1_QUEUE].put("Kill")
-    queue_dict[KILL_CLIENT2_QUEUE].put("Kill")
+    queue_dict[KILL_SERVER_QUEUE].put("Kill", timeout=30)
+    queue_dict[KILL_CLIENT1_QUEUE].put("Kill", timeout=30)
+    queue_dict[KILL_CLIENT2_QUEUE].put("Kill", timeout=30)
 
     print "Joining processes"
-    server.join()
-    client1.join()
-    client2.join()
+    server.join(timeout=30)
+    client1.join(timeout=30)
+    client2.join(timeout=30)
+
+    assert not server.is_alive(), "Server is still alive"
+    assert not client1.is_alive(), "Client1 is still alive"
+    assert not client2.is_alive(), "Client2 is still alive"
 
     assert test_successful is True
 
