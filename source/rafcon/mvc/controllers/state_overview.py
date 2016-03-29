@@ -97,13 +97,14 @@ class StateOverviewController(ExtendedController, Model):
             view['show_content_checkbutton'].set_active(self.model.meta['gui']['show_content'] is True)
             view['show_content_checkbutton'].connect('toggled', self.on_toggle_show_content)
         else:
-            self.view['label_library_path'].destroy()
-            self.view['library_path'].destroy()
-            self.view['label_show_content'].destroy()
-            self.view['show_content_checkbutton'].destroy()
+            self.view['properties_widget'].remove(self.view['label_library_path'])
+            self.view['properties_widget'].remove(self.view['library_path'])
+            self.view['properties_widget'].remove(self.view['label_show_content'])
+            self.view['properties_widget'].remove(self.view['show_content_checkbutton'])
+            self.view['properties_widget'].resize(2, 5)
 
             for key, value in self.state_types_dict.iteritems():
-                if value['class'] == type(self.model.state):
+                if isinstance(self.model.state, value['class']):
                     l_store.prepend([key])
                 else:
                     l_store.append([key])
