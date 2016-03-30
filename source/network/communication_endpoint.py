@@ -7,7 +7,7 @@ import collections
 
 from twisted.internet.protocol import DatagramProtocol
 from multiprocessing import Queue
-from rafcon.utils import log
+import log
 logger = log.get_logger(__name__)
 
 
@@ -67,8 +67,8 @@ class CommunicationEndpoint(DatagramProtocol):
                     del self._messages_to_be_acknowledged[next_message.message_content]
                     del self._messages_to_be_acknowledged_timeout[next_message.message_content]
                 else:
-                    logger.warn("Message {0} was acknowledged that was sent by another endpoint"
-                                " or was already dropped".format(str(next_message)))
+                    logger.warn("Message {0} was acknowledged that was sent by another endpoint "
+                                "or was already acknowledged!".format(str(next_message)))
 
             # check messages for timeout
             # logger.debug("check_acknowledgements checking for messages timeout")

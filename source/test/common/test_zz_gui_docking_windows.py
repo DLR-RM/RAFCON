@@ -48,7 +48,7 @@ def get_stored_window_position(window_key):
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_docking_signals(*args):
     print "Wait for the gui to initialize"
-    time.sleep(2.0)
+    time.sleep(1.0)
     main_window_controller = args[0]
     menu_bar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     condition = threading.Condition()
@@ -100,6 +100,60 @@ def trigger_docking_signals(*args):
     call_gui_callback(menu_bar_ctrl.on_quit_activate, None)
 
 
+@log.log_exceptions(None, gtk_quit=True)
+def trigger_pane_signals(*args):
+    print "Wait for the gui to initialize"
+    time.sleep(1.0)
+    mw_ctrl = args[0]
+    menu_bar_ctrl = mw_ctrl.get_controller('menu_bar_controller')
+    condition = threading.Condition()
+
+    stored_pane_positions = {}
+    for config_id, pan_id in mw_ctrl.pane_id.iteritems():
+        default_pos = mw_ctrl.default_pane_pos[config_id]
+        stored_pane_positions[config_id] = global_runtime_config.get_config_value(config_id, default_pos)
+        if stored_pane_positions[config_id] is None:
+            import logging
+            logging.warning("runtime_config-file has missing values?")
+            return
+
+    def ensure_completion(window, event):
+        condition.acquire()
+        print "notify"
+        condition.notify()
+        condition.release()
+        return True
+
+    def wait_for_gui():
+        condition.acquire()
+        print "wait"
+        condition.wait(0.3)
+        print "finally"
+        condition.release()
+
+    def test_bar(window, window_key):
+        window.connect('configure-event', ensure_completion)
+        call_gui_callback(getattr(mw_ctrl, 'on_{}_bar_undock_clicked'.format(window_key)), None)
+        wait_for_gui()
+        wait_for_gui()
+        call_gui_callback(getattr(mw_ctrl, 'on_{}_bar_dock_clicked'.format(window_key)), None)
+        wait_for_gui()
+
+    print "test left_bar_window"
+    test_bar(mw_ctrl.view.left_bar_window.get_top_widget(), 'left')
+    print "test right_bar_window"
+    test_bar(mw_ctrl.view.right_bar_window.get_top_widget(), 'right')
+    print "test console_bar_window"
+    test_bar(mw_ctrl.view.console_bar_window.get_top_widget(), 'console')
+
+    print "check if pane positions are still like in runtime_config.yaml"
+    for config_id, pane_id in mw_ctrl.pane_id.iteritems():
+        print "check pos of ", config_id, pane_id
+        assert mw_ctrl.view[pane_id].get_position() == stored_pane_positions[config_id]
+
+    call_gui_callback(menu_bar_ctrl.on_quit_activate, None)
+
+
 def test_window_positions(caplog):
     testing_utils.test_multithrading_lock.acquire()
     os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
@@ -111,6 +165,26 @@ def test_window_positions(caplog):
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
     thread = threading.Thread(target=trigger_docking_signals, args=[main_window_controller])
+    thread.start()
+
+    gtk.main()
+    thread.join()
+    os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=warnings)
+
+
+def test_pane_positions(caplog):
+    testing_utils.test_multithrading_lock.acquire()
+    os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
+    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
+    mirror_runtime_config_file()
+    global_runtime_config.load(config_file='runtime_config.yaml', path=DOCKING_TEST_FOLDER)
+    testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    main_window_view = MainWindowView()
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
+                                                  editor_type='LogicDataGrouped')
+    thread = threading.Thread(target=trigger_pane_signals, args=[main_window_controller])
     thread.start()
 
     gtk.main()

@@ -58,6 +58,7 @@
           <object class="GtkHPaned" id="top_level_h_pane">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="position_set">True</property>
             <child>
               <object class="GtkHBox" id="left_bar_container">
                 <property name="visible">True</property>
@@ -66,6 +67,7 @@
                     <property name="width_request">15</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -76,13 +78,13 @@
                 <child>
                   <object class="GtkViewport" id="left_sidebar_viewport">
                     <property name="visible">True</property>
-                    <property name="resize_mode">parent</property>
                     <child>
                       <object class="GtkVPaned" id="left_bar_pane">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="orientation">vertical</property>
                         <property name="receives_default">True</property>
+                        <property name="orientation">vertical</property>
+                        <property name="position_set">True</property>
                         <child>
                           <object class="GtkVBox" id="upper_left_sidebar">
                             <property name="visible">True</property>
@@ -255,7 +257,7 @@
                           </object>
                           <packing>
                             <property name="resize">False</property>
-                            <property name="shrink">False</property>
+                            <property name="shrink">True</property>
                           </packing>
                         </child>
                         <child>
@@ -417,7 +419,7 @@
                           </object>
                           <packing>
                             <property name="resize">True</property>
-                            <property name="shrink">False</property>
+                            <property name="shrink">True</property>
                           </packing>
                         </child>
                       </object>
@@ -430,14 +432,15 @@
                 </child>
               </object>
               <packing>
-                <property name="resize">True</property>
-                <property name="shrink">False</property>
+                <property name="resize">False</property>
+                <property name="shrink">True</property>
               </packing>
             </child>
             <child>
               <object class="GtkHPaned" id="right_h_pane">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="position_set">True</property>
                 <child>
                   <object class="GtkHBox" id="hbox1">
                     <property name="visible">True</property>
@@ -458,6 +461,7 @@
                         <property name="can_focus">True</property>
                         <property name="orientation">vertical</property>
                         <property name="position">2</property>
+                        <property name="position_set">True</property>
                         <child>
                           <object class="GtkVBox" id="graphical_editor_outer_vbox">
                             <property name="visible">True</property>
@@ -796,7 +800,7 @@
                           </object>
                           <packing>
                             <property name="resize">False</property>
-                            <property name="shrink">False</property>
+                            <property name="shrink">True</property>
                           </packing>
                         </child>
                         <child>
@@ -953,7 +957,7 @@
                           </object>
                           <packing>
                             <property name="resize">True</property>
-                            <property name="shrink">False</property>
+                            <property name="shrink">True</property>
                           </packing>
                         </child>
                       </object>
@@ -974,8 +978,8 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="resize">True</property>
-                    <property name="shrink">False</property>
+                    <property name="resize">False</property>
+                    <property name="shrink">True</property>
                   </packing>
                 </child>
                 <child>
@@ -1063,13 +1067,13 @@
                   </object>
                   <packing>
                     <property name="resize">True</property>
-                    <property name="shrink">False</property>
+                    <property name="shrink">True</property>
                   </packing>
                 </child>
               </object>
               <packing>
                 <property name="resize">True</property>
-                <property name="shrink">False</property>
+                <property name="shrink">True</property>
               </packing>
             </child>
           </object>

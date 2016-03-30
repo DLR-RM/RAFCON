@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 from twisted.internet.protocol import DatagramProtocol
+
 from communication_endpoint import CommunicationEndpoint
-from rafcon.utils import log
+import log
 logger = log.get_logger(__name__)
 
 
