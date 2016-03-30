@@ -173,10 +173,10 @@ class LibraryManager(Observable):
             if not self._replaced_libraries[original_path_and_name][2]:
                 logger.debug("The library with library path \"{0}\" and name \"{1}\" "
                              "is automatically replaced by the library "
-                             "with file system path \"{2}\" and library path \"{3}\"".format(str(library_path),
-                                                                                             str(library_name),
-                                                                                             str(new_path),
-                                                                                             str(new_library_path)))
+                             "with file system path \"{2}\" and library path \"{3}\"".format(library_path,
+                                                                                             library_name,
+                                                                                             new_path,
+                                                                                             new_library_path))
             return new_path, new_library_path, library_name
 
         # a boolean to indicate if a state was regularly found or by the help of the user
@@ -186,9 +186,8 @@ class LibraryManager(Observable):
 
             if target_lib_dict is None:  # This cannot happen in the first iteration
                 regularly_found = False
-                if not allow_user_interaction:
-                    new_library_path = None
-                else:
+                new_library_path = None
+                if allow_user_interaction:
                     notice = "Cannot find library '{0}' in subfolder '{1}'. Please check your library path " \
                              "configuration. If your library path is correct and the library was moved, please select" \
                              " the new root folder of the library. If not, please abort.".format(library_name,
@@ -240,6 +239,5 @@ class LibraryManager(Observable):
         path = target_lib_dict[library_name]
         # save the replacement in order that for a future occurrence the correct path can be used, without asking
         # the user for the correct path
-        import copy
-        self._replaced_libraries[original_path_and_name] = (path, library_path, copy.copy(regularly_found))
+        self._replaced_libraries[original_path_and_name] = (path, library_path, regularly_found)
         return path, library_path, library_name
