@@ -42,12 +42,12 @@ def create_models():
 
     return logger, global_var_manager_model
 
+
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(*args):
     print "Wait for the gui to initialize"
     time.sleep(2.0)
-    sm_manager_model = args[0]
-    main_window_controller = args[1]
+    main_window_controller = args[0]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
     call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
@@ -66,7 +66,6 @@ def trigger_gui_signals(*args):
 
     sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
     time.sleep(sleep_time)
-
     for key, sd in sm.root_state.scoped_data.iteritems():
         if sd.name == "beer_number":
             assert sd.value == 100
@@ -76,26 +75,21 @@ def trigger_gui_signals(*args):
             assert sd.value == 20
 
     call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
-
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
 def test_backward_stepping(caplog):
-
     testing_utils.test_multithrading_lock.acquire()
     testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
-
     logger, gvm_model = create_models()
-
     rafcon.statemachine.singleton.library_manager.initialize()
-
-    state_machine = storage.load_statemachine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/backward_step_barrier_test"))
-
+    state_machine = storage.load_statemachine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines"
+                                                                                       "/backward_step_barrier_test"))
     main_window_view = MainWindowView()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     if testing_utils.sm_manager_model is None:
@@ -103,16 +97,13 @@ def test_backward_stepping(caplog):
 
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type="LogicDataGrouped")
-    thread = threading.Thread(target=trigger_gui_signals,
-                              args=[testing_utils.sm_manager_model, main_window_controller])
+    thread = threading.Thread(target=trigger_gui_signals, args=[main_window_controller])
     thread.start()
-
     gtk.main()
     logger.debug("Gtk main loop exited!")
     thread.join()
     logger.debug("Joined test triggering thread!")
     os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
-
     testing_utils.reload_config()
     testing_utils.test_multithrading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)

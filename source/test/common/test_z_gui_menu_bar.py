@@ -3,9 +3,8 @@ import logging
 import gtk
 import threading
 import time
-import glib
 import os
-from os.path import dirname, join
+from os.path import dirname
 
 # general tool elements
 from rafcon.utils import log
@@ -39,7 +38,6 @@ def setup_module(module):
     testing_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     print "File: ", dirname(__file__), dirname(dirname(__file__))
-
     library_paths["ros"] = rafcon.__path__[0] + "/../test_scripts/ros_libraries"
     library_paths["turtle_libraries"] = rafcon.__path__[0] + "/../test_scripts/turtle_libraries"
     library_paths["generic"] = rafcon.__path__[0] + "/../libraries/generic"
@@ -82,8 +80,8 @@ def create_models(*args, **kargs):
     state3.add_transition(state4.state_id, 0, state5.state_id, None)
     state3.add_transition(state5.state_id, 0, state3.state_id, 0)
     state3.add_data_flow(state4.state_id, output_state4, state5.state_id, input_state5)
-    state3.add_outcome('Branch1')
-    state3.add_outcome('Branch2')
+    #state3.add_outcome('Branch1')
+    #state3.add_outcome('Branch2')
 
     ctr_state = HierarchyState(name="Container")
     ctr_state.add_state(state1)
@@ -109,29 +107,12 @@ def create_models(*args, **kargs):
     ctr_state.add_output_data_port("result", "str", "default_value2")
 
     scoped_variable1_ctr_state = ctr_state.add_scoped_variable("scoped", "str", "default_value1")
-    scoped_variable2_ctr_state = ctr_state.add_scoped_variable("my_var", "str", "default_value1")
     scoped_variable3_ctr_state = ctr_state.add_scoped_variable("ctr", "int", 42)
 
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
-    # this is not allowed as the output port is already connected
     ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
 
-    global_var_manager_model = GlobalVariableManagerModel()
-    global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
-    global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
-
-    return state5, logger, ctr_state, global_var_manager_model
-
-
-def wait_for_values_identical_number_state_machines(sm_manager_model, val2):
-    values_identical = len(sm_manager_model.state_machines) == val2
-    counter = 0
-    while not values_identical:
-        time.sleep(0.1)
-        values_identical = len(sm_manager_model.state_machines) == val2
-        counter += 1
-        if counter == 50:
-            break
+    return logger, ctr_state
 
 
 def focus_graphical_editor_in_page(page):
@@ -141,9 +122,27 @@ def focus_graphical_editor_in_page(page):
     graphical_controller.grab_focus()
 
 
+def select_and_paste_state(statemachine_model, source_state_model, target_state_model, menu_bar_ctrl, operation,
+                           main_window_controller, page):
+    print "\n\n %s \n\n" % source_state_model.state.name
+    call_gui_callback(statemachine_model.selection.set, [source_state_model])
+    call_gui_callback(getattr(menu_bar_ctrl, 'on_{}_selection_activate'.format(operation)), None, None)
+    print "\n\n %s \n\n" % target_state_model.state.name
+    call_gui_callback(statemachine_model.selection.set, [target_state_model])
+    old_child_state_count = len(target_state_model.state.states)
+    main_window_controller.view['main_window'].grab_focus()
+    focus_graphical_editor_in_page(page)
+    call_gui_callback(menu_bar_ctrl.on_paste_clipboard_activate, None, None)
+    time.sleep(1.0)
+    print target_state_model.state.states.keys()
+    assert len(target_state_model.state.states) == old_child_state_count + 1
+    return target_state_model, old_child_state_count
+
+
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(*args):
-    """ The function triggers and test basic functions of the menu bar.
+    """The function triggers and test basic functions of the menu bar.
+
     At the moment those functions are tested:
     - New State Machine
     - Open State Machine
@@ -164,140 +163,45 @@ def trigger_gui_signals(*args):
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
     current_sm_length = len(sm_manager_model.state_machines)
-    # print "1:", sm_manager_model.state_machines.keys()
     first_sm_id = sm_manager_model.state_machines.keys()[0]
     call_gui_callback(menubar_ctrl.on_new_activate, None)
-    # print "2:", sm_manager_model.state_machines.keys()
 
-    # wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+1)
-    assert len(sm_manager_model.state_machines) == current_sm_length+1
+    assert len(sm_manager_model.state_machines) == current_sm_length + 1
+    call_gui_callback(menubar_ctrl.on_open_activate, None, None, rafcon.__path__[0] + "/../test_scripts/tutorials/"
+                                                                                      "basic_turtle_demo_sm")
+    assert len(sm_manager_model.state_machines) == current_sm_length + 2
 
-    call_gui_callback(menubar_ctrl.on_open_activate, None, None, rafcon.__path__[0] + "/../test_scripts/tutorials/basic_turtle_demo_sm")
-    # wait_for_values_identical_number_state_machines(sm_manager_model, current_sm_length+2)
-    assert len(sm_manager_model.state_machines) == current_sm_length+2
-
-    # print "3:", sm_manager_model.state_machines.keys(), first_sm_id+2
     sleep_time_short = 1.0
-    sm_m = sm_manager_model.state_machines[first_sm_id+2]
+    sm_m = sm_manager_model.state_machines[first_sm_id + 2]
     sm_m.history.fake = True
     time.sleep(sleep_time_short)
-    # print "focus"
-    # time.sleep(5)
     # MAIN_WINDOW NEEDS TO BE FOCUSED (for global input focus) TO OPERATE PASTE IN GRAPHICAL VIEWER
     main_window_controller.view['main_window'].grab_focus()
-    sm_manager_model.selected_state_machine_id = first_sm_id+2
+    sm_manager_model.selected_state_machine_id = first_sm_id + 2
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
-    page_id = state_machines_ctrl.get_page_id(first_sm_id+2)
+    page_id = state_machines_ctrl.get_page_id(first_sm_id + 2)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
     focus_graphical_editor_in_page(page)
-
     time.sleep(sleep_time_short)
-    #########################################################
-    # select a execution state -> and paste it some where
 
-    state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')  # /UEPNNW
-    print "\n\n %s \n\n" % state_m.state.name
-    # print "set"
-    call_gui_callback(sm_m.selection.set, [state_m])
-    # time.sleep(3)
-    # print "copy"
-    # copy the state to clipboard
-    call_gui_callback(menubar_ctrl.on_copy_selection_activate, None, None)
-    # time.sleep(3)
-    # print "set"
-    # select other state
-    state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW')
-    print state_m.state.states.keys()
-    print "\n\n %s \n\n" % state_m.state.name
-    call_gui_callback(sm_m.selection.set, [state_m])
-    # time.sleep(3)
-    old_child_state_count = len(state_m.state.states)
-    # print "focus"
-    # paste clipboard element into the new state
-    main_window_controller.view['main_window'].grab_focus()  # refresh focus
-    focus_graphical_editor_in_page(page)
-    # time.sleep(3)
-    # print "paste"
-    # print dir(page.children()[0]), "\n\n", page.children()[0], "\n\n", page.children()[0].has_focus()
-    call_gui_callback(menubar_ctrl.on_paste_clipboard_activate, None, None)
-    state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW')
-    print state_m.state.states.keys()
-    # IN CASE OF ASSERTION SECURE FOCUS FOR MAIN MAIN WINDOW !!!!
-    assert len(state_m.state.states) == old_child_state_count + 1
+    #########################################################
+    # select & copy an execution state -> and paste it somewhere
+    select_and_paste_state(sm_m, sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ'), sm_m.get_state_model_by_path(
+        'CDMJPK/RMKGEW'), menubar_ctrl, 'copy', main_window_controller, page)
 
     ###########################################################
-    # select a hierarchy state -> and paste it some where
-    sm_m = sm_manager_model.state_machines[first_sm_id+2]
-    state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY')
-    print "\n\n %s \n\n" % state_m.state.name
-    # glib.idle_add(sm_m.selection.set, [state_m])
-    call_gui_callback(sm_m.selection.set, [state_m])
-    # time.sleep(sleep_time_short)
-
-    # copy the state to clipboard
-    # glib.idle_add(menubar_ctrl.on_copy_selection_activate, None, None)
-    call_gui_callback(menubar_ctrl.on_copy_selection_activate, None, None)
-    # global_clipboard.copy(sm_m.selection)
-    # time.sleep(sleep_time_short)
-
-    # select other state
-    state_m = sm_m.get_state_model_by_path('CDMJPK')
-    old_child_state_count = len(state_m.state.states)
-    print "\n\n %s \n\n" % state_m.state.name
-    # glib.idle_add(sm_m.selection.set, [state_m])
-    call_gui_callback(sm_m.selection.set, [state_m])
-    # time.sleep(sleep_time_short)
-
-    # paste clipboard element into the new state
-    main_window_controller.view['main_window'].grab_focus()  # refresh focus
-    focus_graphical_editor_in_page(page)
-    glib.idle_add(menubar_ctrl.on_paste_clipboard_activate, None, None)
-    # global_clipboard.paste(state_m)  # sm_m.selection)
-    time.sleep(sleep_time_short)
-
-    # verify
-    state_m = sm_m.get_state_model_by_path('CDMJPK')
-    print state_m.state.states.keys()
-    # IN CASE OF ASSERTION SECURE FOCUS FOR MAIN MAIN WINDOW !!!!
-    assert len(state_m.state.states) == old_child_state_count + 1
+    # select & copy a hierarchy state -> and paste it some where
+    select_and_paste_state(sm_m, sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY'),
+                           sm_m.get_state_model_by_path('CDMJPK'), menubar_ctrl, 'copy', main_window_controller, page)
 
     ##########################################################
     # select a library state -> and paste it some where WITH CUT !!!
-    sm_m = sm_manager_model.state_machines[first_sm_id+2]
-    state_m = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY')
-    print "\n\n %s \n\n" % state_m.state.name
-    # glib.idle_add(sm_m.selection.set, [state_m])
-    call_gui_callback(sm_m.selection.set, [state_m])
-    # time.sleep(sleep_time_short)
+    state_m, old_child_state_count = select_and_paste_state(sm_m,
+                                                            sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY'),
+                                                            sm_m.get_state_model_by_path('CDMJPK'), menubar_ctrl, 'cut',
+                                                            main_window_controller, page)
 
-    # cut the state to clipboard
-    # glib.idle_add(menubar_ctrl.on_copy_selection_activate, None, None)
-    # glib.idle_add(menubar_ctrl.on_cut_selection_activate, None, None)
-    call_gui_callback(menubar_ctrl.on_cut_selection_activate, None, None)
-
-    # select other state
-    state_m = sm_m.get_state_model_by_path('CDMJPK')
-    old_child_state_count = len(state_m.state.states)
-    print "\n\n %s \n\n" % state_m.state.name
-    # glib.idle_add(sm_m.selection.set, [state_m])
-    call_gui_callback(sm_m.selection.set, [state_m])
-    # time.sleep(sleep_time_short)
-
-    # paste clipboard element into the new state
-    main_window_controller.view['main_window'].grab_focus()  # refresh focus
-    focus_graphical_editor_in_page(page)
-    # glib.idle_add(menubar_ctrl.on_paste_clipboard_activate, None, None)
-    call_gui_callback(menubar_ctrl.on_paste_clipboard_activate, None, None)
-    # global_clipboard.paste(state_m)  # sm_m.selection)
-    # time.sleep(sleep_time_short)
-
-    # verify
-    state_m = sm_m.get_state_model_by_path('CDMJPK')
-    print state_m.state.states.keys()
-    # IN CASE OF ASSERTION SECURE FOCUS FOR MAIN MAIN WINDOW !!!!
-    assert len(state_m.state.states) == old_child_state_count + 1
     ##########################################################
-
     # complex state with all elements
     lib_state = LibraryState("generic/dialog", "Dialog [3 options]", "0.1", "Dialog [3 options]")
     call_gui_callback(statemachine_helper.insert_state, lib_state, True)
@@ -307,9 +211,7 @@ def trigger_gui_signals(*args):
         if state.name == "Dialog [3 options]":
             break
     new_template_state = state
-    # print new_template_state
     call_gui_callback(new_template_state.add_scoped_variable, 'scoopy', float, 0.3)
-
     state_m_to_copy = sm_m.get_state_model_by_path('CDMJPK/' + new_template_state.state_id)
     call_gui_callback(sm_m.selection.set, [state_m_to_copy])
     focus_graphical_editor_in_page(page)
@@ -337,12 +239,9 @@ def trigger_gui_signals(*args):
 
     call_gui_callback(menubar_ctrl.on_refresh_libraries_activate, None)
     call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
-
-    # wait_for_values_identical_number_state_machines(sm_manager_model, 1)
     assert len(sm_manager_model.state_machines) == 1
 
     call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
-
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
@@ -354,7 +253,7 @@ def test_gui(caplog):
     os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
     gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
     rafcon.statemachine.singleton.library_manager.initialize()
-    [execution_state, logger, ctr_state, gvm_model] = create_models()
+    [logger, ctr_state] = create_models()
 
     state_machine = StateMachine(ctr_state)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
@@ -362,11 +261,8 @@ def test_gui(caplog):
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
-
-    thread = threading.Thread(target=trigger_gui_signals, args=[testing_utils.sm_manager_model,
-                                                                main_window_controller])
+    thread = threading.Thread(target=trigger_gui_signals, args=[testing_utils.sm_manager_model, main_window_controller])
     thread.start()
-
     gtk.main()
     logger.debug("after gtk main")
     thread.join()

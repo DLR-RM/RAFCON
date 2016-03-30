@@ -108,7 +108,8 @@ def create_models(*args, **kargs):
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
     ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
 
-    state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
+    state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
+                  'Nested2': state5}
     sm = StateMachine(ctr_state)
 
     # add new state machine
@@ -552,26 +553,17 @@ def list_store_id_dict(store):
     return list_store_id
 
 check_list_ES = ['ports', 'outcomes', 'transitions_external', 'data_flows_external']
-check_list_HS = ['ports', 'outcomes', 'states', 'scoped_variables',
-                  'transitions_internal', 'transitions_external',
+check_list_HS = ['ports', 'outcomes', 'states', 'scoped_variables', 'transitions_internal', 'transitions_external',
+                 'data_flows_internal', 'data_flows_external']
+check_list_PCS = ['ports', 'outcomes', 'states', 'scoped_variables', 'transitions_internal', 'transitions_external',
                   'data_flows_internal', 'data_flows_external']
-check_list_PCS = ['ports', 'outcomes', 'states', 'scoped_variables',
-                  'transitions_internal', 'transitions_external',
-                  'data_flows_internal', 'data_flows_external']
-check_list_BCS = ['ports', 'outcomes', 'states', 'scoped_variables',
-                  'transitions_internal', 'transitions_external',
+check_list_BCS = ['ports', 'outcomes', 'states', 'scoped_variables', 'transitions_internal', 'transitions_external',
                   'data_flows_internal', 'data_flows_external']
 
 check_list_root_ES = ['ports', 'outcomes']
-check_list_root_HS = ['ports', 'outcomes', 'states', 'scoped_variables',
-                      'transitions_internal',
-                      'data_flows_internal']
-check_list_root_PCS = ['ports', 'outcomes', 'states', 'scoped_variables',
-                       'transitions_internal',
-                       'data_flows_internal']
-check_list_root_BCS = ['ports', 'outcomes', 'states', 'scoped_variables',
-                       'transitions_internal',
-                       'data_flows_internal']
+check_list_root_HS = ['ports', 'outcomes', 'states', 'scoped_variables', 'transitions_internal', 'data_flows_internal']
+check_list_root_PCS = ['ports', 'outcomes', 'states', 'scoped_variables', 'transitions_internal', 'data_flows_internal']
+check_list_root_BCS = ['ports', 'outcomes', 'states', 'scoped_variables', 'transitions_internal', 'data_flows_internal']
 
 
 def get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controller, sleep_time_max, logger):
@@ -590,20 +582,11 @@ def get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controlle
     return state_editor_ctrl, list_store_id_from_state_type_dict
 
 
-# def test_state_type_change_without_gui():
-#     state_type_change_test(with_gui=False)
-#
-#
-# def test_state_type_change_with_gui():
-#     state_type_change_test(with_gui=True)
-
-
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(*args):
-    """
-    Does only works with gui at the moment.
+    """Only works with gui at the moment.
+
     :param args:
-    :return:
     """
     print "Wait for the gui to initialize"
     time.sleep(2.0)
@@ -762,12 +745,9 @@ def test_state_type_change_test(caplog):
     global_gui_config.load()  # load the default config
 
     logger, state, gvm_model, sm_m, state_dict = create_models()
-
     testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
-
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
-
     main_window_controller = None
     if with_gui:
         main_window_view = MainWindowView()
@@ -775,12 +755,10 @@ def test_state_type_change_test(caplog):
         # load the meta data for the state machine
         main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                       editor_type='LogicDataGrouped')
-
     thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[testing_utils.sm_manager_model, main_window_controller,
-                                    sm_m, state_dict, with_gui, logger])
+                              args=[testing_utils.sm_manager_model, main_window_controller, sm_m, state_dict, with_gui,
+                                    logger])
     thread.start()
-
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
@@ -794,4 +772,4 @@ def test_state_type_change_test(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main(['-s',__file__])
+    pytest.main(['-s', __file__])

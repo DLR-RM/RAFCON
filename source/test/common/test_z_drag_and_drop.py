@@ -43,10 +43,8 @@ class StructHelper:
 
 
 def create_models(*args, **kargs):
-
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
-
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
 
@@ -140,7 +138,6 @@ def trigger_drag_and_drop_tests(*args):
 
 
 def test_drag_and_drop_test(caplog):
-
     test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir(testing_utils.RAFCON_PATH + "/mvc")
