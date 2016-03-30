@@ -80,8 +80,6 @@ def create_models(*args, **kargs):
     state3.add_transition(state4.state_id, 0, state5.state_id, None)
     state3.add_transition(state5.state_id, 0, state3.state_id, 0)
     state3.add_data_flow(state4.state_id, output_state4, state5.state_id, input_state5)
-    #state3.add_outcome('Branch1')
-    #state3.add_outcome('Branch2')
 
     ctr_state = HierarchyState(name="Container")
     ctr_state.add_state(state1)
@@ -99,19 +97,6 @@ def create_models(*args, **kargs):
     ctr_state.add_data_flow(state3.state_id, output_state3, ctr_state.state_id, output_ctr_state)
     ctr_state.name = "Container"
 
-    ctr_state.add_input_data_port("input", "str", "default_value1")
-    ctr_state.add_input_data_port("pos_x", "str", "default_value2")
-    ctr_state.add_input_data_port("pos_y", "str", "default_value3")
-
-    ctr_state.add_output_data_port("output", "str", "default_value1")
-    ctr_state.add_output_data_port("result", "str", "default_value2")
-
-    scoped_variable1_ctr_state = ctr_state.add_scoped_variable("scoped", "str", "default_value1")
-    scoped_variable3_ctr_state = ctr_state.add_scoped_variable("ctr", "int", 42)
-
-    ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
-    ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
-
     return logger, ctr_state
 
 
@@ -124,6 +109,18 @@ def focus_graphical_editor_in_page(page):
 
 def select_and_paste_state(statemachine_model, source_state_model, target_state_model, menu_bar_ctrl, operation,
                            main_window_controller, page):
+    """Select a particular state and perform an operation on it (Copy or Cut) and paste it somewhere else. At the end,
+    verify that the operation was completed successfully.
+
+    :param statemachine_model: The statemachine model where the operation will be conducted
+    :param source_state_model: The state model, on which the operation will be performed
+    :param target_state_model: The state model, where the source state will be pasted
+    :param menu_bar_ctrl: The menu_bar controller, through which copy, cut & paste actions are triggered
+    :param operation: String indicating the operation to be performed (Copy or Cut)
+    :param main_window_controller: The MainWindow Controller
+    :param page: The notebook page of the corresponding statemachine in the statemachines editor
+    :return: The target state model, and the child state count before pasting
+    """
     print "\n\n %s \n\n" % source_state_model.state.name
     call_gui_callback(statemachine_model.selection.set, [source_state_model])
     call_gui_callback(getattr(menu_bar_ctrl, 'on_{}_selection_activate'.format(operation)), None, None)
@@ -137,6 +134,17 @@ def select_and_paste_state(statemachine_model, source_state_model, target_state_
     print target_state_model.state.states.keys()
     assert len(target_state_model.state.states) == old_child_state_count + 1
     return target_state_model, old_child_state_count
+
+
+def copy_and_paste_lib_state(sm_m, state_m_to_copy, page, menu_bar_ctrl):
+    call_gui_callback(sm_m.selection.set, [state_m_to_copy])
+    focus_graphical_editor_in_page(page)
+    call_gui_callback(menu_bar_ctrl.on_copy_selection_activate, None, None)
+    old_child_state_count = len(state_m_to_copy.state.states)
+    call_gui_callback(sm_m.selection.set, [state_m_to_copy])
+    focus_graphical_editor_in_page(page)
+    call_gui_callback(menu_bar_ctrl.on_paste_clipboard_activate, None, None)
+    assert len(state_m_to_copy.state.states) == old_child_state_count + 1
 
 
 @log.log_exceptions(None, gtk_quit=True)
@@ -213,29 +221,9 @@ def trigger_gui_signals(*args):
     new_template_state = state
     call_gui_callback(new_template_state.add_scoped_variable, 'scoopy', float, 0.3)
     state_m_to_copy = sm_m.get_state_model_by_path('CDMJPK/' + new_template_state.state_id)
-    call_gui_callback(sm_m.selection.set, [state_m_to_copy])
-    focus_graphical_editor_in_page(page)
-    call_gui_callback(menubar_ctrl.on_copy_selection_activate, None, None)
 
-    # paste in it-self
-    old_child_state_count = len(state_m_to_copy.state.states)
-    call_gui_callback(sm_m.selection.set, [state_m_to_copy])
-    focus_graphical_editor_in_page(page)
-    call_gui_callback(menubar_ctrl.on_paste_clipboard_activate, None, None)
-    assert len(state_m_to_copy.state.states) == old_child_state_count + 1
-
-    # increase complexity by doing it twice
-    state_m_to_copy = sm_m.get_state_model_by_path('CDMJPK/' + new_template_state.state_id)
-    call_gui_callback(sm_m.selection.set, [state_m_to_copy])
-    focus_graphical_editor_in_page(page)
-    call_gui_callback(menubar_ctrl.on_copy_selection_activate, None, None)
-
-    # paste in it-self
-    old_child_state_count = len(state_m_to_copy.state.states)
-    call_gui_callback(sm_m.selection.set, [state_m_to_copy])
-    focus_graphical_editor_in_page(page)
-    call_gui_callback(menubar_ctrl.on_paste_clipboard_activate, None, None)
-    assert len(state_m_to_copy.state.states) == old_child_state_count + 1
+    copy_and_paste_lib_state(sm_m, state_m_to_copy, page, menubar_ctrl)
+    copy_and_paste_lib_state(sm_m, state_m_to_copy, page, menubar_ctrl)
 
     call_gui_callback(menubar_ctrl.on_refresh_libraries_activate, None)
     call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
