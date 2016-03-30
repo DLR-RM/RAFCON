@@ -30,14 +30,10 @@ def show_notice(query):
 
 
 def open_folder(query):
-    return_value = ""
-
     if "library2_for_relocation_test" in query:
-        return_value = None  # the first relocation has to be aborted
+        return None  # the first relocation has to be aborted
     else:
-        return_value = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/library_relocation_test_source/library1_for_relocation_test_relocated"
-
-    return return_value
+        return testing_utils.get_test_sm_path("unit_test_state_machines/library_relocation_test_source/library1_for_relocation_test_relocated")
 
 
 def test_library_relocation(caplog):
@@ -48,7 +44,7 @@ def test_library_relocation(caplog):
     testing_utils.remove_all_libraries()
 
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_scripts"] = rafcon.__path__[0] + "/../test_scripts"
+    library_paths["test_scripts"] = testing_utils.TEST_SM_PATH
 
     # logger.debug(library_paths["test_scripts"])
     # exit()
@@ -62,8 +58,8 @@ def test_library_relocation(caplog):
     # Initialize libraries
     sm_singletons.library_manager.initialize()
 
-    state_machine = storage.load_statemachine_from_path(rafcon.__path__[0] +
-                                                        "/../test_scripts/unit_test_state_machines/library_relocation_test")
+    state_machine = storage.load_statemachine_from_path(testing_utils.get_test_sm_path(
+        "unit_test_state_machines/library_relocation_test"))
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
 
