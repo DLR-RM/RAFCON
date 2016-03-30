@@ -326,7 +326,7 @@ class LibraryState(State):
     @version.setter
     @Observable.observed
     def version(self, version):
-        if not isinstance(version, basestring):
+        if version is not None and not isinstance(version, basestring):
             raise TypeError("version must be of type str")
 
         self._version = version
