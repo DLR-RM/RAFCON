@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 
 import pytest
+from pytest import raises
+import testing_utils
 import signal
 
 import rafcon
 from rafcon.statemachine import interface
-import testing_utils
 
-from rafcon.utils import log
-logger = log.get_logger("start-no-gui")
-logger.info("initialize RAFCON ... ")
-
+from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
+from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.storage import storage
 import rafcon.statemachine.singleton as sm_singletons
 # needed for yaml parsing
@@ -21,7 +20,9 @@ from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurre
 from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
 from rafcon.statemachine.enums import StateExecutionState
 
-from os.path import join, dirname
+from rafcon.utils import log
+logger = log.get_logger("start-no-gui")
+logger.info("initialize RAFCON ... ")
 
 
 def show_notice(query):
@@ -79,5 +80,11 @@ def test_library_relocation(caplog):
     logger.info("State machine execution finished!")
 
 
+def test_library_relocation_exception():
+    logger.info("Load not existing library, expect exception to be raised...")
+    with raises(LibraryNotFoundException):
+        print LibraryState('aasdasd', 'basdasd', allow_user_interaction=False)
+
+
 if __name__ == '__main__':
-    pytest.main([__file__])
+    pytest.main([__file__, '-s'])
