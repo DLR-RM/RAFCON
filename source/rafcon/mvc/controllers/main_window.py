@@ -179,16 +179,6 @@ class MainWindowController(ExtendedController):
         view.right_bar_window.initialize_title('STATE EDITOR')
         view.console_bar_window.initialize_title('CONSOLE')
 
-        # define panes
-        self.pane_id = {'LEFT_BAR_DOCKED_POS': 'top_level_h_pane',
-                        'RIGHT_BAR_DOCKED_POS': 'right_h_pane',
-                        'CONSOLE_DOCKED_POS': 'central_v_pane',
-                        'LEFT_BAR_INNER_PANE_POS': 'left_bar_pane'}
-        self.default_pane_pos = {'LEFT_BAR_DOCKED_POS': 300,
-                                 'RIGHT_BAR_DOCKED_POS': 1000,
-                                 'CONSOLE_DOCKED_POS': 600,
-                                 'LEFT_BAR_INNER_PANE_POS': 400}
-
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
 
@@ -258,21 +248,15 @@ class MainWindowController(ExtendedController):
         gui_helper.set_window_size_and_position(view.get_top_widget(), 'MAIN_WINDOW')
 
         # Initializing Pane positions
-        # TODO check the child elements why those create so many size-allocate signals -> not clear why that happens
-        # for config_id, pane_id in self.pane_id.iteritems():
-        #     view[pane_id].get_child2().connect('size-allocate', self.print_paned_pos, config_id)
-        self.set_pane_position('LEFT_BAR_DOCKED_POS')
-        self.set_pane_position('RIGHT_BAR_DOCKED_POS')
-        self.set_pane_position('CONSOLE_DOCKED_POS')
-        self.set_pane_position('LEFT_BAR_INNER_PANE_POS')
+        for config_id in constants.PANE_ID.keys():
+            self.set_pane_position(config_id)
+            # view[constants.PANE_ID[config_id]].get_child2().connect('size-allocate', self.print_paned_pos, config_id)
 
     def print_paned_pos(self, width, height, config_id):
-        pass
-        # if config_id in ['LEFT_BAR_DOCKED', 'RIGHT_BAR_DOCKED']:
-        pane_id = self.pane_id[config_id]
+        pane_id = constants.PANE_ID[config_id]
         view = self.view[pane_id]
-        logger.warning("paned position {4} '{1}' is now {0}.{2}|{3}".format(view.get_position(), pane_id, width, height,
-                                                                            config_id))
+        print "paned position {4} '{1}' is now {0}.{2}|{3}".format(view.get_position(), pane_id,
+                                                                   width, height, config_id)
 
     def connect_button_to_function(self, view_index, button_state, function):
         handler_id = self.view[view_index].connect(button_state, function)
@@ -297,9 +281,9 @@ class MainWindowController(ExtendedController):
 
         :param config_id: The pane identifier saved in the runtime config file
         """
-        default_pos = self.default_pane_pos[config_id]
+        default_pos = constants.DEFAULT_PANE_POS[config_id]
         position = global_runtime_config.get_config_value(config_id, default_pos)
-        pane_id = self.pane_id[config_id]
+        pane_id = constants.PANE_ID[config_id]
         # prev_pos = {}
         # for pane_id_ in ['top_level_h_pane', 'right_h_pane', 'central_v_pane', 'left_bar_pane']:
         #     prev_pos[pane_id_] = self.view[pane_id_].get_position()
