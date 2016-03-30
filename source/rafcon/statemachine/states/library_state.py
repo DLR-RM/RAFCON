@@ -14,7 +14,6 @@ from rafcon.statemachine.states.state import State
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.singleton import library_manager
 from rafcon.utils import log
-from rafcon.utils.type_helpers import convert_string_value_to_type_value
 
 logger = log.get_logger(__name__)
 
@@ -45,7 +44,8 @@ class LibraryState(State):
                  # the following are the container state specific attributes
                  name=None, state_id=None, outcomes=None,
                  input_data_port_runtime_values=None, use_runtime_value_input_data_ports=None,
-                 output_data_port_runtime_values=None, use_runtime_value_output_data_ports=None):
+                 output_data_port_runtime_values=None, use_runtime_value_output_data_ports=None,
+                 allow_user_interaction=True):
 
         # this variable is set to true if the state initialization is finished! after initialization no change to the
         # library state is allowed any more
@@ -57,7 +57,7 @@ class LibraryState(State):
         self.version = version
 
         lib_os_path, new_library_path, new_library_name = \
-            library_manager.get_os_path_to_library(library_path, library_name)
+            library_manager.get_os_path_to_library(library_path, library_name, allow_user_interaction)
 
         if library_path != new_library_path or library_name != new_library_name:
             self.library_name = new_library_name

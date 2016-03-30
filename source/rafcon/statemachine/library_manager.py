@@ -4,32 +4,32 @@
    :synopsis: A module to handle all libraries for a statemachine
 
 .. moduleauthor:: Sebastian Brunner
-
-
 """
 
-from gtkmvc import Observable
 import os
+import sys
+from gtkmvc import Observable
 
-from rafcon.utils import log
-logger = log.get_logger(__name__)
+from rafcon.statemachine import interface
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
 import rafcon.statemachine.config as config
-from rafcon.statemachine import interface
-import sys
+
+from rafcon.utils import log
+logger = log.get_logger(__name__)
+
 if not sys.version_info < (2, 7):
     from collections import OrderedDict
 
 
 class LibraryManager(Observable):
+    """This class manages all libraries
 
-    """This class manages all libraries specified in config.py.
     Libraries are essentially just (reusable) state machines.
 
     :ivar _libraries: a dictionary to hold  all libraries
-    :ivar storage: the storage object to be able to load and save states
     """
+
     def __init__(self):
         Observable.__init__(self)
         self._libraries = {}
@@ -121,9 +121,9 @@ class LibraryManager(Observable):
         """
         self.initialize()
 
-#########################################################################
-# Properties for all class fields that must be observed by gtkmvc
-#########################################################################
+    #########################################################################
+    # Properties for all class fields that must be observed by gtkmvc
+    #########################################################################
 
     @property
     def libraries(self):
@@ -140,18 +140,22 @@ class LibraryManager(Observable):
 
         self._libraries = libraries
 
-    def get_os_path_to_library(self, library_path, library_name):
-        """
-        This function retrieves the file system path of a library specified by a path and a name in the case that the
-        library does not exist any more at its original location. The user has to specify an alternative location.
+    def get_os_path_to_library(self, library_path, library_name, allow_user_interaction=True):
+        """Find path of librar
+
+        This function retrieves the file system path of a library specified by a path and a name. In case the library
+        does not exist any more at its original location, the user has to specify an alternative location.
+
         :param library_path:  the path of the library, that must be relative to a library path given in the config.yaml
         :param library_name: the name of the library
-        :return:
+        :param allow_user_interaction: Whether the user may be asked to specify library location
+        :return: library path within filesystem, path within library, library name
+        :rtype: str, str, str
         """
         path_list = library_path.split("/")
         target_lib_dict = self.libraries
 
-        original_path_and_name = library_path+library_name
+        original_path_and_name = library_path + library_name
 
         # skip already skipped states
         if original_path_and_name in self._skipped_states:
@@ -170,9 +174,9 @@ class LibraryManager(Observable):
                 logger.debug("The library with library path \"{0}\" and name \"{1}\" "
                              "is automatically replaced by the library "
                              "with file system path \"{2}\" and library path \"{3}\"".format(str(library_path),
-                                                                                     str(library_name),
-                                                                                     str(new_path),
-                                                                                     str(new_library_path)))
+                                                                                             str(library_name),
+                                                                                             str(new_path),
+                                                                                             str(new_library_path)))
             return new_path, new_library_path, library_name
 
         # a boolean to indicate if a state was regularly found or by the help of the user
@@ -182,12 +186,16 @@ class LibraryManager(Observable):
 
             if target_lib_dict is None:  # This cannot happen in the first iteration
                 regularly_found = False
-                notice = "Cannot find library '{0}' in subfolder '{1}'. Please check your library path configuration." \
-                            " If your library path is correct and the library was moved, please select the new root " \
-                            "folder of the library. If not, please abort.".format(library_name, library_path)
-                interface.show_notice_func(notice)
-                new_library_path = interface.open_folder_func("Select root folder for library '{0}'".format(
-                    library_name))
+                if not allow_user_interaction:
+                    new_library_path = None
+                else:
+                    notice = "Cannot find library '{0}' in subfolder '{1}'. Please check your library path " \
+                             "configuration. If your library path is correct and the library was moved, please select" \
+                             " the new root folder of the library. If not, please abort.".format(library_name,
+                                                                                                 library_path)
+                    interface.show_notice_func(notice)
+                    new_library_path = interface.open_folder_func("Select root folder for library '{0}'".format(
+                        library_name))
                 if new_library_path is None:
                     # Cancel library search
                     self._skipped_states[original_path_and_name] = True
