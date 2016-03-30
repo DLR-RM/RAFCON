@@ -109,8 +109,8 @@ def trigger_pane_signals(*args):
     condition = threading.Condition()
 
     stored_pane_positions = {}
-    for config_id, pan_id in mw_ctrl.pane_id.iteritems():
-        default_pos = mw_ctrl.default_pane_pos[config_id]
+    for config_id, pan_id in constants.PANE_ID.iteritems():
+        default_pos = constants.DEFAULT_PANE_POS[config_id]
         stored_pane_positions[config_id] = global_runtime_config.get_config_value(config_id, default_pos)
         if stored_pane_positions[config_id] is None:
             import logging
@@ -147,7 +147,7 @@ def trigger_pane_signals(*args):
     test_bar(mw_ctrl.view.console_bar_window.get_top_widget(), 'console')
 
     print "check if pane positions are still like in runtime_config.yaml"
-    for config_id, pane_id in mw_ctrl.pane_id.iteritems():
+    for config_id, pane_id in constants.PANE_ID.iteritems():
         print "check pos of ", config_id, pane_id
         assert mw_ctrl.view[pane_id].get_position() == stored_pane_positions[config_id]
 
