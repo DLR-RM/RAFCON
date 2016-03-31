@@ -735,23 +735,17 @@ def trigger_state_type_change_tests(*args):
 
 def test_state_type_change_test(caplog):
     with_gui = True
-    test_multithrading_lock.acquire()
-    testing_utils.remove_all_libraries()
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(testing_utils.RAFCON_PATH + "/mvc")
-    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
+    testing_utils.start_rafcon()
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
 
     logger, state, gvm_model, sm_m, state_dict = create_models()
     testing_utils.remove_all_libraries()
-    rafcon.statemachine.singleton.library_manager.initialize()
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_controller = None
     if with_gui:
         main_window_view = MainWindowView()
-
         # load the meta data for the state machine
         main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                       editor_type='LogicDataGrouped')

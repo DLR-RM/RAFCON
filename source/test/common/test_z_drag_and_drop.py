@@ -138,10 +138,7 @@ def trigger_drag_and_drop_tests(*args):
 
 
 def test_drag_and_drop_test(caplog):
-    test_multithrading_lock.acquire()
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(testing_utils.RAFCON_PATH + "/mvc")
-    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
+    testing_utils.start_rafcon()
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
@@ -151,7 +148,6 @@ def test_drag_and_drop_test(caplog):
     testing_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     library_paths["unit_test_state_machines"] = testing_utils.get_test_sm_path("unit_test_state_machines")
-
     rafcon.statemachine.singleton.library_manager.initialize()
 
     if testing_utils.sm_manager_model is None:

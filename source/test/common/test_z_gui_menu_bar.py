@@ -50,7 +50,6 @@ def teardown_module(module):
 def create_models(*args, **kargs):
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
-    #logging.getLogger('gtkmvc').setLevel(logging.DEBUG)
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
     stdout = logging.StreamHandler(sys.stdout)
@@ -61,18 +60,12 @@ def create_models(*args, **kargs):
     logging.getLogger('controllers.state_properties').setLevel(logging.DEBUG)
 
     state1 = ExecutionState('State1')
-    output_state1 = state1.add_output_data_port("output", "int")
-    input_state1 = state1.add_input_data_port("input", "str", "zero")
     state2 = ExecutionState('State2')
-    input_par_state2 = state2.add_input_data_port("par", "int", 0)
-    output_res_state2 = state2.add_output_data_port("res", "int")
     state4 = ExecutionState('Nested')
     output_state4 = state4.add_output_data_port("out", "int")
     state5 = ExecutionState('Nested2')
     input_state5 = state5.add_input_data_port("in", "int", 0)
     state3 = HierarchyState(name='State3')
-    input_state3 = state3.add_input_data_port("input", "int", 0)
-    output_state3 = state3.add_output_data_port("output", "int")
     state3.add_state(state4)
     state3.add_state(state5)
     state3.set_start_state(state4)
@@ -85,16 +78,10 @@ def create_models(*args, **kargs):
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
-    input_ctr_state = ctr_state.add_input_data_port("ctr_in", "str", "zero")
-    output_ctr_state = ctr_state.add_output_data_port("ctr_out", "int")
     ctr_state.set_start_state(state1)
     ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)
     ctr_state.add_transition(state2.state_id, 0, state3.state_id, None)
     ctr_state.add_transition(state3.state_id, 0, ctr_state.state_id, 0)
-    ctr_state.add_data_flow(state1.state_id, output_state1, state2.state_id, input_par_state2)
-    ctr_state.add_data_flow(state2.state_id, output_res_state2, state3.state_id, input_state3)
-    ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, state1.state_id, input_state1)
-    ctr_state.add_data_flow(state3.state_id, output_state3, ctr_state.state_id, output_ctr_state)
     ctr_state.name = "Container"
 
     return logger, ctr_state
@@ -235,14 +222,8 @@ def trigger_gui_signals(*args):
 
 
 def test_gui(caplog):
-    testing_utils.test_multithrading_lock.acquire()
-    # delete all old state machines
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
-    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
-    rafcon.statemachine.singleton.library_manager.initialize()
+    testing_utils.start_rafcon()
     [logger, ctr_state] = create_models()
-
     state_machine = StateMachine(ctr_state)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
@@ -260,6 +241,4 @@ def test_gui(caplog):
 
 
 if __name__ == '__main__':
-    # setup_module(None)
-    # test_gui(None)
     pytest.main([__file__])

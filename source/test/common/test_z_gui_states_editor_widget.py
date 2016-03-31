@@ -14,7 +14,7 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
 
 # mvc elements
-from rafcon.mvc.models import GlobalVariableManagerModel, ContainerStateModel
+from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
@@ -34,7 +34,6 @@ def create_models(*args, **kargs):
 
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
-    #logging.getLogger('gtkmvc').setLevel(logging.DEBUG)
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
 
@@ -62,18 +61,13 @@ def create_models(*args, **kargs):
     state3.add_data_flow(state4.state_id, output_state4, state5.state_id, input_state5)
     state3.add_outcome('Branch1')
     state3.add_outcome('Branch2')
-    # print state3.input_data_ports
-    # print state3.output_data_ports
-    # exit(0)
 
     ctr_state = HierarchyState(name="Root", state_id="Root")
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
     input_ctr_state = ctr_state.add_input_data_port("ctr_in", "str", "zero")
-    #print input_ctr_state
     output_ctr_state = ctr_state.add_output_data_port("ctr_out", "int")
-    #print output_ctr_state
     ctr_state.set_start_state(state1)
     ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)
     ctr_state.add_transition(state2.state_id, 0, state3.state_id, None)
@@ -90,18 +84,15 @@ def create_models(*args, **kargs):
 
     ctr_state.add_output_data_port("output", "str", "default_value1")
     ctr_state.add_output_data_port("result", "str", "default_value2")
-    # print ctr_state.input_data_ports
-    # print ctr_state.output_data_ports
-    # exit(0)
 
     scoped_variable1_ctr_state = ctr_state.add_scoped_variable("scoped", "str", "default_value1")
-    scoped_variable2_ctr_state = ctr_state.add_scoped_variable("my_var", "str", "default_value1")
     scoped_variable3_ctr_state = ctr_state.add_scoped_variable("ctr", "int", 42)
 
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
     ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
 
-    state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
+    state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
+                  'Nested2': state5}
     sm = StateMachine(ctr_state)
 
     # remove existing state machines
@@ -114,7 +105,6 @@ def create_models(*args, **kargs):
     # get state machine model
     sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
-    global_var_manager_model = GlobalVariableManagerModel()
     global_var_manager_model = rafcon.mvc.singleton.global_variable_manager_model
     global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
@@ -196,55 +186,34 @@ def trigger_state_type_change_tests(*args):
     logger = args[5]
     sleep_time_max = 5.0
 
-    states_editor_controller = main_window_controller.get_controller('states_editor_ctrl')
-
     ####### General Type Change inside of a state machine (NO ROOT STATE) ############
     state_of_type_change = 'State3'
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
 
+    def change_state_type(state_m, new_state_type):
+        # - get state-editor controller and find right row in combo box
+        [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+            get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controller, sleep_time_max, logger)
+        # - do state type change
+        state_type_row_id = list_store_id_from_state_type_dict[new_state_type]
+        call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active,
+                          state_type_row_id)
+        # - check child state editor widgets
+        new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        return new_state_m
+
     # HS -> BCS
-    # - get state-editor controller and find right row in combo box
-    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
-        get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controller, sleep_time_max, logger)
-    # - do state type change
-    state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
-    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    # - check child state editor widgets
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+    new_state_m = change_state_type(state_m, 'BARRIER_CONCURRENCY')
 
     # BCS -> HS
-    # - get state-editor controller and find right row in combo box
-    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
-        get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
-    # - do state type change
-    state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
-    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    # - check child state editor widgets
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+    new_state_m = change_state_type(new_state_m, 'HIERARCHY')
 
     # HS -> PCS
-    # - get state-editor controller and find right row in combo box
-    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
-        get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
-    # - do state type change
-    state_type_row_id = list_store_id_from_state_type_dict['PREEMPTION_CONCURRENCY']
-    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    # - check child state editor widgets
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+    new_state_m = change_state_type(new_state_m, 'PREEMPTION_CONCURRENCY')
 
     # PCS -> ES
-    # - get state-editor controller and find right row in combo box
-    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
-        get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
-    # - do state type change
-    state_type_row_id = list_store_id_from_state_type_dict['EXECUTION']
-    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    # - check child state editor widgets
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+    change_state_type(new_state_m, 'EXECUTION')
 
     # TODO all test that are not root_state-test have to be performed with Preemptive and Barrier Concurrency States as parents too
 
@@ -253,48 +222,16 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
 
     # HS -> BCS
-    # - get state-editor controller and find right row in combo box
-    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
-        get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
-    # - do state type change
-    state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
-    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    # - check child state editor widgets
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+    new_state_m = change_state_type(new_state_m, 'BARRIER_CONCURRENCY')
 
     # BCS -> HS
-    # - get state-editor controller and find right row in combo box
-    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
-        get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
-    # - do state type change
-    state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
-    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    # - check child state editor widgets
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+    new_state_m = change_state_type(new_state_m, 'HIERARCHY')
 
     # HS -> PCS
-    # - get state-editor controller and find right row in combo box
-    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
-        get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
-    # - do state type change
-    state_type_row_id = list_store_id_from_state_type_dict['PREEMPTION_CONCURRENCY']
-    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    # - check child state editor widgets
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+    new_state_m = change_state_type(new_state_m, 'PREEMPTION_CONCURRENCY')
 
     # PCS -> ES
-    # - get state-editor controller and find right row in combo box
-    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
-        get_state_editor_ctrl_and_store_id_dict(sm_m, new_state_m, main_window_controller, sleep_time_max, logger)
-    # - do state type change
-    state_type_row_id = list_store_id_from_state_type_dict['EXECUTION']
-    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
-    # - check child state editor widgets
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+    change_state_type(new_state_m, 'EXECUTION')
 
     # simple type change of root_state -> still could be extended
 
@@ -308,11 +245,7 @@ def trigger_state_type_change_tests(*args):
 
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_type_change_test(with_gui, caplog):
-
-    test_multithrading_lock.acquire()
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(testing_utils.RAFCON_PATH + "/mvc")
-    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
+    testing_utils.start_rafcon()
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
@@ -320,7 +253,7 @@ def test_state_type_change_test(with_gui, caplog):
     logger, state, gvm_model, sm_m, state_dict = create_models()
 
     testing_utils.remove_all_libraries()
-    rafcon.statemachine.singleton.library_manager.initialize()
+    #rafcon.statemachine.singleton.library_manager.initialize()
 
     if testing_utils.sm_manager_model is None:
             testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
