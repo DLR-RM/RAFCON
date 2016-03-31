@@ -12,24 +12,16 @@ class HistoryTreeView(View, gtk.TreeView):
 
         foreground = 5
 
-        # cell = gtk.CellRendererText()
-        # tvcolumn = gtk.TreeViewColumn('Nr', cell, text=0, foreground=foreground)
-        # self.append_column(tvcolumn)
-
-        cell = gtk.CellRendererText()
-        tvcolumn = gtk.TreeViewColumn('Nr', cell, text=1, foreground=foreground)
+        tvcolumn = gtk.TreeViewColumn('Nr', gtk.CellRendererText(), text=1, foreground=foreground)
         self.append_column(tvcolumn)
 
-        cell = gtk.CellRendererText()
-        tvcolumn = gtk.TreeViewColumn('Action', cell, text=2, foreground=foreground)
+        tvcolumn = gtk.TreeViewColumn('Action', gtk.CellRendererText(), text=2, foreground=foreground)
         self.append_column(tvcolumn)
 
-        cell = gtk.CellRendererText()
-        tvcolumn = gtk.TreeViewColumn('Parameters', cell, text=7, foreground=foreground)
+        tvcolumn = gtk.TreeViewColumn('Parameters', gtk.CellRendererText(), text=7, foreground=foreground)
         self.append_column(tvcolumn)
 
-        cell = gtk.CellRendererText()
-        tvcolumn = gtk.TreeViewColumn('Affects', cell, text=3, foreground=foreground)
+        tvcolumn = gtk.TreeViewColumn('Affects', gtk.CellRendererText(), text=3, foreground=foreground)
         # tvcolumn.set_min_width(150)
         self.append_column(tvcolumn)
 

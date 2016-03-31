@@ -10,34 +10,38 @@ class ExecutionHistoryTreeView(View, gtk.TreeView):
         View.__init__(self)
         gtk.TreeView.__init__(self)
 
-        column_name = gtk.TreeViewColumn('History')
-        self.append_column(column_name)
-        cell_renderer_name = gtk.CellRendererText()
-        column_name.pack_start(cell_renderer_name, True)
-        column_name.add_attribute(cell_renderer_name, 'text', 0)
+        tvcolumn = gtk.TreeViewColumn('History', gtk.CellRendererText(), text=0)
+        self.append_column(tvcolumn)
 
         self['history_treeview'] = self
 
 
-class ExecutionHistoryView(View):
-    top = 'history_vbox'
+class ExecutionHistoryView(View, gtk.ScrolledWindow):
+    top = 'history_view'
 
     def __init__(self):
         View.__init__(self)
+        gtk.ScrolledWindow.__init__(self)
 
-        history_vbox = gtk.VBox()
+        history_tree = ExecutionHistoryTreeView()
+
         reload_button = gtk.Button("Reload history")
         reload_button.set_border_width(constants.BORDER_WIDTH)
+
         reload_button_box = gtk.HBox()
-        reload_button_box.pack_end(reload_button, False, True)
-        history_tree = ExecutionHistoryTreeView()
-        scroller = gtk.ScrolledWindow()
-        scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scroller.add(history_tree)
-        history_vbox.pack_start(scroller, True, True, 0)
-        history_vbox.pack_start(reload_button_box, False, True, 0)
-        history_vbox.show_all()
+        reload_button_box.pack_end(reload_button, False, True, 0)
+
+        history_vbox = gtk.VBox()
+        history_vbox.pack_end(reload_button_box, False, True, 0)
+        history_vbox.pack_end(self, True, True, 0)
+
+
+        self.add(history_tree)
+        self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.show_all()
 
         self['history_vbox'] = history_vbox
-        self['reload_button'] = reload_button
+        self['history_view'] = self
         self['history_tree'] = history_tree
+        self['reload_button'] = reload_button
+
