@@ -123,7 +123,7 @@ def select_and_paste_state(statemachine_model, source_state_model, target_state_
     return target_state_model, old_child_state_count
 
 
-def copy_and_paste_lib_state(sm_m, state_m_to_copy, page, menu_bar_ctrl):
+def copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menu_bar_ctrl):
     call_gui_callback(sm_m.selection.set, [state_m_to_copy])
     focus_graphical_editor_in_page(page)
     call_gui_callback(menu_bar_ctrl.on_copy_selection_activate, None, None)
@@ -197,7 +197,7 @@ def trigger_gui_signals(*args):
                                                             main_window_controller, page)
 
     ##########################################################
-    # complex state with all elements
+    # create complex state with all elements
     lib_state = LibraryState("generic/dialog", "Dialog [3 options]", "0.1", "Dialog [3 options]")
     call_gui_callback(statemachine_helper.insert_state, lib_state, True)
     assert len(state_m.state.states) == old_child_state_count + 2
@@ -209,8 +209,11 @@ def trigger_gui_signals(*args):
     call_gui_callback(new_template_state.add_scoped_variable, 'scoopy', float, 0.3)
     state_m_to_copy = sm_m.get_state_model_by_path('CDMJPK/' + new_template_state.state_id)
 
-    copy_and_paste_lib_state(sm_m, state_m_to_copy, page, menubar_ctrl)
-    copy_and_paste_lib_state(sm_m, state_m_to_copy, page, menubar_ctrl)
+    ##########################################################
+    # copy & paste complex state into itself
+    copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menubar_ctrl)
+    # increase complexity by doing it twice -> increase the hierarchy-level
+    copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menubar_ctrl)
 
     call_gui_callback(menubar_ctrl.on_refresh_libraries_activate, None)
     call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
