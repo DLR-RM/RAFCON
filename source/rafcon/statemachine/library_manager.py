@@ -138,6 +138,9 @@ class LibraryManager(Observable):
 
         original_path_and_name = library_path + library_name
 
+        if not self._library_paths:
+            raise LibraryNotFoundException("There are no libraries registered")
+
         # skip already skipped states
         if original_path_and_name in self._skipped_states:
             # if an already skipped state shall be loaded again, directly raise the exception to jump over this state
