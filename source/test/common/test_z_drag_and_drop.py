@@ -15,8 +15,6 @@ from rafcon.statemachine.state_machine import StateMachine
 # mvc elements
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.controllers.graphical_editor_gaphas import GraphicalEditorController as \
-        GraphicalEditorGaphasController
 
 # singleton elements
 import rafcon.mvc.singleton
