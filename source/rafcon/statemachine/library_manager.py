@@ -19,7 +19,9 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 if not sys.version_info < (2, 7):
-    from collections import OrderedDict
+    from collections import OrderedDict as ordered_dict
+else:
+    ordered_dict = dict
 
 
 class LibraryManager(Observable):
@@ -69,55 +71,35 @@ class LibraryManager(Observable):
                 self._library_paths[lib_key] = lib_path
                 self._libraries[lib_key] = {}
                 self.add_libraries_from_path(lib_path, self._libraries[lib_key])
-                if not sys.version_info < (2, 7):
-                    self._libraries[lib_key] = OrderedDict(sorted(self._libraries[lib_key].items()))
-                else:
-                    self._libraries[lib_key] = dict(sorted(self._libraries[lib_key].items()))
+                self._libraries[lib_key] = ordered_dict(sorted(self._libraries[lib_key].items()))
             else:
                 logger.warn("Wrong path in config for library with name: '{0}' because path {1} does not exist"
                             "".format(lib_key, lib_path))
-        if not sys.version_info < (2, 7):
-            self._libraries = OrderedDict(sorted(self._libraries.items()))
-        else:
-            self._libraries = dict(sorted(self._libraries.items()))
+        self._libraries = ordered_dict(sorted(self._libraries.items()))
         logger.debug("Initialization of LibraryManager done")
 
-    def add_libraries_from_path(self, lib_path, target_dict):
+    @classmethod
+    def add_libraries_from_path(cls, library_path, target_dict):
         """
         Adds all libraries specified in a given path and stores them into the provided library dictionary. The library
         entries in the dictionary consist only of the path to the library in the file system.
-        :param lib_path: the path to add all libraries from
+        :param library_path: the path to add all libraries from
         :param target_dict: the target dictionary to store all loaded libraries to
-        :return:
         """
-        for lib in os.listdir(lib_path):
-            if os.path.isdir(os.path.join(lib_path, lib)) and not '.' == lib[0]:
-                if os.path.exists(os.path.join(os.path.join(lib_path, lib), storage.STATEMACHINE_FILE)) \
-                        or os.path.exists(os.path.join(os.path.join(lib_path, lib), storage.STATEMACHINE_FILE_OLD)):
-                    self.add_library(lib, lib_path, target_dict)
+        for library_name in os.listdir(library_path):
+            full_library_path = os.path.join(library_path, library_name)
+            if os.path.isdir(full_library_path) and library_name[0] != '.':
+                if os.path.exists(os.path.join(full_library_path, storage.STATEMACHINE_FILE)) \
+                        or os.path.exists(os.path.join(full_library_path, storage.STATEMACHINE_FILE_OLD)):
+                    target_dict[library_name] = full_library_path
                 else:
-                    target_dict[lib] = {}
-                    self.add_libraries_from_path(os.path.join(lib_path, lib), target_dict[lib])
-                    if not sys.version_info < (2, 7):
-                        target_dict[lib] = OrderedDict(sorted(target_dict[lib].items()))
-                    else:
-                        target_dict[lib] = dict(sorted(target_dict[lib].items()))
-
-    def add_library(self, lib, lib_path, target_dict):
-        """
-        Adds a single library path to the specified library dictionary.
-        :param lib: the library to add
-        :param lib_path: the path to the library specified in lib
-        :param target_dict: the library dictionary to save the loaded library to
-        :return:
-        """
-        target_dict[lib] = os.path.join(lib_path, lib)
+                    target_dict[library_name] = {}
+                    cls.add_libraries_from_path(full_library_path, target_dict[library_name])
+                    target_dict[library_name] = ordered_dict(sorted(target_dict[library_name].items()))
 
     @Observable.observed
     def refresh_libraries(self):
-        """
-        Deletes all loaded libraries and reloads them from the file system.
-        :return:
+        """Deletes all loaded libraries and reloads them from the file system
         """
         self.initialize()
 
@@ -127,8 +109,7 @@ class LibraryManager(Observable):
 
     @property
     def libraries(self):
-        """Property for the _libraries field
-
+        """Getter for all library tree
         """
         return self._libraries
 
@@ -141,7 +122,7 @@ class LibraryManager(Observable):
         self._libraries = libraries
 
     def get_os_path_to_library(self, library_path, library_name, allow_user_interaction=True):
-        """Find path of librar
+        """Find path of library
 
         This function retrieves the file system path of a library specified by a path and a name. In case the library
         does not exist any more at its original location, the user has to specify an alternative location.
@@ -152,7 +133,7 @@ class LibraryManager(Observable):
         :return: library path within filesystem, path within library, library name
         :rtype: str, str, str
         """
-        path_list = library_path.split("/")
+        path_list = library_path.split(os.sep)
         target_lib_dict = self.libraries
 
         original_path_and_name = library_path + library_name
@@ -217,11 +198,11 @@ class LibraryManager(Observable):
                     logger.error("Specified path not within library path list or your config file")
                     continue  # Allow the user to change the directory
 
-                path_list = rel_path.split('/')
+                path_list = rel_path.split(os.sep)
                 library_name = path_list[-1]
                 path_list = path_list[:-1]
                 path_list.insert(0, library_key)
-                library_path = '/'.join(path_list)
+                library_path = os.path.join(*path_list)
                 target_lib_dict = self.libraries
 
             # go down the path to the correct library
