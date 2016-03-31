@@ -1,6 +1,9 @@
 import gtk
+
 from gtkmvc import View
+
 from rafcon.mvc.utils import constants
+from rafcon.mvc.gui_helper import set_label_markup
 
 
 class MenuBarView(View):
@@ -60,15 +63,13 @@ class MenuBarView(View):
         self.win = top_window['main_window']
 
         for key in self.buttons.iterkeys():
-            self.set_image_for_button(key)
+            self.set_image_for_menu_item(key)
 
-    def set_image_for_button(self, button_name):
-        button = self[button_name]
+    def set_image_for_menu_item(self, menu_item_name):
+        menu_item = self[menu_item_name]
 
         label = gtk.Label()
-        label.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
-                         (constants.ICON_FONT,
-                          constants.FONT_SIZE_BIG,
-                          self.buttons[button_name]))
-
-        button.set_image(label)
+        set_label_markup(label, '&#x' + self.buttons[menu_item_name] + ';',
+                         font=constants.ICON_FONT, font_size=constants.FONT_SIZE_BIG)
+        menu_item.set_image(label)
+        menu_item.set_always_show_image(True)

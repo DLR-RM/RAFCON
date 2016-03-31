@@ -10,8 +10,6 @@ from rafcon.utils import log
 
 # core elements
 from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.script import Script
-from rafcon.statemachine.enums import StateType
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
@@ -245,8 +243,9 @@ class StateNotificationLogObserver(NotificationLogObserver):
                 overview['model'][-1].parent.state.get_path()
                 if self.with_print:
                     print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
-                    overview['model'][-1].parent.state.get_path()
-                assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().split('/')[0]
+                        overview['model'][-1].parent.state.get_path()
+                assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().\
+                    split('/')[0]
         return overview
 
 
@@ -312,7 +311,8 @@ def create_models(*args, **kargs):
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
     ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
 
-    state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
+    state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
+                  'Nested2': state5}
     sm = StateMachine(ctr_state)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
     rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
@@ -439,9 +439,9 @@ def test_add_remove_history(caplog):
         #             print_all(state_m)
 
         print sm_model, "\n", sm_model.root_state
-        # print_all(sm_model.root_state)
         save_state_machine(sm_model, state_machine_path + '_before', logger, with_gui=False, menubar_ctrl=None)
-        sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).remove_outcome(outcome_super)  # new outcome should be the third one
+        # new outcome should be the third one
+        sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).remove_outcome(outcome_super)
         assert len(sm_history.modifications.single_trail_history()) == 3
         save_state_machine(sm_model, state_machine_path + '_after', logger, with_gui=False, menubar_ctrl=None)
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
@@ -1225,8 +1225,7 @@ def test_data_flow_property_modifications_history(caplog):
     output_count_state1 = state1.add_output_data_port("count", "int")
     input_number_state2 = state2.add_input_data_port("number", "int", 5)
 
-    new_df_id = state_dict['Nested'].add_data_flow(from_state_id=state2.state_id,
-                                                   from_data_port_id=output_res_state2,
+    new_df_id = state_dict['Nested'].add_data_flow(from_state_id=state2.state_id, from_data_port_id=output_res_state2,
                                                    to_state_id=state_dict['Nested'].state_id,
                                                    to_data_port_id=output_res_nested)
 
@@ -1263,15 +1262,14 @@ def test_data_flow_property_modifications_history(caplog):
 
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
-    new_df_id = state_dict['Nested'].data_flows[new_df_id].data_flow_id  # only if histroy.redo was not run
+    new_df_id = state_dict['Nested'].data_flows[new_df_id].data_flow_id  # only if history.redo was not run
 
     # reset observer and testbed
     state_dict['Nested'].remove_data_flow(new_df_id)
     sm_model.history.undo()
     sm_model.history.redo()
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
-    new_df_id = state_dict['Nested'].add_data_flow(from_state_id=state2.state_id,
-                                                   from_data_port_id=output_res_state2,
+    new_df_id = state_dict['Nested'].add_data_flow(from_state_id=state2.state_id, from_data_port_id=output_res_state2,
                                                    to_state_id=state_dict['Nested'].state_id,
                                                    to_data_port_id=output_res_nested)
     sm_model.history.undo()
@@ -1316,31 +1314,21 @@ def test_data_flow_property_modifications_history(caplog):
 
 
 def test_type_modifications_without_gui(caplog):
-
     with_gui = False
-
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     os.chdir(rafcon.__path__[0] + "/mvc")
-    gtk.rc_parse(rafcon.__path__[0] + "/mvc/themes/dark/gtk-2.0/gtkrc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
-    # time.sleep(1)
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
     testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
-
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
     sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
-
-    # thread = threading.Thread(target=test_add_remove_history,
-    #                           args=[True, variables_for_pytest.sm_manager_model, main_window_controller,
-    #                                 sm_m, state_dict, with_gui])
-    # time.sleep(1)
     print "start thread"
     trigger_state_type_change_tests(sm_manager_model, None, sm_m, state_dict, with_gui, logger)
     os.chdir(rafcon.__path__[0] + "/../test")
@@ -1351,11 +1339,7 @@ def test_type_modifications_without_gui(caplog):
 
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_machine_modifications_with_gui(with_gui, caplog):
-
-    test_multithrading_lock.acquire()
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(rafcon.__path__[0] + "/mvc")
-    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
+    testing_utils.start_rafcon()
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
@@ -1364,28 +1348,18 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
     testing_utils.remove_all_libraries()
-    rafcon.statemachine.singleton.library_manager.initialize()
-
     if testing_utils.sm_manager_model is None:
         testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     print "initialize MainWindow"
     main_window_view = MainWindowView()
-
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
-
-    # thread = threading.Thread(target=test_add_remove_history,
-    #                           args=[True, variables_for_pytest.sm_manager_model, main_window_controller,
-    #                                 sm_m, state_dict, with_gui])
-    # time.sleep(1)
     print "start thread"
     thread = threading.Thread(target=trigger_state_type_change_tests,
                               args=[testing_utils.sm_manager_model, main_window_controller,
                                     sm_m, state_dict, with_gui, logger])
-
     thread.start()
-
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
@@ -1393,19 +1367,14 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
 
     os.chdir(rafcon.__path__[0] + "/../test/common")
     thread.join()
-
     testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_type_change_bugs_with_gui(with_gui, caplog):
-
     print "NEW BUG TEST"
-    test_multithrading_lock.acquire()
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(rafcon.__path__[0] + "/mvc")
-    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
+    testing_utils.start_rafcon()
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config

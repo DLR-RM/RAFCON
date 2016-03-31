@@ -80,14 +80,9 @@ def trigger_gui_signals(*args):
 
 
 def test_backward_stepping(caplog):
-    testing_utils.test_multithrading_lock.acquire()
-    testing_utils.remove_all_libraries()
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(testing_utils.RAFCON_PATH + "/mvc/")
-    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
+    testing_utils.start_rafcon()
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     logger, gvm_model = create_models()
-    rafcon.statemachine.singleton.library_manager.initialize()
     state_machine = storage.load_statemachine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines"
                                                                                        "/backward_step_barrier_test"))
     main_window_view = MainWindowView()

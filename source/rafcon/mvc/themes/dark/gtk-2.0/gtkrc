@@ -239,11 +239,11 @@ style "basic-colors"
 class "GtkWidget" style : highest "basic-colors"
 
 
-style "toolbar" {
+style "rafcon-toolbar" {
     bg[NORMAL]        = @background_menu
 }
-widget "*.toolbar*" style : highest "toolbar"
-widget "*.top_menu_hbox.*" style : highest "toolbar"
+widget "*.toolbar*" style : highest "rafcon-toolbar"
+widget "*.top_menu_hbox.*" style : highest "rafcon-toolbar"
 
 
 style "widget-colors" {
@@ -253,29 +253,29 @@ style "widget-colors" {
 widget_class "*.<GtkNotebook>.*" style : highest "widget-colors"
 
 
-style "notebook" {
+style "rafcon-notebook" {
     bg[ACTIVE]        = @background_widgets
     bg[INSENSITIVE]   = @button_background_inactive
     bg[NORMAL]        = @accent
     bg[PRELIGHT]      = @accent
     bg[SELECTED]      = @accent
 }
-widget_class "*Notebook" style : highest "notebook"
+widget_class "*Notebook" style : highest "rafcon-notebook"
 
-style "space" {
+style "rafcon-space" {
     bg[ACTIVE]        = @pane
     bg[INSENSITIVE]   = @background_space
     bg[NORMAL]        = @background_space
     bg[PRELIGHT]      = @pane
     bg[SELECTED]      = @pane
 }
-widget_class "*Paned"  style : highest "space"
-widget "*logic_vpaned"  style : highest "space"
-widget "*data_vpaned"  style : highest "space"
-class "GtkWindow"  style : highest "space"
+widget_class "*Paned"  style : highest "rafcon-space"
+widget "*logic_vpaned"  style : highest "rafcon-space"
+widget "*data_vpaned"  style : highest "rafcon-space"
+class "GtkWindow"  style : highest "rafcon-space"
 
 
-style "button"
+style "rafcon-button"
 {
     bg[INSENSITIVE]   = @button_background_inactive
     bg[NORMAL]        = @button_background
@@ -288,13 +288,13 @@ style "button"
     base[PRELIGHT]      = @input_background_active
     base[ACTIVE]      = @input_background_active
 }
-widget_class "*.<GtkButton>" style : highest "button"
-widget_class "*GtkMenu*" style : highest "button"
+widget_class "*.<GtkButton>" style : highest "rafcon-button"
+widget_class "*.<GtkMenuItem>" style : highest "rafcon-button"
 
 
 style "icons" = "test-style"{
     base[NORMAL] = @background_widgets
-    bg[ACTIVE] = @accent
+    bg[ACTIVE]   = @accent
     bg[SELECTED] = @accent
     bg[PRELIGHT] = @accent
     text[NORMAL] = @text_default
@@ -306,10 +306,7 @@ widget_class "*IconView*" style : highest "icons"
 
 
 style "sidebar-hide-button" {
-    GtkButton::child-displacement-x              = 0
-    GtkButton::child-displacement-y              = 0
     GtkButton::inner-border                      = {0, 0, 0, 0}
-
     bg[ACTIVE]        = @accent
     bg[INSENSITIVE]   = @background_space
     bg[NORMAL]        = @background_space
@@ -324,21 +321,21 @@ widget "*console_hide_button" style : highest "sidebar-hide-button"
 widget "*console_return_button" style : highest "sidebar-hide-button"
 
 
-style "scrollbar" {
+style "rafcon-scrollbar" {
     bg[INSENSITIVE]   = @scrollbar_background
     bg[ACTIVE]        = @scrollbar_background
     bg[NORMAL]        = @scrollbar_scroller
     bg[PRELIGHT]      = @scrollbar_scroller_active
     bg[SELECTED]      = @scrollbar_background
 }
-widget_class "*Scrollbar*" style : highest "scrollbar"
+widget_class "*Scrollbar*" style : highest "rafcon-scrollbar"
 
 
-style "scrollbar-decent" = "scrollbar" {
+style "rafcon-scrollbar-decent" = "scrollbar" {
     #bg[PRELIGHT]      = @scrollbar_scroller_active_decent
     bg[PRELIGHT]      = shade(0.5, @scrollbar_scroller_active_decent)
 }
-widget "*graphical_editor_scroller*" style : highest "scrollbar-decent"
+widget "*graphical_editor_scroller*" style : highest "rafcon-scrollbar-decent"
 
 
 style "text-view-background" {
@@ -372,13 +369,13 @@ widget "*.logical_linkage_title_wrapper" style : highest "widget-title"
 widget "*.description_title_wrapper" style : highest "widget-title"
 
 
-style "trees" {
+style "rafcon-trees" {
     GtkTreeView::expander-size                   = 12
     #GtkTreeView::grid-line-pattern               = "\777\1"
 }
-widget "*.library_tree" style : highest "trees"
-widget "*.history_tree" style : highest "trees"
-widget "*.state_machine_tree" style : highest "trees"
+widget "*.library_tree" style : highest "rafcon-trees"
+widget "*.history_tree" style : highest "rafcon-trees"
+widget "*.state_machine_tree" style : highest "rafcon-trees"
 
 
 style "active-dropdown-entry" {

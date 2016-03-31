@@ -1,6 +1,6 @@
 import tempfile
 from os.path import join, dirname
-from os import mkdir
+from os import mkdir, chdir
 from threading import Lock, Condition
 
 import rafcon
@@ -87,5 +87,12 @@ def call_gui_callback(callback, *args):
     # TODO: implement timeout that raises an exception
     condition.wait()
     condition.release()
+
+
+def start_rafcon():
+    test_multithrading_lock.acquire()
+    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    chdir(rafcon.__path__[0] + "/mvc")
+    rafcon.statemachine.singleton.library_manager.initialize()
 
 sm_manager_model = None

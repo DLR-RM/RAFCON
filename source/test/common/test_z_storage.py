@@ -202,7 +202,8 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_gui_meta_data=Fal
         old_without_base = None
     if with_print and missing_elements:
         print 30*"#"
-        print "statemachine %s with root_state.state_id %s MISSING the following FILES" % (sm_m.state_machine.state_machine_id, root_state.state_id)
+        print "statemachine %s with root_state.state_id %s MISSING the following FILES" % \
+              (sm_m.state_machine.state_machine_id, root_state.state_id)
         print 30*"#"
         for path in missing_elements:
             if old_without_base is not None and path.replace(base_path, "") in old_without_base:
@@ -211,15 +212,15 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_gui_meta_data=Fal
                 print path, " ... but does not exist before"
     else:
         print 30*"#"
-        print "All Files and Folders where Found of statemachine %s with root_state.state_id %s" % (sm_m.state_machine.state_machine_id, root_state.state_id)
+        print "All Files and Folders where Found of statemachine %s with root_state.state_id %s" % \
+              (sm_m.state_machine.state_machine_id, root_state.state_id)
         print 30*"#"
 
     return missing_elements, actual_exists
 
 
 def test_storage_without_gui(caplog):
-    with_gui=False
-
+    with_gui = False
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
@@ -235,16 +236,11 @@ def test_storage_without_gui(caplog):
 
 def test_storage_with_gui(caplog):
     with_gui = True
-
-    test_multithrading_lock.acquire()
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(rafcon.__path__[0] + "/mvc")
-    gtk.rc_parse("./themes/dark/gtk-2.0/gtkrc")
+    testing_utils.start_rafcon()
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
-    testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
 
     if testing_utils.sm_manager_model is None:
