@@ -73,10 +73,12 @@ class StateNotificationLogObserver(NotificationLogObserver):
     def reset(self):
         self.log = {"before": {'states': [], 'state': [],
                                'outcomes': [], 'input_data_ports': [], 'output_data_ports': [], 'scoped_variables': [],
-                               'transitions': [], 'data_flows': [], 'is_start': []},
+                               'transitions': [], 'data_flows': [], 'is_start': [],
+                               'meta_signal': [], 'state_type_changed_signal': []},
                     "after": {'states': [], 'state': [],
                               'outcomes': [], 'input_data_ports': [], 'output_data_ports': [], 'scoped_variables': [],
-                              'transitions': [], 'data_flows': [], 'is_start': []}}
+                              'transitions': [], 'data_flows': [], 'is_start': [],
+                              'meta_signal': [], 'state_type_changed_signal': []}}
         self.no_failure = True
 
     @Observer.observe('states', before=True)
@@ -111,6 +113,8 @@ class StateNotificationLogObserver(NotificationLogObserver):
     @Observer.observe("transitions", after=True)
     @Observer.observe("data_flows", after=True)
     @Observer.observe("is_start", after=True)
+    @Observer.observe("meta_signal", signal=True)
+    @Observer.observe("state_type_changed_signal", signal=True)
     def notification_after(self, model, prop_name, info):
         if prop_name in self.log['after']:
             self.log['after'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
