@@ -1352,6 +1352,7 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
+# TODO introduce test_add_remove_history with_gui=True to have a more reliable unit-test
 
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_type_change_bugs_with_gui(with_gui, caplog):

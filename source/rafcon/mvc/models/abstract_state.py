@@ -18,7 +18,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-def state_to_state_model(state):
+def get_state_model_class_for_state(state):
     """Determines the model required for the given state class
 
     :param state: Instance of a state (ExecutionState, BarrierConcurrencyState, ...)
@@ -34,6 +34,7 @@ def state_to_state_model(state):
     elif isinstance(state, State):
         return StateModel
     else:
+        logger.warning("There is not model for state of type {0} {1}".format(type(state), state))
         return None
 
 

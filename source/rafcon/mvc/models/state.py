@@ -124,13 +124,14 @@ class StateModel(AbstractStateModel):
         """
         # logger.info("method_name: " + info.method_name)
         model_list = None
-        if "input_data_port" in info.method_name:
+        if info.method_name in ["add_input_data_port", "remove_input_data_port", "input_data_ports"]:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("input_data_port")
-        elif "output_data_port" in info.method_name:
+        elif info.method_name in ["add_output_data_port", "remove_output_data_port", "output_data_ports"]:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("output_data_port")
-        elif "outcome" in info.method_name:
+        elif info.method_name in ["add_outcome", "remove_outcome", "outcomes"]:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("outcome")
 
+        # TODO for list assignment of core has to be taken care -> unit-test seems to miss, too
         if model_list is not None:
             if "add" in info.method_name:
                 self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
