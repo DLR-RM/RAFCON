@@ -127,16 +127,6 @@ def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
     return state_editor_ctrl, time_waited
 
 
-def list_store_id_dict(store):
-    id = 0
-    list_store_id = {}
-    for row in store:
-        # Print values of all columns
-        list_store_id[row[0]] = id
-        id += 1
-    return list_store_id
-
-
 def check_state_editor_models(sm_m, parent_state_m, main_window_controller, logger):
     sleep_time_max = 5.0
     states_editor_controller = main_window_controller.get_controller('states_editor_ctrl')

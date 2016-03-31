@@ -51,9 +51,8 @@ def on_save_activate(state_machine_m, logger):
         return
 
     logger.debug("Saving state machine to {0}".format(save_path))
-    storage.save_statemachine_to_path(
-        state_machine_m.state_machine,
-        state_machine_m.state_machine.file_system_path, delete_old_state_machine=True)
+    storage.save_statemachine_to_path(state_machine_m.state_machine,
+                                      state_machine_m.state_machine.file_system_path, delete_old_state_machine=True)
 
     state_machine_m.root_state.store_meta_data()
     logger.debug("Successfully saved graphics meta data.")
@@ -69,7 +68,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
                 print_states(child_state)
     print_states(sm_model.state_machine.root_state)
 
-    print "do SAVEING OF STATEMACHINE"
+    print "do SAVING OF STATEMACHINE"
     if with_gui:
         sm_model.state_machine.file_system_path = path
         print "by Menubar_ctrl"
@@ -305,7 +304,6 @@ def create_models(*args, **kargs):
     ctr_state.add_output_data_port("result", "str", "default_value2")
 
     scoped_variable1_ctr_state = ctr_state.add_scoped_variable("scoped", "str", "default_value1")
-    scoped_variable2_ctr_state = ctr_state.add_scoped_variable("my_var", "str", "default_value1")
     scoped_variable3_ctr_state = ctr_state.add_scoped_variable("ctr", "int", 42)
 
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
@@ -322,7 +320,7 @@ def create_models(*args, **kargs):
     print "with_prints is: ", sm_m.history.with_prints
     sm_m.history.with_prints = False
     # return ctr_state, sm_m, state_dict
-    return logger, ctr_state, sm_m, state_dict
+    return logger, sm_m, state_dict
 
 
 def get_state_model_by_path(state_model, path):
@@ -374,27 +372,15 @@ def test_add_remove_history(caplog):
     # remove data_flow
 
     # create testbed
-    [logger, state, sm_model, state_dict] = create_models()
+    [logger, sm_model, state_dict] = create_models()
 
-    import rafcon
     state_machine_path = TEST_PATH + '_test_add_remove'
     save_state_machine(sm_model, state_machine_path + '_before', logger, with_gui=False, menubar_ctrl=None)
-
-    def store_state_machine(sm_model, path):
-        storage.save_statemachine_to_path(sm_model.state_machine, path, delete_old_state_machine=True)
-        sm_model.root_state.store_meta_data()
 
     sm_history = sm_model.history
 
     state1 = HierarchyState('state1', state_id='STATE1')
-    input_state1 = state1.add_input_data_port("input", "str", "zero")
-    output_state1 = state1.add_output_data_port("output", "int")
-    output_count_state1 = state1.add_output_data_port("count", "int")
-
     state2 = ExecutionState('state2', state_id='STATE2')
-    input_par_state2 = state2.add_input_data_port("par", "int", 0)
-    input_number_state2 = state2.add_input_data_port("number", "int", 5)
-    output_res_state2 = state2.add_output_data_port("res", "int")
 
     state_dict['Nested'].add_state(state1)
     state_dict['Nested'].add_state(state2)
@@ -734,7 +720,7 @@ def test_state_property_modifications_history(caplog):
     # change child_execution
 
     # create testbed
-    [logger, state, sm_model, state_dict] = create_models()
+    [logger, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
     input_state1 = state1.add_input_data_port("input", "str", "zero")
@@ -882,12 +868,11 @@ def test_outcome_property_modifications_history(caplog):
     # change name
 
     # create testbed
-    [logger, state, sm_model, state_dict] = create_models()
+    [logger, sm_model, state_dict] = create_models()
 
     def do_check_for_state(state_dict, state_name='Nested'):
         ####################################################
         # modify outcome and generate in previous a observer
-        outcome_models_observer_dict = {}
         for outcome_id, outcome in state_dict['Nested2'].outcomes.iteritems():
             if not outcome_id < 0:
                 outcome.name = "new_name_" + str(outcome_id)
@@ -902,7 +887,6 @@ def test_outcome_property_modifications_history(caplog):
 
         ####################################################
         # modify outcome
-        outcome_models_observer_dict = {}
         for outcome_id, outcome in state_dict['Nested'].outcomes.iteritems():
             outcome.name = "new_name_" + str(outcome_id)
             sm_model.history.undo()
@@ -957,7 +941,7 @@ def test_transition_property_modifications_history(caplog):
     # modify_transition_to_state
 
     # create testbed
-    [logger, state, sm_model, state_dict] = create_models()
+    [logger, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
     outcome_again_state1 = state1.add_outcome("again")
@@ -971,10 +955,8 @@ def test_transition_property_modifications_history(caplog):
     oc_full_state2 = state2.add_outcome("full")
     # assert False
 
-    new_trans_id = state_dict['Nested'].add_transition(from_state_id=state1.state_id,
-                                                       from_outcome=outcome_again_state1,
-                                                       to_state_id=state1.state_id,
-                                                       to_outcome=None)
+    new_trans_id = state_dict['Nested'].add_transition(from_state_id=state1.state_id, from_outcome=outcome_again_state1,
+                                                       to_state_id=state1.state_id, to_outcome=None)
 
     # modify_origin(self, from_state, from_outcome)
     state_dict['Nested'].transitions[new_trans_id].modify_origin(from_state=state2.state_id,
@@ -1058,7 +1040,7 @@ def test_input_port_modify_notification(caplog):
     # change datatype
 
     # create testbed
-    [logger, state, sm_model, state_dict] = create_models()
+    [logger, sm_model, state_dict] = create_models()
     new_input_data_port_id = state_dict['Nested2'].add_input_data_port(name='new_input', data_type='str')
     sm_model.history.undo()
     sm_model.history.redo()
@@ -1106,7 +1088,7 @@ def test_output_port_modify_notification(caplog):
     # change datatype
 
     # create testbed
-    [logger, state, sm_model, state_dict] = create_models()
+    [logger, sm_model, state_dict] = create_models()
     new_output_data_port_id = state_dict['Nested2'].add_output_data_port(name='new_output', data_type='str')
 
     ################################
@@ -1151,7 +1133,7 @@ def test_scoped_variable_modify_notification(caplog):
     # change datatype
 
     # create testbed
-    [logger, state, sm_model, state_dict] = create_models()
+    [logger, sm_model, state_dict] = create_models()
     new_scoped_variable_id = state_dict['Nested'].add_scoped_variable(name='new_output', data_type='str')
 
     ################################
@@ -1211,7 +1193,7 @@ def test_data_flow_property_modifications_history(caplog):
     # modify_transition_to_state
 
     # create testbed
-    [logger, ctr_state, sm_model, state_dict] = create_models()
+    [logger, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
@@ -1321,7 +1303,7 @@ def test_type_modifications_without_gui(caplog):
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
     print "create model"
-    [logger, state, sm_m, state_dict] = create_models()
+    [logger, sm_m, state_dict] = create_models()
     print "init libs"
     testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
@@ -1345,7 +1327,7 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     global_gui_config.load()  # load the default config
     time.sleep(1)
     print "create model"
-    [logger, state, sm_m, state_dict] = create_models()
+    [logger, sm_m, state_dict] = create_models()
     print "init libs"
     testing_utils.remove_all_libraries()
     if testing_utils.sm_manager_model is None:
@@ -1381,7 +1363,7 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     global_gui_config.load()  # load the default config
     time.sleep(1)
     print "create model"
-    [logger, state, sm_m, state_dict] = create_models()
+    [logger, sm_m, state_dict] = create_models()
     print "init libs"
     testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
@@ -1393,14 +1375,12 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     if with_gui:
         print "initialize MainWindow"
         main_window_view = MainWindowView()
-
         main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                       editor_type='LogicDataGrouped')
-
         print "start thread"
         thread = threading.Thread(target=trigger_state_type_change_typical_bug_tests,
-                                  args=[testing_utils.sm_manager_model, main_window_controller,
-                                        sm_m, state_dict, with_gui, logger])
+                                  args=[testing_utils.sm_manager_model, main_window_controller, sm_m, state_dict,
+                                        with_gui, logger])
         thread.start()
 
         if with_gui:
@@ -1455,9 +1435,7 @@ def trigger_state_type_change_tests(*args):
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
     print "\n\n %s \n\n" % state_m.state.name
-    # call_gui_callback(sm_m.selection.set, [state_m])
     sm_m.selection.set([state_m])
-    # time.sleep(sleep_time_short)
 
     # adjust the transition test
     # TODO finish it
@@ -1540,7 +1518,6 @@ def trigger_state_type_change_tests(*args):
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
     # BCS -> HS
-    [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
     save_state_machine(sm_model, state_machine_path + '_before2', logger, with_gui, menubar_ctrl)
     sm_model.state_machine.file_system_path = state_machine_path
     logger.info("BCS -> HS")
@@ -1938,6 +1915,7 @@ def trigger_state_type_change_tests(*args):
 
     check_elements_ignores.remove("internal_transitions")
     print check_elements_ignores
+
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_typical_bug_tests(*args):
