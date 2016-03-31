@@ -80,11 +80,11 @@
                     <property name="visible">True</property>
                     <child>
                       <object class="GtkVPaned" id="left_bar_pane">
+                        <property name="width_request">38</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <property name="orientation">vertical</property>
-                        <property name="position_set">True</property>
                         <child>
                           <object class="GtkVBox" id="upper_left_sidebar">
                             <property name="visible">True</property>
@@ -99,10 +99,12 @@
                                       <object class="GtkLabel" id="upper_notebook_title">
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
+                                        <property name="xpad">50</property>
                                         <property name="label" translatable="yes">upper_notebook_title</property>
                                       </object>
                                       <packing>
-                                        <property name="padding">53</property>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
                                         <property name="position">0</property>
                                       </packing>
                                     </child>
@@ -119,6 +121,8 @@
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="pack_type">end</property>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
@@ -275,15 +279,13 @@
                                       <object class="GtkLabel" id="lower_notebook_title">
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
+                                        <property name="xpad">50</property>
                                         <property name="label" translatable="yes">lower_notebook_title</property>
                                       </object>
                                       <packing>
-                                        <property name="padding">53</property>
+                                        <property name="expand">False</property>
                                         <property name="position">0</property>
                                       </packing>
-                                    </child>
-                                    <child>
-                                      <placeholder/>
                                     </child>
                                   </object>
                                 </child>
@@ -426,14 +428,13 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="pack_type">end</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
               </object>
               <packing>
                 <property name="resize">False</property>
-                <property name="shrink">True</property>
+                <property name="shrink">False</property>
               </packing>
             </child>
             <child>
@@ -957,7 +958,7 @@
                           </object>
                           <packing>
                             <property name="resize">True</property>
-                            <property name="shrink">True</property>
+                            <property name="shrink">False</property>
                           </packing>
                         </child>
                       </object>
@@ -984,6 +985,7 @@
                 </child>
                 <child>
                   <object class="GtkHBox" id="right_bar_container">
+                    <property name="width_request">53</property>
                     <property name="visible">True</property>
                     <child>
                       <object class="GtkVBox" id="right_bar">
@@ -1023,6 +1025,7 @@
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
+                                    <property name="pack_type">end</property>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
@@ -1067,7 +1070,7 @@
                   </object>
                   <packing>
                     <property name="resize">True</property>
-                    <property name="shrink">True</property>
+                    <property name="shrink">False</property>
                   </packing>
                 </child>
               </object>

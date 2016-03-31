@@ -21,7 +21,7 @@ with_print = False
 
 
 class NotificationLogObserver(Observer):
-    """ This observer is a abstract class to counts and store notification
+    """ This observer is a abstract class to count and store notification
     """
 
     def __init__(self, model, with_print=False):
@@ -56,10 +56,12 @@ class StateNotificationLogObserver(NotificationLogObserver):
     def reset(self):
         self.log = {"before": {'states': [], 'state': [],
                                'outcomes': [], 'input_data_ports': [], 'output_data_ports': [], 'scoped_variables': [],
-                               'transitions': [], 'data_flows': [], 'is_start': []},
+                               'transitions': [], 'data_flows': [], 'is_start': [],
+                               'meta_signal': [], 'state_type_changed_signal': []},
                     "after": {'states': [], 'state': [],
                               'outcomes': [], 'input_data_ports': [], 'output_data_ports': [], 'scoped_variables': [],
-                              'transitions': [], 'data_flows': [], 'is_start': []}}
+                              'transitions': [], 'data_flows': [], 'is_start': [],
+                              'meta_signal': [], 'state_type_changed_signal': []}}
         self.no_failure = True
 
     @Observer.observe('states', before=True)
@@ -97,6 +99,8 @@ class StateNotificationLogObserver(NotificationLogObserver):
     @Observer.observe("transitions", after=True)
     @Observer.observe("data_flows", after=True)
     @Observer.observe("is_start", after=True)
+    @Observer.observe("meta_signal", signal=True)
+    @Observer.observe("state_type_changed_signal", signal=True)
     def notification_after(self, model, prop_name, info):
         if prop_name in self.log['after']:
             self.log['after'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
@@ -130,19 +134,20 @@ class StateNotificationLogObserver(NotificationLogObserver):
                     print 'kwargs'
                 elem['level'].append('kwargs')
                 set_dict(info, elem)
-                find_parent(info['kwargs'], elem)
+                if 'method_name' in info['kwargs']:
+                    find_parent(info['kwargs'], elem)
             elif 'info' in info and info['info']:
                 if self.with_print:
                     print 'info'
                 elem['level'].append('info')
                 set_dict(info, elem)
                 find_parent(info['info'], elem)
-            elif 'info' in info:
-                set_dict(info, elem)
-            elif 'kwargs' in info:
+            elif 'info' in info or 'kwargs' in info:
                 set_dict(info, elem)
             else:
-                print 'NotificationLogger ---> assert !!! Type of notification not known'
+                print info
+                from rafcon.mvc.utils.notification_overview import NotificationOverview
+                print 'NotificationLogger ---> assert !!! Type of notification not known'#\n{0}'.format(NotificationOverview(info))
                 assert True
             return elem
 
@@ -182,10 +187,10 @@ def create_models(*args, **kargs):
     state2 = ExecutionState('State2')
     input_par_state2 = state2.add_input_data_port("par", "int", 0)
     output_res_state2 = state2.add_output_data_port("res", "int")
-    state4 = HierarchyState(name='Nested')
+    state4 = HierarchyState(name='Nested', state_id="NESTED")
     state4.add_outcome('GoGo')
     output_state4 = state4.add_output_data_port("out", "int")
-    state5 = ExecutionState('Nested2')
+    state5 = ExecutionState('Nested2', state_id="NESTED2")
     state5.add_outcome('HereWeGo')
     input_state5 = state5.add_input_data_port("in", "int", 0)
     state3 = HierarchyState(name='State3')
@@ -841,7 +846,7 @@ def test_add_remove_models(caplog):
         outcome_super = state_dict[state_name].add_outcome('super')
         state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
         state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
-        [stored_s_elements, stored_s_m_elements] = store_state_elements(state, state_m)
+        # [stored_s_elements, stored_s_m_elements] = store_state_elements(state, state_m)
         check_state_for_all_models(state, state_m)
 
         ################
@@ -877,7 +882,7 @@ def test_add_remove_models(caplog):
             print pstate.states.keys(), "\n\n"
             # print pstate.state_id, pstate.name, pstate.get_path()
 
-        print_all_states_with_path_and_name(state_dict['Container'])
+        # print_all_states_with_path_and_name(state_dict['Container'])
         # exit(1)
         state4 = sm_model.get_state_model_by_path(state4.get_path()).state
         state5 = sm_model.get_state_model_by_path(state5.get_path()).state
@@ -888,8 +893,10 @@ def test_add_remove_models(caplog):
 
         ################
         # add transition from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id
-        new_transition_id1 = state_dict[state_name].add_transition(from_state_id=state4.state_id, from_outcome=outcome_state4,
-                                                                   to_state_id=state5.state_id, to_outcome=None)
+        new_transition_id1 = state_dict[state_name].add_transition(from_state_id=state4.state_id,
+                                                                   from_outcome=outcome_state4,
+                                                                   to_state_id=state5.state_id,
+                                                                   to_outcome=None)
         check_state_for_all_models(state, state_m)
         state_dict[state_name].add_transition(from_state_id=state5.state_id, from_outcome=outcome_state5,
                                               to_state_id=state_dict[state_name].state_id, to_outcome=-1)
@@ -1445,8 +1452,6 @@ def test_scoped_variable_modify_notification(caplog):
     ################################
     # check for modification of name
     state_dict['Nested'].scoped_variables[new_scoped_variable_id].name = 'changed_new_scoped_var_name'
-    state_dict['Nested'].scoped_variables[new_scoped_variable_id].name = 'changed_new_scoped_var_name'
-    # TODO warum zweimal noetig um keinen fehler in den naechsten undo zu haben
     sm_model.history.undo()
     sm_model.history.redo()
     # resolve reference
@@ -1505,7 +1510,7 @@ def test_data_flow_property_modifications_history(caplog):
     state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
     input_state1 = state1.add_input_data_port("input", "str", "zero")
-    state2 = ExecutionState('State2')
+    state2 = ExecutionState('State2', state_id="STATE2")
     input_par_state2 = state2.add_input_data_port("par", "int", 0)
     output_res_state2 = state2.add_output_data_port("res", "int")
     state_dict['Nested'].add_state(state1)
@@ -1605,4 +1610,4 @@ def test_data_flow_property_modifications_history(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    pytest.main(['-s', __file__])

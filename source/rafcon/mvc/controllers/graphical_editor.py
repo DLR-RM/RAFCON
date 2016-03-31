@@ -667,7 +667,11 @@ class GraphicalEditorController(ExtendedController):
         """
         self.view.editor.emit("expose_event", None)
         rel_pos = self.view.editor.screen_to_opengl_coordinates((x, y))
-        self._move_state(self.model.selection.get_selected_state().states[data.get_text()], rel_pos, combined_action=True)
+        if self.model.selection.get_selected_state() is not None:
+            self._move_state(self.model.selection.get_selected_state().states[data.get_text()], rel_pos,
+                             combined_action=True)
+        else:
+            logger.warning('Could not select state at drag-position received.')
 
     def on_drag_motion(self, widget, context, x, y, time):
         """Changes the selection on mouse over during drag motion

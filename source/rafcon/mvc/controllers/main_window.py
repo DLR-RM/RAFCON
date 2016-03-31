@@ -257,6 +257,8 @@ class MainWindowController(ExtendedController):
         view = self.view[pane_id]
         print "paned position {4} '{1}' is now {0}.{2}|{3}".format(view.get_position(), pane_id,
                                                                    width, height, config_id)
+        # TODO scale panes proportional if window is re-sized
+        # TODO right-bar-pane hold position if left-bar-pane moves or becomes hide
 
     def connect_button_to_function(self, view_index, button_state, function):
         handler_id = self.view[view_index].connect(button_state, function)
@@ -381,15 +383,15 @@ class MainWindowController(ExtendedController):
 
     def on_left_bar_return_clicked(self, widget, event=None):
         self.view['left_bar_return_button'].hide()
-        self.view['top_level_h_pane'].add1(self.left_bar_child)
+        self.view['top_level_h_pane'].pack1(self.left_bar_child, resize=True, shrink=False)
 
     def on_right_bar_return_clicked(self, widget, event=None):
         self.view['right_bar_return_button'].hide()
-        self.view['right_h_pane'].add2(self.right_bar_child)
+        self.view['right_h_pane'].pack2(self.right_bar_child, resize=True, shrink=False)
 
     def on_console_return_clicked(self, widget, event=None):
         self.view['console_return_button'].hide()
-        self.view['central_v_pane'].add2(self.console_child)
+        self.view['central_v_pane'].pack2(self.console_child, resize=True, shrink=False)
 
     def on_left_bar_hide_clicked(self, widget, event=None):
         self.view['top_level_h_pane'].remove(self.left_bar_child)
