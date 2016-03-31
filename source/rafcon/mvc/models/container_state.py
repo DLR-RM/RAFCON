@@ -11,7 +11,7 @@ from rafcon.mvc.models.transition import TransitionModel
 from rafcon.mvc.models.data_flow import DataFlowModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
-from rafcon.mvc.models.abstract_state import state_to_state_model, StateTypeChangeSignalMsg
+from rafcon.mvc.models.abstract_state import get_state_model_class_for_state, StateTypeChangeSignalMsg
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -47,7 +47,7 @@ class ContainerStateModel(StateModel):
         states = container_state.states
         for state in states.itervalues():
             # Create hierarchy
-            model_class = state_to_state_model(state)
+            model_class = get_state_model_class_for_state(state)
             if model_class is not None:
                 self.states[state.state_id] = model_class(state, parent=self)
             else:
@@ -143,7 +143,7 @@ class ContainerStateModel(StateModel):
 
         model_list = None
 
-        def get_model_info(model):
+        def get_model_info(model, info=None):
             model_list = None
             data_list = None
             model_name = ""
@@ -169,19 +169,22 @@ class ContainerStateModel(StateModel):
                 data_list = self.state.states
                 model_name = "state"
                 # Defer state type from class type (Execution, Hierarchy, ...)
-                model_class = state_to_state_model(info.args[1])
+                model_class = None
+                if not isinstance(info.args[1], (str, unicode)) and info.args[1] is not None:
+                    model_class = get_state_model_class_for_state(info.args[1])
                 model_key = "state_id"
             return model_list, data_list, model_name, model_class, model_key
 
-        if "transition" in info.method_name:
+        if info.method_name in ["add_transition", "remove_transition", "transitions"]:
             (model_list, data_list, model_name, model_class, model_key) = get_model_info("transition")
-        elif "data_flow" in info.method_name:
+        elif info.method_name in ["add_data_flow", "remove_data_flow", "data_flows"]:
             (model_list, data_list, model_name, model_class, model_key) = get_model_info("data_flow")
-        elif "state" in info.method_name:
-            (model_list, data_list, model_name, model_class, model_key) = get_model_info("state")
-        elif "scoped_variable" in info.method_name:
+        elif info.method_name in ["add_state", "remove_state", "states"]:
+            (model_list, data_list, model_name, model_class, model_key) = get_model_info("state", info)
+        elif info.method_name in ["add_scoped_variable", "remove_scoped_variable", "scoped_variables"]:
             (model_list, data_list, model_name, model_class, model_key) = get_model_info("scoped_variable")
 
+        # TODO for list assignment of core has to be taken care -> unit-test seems to miss, too
         if model_list is not None:
             if "add" in info.method_name:
                 self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
@@ -214,17 +217,20 @@ class ContainerStateModel(StateModel):
         # After the state has been changed in the core, we create a new model for it with all information extracted
         # from the old state model
         else:  # after
-            # The new state is returned by the core state class method 'change_state_type'
-            new_state = info.result
-            # Create a new state model based on the new state and apply the extracted child models
-            child_models = self.change_state_type.__func__.child_models
-            new_state_m = statemachine_helper.create_state_model_for_state(new_state, child_models)
-            # Set this state model (self) to be the parent of our new state model
-            new_state_m.parent = self
-            # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
-            self.states[state_id] = new_state_m
+            if isinstance(info.result, Exception):
+                logger.exception("Container state type change failed {0}".format(info.result))
+            else:
+                # The new state is returned by the core state class method 'change_state_type'
+                new_state = info.result
+                # Create a new state model based on the new state and apply the extracted child models
+                child_models = self.change_state_type.__func__.child_models
+                new_state_m = statemachine_helper.create_state_model_for_state(new_state, child_models)
+                # Set this state model (self) to be the parent of our new state model
+                new_state_m.parent = self
+                # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
+                self.states[state_id] = new_state_m
 
-            state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
+                state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
 
         info.method_name = 'handled_change_state_type'
         self.model_changed(model, prop_name, info)

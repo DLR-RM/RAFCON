@@ -7,7 +7,7 @@ from rafcon.mvc.models.abstract_state import AbstractStateModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel
 
-from rafcon.mvc.models.abstract_state import state_to_state_model
+from rafcon.mvc.models.abstract_state import get_state_model_class_for_state
 
 from rafcon.statemachine.singleton import library_manager
 
@@ -31,8 +31,7 @@ class LibraryStateModel(AbstractStateModel):
         """
         super(LibraryStateModel, self).__init__(state, parent, meta)
         assert isinstance(state, LibraryState)
-
-        model_class = state_to_state_model(state.state_copy)
+        model_class = get_state_model_class_for_state(state.state_copy)
         if model_class is not None:
             self.state_copy = model_class(state.state_copy, parent=self)
         else:

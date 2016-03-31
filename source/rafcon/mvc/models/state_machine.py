@@ -201,7 +201,7 @@ class StateMachineModel(ModelMT):
         # from the old state model
         else:  # after
             if isinstance(info.result, Exception):
-                logger.error("Root state type change failed")
+                logger.exception("Root state type change failed {0}".format(info.result))
             else:
                 # The new state is returned by the core state class method 'change_state_type'
                 new_state = info.result

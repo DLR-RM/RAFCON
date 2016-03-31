@@ -276,8 +276,8 @@ def create_state_model_for_state(new_state, state_element_models):
     :param state_element_models: All state element and child state models of the original state model
     :return: New state model for new_state with all childs of state_element_models
     """
-    from rafcon.mvc.models.abstract_state import state_to_state_model
-    state_m_class = state_to_state_model(new_state)
+    from rafcon.mvc.models.abstract_state import get_state_model_class_for_state
+    state_m_class = get_state_model_class_for_state(new_state)
     new_state_m = state_m_class(new_state)
 
     # handle special case of BarrierConcurrencyState -> secure decider state model to not be overwritten
