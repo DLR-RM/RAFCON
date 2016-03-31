@@ -229,7 +229,7 @@ class StateTransitionsListController(ExtendedController):
 
     def on_combo_changed_from_outcome(self, widget, path, text):
         # check if the outcome may has not changed or combo is empty
-        if self.tree_store[path][2] == text.split('.')[0] or text is None:
+        if text is None or self.tree_store[path][2] == text.split('.')[0]:
             return
 
         # transition gets modified
@@ -280,7 +280,7 @@ class StateTransitionsListController(ExtendedController):
 
     def on_combo_changed_to_outcome(self, widget, path, text):
         # check if the outcome may has not changed or combo is empty
-        if self.tree_store[path][4] == text.split('.')[1] or text is None:
+        if text is None or self.tree_store[path][4] == text.split('.')[1]:
             return
 
         # transition gets modified
