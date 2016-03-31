@@ -236,11 +236,9 @@ def test_storage_without_gui(caplog):
 def test_storage_with_gui(caplog):
     with_gui = True
     testing_utils.start_rafcon()
-    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     print "create model"
     [logger, state, sm_m, state_dict] = create_models()
     print "init libs"
-    rafcon.statemachine.singleton.library_manager.initialize()
 
     if testing_utils.sm_manager_model is None:
         testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
@@ -251,6 +249,9 @@ def test_storage_with_gui(caplog):
                                                   editor_type='LogicDataGrouped')
 
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+    # Wait for GUI to initialize
+    while gtk.events_pending():
+        gtk.main_iteration(False)
     print "start thread"
     import threading
     thread = threading.Thread(target=save_state_machine,

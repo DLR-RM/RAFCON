@@ -1322,10 +1322,6 @@ def test_type_modifications_without_gui(caplog):
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_machine_modifications_with_gui(with_gui, caplog):
     testing_utils.start_rafcon()
-    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
-    global_config.load()  # load the default config
-    global_gui_config.load()  # load the default config
-    time.sleep(1)
     print "create model"
     [logger, sm_m, state_dict] = create_models()
     print "init libs"
@@ -1337,6 +1333,9 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
+    # Wait for GUI to initialize
+    while gtk.events_pending():
+        gtk.main_iteration(False)
     print "start thread"
     thread = threading.Thread(target=trigger_state_type_change_tests,
                               args=[testing_utils.sm_manager_model, main_window_controller,
@@ -1358,10 +1357,6 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
 def test_state_type_change_bugs_with_gui(with_gui, caplog):
     print "NEW BUG TEST"
     testing_utils.start_rafcon()
-    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
-    global_config.load()  # load the default config
-    global_gui_config.load()  # load the default config
-    time.sleep(1)
     print "create model"
     [logger, sm_m, state_dict] = create_models()
     print "init libs"
@@ -1377,6 +1372,10 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
         main_window_view = MainWindowView()
         main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                       editor_type='LogicDataGrouped')
+        if with_gui:
+            # Wait for GUI to initialize
+            while gtk.events_pending():
+                gtk.main_iteration(False)
         print "start thread"
         thread = threading.Thread(target=trigger_state_type_change_typical_bug_tests,
                                   args=[testing_utils.sm_manager_model, main_window_controller, sm_m, state_dict,
@@ -1402,7 +1401,6 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(*args):
-    print "Wait for the gui to initialize"
     with_gui = bool(args[4])
     # if with_gui:
     #     time.sleep(1.0)
@@ -1919,10 +1917,7 @@ def trigger_state_type_change_tests(*args):
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_typical_bug_tests(*args):
-    print "Wait for the gui to initialize"
     with_gui = bool(args[4])
-    if with_gui:
-        time.sleep(1.0)
     sm_manager_model = args[0]
     main_window_controller = args[1]
     sm_m = args[2]

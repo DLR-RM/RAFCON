@@ -166,9 +166,6 @@ def check_state_editor_models(sm_m, parent_state_m, main_window_controller, logg
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(*args):
-    print "Wait for the gui to initialize"
-    time.sleep(2.0)
-    sm_manager_model = args[0]
     main_window_controller = args[1]
     sm_m = args[2]
     state_dict = args[3]
@@ -236,9 +233,6 @@ def trigger_state_type_change_tests(*args):
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_type_change_test(with_gui, caplog):
     testing_utils.start_rafcon()
-    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
-    global_config.load()  # load the default config
-    global_gui_config.load()  # load the default config
 
     logger, state, gvm_model, sm_m, state_dict = create_models()
 
@@ -257,6 +251,9 @@ def test_state_type_change_test(with_gui, caplog):
 
         main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                       editor_type='LogicDataGrouped')
+        # Wait for GUI to initialize
+        while gtk.events_pending():
+            gtk.main_iteration(False)
     else:
         # load the meta data for the state machine
         testing_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()

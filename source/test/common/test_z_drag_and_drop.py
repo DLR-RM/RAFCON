@@ -69,8 +69,6 @@ def create_models(*args, **kargs):
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_drag_and_drop_tests(*args):
-    print "Wait for the gui to initialize"
-    time.sleep(2.0)
     sm_manager_model = args[0]
     main_window_controller = args[1]
     logger = args[2]
@@ -137,9 +135,6 @@ def trigger_drag_and_drop_tests(*args):
 
 def test_drag_and_drop_test(caplog):
     testing_utils.start_rafcon()
-    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
-    global_config.load()  # load the default config
-    global_gui_config.load()  # load the default config
 
     logger, state, gvm_model, sm_m, state_dict = create_models()
 
@@ -159,6 +154,9 @@ def test_drag_and_drop_test(caplog):
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
 
+    # Wait for GUI to initialize
+    while gtk.events_pending():
+        gtk.main_iteration(False)
     thread = threading.Thread(target=trigger_drag_and_drop_tests,
                               args=[testing_utils.sm_manager_model, main_window_controller, logger])
     thread.start()

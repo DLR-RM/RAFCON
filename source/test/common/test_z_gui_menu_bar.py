@@ -4,7 +4,7 @@ import gtk
 import threading
 import time
 import os
-from os.path import dirname
+from os.path import dirname, join
 
 # general tool elements
 from rafcon.utils import log
@@ -37,7 +37,6 @@ def setup_module(module):
     # set the test_libraries path temporarily to the correct value
     testing_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    print "File: ", dirname(__file__), dirname(dirname(__file__))
     library_paths["ros"] = rafcon.__path__[0] + "/../test_scripts/ros_libraries"
     library_paths["turtle_libraries"] = rafcon.__path__[0] + "/../test_scripts/turtle_libraries"
     library_paths["generic"] = rafcon.__path__[0] + "/../libraries/generic"
@@ -151,8 +150,6 @@ def trigger_gui_signals(*args):
     - Quit GUI
     """
 
-    print "Wait for the gui to initialize"
-    time.sleep(2.0)
     sm_manager_model = args[0]
     main_window_controller = args[1]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
@@ -226,6 +223,13 @@ def trigger_gui_signals(*args):
 
 def test_gui(caplog):
     testing_utils.start_rafcon()
+    testing_utils.remove_all_libraries()
+    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
+    library_paths["ros"] = rafcon.__path__[0] + "/../test_scripts/ros_libraries"
+    library_paths["turtle_libraries"] = rafcon.__path__[0] + "/../test_scripts/turtle_libraries"
+    library_paths["generic"] = rafcon.__path__[0] + "/../libraries/generic"
+    rafcon.statemachine.singleton.library_manager.refresh_libraries()
+
     [logger, ctr_state] = create_models()
     state_machine = StateMachine(ctr_state)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
@@ -233,6 +237,10 @@ def test_gui(caplog):
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
+
+    # Wait for GUI to initialize
+    while gtk.events_pending():
+        gtk.main_iteration(False)
     thread = threading.Thread(target=trigger_gui_signals, args=[testing_utils.sm_manager_model, main_window_controller])
     thread.start()
     gtk.main()

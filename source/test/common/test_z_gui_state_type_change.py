@@ -588,8 +588,6 @@ def trigger_state_type_change_tests(*args):
 
     :param args:
     """
-    print "Wait for the gui to initialize"
-    time.sleep(2.0)
     sm_manager_model = args[0]
     main_window_controller = args[1]
     sm_m = args[2]
@@ -678,9 +676,6 @@ def trigger_state_type_change_tests(*args):
 def test_state_type_change_test(caplog):
     with_gui = True
     testing_utils.start_rafcon()
-    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
-    global_config.load()  # load the default config
-    global_gui_config.load()  # load the default config
 
     logger, state, gvm_model, sm_m, state_dict = create_models()
     testing_utils.remove_all_libraries()
@@ -691,6 +686,11 @@ def test_state_type_change_test(caplog):
         # load the meta data for the state machine
         main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                       editor_type='LogicDataGrouped')
+
+    if with_gui:
+        # Wait for GUI to initialize
+        while gtk.events_pending():
+            gtk.main_iteration(False)
     thread = threading.Thread(target=trigger_state_type_change_tests,
                               args=[testing_utils.sm_manager_model, main_window_controller, sm_m, state_dict, with_gui,
                                     logger])

@@ -45,8 +45,6 @@ def create_models():
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(*args):
-    print "Wait for the gui to initialize"
-    time.sleep(2.0)
     main_window_controller = args[0]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
@@ -81,7 +79,6 @@ def trigger_gui_signals(*args):
 
 def test_backward_stepping(caplog):
     testing_utils.start_rafcon()
-    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     logger, gvm_model = create_models()
     state_machine = storage.load_statemachine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines"
                                                                                        "/backward_step_barrier_test"))
@@ -92,6 +89,10 @@ def test_backward_stepping(caplog):
 
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type="LogicDataGrouped")
+
+    # Wait for GUI to initialize
+    while gtk.events_pending():
+        gtk.main_iteration(False)
     thread = threading.Thread(target=trigger_gui_signals, args=[main_window_controller])
     thread.start()
     gtk.main()

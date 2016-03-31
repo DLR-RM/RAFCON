@@ -1,10 +1,13 @@
+import signal
 import tempfile
-from os.path import join, dirname
-from os import mkdir, chdir
+from os import mkdir, chdir, environ
+from os.path import join, dirname, realpath
 from threading import Lock, Condition
 
 import rafcon
 from rafcon.utils import log, constants
+from rafcon.statemachine.config import global_config
+from rafcon.mvc.config import global_gui_config
 
 
 test_multithrading_lock = Lock()
@@ -15,7 +18,7 @@ try:
 except OSError:  # Raised when directory is already existing, thus can be ignored
     pass
 
-RAFCON_PATH = rafcon.__path__[0]
+RAFCON_PATH = realpath(rafcon.__path__[0])
 TEST_SM_PATH = join(dirname(RAFCON_PATH), 'test_scripts')
 
 
@@ -41,6 +44,7 @@ def remove_all_libraries():
     libs = [lib for lib in library_paths]
     for lib in libs:
         del library_paths[lib]
+    rafcon.statemachine.singleton.library_manager.initialize()
 
 
 def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_errors=0):
@@ -91,8 +95,12 @@ def call_gui_callback(callback, *args):
 
 def start_rafcon():
     test_multithrading_lock.acquire()
+    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
+    global_config.load()
+    global_gui_config.load()
+    environ['RAFCON_LIB_PATH'] = join(dirname(RAFCON_PATH), 'libraries')
+    rafcon.statemachine.singleton.library_manager.initialize()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     chdir(rafcon.__path__[0] + "/mvc")
-    rafcon.statemachine.singleton.library_manager.initialize()
 
 sm_manager_model = None

@@ -47,8 +47,6 @@ def get_stored_window_position(window_key):
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_docking_signals(*args):
-    print "Wait for the gui to initialize"
-    time.sleep(1.0)
     main_window_controller = args[0]
     menu_bar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     condition = threading.Condition()
@@ -102,8 +100,6 @@ def trigger_docking_signals(*args):
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_pane_signals(*args):
-    print "Wait for the gui to initialize"
-    time.sleep(1.0)
     mw_ctrl = args[0]
     menu_bar_ctrl = mw_ctrl.get_controller('menu_bar_controller')
     condition = threading.Condition()
@@ -162,6 +158,9 @@ def test_window_positions(caplog):
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
+    # Wait for GUI to initialize
+    while gtk.events_pending():
+        gtk.main_iteration(False)
     thread = threading.Thread(target=trigger_docking_signals, args=[main_window_controller])
     thread.start()
 
@@ -180,6 +179,9 @@ def test_pane_positions(caplog):
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
                                                   editor_type='LogicDataGrouped')
+    # Wait for GUI to initialize
+    while gtk.events_pending():
+        gtk.main_iteration(False)
     thread = threading.Thread(target=trigger_pane_signals, args=[main_window_controller])
     thread.start()
 
