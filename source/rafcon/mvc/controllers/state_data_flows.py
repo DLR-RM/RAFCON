@@ -493,8 +493,8 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                 from_state = model.state
                 from_state_label = 'self.' + model.state.name + '.' + data_flow.from_state
             else:
-                if take_from_dict(model.states, data_flow.from_state):
-                    from_state = take_from_dict(model.states, data_flow.from_state).state
+                if take_from_dict(model.state.states, data_flow.from_state):
+                    from_state = take_from_dict(model.state.states, data_flow.from_state)
                     from_state_label = from_state.name + '.' + data_flow.from_state
                 else:
                     # print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
@@ -505,8 +505,8 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                 to_state = model.state
                 to_state_label = 'self.' + model.state.name + '.' + data_flow.to_state
             else:
-                if take_from_dict(model.states, data_flow.to_state):
-                    to_state = take_from_dict(model.states, data_flow.to_state).state
+                if take_from_dict(model.state.states, data_flow.to_state):
+                    to_state = take_from_dict(model.state.states, data_flow.to_state)
                     to_state_label = to_state.name + '.' + data_flow.to_state
                 else:
                     # print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
@@ -595,8 +595,8 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                     from_state = model.parent.state
                     from_state_label = 'parent.' + model.parent.state.name + '.' + data_flow.from_state
                 else:
-                    if take_from_dict(model.parent.states, data_flow.from_state):
-                        from_state = take_from_dict(model.parent.states, data_flow.from_state).state
+                    if take_from_dict(model.parent.state.states, data_flow.from_state):
+                        from_state = take_from_dict(model.parent.state.states, data_flow.from_state)
                         from_state_label = from_state.name + '.' + data_flow.from_state
                     else:
                         # print "#", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
@@ -612,8 +612,8 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                     to_state = model.parent.state
                     to_state_label = 'parent.' + model.parent.state.name + '.' + data_flow.to_state
                 else:
-                    if take_from_dict(model.parent.states, data_flow.to_state):
-                        to_state = take_from_dict(model.parent.states, data_flow.to_state).state
+                    if take_from_dict(model.parent.state.states, data_flow.to_state):
+                        to_state = take_from_dict(model.parent.state.states, data_flow.to_state)
                         to_state_label = to_state.name + '.' + data_flow.to_state
                     else:
                         # print "##", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
