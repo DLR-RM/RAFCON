@@ -52,8 +52,6 @@ class StateMachineTreeController(ExtendedController):
         self.__my_selected_sm_id = None
         self._selected_sm_model = None
 
-        self.no_cursor_selection = False
-
         self.__buffered_root_state = None  # needed to handle exchange of root_state
         self.__expansion_state = {}
 
@@ -62,6 +60,7 @@ class StateMachineTreeController(ExtendedController):
     def register_view(self, view):
         """Called when the view was registered"""
         self.view.connect('cursor-changed', self.on_cursor_changed)
+        self.view.connect('button_press_event', self.mouse_click)
         self.view_is_registered = True
         self.update(with_expand=True)
 
@@ -80,7 +79,6 @@ class StateMachineTreeController(ExtendedController):
 
     def register(self):
         """Change the state machine that is observed for new selected states to the selected state machine."""
-        # print "state_machine_tree register state_machine"
         # relieve old models
         if self.__my_selected_sm_id is not None:  # no old models available
             self.relieve_model(self.__buffered_root_state)
@@ -120,35 +118,10 @@ class StateMachineTreeController(ExtendedController):
 
         if overview['prop_name'][-1] == 'state' and \
                         overview['method_name'][-1] in ["name"]:  # , "add_state", "remove_state"]:
-            # print "do update", model.state.name
-            # self.update(model)
             self.update_tree_store_row(overview['model'][-1])
         elif overview['prop_name'][-1] == 'state' and \
                 overview['method_name'][-1] in ["add_state", "remove_state", "change_state_type"]:
-            # self.store_expansion_state()
             self.update(model)
-            # self.redo_expansion_state(info)
-            # self.update_tree_store_row(overview['model'][-1])
-        else:
-            if not overview['prop_name'][-1] == 'state' or \
-                    overview['prop_name'][-1] == 'state' and \
-                    overview['method_name'][-1] in ["add_input_data_port", "remove_input_data_port",
-                                                    "add_output_data_port", "remove_output_data_port",
-                                                    "add_scoped_variable", "remove_scoped_variable",
-                                                    "add_outcome", "remove_outcome",
-                                                    "add_data_flow", "remove_data_flow",
-                                                    "add_transition", "remove_transition", "parent",
-                                                    "input_data_ports", "output_data_ports", "outcomes", "description",
-                                                    "scoped_variables", "data_flows", "transitions",  # ContainerState
-                                                    "state_execution_status", "script_text",
-                                                    'library_name', 'library_path', 'version', 'state_copy',  # LibraryState
-                                                    'input_data_port_runtime_values', 'output_data_port_runtime_values',
-                                                    'use_runtime_value_input_data_ports', 'use_runtime_value_output_data_ports',
-                                                    'set_input_runtime_value', 'set_output_runtime_value',
-                                                    'set_use_input_runtime_value', 'set_use_output_runtime_value']:
-                return
-            else:
-                logger.error(overview)
 
     @ExtendedController.observe("root_state", assign=True)
     def state_machine_notification(self, model, property, info):
@@ -295,7 +268,7 @@ class StateMachineTreeController(ExtendedController):
     def on_cursor_changed(self, widget):
         (model, row) = self.view.get_selection().get_selected()
         logger.debug("The view jumps to the selected state and the zoom should be adjusted as well")
-        if row is not None and not self.no_cursor_selection:
+        if row is not None:
             state_model = model[row][3]
             self._selected_sm_model.selection.clear()
 
@@ -303,6 +276,25 @@ class StateMachineTreeController(ExtendedController):
             self.view.expand_to_path(state_row_path)
 
             self._selected_sm_model.selection.add(state_model)
+
+    def mouse_click(self, widget, event=None):
+        # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}"
+        #             "".format(event.button, gtk.gdk.BUTTON_PRESS, event.type == gtk.gdk._2BUTTON_PRESS,
+        #                       event.type == gtk.gdk.BUTTON_PRESS, event.button == 1))
+        (model, row) = self.view.get_selection().get_selected()
+        if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
+            state_model = model[row][3]
+            # logger.info("left double click event detected -> unfold state tree: {0}/{1}".format(model[row][2],
+            #                                                                                     model[row][0]))
+            state_row_path = self.tree_store.get_path(row)
+            if state_row_path is not None:
+                if self.view.row_expanded(state_row_path):
+                    self.view.collapse_row(state_row_path)
+                else:
+                    if isinstance(state_model, ContainerStateModel):
+                        self.view.expand_to_path(state_row_path)
+
+            return True
 
     @ExtendedController.observe("selection", after=True)
     def assign_notification_selection(self, model, prop_name, info):
@@ -328,13 +320,8 @@ class StateMachineTreeController(ExtendedController):
                 if not selected_path == actual_path:
                     # logger.debug("reselect state machine tree-selection")
                     # if single selection-mode is set no un-select is needed
-                    # self.view.get_selection().unselect_path(actual_path)
-                    # self.no_cursor_selection = True
                     self.view.expand_to_path(selected_path)
                     self.view.get_selection().select_iter(selected_iter)
-                    # self.no_cursor_selection = False
 
-                    # # work around to force selection to state-editor
-                    # self._selected_sm_model.selection.set([self._selected_sm_model.selection.get_selected_state()])
             except (TypeError, KeyError):
                 logger.error("Could not update selection")
