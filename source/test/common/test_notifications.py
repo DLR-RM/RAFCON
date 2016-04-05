@@ -393,6 +393,11 @@ def setup_observer_dict_for_state_model(state_model, with_print=False):
 
 def check_count_of_model_notifications(model_observer, forecast_dict):
     number_of_all_notifications = 0
+    # check if there are unforseen notifications
+    print "BEFORE: \n", '\n'.join([str(elem[0]) + '\n\t' + '\n\t'.join([str(el) for el in elem[1]])
+                                   for elem in model_observer.log['before'].iteritems() if len(elem) > 0])
+    print "\nAFTER: \n", '\n'.join([str(elem[0]) + '\n\t' + '\n\t'.join([str(el) for el in elem[1]])
+                                    for elem in model_observer.log['after'].iteritems() if len(elem) > 0])
     for prop_name, nr_of_notifications in forecast_dict.iteritems():
         if 'parent' in forecast_dict:
             print model_observer
@@ -405,15 +410,19 @@ def check_count_of_model_notifications(model_observer, forecast_dict):
         assert len(model_observer.log['after'][prop_name]) == nr_of_notifications
         number_of_all_notifications += 2*nr_of_notifications
     # check if there are unforseen notifications
-    # for key, elem in model_observer.log['before'].iteritems():
-    #     print key, "      ", elem, "\n"
-    # print "\n\n\n\n\n"
-    # for key, elem in model_observer.log['after'].iteritems():
-    #     print key, "      ", elem, "\n"
-    print model_observer.log
+    print "BEFORE: \n", '\n'.join([str(elem[0]) + '\n\t' + '\n\t'.join([str(el) for el in elem[1]])
+                                   for elem in model_observer.log['before'].iteritems() if len(elem) > 0])
+    print "\nAFTER: \n", '\n'.join([str(elem[0]) + '\n\t' + '\n\t'.join([str(el) for el in elem[1]])
+                                    for elem in model_observer.log['after'].iteritems() if len(elem) > 0])
     print "over all estimated: %s and occured %s" % (number_of_all_notifications, model_observer.get_number_of_notifications())
     assert model_observer.get_number_of_notifications() == number_of_all_notifications
     assert model_observer.no_failure
+
+
+def full_observer_dict_reset(observer_dict):
+        for path, state_m_observer in observer_dict.iteritems():
+            state_m_observer.reset()
+        return 0
 
 
 def test_outcome_add_remove_notification(caplog):
@@ -437,8 +446,7 @@ def test_outcome_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
-    for path, state_m_observer in states_observer_dict.iteritems():
-        state_m_observer.reset()
+    full_observer_dict_reset(states_observer_dict)
 
     ################
     # remove outcome
@@ -503,8 +511,7 @@ def test_outcome_modify_notification(caplog):
             assert outcome_model_observer.get_number_of_notifications() == 0
 
     # reset observers
-    for path, state_m_observer in states_observer_dict.iteritems():
-        state_m_observer.reset()
+    full_observer_dict_reset(states_observer_dict)
 
     ##########################
     # check for ContainerState -> should be unnecessary
@@ -560,8 +567,7 @@ def test_input_port_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
-    for path, state_m_observer in states_observer_dict.iteritems():
-        state_m_observer.reset()
+    full_observer_dict_reset(states_observer_dict)
 
     ########################
     # remove input_data_port
@@ -670,8 +676,7 @@ def test_output_port_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
-    for path, state_m_observer in states_observer_dict.iteritems():
-        state_m_observer.reset()
+    full_observer_dict_reset(states_observer_dict)
 
     #########################
     # remove output data port
@@ -782,8 +787,7 @@ def test_scoped_variable_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
-    for path, state_m_observer in states_observer_dict.iteritems():
-        state_m_observer.reset()
+    full_observer_dict_reset(states_observer_dict)
 
     ########################
     # remove scoped variable
@@ -940,8 +944,7 @@ def test_data_flow_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
-    for path, state_m_observer in states_observer_dict.iteritems():
-        state_m_observer.reset()
+    full_observer_dict_reset(states_observer_dict)
 
     ################
     # remove data_flow
@@ -1047,8 +1050,7 @@ def test_data_flow_modify_notification(caplog):
                                                    to_state_id=state_dict['Nested'].state_id,
                                                    to_data_port_id=output_res_nested)
 
-    for path, state_m_observer in states_m_observer_dict.iteritems():
-        state_m_observer.reset()
+    full_observer_dict_reset(states_m_observer_dict)
     data_flow_model = None
     for df_model in state_model_nested.data_flows:
         if df_model.data_flow.data_flow_id == new_df_id:
@@ -1109,8 +1111,7 @@ def test_transition_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 2})
 
-    for path, state_m_observer in states_observer_dict.iteritems():
-        state_m_observer.reset()
+    full_observer_dict_reset(states_observer_dict)
 
     ###################
     # remove transition
@@ -1214,8 +1215,7 @@ def test_transition_modify_notification(caplog):
                                                     to_state_id=state1.state_id,
                                                     to_outcome=None)
 
-    for path, state_m_observer in states_m_observer_dict.iteritems():
-        state_m_observer.reset()
+    full_observer_dict_reset(states_m_observer_dict)
     transition_model = None
     for df_model in state_model_nested.transitions:
         if df_model.transition.transition_id == new_df_id:
@@ -1276,8 +1276,7 @@ def test_state_add_remove_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 2})
 
-    for path, state_m_observer in states_observer_dict.iteritems():
-        state_m_observer.reset()
+    forecast = full_observer_dict_reset(states_observer_dict)
 
     ##############
     # remove State
@@ -1352,7 +1351,10 @@ def test_state_property_modify_notification(caplog):
         state_model_observer = states_observer_dict[state_dict[sub_state_name].get_path()]
         check_dict = {'state': forecast}
         check_dict.update(child_effects)
+        print state_model_observer.log["before"]
+        print state_model_observer.log["after"]
         check_count_of_model_notifications(state_model_observer, check_dict)
+
 
         # check parent
         num_child_effects = 0
@@ -1367,7 +1369,6 @@ def test_state_property_modify_notification(caplog):
         # check grand parent
         state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
         check_count_of_model_notifications(state_model_observer, check_dict)
-
 
     # create testbed
     [state, sm_model, state_dict] = create_models()
@@ -1412,27 +1413,41 @@ def test_state_property_modify_notification(caplog):
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
 
     # input_data_ports(self, input_data_ports) None or dict
-    state_dict['Nested'].input_data_ports = None
+    forecast = full_observer_dict_reset(states_observer_dict)
+    new_dict = {}
+    nr_of_old_elements = len(state_dict['Nested'].input_data_ports)
+    nr_of_new_elements = len(new_dict)
+    state_dict['Nested'].input_data_ports = new_dict
     forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
+    state_m_observer = states_observer_dict[state_dict['Nested'].get_path()]
+    check_count_of_model_notifications(state_m_observer, {'state': forecast, 'input_data_ports': nr_of_new_elements+nr_of_old_elements})
 
     # output_data_ports(self, output_data_ports) None or dict
-    state_dict['Nested'].output_data_ports = None
+    forecast = full_observer_dict_reset(states_observer_dict)
+    new_dict = {}
+    nr_of_old_elements = len(state_dict['Nested'].output_data_ports)
+    nr_of_new_elements = len(new_dict)
+    state_dict['Nested'].output_data_ports = new_dict
     forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
+    state_m_observer = states_observer_dict[state_dict['Nested'].get_path()]
+    check_count_of_model_notifications(state_m_observer, {'state': forecast, 'output_data_ports': nr_of_new_elements+nr_of_old_elements})
 
     # outcomes(self, outcomes) None or dict
-    # state_dict['Nested'].outcomes = None
-    # forecast += 4
+    forecast = full_observer_dict_reset(states_observer_dict)
+    new_dict = {}
+    nr_of_old_elements = len(state_dict['Nested'].outcomes)
+    nr_of_new_elements = len(new_dict)
+    state_dict['Nested'].outcomes = new_dict
+    forecast += 1
+    nr_of_old_elements += len(state_dict['Nested'].outcomes)
+    nr_of_new_elements += len(state_dict['Nested'].outcomes)
     state_dict['Nested'].outcomes = state_dict['Nested'].outcomes
     forecast += 1
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast,
-                               child_effects={'outcomes': 5})
+    state_m_observer = states_observer_dict[state_dict['Nested'].get_path()]
+    check_count_of_model_notifications(state_m_observer, {'state': forecast, 'outcomes': nr_of_new_elements+nr_of_old_elements})
 
     # Observer reset
-    for path, state_m_observer in states_observer_dict.iteritems():
-        state_m_observer.reset()
-    forecast = 0
+    forecast = full_observer_dict_reset(states_observer_dict)
 
     # script(self, script) Script -> script - setter is removed from
     if isinstance(state_dict['Nested2'], ExecutionState):
@@ -1441,9 +1456,7 @@ def test_state_property_modify_notification(caplog):
     check_states_notifications(states_observer_dict, sub_state_name='Nested2', forecast=forecast)
 
     # Observer reset
-    for path, state_m_observer in states_observer_dict.iteritems():
-        state_m_observer.reset()
-    forecast = 0
+    forecast = full_observer_dict_reset(states_observer_dict)
 
     # description(self, description) str
     state_dict['Nested'].description = "awesome"
@@ -1452,8 +1465,7 @@ def test_state_property_modify_notification(caplog):
 
     ############################################
     ###### Properties of ContainerState ########
-    for path, state_m_observer in states_observer_dict.iteritems():
-        state_m_observer.reset()
+    full_observer_dict_reset(states_observer_dict)
 
     # set_start_state(self, state) State or state_id
     state_dict['Nested'].set_start_state(state1.state_id)
@@ -1471,9 +1483,7 @@ def test_state_property_modify_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
     # Observer reset
-    for path, state_m_observer in states_observer_dict.iteritems():
-        state_m_observer.reset()
-    forecast = 0
+    forecast = full_observer_dict_reset(states_observer_dict)
 
     # set_start_state(self, state) State or state_id
     state_dict['Nested'].set_start_state(state2.state_id)
@@ -1490,34 +1500,43 @@ def test_state_property_modify_notification(caplog):
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
     check_count_of_model_notifications(state_model_observer, {'states': 2})
 
-    # Observer reset
-    for path, state_m_observer in states_observer_dict.iteritems():
-        state_m_observer.reset()
-    forecast = 0
-
     # states(self, states) None or dict
-    state_dict['Nested'].states = None
-    forecast += 4
-    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast, child_effects={
-        'states': 2, 'transitions': 1})
-
-    # transitions(self, transitions) None or dict
-    state_dict['Nested'].transitions = None
+    forecast = full_observer_dict_reset(states_observer_dict)
+    state_dict['Nested'].states = {}
     forecast += 1
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast, child_effects={
-        'states': 2, 'transitions': 1})
+        'states': 2})
+
+    # input_data_ports(self, input_data_ports) None or dict
+    forecast = full_observer_dict_reset(states_observer_dict)
+    new_dict = {}
+    nr_of_old_elements = len(state_dict['Nested'].transitions)
+    nr_of_new_elements = len(new_dict)
+    # transitions(self, transitions) None or dict
+    state_dict['Nested'].transitions = new_dict
+    forecast += 1
+    check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast, child_effects={
+        'transitions': nr_of_old_elements + nr_of_new_elements})
 
     # data_flows(self, data_flows) None or dict
-    state_dict['Nested'].data_flows = None
+    forecast = full_observer_dict_reset(states_observer_dict)
+    new_dict = {}
+    nr_of_old_elements = len(state_dict['Nested'].data_flows)
+    nr_of_new_elements = len(new_dict)
+    state_dict['Nested'].data_flows = new_dict
     forecast += 1
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast, child_effects={
-        'states': 2, 'transitions': 1})
+        'data_flows': nr_of_old_elements + nr_of_new_elements})
 
     # scoped_variables(self, scoped_variables) None or dict
-    state_dict['Nested'].scoped_variables = None
+    forecast = full_observer_dict_reset(states_observer_dict)
+    new_dict = {}
+    nr_of_old_elements = len(state_dict['Nested'].scoped_variables)
+    nr_of_new_elements = len(new_dict)
+    state_dict['Nested'].scoped_variables = new_dict
     forecast += 1
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast, child_effects={
-        'states': 2, 'transitions': 1})
+        'scoped_variables': nr_of_old_elements + nr_of_new_elements})
 
     # Observer reset
     for path, state_m_observer in states_observer_dict.iteritems():

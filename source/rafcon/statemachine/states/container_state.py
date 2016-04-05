@@ -59,10 +59,10 @@ class ContainerState(State):
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
 
-        self.scoped_variables = scoped_variables
-        self.states = states
-        self.transitions = transitions
-        self.data_flows = data_flows
+        self.scoped_variables = scoped_variables if scoped_variables is not None else {}
+        self.states = states if states is not None else {}
+        self.transitions = transitions if transitions is not None else {}
+        self.data_flows = data_flows if data_flows is not None else {}
         if start_state_id is not None:
             self.start_state_id = start_state_id
 
@@ -1207,19 +1207,27 @@ class ContainerState(State):
     @states.setter
     @Observable.observed
     def states(self, states):
-        # First safely remove all existing states (recursively!), as they will be replaced
-        state_ids = self.states.keys()
-        for state_id in state_ids:
-            self.remove_state(state_id)
-        if states is not None:
-            if not isinstance(states, dict):
-                raise TypeError("states must be of type dict")
-            for state in states.itervalues():
-                self.add_state(state)
-            #     if not isinstance(state, State):
-            #         raise TypeError("element of container_state.states must be of type State")
-            #     state.parent = self
-            # self._states = states
+        """ The method mirrors states to be ContainerState.states which is a dict. The method checks if the elements are
+        of the right type  or will cancel the operation and recover old outcomes. The method does check validity of
+        the elements by calling the parent-setter.
+        :param states: Dictionary of States
+        :return:
+        """
+        if not isinstance(states, dict):
+            raise TypeError("states must be of type dict")
+        if [state_id for state_id, state in states.iteritems() if not isinstance(state, State)]:
+            raise TypeError("element of container_state.states must be of type State")
+        if [state_id for state_id, state in states.iteritems() if not state_id == state.state_id]:
+            raise AttributeError("The key of the state dictionary and the id of the state do not match")
+
+        old_states = self._states
+        self._states = states
+        for state_id, state in states.iteritems():
+            try:
+                state.parent = self
+            except ValueError:
+                self._states = old_states
+                raise
 
     @property
     def transitions(self):
@@ -1231,18 +1239,27 @@ class ContainerState(State):
     @transitions.setter
     @Observable.observed
     def transitions(self, transitions):
-        # First safely remove all existing transitions, as they will be replaced
-        transition_ids = self.transitions.keys()
-        for transition_id in transition_ids:
-            self.remove_transition(transition_id)
-        if transitions is not None:
-            if not isinstance(transitions, dict):
-                raise TypeError("transitions must be of type dict")
-            for transition in transitions.itervalues():
-                if not isinstance(transition, Transition):
-                    raise TypeError("element of transitions must be of type Transition")
+        """ The method substitutes ContainerState.transitions with dictionary transitions.  The method checks if the
+        elements are of the right type and the keys consistent. The method does check validity of the elements by
+        calling the parent-setter and in case of failure cancel the operation and recover old transitions.
+        :param transitions: Dictionary of Transitions
+        :return:
+        """
+        if not isinstance(transitions, dict):
+            raise TypeError("transitions must be of type dict")
+        if [t_id for t_id, transition in transitions.iteritems() if not isinstance(transition, Transition)]:
+            raise TypeError("element of transitions must be of type Transition")
+        if [t_id for t_id, transition in transitions.iteritems() if not t_id == transition.transition_id]:
+            raise AttributeError("The key of the transition dictionary and the id of the transition do not match")
+
+        old_transitions = self._transitions
+        self._transitions = transitions
+        for transition_id, transition in transitions.iteritems():
+            try:
                 transition.parent = self
-            self._transitions = transitions
+            except ValueError:
+                self._transitions = old_transitions
+                raise
 
     @property
     def data_flows(self):
@@ -1254,18 +1271,27 @@ class ContainerState(State):
     @data_flows.setter
     @Observable.observed
     def data_flows(self, data_flows):
-        # First safely remove all existing data flows, as they will be replaced
-        data_flow_ids = self.data_flows.keys()
-        for data_flow_id in data_flow_ids:
-            self.remove_data_flow(data_flow_id)
-        if data_flows is not None:
-            if not isinstance(data_flows, dict):
-                raise TypeError("data_flows must be of type dict")
-            for data_flow in data_flows.itervalues():
-                if not isinstance(data_flow, DataFlow):
-                    raise TypeError("element of data_flows must be of type DataFlow")
+        """ The method substitutes ContainerState.data_flows with dictionary data_flows. The method checks if the
+        elements are of the right type and the keys consistent. The method does check validity of the elements by
+        calling the parent-setter and in case of failure cancel the operation and recover old data_flows.
+        :param data_flows: Dictionary of DataFlows
+        :return:
+        """
+        if not isinstance(data_flows, dict):
+            raise TypeError("data_flows must be of type dict")
+        if [df_id for df_id, data_flow in data_flows.iteritems() if not isinstance(data_flow, DataFlow)]:
+            raise TypeError("element of data_flows must be of type DataFlow")
+        if [df_id for df_id, data_flow in data_flows.iteritems() if not df_id == data_flow.data_flow_id]:
+            raise AttributeError("The key of the data flow dictionary and the id of the data flow do not match")
+
+        old_data_flows = self._data_flows
+        self._data_flows = data_flows
+        for data_flow_id, data_flow in data_flows.iteritems():
+            try:
                 data_flow.parent = self
-            self._data_flows = data_flows
+            except ValueError:
+                self._data_flows = old_data_flows
+                raise
 
     @property
     def start_state_id(self):
@@ -1323,16 +1349,28 @@ class ContainerState(State):
     @scoped_variables.setter
     @Observable.observed
     def scoped_variables(self, scoped_variables):
-        if scoped_variables is None:
-            self._scoped_variables = {}
-        else:
-            if not isinstance(scoped_variables, dict):
-                raise TypeError("scoped_variables must be of type dict")
-            for scoped_variable in scoped_variables.itervalues():
-                if not isinstance(scoped_variable, ScopedVariable):
-                    raise TypeError("element of scope must be of type ScopedVariable")
+        """ The method substitutes ContainerState.scoped_variables with dictionary scoped_variables. The method checks
+        if the elements are of the right type and the keys consistent. The method does check validity of the elements by
+        calling the parent-setter and in case of failure cancel the operation and recover old scoped_variables.
+        :param outcomes: Dictionary of States
+        :return:
+        """
+        if not isinstance(scoped_variables, dict):
+            raise TypeError("scoped_variables must be of type dict")
+        if [sv_id for sv_id, sv in scoped_variables.iteritems() if not isinstance(sv, ScopedVariable)]:
+            raise TypeError("element of scope variable must be of type ScopedVariable")
+        if [sv_id for sv_id, sv in scoped_variables.iteritems() if not sv_id == sv.data_port_id]:
+            raise AttributeError("The key of the scope variable dictionary and "
+                                 "the id of the scope variable do not match")
+
+        old_scoped_variables = self._scoped_variables
+        self._scoped_variables = scoped_variables
+        for port_id, scoped_variable in scoped_variables.iteritems():
+            try:
                 scoped_variable.parent = self
-            self._scoped_variables = scoped_variables
+            except ValueError:
+                self._scoped_variables = old_scoped_variables
+                raise
 
     @property
     def scoped_data(self):

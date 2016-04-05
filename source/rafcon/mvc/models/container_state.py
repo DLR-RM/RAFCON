@@ -184,12 +184,13 @@ class ContainerStateModel(StateModel):
         elif info.method_name in ["add_scoped_variable", "remove_scoped_variable", "scoped_variables"]:
             (model_list, data_list, model_name, model_class, model_key) = get_model_info("scoped_variable")
 
-        # TODO for list assignment of core has to be taken care -> unit-test seems to miss, too
         if model_list is not None:
             if "add" in info.method_name:
                 self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
             elif "remove" in info.method_name:
                 self.remove_additional_model(model_list, data_list, model_name, model_key)
+            elif info.method_name in ["transitions", "data_flows", "states", "scoped_variables"]:
+                self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
 
     @ModelMT.observe("state", after=True, before=True)
     def change_state_type(self, model, prop_name, info):

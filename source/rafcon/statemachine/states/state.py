@@ -88,10 +88,10 @@ class State(Observable, YAMLObject, JSONObject):
             self._state_id = state_id
 
         self.parent = parent
-        self.input_data_ports = input_data_ports
-        self.output_data_ports = output_data_ports
+        self.input_data_ports = input_data_ports if input_data_ports is not None else {}
+        self.output_data_ports = output_data_ports if output_data_ports is not None else {}
 
-        self.outcomes = outcomes
+        self.outcomes = outcomes if outcomes is not None else {0: Outcome(outcome_id=0, name="success")}
         self.state_execution_status = StateExecutionState.INACTIVE
 
         self.edited_since_last_execution = False
@@ -719,24 +719,34 @@ class State(Observable, YAMLObject, JSONObject):
     @input_data_ports.setter
     @Observable.observed
     def input_data_ports(self, input_data_ports):
-        self._input_data_ports = {}
-        if input_data_ports is None:
-            return
+        """ The method substitute State.input_data_ports with dictionary input_data_ports. The method checks if the
+        elements are of the right type  and the keys consistent or will. The method does check validity of the elements
+        by calling the parent-setter and in case of failure cancel the operation and recover old input_data_ports.
+        :param input_data_ports: Dictionary of DataPorts
+        :return:
+        """
         if not isinstance(input_data_ports, dict):
             raise TypeError("input_data_ports must be of type dict")
+        # This is a fix for older state machines, which didn't distinguish between input and output ports
         for port_id, port in input_data_ports.iteritems():
             if not isinstance(port, InputDataPort):
-                if type(port) == DataPort:
-                    # This is a fix for older state machines, which didn't distinguish between input and output ports
+                if isinstance(port, DataPort):
                     port = InputDataPort(port.name, port.data_type, port.default_value, port.data_port_id)
                     input_data_ports[port_id] = port
                 else:
                     raise TypeError("Elements of input_data_ports must be of type InputDataPort, given: {0}".format(
                         type(port)))
-            if not port_id == port.data_port_id:
-                raise AttributeError("The key of the input dictionary and the id of the data port do not match")
-            port.parent = self
-        self._input_data_ports = input_data_ports
+        if [port_id for port_id, port in input_data_ports.iteritems() if not port_id == port.data_port_id]:
+            raise AttributeError("The key of the input dictionary and the id of the data port do not match")
+
+        old_input_data_ports = self._input_data_ports
+        for port_id, port in input_data_ports.iteritems():
+            self._input_data_ports = input_data_ports
+            try:
+                port.parent = self
+            except ValueError:
+                self._input_data_ports = old_input_data_ports
+                raise
 
     @property
     def output_data_ports(self):
@@ -748,24 +758,35 @@ class State(Observable, YAMLObject, JSONObject):
     @output_data_ports.setter
     @Observable.observed
     def output_data_ports(self, output_data_ports):
-        self._output_data_ports = {}
-        if output_data_ports is None:
-            return
+        """ The method substitute State.output_data_ports with dictionary output_data_ports. The method checks if the
+        elements are of the right type  and the keys consistent. The method does check validity of the elements by
+        calling the parent-setter and in case of failure cancel the operation and recover old output_data_ports.
+        :param output_data_ports: Dictionary of DataPorts
+        :return:
+        """
         if not isinstance(output_data_ports, dict):
             raise TypeError("output_data_ports must be of type dict")
+        if [port_id for port_id, port in output_data_ports.iteritems() if not port_id == port.data_port_id]:
+            raise AttributeError("The key of the output dictionary and the id of the data port do not match")
+
+        # This is a fix for older state machines, which didn't distinguish between input and output ports
         for port_id, port in output_data_ports.iteritems():
             if not isinstance(port, OutputDataPort):
-                if type(port) == DataPort:
-                    # This is a fix for older state machines, which didn't distinguish between input and output ports
+                if isinstance(port, DataPort):
                     port = OutputDataPort(port.name, port.data_type, port.default_value, port.data_port_id)
                     output_data_ports[port_id] = port
                 else:
                     raise TypeError("Elements of output_data_ports must be of type OutputDataPort, given: {0}".format(
                         type(port)))
-            if not port_id == port.data_port_id:
-                raise AttributeError("The key of the output dictionary and the id of the data port do not match")
-            port.parent = self
+
+        old_output_data_ports = self._output_data_ports
         self._output_data_ports = output_data_ports
+        for port_id, port in output_data_ports.iteritems():
+            try:
+                port.parent = self
+            except ValueError:
+                self._output_data_ports = old_output_data_ports
+                raise
 
     @property
     def outcomes(self):
@@ -777,29 +798,33 @@ class State(Observable, YAMLObject, JSONObject):
     @outcomes.setter
     @Observable.observed
     def outcomes(self, outcomes):
-        if outcomes is None:
-            self._outcomes = {}
-            self.add_outcome("success", 0)
-            self.add_outcome("aborted", -1)
-            self.add_outcome("preempted", -2)
+        """ The method substitutes State.outcomes with dictionary outcomes. The method checks if the elements are
+        of the right type  and the keys consistent. The method does check validity of the elements by calling the
+        parent-setter and in case of failure cancel the operation and recover old outcomes.
+        :param outcomes: Dictionary of Outcomes
+        :return:
+        """
+        if not isinstance(outcomes, dict):
+            raise TypeError("outcomes must be of type dict")
+        if [outcome_id for outcome_id, outcome in outcomes.iteritems() if not isinstance(outcome, Outcome)]:
+            raise TypeError("element of outcomes must be of type Outcome")
+        if [outcome_id for outcome_id, outcome in outcomes.iteritems() if not outcome_id == outcome.outcome_id]:
+            raise AttributeError("The key of the input dictionary and the id of the data port do not match")
 
-        else:
-            if not isinstance(outcomes, dict):
-                raise TypeError("outcomes must be of type dict")
-            # Reset outcomes, otherwise outcome checks may fail due to duplicate outcome ids
-            old_outcomes = self.outcomes
-            self._outcomes = {}
-            for outcome in outcomes.itervalues():
-                if not isinstance(outcome, Outcome):
-                    self._outcomes = old_outcomes
-                    raise TypeError("element of outcomes must be of type Outcome")
+        old_outcomes = self.outcomes
+        self._outcomes = outcomes
+        for outcome_id, outcome in outcomes.iteritems():
+            try:
                 outcome.parent = self
-            self._outcomes = outcomes
-            # aborted and preempted must always exist
-            if -1 not in outcomes:
-                self.add_outcome("aborted", -1)
-            if -2 not in outcomes:
-                self.add_outcome("preempted", -2)
+            except ValueError:
+                self._outcomes = old_outcomes
+                raise
+
+        # aborted and preempted must always exist
+        if -1 not in outcomes:
+            self._outcomes[-1] = Outcome(outcome_id=-1, name="aborted", parent=self)
+        if -2 not in outcomes:
+            self._outcomes[-2] = Outcome(outcome_id=-2, name="preempted", parent=self)
 
     @property
     def input_data(self):

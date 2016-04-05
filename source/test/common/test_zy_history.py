@@ -767,12 +767,12 @@ def test_state_property_modifications_history(caplog):
     # sm_model.history.redo()
 
     # input_data_ports(self, input_data_ports) None or dict
-    state_dict['Nested'].input_data_ports = None
+    state_dict['Nested'].input_data_ports = {}
     sm_model.history.undo()
     sm_model.history.redo()
 
     # output_data_ports(self, output_data_ports) None or dict
-    state_dict['Nested'].output_data_ports = None
+    state_dict['Nested'].output_data_ports = {}
     sm_model.history.undo()
     sm_model.history.redo()
 
@@ -780,7 +780,7 @@ def test_state_property_modifications_history(caplog):
     state_dict['Nested'].outcomes = state_dict['Nested'].outcomes
     sm_model.history.undo()
     sm_model.history.redo()
-    state_dict['Nested'].outcomes = None
+    state_dict['Nested'].outcomes = {}
     sm_model.history.undo()
     sm_model.history.redo()
 
@@ -811,12 +811,10 @@ def test_state_property_modifications_history(caplog):
     # state_dict['Nested'].child_execution = True
     # sm_model.history.undo()
     # sm_model.history.redo()
-    # TODO state_execution_status has to be checked
 
     ############################################
     ###### Properties of ContainerState ########
 
-    # TODO May SOLVED - check where all this shit comes from may a observed capsuled set_start_state function in ContainerState will help
     # set_start_state(self, state) State or state_id
     state_dict['Nested'] = sm_model.state_machine.get_state_by_path(nested_state_path)
     state1_m = sm_model.get_state_model_by_path(state1.get_path())
@@ -829,30 +827,24 @@ def test_state_property_modifications_history(caplog):
     sm_model.history.undo()
     sm_model.history.redo()
 
-    # TODO all dict setter have to use remove and add functionalities or need better implementation
-    # # states(self, states) None or dict
-    # state_dict['Nested'].states = None
-    # # print "\n\n\n", state_dict['Nested'].states
-    # # state_nested_m = sm_model.get_state_model_by_path(state_dict['Nested'].get_path())
-    # # print "\n\n\n", state_nested_m.state.states
-    # # print "\n\n\n", state_nested_m.states
-    # # exit(1)
-    # # assert state_nested_m.states
-    # sm_model.history.undo()
-    # sm_model.history.redo()
+    # transitions(self, transitions) None or dict
+    state_dict['Nested'].transitions = {}
+    sm_model.history.undo()
+    sm_model.history.redo()
 
-    # # transitions(self, transitions) None or dict
-    # state_dict['Nested'].transitions = None
-    # sm_model.history.undo()
-    # sm_model.history.redo()
-    #
-    # # data_flows(self, data_flows) None or dict
-    # state_dict['Nested'].data_flows = None
-    # sm_model.history.undo()
-    # sm_model.history.redo()
+    # data_flows(self, data_flows) None or dict
+    state_dict['Nested'].data_flows = {}
+    sm_model.history.undo()
+    sm_model.history.redo()
 
     # scoped_variables(self, scoped_variables) None or dict
-    state_dict['Nested'].scoped_variables = None
+    state_dict['Nested'].scoped_variables = {}
+    sm_model.history.undo()
+    sm_model.history.redo()
+
+    # states(self, states) None or dict
+    state_dict['Nested'].states = {}
+    assert sm_model.history.modifications.single_trail_history()[-1].before_overview['method_name'][-1] == 'states'
     sm_model.history.undo()
     sm_model.history.redo()
 

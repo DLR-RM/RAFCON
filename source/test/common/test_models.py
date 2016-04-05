@@ -1091,6 +1091,7 @@ def test_state_property_modifications_history(caplog):
 
     #######################################
     # Properties of State #################
+    state_name = 'Nested'
 
     # name(self, name)
     state_dict['Nested'].name = 'nested'
@@ -1103,20 +1104,37 @@ def test_state_property_modifications_history(caplog):
     sm_model.history.redo()
 
     # input_data_ports(self, input_data_ports) None or dict
-    state_dict['Nested'].input_data_ports = None
+    state_dict['Nested'].input_data_ports = {}
+    state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
+    state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
+    print "CHECK INPUTS_LIST_ASSIGNMENT"
+    check_state_for_all_models(state, state_m)
     sm_model.history.undo()
     sm_model.history.redo()
 
     # output_data_ports(self, output_data_ports) None or dict
-    state_dict['Nested'].output_data_ports = None
+    print "DO OUTPUTS_LIST_ASSIGNMENT"
+    state_dict['Nested'].output_data_ports = {}
+    state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
+    state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
+    print "CHECK OUTPUTS_LIST_ASSIGNMENT"
+    check_state_for_all_models(state, state_m)
     sm_model.history.undo()
     sm_model.history.redo()
 
     # outcomes(self, outcomes) None or dict
-    state_dict['Nested'].outcomes = state_dict['Nested'].outcomes
+    print "DO OUTCOMES_LIST_ASSIGNMENT"
+    state_dict['Nested'].outcomes = state2.outcomes
+    state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
+    state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
+    print "CHECK OUTCOMES_LIST_ASSIGNMENT"
+    check_state_for_all_models(state, state_m)
     sm_model.history.undo()
     sm_model.history.redo()
-    state_dict['Nested'].outcomes = None
+    state_dict['Nested'].outcomes = {}
+    state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
+    state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
+    check_state_for_all_models(state, state_m)
     sm_model.history.undo()
     sm_model.history.redo()
 
@@ -1165,29 +1183,41 @@ def test_state_property_modifications_history(caplog):
     sm_model.history.undo()
     sm_model.history.redo()
 
-    # # states(self, states) None or dict
-    # state_dict['Nested'].states = None
-    # # print "\n\n\n", state_dict['Nested'].states
-    # # state_nested_m = sm_model.get_state_model_by_path(state_dict['Nested'].get_path())
-    # # print "\n\n\n", state_nested_m.state.states
-    # # print "\n\n\n", state_nested_m.states
-    # # exit(1)
-    # # assert state_nested_m.states
-    # sm_model.history.undo()
-    # sm_model.history.redo()
+    # states(self, states) None or dict
+    state_dict['Nested'].states = {}
+    # print "\n\n\n", state_dict['Nested'].states
+    # state_nested_m = sm_model.get_state_model_by_path(state_dict['Nested'].get_path())
+    # print "\n\n\n", state_nested_m.state.states
+    # print "\n\n\n", state_nested_m.states
+    # exit(1)
+    # assert state_nested_m.states
+    state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
+    state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
+    check_state_for_all_models(state, state_m)
+    sm_model.history.undo()
+    sm_model.history.redo()
 
-    # # transitions(self, transitions) None or dict
-    # state_dict['Nested'].transitions = None
-    # sm_model.history.undo()
-    # sm_model.history.redo()
-    #
-    # # data_flows(self, data_flows) None or dict
-    # state_dict['Nested'].data_flows = None
-    # sm_model.history.undo()
-    # sm_model.history.redo()
+    # transitions(self, transitions) None or dict
+    state_dict['Nested'].transitions = {}
+    state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
+    state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
+    check_state_for_all_models(state, state_m)
+    sm_model.history.undo()
+    sm_model.history.redo()
+
+    # data_flows(self, data_flows) None or dict
+    state_dict['Nested'].data_flows = {}
+    state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
+    state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
+    check_state_for_all_models(state, state_m)
+    sm_model.history.undo()
+    sm_model.history.redo()
 
     # scoped_variables(self, scoped_variables) None or dict
-    state_dict['Nested'].scoped_variables = None
+    state_dict['Nested'].scoped_variables = {}
+    state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
+    state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
+    check_state_for_all_models(state, state_m)
     sm_model.history.undo()
     sm_model.history.redo()
     testing_utils.assert_logger_warnings_and_errors(caplog)

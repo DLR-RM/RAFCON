@@ -48,7 +48,6 @@ class StateModel(AbstractStateModel):
         :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
-        # logger.info("STATEMODEL {0} {1}".format(0,1)) if 'after' in info else logger.info("STATEMODEL {0} {1}".format(1,0))
         # If this model has been changed (and not one of its child states), then we have to update all child models
         # This must be done before notifying anybody else, because other may relay on the updated models
         if 'after' in info and self.state == info['instance']:
@@ -63,9 +62,6 @@ class StateModel(AbstractStateModel):
             # if the state_execution state is changed the sm must not be marked dirty
             if "after" in info and info["method_name"] != "state_execution_status":
                 self._mark_state_machine_as_dirty()
-
-        # TODO the modify observation to notify the list has to be changed in the manner, that the element-models
-        # notify there parent with there own instance as argument
 
         changed_list = None
         cause = None
@@ -122,7 +118,6 @@ class StateModel(AbstractStateModel):
             output-data-port models
             outcome models
         """
-        # logger.info("method_name: " + info.method_name)
         model_list = None
         if info.method_name in ["add_input_data_port", "remove_input_data_port", "input_data_ports"]:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("input_data_port")
@@ -131,12 +126,13 @@ class StateModel(AbstractStateModel):
         elif info.method_name in ["add_outcome", "remove_outcome", "outcomes"]:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("outcome")
 
-        # TODO for list assignment of core has to be taken care -> unit-test seems to miss, too
         if model_list is not None:
             if "add" in info.method_name:
                 self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
             elif "remove" in info.method_name:
                 self.remove_additional_model(model_list, data_list, model_name, model_key)
+            elif info.method_name in ["input_data_ports", "output_data_ports", "outcomes"]:
+                self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
 
     def _load_input_data_port_models(self):
         """Reloads the input data port models directly from the the state
@@ -159,8 +155,27 @@ class StateModel(AbstractStateModel):
         for outcome in self.state.outcomes.itervalues():
             self.outcomes.append(OutcomeModel(outcome, self))
 
-    def add_missing_model(self, model_list_or_dict, core_objects_dict, model_name, model_class, model_key):
+    def re_initiate_model_list(self, model_list_or_dict, core_objects_dict, model_name, model_class, model_key):
+        """ The method re-initiate a handed list or dictionary of models with the new dictionary of core-objects.
+        :param model_list_or_dict: could be a list or dictionary of one model type
+        :param core_objects_dict: new dictionary of one type of core-elements (rafcon.statemachine)
+        :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
+        :param model_class: model-class of the elements that should be insert
+        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element (e.g. 'state_id')
+        :return:
         """
+        for idx in range(len(model_list_or_dict)):
+            self.remove_additional_model(model_list_or_dict, core_objects_dict, model_name, model_key)
+
+        if core_objects_dict:
+            for elem in core_objects_dict:
+                self.add_missing_model(model_list_or_dict, core_objects_dict, model_name, model_class, model_key)
+
+    def add_missing_model(self, model_list_or_dict, core_objects_dict, model_name, model_class, model_key):
+        """ The method add one missing model. The method will search for the first core-object out of core_object_dict
+        not represented in the list or dict of models handed by model_list_or_dict, add it and return without continue
+        to search for more objects which maybe are missing in model_list_or_dict with respect to the
+        core_object_dict.
         :param model_list_or_dict: could be a list or dictionary of one model type
         :param core_objects_dict: dictionary of one type of core-elements (rafcon.statemachine)
         :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
@@ -179,10 +194,21 @@ class StateModel(AbstractStateModel):
                 if model_key is None:
                     model_list_or_dict.append(model_class(core_object, self))
                 else:
+                    # from rafcon.mvc.models.abstract_state import get_state_model_class_for_state
+                    # model_class = get_state_model_class_for_state(core_object)
                     model_list_or_dict[getattr(core_object, model_key)] = model_class(core_object, self)
                 return
 
     def remove_additional_model(self, model_list_or_dict, core_objects_dict, model_name, model_key):
+        """The method remove one unnecessary model. The method will search for the first model-object out of
+        model_list_or_dict that represents no core-object in the dictionary of core-objects handed by core_objects_dict,
+        remove it and return without continue to search for more model-objects which maybe are unnecessary, too.
+        :param model_list_or_dict: could be a list or dictionary of one model type
+        :param core_objects_dict: dictionary of one type of core-elements (rafcon.statemachine)
+        :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
+        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element (e.g. 'state_id')
+        :return:
+        """
         for model_or_key in model_list_or_dict:
             model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
             found = False
