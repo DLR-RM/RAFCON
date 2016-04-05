@@ -57,6 +57,12 @@ class LibraryTreeController(ExtendedController):
         if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][1], dict):  # double click on folder, not library
+                state_row_path = self.library_tree_store.get_path(row)
+                if state_row_path is not None:
+                    if self.view.row_expanded(state_row_path):
+                        self.view.collapse_row(state_row_path)
+                    else:
+                        self.view.expand_to_path(state_row_path)
                 return False
             logger.info(
                 "left double click event detected -> open library: {0}/{1}".format(model[row][2], model[row][0]))
