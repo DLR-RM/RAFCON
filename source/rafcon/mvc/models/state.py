@@ -194,8 +194,6 @@ class StateModel(AbstractStateModel):
                 if model_key is None:
                     model_list_or_dict.append(model_class(core_object, self))
                 else:
-                    # from rafcon.mvc.models.abstract_state import get_state_model_class_for_state
-                    # model_class = get_state_model_class_for_state(core_object)
                     model_list_or_dict[getattr(core_object, model_key)] = model_class(core_object, self)
                 return
 
