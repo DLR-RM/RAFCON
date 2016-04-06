@@ -43,11 +43,12 @@ class ScopedVariable(DataPort):
     It inherits from the DataPort class as it needs exactly the same class fields.
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar _name: the key of the scoped variable
-    :ivar _data_type: specifies the type of the scoped variable; the setter of _value will only allow assignments that
-                satisfies the type constraint
-    :ivar _value_type: specifies the type of self._default_value
-    :ivar _timestamp: the timestamp when the variable was written to last
+    :ivar str name: the name of the scoped variable
+    :ivar data_type: specifies the type of the scoped variable (data port); the setter of _value will only allow
+                assignments that satisfies the type constraint
+    :ivar default_value: specifies the default value of the scoped variable (data port)
+    :ivar int data_port_id: the id of the scoped variable (data port), must be unique for the parent state
+    :ivar rafcon.statemachine.states.container_state.ContainerState parent: reference to the parent state
 
     """
 

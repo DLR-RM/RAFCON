@@ -21,9 +21,11 @@ logger = log.get_logger(__name__)
 class DataPort(StateElement):
     """A class for representing a data ports in a state
 
-    :ivar name: the name of the data port
+    :ivar str name: the name of the data port
     :ivar data_type: the value type of the data port
     :ivar default_value: the default value of the data port
+    :ivar int data_port_id: the id of the data port, must be unique for the parent state
+    :ivar rafcon.statemachine.states.state.State parent: reference to the parent state
     """
 
     # Define all parameters and set their default values

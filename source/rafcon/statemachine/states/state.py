@@ -39,9 +39,8 @@ class State(Observable, YAMLObject, JSONObject):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar state_id: the id of the state
-    :ivar name: the name of the state
-    :ivar parent: the parent of the state
+    :ivar str name: the name of the state
+    :ivar str state_id: the id of the state
     :ivar dict input_data_ports: holds the input data ports of the state
     :ivar dict output_data_ports: holds the output data ports of the state
     :ivar dict outcomes: holds the state outcomes, which are the connection points for transitions
@@ -714,11 +713,13 @@ class State(Observable, YAMLObject, JSONObject):
     def input_data_ports(self):
         """Property for the _input_data_ports field
 
-        The setter substitute State._input_data_ports with dictionary input_data_ports. The method checks if the
-        elements are of the right type  and the keys consistent. The method does check validity of the elements
-        by calling the parent-setter and in case of failure cancel the operation and recover old input_data_ports.
+        The setter-method substitute State._input_data_ports with a handed dictionary. The method checks if the
+        elements in the dictionary are of the right type and the keys consistent (DataPort.data_port_id==key).
+        The method does check validity of the elements by calling the parent-setter and in case of failure cancel
+        the operation and recover old _input_data_ports.
 
-        :return: dict: Dictionary input_data_ports[data_port_id] of rafcon.statemachine.data_port.InputDataPort
+        :return: Dictionary input_data_ports[data_port_id] of :class:`rafcon.statemachine.data_port.InputDataPort`
+        :rtype: dict
         """
         return self._input_data_ports
 
@@ -728,11 +729,10 @@ class State(Observable, YAMLObject, JSONObject):
         """ Setter for _input_data_ports field
 
         The method substitute State._input_data_ports with dictionary input_data_ports. The method checks if the
-        elements are of the right type  and the keys consistent or will. The method does check validity of the elements
-        by calling the parent-setter and in case of failure cancel the operation and recover old input_data_ports.
+        elements are of the right type and the keys consistent. The method does check validity of the elements
+        by calling the parent-setter and in case of failure cancel the operation and recover old _input_data_ports.
 
-        :param dict input_data_ports: Dictionary of rafcon.statemachine.data_port.InputDataPort
-        :return:
+        :param dict input_data_ports: Dictionary of :class:`rafcon.statemachine.data_port.InputDataPort`
         """
         if not isinstance(input_data_ports, dict):
             raise TypeError("input_data_ports must be of type dict")
@@ -761,6 +761,13 @@ class State(Observable, YAMLObject, JSONObject):
     def output_data_ports(self):
         """Property for the _output_data_ports field
 
+        The setter-method substitute State._output_data_ports with a handed dictionary. The method checks if the
+        elements are of the right type and the keys consistent (DataPort.data_port_id==key). The method does check
+        validity of the elements by calling the parent-setter and in case of failure cancel the operation and recover
+        old _output_data_ports.
+
+        :return: Dictionary output_data_ports[data_port_id] of :class:`rafcon.statemachine.data_port.OutputDataPort`
+        :rtype: dict
         """
         return self._output_data_ports
 
@@ -770,11 +777,10 @@ class State(Observable, YAMLObject, JSONObject):
         """ Setter for _output_data_ports field
 
         The method substitute State._output_data_ports with dictionary output_data_ports. The method checks if the
-        elements are of the right type  and the keys consistent. The method does check validity of the elements by
+        elements are of the right type and the keys consistent. The method does check validity of the elements by
         calling the parent-setter and in case of failure cancel the operation and recover old output_data_ports.
 
-        :param output_data_ports: Dictionary of DataPorts
-        :return:
+        :param Dictionary output_data_ports[data_port_id] of :class:`rafcon.statemachine.data_port.OutputDataPort`
         """
         if not isinstance(output_data_ports, dict):
             raise TypeError("output_data_ports must be of type dict")
@@ -804,6 +810,12 @@ class State(Observable, YAMLObject, JSONObject):
     def outcomes(self):
         """Property for the _outcomes field
 
+        The setter-method substitute State._outcomes with a handed dictionary. The method checks if the elements are
+        of the right type and the keys consistent (Outcome.outcome_id==key). The method does check validity of
+        the elements by calling the parent-setter and in case of failure cancel the operation and recover old outcomes.
+
+        :return: Dictionary outcomes[outcome_id] of :class:`rafcon.statemachine.outcome.Outcome`
+        :rtype: dict
         """
         return self._outcomes
 
@@ -816,8 +828,7 @@ class State(Observable, YAMLObject, JSONObject):
         of the right type  and the keys consistent. The method does check validity of the elements by calling the
         parent-setter and in case of failure cancel the operation and recover old outcomes.
 
-        :param outcomes: Dictionary of Outcomes
-        :return:
+        :param dict outcomes: Dictionary outcomes[outcome_id] of :class:`rafcon.statemachine.outcome.Outcome`
         """
         if not isinstance(outcomes, dict):
             raise TypeError("outcomes must be of type dict")

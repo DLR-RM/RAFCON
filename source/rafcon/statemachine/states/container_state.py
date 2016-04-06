@@ -36,7 +36,7 @@ class ContainerState(State):
     :ivar dict states: the child states of the container state of the state
     :ivar dict transitions: transitions between all child states
     :ivar dict data_flows: data flows between all child states
-    :ivar start_state_id: the state to start with when the hierarchy state is executed
+    :ivar str start_state_id: the state to start with when the hierarchy state is executed
     :ivar dict scoped_variables: the scoped variables of the container
 
     """
@@ -1238,6 +1238,13 @@ class ContainerState(State):
     def transitions(self):
         """Property for the _transitions field
 
+        The setter-method substitute ContainerState._transitions with a handed dictionary. The method checks if the
+        elements are of the right type and the keys consistent (Transition.transition_id==key). The method does check
+        validity of the elements by calling the parent-setter and in case of failure cancel the operation and
+        recover old _transitions dictionary.
+
+        :return: Dictionary transitions[transition_id] of :class:`rafcon.statemachine.transition.Transition`
+        :rtype: dict
         """
         return self._transitions
 
@@ -1246,12 +1253,11 @@ class ContainerState(State):
     def transitions(self, transitions):
         """ Setter for _transitions field
 
-        The method substitute ContainerState._transitions with dictionary transitions.  The method checks if the
+        The method substitute ContainerState._transitions with dictionary transitions. The method checks if the
         elements are of the right type and the keys consistent. The method does check validity of the elements by
-        calling the parent-setter and in case of failure cancel the operation and recover old transitions.
+        calling the parent-setter and in case of failure cancel the operation and recover old _transitions.
 
-        :param transitions: Dictionary of Transitions
-        :return:
+        :param: transitions: Dictionary transitions[transition_id] of :class:`rafcon.statemachine.transition.Transition`
         """
         if not isinstance(transitions, dict):
             raise TypeError("transitions must be of type dict")
@@ -1273,6 +1279,13 @@ class ContainerState(State):
     def data_flows(self):
         """Property for the _data_flows field
 
+        The setter-method substitute ContainerState._data_flows with handed dictionary. The method checks if the
+        elements are of the right type and the keys consistent (DataFlow.data_flow_id==key). The method does check
+        validity of the elements by calling the parent-setter and in case of failure cancel the operation and
+        recover old _data_flows dictionary.
+
+        :return: Dictionary data_flows[data_flow_id] of :class:`rafcon.statemachine.data_flow.DataFlow`
+        :rtype: dict
         """
         return self._data_flows
 
@@ -1283,10 +1296,9 @@ class ContainerState(State):
 
         The method substitute ContainerState._data_flows with dictionary data_flows. The method checks if the
         elements are of the right type and the keys consistent. The method does check validity of the elements by
-        calling the parent-setter and in case of failure cancel the operation and recover old data_flows.
+        calling the parent-setter and in case of failure cancel the operation and recover old _data_flows.
 
-        :param data_flows: Dictionary of DataFlows
-        :return:
+        :param dict data_flows: Dictionary data_flows[data_flow_id] of :class:`rafcon.statemachine.data_flow.DataFlow`
         """
         if not isinstance(data_flows, dict):
             raise TypeError("data_flows must be of type dict")
@@ -1354,6 +1366,13 @@ class ContainerState(State):
     def scoped_variables(self):
         """Property for the _scoped_variables field
 
+        The setter-method ContainerState._scoped_variables with a handed dictionary. The method checks if the elements
+        are of the right type and the keys consistent (Transition.transition_id==key). The method does check validity
+        of the elements by calling the parent-setter and in case of failure cancel the operation and recover old
+        _scoped_variables dictionary.
+
+        :return: Dictionary scoped_variables[data_port_id] of :class:`rafcon.statemachine.scope.ScopedVariable`
+        :rtype: dict
         """
         return self._scoped_variables
 
@@ -1364,10 +1383,9 @@ class ContainerState(State):
 
         The method substitute ContainerState._scoped_variables with dictionary scoped_variables. The method checks
         if the elements are of the right type and the keys consistent. The method does check validity of the elements by
-        calling the parent-setter and in case of failure cancel the operation and recover old scoped_variables.
+        calling the parent-setter and in case of failure cancel the operation and recover old _scoped_variables.
 
-        :param outcomes: Dictionary of States
-        :return:
+        :param dict scoped_variables: Dictionary scoped_variables[data_port_id] of :class:`rafcon.statemachine.scope.ScopedVariable`
         """
         if not isinstance(scoped_variables, dict):
             raise TypeError("scoped_variables must be of type dict")
