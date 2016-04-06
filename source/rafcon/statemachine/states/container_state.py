@@ -33,11 +33,11 @@ class ContainerState(State):
 
     Only the variables are listed that are not already contained in the state base class
 
-    :ivar states: the child states of the container state of the state
-    :ivar transitions: transitions between all child states
-    :ivar data_flows: data flows between all child states
+    :ivar dict states: the child states of the container state of the state
+    :ivar dict transitions: transitions between all child states
+    :ivar dict data_flows: data flows between all child states
     :ivar start_state_id: the state to start with when the hierarchy state is executed
-    :ivar scoped_variables: the scoped variables of the container
+    :ivar dict scoped_variables: the scoped variables of the container
 
     """
 
@@ -508,7 +508,6 @@ class ContainerState(State):
         :param to_state_id: The id target state of the data_flow
         :param to_data_port_id: The input_key of the target state
         :param data_flow_id: an optional id for the data flow
-
         """
         if data_flow_id is None:
             data_flow_id = generate_data_flow_id()
@@ -650,6 +649,7 @@ class ContainerState(State):
         """Search for the given data port id in the data ports of the state
 
         The method tries to find a data port in the input and output data ports as well as in the scoped variables.
+
         :param data_port_id: the unique id of the data port
         :return: the data port with the searched id or None if not found
         """
@@ -776,6 +776,7 @@ class ContainerState(State):
         """
         Changes the id of the state to a new id. This functions replaces the old state_id with the new state_id in all
         data flows and transitions.
+
         :param state_id: The new state if of the state
         :return:
         """
@@ -865,6 +866,7 @@ class ContainerState(State):
         flows. The data port does not belong to 'self', but to one of self.states.
         If the data port is connected to a data flow, the method checks, whether these connect consistent data types
         of ports.
+
         :param rafcon.statemachine.data_port.DataPort check_data_port: The port to check
         :return: valid, message
         """

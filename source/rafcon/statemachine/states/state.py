@@ -42,9 +42,9 @@ class State(Observable, YAMLObject, JSONObject):
     :ivar state_id: the id of the state
     :ivar name: the name of the state
     :ivar parent: the parent of the state
-    :ivar input_data_ports: holds the input data ports of the state
-    :ivar output_data_ports: holds the output data ports of the state
-    :ivar outcomes: holds the state outcomes, which are the connection points for transitions
+    :ivar dict input_data_ports: holds the input data ports of the state
+    :ivar dict output_data_ports: holds the output data ports of the state
+    :ivar dict outcomes: holds the state outcomes, which are the connection points for transitions
     :ivar parent: a reference to the parent state
 
     """
@@ -191,8 +191,8 @@ class State(Observable, YAMLObject, JSONObject):
         self.preempted = True
 
     def get_previously_executed_state(self):
-        """
-        Calculates the state that was executed before this state
+        """ Calculates the state that was executed before this state
+
         :return: The last state in the execution history
         """
         return self.execution_history.get_last_history_item().prev.state_reference
@@ -714,6 +714,11 @@ class State(Observable, YAMLObject, JSONObject):
     def input_data_ports(self):
         """Property for the _input_data_ports field
 
+        The setter substitute State._input_data_ports with dictionary input_data_ports. The method checks if the
+        elements are of the right type  and the keys consistent. The method does check validity of the elements
+        by calling the parent-setter and in case of failure cancel the operation and recover old input_data_ports.
+
+        :return: dict: Dictionary input_data_ports[data_port_id] of rafcon.statemachine.data_port.InputDataPort
         """
         return self._input_data_ports
 
@@ -726,7 +731,7 @@ class State(Observable, YAMLObject, JSONObject):
         elements are of the right type  and the keys consistent or will. The method does check validity of the elements
         by calling the parent-setter and in case of failure cancel the operation and recover old input_data_ports.
 
-        :param input_data_ports: Dictionary of DataPorts
+        :param dict input_data_ports: Dictionary of rafcon.statemachine.data_port.InputDataPort
         :return:
         """
         if not isinstance(input_data_ports, dict):
