@@ -22,6 +22,7 @@ global_focus = None
 
 def open_folder(query):
     import gtk
+    from os.path import expanduser
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
     if not last_path:
         last_path = expanduser('~')
@@ -56,6 +57,7 @@ interface.open_folder_func = open_folder
 
 def create_folder(query):
     import gtk
+    from os.path import expanduser
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
     if not last_path:
         last_path = expanduser('~')
