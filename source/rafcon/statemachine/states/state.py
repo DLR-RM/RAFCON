@@ -719,9 +719,12 @@ class State(Observable, YAMLObject, JSONObject):
     @input_data_ports.setter
     @Observable.observed
     def input_data_ports(self, input_data_ports):
-        """ The method substitute State.input_data_ports with dictionary input_data_ports. The method checks if the
+        """ Setter for _input_data_ports field
+
+        The method substitute State._input_data_ports with dictionary input_data_ports. The method checks if the
         elements are of the right type  and the keys consistent or will. The method does check validity of the elements
         by calling the parent-setter and in case of failure cancel the operation and recover old input_data_ports.
+
         :param input_data_ports: Dictionary of DataPorts
         :return:
         """
@@ -758,9 +761,12 @@ class State(Observable, YAMLObject, JSONObject):
     @output_data_ports.setter
     @Observable.observed
     def output_data_ports(self, output_data_ports):
-        """ The method substitute State.output_data_ports with dictionary output_data_ports. The method checks if the
+        """ Setter for _output_data_ports field
+
+        The method substitute State._output_data_ports with dictionary output_data_ports. The method checks if the
         elements are of the right type  and the keys consistent. The method does check validity of the elements by
         calling the parent-setter and in case of failure cancel the operation and recover old output_data_ports.
+
         :param output_data_ports: Dictionary of DataPorts
         :return:
         """
@@ -798,9 +804,12 @@ class State(Observable, YAMLObject, JSONObject):
     @outcomes.setter
     @Observable.observed
     def outcomes(self, outcomes):
-        """ The method substitutes State.outcomes with dictionary outcomes. The method checks if the elements are
+        """ Setter for _outcomes field
+
+        The method substitute State._outcomes with dictionary outcomes. The method checks if the elements are
         of the right type  and the keys consistent. The method does check validity of the elements by calling the
         parent-setter and in case of failure cancel the operation and recover old outcomes.
+
         :param outcomes: Dictionary of Outcomes
         :return:
         """

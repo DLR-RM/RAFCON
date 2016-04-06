@@ -1207,9 +1207,12 @@ class ContainerState(State):
     @states.setter
     @Observable.observed
     def states(self, states):
-        """ The method mirrors states to be ContainerState.states which is a dict. The method checks if the elements are
+        """ Setter for _states field
+
+        The method substitute ContainerState.states which is a dict. The method checks if the elements are
         of the right type  or will cancel the operation and recover old outcomes. The method does check validity of
         the elements by calling the parent-setter.
+
         :param states: Dictionary of States
         :return:
         """
@@ -1239,9 +1242,12 @@ class ContainerState(State):
     @transitions.setter
     @Observable.observed
     def transitions(self, transitions):
-        """ The method substitutes ContainerState.transitions with dictionary transitions.  The method checks if the
+        """ Setter for _transitions field
+
+        The method substitute ContainerState._transitions with dictionary transitions.  The method checks if the
         elements are of the right type and the keys consistent. The method does check validity of the elements by
         calling the parent-setter and in case of failure cancel the operation and recover old transitions.
+
         :param transitions: Dictionary of Transitions
         :return:
         """
@@ -1271,9 +1277,12 @@ class ContainerState(State):
     @data_flows.setter
     @Observable.observed
     def data_flows(self, data_flows):
-        """ The method substitutes ContainerState.data_flows with dictionary data_flows. The method checks if the
+        """ Setter for _data_flows field
+
+        The method substitute ContainerState._data_flows with dictionary data_flows. The method checks if the
         elements are of the right type and the keys consistent. The method does check validity of the elements by
         calling the parent-setter and in case of failure cancel the operation and recover old data_flows.
+
         :param data_flows: Dictionary of DataFlows
         :return:
         """
@@ -1349,9 +1358,12 @@ class ContainerState(State):
     @scoped_variables.setter
     @Observable.observed
     def scoped_variables(self, scoped_variables):
-        """ The method substitutes ContainerState.scoped_variables with dictionary scoped_variables. The method checks
+        """ Setter for _scoped_variables field
+
+        The method substitute ContainerState._scoped_variables with dictionary scoped_variables. The method checks
         if the elements are of the right type and the keys consistent. The method does check validity of the elements by
         calling the parent-setter and in case of failure cancel the operation and recover old scoped_variables.
+
         :param outcomes: Dictionary of States
         :return:
         """
