@@ -156,7 +156,10 @@ class StateModel(AbstractStateModel):
             self.outcomes.append(OutcomeModel(outcome, self))
 
     def re_initiate_model_list(self, model_list_or_dict, core_objects_dict, model_name, model_class, model_key):
-        """ The method re-initiate a handed list or dictionary of models with the new dictionary of core-objects.
+        """Recreate model list
+
+        The method re-initiate a handed list or dictionary of models with the new dictionary of core-objects.
+
         :param model_list_or_dict: could be a list or dictionary of one model type
         :param core_objects_dict: new dictionary of one type of core-elements (rafcon.statemachine)
         :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
@@ -164,18 +167,21 @@ class StateModel(AbstractStateModel):
         :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element (e.g. 'state_id')
         :return:
         """
-        for idx in range(len(model_list_or_dict)):
+        for _ in range(len(model_list_or_dict)):
             self.remove_additional_model(model_list_or_dict, core_objects_dict, model_name, model_key)
 
         if core_objects_dict:
-            for elem in core_objects_dict:
+            for _ in core_objects_dict:
                 self.add_missing_model(model_list_or_dict, core_objects_dict, model_name, model_class, model_key)
 
     def add_missing_model(self, model_list_or_dict, core_objects_dict, model_name, model_class, model_key):
-        """ The method add one missing model. The method will search for the first core-object out of core_object_dict
+        """Adds one missing model
+
+        The method will search for the first core-object out of core_object_dict
         not represented in the list or dict of models handed by model_list_or_dict, add it and return without continue
         to search for more objects which maybe are missing in model_list_or_dict with respect to the
         core_object_dict.
+
         :param model_list_or_dict: could be a list or dictionary of one model type
         :param core_objects_dict: dictionary of one type of core-elements (rafcon.statemachine)
         :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
@@ -198,9 +204,12 @@ class StateModel(AbstractStateModel):
                 return
 
     def remove_additional_model(self, model_list_or_dict, core_objects_dict, model_name, model_key):
-        """The method remove one unnecessary model. The method will search for the first model-object out of
+        """Remove one unnecessary model
+
+        The method will search for the first model-object out of
         model_list_or_dict that represents no core-object in the dictionary of core-objects handed by core_objects_dict,
         remove it and return without continue to search for more model-objects which maybe are unnecessary, too.
+
         :param model_list_or_dict: could be a list or dictionary of one model type
         :param core_objects_dict: dictionary of one type of core-elements (rafcon.statemachine)
         :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
