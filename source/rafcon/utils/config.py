@@ -81,6 +81,16 @@ class DefaultConfig(object):
                 logger.error('Could not read from config {0}, using temporary default configuration. '
                              'Error: {1}'.format(config_file_path, e))
 
+            # Check if all attributes of the default config exists and introduce them if missing
+            default_config_dict = yaml.load(self.default_config) if self.default_config else {}
+            missing_default_configs = [(k, v) for k, v in default_config_dict.iteritems() if k not in self.__config_dict]
+            for k, v in missing_default_configs:
+                if k not in self.__config_dict:
+                    logger.info("{0} use default-config-file parameter '{1}': {2}.".format(type(self).__name__, k, v))
+                    self.__config_dict[k] = v
+            if missing_default_configs:
+                storage_utils.write_dict_to_yaml(self.__config_dict, config_file_path, width=80, default_flow_style=False)
+
         self.path = path
 
     def get_config_value(self, key, default=None):
