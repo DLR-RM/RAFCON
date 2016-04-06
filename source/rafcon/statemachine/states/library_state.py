@@ -326,10 +326,10 @@ class LibraryState(State):
     @version.setter
     @Observable.observed
     def version(self, version):
-        if version is not None and not isinstance(version, basestring):
-            raise TypeError("version must be of type str")
+        if version is not None and not isinstance(version, (basestring, int, float)):
+            raise TypeError("version must be of type str, got: {}, {}".format(type(version), version))
 
-        self._version = version
+        self._version = str(version)
 
     @property
     def state_copy(self):

@@ -6,7 +6,9 @@ to define specific Action-*-Classes for simple/specific edit actions.
 import copy
 import json
 
-from rafcon.utils.json_utils import JSONObjectDecoder, JSONObjectEncoder
+
+from jsonconversion.decoder import JSONObjectDecoder
+from jsonconversion.encoder import JSONObjectEncoder
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
 

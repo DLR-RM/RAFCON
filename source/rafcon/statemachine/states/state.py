@@ -17,8 +17,9 @@ from weakref import ref
 
 from gtkmvc import Observable
 from yaml import YAMLObject
+from jsonconversion.jsonobject import JSONObject
 
-from rafcon.utils.json_utils import JSONObject
+
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
 logger = log.get_logger(__name__)

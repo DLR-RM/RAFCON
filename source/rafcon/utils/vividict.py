@@ -11,7 +11,7 @@
 
 
 from yaml import YAMLObject
-from rafcon.utils.json_utils import JSONObject
+from jsonconversion.jsonobject import JSONObject
 
 
 class Vividict(dict, YAMLObject, JSONObject):

@@ -9,13 +9,13 @@
 """
 
 from gtkmvc import Observable
+from jsonconversion.jsonobject import JSONObject
 
 from rafcon.statemachine.id_generator import generate_state_machine_id
 from rafcon.statemachine.execution.execution_history import ExecutionHistory
 from rafcon.statemachine.enums import StateExecutionState
 
 from rafcon.utils.storage_utils import get_current_time_string
-from rafcon.utils.json_utils import JSONObject
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

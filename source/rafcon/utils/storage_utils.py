@@ -12,7 +12,8 @@ import json
 import yaml
 from time import gmtime, strftime
 
-from rafcon.utils.json_utils import JSONObjectDecoder, JSONObjectEncoder
+from jsonconversion.decoder import JSONObjectDecoder
+from jsonconversion.encoder import JSONObjectEncoder
 
 
 def get_current_time_string():

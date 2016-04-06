@@ -11,8 +11,8 @@
 
 from gtkmvc import Observable
 from yaml import YAMLObject
+from jsonconversion.jsonobject import JSONObject
 from weakref import ref
-from rafcon.utils.json_utils import JSONObject
 
 
 class StateElement(Observable, YAMLObject, JSONObject):
