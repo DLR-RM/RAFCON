@@ -26,6 +26,10 @@ HISTORY_ENABLED: True
 
 KEEP_ONLY_STICKY_STATES_OPEN: True
 
+TIMED_TEMPORARY_STORAGE_ENABLED: True
+FORCED_TEMPORARY_STORAGE_INTERVAL: 60
+TIMED_TEMPORARY_STORAGE_INTERVAL: 10
+
 SHORTCUTS:
     abort: Escape
     add: <Control>A             # In graphical editor: add execution state

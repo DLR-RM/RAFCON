@@ -9,6 +9,7 @@ Hereby the branching of the edit process is stored and should be accessible, too
 """
 import copy
 import time
+import threading
 
 from gtkmvc import ModelMT, Observable
 
@@ -25,6 +26,7 @@ from rafcon.statemachine.data_port import InputDataPort
 from rafcon.statemachine.state_machine import StateMachine
 
 from rafcon.mvc.utils.notification_overview import NotificationOverview
+from rafcon.mvc.config import global_gui_config
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
 from rafcon.statemachine.storage import storage
@@ -73,17 +75,18 @@ class ModificationsHistoryModel(ModelMT):
         self.with_debug_logs = False
         self.with_meta_data_actions = True
 
-        self.with_temp_storage = True
-        self.temp_storage_interval = 5
+        self.timed_temp_storage_enabled = global_gui_config.get_config_value('TIMED_TEMPORARY_STORAGE_ENABLED')
+        self.force_temp_storage_interval = global_gui_config.get_config_value('FORCED_TEMPORARY_STORAGE_INTERVAL')
+        self.timed_temp_storage_interval = global_gui_config.get_config_value('TIMED_TEMPORARY_STORAGE_INTERVAL')
         self.last_storage_time = time.time()
-        # self.check_for_temp_storage(force=True)
-    #     self.timer_request_time = None
-    #     self.tmp_storage_timed_thread = None
-    #
-    # def __destroy__(self):
-    #     logger.info("destroy history")
-    #     if self.tmp_storage_timed_thread is not None:
-    #         self.tmp_storage_timed_thread.cancel()
+        self.check_for_temp_storage(force=True)
+        self.timer_request_lock = threading.Lock()
+        self.timer_request_time = None
+        self.tmp_storage_timed_thread = None
+
+    def __destroy__(self):
+        if self.tmp_storage_timed_thread is not None:
+            self.tmp_storage_timed_thread.cancel()
 
     def get_state_element_meta_from_tmp_storage(self, state_path):
         path_elements = state_path.split('/')
@@ -115,7 +118,7 @@ class ModificationsHistoryModel(ModelMT):
                 self._redo(elem[0])
 
         self.modifications.reorganize_trail_history_for_version_id(pointer_on_version_to_recover)
-        self.check_for_temp_storage(force=True)
+        self.check_for_temp_storage()
 
     def _undo(self, version_id):
         self.busy = True
@@ -402,27 +405,42 @@ class ModificationsHistoryModel(ModelMT):
 
         self.check_for_temp_storage()
 
-    # def check_for_auto_temp_storage(self):
-    #     if self.last_storage_time < self.timer_request_time:
-    #         logger.info("Perform timed auto storage to tmp-folder.")
-    #         self.check_for_temp_storage(force=True)
-    #         self.timer_request_time = None
-    #         self.tmp_storage_timed_thread = None
-    #     else:
-    #         actual_duration_to_wait = self.timer_request_time - self.last_storage_time
-    #         self.tmp_storage_timed_thread = threading.Timer(actual_duration_to_wait, self.check_for_auto_temp_storage)
-    #         self.tmp_storage_timed_thread.start()
+    def _check_for_timed_auto_temp_storage(self):
+        """ The method implements the timed storage by forcing the storing or re-initiating a new timed thread.
+        """
+        actual_time = time.time()
+        self.timer_request_lock.acquire()
+        if self.last_storage_time > self.timer_request_time:
+            # logger.info('{1} quit_thread {0}'.format(self.__state_machine_id, time.time()))
+            self.timer_request_time = None
+            self.tmp_storage_timed_thread = None
+        elif self.timed_temp_storage_interval < actual_time - self.timer_request_time:
+            # logger.info("{0} Perform timed auto storage of state-machine {1}.".format(time.time(),
+            #                                                                           self.__state_machine_id))
+            self.check_for_temp_storage(force=True)
+            self.timer_request_time = None
+            self.tmp_storage_timed_thread = None
+        else:
+            duration_to_wait = self.timed_temp_storage_interval - (actual_time - self.timer_request_time)
+            # logger.info('{2} restart_thread {0} time to go {1}'.format(self.__state_machine_id,
+            #                                                            duration_to_wait, time.time()))
+            self.tmp_storage_timed_thread = threading.Timer(duration_to_wait, self._check_for_timed_auto_temp_storage)
+            self.tmp_storage_timed_thread.start()
+        self.timer_request_lock.release()
 
     def check_for_temp_storage(self, force=False):
-        """ Method implements the checks for possible temporary backup of the state-machine according duration till
-        the last change.
+        """ The method implements the checks for possible temporary backup of the state-machine according duration till
+        the last change together with the private method _check_for_timed_auto_temp_storage.
+
         :param force: is a flag that force the temporary backup of the state-machine to the tmp-folder
         :return:
         """
-        if not self.with_temp_storage:
+        if not self.timed_temp_storage_enabled:
             return
         sm = self.state_machine_model.state_machine
-        if sm.marked_dirty and time.time() - self.last_storage_time > self.temp_storage_interval or force:
+        actual_time = time.time()
+        if sm.marked_dirty and actual_time - self.last_storage_time > self.force_temp_storage_interval or force:
+            logger.info('Perform auto storage of state-machine {} to tmp-folder'.format(self.__state_machine_id))
             if sm.file_system_path is None:
                 tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/not_stored_' + str(sm.state_machine_id)
             else:
@@ -430,14 +448,19 @@ class ModificationsHistoryModel(ModelMT):
             storage.save_statemachine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=False,
                                               save_as=True, temporary_storage=True)
             self.state_machine_model.root_state.store_meta_data(temp_path=tmp_sm_system_path)
-            self.last_storage_time = time.time()
-        # else:
-        #     if self.timer_request_time is None:
-        #         self.timer_request_time = time.time()
-        #         self.tmp_storage_timed_thread = threading.Timer(self.temp_storage_interval, self.check_for_auto_temp_storage)
-        #         self.tmp_storage_timed_thread.start()
-        #     else:
-        #         self.timer_request_time = time.time()
+            self.last_storage_time = actual_time
+        else:
+            self.timer_request_lock.acquire()
+            if self.timer_request_time is None:
+                # logger.info('{0} start_thread {1}'.format(actual_time, self.__state_machine_id))
+                self.timer_request_time = actual_time
+                self.tmp_storage_timed_thread = threading.Timer(self.timed_temp_storage_interval,
+                                                                self._check_for_timed_auto_temp_storage)
+                self.tmp_storage_timed_thread.start()
+            else:
+                # logger.info('{0} update_thread {1}'.format(actual_time, self.__state_machine_id))
+                self.timer_request_time = actual_time
+            self.timer_request_lock.release()
 
     @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state_model changed
     # @ModelMT.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed

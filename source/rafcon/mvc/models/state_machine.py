@@ -70,6 +70,9 @@ class StateMachineModel(ModelMT):
 
         self.temp = Vividict()
 
+    def __destroy__(self):
+        self.history.__destroy__()
+
     @ModelMT.observe("state_machine", after=True)
     def marked_dirty_flag_changed(self, model, prop_name, info):
         if info.method_name != 'marked_dirty':
