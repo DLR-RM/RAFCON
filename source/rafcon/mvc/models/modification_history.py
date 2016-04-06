@@ -406,7 +406,13 @@ class ModificationsHistoryModel(ModelMT):
         self.check_for_temp_storage()
 
     def _check_for_timed_auto_temp_storage(self):
-        """ The method implements the timed storage by forcing the storing or re-initiating a new timed thread.
+        """ The method implements the timed storage feature.
+
+         The method re-initiating a new timed thread if the state-machine not already stored to backup
+         (what could be caused by the force_temp_storage_interval) or force the storing of the state-machine if there
+         is no new request for a timed backup. New timed backup request are intrinsically represented by
+         self.timer_request_time and initiated by the check_for_temp_storage-method.
+         The feature uses only one thread for each ModificationHistoryModel and lock to be thread save.
         """
         actual_time = time.time()
         self.timer_request_lock.acquire()
