@@ -18,6 +18,7 @@ from os.path import realpath, dirname, join, exists
 import signal
 import time
 from Queue import Empty
+import threading
 
 import rafcon
 from rafcon.utils.config import config_path
