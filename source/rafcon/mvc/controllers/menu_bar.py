@@ -483,16 +483,13 @@ class MenuBarController(ExtendedController):
             if reactor.running:
                 reactor.callFromThread(reactor.stop)
 
-            # shutdown gtk
-            self.main_window_view.hide()
-            import glib
-            glib.idle_add(gtk.main_quit)
-        else:
-            # stop gtk if twisted is not imported
-            import glib
-            logger.debug("Closing main window!")
-            self.main_window_view.hide()
-            glib.idle_add(gtk.main_quit)
+        # shutdown gtk
+        logger.debug("Closing main window!")
+        self.main_window_view.hide()
+        import glib
+        glib.idle_add(gtk.main_quit)
+        while gtk.events_pending():
+            gtk.main_iteration(False)
 
     def _prepare_destruction(self):
         """Saves current configuration of windows and panes to the runtime config file, before RAFCON is closed."""
