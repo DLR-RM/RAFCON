@@ -36,10 +36,6 @@ if "twisted" in sys.modules.keys():
     from twisted.internet import gtk2reactor
     # needed for glib.idle_add, and signals
     gtk2reactor.install()
-    from twisted.internet import reactor
-else:
-    print "Twisted not imported! Thus the gkt2reatcor is not installed!"
-    exit()
 
 
 def setup_logger():
