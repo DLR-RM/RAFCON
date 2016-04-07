@@ -3,7 +3,7 @@
 # from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 # from rafcon.utils import log
 # from rafcon.mvc.views.network_connections import NetworkConnectionsView
-# from rafcon.python_acknowledged_udp.singleton import network_connections
+# from rafcon.acknowledged_udp.singleton import network_connections
 #
 # logger = log.get_logger(__name__)
 #

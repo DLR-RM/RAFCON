@@ -30,7 +30,7 @@ def setup_logger():
 def start_client(interacting_function, queue_dict):
 
     import rafcon
-    from rafcon.utils.config import config_path
+    from yaml_configuration.config import config_path
     from rafcon.utils import log
     from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
     import rafcon.utils.filesystem as filesystem

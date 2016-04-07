@@ -10,7 +10,7 @@
 
 from plugins.monitoring.client import MonitoringClient
 from plugins.monitoring.server import MonitoringServer
-from python_acknowledged_udp.config import global_network_config
+from acknowledged_udp.config import global_network_config
 
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.container_state import ContainerState
@@ -19,7 +19,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.singleton import state_machine_manager
 from rafcon.statemachine.singleton import argument_parser
 
-from rafcon.utils.config import config_path
+from yaml_configuration.config import config_path
 import rafcon.utils.filesystem as filesystem
 
 from rafcon.utils import log

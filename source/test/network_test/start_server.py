@@ -36,7 +36,7 @@ def start_server(interacting_function, queue_dict):
 
     from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
     import rafcon
-    from rafcon.utils.config import config_path
+    from yaml_configuration.config import config_path
     import rafcon.utils.filesystem as filesystem
 
     from rafcon.statemachine.config import global_config
