@@ -26,6 +26,8 @@ def load_plugins():
     :return:
     """
     plugins = os.environ.get('RAFCON_PLUGIN_PATH', None)
+    if not plugins:
+        return
     plugin_list = plugins.split(":")
     global plugin_dict
     for plugin in plugin_list:
