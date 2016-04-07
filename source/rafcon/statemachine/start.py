@@ -19,6 +19,7 @@ import signal
 import time
 from Queue import Empty
 import threading
+import sys
 
 import rafcon
 from yaml_configuration.config import config_path
@@ -35,11 +36,14 @@ from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurre
 from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
 from rafcon.statemachine.enums import StateExecutionState
 
-from plugins import *
-
 from rafcon.utils import log
+from rafcon.utils import plugins
+
 logger = log.get_logger("start-no-gui")
 logger.info("initialize RAFCON ... ")
+
+# load all plugins specified in the RAFCON_PLUGIN_PATH
+plugins.load_plugins()
 
 
 def state_machine_path(path):
@@ -83,6 +87,8 @@ def check_for_sm_finished(sm, monitoring_manager=None):
 
 if __name__ == '__main__':
 
+    plugins.run_pre_inits()
+
     rafcon_root_path = dirname(realpath(rafcon.__file__))
     if not os.environ.get('RAFCON_PATH', None):
         # set env variable RAFCON_PATH to the root directory of RAFCON
@@ -122,15 +128,12 @@ if __name__ == '__main__':
 
     sm = start_state_machine(setup_config)
 
-    try:
-        # check if monitoring plugin is loaded
-        from plugins.monitoring.monitoring_manager import global_monitoring_manager
-        if global_monitoring_manager.networking_enabled():
-            global_monitoring_manager.initialize(setup_config)
-            from twisted.internet import reactor
-            reactor.run()
-    except ImportError, e:
-        # plugin not found
+    plugins.run_post_inits(setup_config)
+
+    if "twisted" in sys.modules.keys():
+        from twisted.internet import reactor
+        reactor.run()
+    else:
         pass
 
     sm.root_state.join()

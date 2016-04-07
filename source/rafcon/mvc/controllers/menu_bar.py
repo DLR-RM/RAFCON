@@ -9,6 +9,7 @@
 """
 
 import gtk
+import sys
 from functools import partial
 # from twisted.internet import reactor
 
@@ -471,13 +472,12 @@ class MenuBarController(ExtendedController):
             import traceback
             logger.exception("Could not stop state machine!")
 
-        # stop twisted if loaded
-        try:
-            from plugins.monitoring.monitoring_manager import global_monitoring_manager
+        if "twisted" in sys.modules.keys():
+            # from monitoring.monitoring_manager import global_monitoring_manager
             logger.info("Shutting down twisted from gtk and thus gtk itself")
             from twisted.internet import reactor
             logger.info("Shutting down monitoring manager")
-            global_monitoring_manager.shutdown()
+            # global_monitoring_manager.shutdown()
             logger.info("Shutting down twisted")
             # the plugin may be installed but no reactor is running
             if reactor.running:
@@ -487,7 +487,7 @@ class MenuBarController(ExtendedController):
             self.main_window_view.hide()
             import glib
             glib.idle_add(gtk.main_quit)
-        except ImportError, e:
+        else:
             # stop gtk if twisted is not imported
             import glib
             logger.debug("Closing main window!")

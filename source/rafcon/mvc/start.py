@@ -26,7 +26,10 @@ import rafcon.mvc.singleton as mvc_singletons
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
-from plugins import *
+from rafcon.utils import plugins
+# load all plugins specified in the RAFCON_PLUGIN_PATH
+plugins.load_plugins()
+
 
 # check if twisted is imported
 if "twisted" in sys.modules.keys():
@@ -37,6 +40,7 @@ if "twisted" in sys.modules.keys():
 else:
     print "Twisted not imported! Thus the gkt2reatcor is not installed!"
     exit()
+
 
 def setup_logger():
     import sys
@@ -50,6 +54,9 @@ def setup_logger():
 
 
 if __name__ == '__main__':
+
+    plugins.run_pre_inits()
+
     setup_logger()
     # from rafcon.utils import log
     logger = log.get_logger("start")
@@ -124,33 +131,12 @@ if __name__ == '__main__':
     logger.info("Ready")
     logger.setLevel(level)
 
-    try:
-        #
-        # check if monitoring plugin is loaded
-        from plugins.monitoring.monitoring_manager import global_monitoring_manager
+    plugins.run_post_inits(setup_config)
 
-        def initialize_monitoring_manager():
-            monitoring_manager_initialized = False
-            while not monitoring_manager_initialized:
-                logger.info("Try to initialize the global monitoring manager and setup the connection to the server!")
-                succeeded = global_monitoring_manager.initialize(setup_config)
-                if succeeded:
-                    monitoring_manager_initialized = True
-
-        import threading
-        init_thread = threading.Thread(target=initialize_monitoring_manager)
-        init_thread.start()
-        # reactor.callLater(2.0, initialize_monitoring_manager)
-
-        if global_monitoring_manager.networking_enabled():
-            # gtk.main()
-            reactor.run()
-        else:
-            gtk.main()
-
-    except ImportError, e:
-        logger.info("Monitoring plugin not found: executing the GUI directly")
-        # plugin not found
+    # check if twisted is imported
+    if "twisted" in sys.modules.keys():
+        reactor.run()
+    else:
         gtk.main()
 
     logger.info("Joined root state")
@@ -165,3 +151,4 @@ if __name__ == '__main__':
     # this is a ugly process shutdown method but works if gtk or twisted process are still blocking
     import os
     os._exit(0)
+
