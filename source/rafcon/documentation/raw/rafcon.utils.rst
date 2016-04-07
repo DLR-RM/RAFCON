@@ -4,10 +4,6 @@ Utils
 .. contents::
     :backlinks: top
 
-config
-------
-.. automodule:: yaml_configuration.config
-
 constants
 ---------
 .. automodule:: rafcon.utils.constants
