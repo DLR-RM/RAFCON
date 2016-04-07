@@ -22,12 +22,12 @@ ADDITIONAL_ENV.osl* = RAFCON_PATH=${PKGROOT}/lib/python2.7/rafcon, RAFCON_LIB_PA
 ADDITIONAL_ENV.sled11* = RAFCON_PATH=${PKGROOT}/lib/python2.7/rafcon, RAFCON_LIB_PATH=${PKGROOT}/share/libraries, PATH=${PKGROOT}/bin:/opt/python/python2.7/bin:$${PATH}
 
 [install]
-source/rafcon => lib/python2.7/rafcon
-source/rafcon_server => lib/python2.7/rafcon_server
-source/libraries => share/libraries
-share => share
+source/rafcon | !*.pyc => lib/python2.7/rafcon
+source/rafcon_server | !*.pyc => lib/python2.7/rafcon_server
+source/libraries | !*.pyc => share/libraries
+share | !*.pyc => share
 source/rafcon/documentation => docs
-bin/ | !rafcon_start | !rafcon_start_gui => bin # Symlinks are recreated in post_install step
+bin/ | !rafcon_start | !rafcon_start_gui | !*.pyc => bin # Symlinks are recreated in post_install step
 
 [post-install]
 cd ${RMPM_INSTALL_DIR}/bin && ln -s ../lib/python2.7/rafcon/statemachine/start.py rafcon_start && ln -s ../lib/python2.7/rafcon/mvc/start.py rafcon_start_gui
