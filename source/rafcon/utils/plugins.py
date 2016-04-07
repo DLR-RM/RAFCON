@@ -29,6 +29,8 @@ def load_plugins():
     plugin_list = plugins.split(":")
     global plugin_dict
     for plugin in plugin_list:
+        if plugin == "":
+            continue
         logger.info(plugin)
         dir_name, plugin_name = os.path.split(plugin)
         sys.path.append(dir_name)
