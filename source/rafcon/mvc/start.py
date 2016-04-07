@@ -6,6 +6,7 @@ import gtk
 import signal
 import argparse
 from os.path import realpath, dirname, join, expanduser, expandvars, isdir
+import sys
 
 import rafcon
 from rafcon.utils.config import config_path
@@ -27,15 +28,15 @@ from rafcon.mvc.runtime_config import global_runtime_config
 
 from plugins import *
 
-try:
-    from plugins.monitoring.monitoring_manager import global_monitoring_manager
+# check if twisted is imported
+if "twisted" in sys.modules.keys():
     from twisted.internet import gtk2reactor
     # needed for glib.idle_add, and signals
     gtk2reactor.install()
     from twisted.internet import reactor
-except ImportError, e:
-    print "Monitoring plugin not found"
-
+else:
+    print "Twisted not imported! Thus the gkt2reatcor is not installed!"
+    exit()
 
 def setup_logger():
     import sys
@@ -124,24 +125,17 @@ if __name__ == '__main__':
     logger.setLevel(level)
 
     try:
+        #
         # check if monitoring plugin is loaded
         from plugins.monitoring.monitoring_manager import global_monitoring_manager
 
-        # main_window_view.hide()
-        # gtk.gdk.flush()
-
         def initialize_monitoring_manager():
-
             monitoring_manager_initialized = False
-
             while not monitoring_manager_initialized:
                 logger.info("Try to initialize the global monitoring manager and setup the connection to the server!")
                 succeeded = global_monitoring_manager.initialize(setup_config)
                 if succeeded:
                     monitoring_manager_initialized = True
-
-            # main_window_view.show()
-            # gtk.gdk.flush()
 
         import threading
         init_thread = threading.Thread(target=initialize_monitoring_manager)
