@@ -115,8 +115,8 @@ class MonitoringServer(UdpServer):
         assert isinstance(observable, State)
         message = observable.get_path() + STATE_EXECUTION_STATUS_SEPARATOR + str(observable.state_execution_status.value)
         protocol = Protocol(MessageType.STATE_ID, message)
-        if len(self.get_registered_endpoints()) == 0:
-            logger.warn("No endpoint registered yet")
+        # if len(self.get_registered_endpoints()) == 0:
+        #     logger.warn("No endpoint registered yet")
         if self.initialized:
             for address in self.get_registered_endpoints():
                 self.send_message_non_acknowledged(protocol, address)
