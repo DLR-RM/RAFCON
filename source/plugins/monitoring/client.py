@@ -13,9 +13,9 @@ import time
 
 from plugins.monitoring.monitoring_execution_engine import MonitoringExecutionEngine
 
-from network.udp_client import UdpClient
-from network.protocol import Protocol, MessageType, STATE_EXECUTION_STATUS_SEPARATOR
-from network.config import global_network_config
+from python_acknowledged_udp.udp_client import UdpClient
+from python_acknowledged_udp.protocol import Protocol, MessageType, STATE_EXECUTION_STATUS_SEPARATOR
+from python_acknowledged_udp.config import global_network_config
 
 from rafcon.statemachine.enums import StateExecutionState, StateMachineExecutionStatus
 from rafcon.statemachine.singleton import state_machine_manager

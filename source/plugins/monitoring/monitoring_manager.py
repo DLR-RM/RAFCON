@@ -10,7 +10,7 @@
 
 from plugins.monitoring.client import MonitoringClient
 from plugins.monitoring.server import MonitoringServer
-from network.config import global_network_config
+from python_acknowledged_udp.config import global_network_config
 
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.container_state import ContainerState

@@ -11,9 +11,9 @@
 from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
-from network.udp_client import UdpClient
-from network.protocol import Protocol, MessageType, STATE_EXECUTION_STATUS_SEPARATOR
-from network.config import global_network_config
+from python_acknowledged_udp.udp_client import UdpClient
+from python_acknowledged_udp.protocol import Protocol, MessageType, STATE_EXECUTION_STATUS_SEPARATOR
+from python_acknowledged_udp.config import global_network_config
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)

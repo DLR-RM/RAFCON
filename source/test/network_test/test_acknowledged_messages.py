@@ -8,10 +8,10 @@ from os.path import realpath, dirname, join, exists, expanduser, expandvars, isd
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 
-from network.udp_client import UdpClient
-from network.udp_server import UdpServer
-from network.config import global_network_config
-from network.protocol import Protocol, MessageType
+from python_acknowledged_udp.udp_client import UdpClient
+from python_acknowledged_udp.udp_server import UdpServer
+from python_acknowledged_udp.config import global_network_config
+from python_acknowledged_udp.protocol import Protocol, MessageType
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
