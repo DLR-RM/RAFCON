@@ -9,7 +9,7 @@
 """
 from os import path
 
-from rafcon.utils.config import DefaultConfig, ConfigError
+from yaml_configuration.config import DefaultConfig, ConfigError
 from rafcon.utils import filesystem
 from rafcon.utils import log
 

@@ -8,7 +8,7 @@
 
 """
 import gtk
-from rafcon.utils.config import DefaultConfig
+from yaml_configuration.config import DefaultConfig
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

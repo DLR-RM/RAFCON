@@ -9,7 +9,7 @@ from os.path import realpath, dirname, join, expanduser, expandvars, isdir
 import sys
 
 import rafcon
-from rafcon.utils.config import config_path
+from yaml_configuration.config import config_path
 from rafcon.utils import log
 import rafcon.utils.filesystem as filesystem
 

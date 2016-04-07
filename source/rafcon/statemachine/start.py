@@ -21,7 +21,7 @@ from Queue import Empty
 import threading
 
 import rafcon
-from rafcon.utils.config import config_path
+from yaml_configuration.config import config_path
 import rafcon.utils.filesystem as filesystem
 
 from rafcon.statemachine.config import global_config

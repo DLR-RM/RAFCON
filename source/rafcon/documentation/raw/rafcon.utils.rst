@@ -6,7 +6,7 @@ Utils
 
 config
 ------
-.. automodule:: rafcon.utils.config
+.. automodule:: yaml_configuration.config
 
 constants
 ---------
