@@ -11,6 +11,7 @@
 import logging
 import gtk
 import signal
+import sys
 from os.path import realpath, dirname, join
 
 
@@ -47,16 +48,21 @@ def start_client(interacting_function, queue_dict):
     from rafcon.mvc.config import global_gui_config
     from rafcon.mvc.runtime_config import global_runtime_config
 
-    from plugins import monitoring
+    from rafcon.utils import plugins
+    # load all plugins specified in the RAFCON_PLUGIN_PATH
+    plugins.load_plugins()
 
-    try:
-        from plugins.monitoring.monitoring_manager import global_monitoring_manager
+    # check if twisted is imported
+    if "twisted" in sys.modules.keys():
         from twisted.internet import gtk2reactor
         # needed for glib.idle_add, and signals
         gtk2reactor.install()
         from twisted.internet import reactor
-    except ImportError, e:
-        print "Monitoring plugin not found"
+    else:
+        print "Twisted not imported! Thus the gkt2reatcor is not installed!"
+        exit()
+
+    plugins.run_pre_inits()
 
     setup_logger()
     logger = log.get_logger("start")
@@ -99,37 +105,23 @@ def start_client(interacting_function, queue_dict):
     sm_manager_model = mvc_singletons.state_machine_manager_model
     main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type='LogicDataGrouped')
 
-    try:
-        # check if monitoring plugin is loaded
-        from plugins.monitoring.monitoring_manager import global_monitoring_manager
+    plugins.run_post_inits(setup_config)
 
-        def initialize_monitoring_manager():
-            monitoring_manager_initialized = False
-            while not monitoring_manager_initialized:
-                logger.info("Try to initialize the global monitoring manager and setup the connection to the server!")
-                succeeded = global_monitoring_manager.initialize(setup_config)
-                if succeeded:
-                    monitoring_manager_initialized = True
+    import threading
+    # this is not recognized by pycharm as the module is loaded in plugins.load_plugins()
+    from monitoring.monitoring_manager import global_monitoring_manager
+    interacting_thread = threading.Thread(target=interacting_function, args=[main_window_controller,
+                                                                             global_monitoring_manager,
+                                                                             queue_dict])
+    interacting_thread.start()
 
-        import threading
-        init_thread = threading.Thread(target=initialize_monitoring_manager)
-        init_thread.start()
-
-        interacting_thread = threading.Thread(target=interacting_function, args=[main_window_controller,
-                                                                                 global_monitoring_manager,
-                                                                                 queue_dict])
-        interacting_thread.start()
-
-        if global_monitoring_manager.networking_enabled():
-            # gtk.main()
-            reactor.run()
-        else:
-            gtk.main()
-
-    except ImportError, e:
-        logger.info("Monitoring plugin not found: executing the GUI directly")
-        # plugin not found
-        gtk.main()
+    # check if twisted is imported
+    if "twisted" in sys.modules.keys():
+        reactor.run()
+    else:
+        logger.error("Something went seriously wrong!")
+        import os
+        os._exit(0)
 
     logger.info("Joined root state")
 

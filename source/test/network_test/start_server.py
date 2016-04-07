@@ -33,7 +33,8 @@ def check_for_sm_finished(sm, monitoring_manager=None):
 
 
 def start_server(interacting_function, queue_dict):
-
+    import sys
+    import os
     from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
     import rafcon
     from yaml_configuration.config import config_path
@@ -49,11 +50,13 @@ def start_server(interacting_function, queue_dict):
     from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
     from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
 
-    from plugins import monitoring
-
     from rafcon.utils import log
+    from rafcon.utils import plugins
     logger = log.get_logger("start-no-gui")
     logger.info("initialize RAFCON ... ")
+
+    plugins.load_plugins()
+    plugins.run_pre_inits()
 
     signal.signal(signal.SIGINT, sm_singletons.signal_handler)
 
@@ -72,21 +75,18 @@ def start_server(interacting_function, queue_dict):
     setup_config = dict()
     setup_config["net_config_path"] = os.path.abspath(path=os.path.dirname(os.path.abspath(__file__))+"/server")
 
-    try:
-        # check if monitoring plugin is loaded
-        from plugins.monitoring.monitoring_manager import global_monitoring_manager
-        if global_monitoring_manager.networking_enabled():
-            global_monitoring_manager.initialize(setup_config)
+    plugins.run_post_inits(setup_config)
 
-            interacting_thread = threading.Thread(target=interacting_function,
-                                                  args=[queue_dict, ])
-            interacting_thread.start()
-
-            from twisted.internet import reactor
-            reactor.run()
-    except ImportError, e:
-        # plugin not found
-        pass
+    if "twisted" in sys.modules.keys():
+        interacting_thread = threading.Thread(target=interacting_function,
+                                              args=[queue_dict, ])
+        interacting_thread.start()
+        from twisted.internet import reactor
+        reactor.run()
+    else:
+        logger.error("Something went seriously wrong!")
+        import os
+        os._exit(0)
 
     state_machine.root_state.join()
 
