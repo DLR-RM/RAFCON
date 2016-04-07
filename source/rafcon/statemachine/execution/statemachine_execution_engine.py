@@ -153,7 +153,6 @@ class StatemachineExecutionEngine(Observable):
         """Observe running state machine and stop engine if execution has finished"""
         self.state_machine_running = True
         self.__running_state_machine.join()
-        print "Joined currently running hierarchy state"
         self.set_execution_mode_to_stopped()
         self.state_machine_running = False
 
