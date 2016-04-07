@@ -88,9 +88,14 @@ def trigger_drag_and_drop_tests(*args):
 
     selection_data = StructHelper(0, 0, None)
 
+    state_machine_m = sm_manager_model.get_selected_state_machine_model()
+
     # insert state in root_state
     print "insert state in root_state"
     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 200, 200, None)
+    # Override selection
+    state_m = state_machine_m.root_state
+    call_gui_callback(state_machine_m.selection.set, [state_m])
     call_gui_callback(library_tree_controller.on_drag_data_get, library_tree_controller.view, None, selection_data, 0, None)
     call_gui_callback(graphical_editor_controller.on_drag_data_received, None, None, 200, 200, selection_data, None, None)
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 2
@@ -98,6 +103,9 @@ def trigger_drag_and_drop_tests(*args):
     # insert state from IconView
     print "insert state from IconView"
     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 300, 300, None)
+    # Override selection
+    state_m = state_machine_m.root_state
+    call_gui_callback(state_machine_m.selection.set, [state_m])
     call_gui_callback(state_icon_controller.on_mouse_motion, None, StructHelper(30, 15, None))
     call_gui_callback(state_icon_controller.on_drag_data_get, None, None, selection_data, None, None)
     call_gui_callback(graphical_editor_controller.on_drag_data_received, None, None, 300, 300, selection_data, None, None)
@@ -112,7 +120,6 @@ def trigger_drag_and_drop_tests(*args):
 
     # insert state in state1
     print "insert state in state1"
-    state_machine_m = sm_manager_model.get_selected_state_machine_model()
     state_m = state_machine_m.root_state.states['State1']
     call_gui_callback(state_machine_m.selection.set, [state_m])
     # Selecting a state using the drag_motion event is too unreliable, as the exact position depends on the size of
