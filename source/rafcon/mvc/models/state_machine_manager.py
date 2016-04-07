@@ -67,7 +67,7 @@ class StateMachineManagerModel(ModelMT, Observable):
         for sm_id_to_delete in self.state_machines.keys():
             sm_m = self.state_machines[sm_id_to_delete]
             del self.state_machines[sm_id_to_delete]
-            sm_m.__destroy__()
+            sm_m.destroy()
 
     @ModelMT.observe("state_machine_manager", after=True)
     def model_changed(self, model, prop_name, info):
@@ -91,7 +91,7 @@ class StateMachineManagerModel(ModelMT, Observable):
                 logger.debug("Delete state machine model for state machine with id %s", sm_id_to_delete)
                 sm_m = self.state_machines[sm_id_to_delete]
                 del self.state_machines[sm_id_to_delete]
-                sm_m.__destroy__()
+                sm_m.destroy()
 
     def get_sm_m_for_state_model(self, state_m):
         return self.state_machines[state_m.state.get_sm_for_state().state_machine_id]

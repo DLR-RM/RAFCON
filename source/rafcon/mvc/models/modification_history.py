@@ -85,6 +85,9 @@ class ModificationsHistoryModel(ModelMT):
         self.tmp_storage_timed_thread = None
 
     def __destroy__(self):
+        self.destroy()
+
+    def destroy(self):
         if self.tmp_storage_timed_thread is not None:
             self.tmp_storage_timed_thread.cancel()
 
