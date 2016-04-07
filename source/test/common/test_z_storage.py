@@ -142,7 +142,7 @@ def check_file(file_path, kind, missing_elements=None, actual_exists=None):
             actual_exists.append(file_path)
         return True
     else:
-        print "%s: '%s' DON'T exists" % (kind, file_path)
+        print "%s: '%s' DOESN'T exist" % (kind, file_path)
         if missing_elements is not None:
             missing_elements.append(file_path)
         return False
@@ -155,7 +155,7 @@ def check_folder(folder_path, kind, missing_elements=None, actual_exists=None):
             actual_exists.append(folder_path)
         return True
     else:
-        print "%s: '%s' DON'T exists" % (kind, folder_path)
+        print "%s: '%s' DOESN'T exist" % (kind, folder_path)
         if missing_elements is not None:
             missing_elements.append(folder_path)
         return False
@@ -164,23 +164,23 @@ def check_folder(folder_path, kind, missing_elements=None, actual_exists=None):
 def check_state_storage(state, parent_path, missing_elements, check_gui_meta_data=False, actual_exists=None):
 
     # check state folder exists
-    folder_path = parent_path + "/" + state.state_id
+    folder_path = os.path.join(parent_path, state.state_id)
     check_folder(folder_path, "state_path", missing_elements, actual_exists)
 
     # check state script exists
     if isinstance(state, ExecutionState):
-        file_path = parent_path + "/" + state.state_id + "/" + "script.py"
+        file_path = os.path.join(parent_path, state.state_id, storage.SCRIPT_FILE)
         check_file(file_path, "script", missing_elements, actual_exists)
 
     # check state-meta data exists (transitions and so on)
-    file_path = parent_path + "/" + state.state_id + "/" + "meta.yaml"
-    check_file(file_path, "state_meta.yaml", missing_elements, actual_exists)
+    file_path = os.path.join(parent_path, state.state_id, storage.FILE_NAME_CORE_DATA)
+    check_file(file_path, "core data", missing_elements, actual_exists)
 
     # check if optional gui-meta-data exists
     if check_gui_meta_data:
         # gtk gui meta data
-        file_path = parent_path + "/" + state.state_id + "/" + "gtk_meta.yaml"
-        check_file(file_path, "gtk_gui_meta.yaml", missing_elements, actual_exists)
+        file_path = os.path.join(parent_path, state.state_id, storage.FILE_NAME_META_DATA)
+        check_file(file_path, "meta data", missing_elements, actual_exists)
 
     if isinstance(state, ContainerState):
         for key, child_state in state.states.iteritems():
@@ -228,7 +228,9 @@ def test_storage_without_gui(caplog):
     save_state_machine(sm_model=sm_m, path=get_unique_temp_path(), logger=logger, with_gui=with_gui,
                        menubar_ctrl=None)
 
-    missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
+    missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
+    assert len(missing_elements) == 0
+
     testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
@@ -265,7 +267,9 @@ def test_storage_with_gui(caplog):
 
     thread.join()
 
-    missing_elements = check_that_all_files_are_there(sm_m, with_print=True)
+    missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
+    assert len(missing_elements) == 0
+
     os.chdir(rafcon.__path__[0] + "/../test/common")
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
