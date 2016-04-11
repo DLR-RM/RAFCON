@@ -80,6 +80,7 @@ class StateOverviewController(ExtendedController, Model):
         format_cell(cell, constants.BUTTON_MIN_HEIGHT, constants.GRID_SIZE)
         l_store = gtk.ListStore(str)
         combo = gtk.ComboBox()
+        combo.set_name("state_type_combo")
         combo.set_focus_on_click(False)
         combo.set_model(l_store)
         combo.pack_start(cell, True)

@@ -404,3 +404,8 @@ style "tree-views" {
     GtkTreeView::odd-row-color  = @input_background_active
 }
 widget_class "*Tree*" style : highest "tree-views"
+
+style "dropdown-list" {
+    GtkComboBox::appears-as-list = 1
+}
+widget "*.state_type_combo" style : highest "dropdown-list"
