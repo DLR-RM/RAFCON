@@ -12,7 +12,6 @@
 
 
 import os
-import glib
 import argparse
 from os.path import realpath, dirname, join, exists
 import signal
@@ -28,22 +27,11 @@ import rafcon.utils.filesystem as filesystem
 from rafcon.statemachine.config import global_config
 import rafcon.statemachine.singleton as sm_singletons
 from rafcon.statemachine.storage import storage
-# needed for yaml parsing
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
 from rafcon.statemachine.enums import StateExecutionState
 
 from rafcon.utils import log
 from rafcon.utils import plugins
-
-logger = log.get_logger("start-no-gui")
-logger.info("initialize RAFCON ... ")
-
-# load all plugins specified in the RAFCON_PLUGIN_PATH
-plugins.load_plugins()
 
 
 def state_machine_path(path):
@@ -86,6 +74,12 @@ def check_for_sm_finished(sm, monitoring_manager=None):
 
 
 if __name__ == '__main__':
+
+    logger = log.get_logger("start_core")
+    logger.info("initialize RAFCON ... ")
+
+    # load all plugins specified in the RAFCON_PLUGIN_PATH
+    plugins.load_plugins()
 
     plugins.run_pre_inits()
 

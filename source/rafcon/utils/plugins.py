@@ -21,44 +21,40 @@ plugin_dict = {}
 
 
 def load_plugins():
+    """Loads all plugins specified in the RAFCON_PLUGIN_PATH environment variable
     """
-    Loads all plugins specified in the RAFCON_PLUGIN_PATH environment variable
-    :return:
-    """
-    plugins = os.environ.get('RAFCON_PLUGIN_PATH', None)
-    if not plugins:
-        return
+    plugins = os.environ.get('RAFCON_PLUGIN_PATH', '')
     plugin_list = plugins.split(":")
     global plugin_dict
-    for plugin in plugin_list:
-        if plugin == "":
+    for plugin_path in plugin_list:
+        if not plugin_path:
             continue
-        logger.info(plugin)
-        dir_name, plugin_name = os.path.split(plugin)
-        sys.path.append(dir_name)
-        i = importlib.import_module(plugin_name)
-        plugin_dict[plugin_name] = i
+        plugin_path = os.path.expandvars(os.path.expanduser(plugin_path))
+        if not os.path.exists(plugin_path):
+            logger.error("The specified plugin path does not exist: {}".format(plugin_path))
+            continue
+        dir_name, plugin_name = os.path.split(plugin_path)
+        logger.info("Found plugin '{}' at {}".format(plugin_name, plugin_path))
+        sys.path.insert(0, dir_name)
+        try:
+            module = importlib.import_module(plugin_name)
+            plugin_dict[plugin_name] = module
+        except ImportError as e:
+            logger.error("Could not import plugin '{}': {}".format(plugin_name, e))
 
 
 def run_pre_inits():
+    """Runs the pre_init methods of all registered plugins
     """
-    Runs the pre_init methods of all registered plugins
-    :return:
-    """
-    global plugin_dict
-    for plugin, module in plugin_dict.iteritems():
-        # print dir(module)
-        # print module.__file__
+    for module in plugin_dict.itervalues():
         module.hooks.pre_init()
 
 
 def run_post_inits(setup_config):
-    """
-    Runs the post_init methods of all registered plugins
+    """Runs the post_init methods of all registered plugins
+
     :param setup_config:
-    :return:
     """
-    global plugin_dict
-    for plugin, module in plugin_dict.iteritems():
+    for module in plugin_dict.itervalues():
         module.hooks.post_init(setup_config)
 

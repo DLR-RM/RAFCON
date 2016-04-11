@@ -27,15 +27,6 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
 from rafcon.utils import plugins
-# load all plugins specified in the RAFCON_PLUGIN_PATH
-plugins.load_plugins()
-
-
-# check if twisted is imported
-if "twisted" in sys.modules.keys():
-    from twisted.internet import gtk2reactor
-    # needed for glib.idle_add, and signals
-    gtk2reactor.install()
 
 
 def setup_logger():
@@ -49,11 +40,23 @@ def setup_logger():
     logging.getLogger('gtkmvc').addHandler(stdout)
 
 
-if __name__ == '__main__':
+def prepare_plugins():
+    # load all plugins specified in the RAFCON_PLUGIN_PATH
+    plugins.load_plugins()
+
+    # check if twisted is imported and if so, install the required reactor
+    if "twisted" in sys.modules.keys():
+        from twisted.internet import gtk2reactor
+        # needed for glib.idle_add, and signals
+        gtk2reactor.install()
 
     plugins.run_pre_inits()
 
+
+if __name__ == '__main__':
     setup_logger()
+    prepare_plugins()
+
     # from rafcon.utils import log
     logger = log.get_logger("start")
     logger.info("RAFCON launcher")
@@ -131,6 +134,7 @@ if __name__ == '__main__':
 
     # check if twisted is imported
     if "twisted" in sys.modules.keys():
+        from twisted.internet import reactor
         reactor.run()
     else:
         gtk.main()
