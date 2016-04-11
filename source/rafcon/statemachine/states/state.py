@@ -383,22 +383,32 @@ class State(Observable, YAMLObject, JSONObject):
     # ------------------------------------ outcome functions --------------------------------------
     # ---------------------------------------------------------------------------------------------
 
-    def get_path(self, appendix=None):
-        """ Recursively create the path of the state. In bottom up method i.e. from the nested child states to the root
-        state.
-        :param appendix: the part of the path that was already calculated by previous function calls
+    def get_path(self, appendix=None, by_name=False):
+        """ Recursively create the path of the state.
+
+        The path is generated in bottom up method i.e. from the nested child states to the root state. The method
+        concatenate either State.state_id (always unique) or State.name (maybe not unique but human readable) as
+        state identifier for the path.
+
+        :param str appendix: the part of the path that was already calculated by previous function calls
+        :param bool by_name: The boolean enables name usage to generate the path
         :return: the full path to the root state
         """
+        if by_name:
+            state_identifier = self.name
+        else:
+            state_identifier = self.state_id
+
         if not self.is_root_state:
             if appendix is None:
-                return self.parent.get_path(self.state_id)
+                return self.parent.get_path(state_identifier, by_name)
             else:
-                return self.parent.get_path(self.state_id + PATH_SEPARATOR + appendix)
+                return self.parent.get_path(state_identifier + PATH_SEPARATOR + appendix, by_name)
         else:
             if appendix is None:
-                return self.state_id
+                return state_identifier
             else:
-                return self.state_id + PATH_SEPARATOR + appendix
+                return state_identifier + PATH_SEPARATOR + appendix
 
     def get_sm_for_state(self):
         """
