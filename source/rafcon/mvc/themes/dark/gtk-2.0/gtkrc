@@ -82,7 +82,7 @@ style "basic_layout"
     GtkOptionMenu::indicator-size                = {20, 20}
     GtkOptionMenu::indicator-spacing             = {10, 10, 10, 10}
 
-    GtkComboBox::appears-as-list                 = 1
+    GtkComboBox::appears-as-list                 = 0
     GtkComboBox::arrow-size                      = 20
     GtkComboBox::shadow-type                     = GTK_SHADOW_NONE
 
