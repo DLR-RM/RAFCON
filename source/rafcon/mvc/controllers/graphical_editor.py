@@ -29,8 +29,8 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc import statemachine_helper
-from rafcon.mvc.models.abstract_state import MetaSignalMsg
-from rafcon.mvc.models import ContainerStateModel, StateModel, TransitionModel, DataFlowModel
+from rafcon.mvc.models.signals import MetaSignalMsg
+from rafcon.mvc.models import ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.library_state import LibraryStateModel
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 from rafcon.mvc.models.state_machine import StateMachineModel
@@ -38,8 +38,6 @@ from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.views.graphical_editor import Direction
 from rafcon.mvc.controllers.extended_controller import ExtendedController
-
-from rafcon.mvc import singleton as mvc_singleton
 
 from rafcon.utils import log
 

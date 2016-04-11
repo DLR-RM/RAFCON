@@ -449,7 +449,7 @@ def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', c
 
     t_m.meta['gui']['editor_opengl'].update({'waypoints': [(first_point_x, first_point_y),
                                                            (second_point_x, second_point_y)]})
-    from rafcon.mvc.models.abstract_state import MetaSignalMsg
+    from rafcon.mvc.models.signals import MetaSignalMsg
     if combined_action:
         t_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='append_to_last_change'))
     else:

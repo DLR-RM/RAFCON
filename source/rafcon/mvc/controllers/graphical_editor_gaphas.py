@@ -16,7 +16,7 @@ from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc import statemachine_helper
 
-from rafcon.mvc.models.abstract_state import MetaSignalMsg
+from rafcon.mvc.models.signals import MetaSignalMsg
 from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.models import ContainerStateModel, StateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel

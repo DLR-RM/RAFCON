@@ -33,7 +33,7 @@ from rafcon.statemachine.storage import storage
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
 from rafcon.mvc.models.container_state import ContainerState, ContainerStateModel
-from rafcon.mvc.models.abstract_state import MetaSignalMsg
+from rafcon.mvc.models.signals import MetaSignalMsg
 
 import rafcon.mvc.singleton as mvc_singleton
 from rafcon.mvc.utils.notification_overview import NotificationOverview

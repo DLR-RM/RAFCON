@@ -135,11 +135,11 @@ def save_state_machine(sm_model, path, logger, with_gui, menubar_ctrl):
         # time.sleep(sleep_time_short)
 
 
-def check_file(file_path, kind, missing_elements=None, actual_exists=None):
+def check_file(file_path, kind, missing_elements=None, existing_elements=None):
     if os.path.isfile(file_path):
         print "%s: '%s' exists" % (kind, file_path)
-        if actual_exists is not None:
-            actual_exists.append(file_path)
+        if existing_elements is not None:
+            existing_elements.append(file_path)
         return True
     else:
         print "%s: '%s' DOESN'T exist" % (kind, file_path)
@@ -148,11 +148,11 @@ def check_file(file_path, kind, missing_elements=None, actual_exists=None):
         return False
 
 
-def check_folder(folder_path, kind, missing_elements=None, actual_exists=None):
+def check_folder(folder_path, kind, missing_elements=None, existing_elements=None):
     if os.path.exists(folder_path):
         print "%s: '%s' exists" % (kind, folder_path)
-        if actual_exists is not None:
-            actual_exists.append(folder_path)
+        if existing_elements is not None:
+            existing_elements.append(folder_path)
         return True
     else:
         print "%s: '%s' DOESN'T exist" % (kind, folder_path)
@@ -161,40 +161,57 @@ def check_folder(folder_path, kind, missing_elements=None, actual_exists=None):
         return False
 
 
-def check_state_storage(state, parent_path, missing_elements, check_gui_meta_data=False, actual_exists=None):
+def check_state_machine_storage(state_machine, path, missing_elements, existing_elements=None, check_meta_data=False):
+    # check state machine folder exists
+    check_folder(path, "state machine path", missing_elements, existing_elements)
+
+    # check state-meta data exists (transitions and so on)
+    file_path = os.path.join(path, storage.STATEMACHINE_FILE)
+    check_file(file_path, "statemachine data", missing_elements, existing_elements)
+
+    # check if optional gui-meta-data exists
+    if check_meta_data:
+        # gtk gui meta data
+        file_path = os.path.join(path, storage.FILE_NAME_META_DATA)
+        check_file(file_path, "meta data", missing_elements, existing_elements)
+
+    if state_machine.root_state:
+        check_state_storage(state_machine.root_state, path, missing_elements, existing_elements, check_meta_data)
+
+
+def check_state_storage(state, parent_path, missing_elements, existing_elements=None, check_meta_data=False):
 
     # check state folder exists
     folder_path = os.path.join(parent_path, state.state_id)
-    check_folder(folder_path, "state_path", missing_elements, actual_exists)
+    check_folder(folder_path, "state_path", missing_elements, existing_elements)
 
     # check state script exists
     if isinstance(state, ExecutionState):
         file_path = os.path.join(parent_path, state.state_id, storage.SCRIPT_FILE)
-        check_file(file_path, "script", missing_elements, actual_exists)
+        check_file(file_path, "script", missing_elements, existing_elements)
 
     # check state-meta data exists (transitions and so on)
     file_path = os.path.join(parent_path, state.state_id, storage.FILE_NAME_CORE_DATA)
-    check_file(file_path, "core data", missing_elements, actual_exists)
+    check_file(file_path, "core data", missing_elements, existing_elements)
 
     # check if optional gui-meta-data exists
-    if check_gui_meta_data:
+    if check_meta_data:
         # gtk gui meta data
         file_path = os.path.join(parent_path, state.state_id, storage.FILE_NAME_META_DATA)
-        check_file(file_path, "meta data", missing_elements, actual_exists)
+        check_file(file_path, "meta data", missing_elements, existing_elements)
 
     if isinstance(state, ContainerState):
         for key, child_state in state.states.iteritems():
-            check_state_storage(child_state, folder_path, missing_elements, check_gui_meta_data, actual_exists)
+            check_state_storage(child_state, folder_path, missing_elements, existing_elements, check_meta_data)
 
 
-def check_that_all_files_are_there(sm_m, base_path=None, check_gui_meta_data=False, with_print=False, old_exists=None, old_base_path=None):
+def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, with_print=False, old_exists=None, old_base_path=None):
     root_state = sm_m.state_machine.root_state
     base_path = sm_m.state_machine.file_system_path
     missing_elements = []
-    actual_exists = []
-    check_folder(base_path, "statemachine_root_state_base_path", missing_elements, actual_exists)
+    existing_elements = []
+    check_state_machine_storage(sm_m.state_machine, base_path, missing_elements, existing_elements, check_meta_data)
 
-    check_state_storage(root_state, base_path, missing_elements, check_gui_meta_data, actual_exists)
     if old_exists is not None and old_base_path:
         old_without_base = [old_path.replace(old_base_path, "") for old_path in old_exists]
     else:
@@ -215,7 +232,7 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_gui_meta_data=Fal
               (sm_m.state_machine.state_machine_id, root_state.state_id)
         print 30*"#"
 
-    return missing_elements, actual_exists
+    return missing_elements, existing_elements
 
 
 def test_storage_without_gui(caplog):
@@ -267,7 +284,7 @@ def test_storage_with_gui(caplog):
 
     thread.join()
 
-    missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
+    missing_elements, _ = check_that_all_files_are_there(sm_m, check_meta_data=True, with_print=False)
     assert len(missing_elements) == 0
 
     os.chdir(rafcon.__path__[0] + "/../test/common")

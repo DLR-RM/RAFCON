@@ -22,7 +22,7 @@ from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurre
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.models.abstract_state import MetaSignalMsg
+from rafcon.mvc.models.signals import MetaSignalMsg
 
 from rafcon.utils import log
 from rafcon.mvc.utils import constants

@@ -1,19 +1,17 @@
 import os.path
 from copy import deepcopy
-from collections import namedtuple
 from weakref import ref
 
-from gtkmvc import ModelMT, Signal
-
-from rafcon.statemachine.storage import storage
-
-from rafcon.statemachine.states.state import State
+from rafcon.mvc.models.signals import MetaSignalMsg, Notification
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.library_state import LibraryState
-
+from rafcon.statemachine.states.state import State
+from rafcon.statemachine.storage import storage
+from rafcon.utils import log
 from rafcon.utils import storage_utils
 from rafcon.utils.vividict import Vividict
-from rafcon.utils import log
+
+from gtkmvc import ModelMT, Signal
 
 logger = log.get_logger(__name__)
 
@@ -36,14 +34,6 @@ def get_state_model_class_for_state(state):
     else:
         logger.warning("There is not model for state of type {0} {1}".format(type(state), state))
         return None
-
-
-MetaSignalMsg = namedtuple('MetaSignalMsg', ['origin', 'change', 'affects_children', 'notification'])
-MetaSignalMsg.__new__.__defaults__ = (False, None)  # Make last two parameters optional
-
-StateTypeChangeSignalMsg = namedtuple('StateTypeChangeSignalMsg', ['new_state_m'])
-
-Notification = namedtuple('Notification', ['model', 'prop_name', 'info'])
 
 
 class AbstractStateModel(ModelMT):
@@ -258,7 +248,7 @@ class AbstractStateModel(ModelMT):
         elements (data ports, outcomes, etc.) and stores it on the filesystem.
         """
         if temp_path:
-            meta_file_json = os.path.join(temp_path + '/' + self.state.get_path(), storage.FILE_NAME_META_DATA)
+            meta_file_json = os.path.join(temp_path, self.state.get_path(), storage.FILE_NAME_META_DATA)
         else:
             meta_file_json = os.path.join(self.state.get_file_system_path(), storage.FILE_NAME_META_DATA)
         meta_data = deepcopy(self.meta)

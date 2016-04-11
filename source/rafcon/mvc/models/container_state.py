@@ -11,7 +11,8 @@ from rafcon.mvc.models.transition import TransitionModel
 from rafcon.mvc.models.data_flow import DataFlowModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
-from rafcon.mvc.models.abstract_state import get_state_model_class_for_state, StateTypeChangeSignalMsg
+from rafcon.mvc.models.abstract_state import get_state_model_class_for_state
+from rafcon.mvc.models.signals import StateTypeChangeSignalMsg
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -49,7 +50,7 @@ class ContainerStateModel(StateModel):
             # Create hierarchy
             model_class = get_state_model_class_for_state(state)
             if model_class is not None:
-                self.states[state.state_id] = model_class(state, parent=self)
+                self.states[state.state_id] = model_class(state, parent=self, load_meta_data=load_meta_data)
             else:
                 logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
 

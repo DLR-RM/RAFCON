@@ -1,7 +1,8 @@
 from weakref import ref
 from gtkmvc import ModelMT, Signal
 
-from rafcon.mvc.models.abstract_state import Notification, AbstractStateModel
+from rafcon.mvc.models.signals import Notification
+from rafcon.mvc.models.abstract_state import AbstractStateModel
 
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log

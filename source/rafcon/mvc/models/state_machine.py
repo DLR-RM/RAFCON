@@ -1,15 +1,18 @@
+import os
 from gtkmvc import ModelMT, Signal
 
-from rafcon.mvc.models.abstract_state import StateTypeChangeSignalMsg
 from rafcon.mvc.models import ContainerStateModel, StateModel
+from rafcon.mvc.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg
 from rafcon.mvc.selection import Selection
 
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.statemachine.storage import storage
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.utils.vividict import Vividict
+from rafcon.utils import storage_utils
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -29,9 +32,11 @@ class StateMachineModel(ModelMT):
     meta_signal = Signal()
     state_meta_signal = Signal()
 
+    suppress_new_root_state_model_one_time = False
+
     __observables__ = ("state_machine", "root_state", "selection", "meta_signal", "state_meta_signal")
 
-    def __init__(self, state_machine, sm_manager_model, meta=None):
+    def __init__(self, state_machine, sm_manager_model, meta=None, load_meta_data=True):
         """Constructor
         """
         ModelMT.__init__(self)  # pass columns as separate parameters
@@ -42,23 +47,11 @@ class StateMachineModel(ModelMT):
 
         root_state = self.state_machine.root_state
         if isinstance(root_state, ContainerState):
-            self.root_state = ContainerStateModel(root_state)
+            self.root_state = ContainerStateModel(root_state, parent=self, load_meta_data=load_meta_data)
         else:
-            self.root_state = StateModel(root_state)
-
-        self.root_state.register_observer(self)
-        self.register_observer(self)
+            self.root_state = StateModel(root_state, parent=self, load_meta_data=load_meta_data)
 
         self.sm_manager_model = sm_manager_model
-
-        self.selection = Selection()
-
-        from rafcon.mvc.models.modification_history import ModificationsHistoryModel
-        history_enabled = global_gui_config.get_config_value('HISTORY_ENABLED')
-        logger.info("is modification-history enabled: %s" % history_enabled)
-        self.history = ModificationsHistoryModel(self)
-        if not history_enabled:
-            self.history.fake = True
 
         if isinstance(meta, Vividict):
             self.meta = meta
@@ -66,9 +59,23 @@ class StateMachineModel(ModelMT):
             self.meta = Vividict()
         self.meta_signal = Signal()
         self.state_meta_signal = Signal()
-        self.suppress_new_root_state_model_one_time = False
 
         self.temp = Vividict()
+
+        if load_meta_data:
+            self.load_meta_data(recursively=False)
+
+        self.selection = Selection()
+
+        from rafcon.mvc.models.modification_history import ModificationsHistoryModel
+        history_enabled = global_gui_config.get_config_value('HISTORY_ENABLED')
+        self.history = ModificationsHistoryModel(self)
+        if not history_enabled:
+            self.history.fake = True
+            logger.info("The modification history is disabled")
+
+        self.root_state.register_observer(self)
+        self.register_observer(self)
 
     def __destroy__(self):
         self.destroy()
@@ -229,4 +236,54 @@ class StateMachineModel(ModelMT):
         if 'before' in info:
             self.state_machine._notify_method_before(self.state_machine, cause, (self.state_machine, ), info)
         elif 'after' in info:
-            self.state_machine._notify_method_after(self.state_machine, cause, None, (self.state_machine, ), info)
+            self.state_machine._notify_method_after(self.state_machine, cause, None, (self.state_machine, ), info)# ---------------------------------------- meta data methods ---------------------------------------------
+
+    def load_meta_data(self, path=None, recursively=True):
+        """Load meta data of state machine model from the file system
+
+        The meta data of the state machine model is loaded from the file system and stored in the meta property of the
+        model. Existing meta data is removed. Also the meta data of root state and children is loaded.
+
+        :param str path: Optional path to the meta data file. If not given, the path will be derived from the state
+            machine's path on the filesystem
+        """
+
+        meta_data_path = path if path is not None else self.state_machine.file_system_path
+
+        if meta_data_path:
+            path_meta_data = os.path.join(meta_data_path, storage.FILE_NAME_META_DATA)
+
+            try:
+                tmp_meta = storage.load_data_file(path_meta_data)
+            except ValueError:
+                tmp_meta = {}
+        else:
+            tmp_meta = {}
+
+        # JSON returns a dict, which must be converted to a Vividict
+        tmp_meta = Vividict(tmp_meta)
+
+        if recursively:
+            root_state_path = None if not path else os.path.join(path, self.root_state.state.state_id)
+            self.root_state.load_meta_data(root_state_path)
+
+        if tmp_meta:
+            # assign the meta data to the state
+            self.meta = tmp_meta
+            self.meta_signal.emit(MetaSignalMsg("load_meta_data", "all", True))
+
+    def store_meta_data(self, temp_path=None):
+        """Save meta data of the state machine model to the file system
+
+        This method generates a dictionary of the meta data of the state machine and stores it on the filesystem.
+
+        :param str temp_path: Optional, if the path is specified, it will be used instead of the file system path
+        """
+        if temp_path:
+            meta_file_json = os.path.join(temp_path, storage.FILE_NAME_META_DATA)
+        else:
+            meta_file_json = os.path.join(self.state_machine.file_system_path, storage.FILE_NAME_META_DATA)
+
+        storage_utils.write_dict_to_json(self.meta, meta_file_json)
+
+        self.root_state.store_meta_data(temp_path)

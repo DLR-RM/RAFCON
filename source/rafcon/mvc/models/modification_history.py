@@ -456,7 +456,7 @@ class ModificationsHistoryModel(ModelMT):
                 tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/' + sm.file_system_path
             storage.save_statemachine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=False,
                                               save_as=True, temporary_storage=True)
-            self.state_machine_model.root_state.store_meta_data(temp_path=tmp_sm_system_path)
+            self.state_machine_model.store_meta_data(temp_path=tmp_sm_system_path)
             self.last_storage_time = actual_time
         else:
             self.timer_request_lock.acquire()
