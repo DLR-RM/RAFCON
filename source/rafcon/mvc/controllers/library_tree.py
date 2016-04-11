@@ -73,17 +73,22 @@ class LibraryTreeController(ExtendedController):
             add_link_menu_item = gtk.ImageMenuItem(gtk.STOCK_ADD)
             add_link_menu_item.set_label("Add as library (link)")
             add_link_menu_item.connect("activate", partial(self.insert_button_clicked, as_template=False))
+            add_link_menu_item.set_always_show_image(True)
 
             add_template_menu_item = gtk.ImageMenuItem(gtk.STOCK_COPY)
             add_template_menu_item.set_label("Add as template (copy)")
             add_template_menu_item.connect("activate", partial(self.insert_button_clicked, as_template=True))
+            add_template_menu_item.set_always_show_image(True)
 
             open_menu_item = gtk.ImageMenuItem(gtk.STOCK_OPEN)
             open_menu_item.set_label("Open")
             open_menu_item.connect("activate", self.open_button_clicked)
+            open_menu_item.set_always_show_image(True)
 
-            open_run_menu_item = gtk.MenuItem("Open and run")
+            open_run_menu_item = gtk.ImageMenuItem(gtk.STOCK_MEDIA_PLAY)
+            open_run_menu_item.set_label("Open and run")
             open_run_menu_item.connect("activate", self.open_run_button_clicked)
+            open_run_menu_item.set_always_show_image(True)
 
             menu.append(add_link_menu_item)
             menu.append(add_template_menu_item)
