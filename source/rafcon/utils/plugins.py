@@ -24,7 +24,7 @@ def load_plugins():
     """Loads all plugins specified in the RAFCON_PLUGIN_PATH environment variable
     """
     plugins = os.environ.get('RAFCON_PLUGIN_PATH', '')
-    plugin_list = plugins.split(":")
+    plugin_list = set(plugins.split(os.pathsep))
     global plugin_dict
     for plugin_path in plugin_list:
         if not plugin_path:
