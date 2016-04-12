@@ -1008,12 +1008,6 @@ class ContainerState(State):
             if to_data_port is to_data_port_existing and data_flow is not existing_data_flow:
                 if from_data_port is from_data_port_existing:
                     return False, "Exactly the same data flow is already existing"
-                # Scoped variables are an exception, they can be connected several times
-                if to_data_port.parent is self:
-                    if to_data_port_id not in to_data_port.parent.scoped_variables:
-                        return False, "Data flow target is already connected to another data flow"
-                else:
-                    return False, "Data flow target is already connected to another data flow"
 
         return True, "valid"
 
