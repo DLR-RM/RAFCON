@@ -26,6 +26,9 @@ source/rafcon | !*.pyc => lib/python2.7/rafcon
 source/rafcon_server | !*.pyc => lib/python2.7/rafcon_server
 source/libraries | !*.pyc => share/libraries
 share | !*.pyc => share
+source/test_scripts/ros_libraries => share/examples/libraries/ros_libraries
+source/test_scripts/turtle_libraries => share/examples/libraries/turtle_libraries
+source/test_scripts/tutorials => share/examples/tutorials
 source/rafcon/documentation => docs
 bin/ | !rafcon_start | !rafcon_start_gui | !*.pyc => bin # Symlinks are recreated in post_install step
 
