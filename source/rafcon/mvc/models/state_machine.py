@@ -236,7 +236,11 @@ class StateMachineModel(ModelMT):
         if 'before' in info:
             self.state_machine._notify_method_before(self.state_machine, cause, (self.state_machine, ), info)
         elif 'after' in info:
-            self.state_machine._notify_method_after(self.state_machine, cause, None, (self.state_machine, ), info)# ---------------------------------------- meta data methods ---------------------------------------------
+            self.state_machine._notify_method_after(self.state_machine, cause, None, (self.state_machine, ), info)
+
+    #######################################################
+    # --------------------- meta data methods ---------------------
+    #######################################################
 
     def load_meta_data(self, path=None, recursively=True):
         """Load meta data of state machine model from the file system
