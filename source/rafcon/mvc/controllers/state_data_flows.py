@@ -2,7 +2,7 @@
 .. module:: state_data_flows
    :platform: Unix, Windows
    :synopsis: A module that holds the controller to list and edit all internal and related external data flows of a
-   state.
+     state.
 
 .. moduleauthor:: Rico Belder
 

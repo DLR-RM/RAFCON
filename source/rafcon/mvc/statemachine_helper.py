@@ -25,6 +25,7 @@ def delete_model(model, raise_exceptions=False):
 
     If the model is one of state, data flow or transition, it is tried to delete that model together with its
     data from the corresponding state machine.
+
     :param model: The model to delete
     :return: True if successful, False else
     """
@@ -107,6 +108,7 @@ def delete_models(models, raise_exceptions=False):
     """Deletes all given models from their state machines
 
     Calls the :func:`delete_model` for all models given.
+
     :param models: A single model or a list of models to be deleted
     :return: The number of models that were successfully deleted
     """
@@ -131,6 +133,7 @@ def add_state(container_state_m, state_type):
     """Add a state to a container state
 
     Adds a state of type state_type to the given container_state
+
     :param rafcon.mvc.models.container_state.ContainerState container_state_m: A model of a container state to add
       the new state to
     :param rafcon.statemachine.enums.StateType state_type: The type of state that should be added
@@ -332,6 +335,7 @@ def get_root_state_model(state_m, library_root=False):
     The method walks up the state tree from the given state model to find the root state model (which doesn't
     have a parent state). If the flag library_root is set to True, the root is defined as root of the library and
     not of the whole state machine.
+
     :param state_m: The state model to start from
     :param library_root: Flag to specify if the root of teh library is searched
     :return: The model of the root state (either of the state machine or the library)
@@ -346,6 +350,7 @@ def get_state_model_for_state(state):
 
     The function looks up the state machine id for the given state and walks the state tree up until it find the
     model of the given state.
+
     :param state: The state of which the state model is searched
     :return: The model corresponding to state
     """

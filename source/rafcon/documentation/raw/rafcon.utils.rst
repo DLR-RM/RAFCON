@@ -16,10 +16,6 @@ geometry
 --------
 .. automodule:: rafcon.utils.geometry
 
-json_utils
-----------
-.. automodule:: rafcon.utils.json_utils
-
 log
 ---
 .. automodule:: rafcon.utils.log

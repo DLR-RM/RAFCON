@@ -1,7 +1,10 @@
-""" The Action-Class provides the a general redo or undo functionality for any action
-as long as the the class object was initialized with consistent arguments.
-This general Action (one procedure for all possible edition) procedure is expansive and complex dues it is aimed
-to define specific Action-*-Classes for simple/specific edit actions.
+"""Action class for history
+
+The Action-Class provides a general redo or undo functionality for any action, as long as the the class object was
+initialized with consistent arguments.
+
+This general Action (one procedure for all possible edition) procedure is expansive and complex, therefore it is aimed
+to define specific _-Action-Classes for simple/specific edit actions.
 """
 import copy
 import json

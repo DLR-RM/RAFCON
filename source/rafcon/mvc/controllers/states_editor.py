@@ -2,7 +2,7 @@
 .. module:: states_editor
    :platform: Unix, Windows
    :synopsis: A module that holds the controller with the interface to the states editor notebook and controls
-   showing and organization of selected and hold state editors.
+     showing and organization of selected and hold state editors.
 
 .. moduleauthor:: Rico Belder
 

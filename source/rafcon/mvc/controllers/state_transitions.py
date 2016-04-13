@@ -2,7 +2,7 @@
 .. module:: state_transitions
    :platform: Unix, Windows
    :synopsis: A module that holds the controller to list and edit all internal and related external transitions of a
-   state.
+     state.
 
 .. moduleauthor:: Rico Belder
 
