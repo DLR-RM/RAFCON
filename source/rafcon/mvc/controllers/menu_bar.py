@@ -247,26 +247,20 @@ class MenuBarController(ExtendedController):
         state_machine_m = self.model.get_selected_state_machine_model()
         if state_machine_m is None:
             return
-        save_path = state_machine_m.state_machine.file_system_path
-        if save_path is None:
-            if not self.on_save_as_activate(widget, data=None):
-                return
-
-        logger.debug("Saving state machine to {0}".format(save_path))
 
         all_tabs = self.states_editor_ctrl.tabs.values()
         all_tabs.extend(self.states_editor_ctrl.closed_tabs.values())
-        dirty_source_editors = [tab_dict['controller'] for tab_dict in all_tabs if
-                                tab_dict['source_code_view_is_dirty'] is True
-                                and tab_dict[
-                                    'state_m'].state.get_sm_for_state().state_machine_id ==
-                                state_machine_m.state_machine.state_machine_id]
+        dirty_source_editor_ctrls = [tab_dict['controller'].get_controller('source_ctrl') for tab_dict in all_tabs if
+                                     tab_dict['source_code_view_is_dirty'] is True
+                                     and tab_dict[
+                                     'state_m'].state.get_sm_for_state().state_machine_id ==
+                                     state_machine_m.state_machine.state_machine_id]
 
-        for dirty_source_editor in dirty_source_editors:
+        for dirty_source_editor_ctrl in dirty_source_editor_ctrls:
             def on_message_dialog_response_signal(widget, response_id):
                 if response_id == 42:
                     widget.destroy()
-                    dirty_source_editor.get_controller('source_ctrl').apply_clicked(None)
+                    dirty_source_editor_ctrl.apply_clicked(None)
                     logger.debug("Source script in editing stored before saving")
 
                 elif response_id == 43:
@@ -277,12 +271,20 @@ class MenuBarController(ExtendedController):
             message_string = "Are you sure you want to store the state machine without storing source Code in " \
                              "editing?\n\n" \
                              "The changes of state: %s name: %s have to be stored or ignored while saving. " % \
-                             (dirty_source_editor.model.state.get_path(), dirty_source_editor.model.state.name)
+                             (dirty_source_editor_ctrl.model.state.get_path(), dirty_source_editor_ctrl.model.state.name)
             dialog.set_markup(message_string)
             dialog.add_button("Store", 42)
             dialog.add_button("Ignore", 43)
             dialog.grab_focus()
             dialog.finalize(on_message_dialog_response_signal)
+            dialog.run()
+
+        save_path = state_machine_m.state_machine.file_system_path
+        if save_path is None:
+            if not self.on_save_as_activate(widget, data=None):
+                return
+
+        logger.debug("Saving state machine to {0}".format(save_path))
 
         state_machine = self.model.get_selected_state_machine_model().state_machine
         storage.save_statemachine_to_path(state_machine, state_machine.file_system_path,
@@ -290,6 +292,7 @@ class MenuBarController(ExtendedController):
 
         self.model.get_selected_state_machine_model().store_meta_data()
         logger.debug("Successfully saved state machine and its meta data.")
+        return True
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
         if path is None:
@@ -300,7 +303,7 @@ class MenuBarController(ExtendedController):
             if path is None:
                 return False
         self.model.get_selected_state_machine_model().state_machine.file_system_path = path
-        self.on_save_activate(widget, data, save_as=True)
+        return self.on_save_activate(widget, data, save_as=True)
 
     def on_menu_properties_activate(self, widget, data=None):
         # TODO: implement
