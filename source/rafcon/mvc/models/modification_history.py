@@ -79,6 +79,7 @@ class ModificationsHistoryModel(ModelMT):
         self.force_temp_storage_interval = global_gui_config.get_config_value('FORCED_TEMPORARY_STORAGE_INTERVAL')
         self.timed_temp_storage_interval = global_gui_config.get_config_value('TIMED_TEMPORARY_STORAGE_INTERVAL')
         self.last_storage_time = time.time()
+        self.storage_lock = threading.Lock()
         self.check_for_temp_storage(force=True)
         self.timer_request_lock = threading.Lock()
         self.timer_request_time = None
@@ -419,23 +420,37 @@ class ModificationsHistoryModel(ModelMT):
         """
         actual_time = time.time()
         self.timer_request_lock.acquire()
+        sm = self.state_machine_model.state_machine
         if self.last_storage_time > self.timer_request_time:
-            # logger.info('{1} quit_thread {0}'.format(self.__state_machine_id, time.time()))
+            # logger.info('{1} quit_thread {0}'.format(sm.state_machine_id, time.time()))
             self.timer_request_time = None
             self.tmp_storage_timed_thread = None
         elif self.timed_temp_storage_interval < actual_time - self.timer_request_time:
-            # logger.info("{0} Perform timed auto storage of state-machine {1}.".format(time.time(),
-            #                                                                           self.__state_machine_id))
+            # logger.info("{0} Perform timed auto-backup of state-machine {1}.".format(time.time(),
+            #                                                                          sm.state_machine_id))
             self.check_for_temp_storage(force=True)
             self.timer_request_time = None
             self.tmp_storage_timed_thread = None
         else:
             duration_to_wait = self.timed_temp_storage_interval - (actual_time - self.timer_request_time)
-            # logger.info('{2} restart_thread {0} time to go {1}'.format(self.__state_machine_id,
+            # logger.info('{2} restart_thread {0} time to go {1}'.format(sm.state_machine_id,
             #                                                            duration_to_wait, time.time()))
             self.tmp_storage_timed_thread = threading.Timer(duration_to_wait, self._check_for_timed_auto_temp_storage)
             self.tmp_storage_timed_thread.start()
         self.timer_request_lock.release()
+
+    def perform_temp_storage(self):
+        sm = self.state_machine_model.state_machine
+        logger.info('Perform auto-backup of state-machine {} to tmp-folder'.format(sm.state_machine_id))
+        if sm.file_system_path is None:
+            tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/not_stored_' + str(sm.state_machine_id)
+        else:
+            tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/' + sm.file_system_path
+        self.storage_lock.acquire()
+        storage.save_statemachine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=False,
+                                          save_as=True, temporary_storage=True)
+        self.state_machine_model.store_meta_data(temp_path=tmp_sm_system_path)
+        self.storage_lock.release()
 
     def check_for_temp_storage(self, force=False):
         """ The method implements the checks for possible temporary backup of the state-machine according duration till
@@ -449,25 +464,19 @@ class ModificationsHistoryModel(ModelMT):
         sm = self.state_machine_model.state_machine
         actual_time = time.time()
         if sm.marked_dirty and actual_time - self.last_storage_time > self.force_temp_storage_interval or force:
-            logger.info('Perform auto storage of state-machine {} to tmp-folder'.format(self.__state_machine_id))
-            if sm.file_system_path is None:
-                tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/not_stored_' + str(sm.state_machine_id)
-            else:
-                tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/' + sm.file_system_path
-            storage.save_statemachine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=False,
-                                              save_as=True, temporary_storage=True)
-            self.state_machine_model.store_meta_data(temp_path=tmp_sm_system_path)
+
+            self.perform_temp_storage()
             self.last_storage_time = actual_time
         else:
             self.timer_request_lock.acquire()
             if self.timer_request_time is None:
-                # logger.info('{0} start_thread {1}'.format(actual_time, self.__state_machine_id))
+                # logger.info('{0} start_thread {1}'.format(actual_time, sm.state_machine_id))
                 self.timer_request_time = actual_time
                 self.tmp_storage_timed_thread = threading.Timer(self.timed_temp_storage_interval,
                                                                 self._check_for_timed_auto_temp_storage)
                 self.tmp_storage_timed_thread.start()
             else:
-                # logger.info('{0} update_thread {1}'.format(actual_time, self.__state_machine_id))
+                # logger.info('{0} update_thread {1}'.format(actual_time, sm.state_machine_id))
                 self.timer_request_time = actual_time
             self.timer_request_lock.release()
 
@@ -508,6 +517,22 @@ class ModificationsHistoryModel(ModelMT):
     def manual_changed_notify_after(self, change_type, changed_parent_model, changed_model, recursive_changes):
         pass
 
+    def before_count(self):
+        if self.count_before == 0:
+            self.storage_lock.acquire()
+            self.locked = True
+        self.count_before += 1
+        if self.with_prints:
+            print "LOCKED count up", self.count_before
+
+    def after_count(self):
+        self.count_before -= 1
+        if self.with_prints:
+            print "LOCKED count down", self.count_before
+        if self.count_before == 0:
+            self.locked = False
+            self.storage_lock.release()
+
     @ModelMT.observe("state_machine", before=True)
     def assign_notification_change_type_root_state_before(self, model, prop_name, info):
         if info.method_name != "root_state_change":
@@ -525,10 +550,7 @@ class ModificationsHistoryModel(ModelMT):
             self.actual_action = StateMachineAction(parent_path=overview['instance'][-1].root_state.get_path(),
                                                     state_machine_model=self.state_machine_model,
                                                     overview=overview)
-            self.count_before += 1
-            if self.with_prints:
-                print "LOCKED count up state_machine", self.count_before
-            self.locked = True
+            self.before_count()
 
     @ModelMT.observe("state_machine", after=True)
     def assign_notification_change_type_root_state_after(self, model, prop_name, info):
@@ -550,17 +572,12 @@ class ModificationsHistoryModel(ModelMT):
 
             # decrease counter and finish action if count_before = 0
             if self.locked:
-                self.count_before -= 1
-                if self.with_prints:
-                    print "LOCKED count down state_machine", self.count_before
+                self.after_count()
                 if self.count_before == 0:
-                    self.locked = False
-                    if self.with_prints:
-                        print "IN HISTORY", model, prop_name, info
                     self.finish_new_action(overview)
                     self._re_initiate_observation()
                     if self.with_prints:
-                        print "HISTORY COUNT WAS OF SUCCESS"
+                        print "HISTORY COUNT WAS OF SUCCESS FOR STATE MACHINE"
             else:
                 logger.error("HISTORY after not count [state_machine] -> For every before there should be a after.")
 
@@ -585,17 +602,12 @@ class ModificationsHistoryModel(ModelMT):
 
             # increase counter and generate new action if not locked by action that is performed
             if self.locked:
-                self.count_before += 1
-                if self.with_prints:
-                    print "LOCKED count up", self.count_before
+                self.before_count()
             else:
                 if self.with_prints:
-                    print "NEW HISTORY ELEMENT", info
+                    print "NEW HISTORY ELEMENT"
                 if self.start_new_action(overview):
-                    self.count_before += 1
-                    if self.with_prints:
-                        print "LOCKED count up", self.count_before
-                    self.locked = True
+                    self.before_count()
                 else:
                     logger.error("FAILED to start NEW HISTORY ELEMENT [states]")
 
@@ -630,24 +642,15 @@ class ModificationsHistoryModel(ModelMT):
                     overview['method_name'][-1] in ['active', 'child_execution', 'state_execution_status'] or \
                     not overview['method_name'][0] == 'state_change' or \
                     overview['method_name'][-1] == 'parent':
-                if self.with_prints:
-                    print overview['method_name']
                 return
 
             # decrease counter and finish action if count_before = 0
             if self.locked:
-                self.count_before -= 1
-                if self.with_prints:
-                    print "LOCKED count down", self.count_before
+                self.after_count()
                 if self.count_before == 0:
-                    self.locked = False
-                    if self.with_prints:
-                        print "IN HISTORY", model, prop_name, info
-
                     self.finish_new_action(overview)
-
                     if self.with_prints:
-                        print "HISTORY COUNT WAS OF SUCCESS"
+                        print "HISTORY COUNT WAS OF SUCCESS {}".format(overview)
             else:
                 logger.error("HISTORY after not count [states] -> For every before there should be a after.")
 
@@ -683,18 +686,13 @@ class ModificationsHistoryModel(ModelMT):
 
             # increase counter and generate new action if not locked by action that is performed
             if self.locked:
-                self.count_before += 1
-                if self.with_prints:
-                    print "LOCKED count up", self.count_before
+                self.before_count()
             else:
                 if self.with_prints:
-                    print "NEW HISTORY ELEMENT", info
+                    print "NEW HISTORY ELEMENT"
 
                 if self.start_new_action(overview):
-                    self.count_before += 1
-                    if self.with_prints:
-                        print "LOCKED count up", self.count_before
-                    self.locked = True
+                    self.before_count()
                 else:
                     logger.error("FAILED to start NEW HISTORY ELEMENT [root_state]")
 
@@ -736,18 +734,11 @@ class ModificationsHistoryModel(ModelMT):
 
             # decrease counter and finish action when reaching count=0
             if self.locked:
-                self.count_before -= 1
-                if self.with_prints:
-                    print "LOCKED count down", self.count_before
+                self.after_count()
                 if self.count_before == 0:
-                    self.locked = False
-                    if self.with_prints:
-                        print "IN HISTORY", model, prop_name, info
-
                     self.finish_new_action(overview)
-
                     if self.with_prints:
-                        print "HISTORY COUNT WAS OF SUCCESS"
+                        print "HISTORY COUNT WAS OF SUCCESS {}".format(overview)
             else:
                 logger.error("HISTORY after not count [root_state] -> For every before there should be a after.")
 
