@@ -67,6 +67,7 @@ class SourceEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("cut", self._cut)
         shortcut_manager.add_callback_for_action("undo", self._undo)
         shortcut_manager.add_callback_for_action("redo", self._redo)
+        shortcut_manager.add_callback_for_action("apply", self._apply)
 
     def _copy(self, *args):
         pass
@@ -80,7 +81,7 @@ class SourceEditorController(ExtendedController):
     def _undo(self, *args):
         buffer = self.view.textview.get_buffer()
         if self.view.textview.is_focus() and buffer.can_undo():
-            logger.debug('run Undo on script editor')
+            logger.debug('Run undo on script editor')
             return buffer.undo()
         else:
             return False
@@ -88,8 +89,15 @@ class SourceEditorController(ExtendedController):
     def _redo(self, *args):
         buffer = self.view.textview.get_buffer()
         if self.view.textview.is_focus() and buffer.can_redo():
-            logger.debug('run Redo on script editor')
+            logger.debug('Run redo on script editor')
             return buffer.redo()
+        else:
+            return False
+
+    def _apply(self, *args):
+        if self.view.textview.is_focus():
+            logger.debug("Apply short-cut pressed")
+            self.apply_clicked(None)
         else:
             return False
 
