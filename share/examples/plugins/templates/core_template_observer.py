@@ -9,6 +9,7 @@ logger = log.get_logger(__name__)
 class ExecutionEngineObserver:
 
     def __init__(self):
+        self.logger = log.get_logger(type(self).__name__)
         self.execution_engine = rafcon.statemachine.singleton.state_machine_execution_engine
         self.register_observer()
 
@@ -20,13 +21,13 @@ class ExecutionEngineObserver:
         self.execution_engine.add_observer(self, "stop", notify_before_function=self.on_stop)
 
     def on_start(self, arg, kwargs):
-        logger.info("ExecutionEngine will be set to 'start'.")
+        self.logger.info("ExecutionEngine will be set to 'start'.")
 
     def on_pause(self, arg, kwargs):
-        logger.info("ExecutionEngine will be set to 'pause'.")
+        self.logger.info("ExecutionEngine will be set to 'pause'.")
 
     def on_stop(self, arg, kwargs):
-        logger.info("ExecutionEngine will be set to 'stop'.")
+        self.logger.info("ExecutionEngine will be set to 'stop'.")
 
 
 class ExecutionStatusObserver:
@@ -35,7 +36,8 @@ class ExecutionStatusObserver:
     """
 
     def __init__(self):
-        logger.info("Initiate ExecutionStatusObserver")
+        self.logger = log.get_logger(type(self).__name__)
+        self.logger.info("Initiate ExecutionStatusObserver")
         for id, sm in rafcon.statemachine.singleton.state_machine_manager.state_machines.iteritems():
             self.register_states_of_state_machine(sm)
         rafcon.statemachine.singleton.state_machine_manager.add_observer(self, "add_state_machine",
@@ -56,7 +58,7 @@ class ExecutionStatusObserver:
         :param state:
         :return:
         """
-        logger.info("Execution status observer add new state {}".format(state))
+        self.logger.info("Execution status observer add new state {}".format(state))
         if isinstance(state, ContainerState):
             state.add_observer(self, "add_state",
                                notify_after_function=self.on_add_state)
@@ -77,7 +79,7 @@ class ExecutionStatusObserver:
         :param args:
         :return:
         """
-        logger.info("Execution status observer register new state machine sm_id: {}".format(args[1].state_machine_id))
+        self.logger.info("Execution status observer register new state machine sm_id: {}".format(args[1].state_machine_id))
         self.register_states_of_state_machine(args[1])
 
     def on_add_state(self, observable, return_value, args):
@@ -97,5 +99,5 @@ class ExecutionStatusObserver:
         :param args: a list of all arguments of the observed function
         :return:
         """
-        logger.info("Execution status has changed for state '{0}' to status: {1}"
-                    "".format(observable.get_path(by_name=True), observable.state_execution_status))
+        self.logger.info("Execution status has changed for state '{0}' to status: {1}"
+                         "".format(observable.get_path(by_name=True), observable.state_execution_status))
