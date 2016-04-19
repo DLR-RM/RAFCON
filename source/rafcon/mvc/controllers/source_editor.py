@@ -97,7 +97,13 @@ class SourceEditorController(ExtendedController):
     def _apply(self, *args):
         if self.view.textview.is_focus():
             logger.debug("Apply short-cut pressed")
-            self.apply_clicked(None)
+            tbuffer = self.view.get_buffer()
+            current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
+            if self.model.state.script.script == current_text:
+                logger.debug("Nothing to apply.")
+            else:
+                self.apply_clicked(None)
+            return True
         else:
             return False
 
