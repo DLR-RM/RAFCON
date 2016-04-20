@@ -34,10 +34,10 @@ class AutoBackupModel(ModelMT):
         self.observe_model(self.state_machine_model)
         self.observe_model(self.state_machine_model.history)
 
-        self.timed_temp_storage_enabled = global_gui_config.get_config_value('TIMED_TEMPORARY_STORAGE_ENABLED')
-        self.only_fix_interval = global_gui_config.get_config_value('ONLY_FIX_FORCED_TEMPORARY_STORAGE_INTERVAL')
-        self.force_temp_storage_interval = global_gui_config.get_config_value('FORCED_TEMPORARY_STORAGE_INTERVAL')
-        self.timed_temp_storage_interval = global_gui_config.get_config_value('TIMED_TEMPORARY_STORAGE_INTERVAL')
+        self.timed_temp_storage_enabled = global_gui_config.get_config_value('AUTO_BACKUP_ENABLED')
+        self.only_fix_interval = global_gui_config.get_config_value('AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL')
+        self.force_temp_storage_interval = global_gui_config.get_config_value('AUTO_BACKUP_FORCED_STORAGE_INTERVAL')
+        self.timed_temp_storage_interval = global_gui_config.get_config_value('AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL')
         self.last_storage_time = time.time()
         self.marked_dirty = False
         self.check_for_auto_backup(force=True)
