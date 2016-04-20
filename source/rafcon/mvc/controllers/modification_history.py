@@ -1,5 +1,5 @@
 """
-.. module:: io_data_port_list
+.. module:: modification_history
    :platform: Unix, Windows
    :synopsis: A module that holds the controller to list and access the modification-history.
 
@@ -153,9 +153,10 @@ class ModificationHistoryTreeController(ExtendedController):
         self.no_cursor_observation = False
 
     def undo(self, key_value, modifier_mask):
-        """ Undo for selected state-machine if no state-source-editor is open and focused in states-editor-controller.
-        :return: bool  -- True if a undo was performed.
-                       -- False if focus on source-editor.
+        """Undo for selected state-machine if no state-source-editor is open and focused in states-editor-controller.
+
+        :return: True if a undo was performed, False if focus on source-editor.
+        :rtype: bool
         """
         # TODO re-organize as request to controller which holds source-editor-view or any parent to it
         for key, tab in mvc_singleton.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
@@ -169,9 +170,10 @@ class ModificationHistoryTreeController(ExtendedController):
             logger.debug("Undo is not possible now as long as no state_machine is selected.")
 
     def redo(self, key_value, modifier_mask):
-        """ Redo for selected state-machine if no state-source-editor is open and focused in states-editor-controller.
-        :return: bool  -- True if a redo was performed.
-                       -- False if focus on source-editor.
+        """Redo for selected state-machine if no state-source-editor is open and focused in states-editor-controller.
+
+        :return: True if a redo was performed, False if focus on source-editor.
+        :rtype: bool
         """
         # TODO re-organize as request to controller which holds source-editor-view or any parent to it
         for key, tab in mvc_singleton.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():

@@ -1,5 +1,5 @@
 """
-.. module:: io_data_port_list
+.. module:: scoped_variable_list
    :platform: Unix, Windows
    :synopsis: A module that holds the controller to list and edit all scoped_variables of a state.
 

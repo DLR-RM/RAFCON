@@ -2,7 +2,7 @@
 .. module:: state_overview
    :platform: Unix, Windows
    :synopsis: A module that holds the controller to give access to basic state information and to edit state name,
-   is-start-state flag and state-type.
+     is-start-state flag and state-type.
 
 .. moduleauthor:: Rico Belder
 

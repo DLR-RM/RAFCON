@@ -359,14 +359,17 @@ class MainWindowController(ExtendedController):
                     self.view[button_name].handler_unblock(self.handler_ids[button_name])
 
     def focus_notebook_page_of_controller(self, controller):
-        """ The method implements focus request of the notebooks in left side-bar of the main window. Thereby it is the
-        master-function of focus pattern of the notebooks in left side-bar.
-            Actual pattern is:
-            - Execution-History is put to focus any time requested (request occur at the moment when the state-machine
-              is started and stopped.
-            - Modification-History one time focused while and one time after execution if requested.
+        """Puts the focus on the given child controller
 
-            :param controller The controller which request to be focused.
+        The method implements focus request of the notebooks in left side-bar of the main window. Thereby it is the
+        master-function of focus pattern of the notebooks in left side-bar.
+
+        Actual pattern is:
+        * Execution-History is put to focus any time requested (request occur at the moment when the state-machine
+          is started and stopped.
+        * Modification-History one time focused while and one time after execution if requested.
+
+        :param controller The controller which request to be focused.
         """
         # TODO think about to may substitute Controller- by View-objects it is may the better design
         if controller not in self.get_child_controllers():
