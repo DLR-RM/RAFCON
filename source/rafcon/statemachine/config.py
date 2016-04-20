@@ -25,8 +25,8 @@ class Config(DefaultConfig):
     Class to hold and load the global statemachine configurations.
     """
 
-    def __init__(self):
-        super(Config, self).__init__(DEFAULT_CONFIG)
+    def __init__(self, logger_object=None):
+        super(Config, self).__init__(DEFAULT_CONFIG, logger_object)
         self.load(CONFIG_FILE)
         if self.get_config_value("TYPE") != "SM_CONFIG":
             raise ConfigError("Type should be SM_CONFIG for statemachine configuration. "
@@ -39,4 +39,4 @@ class Config(DefaultConfig):
 
 
 # This variable holds the global configuration parameters for the statemachine
-global_config = Config()
+global_config = Config(logger)

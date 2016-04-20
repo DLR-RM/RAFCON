@@ -24,8 +24,8 @@ class GuiConfig(DefaultConfig):
     colors = {}
     gtk_colors = {}
 
-    def __init__(self):
-        super(GuiConfig, self).__init__(DEFAULT_CONFIG)
+    def __init__(self, logger_object=None):
+        super(GuiConfig, self).__init__(DEFAULT_CONFIG, logger_object)
         self.load(CONFIG_FILE)
         if self.get_config_value("TYPE") != "GUI_CONFIG":
             raise ConfigError("Type should be GUI_CONFIG for GUI configuration. "
@@ -136,4 +136,4 @@ class GuiConfig(DefaultConfig):
         self.colors.update(colors)
 
 
-global_gui_config = GuiConfig()
+global_gui_config = GuiConfig(logger)
