@@ -8,8 +8,6 @@ The HistoryChanges-Class provides the functionalities to organize and access all
 Hereby the branching of the edit process is stored and should be accessible, too.
 """
 import copy
-import time
-import threading
 
 from gtkmvc import ModelMT, Observable
 
@@ -26,11 +24,10 @@ from rafcon.statemachine.data_port import InputDataPort
 from rafcon.statemachine.state_machine import StateMachine
 
 from rafcon.mvc.utils.notification_overview import NotificationOverview
-from rafcon.mvc.config import global_gui_config
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
-from rafcon.statemachine.storage import storage
 from rafcon.mvc.models.abstract_state import AbstractStateModel
+from rafcon.mvc.models.state_machine import StateMachineModel
 
 
 from rafcon.mvc.action import ActionDummy, Action, StateMachineAction, StateAction, DataPortAction, \
@@ -45,13 +42,14 @@ HISTORY_DEBUG_LOG_FILE = RAFCON_TEMP_PATH_BASE + '../test_file.txt'
 class ModificationsHistoryModel(ModelMT):
     state_machine_model = None
     modifications = None
+    change_count = None
 
-    __observables__ = ("modifications",)
+    __observables__ = ("modifications", "change_count",)
 
     def __init__(self, state_machine_model):
         ModelMT.__init__(self)
 
-        # assert isinstance(state_machine_model, StateMachineModel)
+        assert isinstance(state_machine_model, StateMachineModel)
         self.state_machine_model = state_machine_model
         self.__state_machine_id = state_machine_model.state_machine.state_machine_id
         self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
@@ -67,6 +65,7 @@ class ModificationsHistoryModel(ModelMT):
         self.count_before = 0
 
         self.modifications = ModificationsHistory()
+        self.change_count = 0
 
         self.fake = False
 
@@ -75,24 +74,7 @@ class ModificationsHistoryModel(ModelMT):
         self.with_debug_logs = False
         self.with_meta_data_actions = True
 
-        self.timed_temp_storage_enabled = global_gui_config.get_config_value('TIMED_TEMPORARY_STORAGE_ENABLED')
-        self.force_temp_storage_interval = global_gui_config.get_config_value('FORCED_TEMPORARY_STORAGE_INTERVAL')
-        self.timed_temp_storage_interval = global_gui_config.get_config_value('TIMED_TEMPORARY_STORAGE_INTERVAL')
-        self.last_storage_time = time.time()
-        self.storage_lock = threading.Lock()
-        self.check_for_temp_storage(force=True)
-        self.timer_request_lock = threading.Lock()
-        self.timer_request_time = None
-        self.tmp_storage_timed_thread = None
-
-    def __destroy__(self):
-        self.destroy()
-
-    def destroy(self):
-        if self.tmp_storage_timed_thread is not None:
-            self.tmp_storage_timed_thread.cancel()
-
-    def get_state_element_meta_from_tmp_storage(self, state_path):
+    def get_state_element_meta_from_internal_tmp_storage(self, state_path):
         path_elements = state_path.split('/')
         path_elements.pop(0)
         # print path_elements
@@ -113,6 +95,7 @@ class ModificationsHistoryModel(ModelMT):
         undo_redo_list = self.modifications.undo_redo_list_from_actual_trail_history_to_version_id(pointer_on_version_to_recover)
         logger.debug("Multiple undo and redo to reach modification history element of version {0} "
                     "-> undo-redo-list is: {1}".format(pointer_on_version_to_recover, undo_redo_list))
+        self.state_machine_model.storage_lock.acquire()
         for elem in undo_redo_list:
             if elem[1] == 'undo':
                 # do undo
@@ -122,7 +105,8 @@ class ModificationsHistoryModel(ModelMT):
                 self._redo(elem[0])
 
         self.modifications.reorganize_trail_history_for_version_id(pointer_on_version_to_recover)
-        self.check_for_temp_storage()
+        self.state_machine_model.storage_lock.release()
+        self.change_count += 1
 
     def _undo(self, version_id):
         self.busy = True
@@ -133,7 +117,6 @@ class ModificationsHistoryModel(ModelMT):
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
             # logger.debug("StateMachineAction Undo")
             self._re_initiate_observation()
-        self.check_for_temp_storage()
         self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
 
     def undo(self):
@@ -143,14 +126,16 @@ class ModificationsHistoryModel(ModelMT):
             return
         # else:
         #     logger.debug("do Undo %s %s %s" % (bool(self.modifications.trail_history), self.modifications.trail_history, (self.modifications.trail_pointer, len(self.modifications.trail_history))))
+        self.state_machine_model.storage_lock.acquire()
         self.busy = True
         self.modifications.undo()
         self.busy = False
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
             # logger.debug("StateMachineAction Undo")
             self._re_initiate_observation()
-        self.check_for_temp_storage()
         self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        self.state_machine_model.storage_lock.release()
+        self.change_count += 1
 
     def _redo(self, version_id):
         self.busy = True
@@ -163,7 +148,6 @@ class ModificationsHistoryModel(ModelMT):
                 and isinstance(self.modifications.trail_history[self.modifications.trail_pointer], StateMachineAction):
             # logger.debug("StateMachineAction Redo")
             self._re_initiate_observation()
-        self.check_for_temp_storage()
         self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
 
     def redo(self):
@@ -173,14 +157,16 @@ class ModificationsHistoryModel(ModelMT):
             return
         # else:
         #     logger.debug("do Redo %s %s %s" % (bool(self.modifications.trail_history), self.modifications.trail_history, (self.modifications.trail_pointer, len(self.modifications.trail_history))))
+        self.state_machine_model.storage_lock.acquire()
         self.busy = True
         self.modifications.redo()
         self.busy = False
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer], StateMachineAction):
             # logger.debug("StateMachineAction Redo")
             self._re_initiate_observation()
-        self.check_for_temp_storage()
         self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        self.state_machine_model.storage_lock.release()
+        self.change_count += 1
 
     def _interrupt_actual_action(self):
         # self.busy = True
@@ -188,6 +174,7 @@ class ModificationsHistoryModel(ModelMT):
         # self.busy = False
         self.locked = False
         self.count_before = 0
+        self.state_machine_model.storage_lock.release()
 
     def _re_initiate_observation(self):
         # logger.info("re initiate root_state observation")
@@ -199,7 +186,6 @@ class ModificationsHistoryModel(ModelMT):
     def store_test_log_file(string):
         with open(HISTORY_DEBUG_LOG_FILE, 'a+') as f:
             f.write(string)
-        f.closed
 
     def start_new_action(self, overview):
         """
@@ -407,78 +393,7 @@ class ModificationsHistoryModel(ModelMT):
             logger.exception("Failure occurred while finishing action")
             # traceback.print_exc(file=sys.stdout)
 
-        self.check_for_temp_storage()
-
-    def _check_for_timed_auto_temp_storage(self):
-        """ The method implements the timed storage feature.
-
-         The method re-initiating a new timed thread if the state-machine not already stored to backup
-         (what could be caused by the force_temp_storage_interval) or force the storing of the state-machine if there
-         is no new request for a timed backup. New timed backup request are intrinsically represented by
-         self.timer_request_time and initiated by the check_for_temp_storage-method.
-         The feature uses only one thread for each ModificationHistoryModel and lock to be thread save.
-        """
-        actual_time = time.time()
-        self.timer_request_lock.acquire()
-        sm = self.state_machine_model.state_machine
-        if self.last_storage_time > self.timer_request_time:
-            # logger.info('{1} quit_thread {0}'.format(sm.state_machine_id, time.time()))
-            self.timer_request_time = None
-            self.tmp_storage_timed_thread = None
-        elif self.timed_temp_storage_interval < actual_time - self.timer_request_time:
-            # logger.info("{0} Perform timed auto-backup of state-machine {1}.".format(time.time(),
-            #                                                                          sm.state_machine_id))
-            self.check_for_temp_storage(force=True)
-            self.timer_request_time = None
-            self.tmp_storage_timed_thread = None
-        else:
-            duration_to_wait = self.timed_temp_storage_interval - (actual_time - self.timer_request_time)
-            # logger.info('{2} restart_thread {0} time to go {1}'.format(sm.state_machine_id,
-            #                                                            duration_to_wait, time.time()))
-            self.tmp_storage_timed_thread = threading.Timer(duration_to_wait, self._check_for_timed_auto_temp_storage)
-            self.tmp_storage_timed_thread.start()
-        self.timer_request_lock.release()
-
-    def perform_temp_storage(self):
-        sm = self.state_machine_model.state_machine
-        logger.info('Perform auto-backup of state-machine {} to tmp-folder'.format(sm.state_machine_id))
-        if sm.file_system_path is None:
-            tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/not_stored_' + str(sm.state_machine_id)
-        else:
-            tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/' + sm.file_system_path
-        self.storage_lock.acquire()
-        storage.save_statemachine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=False,
-                                          save_as=True, temporary_storage=True)
-        self.state_machine_model.store_meta_data(temp_path=tmp_sm_system_path)
-        self.storage_lock.release()
-
-    def check_for_temp_storage(self, force=False):
-        """ The method implements the checks for possible temporary backup of the state-machine according duration till
-        the last change together with the private method _check_for_timed_auto_temp_storage.
-
-        :param force: is a flag that force the temporary backup of the state-machine to the tmp-folder
-        :return:
-        """
-        if not self.timed_temp_storage_enabled:
-            return
-        sm = self.state_machine_model.state_machine
-        actual_time = time.time()
-        if sm.marked_dirty and actual_time - self.last_storage_time > self.force_temp_storage_interval or force:
-
-            self.perform_temp_storage()
-            self.last_storage_time = actual_time
-        else:
-            self.timer_request_lock.acquire()
-            if self.timer_request_time is None:
-                # logger.info('{0} start_thread {1}'.format(actual_time, sm.state_machine_id))
-                self.timer_request_time = actual_time
-                self.tmp_storage_timed_thread = threading.Timer(self.timed_temp_storage_interval,
-                                                                self._check_for_timed_auto_temp_storage)
-                self.tmp_storage_timed_thread.start()
-            else:
-                # logger.info('{0} update_thread {1}'.format(actual_time, sm.state_machine_id))
-                self.timer_request_time = actual_time
-            self.timer_request_lock.release()
+        self.change_count += 1
 
     @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state_model changed
     # @ModelMT.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
@@ -507,7 +422,7 @@ class ModificationsHistoryModel(ModelMT):
                                             state_machine_model=self.state_machine_model,
                                             overview=overview)
             # b_tuple = self.actual_action.before_storage
-            meta_dict = self.get_state_element_meta_from_tmp_storage(changed_parent_model.state.get_path())
+            meta_dict = self.get_state_element_meta_from_internal_tmp_storage(changed_parent_model.state.get_path())
             self.actual_action.before_storage = meta_dict
             self.finish_new_action(overview)
 
@@ -519,7 +434,7 @@ class ModificationsHistoryModel(ModelMT):
 
     def before_count(self):
         if self.count_before == 0:
-            self.storage_lock.acquire()
+            self.state_machine_model.storage_lock.acquire()
             self.locked = True
         self.count_before += 1
         if self.with_prints:
@@ -531,7 +446,7 @@ class ModificationsHistoryModel(ModelMT):
             print "LOCKED count down", self.count_before
         if self.count_before == 0:
             self.locked = False
-            self.storage_lock.release()
+            self.state_machine_model.storage_lock.release()
 
     @ModelMT.observe("state_machine", before=True)
     def assign_notification_change_type_root_state_before(self, model, prop_name, info):

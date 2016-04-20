@@ -1,4 +1,5 @@
 import os
+import threading
 from gtkmvc import ModelMT, Signal
 
 from rafcon.mvc.models import ContainerStateModel, StateModel
@@ -67,12 +68,17 @@ class StateMachineModel(ModelMT):
 
         self.selection = Selection()
 
+        self.storage_lock = threading.Lock()
+
         from rafcon.mvc.models.modification_history import ModificationsHistoryModel
         history_enabled = global_gui_config.get_config_value('HISTORY_ENABLED')
         self.history = ModificationsHistoryModel(self)
         if not history_enabled:
             self.history.fake = True
             logger.info("The modification history is disabled")
+
+        from rafcon.mvc.models.auto_backup import AutoBackupModel
+        self.auto_backup = AutoBackupModel(self)
 
         self.root_state.register_observer(self)
         self.register_observer(self)
@@ -81,7 +87,7 @@ class StateMachineModel(ModelMT):
         self.destroy()
 
     def destroy(self):
-        self.history.destroy()
+        self.auto_backup.destroy()
 
     @ModelMT.observe("state_machine", after=True)
     def marked_dirty_flag_changed(self, model, prop_name, info):
