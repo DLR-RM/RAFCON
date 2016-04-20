@@ -6,7 +6,7 @@ logger = log.get_logger(__name__)
 
 def pre_init():
     """
-    The pre_init function of the plugin. Here rafcon-classes can extended/monkey-patched or completely substituted.
+    The pre_init function of the plugin. Here rafcon-classes can be extended/monkey-patched or completely substituted.
     A example is given with the rafcon_execution_hooks_plugin.
     :return:
     """
@@ -44,8 +44,9 @@ def post_init(setup_config):
     core_template_observer.ExecutionStatusObserver()
 
     import gtkmvc_template_observer
-    # Example 3: gtkmvc
+    # Example 3: gtkmvc generale modification observer
     # initiate observer of root_state model-object which already implements a power full recursive notification pattern
     gtkmvc_template_observer.RootStateModificationObserver()
 
-    # TODO meta_signal example
+    # Example 4: gtkmvc meta signal observer
+    gtkmvc_template_observer.MetaSignalModificationObserver()
