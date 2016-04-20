@@ -128,7 +128,7 @@ def run_turtle_demo():
                                                       'share', 'examples', 'libraries', 'ros_libraries')
         library_paths["turtle_libraries"] = os.path.join(rafcon.__path__[0], '..', '..', '..',
                                                          'share', 'examples', 'libraries', 'turtle_libraries')
-        example_path = os.path.join(rafcon.__path__[0], os.pardir, '..', '..', '..', 'share', 'examples', "tutorials")
+        example_path = os.path.join(rafcon.__path__[0], os.pardir, '..', '..', 'share', 'examples', "tutorials")
     else:  # git repo
         os.environ['RAFCON_LIB_PATH'] = os.path.join(rafcon.__path__[0], '..', 'libraries')
         library_paths["ros_libraries"] = os.path.join(rafcon.__path__[0], '..', 'test_scripts', 'ros_libraries')
