@@ -120,6 +120,8 @@ class ModificationHistoryTreeController(ExtendedController):
     def on_reset_button_clicked(self, widget, event=None):
         # logger.debug("do reset")
         self._selected_sm_model.history.modifications.reset()
+        logger.debug("release storage_lock")
+        self._selected_sm_model.storage_lock.release()
 
     def on_toggle_mode(self, widget, event=None):
         if self.view['branch_checkbox'].get_active():
