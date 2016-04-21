@@ -241,13 +241,13 @@ class StateOutcomesListController(ExtendedController):
     def on_add(self, button, info=None):
         # logger.debug("add outcome")
         outcome_id = None
-        for run_id in range(5):
+        for run_id in range(len(self.model.state.outcomes)):
             try:
-                outcome_id = self.model.state.add_outcome('success' + str(len(self.model.state.outcomes)-1+run_id))
+                outcome_id = self.model.state.add_outcome('success' + str(run_id))
                 break
             except ValueError as e:
                 logger.debug("The outcome couldn't be added: {0}".format(e))
-                if run_id == 4:
+                if run_id == len(self.model.state.outcomes) - 1:
                     logger.warn("The outcome couldn't be added: {0}".format(e))
                     return
         # Search for new entry and select it
@@ -259,6 +259,9 @@ class StateOutcomesListController(ExtendedController):
                 break
             ctr += 1
 
+        if outcome_id is not None:
+            return True
+
     def on_remove(self, button, info=None):
 
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
@@ -269,6 +272,7 @@ class StateOutcomesListController(ExtendedController):
                 row_number = path[0][0]
                 if len(self.tree_store) > 0:
                     self.view.tree_view.set_cursor(min(row_number, len(self.tree_store)-1))
+                return True
             except AttributeError as e:
                 logger.warning("Error while removing outcome: {0}".format(e))
 
@@ -410,13 +414,14 @@ class StateOutcomesEditorController(ExtendedController):
 
         :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
-        shortcut_manager.add_callback_for_action("delete", self.remove_outcome)
-        shortcut_manager.add_callback_for_action("add", self.add_outcome)
+        if not isinstance(self.model.state, LibraryState):
+            shortcut_manager.add_callback_for_action("delete", self.remove_outcome)
+            shortcut_manager.add_callback_for_action("add", self.add_outcome)
 
     def add_outcome(self, *_):
-        if self.view.tree.is_focus():
-            self.oc_list_ctrl.on_add(None)
+        if self.view.tree.is_focus() and not isinstance(self.model.state, LibraryState):
+            return self.oc_list_ctrl.on_add(None)
 
     def remove_outcome(self, *_):
-        if self.view.tree.is_focus():
-            self.oc_list_ctrl.on_remove(None)
+        if self.view.tree.is_focus() and not isinstance(self.model.state, LibraryState):
+            return self.oc_list_ctrl.on_remove(None)

@@ -35,8 +35,6 @@ class DataPortListController(ExtendedController):
         self.state_data_port_dict = None
         self.data_port_list_store = None
 
-        self.new_port_counter = 0
-
         if self.type == "input":
             self.state_data_port_dict = self.model.state.input_data_ports
             self.data_port_model_list = self.model.input_data_ports
@@ -132,20 +130,23 @@ class DataPortListController(ExtendedController):
         :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
             between shortcuts and actions.
         """
-        shortcut_manager.add_callback_for_action("delete", self.remove_port)
-        shortcut_manager.add_callback_for_action("add", self.add_port)
+        if not isinstance(self.model.state, LibraryState):
+            shortcut_manager.add_callback_for_action("delete", self.remove_port)
+            shortcut_manager.add_callback_for_action("add", self.add_port)
 
     def add_port(self, *_):
         """Callback method for add action
         """
-        if self.view[self.view.top].is_focus():
+        if self.view[self.view.top].is_focus() and not isinstance(self.model.state, LibraryState):
             self.on_new_port_button_clicked(None)
+            return True
 
     def remove_port(self, *_):
         """Callback method for remove action
         """
-        if self.view[self.view.top].is_focus():
+        if self.view[self.view.top].is_focus() and not isinstance(self.model.state, LibraryState):
             self.on_delete_port_button_clicked(None)
+            return True
 
     def editing_started(self, renderer, editable, path):
         """ Callback method to connect entry-widget focus-out-event to the respective change-method.
@@ -247,17 +248,22 @@ class DataPortListController(ExtendedController):
         """Add a new port with default values and select it"""
 
         data_port_id = None
-        while data_port_id is None:
-            new_port_name = self.type + "_{0}".format(self.new_port_counter)
+        for run_id in range(len(self.model.state.input_data_ports) + len(self.model.state.output_data_ports)):
+            new_port_name = self.type + "_{0}".format(run_id)
             try:
                 if self.type == "input":
                     data_port_id = self.model.state.add_input_data_port(new_port_name, "int", "0")
                 else:
                     data_port_id = self.model.state.add_output_data_port(new_port_name, "int", "0")
-            except ValueError:
-                pass
-            self.new_port_counter += 1
+                break
+            except ValueError as e:
+                logger.debug("The {1} data port couldn't be added: {0}".format(e, self.type))
+                if run_id == len(self.model.state.input_data_ports) + len(self.model.state.output_data_ports) - 1:
+                    logger.warn("The {1} data port couldn't be added: {0}".format(e, self.type))
+                    return
         self.select_entry(data_port_id)
+        if data_port_id is not None:
+            return True
 
     def on_delete_port_button_clicked(self, widget, data=None):
         """Delete the selected port and select the next one"""
@@ -270,6 +276,7 @@ class DataPortListController(ExtendedController):
                 self.model.state.remove_output_data_port(data_port_id)
             if len(self.data_port_list_store) > 0:
                 self.view[self.view.top].set_cursor(min(path, len(self.data_port_list_store) - 1))
+            return True
 
     def get_data_port_id_from_selection(self):
         """Returns the data_port_id of the currently selected port entry"""

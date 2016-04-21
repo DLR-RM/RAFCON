@@ -173,6 +173,7 @@ class StateDataFlowsListController(ExtendedController):
                 # print "NEW DATA_FLOW INTERNAL IS: ", self.model.state.data_flows[data_flow_id]
             except (AttributeError, ValueError) as e:
                 logger.error("Data Flow couldn't be added: {0}".format(e))
+                return
         elif self.view_dict['data_flows_external'] and possible_external_data_flows:  # self.free_to_port_external:
             from_state_id = possible_external_data_flows[0][0]
             # print from_state_id, self.model.state.output_data_ports
@@ -186,12 +187,15 @@ class StateDataFlowsListController(ExtendedController):
                 # print "NEW DATA_FLOW EXTERNAL IS: ", self.model.parent.state.data_flows[data_flow_id]
             except (AttributeError, ValueError) as e:
                 logger.error("Data Flow couldn't be added: {0}".format(e))
+                return
         else:
             logger.warning("NO OPTION TO ADD DATA FLOW")
+            return
 
         # set focus on this new element
         # - at the moment every new element is the last -> easy work around :(
         self.view.tree_view.set_cursor(len(self.tree_store) - 1)
+        return True
 
     def on_remove(self, button, info=None):
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
@@ -203,6 +207,7 @@ class StateDataFlowsListController(ExtendedController):
                     self.model.state.remove_data_flow(self.tree_store[path[0][0]][0])
             except (AttributeError, ValueError) as e:
                 logger.error("Data Flow couldn't be removed: {0}".format(e))
+                return
         else:
             logger.warning("Please select the data flow to be deleted")
             return
@@ -211,6 +216,7 @@ class StateDataFlowsListController(ExtendedController):
         row_number = path[0][0]
         if len(self.tree_store) > 0:
             self.view.tree_view.set_cursor(min(row_number, len(self.tree_store) - 1))
+        return True
 
     def on_combo_changed_from_state(self, widget, path, text):
         if text is None or self.tree_store[path][1] == text:
@@ -816,11 +822,11 @@ class StateDataFlowsEditorController(ExtendedController):
 
     def add_data_flow(self, *_):
         if self.view.data_flows_listView.tree_view.is_focus():
-            self.df_list_ctrl.on_add(None)
+            return self.df_list_ctrl.on_add(None)
 
     def remove_data_flow(self, *_):
         if self.view.data_flows_listView.tree_view.is_focus():
-            self.df_list_ctrl.on_remove(None)
+            return self.df_list_ctrl.on_remove(None)
 
     def toggled_button(self, button, name=None):
 

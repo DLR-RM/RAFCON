@@ -154,6 +154,7 @@ class StateTransitionsListController(ExtendedController):
                     self.view.tree_view.set_cursor(ctr)
                     break
                 ctr += 1
+            return True
         except (AttributeError, ValueError) as e:
             logger.error("Transition couldn't be added: {0}".format(e))
 
@@ -173,9 +174,9 @@ class StateTransitionsListController(ExtendedController):
             # selection to next element
             if len(self.tree_store) > 0:
                 self.view.tree_view.set_cursor(min(row_number, len(self.tree_store) - 1))
+            return True
         else:
             logger.warning("Please select the data flow to be deleted")
-            return
 
     def on_combo_changed_from_state(self, widget, path, text):
         # Check whether the from state was changed or the combo entry is empty
@@ -700,11 +701,11 @@ class StateTransitionsEditorController(ExtendedController):
 
     def add_transition(self, *_):
         if self.view.transitions_listView.tree_view.is_focus():
-            self.trans_list_ctrl.on_add(None)
+            return self.trans_list_ctrl.on_add(None)
 
     def remove_transition(self, *_):
         if self.view.transitions_listView.tree_view.is_focus():
-            self.trans_list_ctrl.on_remove(None)
+            return self.trans_list_ctrl.on_remove(None)
 
     def toggled_button(self, button, name=None):
 

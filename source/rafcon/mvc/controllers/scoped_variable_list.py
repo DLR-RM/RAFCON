@@ -34,7 +34,6 @@ class ScopedVariableListController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view.get_top_widget())
 
-        self.new_sv_counter = 0
         self.last_entry_widget = None
         self.next_focus_column = {}
         self.prev_focus_column = {}
@@ -81,16 +80,17 @@ class ScopedVariableListController(ExtendedController):
         :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
             between shortcuts and actions.
         """
-        shortcut_manager.add_callback_for_action("delete", self.remove_port)
-        shortcut_manager.add_callback_for_action("add", self.add_port)
+        if not isinstance(self.model.state, LibraryState):
+            shortcut_manager.add_callback_for_action("delete", self.remove_port)
+            shortcut_manager.add_callback_for_action("add", self.add_port)
 
     def add_port(self, *_):
-        if self.view[self.view.top].is_focus():
-            self.on_new_scoped_variable_button_clicked(None)
+        if self.view[self.view.top].is_focus() and not isinstance(self.model.state, LibraryState):
+            return self.on_new_scoped_variable_button_clicked(None)
 
     def remove_port(self, *_):
-        if self.view[self.view.top].is_focus():
-            self.on_delete_scoped_variable_button_clicked(None)
+        if self.view[self.view.top].is_focus() and not isinstance(self.model.state, LibraryState):
+            return self.on_delete_scoped_variable_button_clicked(None)
 
     def editing_started(self, renderer, editable, path):
         """ Callback method to connect entry-widget focus-out-event to the respective change-method.
@@ -161,20 +161,24 @@ class ScopedVariableListController(ExtendedController):
         """
         if isinstance(self.model, ContainerStateModel):
             data_port_id = None
-            while data_port_id is None:
+            for run_id in range(len(self.model.state.scoped_variables) + 1):
                 try:
-                    data_port_id = self.model.state.add_scoped_variable("scoped_%s" % self.new_sv_counter, "int", 0)
-                except ValueError:
-                    pass
-                self.new_sv_counter += 1
+                    data_port_id = self.model.state.add_scoped_variable("scoped_%s" % run_id, "int", 0)
+                    break
+                except ValueError as e:
+                    logger.debug("The scoped variable couldn't be added: {0}".format(e))
+                    if run_id == len(self.model.state.scoped_variables):
+                        logger.warn("The scoped variable couldn't be added: {0}".format(e))
+                        return
             self.select_entry(data_port_id)
+            if data_port_id is not None:
+                return True
 
     def on_delete_scoped_variable_button_clicked(self, widget, data=None):
         """Triggered when the Delete button in the Scoped Variables tab is clicked.
 
         Deletes the selected scoped variable.
         """
-        tree_view = self.view["scoped_variables_tree_view"]
         if isinstance(self.model, ContainerStateModel):
 
             path = self.get_path()  # tree_view.get_cursor()[0][0]
@@ -184,6 +188,7 @@ class ScopedVariableListController(ExtendedController):
                 self.model.state.remove_scoped_variable(scoped_variable_key)
             if len(self.scoped_variables_list_store) > 0:
                 self.view[self.view.top].set_cursor(min(path, len(self.scoped_variables_list_store) - 1))
+            return True
 
     def on_name_changed(self, widget, path, text):
         """Triggered when a scoped variable's name is edited
