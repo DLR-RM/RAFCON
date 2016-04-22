@@ -38,7 +38,7 @@ class AutoBackupModel(ModelMT):
         self.only_fix_interval = global_gui_config.get_config_value('AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL')
         self.force_temp_storage_interval = global_gui_config.get_config_value('AUTO_BACKUP_FORCED_STORAGE_INTERVAL')
         self.timed_temp_storage_interval = global_gui_config.get_config_value('AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL')
-        self.last_storage_time = time.time()
+        self.last_backup_time = time.time()         # used as 'last-backup' and 'last-modification-not-backup-ed' time
         self.marked_dirty = False
         self.check_for_auto_backup(force=True)
         self.timer_request_lock = threading.Lock()
@@ -60,9 +60,9 @@ class AutoBackupModel(ModelMT):
     @ModelMT.observe("state_machine", after=True)
     def change_count_of_modification_history(self, model, prop_name, info):
         if info['method_name'] == 'marked_dirty':
-            self.marked_dirty = self.state_machine_model.state_machine.marked_dirty
             if not self.only_fix_interval:
                 self.check_for_auto_backup()
+            self.marked_dirty = self.state_machine_model.state_machine.marked_dirty
 
     def _check_for_dyn_timed_auto_backup(self):
         """ The method implements the timed storage feature.
@@ -76,23 +76,27 @@ class AutoBackupModel(ModelMT):
         actual_time = time.time()
         self.timer_request_lock.acquire()
         sm = self.state_machine_model.state_machine
-        if self.last_storage_time > self.timer_request_time:
-            # logger.info('{1} quit_thread {0}'.format(sm.state_machine_id, time.time()))
-            self.timer_request_time = None
-            self.tmp_storage_timed_thread = None
-        elif self.timed_temp_storage_interval < actual_time - self.timer_request_time:
+        if self.timed_temp_storage_interval < actual_time - self.timer_request_time:
             # logger.info("{0} Perform timed auto-backup of state-machine {1}.".format(time.time(),
             #                                                                          sm.state_machine_id))
             self.check_for_auto_backup(force=True)
-            self.timer_request_time = None
-            self.tmp_storage_timed_thread = None
         else:
             duration_to_wait = self.timed_temp_storage_interval - (actual_time - self.timer_request_time)
-            # logger.info('{2} restart_thread {0} time to go {1}'.format(sm.state_machine_id,
-            #                                                            duration_to_wait, time.time()))
-            self.tmp_storage_timed_thread = threading.Timer(duration_to_wait, self._check_for_dyn_timed_auto_backup)
-            self.tmp_storage_timed_thread.start()
+            hard_limit_duration_to_wait = self.force_temp_storage_interval - (actual_time - self.last_backup_time)
+            hard_limit_active = hard_limit_duration_to_wait < duration_to_wait
+            # logger.info('{2} restart_thread {0} time to go {1}, hard limit {3}'.format(sm.state_machine_id,
+            #                                                                            duration_to_wait, time.time(),
+            #                                                                            hard_limit_active))
+            if hard_limit_active:
+                self.set_timed_thread(hard_limit_duration_to_wait, self.check_for_auto_backup, True)
+            else:
+                self.set_timed_thread(duration_to_wait, self._check_for_dyn_timed_auto_backup)
         self.timer_request_lock.release()
+
+    def set_timed_thread(self, duration, func, *args):
+        # logger.info("start timed thread duration: {0} func: {1}".format(duration, func))
+        self.tmp_storage_timed_thread = threading.Timer(duration, func, args)
+        self.tmp_storage_timed_thread.start()
 
     def perform_temp_storage(self):
         sm = self.state_machine_model.state_machine
@@ -101,10 +105,13 @@ class AutoBackupModel(ModelMT):
             tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/not_stored_' + str(sm.state_machine_id)
         else:
             tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/' + sm.file_system_path
+
         self.state_machine_model.storage_lock.acquire()
         storage.save_statemachine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=False,
                                           save_as=True, temporary_storage=True)
         self.state_machine_model.store_meta_data(temp_path=tmp_sm_system_path)
+        self.timer_request_time = None
+        self.tmp_storage_timed_thread = None
         self.marked_dirty = False
         self.state_machine_model.storage_lock.release()
 
@@ -118,35 +125,35 @@ class AutoBackupModel(ModelMT):
         :param force: is a flag that force the temporary backup of the state-machine to the tmp-folder
         :return:
         """
-        def set_timed_thread(duration, func, *args):
-            # logger.info("start timed thread duration: {0} func: {1}".format(duration, func))
-            self.tmp_storage_timed_thread = threading.Timer(duration, func, args)
-            self.tmp_storage_timed_thread.start()
-
         if not self.timed_temp_storage_enabled:
             return
 
         sm = self.state_machine_model.state_machine
         actual_time = time.time()
+
+        if not self.only_fix_interval and not self.marked_dirty:
+            # logger.info("adjust last_backup_time")
+            self.last_backup_time = actual_time         # used as 'last-modification-not-backup-ed' time
+
         is_not_timed_or_reached_time_to_force = \
-            actual_time - self.last_storage_time > self.force_temp_storage_interval or self.only_fix_interval
+            actual_time - self.last_backup_time > self.force_temp_storage_interval or self.only_fix_interval
 
         if (sm.marked_dirty and is_not_timed_or_reached_time_to_force) or force:
             if not self.only_fix_interval or self.marked_dirty:
                 self.perform_temp_storage()
-                self.last_storage_time = actual_time
+                self.last_backup_time = actual_time     # used as 'last-backup' time
             if self.only_fix_interval:
-                set_timed_thread(self.force_temp_storage_interval, self.check_for_auto_backup)
+                self.set_timed_thread(self.force_temp_storage_interval, self.check_for_auto_backup)
         else:
             if not self.only_fix_interval:
                 self.timer_request_lock.acquire()
                 if self.timer_request_time is None:
                     # logger.info('{0} start_thread {1}'.format(actual_time, sm.state_machine_id))
                     self.timer_request_time = actual_time
-                    set_timed_thread(self.timed_temp_storage_interval, self._check_for_dyn_timed_auto_backup)
+                    self.set_timed_thread(self.timed_temp_storage_interval, self._check_for_dyn_timed_auto_backup)
                 else:
                     # logger.info('{0} update_thread {1}'.format(actual_time, sm.state_machine_id))
                     self.timer_request_time = actual_time
                 self.timer_request_lock.release()
             else:
-                set_timed_thread(self.force_temp_storage_interval, self.check_for_auto_backup)
+                self.set_timed_thread(self.force_temp_storage_interval, self.check_for_auto_backup)
