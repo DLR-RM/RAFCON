@@ -25,7 +25,7 @@ ADDITIONAL_ENV.sled11* = RAFCON_PATH=${PKGROOT}/lib/python2.7/rafcon, RAFCON_LIB
 source/rafcon | !*.pyc => lib/python2.7/rafcon
 source/rafcon_server | !*.pyc => lib/python2.7/rafcon_server
 source/libraries | !*.pyc => share/libraries
-share | !*.pyc => share
+share | !*.pyc | !.gitignore => share
 source/test_scripts/ros_libraries => share/examples/libraries/ros_libraries
 source/test_scripts/turtle_libraries => share/examples/libraries/turtle_libraries
 source/test_scripts/tutorials => share/examples/tutorials
