@@ -746,6 +746,9 @@ class State(Observable, YAMLObject, JSONObject):
         """
         if not isinstance(input_data_ports, dict):
             raise TypeError("input_data_ports must be of type dict")
+        if [port_id for port_id, port in input_data_ports.iteritems() if not port_id == port.data_port_id]:
+            raise AttributeError("The key of the input dictionary and the id of the data port do not match")
+
         # This is a fix for older state machines, which didn't distinguish between input and output ports
         for port_id, port in input_data_ports.iteritems():
             if not isinstance(port, InputDataPort):
@@ -755,12 +758,10 @@ class State(Observable, YAMLObject, JSONObject):
                 else:
                     raise TypeError("Elements of input_data_ports must be of type InputDataPort, given: {0}".format(
                         type(port)))
-        if [port_id for port_id, port in input_data_ports.iteritems() if not port_id == port.data_port_id]:
-            raise AttributeError("The key of the input dictionary and the id of the data port do not match")
 
         old_input_data_ports = self._input_data_ports
+        self._input_data_ports = input_data_ports
         for port_id, port in input_data_ports.iteritems():
-            self._input_data_ports = input_data_ports
             try:
                 port.parent = self
             except ValueError:
