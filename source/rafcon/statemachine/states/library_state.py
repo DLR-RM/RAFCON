@@ -11,6 +11,7 @@ from gtkmvc import Observable
 
 from rafcon.statemachine.enums import StateExecutionState
 from rafcon.statemachine.states.state import State
+from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.singleton import library_manager
 from rafcon.utils import log
@@ -129,10 +130,16 @@ class LibraryState(State):
         For further documentation, look at the State class.
 
         """
-        if self.initialized:
-            logger.error("It is not allowed to add a outcome to a library state")
-        else:
-            return State.add_outcome(self, name, outcome_id)
+        raise TypeError("It is not allowed to add a outcome to a library state{}".format(self))
+
+    def remove_outcome(self, outcome_id):
+        """Overwrites the remove_outcome method of the State class. Prevents user from removing a
+        outcome from the library state.
+
+        For further documentation, look at the State class.
+
+        """
+        raise TypeError("It is not allowed to remove outcomes from a library state {}".format(self))
 
     def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
         """Overwrites the add_input_data_port method of the State class. Prevents user from adding a
@@ -141,20 +148,17 @@ class LibraryState(State):
         For further documentation, look at the State class.
 
         """
-        if self.initialized:
-            logger.error("It is not allowed to add a input data port to a library state")
-        else:
-            return State.add_input_data_port(self, name, data_type, default_value, data_port_id)
+        raise TypeError("It is not allowed to add a input data port to a library state{}".format(self))
 
     def remove_input_data_port(self, data_port_id):
         """
-        Overwrites the remove_input_data_prot method of the State class. Cleans up the runtime related data.
-        :param data_port_id: the id of the data port to be removed
-        :return:
+        Overwrites the remove_input_data_prot method of the State class. Prevents user from removing a
+        input data port from the library state.
+
+        For further documentation, look at the State class.
+
         """
-        del self._use_runtime_value_input_data_ports[data_port_id]
-        del self._input_data_port_runtime_values[data_port_id]
-        State.remove_input_data_port(data_port_id)
+        raise TypeError("It is not allowed to remove input data ports from a library state {}".format(self))
 
     def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
         """Overwrites the add_output_data_port method of the State class. Prevents user from adding a
@@ -163,44 +167,16 @@ class LibraryState(State):
         For further documentation, look at the State class.
 
         """
-        if self.initialized:
-            logger.error("It is not allowed to add a output data port to a library state")
-        else:
-            return State.add_output_data_port(self, name, data_type, default_value, data_port_id)
+        raise TypeError("It is not allowed to add a output data port to a library state {}".format(self))
 
     def remove_output_data_port(self, data_port_id):
-        """
-        Overwrites the remove_output_data_prot method of the State class. Cleans up the runtime related data.
-        :param data_port_id: the id of the data port to remove
-        :return:
-        """
-        del self._use_runtime_value_output_data_ports[data_port_id]
-        del self._output_data_port_runtime_values[data_port_id]
-        State.remove_output_data_port(data_port_id)
+        """Overwrites the remove_output_data_port method of the State class. Prevents user from removing a
+        output data port from the library state.
 
-    def add_state(self, state):
-        """Overwrites the add_state method of the ContainerState class. Prevents user from adding a state to the
-        library state.
-
-        For further documentation, look at the ContainerState class.
+        For further documentation, look at the State class.
 
         """
-        if self.initialized:
-            logger.error("It is not allowed to add a state to a library state")
-        else:
-            return State.add_state(self, state)
-
-    def add_scoped_variable(self, name, data_type=None, default_value=None, scoped_variable_id=None):
-        """Overwrites the add_scoped_variable method of the ContainerState class. Prevents user from adding a
-        scoped_variable to the library state.
-
-        For further documentation, look at the ContainerState class.
-
-        """
-        if self.initialized:
-            logger.error("It is not allowed to add a scoped_variable to a library state")
-        else:
-            return State.add_scoped_variable(self, name, data_type, default_value, scoped_variable_id)
+        raise TypeError("It is not allowed to remove output data ports from a library state {}".format(self))
 
     @Observable.observed
     def set_input_runtime_value(self, input_data_port_id, value):
