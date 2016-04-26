@@ -24,6 +24,7 @@ from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements
 import rafcon.statemachine.singleton
+import rafcon.mvc.singleton
 from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
 
