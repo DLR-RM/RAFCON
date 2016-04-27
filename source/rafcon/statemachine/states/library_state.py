@@ -130,7 +130,7 @@ class LibraryState(State):
         For further documentation, look at the State class.
 
         """
-        raise TypeError("It is not allowed to add a outcome to a library state{}".format(self))
+        raise NotImplementedError("Add outcome is not implemented for library state {}".format(self))
 
     def remove_outcome(self, outcome_id):
         """Overwrites the remove_outcome method of the State class. Prevents user from removing a
@@ -139,7 +139,7 @@ class LibraryState(State):
         For further documentation, look at the State class.
 
         """
-        raise TypeError("It is not allowed to remove outcomes from a library state {}".format(self))
+        raise NotImplementedError("Remove outcome is not implemented for library state {}".format(self))
 
     def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
         """Overwrites the add_input_data_port method of the State class. Prevents user from adding a
@@ -148,7 +148,7 @@ class LibraryState(State):
         For further documentation, look at the State class.
 
         """
-        raise TypeError("It is not allowed to add a input data port to a library state{}".format(self))
+        raise NotImplementedError("Add input data port is not implemented for library state {}".format(self))
 
     def remove_input_data_port(self, data_port_id):
         """
@@ -158,7 +158,7 @@ class LibraryState(State):
         For further documentation, look at the State class.
 
         """
-        raise TypeError("It is not allowed to remove input data ports from a library state {}".format(self))
+        raise NotImplementedError("Remove input data port is not implemented for library state {}".format(self))
 
     def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
         """Overwrites the add_output_data_port method of the State class. Prevents user from adding a
@@ -167,7 +167,7 @@ class LibraryState(State):
         For further documentation, look at the State class.
 
         """
-        raise TypeError("It is not allowed to add a output data port to a library state {}".format(self))
+        raise NotImplementedError("Add a output data port is not implemented for library state {}".format(self))
 
     def remove_output_data_port(self, data_port_id):
         """Overwrites the remove_output_data_port method of the State class. Prevents user from removing a
@@ -176,7 +176,7 @@ class LibraryState(State):
         For further documentation, look at the State class.
 
         """
-        raise TypeError("It is not allowed to remove output data ports from a library state {}".format(self))
+        raise NotImplementedError("Remove output data port is not implemented for library state {}".format(self))
 
     @Observable.observed
     def set_input_runtime_value(self, input_data_port_id, value):
