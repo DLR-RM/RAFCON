@@ -53,13 +53,30 @@ class LibraryManager(Observable):
         logger.debug("Initializing LibraryManager: Loading libraries ... ")
         self._libraries = {}
         self._library_paths = {}
-        for lib_key, lib_path in config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
-            lib_path = self._clean_path(lib_path)
-            if os.path.exists(lib_path):
-                logger.debug("Adding library '{1}' from {0}".format(lib_path, lib_key))
-                self._load_library_from_root_path(lib_key, lib_path)
+
+        # 1. Load libraries from config.yaml
+        for library_key, library_path in config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
+            library_path = self._clean_path(library_path)
+            if os.path.exists(library_path):
+                logger.debug("Adding library '{1}' from {0}".format(library_path, library_key))
+                self._load_library_from_root_path(library_key, library_path)
             else:
-                logger.warn("Configured path for library '{}' does not exist: {}".format(lib_key, lib_path))
+                logger.warn("Configured path for library '{}' does not exist: {}".format(library_key, library_path))
+
+        # 2. Load libraries from RAFCON_LIBRARY_PATH
+        library_path_env = os.environ.get('RAFCON_LIBRARY_PATH', '')
+        library_paths = set(library_path_env.split(os.pathsep))
+        for library_path in library_paths:
+            if not library_path:
+                continue
+            library_path = self._clean_path(library_path)
+            if not os.path.exists(library_path):
+                logger.warn("The library specified in RAFCON_LIBRARY_PATH does not exist: {}".format(library_path))
+                continue
+            _, library_key = os.path.split(library_path)
+            logger.debug("Adding library '{1}' from {0}".format(library_path, library_key))
+            self._load_library_from_root_path(library_key, library_path)
+
         self._libraries = ordered_dict(sorted(self._libraries.items()))
         logger.debug("Initialization of LibraryManager done")
 
