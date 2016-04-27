@@ -160,7 +160,6 @@ class LibraryTreeController(ExtendedController):
         tree_item = self.library_tree_store.insert_before(parent, None, (library_key, library_item, library_path))
         self.library_row_iter_dict_by_library_path[library_path] = tree_item
         if isinstance(library_item, dict):
-            logger.debug("Found library container: %s" % library_key)
             for child_library_key, child_library_item in library_item.iteritems():
                 self.insert_rec(tree_item, child_library_key, child_library_item, library_path)
 
