@@ -250,18 +250,18 @@ class GraphicalEditorController(ExtendedController):
         # try to do general update
         if 'redo' in overview['meta_signal'][-1]['origin'] or 'undo' in overview['meta_signal'][-1]['origin']:
             # logger.info("meta_changed: \n{0}".format(default_overview))
-            logger.info("update_view")
+            # logger.info("update_view")
             self.update_view()
             # and try to do specific update
             if isinstance(overview['model'][-1], StateModel):
                 state_m = overview['model'][-1]
-                logger.info("update_state")
+                # logger.info("update_state")
             elif isinstance(overview['model'][-1], StateMachineModel):
                 state_m = overview['model'][-1].root_state
-                logger.info("update_root_state")
+                # logger.info("update_root_state")
             else:
                 state_m = overview['model'][-1].parent
-                logger.info("update_parent_state")
+                # logger.info("update_parent_state")
             state_v = self.canvas.get_view_for_model(state_m)
             self.canvas.request_update(state_v, matrix=False)
 
