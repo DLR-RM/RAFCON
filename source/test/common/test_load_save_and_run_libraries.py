@@ -191,6 +191,7 @@ def test_rafcon_library_path_variable(caplog):
     rafcon.statemachine.config.global_config.set_config_value("LIBRARY_PATHS", {})
     os.environ['RAFCON_LIBRARY_PATH'] = os.path.join(os.path.dirname(testing_utils.RAFCON_PATH), 'libraries', 'generic')
     rafcon.statemachine.singleton.library_manager.initialize()
+    os.environ['RAFCON_LIBRARY_PATH'] = ""
     libraries = rafcon.statemachine.singleton.library_manager.libraries
     assert 'generic' in libraries
     assert isinstance(libraries['generic'], dict)
