@@ -241,13 +241,13 @@ class StateOutcomesListController(ExtendedController):
     def on_add(self, button, info=None):
         # logger.debug("add outcome")
         outcome_id = None
-        for run_id in range(len(self.model.state.outcomes)):
+        num_success_outcomes = len(self.model.state.outcomes) - 2
+        for run_id in range(num_success_outcomes + 1, 0, -1):
             try:
                 outcome_id = self.model.state.add_outcome('success' + str(run_id))
                 break
             except ValueError as e:
-                logger.debug("The outcome couldn't be added: {0}".format(e))
-                if run_id == len(self.model.state.outcomes) - 1:
+                if run_id == num_success_outcomes:
                     logger.warn("The outcome couldn't be added: {0}".format(e))
                     return
         # Search for new entry and select it
@@ -259,8 +259,7 @@ class StateOutcomesListController(ExtendedController):
                 break
             ctr += 1
 
-        if outcome_id is not None:
-            return True
+        return True
 
     def on_remove(self, button, info=None):
 

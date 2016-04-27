@@ -247,8 +247,11 @@ class DataPortListController(ExtendedController):
     def on_new_port_button_clicked(self, widget, data=None):
         """Add a new port with default values and select it"""
 
-        data_port_id = None
-        for run_id in range(len(self.model.state.input_data_ports) + len(self.model.state.output_data_ports)):
+        if self.type == "input":
+            num_data_ports = len(self.model.state.input_data_ports)
+        else:
+            num_data_ports = len(self.model.state.output_data_ports)
+        for run_id in range(num_data_ports + 1, 0, -1):
             new_port_name = self.type + "_{0}".format(run_id)
             try:
                 if self.type == "input":
@@ -257,13 +260,11 @@ class DataPortListController(ExtendedController):
                     data_port_id = self.model.state.add_output_data_port(new_port_name, "int", "0")
                 break
             except ValueError as e:
-                logger.debug("The {1} data port couldn't be added: {0}".format(e, self.type))
-                if run_id == len(self.model.state.input_data_ports) + len(self.model.state.output_data_ports) - 1:
+                if run_id == num_data_ports:
                     logger.warn("The {1} data port couldn't be added: {0}".format(e, self.type))
-                    return
+                    return False
         self.select_entry(data_port_id)
-        if data_port_id is not None:
-            return True
+        return True
 
     def on_delete_port_button_clicked(self, widget, data=None):
         """Delete the selected port and select the next one"""

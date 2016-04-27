@@ -159,20 +159,19 @@ class ScopedVariableListController(ExtendedController):
 
         Create a new scoped variable with default values.
         """
+        num_data_ports = len(self.model.state.scoped_variables)
         if isinstance(self.model, ContainerStateModel):
             data_port_id = None
-            for run_id in range(len(self.model.state.scoped_variables) + 1):
+            for run_id in range(num_data_ports + 1, 0, -1):
                 try:
                     data_port_id = self.model.state.add_scoped_variable("scoped_%s" % run_id, "int", 0)
                     break
                 except ValueError as e:
-                    logger.debug("The scoped variable couldn't be added: {0}".format(e))
-                    if run_id == len(self.model.state.scoped_variables):
+                    if run_id == num_data_ports:
                         logger.warn("The scoped variable couldn't be added: {0}".format(e))
-                        return
+                        return False
             self.select_entry(data_port_id)
-            if data_port_id is not None:
-                return True
+            return True
 
     def on_delete_scoped_variable_button_clicked(self, widget, data=None):
         """Triggered when the Delete button in the Scoped Variables tab is clicked.
