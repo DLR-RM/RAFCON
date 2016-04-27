@@ -9,19 +9,18 @@
 
 """
 
+import os
 import gtk
 import gobject
 from functools import partial
 
+import rafcon.mvc.statemachine_helper as statemachine_helper
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.singleton import library_manager
 
-import rafcon.mvc.statemachine_helper as statemachine_helper
-
 from rafcon.utils import log
-
 logger = log.get_logger(__name__)
 
 
@@ -44,16 +43,13 @@ class LibraryTreeController(ExtendedController):
         pass
 
     def register_view(self, view):
-        self.view.connect('cursor-changed', self.on_cursor_changed)
-
         self.view.connect('button_press_event', self.mouse_click)
 
         self.view.connect("drag-data-get", self.on_drag_data_get)
         self.view.connect("drag-begin", self.on_drag_begin)
 
     def mouse_click(self, widget, event=None):
-        # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}".format(event.button, gtk.gdk.BUTTON_PRESS,
-        # event.type == gtk.gdk._2BUTTON_PRESS, event.type == gtk.gdk.BUTTON_PRESS, event.button == 1))
+        # Double click with left mpuse button
         if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][1], dict):  # double click on folder, not library
@@ -64,10 +60,10 @@ class LibraryTreeController(ExtendedController):
                     else:
                         self.view.expand_to_path(state_row_path)
                 return False
-            logger.info(
-                "left double click event detected -> open library: {0}/{1}".format(model[row][2], model[row][0]))
             self.open_button_clicked(None)
             return True
+
+        # Single right click
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             menu = gtk.Menu()
             add_link_menu_item = gtk.ImageMenuItem(gtk.STOCK_ADD)
@@ -154,21 +150,19 @@ class LibraryTreeController(ExtendedController):
         logger.info("Libraries have been updated")
 
     def insert_rec(self, parent, library_key, library_item, library_path):
-        # logger.debug("Add new library to tree store: %s" % library_key)
-        tree_item = self.library_tree_store.insert_before(parent, None, (library_key, library_item, library_path))
-        if library_path == "":
+        # Ignore empty directories
+        if isinstance(library_item, dict) and not library_item:
+            return
+        if not library_path:
             library_path = library_key
         else:
-            library_path = library_path + "/" + library_key
+            library_path = os.path.join(library_path, library_key)
+        tree_item = self.library_tree_store.insert_before(parent, None, (library_key, library_item, library_path))
         self.library_row_iter_dict_by_library_path[library_path] = tree_item
         if isinstance(library_item, dict):
-            # logger.debug("Found library container: %s" % library_key)
-            for child_key, child_item in library_item.iteritems():
-                self.insert_rec(tree_item, child_key, child_item, library_path)
-
-    def on_cursor_changed(self, widget):
-        # The user clicked on an entry in the tree store
-        return
+            logger.debug("Found library container: %s" % library_key)
+            for child_library_key, child_library_item in library_item.iteritems():
+                self.insert_rec(tree_item, child_library_key, child_library_item, library_path)
 
     def on_drag_data_get(self, widget, context, data, info, time):
         """dragged state is inserted and its state_id sent to the receiver
@@ -220,7 +214,8 @@ class LibraryTreeController(ExtendedController):
     def _get_selected_library_state(self):
         """Returns the LibraryState which was selected in the LibraryTree
 
-        :return: LibraryState: selected state in TreeView
+        :return: selected state in TreeView
+        :rtype: LibraryState
         """
         (model, row) = self.view.get_selection().get_selected()
         library_key = model[row][0]
