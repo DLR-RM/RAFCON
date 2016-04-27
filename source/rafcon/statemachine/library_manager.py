@@ -74,8 +74,11 @@ class LibraryManager(Observable):
                 logger.warn("The library specified in RAFCON_LIBRARY_PATH does not exist: {}".format(library_path))
                 continue
             _, library_key = os.path.split(library_path)
-            logger.debug("Adding library '{1}' from {0}".format(library_path, library_key))
+            if library_key in self._libraries:
+                logger.warn("The library '{}' is already existing and will be overridden with '{}'".format(
+                    library_key, library_path))
             self._load_library_from_root_path(library_key, library_path)
+            logger.debug("Adding library '{1}' from {0}".format(library_path, library_key))
 
         self._libraries = ordered_dict(sorted(self._libraries.items()))
         logger.debug("Initialization of LibraryManager done")
