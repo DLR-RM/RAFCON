@@ -31,9 +31,14 @@ sys.path.insert(0, os.path.abspath('..'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.ifconfig',
-    'rst2pdf.pdfbuilder'
+    'sphinx.ext.ifconfig'
 ]
+
+try:
+    import rst2pdf
+    extensions.append('rst2pdf.pdfbuilder')
+except ImportError:
+    pass
 
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
 autoclass_content = 'class'
@@ -109,7 +114,7 @@ modindex_common_prefix = ['rafcon.']
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'classic'
+# html_theme = 'classic'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
