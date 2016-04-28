@@ -150,14 +150,13 @@ class LibraryTreeController(ExtendedController):
         logger.info("Libraries have been updated")
 
     def insert_rec(self, parent, library_key, library_item, library_path):
-        # Ignore empty directories
+        tree_item = self.library_tree_store.insert_before(parent, None, (library_key, library_item, library_path))
         if isinstance(library_item, dict) and not library_item:
             return
         if not library_path:
             library_path = library_key
         else:
             library_path = os.path.join(library_path, library_key)
-        tree_item = self.library_tree_store.insert_before(parent, None, (library_key, library_item, library_path))
         self.library_row_iter_dict_by_library_path[library_path] = tree_item
         if isinstance(library_item, dict):
             for child_library_key, child_library_item in library_item.iteritems():
