@@ -208,8 +208,8 @@ class ContainerStateModel(StateModel):
         # the model from the selection
         if 'before' in info:
             # remove selection from StateMachineModel.selection -> find state machine model
-            from rafcon.mvc.singleton import state_machine_manager_model
-            state_machine_m = state_machine_manager_model.get_sm_m_for_state_model(state_m)
+            import rafcon.mvc.singleton as mvc_singleton
+            state_machine_m = mvc_singleton.state_machine_manager_model.get_sm_m_for_state_model(state_m)
             state_machine_m.selection.remove(state_m)
 
             # Extract child models of state, as they have to be applied to the new state model

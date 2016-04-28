@@ -9,7 +9,6 @@
 """
 
 import gtk
-import threading
 
 from rafcon.mvc.controllers.global_variable_manager import GlobalVariableManagerController
 from rafcon.mvc.controllers.state_icons import StateIconController
@@ -19,7 +18,6 @@ from rafcon.mvc.controllers.library_tree import LibraryTreeController
 
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.library_manager import LibraryManagerModel
-from rafcon.mvc.models.state_machine_execution_engine import StateMachineExecutionEngineModel
 from rafcon.mvc.shortcut_manager import ShortcutManager
 
 from rafcon.mvc.controllers.extended_controller import ExtendedController
@@ -33,8 +31,7 @@ from rafcon.mvc.controllers.undocked_window import UndockedWindowController
 
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
-from rafcon.mvc.singleton import global_variable_manager_model as gvm_model
-from rafcon.mvc.singleton import state_machine_execution_model
+import rafcon.mvc.singleton as mvc_singleton
 import rafcon.statemachine.singleton
 import rafcon.statemachine.config
 from rafcon.mvc.config import global_gui_config as gui_config
@@ -59,7 +56,7 @@ class MainWindowController(ExtendedController):
     def __init__(self, state_machine_manager_model, view, editor_type='PortConnectionGrouped'):
         ExtendedController.__init__(self, state_machine_manager_model, view)
 
-        rafcon.mvc.singleton.main_window_controller = self
+        mvc_singleton.main_window_controller = self
         self.state_machine_manager_model = state_machine_manager_model
         self.editor_type = editor_type
         self.shortcut_manager = None
@@ -69,7 +66,7 @@ class MainWindowController(ExtendedController):
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         state_machine_manager = state_machine_manager_model.state_machine_manager
 
-        self.state_machine_execution_model = state_machine_execution_model
+        self.state_machine_execution_model = mvc_singleton.state_machine_execution_model
         self.observe_model(self.state_machine_execution_model)
         self.state_machine_execution_model.register_observer(self)
 
@@ -106,7 +103,8 @@ class MainWindowController(ExtendedController):
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
 
         # global variable editor
-        global_variable_manager_ctrl = GlobalVariableManagerController(gvm_model, view.global_var_editor)
+        global_variable_manager_ctrl = GlobalVariableManagerController(mvc_singleton.global_variable_manager_model,
+                                                                       view.global_var_editor)
         self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
 
         ######################################################
