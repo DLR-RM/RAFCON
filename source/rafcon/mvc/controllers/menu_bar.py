@@ -18,12 +18,10 @@ from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.singleton import state_machine_execution_engine, state_machine_manager, library_manager
+from rafcon.statemachine.singleton import state_machine_manager, library_manager
 
 import rafcon.statemachine.singleton as core_singletons
-import rafcon.mvc.singleton as gui_singletons
 from rafcon.mvc import gui_helper
-from rafcon.mvc.singleton import state_machine_manager_model
 from rafcon.mvc import singleton as mvc_singleton
 from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.mvc.views.about_dialog import MyAboutDialog
@@ -528,7 +526,7 @@ class MenuBarController(ExtendedController):
         # Should close all tabs
         core_singletons.state_machine_manager.delete_all_state_machines()
         # Recursively destroys the main window
-        gui_singletons.main_window_controller.destroy()
+        mvc_singleton.main_window_controller.destroy()
         self.logging_view.quit_flag = True
         glib.idle_add(log.unregister_logging_view, 'main')
 
@@ -627,7 +625,7 @@ class MenuBarController(ExtendedController):
         self.state_machine_execution_engine.start(self.model.selected_state_machine_id)
 
     def on_start_from_selected_state_activate(self, widget, data=None):
-        sel = state_machine_manager_model.get_selected_state_machine_model().selection
+        sel = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
         state_list = sel.get_states()
         if len(state_list) is not 1:
             logger.error("Exactly one state must be selected!")
@@ -658,7 +656,7 @@ class MenuBarController(ExtendedController):
     def on_run_to_selected_state_activate(self, widget, data=None):
         logger.debug("Run to selected state ...")
 
-        sel = state_machine_manager_model.get_selected_state_machine_model().selection
+        sel = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
         state_list = sel.get_states()
         if len(state_list) is not 1:
             logger.error("Exactly one state must be selected!")

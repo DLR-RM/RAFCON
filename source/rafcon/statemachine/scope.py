@@ -8,7 +8,6 @@
 
 """
 
-import sys
 import time
 import datetime
 
@@ -22,10 +21,10 @@ from rafcon.utils import type_helpers
 
 def generate_time_stamp():
     """
-    Generate a time stamp for the current time.
+    Generate a time stamp for the current time as integer in micro.
     :return:
     """
-    return time.time()
+    return int(round(time.time() * 1000000))
 
 
 def get_human_readable_time(timestamp):
@@ -167,6 +166,7 @@ class ScopedData(Observable):
         #     if not isinstance(value, getattr(sys.modules[__name__], self._value_type)):
         #         raise TypeError("result must be of type %s" % str(self._value_type))
         self._timestamp = generate_time_stamp()
+        # print "new scope data update {0}: {1} t:{2}".format(self.name+self.from_state, self._value, self._timestamp)
         self._value = value
 
     @property

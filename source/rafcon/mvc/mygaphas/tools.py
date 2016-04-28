@@ -3,7 +3,7 @@ from gtk.gdk import CONTROL_MASK
 from enum import Enum
 from math import pow
 
-from rafcon.mvc.singleton import state_machine_manager_model
+import rafcon.mvc.singleton as mvc_singleton
 from rafcon.mvc import statemachine_helper
 
 from rafcon.mvc.config import global_gui_config
@@ -71,8 +71,8 @@ class MoveItemTool(ItemTool):
             self._item = item
 
         if (isinstance(self.view.focused_item, NameView) and not
-        state_machine_manager_model.get_selected_state_machine_model().selection.is_selected(
-            self.view.focused_item.parent.model)):
+                mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.is_selected(
+                self.view.focused_item.parent.model)):
             self.view.focused_item = self.view.focused_item.parent
             self._item = self.view.focused_item
 

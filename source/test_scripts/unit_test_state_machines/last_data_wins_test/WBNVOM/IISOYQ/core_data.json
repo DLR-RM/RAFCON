@@ -1,0 +1,9 @@
+{
+    "__jsonqualname__": "rafcon.statemachine.states.execution_state.ExecutionState", 
+    "description": "null", 
+    "input_data_ports": "{}", 
+    "name": "\"output2\"", 
+    "outcomes": "{\n    \"-2\": {\n        \"__jsonqualname__\": \"rafcon.statemachine.outcome.Outcome\", \n        \"name\": \"\\\"preempted\\\"\", \n        \"outcome_id\": \"-2\"\n    }, \n    \"-1\": {\n        \"__jsonqualname__\": \"rafcon.statemachine.outcome.Outcome\", \n        \"name\": \"\\\"aborted\\\"\", \n        \"outcome_id\": \"-1\"\n    }, \n    \"0\": {\n        \"__jsonqualname__\": \"rafcon.statemachine.outcome.Outcome\", \n        \"name\": \"\\\"success\\\"\", \n        \"outcome_id\": \"0\"\n    }\n}", 
+    "output_data_ports": "{\n    \"0\": {\n        \"__jsonqualname__\": \"rafcon.statemachine.data_port.OutputDataPort\", \n        \"data_port_id\": \"0\", \n        \"data_type\": \"{\\n    \\\"__type__\\\": \\\"int\\\"\\n}\", \n        \"default_value\": \"0\", \n        \"name\": \"\\\"output_1\\\"\"\n    }\n}", 
+    "state_id": "\"IISOYQ\""
+}

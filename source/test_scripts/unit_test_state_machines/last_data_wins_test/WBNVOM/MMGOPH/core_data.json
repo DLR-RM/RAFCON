@@ -1,0 +1,9 @@
+{
+    "__jsonqualname__": "rafcon.statemachine.states.execution_state.ExecutionState", 
+    "description": "null", 
+    "input_data_ports": "{}", 
+    "name": "\"Check data-flow ordering\"", 
+    "outcomes": "{\n    \"-2\": {\n        \"__jsonqualname__\": \"rafcon.statemachine.outcome.Outcome\", \n        \"name\": \"\\\"preempted\\\"\", \n        \"outcome_id\": \"-2\"\n    }, \n    \"-1\": {\n        \"__jsonqualname__\": \"rafcon.statemachine.outcome.Outcome\", \n        \"name\": \"\\\"aborted\\\"\", \n        \"outcome_id\": \"-1\"\n    }, \n    \"0\": {\n        \"__jsonqualname__\": \"rafcon.statemachine.outcome.Outcome\", \n        \"name\": \"\\\"success\\\"\", \n        \"outcome_id\": \"0\"\n    }\n}", 
+    "output_data_ports": "{}", 
+    "state_id": "\"MMGOPH\""
+}

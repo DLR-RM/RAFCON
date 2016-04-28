@@ -54,7 +54,6 @@ class BarrierConcurrencyState(ConcurrencyState):
                         self.add_transition(from_state_id=state_id, from_outcome=outcome.outcome_id,
                                             to_state_id=UNIQUE_DECIDER_STATE_ID, to_outcome=None)
 
-
     def run(self):
         """ This defines the sequence of actions that are taken when the barrier concurrency state is executed
 

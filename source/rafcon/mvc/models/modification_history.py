@@ -174,7 +174,11 @@ class ModificationsHistoryModel(ModelMT):
         # self.busy = False
         self.locked = False
         self.count_before = 0
-        self.state_machine_model.storage_lock.release()
+        try:
+            self.state_machine_model.storage_lock.release()
+        except:
+            logger.warning("Release of storage-lock in this case un-necessary for interrupt of action")
+            # TODO check handling of change_data_type of IO ports
 
     def _re_initiate_observation(self):
         # logger.info("re initiate root_state observation")

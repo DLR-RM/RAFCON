@@ -694,15 +694,23 @@ class ContainerState(State):
 
         for input_port_key, value in state.input_data_ports.iteritems():
             # for all input keys fetch the correct data_flow connection and read data into the result_dict
+            actual_value = None
+            actual_value_time = 0
             for data_flow_key, data_flow in self.data_flows.iteritems():
+
                 if data_flow.to_key == input_port_key:
                     if data_flow.to_state == state.state_id:
                         # fetch data from the scoped_data list: the key is the data_port_key + the state_id
                         key = str(data_flow.from_key)+data_flow.from_state
                         if key in self.scoped_data:
-                            result_dict[value.name] = copy.deepcopy(self.scoped_data[key].value)
-                        else:  # if there is not value for the data port specified, take the default value
-                            result_dict[value.name] = value.default_value
+                            # print key, actual_value_time, self.scoped_data[key].timestamp
+                            if actual_value is None or actual_value_time < self.scoped_data[key].timestamp:
+                                actual_value = copy.deepcopy(self.scoped_data[key].value)
+                                actual_value_time = self.scoped_data[key].timestamp
+                                # print "ip new value: {0} {1}".format(actual_value, self)
+
+            if actual_value is not None:
+                result_dict[value.name] = actual_value
 
         return result_dict
 
@@ -835,17 +843,24 @@ class ContainerState(State):
         """
         for output_name, value in self.output_data.iteritems():
             output_port_id = self.get_io_data_port_id_from_name_and_type(output_name, DataPortType.OUTPUT)
+            actual_value = None
+            actual_value_time = 0
             for data_flow_id, data_flow in self.data_flows.iteritems():
                 if data_flow.to_state == self.state_id:
                     if data_flow.to_key == output_port_id:
                         scoped_data_key = str(data_flow.from_key)+data_flow.from_state
                         if scoped_data_key in self.scoped_data:
-                            self.output_data[output_name] = \
-                                copy.deepcopy(self.scoped_data[scoped_data_key].value)
+                            # print scoped_data_key, actual_value_time, self.scoped_data[scoped_data_key].timestamp
+                            if actual_value is None or self.scoped_data[scoped_data_key].timestamp > actual_value_time:
+                                actual_value = copy.deepcopy(self.scoped_data[scoped_data_key].value)
+                                actual_value_time = self.scoped_data[scoped_data_key].timestamp
+                                # print "op new value: {0} {1}".format(actual_value, self)
                         else:
                             if not self.backward_execution:
                                 logger.warn("Output data with name %s was not found in the scoped data. "
                                              "This normally means a statemachine design error", output_name)
+            if actual_value is not None:
+                self.output_data[output_name] = actual_value
 
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- check methods ---------------------------------------
