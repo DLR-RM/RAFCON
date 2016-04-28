@@ -108,10 +108,10 @@ class ShortcutManager:
         """
         res = False
         if action in self.__action_to_callbacks:
-            if len(self.__action_to_callbacks[action]) > 1:
-                logger.debug("Several actions callbacks registered for action {0}: {1}".format(
-                    str(action),
-                    str(self.__action_to_callbacks[action])))
+            # if len(self.__action_to_callbacks[action]) > 1:
+                # logger.debug("Several actions callbacks registered for action {0}: {1}".format(
+                #     str(action),
+                #     str(self.__action_to_callbacks[action])))
             for callback_function in self.__action_to_callbacks[action]:
                 try:
                     # logger.debug("call action {0}".format(str(action)))
