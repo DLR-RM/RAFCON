@@ -26,8 +26,8 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
 
 # singleton elements
-from rafcon.statemachine.singleton import state_machine_manager
-from rafcon.mvc.singleton import state_machine_manager_model
+import rafcon.statemachine.singleton
+import rafcon.mvc.singleton
 
 from rafcon.statemachine.enums import StateExecutionState
 
@@ -363,9 +363,9 @@ def create_models(*args, **kargs):
 
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
-    state_machine_manager.add_state_machine(sm)
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
-    sm_m = state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     return ctr_state, sm_m, state_dict
 
