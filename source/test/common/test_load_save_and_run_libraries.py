@@ -1,3 +1,4 @@
+import os
 from os.path import dirname, join, realpath
 
 # core elements
@@ -184,6 +185,16 @@ def test_nested_library_state_machine(caplog):
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     testing_utils.test_multithrading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+
+
+def test_rafcon_library_path_variable(caplog):
+    rafcon.statemachine.config.global_config.set_config_value("LIBRARY_PATHS", {})
+    os.environ['RAFCON_LIBRARY_PATH'] = os.path.join(os.path.dirname(testing_utils.RAFCON_PATH), 'libraries', 'generic')
+    rafcon.statemachine.singleton.library_manager.initialize()
+    os.environ['RAFCON_LIBRARY_PATH'] = ""
+    libraries = rafcon.statemachine.singleton.library_manager.libraries
+    assert 'generic' in libraries
+    assert isinstance(libraries['generic'], dict)
 
 
 def teardown_module(module=None):

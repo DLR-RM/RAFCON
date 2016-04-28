@@ -43,46 +43,74 @@ class LibraryManager(Observable):
         self._skipped_states = {}
 
     def initialize(self):
-        """
-        Initializes the library manager. It searches through all library paths given in the config file for
-        libraries, and loads the states.
+        """Initializes the library manager
+
+        It searches through all library paths given in the config file for libraries, and loads the states.
 
         This cannot be done in the __init__ function as the library_manager can be compiled and executed by
         singleton.py before the state*.pys are loaded
-        :return:
         """
         logger.debug("Initializing LibraryManager: Loading libraries ... ")
         self._libraries = {}
         self._library_paths = {}
-        for lib_key, lib_path in config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
-            # Replace ~ with /home/user
-            lib_path = os.path.expanduser(lib_path)
-            # Replace environment variables
-            lib_path = os.path.expandvars(lib_path)
-            # If the path is relative, assume it is relative to the config file directory
-            if lib_path.startswith('.'):
-                lib_path = os.path.join(config.global_config.path, lib_path)
-            # Clean path, e.g. replace /./ with /
-            lib_path = os.path.abspath(lib_path)
 
-            if os.path.exists(lib_path):
-                lib_path = os.path.realpath(lib_path)
-                logger.debug("Adding library '{1}' from {0}".format(lib_path, lib_key))
-                self._library_paths[lib_key] = lib_path
-                self._libraries[lib_key] = {}
-                self.add_libraries_from_path(lib_path, self._libraries[lib_key])
-                self._libraries[lib_key] = ordered_dict(sorted(self._libraries[lib_key].items()))
+        # 1. Load libraries from config.yaml
+        for library_key, library_path in config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
+            library_path = self._clean_path(library_path)
+            if os.path.exists(library_path):
+                logger.debug("Adding library '{1}' from {0}".format(library_path, library_key))
+                self._load_library_from_root_path(library_key, library_path)
             else:
-                logger.warn("Wrong path in config for library with name: '{0}' because path {1} does not exist"
-                            "".format(lib_key, lib_path))
+                logger.warn("Configured path for library '{}' does not exist: {}".format(library_key, library_path))
+
+        # 2. Load libraries from RAFCON_LIBRARY_PATH
+        library_path_env = os.environ.get('RAFCON_LIBRARY_PATH', '')
+        library_paths = set(library_path_env.split(os.pathsep))
+        for library_path in library_paths:
+            if not library_path:
+                continue
+            library_path = self._clean_path(library_path)
+            if not os.path.exists(library_path):
+                logger.warn("The library specified in RAFCON_LIBRARY_PATH does not exist: {}".format(library_path))
+                continue
+            _, library_key = os.path.split(library_path)
+            if library_key in self._libraries:
+                logger.warn("The library '{}' is already existing and will be overridden with '{}'".format(
+                    library_key, library_path))
+            self._load_library_from_root_path(library_key, library_path)
+            logger.debug("Adding library '{1}' from {0}".format(library_path, library_key))
+
         self._libraries = ordered_dict(sorted(self._libraries.items()))
         logger.debug("Initialization of LibraryManager done")
 
+    @staticmethod
+    def _clean_path(path):
+        # Replace ~ with /home/user
+        path = os.path.expanduser(path)
+        # Replace environment variables
+        path = os.path.expandvars(path)
+        # If the path is relative, assume it is relative to the config file directory
+        if path.startswith('.'):
+            path = os.path.join(config.global_config.path, path)
+        # Clean path, e.g. replace /./ with /
+        path = os.path.abspath(path)
+        # Eliminate symbolic links
+        path = os.path.realpath(path)
+        return path
+
+    def _load_library_from_root_path(self, library_key, library_path):
+        self._library_paths[library_key] = library_path
+        self._libraries[library_key] = {}
+        self._load_nested_libraries(library_path, self._libraries[library_key])
+        self._libraries[library_key] = ordered_dict(sorted(self._libraries[library_key].items()))
+
     @classmethod
-    def add_libraries_from_path(cls, library_path, target_dict):
-        """
+    def _load_nested_libraries(cls, library_path, target_dict):
+        """Recursively load libraries within path
+
         Adds all libraries specified in a given path and stores them into the provided library dictionary. The library
         entries in the dictionary consist only of the path to the library in the file system.
+
         :param library_path: the path to add all libraries from
         :param target_dict: the target dictionary to store all loaded libraries to
         """
@@ -94,7 +122,7 @@ class LibraryManager(Observable):
                     target_dict[library_name] = full_library_path
                 else:
                     target_dict[library_name] = {}
-                    cls.add_libraries_from_path(full_library_path, target_dict[library_name])
+                    cls._load_nested_libraries(full_library_path, target_dict[library_name])
                     target_dict[library_name] = ordered_dict(sorted(target_dict[library_name].items()))
 
     @Observable.observed
@@ -109,7 +137,7 @@ class LibraryManager(Observable):
 
     @property
     def libraries(self):
-        """Getter for all library tree
+        """Getter for library tree
         """
         return self._libraries
 
