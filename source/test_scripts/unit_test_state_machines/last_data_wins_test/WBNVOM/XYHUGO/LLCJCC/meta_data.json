@@ -1,0 +1,101 @@
+{
+    "data_flow1": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }, 
+            "editor_opengl": {
+                "waypoints": {}
+            }
+        }
+    }, 
+    "data_flow2": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }, 
+            "editor_opengl": {
+                "waypoints": {}
+            }
+        }
+    }, 
+    "gui": {
+        "editor_gaphas": {
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    19.20141928844538, 
+                    39.59103337844225
+                ]
+            }
+        }, 
+        "editor_opengl": {
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    19.20141928844538, 
+                    -39.59103337844225
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    25.691424075531103, 
+                    20.508497246262806
+                ]
+            }
+        }
+    }, 
+    "outcome-1": {}, 
+    "outcome-2": {}, 
+    "outcome0": {}, 
+    "output_data_port0": {
+        "gui": {
+            "editor_opengl": {
+                "inner_rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        21.394819977970116, 
+                        -16.41406945712039
+                    ]
+                }
+            }
+        }
+    }, 
+    "transition14": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }, 
+            "editor_opengl": {
+                "waypoints": [
+                    {
+                        "__jsonqualname__": "__builtin__.tuple", 
+                        "items": [
+                            19.380010812921995, 
+                            -8.438124234286178
+                        ]
+                    }
+                ]
+            }
+        }
+    }, 
+    "transition15": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }, 
+            "editor_opengl": {
+                "waypoints": [
+                    {
+                        "__jsonqualname__": "__builtin__.tuple", 
+                        "items": [
+                            18.591139268758724, 
+                            -13.828746452735174
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+}

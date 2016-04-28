@@ -69,6 +69,27 @@ def test_default_values_of_data_ports(caplog):
     assert root_state.output_data["output_data_port1"] == "default_value"
 
 
+def test_last_wins_value_collection_for_data_ports(caplog):
+
+    storage_path = testing_utils.get_unique_temp_path()
+
+    sm_loaded = storage.load_statemachine_from_path(rafcon.__path__[0] +
+                                                    "/../test_scripts/unit_test_state_machines/last_data_wins_test")
+
+    root_state = sm_loaded.root_state
+
+    state_machine = StateMachine(root_state)
+    testing_utils.test_multithrading_lock.acquire()
+
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    rafcon.statemachine.singleton.state_machine_execution_engine.start()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
+    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
+
+
 def test_unique_port_names(caplog):
 
     state = ExecutionState('execution state')
@@ -138,5 +159,6 @@ def test_unique_port_names(caplog):
 
 if __name__ == '__main__':
     test_default_values_of_data_ports(None)
+    test_last_wins_value_collection_for_data_ports(None)
     # test_unique_port_names(None)
-    # pytest.main([__file__])
+    pytest.main([__file__])
