@@ -59,8 +59,13 @@ class StatemachineExecutionEngine(Observable):
     def pause(self):
         """Set the execution mode to paused
         """
+
+        if self.state_machine_manager.get_active_state_machine() is not None:
+            self.state_machine_manager.get_active_state_machine().root_state.recursively_pause_states()
+
         logger.debug("Pause execution ...")
         self._status.execution_mode = StateMachineExecutionStatus.PAUSED
+
 
     @Observable.observed
     def start(self, state_machine_id=None, start_state_path=None):
@@ -70,6 +75,9 @@ class StatemachineExecutionEngine(Observable):
         :param start_state_path: The path of the state in the state machine, from which the execution will start
         :return:
         """
+
+        if self.state_machine_manager.get_active_state_machine() is not None:
+            self.state_machine_manager.get_active_state_machine().root_state.recursively_resume_states()
 
         if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
             self._status.execution_mode = StateMachineExecutionStatus.STARTED
@@ -199,6 +207,10 @@ class StatemachineExecutionEngine(Observable):
     def run_to_selected_state(self, path, state_machine_id=None):
         """Take a forward step (out) for all active states in the state machine
         """
+
+        if self.state_machine_manager.get_active_state_machine() is not None:
+            self.state_machine_manager.get_active_state_machine().root_state.recursively_resume_states()
+
         if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
             logger.debug("Resume execution engine and run to selected state!")
             self.run_to_states = []

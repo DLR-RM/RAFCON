@@ -135,13 +135,27 @@ class ContainerState(State):
     def recursively_preempt_states(self):
         """ Preempt the state and all of it child states.
         """
-        self.preempted = True
+        State.recursively_preempt_states(self)
         # notify the transition condition variable to let the state instantaneously stop
         self._transitions_cv.acquire()
         self._transitions_cv.notify_all()
         self._transitions_cv.release()
-        for state_id, state in self.states.iteritems():
+        for state in self.states.itervalues():
             state.recursively_preempt_states()
+
+    def recursively_pause_states(self):
+        """ Pause the state and all of it child states.
+        """
+        State.recursively_pause_states(self)
+        for state in self.states.itervalues():
+            state.recursively_pause_states()
+
+    def recursively_resume_states(self):
+        """ Resume the state and all of it child states.
+        """
+        State.recursively_resume_states(self)
+        for state in self.states.itervalues():
+            state.recursively_resume_states()
 
     def setup_run(self):
         """ Executes a generic set of actions that has to be called in the run methods of each derived state class.

@@ -22,14 +22,14 @@ from jsonconversion.jsonobject import JSONObject
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
-logger = log.get_logger(__name__)
+from rafcon.utils import multi_event as multi_event
 
 from rafcon.statemachine.data_port import DataPort, InputDataPort, OutputDataPort
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
 from rafcon.statemachine.outcome import Outcome
 from rafcon.statemachine.id_generator import *
 
-
+logger = log.get_logger(__name__)
 PATH_SEPARATOR = '/'
 
 
@@ -63,8 +63,14 @@ class State(Observable, YAMLObject, JSONObject):
         self._input_data = {}
         # the output data of the state during execution
         self._output_data = {}
-        # a flag to show if the state was preempted from outside
+        # a flag which shows if the state was preempted from outside
         self._preempted = threading.Event()
+        # a flag which shows if the state is running or should resume
+        self._running = threading.Event()
+        # a flag which shows if the state is paused
+        self._paused = threading.Event()
+        # a multi_event listening to all execution engine events
+        self._execution_events = multi_event.create_multi_event(self._preempted, self._running, self._paused)
         # a queue to signal a preemptive concurrency state, that the execution of the state finished
         self._concurrency_queue = None
         # the final outcome of a state, when it finished execution
@@ -188,6 +194,18 @@ class State(Observable, YAMLObject, JSONObject):
         """ Preempt the state
         """
         self.preempted = True
+
+    def recursively_pause_states(self):
+        """ Pause the state
+        """
+        self.running = False
+        self.paused = True
+
+    def recursively_resume_states(self):
+        """ Resume the state
+        """
+        self.running = True
+        self.paused = False
 
     def get_previously_executed_state(self):
         """ Calculates the state that was executed before this state
@@ -899,7 +917,6 @@ class State(Observable, YAMLObject, JSONObject):
         return self._preempted.is_set()
 
     @preempted.setter
-    #@Observable.observed
     def preempted(self, preempted):
         if not isinstance(preempted, bool):
             raise TypeError("preempted must be of type bool")
@@ -907,6 +924,57 @@ class State(Observable, YAMLObject, JSONObject):
             self._preempted.set()
         else:
             self._preempted.clear()
+
+    @property
+    def running(self):
+        """Property for the _running field
+
+        """
+        return self._running.is_set()
+
+    @running.setter
+    def running(self, running):
+        if not isinstance(running, bool):
+            raise TypeError("running must be of type bool")
+        if running:
+            self._running.set()
+        else:
+            self._running.clear()
+
+    @property
+    def paused(self):
+        """Property for the _paused field
+
+        """
+        return self._paused.is_set()
+
+    @paused.setter
+    def paused(self, paused):
+        if not isinstance(paused, bool):
+            raise TypeError("paused must be of type bool")
+        if paused:
+            self._paused.set()
+        else:
+            self._paused.clear()
+
+    @property
+    def execution_events(self):
+        """Property for the _execution_events field
+
+        """
+        return self._execution_events.is_set()
+
+    def wait_for_execution_events(self):
+        """
+        Wait for self._execution_events
+        :return:
+        """
+        # registering to execution status events
+        # resetting them before listening
+        self._running.clear()
+        self._paused.clear()
+        self._preempted.clear()
+        self._execution_events.wait()
 
     @property
     def concurrency_queue(self):
