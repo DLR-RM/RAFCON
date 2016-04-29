@@ -1,11 +1,9 @@
 """
 .. module:: multi_event
    :platform: Unix, Windows
-   :synopsis: A module for creating multi_events, that listens to several threading.Events
+   :synopsis: A module for creating multi_events that listen to several `threading.Event`s
 
-.. moduleauthor:: Sebastain Brunner
-
-
+.. moduleauthor:: Sebastian Brunner, Franz Steinmetz
 """
 import threading
 
@@ -15,21 +13,23 @@ import threading
 
 
 def or_set(self):
-    """
-    A function to overwrite the default set function of threading.Events
-    :return:
+    """A function to overwrite the default set function of threading.Events
+
+    :param self: Reference to the event
     """
     self._set()
-    self.changed()
+    for callback in self.callbacks:
+        callback()
 
 
 def or_clear(self):
-    """
-    A function to overwrite the default clear function of the threading.Event
-    :return:
+    """ A function to overwrite the default clear function of the threading.Event
+
+    :param self: Reference to the event
     """
     self._clear()
-    self.changed()
+    for callback in self.callbacks:
+        callback()
 
 
 def orify(e, changed_callback):
@@ -39,24 +39,29 @@ def orify(e, changed_callback):
     :param changed_callback: a method to call if the event status changes, this method has access to the multi_event
     :return:
     """
-    e._set = e.set
-    e._clear = e.clear
-    e.changed = changed_callback
-    e.set = lambda: or_set(e)
-    e.clear = lambda: or_clear(e)
+    if not hasattr(e, "callbacks"):  # Event has not been orified yet
+        e._set = e.set
+        e._clear = e.clear
+        e.set = lambda: or_set(e)
+        e.clear = lambda: or_clear(e)
+        e.callbacks = list()
+    # Keep track of one callback per multi event
+    e.callbacks.append(changed_callback)
 
 
-def create_multi_event(*events):
-    """
-    Creates a new multi_event, that listens to all events passed in the "events" parameter
+def create(*events):
+    """Creates a new multi_event
+
+    The multi_event listens to all events passed in the "events" parameter.
+
     :param events: a list of threading.Events
-    :return:
+    :return: The multi_event
+    :rtype: threading.Event
     """
     or_event = threading.Event()
 
     def changed():
-        bools = [e.is_set() for e in events]
-        if any(bools):
+        if any([event.is_set() for event in events]):
             or_event.set()
         else:
             or_event.clear()
