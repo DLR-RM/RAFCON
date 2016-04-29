@@ -1297,7 +1297,7 @@ class OutcomeAction(Action):
         self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
         self.after_arguments = None
 
-    @ staticmethod
+    @staticmethod
     def get_set_of_arguments(oc):
         return {'name': oc.name, 'outcome_id': oc.outcome_id}
 
