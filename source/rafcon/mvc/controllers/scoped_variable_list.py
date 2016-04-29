@@ -35,10 +35,17 @@ class ScopedVariableListController(ExtendedController):
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view.get_top_widget())
 
         self.last_entry_widget = None
+        self._actual_entry = None
         self.next_focus_column = {}
         self.prev_focus_column = {}
+
+        # variables to avoid to create and to be robust against chained notification calls
+        self._do_name_change = False
+        self._do_type_change = False
+        self._do_value_change = False
+        self._do_store_update = False
+
         self.scoped_variables_list_store = ListStore(str, str, str, int)
-        self._actual_entry = None
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -184,7 +191,11 @@ class ScopedVariableListController(ExtendedController):
             if path is not None:
                 scoped_variable_key = self.scoped_variables_list_store[int(path)][3]
                 self.scoped_variables_list_store.clear()
-                self.model.state.remove_scoped_variable(scoped_variable_key)
+                try:
+                    self.model.state.remove_scoped_variable(scoped_variable_key)
+                except AttributeError as e:
+                    logger.warn("The scoped variable couldn't be removed: {0}".format(e))
+                    return False
             if len(self.scoped_variables_list_store) > 0:
                 self.view[self.view.top].set_cursor(min(path, len(self.scoped_variables_list_store) - 1))
             return True
@@ -197,12 +208,16 @@ class ScopedVariableListController(ExtendedController):
         :param path: The path identifying the edited variable
         :param text: New variable's name
         """
+        if self._do_name_change:
+            return
+        self._do_name_change = True
         data_port_id = self.get_data_port_id_from_selection()
         try:
             if self.model.state.scoped_variables[data_port_id].name != text:
                 self.model.state.scoped_variables[data_port_id].name = text
         except TypeError as e:
             logger.error("Error while changing port name: {0}".format(e))
+        self._do_name_change = False
 
     def on_data_type_changed(self, widget, path, text):
         """Triggered when a scoped variable's data type is edited.
@@ -212,12 +227,16 @@ class ScopedVariableListController(ExtendedController):
         :param path: The path identifying the edited variable
         :param text: New variable's data type
         """
+        if self._do_type_change:
+            return
+        self._do_type_change = True
         data_port_id = self.get_data_port_id_from_selection()
         try:
             if self.model.state.scoped_variables[data_port_id].data_type.__name__ != text:
                 self.model.state.scoped_variables[data_port_id].change_data_type(text)
         except ValueError as e:
             logger.error("Error while changing data type: {0}".format(e))
+        self._do_type_change = False
 
     def on_default_value_changed(self, widget, path, text):
         """Triggered when a scoped variable's value is edited.
@@ -227,12 +246,16 @@ class ScopedVariableListController(ExtendedController):
         :param path: The path identifying the edited variable
         :param text: New variable's value
         """
+        if self._do_value_change:
+            return
+        self._do_value_change = True
         data_port_id = self.get_data_port_id_from_selection()
         try:
             if str(self.model.state.scoped_variables[data_port_id].default_value) != text:
                 self.model.state.scoped_variables[data_port_id].default_value = text
         except (TypeError, AttributeError) as e:
             logger.error("Error while changing default value: {0}".format(e))
+        self._do_value_change = False
 
     def get_data_port_id_from_selection(self):
         """Returns the data_port_id of the currently selected port entry"""
@@ -260,6 +283,7 @@ class ScopedVariableListController(ExtendedController):
 
     def reload_scoped_variables_list_store(self):
         """Reloads the scoped variable list store from the data port models"""
+
         if isinstance(self.model, ContainerStateModel):
             tmp = ListStore(str, str, str, int)
             for sv_model in self.model.scoped_variables:
@@ -278,9 +302,17 @@ class ScopedVariableListController(ExtendedController):
             tms.set_sort_func(0, compare_variables)
             tms.sort_column_changed()
             tmp = tms
-            self.scoped_variables_list_store.clear()
-            for elem in tmp:
-                self.scoped_variables_list_store.append(elem)
+            if self._do_store_update:
+                return
+            self._do_store_update = True
+            try:
+                self.scoped_variables_list_store.clear()
+                for elem in tmp:
+                    self.scoped_variables_list_store.append(elem)
+            except:
+                pass
+            self._do_store_update = False
         else:
             raise RuntimeError("The reload_scoped_variables_list_store function should be never called for "
                                "a non Container State Model")
+

@@ -47,16 +47,18 @@ class StateOutcomesListController(ExtendedController):
         # not used at the moment key-outcome_id -> label,  from_state_id,  transition_id
         self.dict_from_other_state = {}  # if widget gets extended
 
+        self._actual_entry = None
+
         if not model.state.is_root_state:
             self.observe_model(model.parent)
 
-        # in case of weired notification calls
-        self.update_runs = False  # secures that on_focus and outcomes_changed do not run at the same time updates
+        # variables to avoid to create and to be robust against chained notification calls
+        self._do_name_change = False
+        self._do_store_update = False
 
         # initiate data base and tree
         self.update_internal_data_base()
         self.update_tree_store()
-        self._actual_entry = None
 
     def register_view(self, view):
         """Called when the View was registered
@@ -145,11 +147,15 @@ class StateOutcomesListController(ExtendedController):
     def on_name_changed(self, widget, path, text):
         outcome_id = self.tree_store[path][6].outcome_id
         outcome = self.model.state.outcomes[outcome_id]
+        if self._do_name_change:
+            return
+        self._do_name_change = True
         try:
             outcome.name = text
             logger.debug("Outcome name changed to '{0}'".format(outcome.name))
         except (ValueError, TypeError) as e:
             logger.warning("The name of the outcome could not be changed: {0}".format(e))
+        self._do_name_change = False
         self.tree_store[path][1] = outcome.name
 
     def on_to_state_modification(self, widget, path, text):
@@ -277,9 +283,9 @@ class StateOutcomesListController(ExtendedController):
 
     def update_internal_data_base(self):
 
-        if self.update_runs:
+        if self._do_store_update:
             return
-        self.update_runs = True
+        self._do_store_update = True
 
         model = self.model
 
@@ -345,13 +351,13 @@ class StateOutcomesListController(ExtendedController):
         # print "to_outcome: ", self.list_to_other_outcome
         # print "from state: ", self.list_from_other_state
         # print "state.name: ", self.model.state.name
-        self.update_runs = False
+        self._do_store_update = False
 
     def update_tree_store(self):
 
-        if self.update_runs:
+        if self._do_store_update:
             return
-        self.update_runs = True
+        self._do_store_update = True
         self.tree_store.clear()
         for outcome in self.model.state.outcomes.values():
             to_state = None
@@ -367,7 +373,7 @@ class StateOutcomesListController(ExtendedController):
             # print "treestore: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
             self.tree_store.append(None, [outcome.outcome_id, outcome.name, to_state, to_outcome,
                                           '#f0E5C7', '#f0E5c7', outcome, self.model.state])
-        self.update_runs = False
+        self._do_store_update = False
 
     @ExtendedController.observe("parent", after=True)
     @ExtendedController.observe("outcomes", after=True)

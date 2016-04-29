@@ -42,12 +42,19 @@ class DataPortListController(ExtendedController):
             self.state_data_port_dict = self.model.state.output_data_ports
             self.data_port_model_list = self.model.output_data_ports
 
+        self._actual_entry = None
+
+        # variables to avoid to create and to be robust against chained notification calls
+        self._do_name_change = False
+        self._do_type_change = False
+        self._do_value_change = False
+        self._do_store_update = False
+
         if not isinstance(self.model.state, LibraryState):
             self.data_port_list_store = ListStore(str, str, str, int)
         else:
             self.data_port_list_store = ListStore(str, str, str, int, bool, str)
         self.reload_data_port_list_store()
-        self._actual_entry = None
 
     def default_value_renderer(self, tree_view_column, cell, model, iter):
         """
@@ -330,28 +337,39 @@ class DataPortListController(ExtendedController):
         """Try to set the port name to the newly entered one
         """
         # logger.info("on_name_changed widget: {0} path: {1} text: {2}".format(widget, column_id, text))
+        if self._do_name_change:
+            return
+        self._do_name_change = True
         try:
             data_port_id = self.get_data_port_id_from_selection()
             if self.state_data_port_dict[data_port_id].name != text:
                 self.state_data_port_dict[data_port_id].name = text
         except (TypeError, ValueError) as e:
             logger.error("Error while trying to change the port name: {0}".format(e))
+        self._do_name_change = False
 
     def on_data_type_changed(self, widget, column_id, text):
         """Try to set the port type the the newly entered one
         """
         # logger.info("on_data_type_changed widget: {0} path: {1} text: {2}".format(widget, column_id, text))
+        if self._do_type_change:
+            return
+        self._do_type_change = True
         try:
             data_port_id = self.get_data_port_id_from_selection()
             if self.state_data_port_dict[data_port_id].data_type.__name__ != text:
                 self.state_data_port_dict[data_port_id].change_data_type(text)
         except ValueError as e:
             logger.error("Error while changing data type: {0}".format(e))
+        self._do_type_change = False
 
     def on_default_value_changed(self, widget, column_id, text):
         """Try to set the port default value to the newly entered one
         """
         # logger.info("on_default_value_changed widget: {0} path: {1} text: {2}".format(widget, column_id, text))
+        if self._do_value_change:
+            return
+        self._do_value_change = True
         try:
             data_port_id = self.get_data_port_id_from_selection()
             if isinstance(self.model.state, LibraryState):
@@ -369,6 +387,7 @@ class DataPortListController(ExtendedController):
                     self.state_data_port_dict[data_port_id].default_value = text
         except (TypeError, AttributeError) as e:
             logger.error("Error while changing default value: {0}".format(e))
+        self._do_value_change = False
 
     def reload_data_port_list_store(self):
         """Reloads the input data port list store from the data port models"""
@@ -408,11 +427,19 @@ class DataPortListController(ExtendedController):
                             use_runtime_value,
                             runtime_value
                             ])
+
         tms = gtk.TreeModelSort(tmp)
         tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
         tms.set_sort_func(0, compare_variables)
         tms.sort_column_changed()
         tmp = tms
-        self.data_port_list_store.clear()
-        for elem in tmp:
-            self.data_port_list_store.append(elem)
+        if self._do_store_update:
+            return
+        self._do_store_update = True
+        try:
+            self.data_port_list_store.clear()
+            for elem in tmp:
+                self.data_port_list_store.append(elem)
+        except:
+            pass
+        self._do_store_update = False
