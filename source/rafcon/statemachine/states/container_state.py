@@ -682,7 +682,8 @@ class ContainerState(State):
     # ---------------------------------------------------------------------------------------------
 
     def get_inputs_for_state(self, state):
-        """Get all input data of an state
+        """Retrieves all input data of a state. If several data flows are connected to an input port the
+        most current data is used for the specific input port.
 
         :param state: the state of which the input data is determined
         :return: the input data of the target state
@@ -703,11 +704,9 @@ class ContainerState(State):
                         # fetch data from the scoped_data list: the key is the data_port_key + the state_id
                         key = str(data_flow.from_key)+data_flow.from_state
                         if key in self.scoped_data:
-                            # print key, actual_value_time, self.scoped_data[key].timestamp
                             if actual_value is None or actual_value_time < self.scoped_data[key].timestamp:
                                 actual_value = copy.deepcopy(self.scoped_data[key].value)
                                 actual_value_time = self.scoped_data[key].timestamp
-                                # print "ip new value: {0} {1}".format(actual_value, self)
 
             if actual_value is not None:
                 result_dict[value.name] = actual_value
@@ -850,11 +849,11 @@ class ContainerState(State):
                     if data_flow.to_key == output_port_id:
                         scoped_data_key = str(data_flow.from_key)+data_flow.from_state
                         if scoped_data_key in self.scoped_data:
-                            # print scoped_data_key, actual_value_time, self.scoped_data[scoped_data_key].timestamp
+                            # if self.scoped_data[scoped_data_key].timestamp > actual_value_time is True
+                            # the data of a previous execution of the same state is overwritten
                             if actual_value is None or self.scoped_data[scoped_data_key].timestamp > actual_value_time:
                                 actual_value = copy.deepcopy(self.scoped_data[scoped_data_key].value)
                                 actual_value_time = self.scoped_data[scoped_data_key].timestamp
-                                # print "op new value: {0} {1}".format(actual_value, self)
                         else:
                             if not self.backward_execution:
                                 logger.warn("Output data with name %s was not found in the scoped data. "
