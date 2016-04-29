@@ -135,7 +135,7 @@ class ContainerState(State):
     def recursively_preempt_states(self):
         """ Preempt the state and all of it child states.
         """
-        State.recursively_preempt_states(self)
+        super(ContainerState, self).recursively_preempt_states()
         # notify the transition condition variable to let the state instantaneously stop
         self._transitions_cv.acquire()
         self._transitions_cv.notify_all()
@@ -146,14 +146,14 @@ class ContainerState(State):
     def recursively_pause_states(self):
         """ Pause the state and all of it child states.
         """
-        State.recursively_pause_states(self)
+        super(ContainerState, self).recursively_pause_states()
         for state in self.states.itervalues():
             state.recursively_pause_states()
 
     def recursively_resume_states(self):
         """ Resume the state and all of it child states.
         """
-        State.recursively_resume_states(self)
+        super(ContainerState, self).recursively_resume_states()
         for state in self.states.itervalues():
             state.recursively_resume_states()
 

@@ -4,8 +4,6 @@ import time
 
 # core elements
 from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
 # singleton elements
 from rafcon.statemachine.singleton import state_machine_manager
@@ -13,7 +11,6 @@ from rafcon.statemachine.singleton import global_variable_manager
 from rafcon.statemachine.singleton import state_machine_execution_engine
 
 # test environment elements
-import rafcon.mvc.singleton
 import testing_utils
 
 
@@ -22,29 +19,17 @@ def trigger_exectuion_engine(gvm, execution_engine):
     while not gvm.variable_exist("sm_status"):
         time.sleep(0.1)
 
-    while True:
-        sm_status = gvm.get_variable("sm_status")
-        if sm_status == 0:
-            break
-        else:
-            time.sleep(0.1)
+    while gvm.get_variable("sm_status") != 0:
+        time.sleep(0.1)
 
     execution_engine.pause()
 
-    while True:
-        sm_status = gvm.get_variable("sm_status")
-        if sm_status == 1:
-            break
-        else:
-            time.sleep(0.1)
+    while gvm.get_variable("sm_status") != 1:
+        time.sleep(0.1)
 
     execution_engine.start()
-    while True:
-        sm_status = gvm.get_variable("sm_status")
-        if sm_status == 2:
-            break
-        else:
-            time.sleep(0.1)
+    while gvm.get_variable("sm_status") != 2:
+        time.sleep(0.1)
 
     execution_engine.stop()
 

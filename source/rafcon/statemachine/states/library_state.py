@@ -118,10 +118,22 @@ class LibraryState(State):
         self.finalize(self.state_copy.final_outcome)
 
     def recursively_preempt_states(self):
-        """ Preempt the state and all of it child states.
+        """Preempt the state and all of it child states.
         """
-        self.preempted = True
+        super(LibraryState, self).recursively_preempt_states()
         self.state_copy.recursively_preempt_states()
+
+    def recursively_pause_states(self):
+        """Pause the state and all of it child states.
+        """
+        super(LibraryState, self).recursively_pause_states()
+        self.state_copy.recursively_pause_states()
+
+    def recursively_resume_states(self):
+        """Resume the state and all of it child states.
+        """
+        super(LibraryState, self).recursively_resume_states()
+        self.state_copy.recursively_resume_states()
 
     def add_outcome(self, name, outcome_id=None):
         """Overwrites the add_outcome method of the State class. Prevents user from adding a
