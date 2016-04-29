@@ -137,8 +137,8 @@ class GlobalVariableManagerController(ExtendedController):
                     self.model.global_variable_manager.delete_variable(key)
                 except AttributeError as e:
                     logger.warning("Delete of globale variable '{0}' failed".format(key))
-            if len(self.global_variables_list_store) > 0:
-                self.view['global_variable_tree_view'].set_cursor(min(path[0], len(self.global_variables_list_store) - 1))
+                if len(self.global_variables_list_store) > 0:
+                    self.view['global_variable_tree_view'].set_cursor(min(path[0], len(self.global_variables_list_store) - 1))
             return True
 
     def on_name_changed(self, widget, path, text):
@@ -158,10 +158,12 @@ class GlobalVariableManagerController(ExtendedController):
         try:
             self.model.global_variable_manager.delete_variable(old_key)
             self.model.global_variable_manager.set_variable(text, old_value)
+            old_key = text
         except (AttributeError, RuntimeError) as e:
             logger.warning(str(e))
         self._locked = False
         self.update_global_variables_list_store()
+        self.select_entry(old_key)
 
     def on_value_changed(self, widget, path, text):
         """Triggered when a global variable's value is edited.
@@ -180,6 +182,13 @@ class GlobalVariableManagerController(ExtendedController):
                 self.model.global_variable_manager.set_variable(old_key, text)
         except RuntimeError as e:
             logger.exception(e)
+
+    def select_entry(self, key):
+        """Selects the global variable entry belonging to the given data_port_id"""
+        for row_num, gv_entry in enumerate(self.global_variables_list_store):
+            if gv_entry[0] == key:
+                self.view['global_variable_tree_view'].set_cursor(row_num)
+                break
 
     @ExtendedController.observe("global_variable_manager", after=True)
     def assign_notification_state(self, model, prop_name, info):
