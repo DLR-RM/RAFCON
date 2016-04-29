@@ -58,8 +58,10 @@ class ExtendedController(Controller):
                 return False
         else:
             key = controller
+
         if key in self.__child_controllers:
             self.__action_registered_controllers.remove(self.__child_controllers[key])
+            self.__child_controllers[key].unregister_actions(self.__shortcut_manager)
             self.__child_controllers[key].destroy()
             del self.__child_controllers[key]
             return True
@@ -110,7 +112,6 @@ class ExtendedController(Controller):
     @parent.setter
     def parent(self, controller):
         """Set the parent controller for which this controller is registered as a child.
-
         """
         assert isinstance(controller, ExtendedController)
         self.__parent = controller
@@ -130,8 +131,12 @@ class ExtendedController(Controller):
                     controller.register_actions(shortcut_manager)
                 except Exception as e:
                     logger.error("Error while registering action for {0}: {1}".format(controller.__name__, e))
-                    pass
                 self.__action_registered_controllers.append(controller)
+
+    def unregister_actions(self, shortcut_manager):
+        for controller in self.__child_controllers.values():
+            controller.unregister_actions(shortcut_manager)
+        shortcut_manager.remove_callbacks_for_controller(self)
 
     def __register_actions_of_child_controllers(self):
         assert isinstance(self.__child_controllers, dict)
@@ -150,11 +155,6 @@ class ExtendedController(Controller):
         for controller_name in controller_names:
             self.remove_controller(controller_name)
         self.relieve_all_models()
-        # try:
-        #     self.view.get_top_widget().destroy()
-        # except Exception as e:
-        #     import traceback
-        #     print "Exception in destroy extended controller {0} {1}".format(e.message, traceback.format_exc())
 
     def observe_model(self, model):
         """Make this model observable within the controller
