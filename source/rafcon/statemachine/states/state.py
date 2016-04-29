@@ -22,7 +22,7 @@ from jsonconversion.jsonobject import JSONObject
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
-from rafcon.utils import multi_event as multi_event
+from rafcon.utils import multi_event
 
 from rafcon.statemachine.data_port import DataPort, InputDataPort, OutputDataPort
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
@@ -65,12 +65,14 @@ class State(Observable, YAMLObject, JSONObject):
         self._output_data = {}
         # a flag which shows if the state was preempted from outside
         self._preempted = threading.Event()
-        # a flag which shows if the state is running or should resume
-        self._running = threading.Event()
+        # a flag which shows if the state was started or resumed
+        self._started = threading.Event()
         # a flag which shows if the state is paused
         self._paused = threading.Event()
-        # a multi_event listening to all execution engine events
-        self._execution_events = multi_event.create_multi_event(self._preempted, self._running, self._paused)
+        # a multi_event listening to both paused and preempted event
+        self._interruption_events = multi_event.create(self._preempted, self._paused)
+        # a multi_event listening to both started and preempted event
+        self._unpause_events = multi_event.create(self._preempted, self._started)
         # a queue to signal a preemptive concurrency state, that the execution of the state finished
         self._concurrency_queue = None
         # the final outcome of a state, when it finished execution
@@ -191,24 +193,26 @@ class State(Observable, YAMLObject, JSONObject):
         raise NotImplementedError("The State.run() function has to be implemented!")
 
     def recursively_preempt_states(self):
-        """ Preempt the state
+        """Preempt the state
         """
         self.preempted = True
+        self.paused = False
+        self.started = False
 
     def recursively_pause_states(self):
-        """ Pause the state
+        """Pause the state
         """
-        self.running = False
+        self.started = False
         self.paused = True
 
     def recursively_resume_states(self):
-        """ Resume the state
+        """Resume the state
         """
-        self.running = True
+        self.started = True
         self.paused = False
 
     def get_previously_executed_state(self):
-        """ Calculates the state that was executed before this state
+        """Calculates the state that was executed before this state
 
         :return: The last state in the execution history
         """
@@ -911,8 +915,7 @@ class State(Observable, YAMLObject, JSONObject):
 
     @property
     def preempted(self):
-        """Property for the _preempted field
-
+        """Checks, whether the preempted event is set
         """
         return self._preempted.is_set()
 
@@ -926,25 +929,23 @@ class State(Observable, YAMLObject, JSONObject):
             self._preempted.clear()
 
     @property
-    def running(self):
-        """Property for the _running field
-
+    def started(self):
+        """Checks, whether the started event is set
         """
-        return self._running.is_set()
+        return self._started.is_set()
 
-    @running.setter
-    def running(self, running):
-        if not isinstance(running, bool):
-            raise TypeError("running must be of type bool")
-        if running:
-            self._running.set()
+    @started.setter
+    def started(self, started):
+        if not isinstance(started, bool):
+            raise TypeError("started must be of type bool")
+        if started:
+            self._started.set()
         else:
-            self._running.clear()
+            self._started.clear()
 
     @property
     def paused(self):
-        """Property for the _paused field
-
+        """Checks, whether the paused event is set
         """
         return self._paused.is_set()
 
@@ -957,24 +958,23 @@ class State(Observable, YAMLObject, JSONObject):
         else:
             self._paused.clear()
 
-    @property
-    def execution_events(self):
-        """Property for the _execution_events field
+    def wait_for_interruption(self, timeout=None):
+        """Wait for any of the events paused or preempted to be set
 
+        :param float timeout: Maximum time to wait, None if infinitely
+        :return: True, is an event was set, False if the timeout was reached
+        :rtype: bool
         """
-        return self._execution_events.is_set()
+        return self._interruption_events.wait(timeout)
 
-    def wait_for_execution_events(self):
+    def wait_for_unpause(self, timeout=None):
+        """Wait for any of the events started or preempted to be set
+
+        :param float timeout: Maximum time to wait, None if infinitely
+        :return: True, is an event was set, False if the timeout was reached
+        :rtype: bool
         """
-        Wait for self._execution_events
-        :return:
-        """
-        # registering to execution status events
-        # resetting them before listening
-        self._running.clear()
-        self._paused.clear()
-        self._preempted.clear()
-        self._execution_events.wait()
+        return self._unpause_events.wait(timeout)
 
     @property
     def concurrency_queue(self):
