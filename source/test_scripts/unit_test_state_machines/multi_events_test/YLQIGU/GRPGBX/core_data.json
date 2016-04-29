@@ -1,0 +1,12 @@
+{
+    "__jsonqualname__": "rafcon.statemachine.states.hierarchy_state.HierarchyState", 
+    "data_flows": "{}", 
+    "description": "null", 
+    "input_data_ports": "{}", 
+    "name": "\"hierarchy\"", 
+    "outcomes": "{\n    \"-2\": {\n        \"__jsonqualname__\": \"rafcon.statemachine.outcome.Outcome\", \n        \"name\": \"\\\"preempted\\\"\", \n        \"outcome_id\": \"-2\"\n    }, \n    \"-1\": {\n        \"__jsonqualname__\": \"rafcon.statemachine.outcome.Outcome\", \n        \"name\": \"\\\"aborted\\\"\", \n        \"outcome_id\": \"-1\"\n    }, \n    \"0\": {\n        \"__jsonqualname__\": \"rafcon.statemachine.outcome.Outcome\", \n        \"name\": \"\\\"success\\\"\", \n        \"outcome_id\": \"0\"\n    }\n}", 
+    "output_data_ports": "{}", 
+    "scoped_variables": "{}", 
+    "state_id": "\"GRPGBX\"", 
+    "transitions": "{\n    \"3\": {\n        \"__jsonqualname__\": \"rafcon.statemachine.transition.Transition\", \n        \"from_outcome\": \"null\", \n        \"from_state\": \"null\", \n        \"to_outcome\": \"null\", \n        \"to_state\": \"\\\"OGFHFG\\\"\", \n        \"transition_id\": \"3\"\n    }, \n    \"4\": {\n        \"__jsonqualname__\": \"rafcon.statemachine.transition.Transition\", \n        \"from_outcome\": \"0\", \n        \"from_state\": \"\\\"OGFHFG\\\"\", \n        \"to_outcome\": \"0\", \n        \"to_state\": \"\\\"GRPGBX\\\"\", \n        \"transition_id\": \"4\"\n    }\n}"
+}

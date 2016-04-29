@@ -1,12 +1,9 @@
-import traceback
 import gtk
-
-from rafcon.utils import log
-logger = log.get_logger(__name__)
+from functools import partial
 
 from rafcon.mvc.config import global_gui_config
-
-from functools import partial
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 class ShortcutManager:
@@ -25,6 +22,7 @@ class ShortcutManager:
         self.__action_to_callbacks = {}
         self.__action_to_shortcuts = global_gui_config.get_config_value('SHORTCUTS', {})
         self.__register_shortcuts()
+        self.__controller_action_callbacks = {}
 
     def __register_shortcuts(self):
         for action in self.__action_to_shortcuts:
@@ -56,43 +54,69 @@ class ShortcutManager:
                     return action
         return None
 
-    def add_callback_for_action(self, action, callback, *parameters):
+    def add_callback_for_action(self, action, callback):
         """Adds a callback function to an action
 
         The method checks whether both action and callback are valid. If so, the callback is added to the list of
         functions called when the action is triggered.
-        :param action: An action like 'add', 'copy', 'info'
+
+        :param str action: An action like 'add', 'copy', 'info'
         :param callback: A callback function, which is called when action is triggered. It retrieves the event as
-        parameter
+          parameter
         :return: True is the parameters are valid and the callback is registered, False else
+        :rtype: bool
         """
         if action in self.__action_to_shortcuts:  # Is the action valid?
             if hasattr(callback, '__call__'):  # Is the callback really a function?
                 if action not in self.__action_to_callbacks:
                     self.__action_to_callbacks[action] = []
-                assert isinstance(self.__action_to_callbacks[action], list)
                 self.__action_to_callbacks[action].append(callback)
+
+                controller = None
+                try:
+                    controller = callback.__self__
+                except AttributeError:
+                    try:
+                        # Needed when callback was wrapped using functools.partial
+                        controller = callback.func.__self__
+                    except AttributeError:
+                        pass
+
+                if controller:
+                    if controller not in self.__controller_action_callbacks:
+                        self.__controller_action_callbacks[controller] = {}
+                    if action not in self.__controller_action_callbacks[controller]:
+                        self.__controller_action_callbacks[controller][action] = []
+                    self.__controller_action_callbacks[controller][action].append(callback)
+
                 return True
         return False
 
-    def remove_callback_for_action(self, action, callback, *parameters):
-        """
-        Remove a callback for a specific action. This is mainly for cleanup purposes or a plugin that replaces a
-        GUI widget.
-        :param action: the cation of which the callback is going to be remove
+    def remove_callback_for_action(self, action, callback):
+        """ Remove a callback for a specific action
+
+        This is mainly for cleanup purposes or a plugin that replaces a GUI widget.
+
+        :param str action: the cation of which the callback is going to be remove
         :param callback: the callback to be removed
-        :param parameters:
-        :return:
         """
         if action in self.__action_to_callbacks:
             if callback in self.__action_to_callbacks[action]:
                 self.__action_to_callbacks[action].remove(callback)
 
+    def remove_callbacks_for_controller(self, controller):
+        if controller in self.__controller_action_callbacks:
+            for action in self.__controller_action_callbacks[controller]:
+                for callback in self.__controller_action_callbacks[controller][action]:
+                    self.remove_callback_for_action(action, callback)
+            del self.__controller_action_callbacks[controller]
+
     def get_shortcut_for_action(self, action):
         """Get the shortcut(s) for the specified action
-        :param action: An action like 'add', 'copy', 'info'
+
+        :param str action: An action like 'add', 'copy', 'info'
         :return: None, if no action is not valid or no shortcut is exiting, a single shortcut or a list of shortcuts
-        if one or more shortcuts are registered for that action.
+            if one or more shortcuts are registered for that action.
         """
         if action in self.__action_to_shortcuts:
             return self.__action_to_shortcuts[action]
@@ -101,24 +125,19 @@ class ShortcutManager:
     def trigger_action(self, action, key_value, modifier_mask):
         """Calls the appropriate callback function(s) for the given action
 
-        :param action: The name of the action that was triggered
+        :param str action: The name of the action that was triggered
         :param key_value: The key value of the shortcut that caused the trigger
         :param modifier_mask: The modifier mask of the shortcut that caused the trigger
-        :return: The number of callback functions called
+        :return: Whether a callbacl was triggered
+        :rtype: bool
         """
         res = False
         if action in self.__action_to_callbacks:
-            if len(self.__action_to_callbacks[action]) > 1:
-                logger.debug("Several actions callbacks registered for action {0}: {1}".format(
-                    str(action),
-                    str(self.__action_to_callbacks[action])))
             for callback_function in self.__action_to_callbacks[action]:
                 try:
-                    # logger.debug("call action {0}".format(str(action)))
                     ret = callback_function(key_value, modifier_mask)
                     # If at least one controller returns True, the whole result becomes True
                     res |= (False if ret is None else ret)
                 except Exception as e:
-                    logger.error('Exception while calling callback methods for action "{0}": {1} {2}'.format(
-                        action, e.message, traceback.format_exc()))
+                    logger.exception('Exception while calling callback methods for action "{0}": {1}'.format(action, e))
         return res
