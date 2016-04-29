@@ -97,6 +97,7 @@ class AutoBackupModel(ModelMT):
     def set_timed_thread(self, duration, func, *args):
         # logger.info("start timed thread duration: {0} func: {1}".format(duration, func))
         self.tmp_storage_timed_thread = threading.Timer(duration, func, args)
+        self.tmp_storage_timed_thread.daemon = True
         self.tmp_storage_timed_thread.start()
 
     def perform_temp_storage(self):
