@@ -124,8 +124,6 @@ class ModificationsHistoryModel(ModelMT):
                 or not self.modifications.trail_pointer < len(self.modifications.trail_history):
             logger.debug("There is no more action that can be undone")
             return
-        # else:
-        #     logger.debug("do Undo %s %s %s" % (bool(self.modifications.trail_history), self.modifications.trail_history, (self.modifications.trail_pointer, len(self.modifications.trail_history))))
         self.state_machine_model.storage_lock.acquire()
         self.busy = True
         self.modifications.undo()
@@ -155,8 +153,6 @@ class ModificationsHistoryModel(ModelMT):
                 self.modifications.trail_history):
             logger.debug("There is no more action that can be redone")
             return
-        # else:
-        #     logger.debug("do Redo %s %s %s" % (bool(self.modifications.trail_history), self.modifications.trail_history, (self.modifications.trail_pointer, len(self.modifications.trail_history))))
         self.state_machine_model.storage_lock.acquire()
         self.busy = True
         self.modifications.redo()
@@ -168,17 +164,18 @@ class ModificationsHistoryModel(ModelMT):
         self.state_machine_model.storage_lock.release()
         self.change_count += 1
 
-    def _interrupt_actual_action(self):
+    def _interrupt_actual_action(self, info=None):
+        if self.with_prints:
+            logger.warning("function crash detected {}_after".format(info['prop_name']))
         # self.busy = True
         # self.actual_action.undo()
         # self.busy = False
         self.locked = False
         self.count_before = 0
-        try:
+        if self.with_prints and info is not None:
+            logger.debug(NotificationOverview(info))
+        if self.state_machine_model.storage_lock.locked():
             self.state_machine_model.storage_lock.release()
-        except:
-            logger.warning("Release of storage-lock in this case un-necessary for interrupt of action")
-            # TODO check handling of change_data_type of IO ports
 
     def _re_initiate_observation(self):
         # logger.info("re initiate root_state observation")
@@ -476,9 +473,7 @@ class ModificationsHistoryModel(ModelMT):
         if info.method_name != "root_state_change":
             return
         if info.result == "CRASH in FUNCTION" or isinstance(info.result, Exception):
-            if self.with_prints:
-                logger.warning("function crash detected sm_after")
-            return self._interrupt_actual_action()
+            return self._interrupt_actual_action(info)
 
         if self.busy:  # if proceeding undo or redo
             return
@@ -552,9 +547,7 @@ class ModificationsHistoryModel(ModelMT):
             overview = NotificationOverview(info, with_prints=self.with_prints)
             # handle interrupts of action caused by exceptions
             if overview['result'][-1] == "CRASH in FUNCTION" or isinstance(overview['result'][-1], Exception):
-                if self.with_prints:
-                    logger.warning("function crash detected states_after")
-                return self._interrupt_actual_action()
+                return self._interrupt_actual_action(info)
 
             # modifications of parent are not observed
             if overview['method_name'][0] == 'state_change' and \
@@ -643,9 +636,7 @@ class ModificationsHistoryModel(ModelMT):
 
             # handle interrupts of action caused by exceptions
             if overview['result'][-1] == "CRASH in FUNCTION" or isinstance(overview['result'][-1], Exception):
-                if self.with_prints:
-                    logger.warning("function crash detected state_after")
-                return self._interrupt_actual_action()
+                return self._interrupt_actual_action(info)
 
             # modifications of parent are not observed
             if overview['method_name'][-1] == 'parent':
