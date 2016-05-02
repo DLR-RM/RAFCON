@@ -9,38 +9,36 @@ to define specific _-Action-Classes for simple/specific edit actions.
 import copy
 import json
 
-
 from jsonconversion.decoder import JSONObjectDecoder
 from jsonconversion.encoder import JSONObjectEncoder
-from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
-from rafcon.utils import log
 
-from rafcon.statemachine.scope import ScopedData, ScopedVariable
-from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.data_flow import DataFlow
-from rafcon.statemachine.transition import Transition
-from rafcon.statemachine.script import Script
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.data_port import DataPort
+from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-
-from rafcon.statemachine.data_port import InputDataPort, OutputDataPort
-from rafcon.statemachine.global_variable_manager import GlobalVariableManager
-from rafcon.statemachine.library_manager import LibraryManager
+from rafcon.statemachine.states.state import State
 from rafcon.statemachine.state_machine import StateMachine
+from rafcon.statemachine.state_elements.data_flow import DataFlow
+from rafcon.statemachine.state_elements.data_port import DataPort
+from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
+from rafcon.statemachine.state_elements.outcome import Outcome
+from rafcon.statemachine.state_elements.scope import ScopedData, ScopedVariable
+from rafcon.statemachine.state_elements.transition import Transition
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
-
-from rafcon.mvc.models.container_state import ContainerState, ContainerStateModel
-from rafcon.mvc.models.signals import MetaSignalMsg
+from rafcon.statemachine.global_variable_manager import GlobalVariableManager
+from rafcon.statemachine.library_manager import LibraryManager
+from rafcon.statemachine.script import Script
 
 import rafcon.mvc.singleton as mvc_singleton
+from rafcon.mvc.models.container_state import ContainerState, ContainerStateModel
+from rafcon.mvc.models.signals import MetaSignalMsg
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 
+from rafcon.utils import log
+from rafcon.utils.storage_utils import substitute_modules
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
 logger = log.get_logger(__name__)
 
@@ -99,7 +97,7 @@ def get_state_from_state_tuple(state_tuple):
     # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
     # validity checks for transitions and data flows would fail
     # state_info = yaml.load(state_tuple[0])
-    state_info = json.loads(state_tuple[0], cls=JSONObjectDecoder)
+    state_info = json.loads(state_tuple[0], cls=JSONObjectDecoder, substitute_modules=substitute_modules)
     if not isinstance(state_info, tuple):
         state = state_info
     else:

@@ -15,6 +15,18 @@ from time import gmtime, strftime
 from jsonconversion.decoder import JSONObjectDecoder
 from jsonconversion.encoder import JSONObjectEncoder
 
+substitute_modules = {
+    'rafcon.statemachine.data_flow.DataFlow': 'rafcon.statemachine.state_elements.data_flow.DataFlow',
+    'rafcon.statemachine.data_port.DataPort': 'rafcon.statemachine.state_elements.data_port.DataPort',
+    'rafcon.statemachine.data_port.InputDataPort': 'rafcon.statemachine.state_elements.data_port.InputDataPort',
+    'rafcon.statemachine.data_port.OutputDataPort': 'rafcon.statemachine.state_elements.data_port.OutputDataPort',
+    'rafcon.statemachine.scope.ScopedData': 'rafcon.statemachine.state_elements.scope.ScopedData',
+    'rafcon.statemachine.scope.ScopedVariable': 'rafcon.statemachine.state_elements.scope.ScopedVariable',
+    'rafcon.statemachine.state_element.StateElement': 'rafcon.statemachine.state_elements.state_element.StateElement',
+    'rafcon.statemachine.transition.Transition': 'rafcon.statemachine.state_elements.transition.Transition',
+    'rafcon.statemachine.outcome.Outcome': 'rafcon.statemachine.state_elements.outcome.Outcome',
+}
+
 
 def get_current_time_string():
     return strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -67,6 +79,6 @@ def load_dict_from_json(path, as_dict=False):
     if as_dict:
         result = json.load(f)
     else:
-        result = json.load(f, cls=JSONObjectDecoder)
+        result = json.load(f, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
     f.close()
     return result

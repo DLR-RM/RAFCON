@@ -8,26 +8,24 @@
 
 """
 
-from __builtin__ import staticmethod
-import threading
-import sys
 import Queue
 import copy
+import sys
+import threading
+from __builtin__ import staticmethod
 from weakref import ref
 
 from gtkmvc import Observable
-from yaml import YAMLObject
 from jsonconversion.jsonobject import JSONObject
+from yaml import YAMLObject
 
-
-from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
+from rafcon.statemachine.enums import DataPortType, StateExecutionState
+from rafcon.statemachine.id_generator import *
+from rafcon.statemachine.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
+from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.utils import log
 from rafcon.utils import multi_event
-
-from rafcon.statemachine.data_port import DataPort, InputDataPort, OutputDataPort
-from rafcon.statemachine.enums import DataPortType, StateExecutionState
-from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.id_generator import *
+from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 
 logger = log.get_logger(__name__)
 PATH_SEPARATOR = '/'

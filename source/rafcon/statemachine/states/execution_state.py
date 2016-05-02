@@ -11,10 +11,11 @@
 import traceback
 
 from gtkmvc import Observable
+
 from rafcon.statemachine.states.state import State
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-from rafcon.statemachine.outcome import Outcome
+from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.script import Script
 from rafcon.statemachine.enums import StateExecutionState
 

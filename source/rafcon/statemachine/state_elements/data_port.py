@@ -8,13 +8,12 @@
 
 """
 
-
 from gtkmvc import Observable
 
-from rafcon.statemachine.state_element import StateElement
 from rafcon.statemachine.id_generator import generate_data_port_id
-from rafcon.utils import type_helpers
+from rafcon.statemachine.state_elements.state_element import StateElement
 from rafcon.utils import log
+from rafcon.utils import type_helpers
 logger = log.get_logger(__name__)
 
 

@@ -11,28 +11,24 @@ import copy
 
 from gtkmvc import ModelMT, Observable
 
-from rafcon.utils import log
-
-from rafcon.statemachine.scope import ScopedVariable
-from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.data_flow import DataFlow
-from rafcon.statemachine.transition import Transition
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.data_port import DataPort
-
-from rafcon.statemachine.data_port import InputDataPort
-from rafcon.statemachine.state_machine import StateMachine
-
-from rafcon.mvc.utils.notification_overview import NotificationOverview
-from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
-
-from rafcon.mvc.models.abstract_state import AbstractStateModel
-from rafcon.mvc.models.state_machine import StateMachineModel
-
-
 from rafcon.mvc.action import ActionDummy, Action, StateMachineAction, StateAction, DataPortAction, \
     ScopedVariableAction, OutcomeAction, TransitionAction, DataFlowAction, AddObjectAction, RemoveObjectAction, \
     MetaAction, get_state_element_meta
+
+from rafcon.statemachine.states.state import State
+from rafcon.statemachine.state_machine import StateMachine
+from rafcon.statemachine.state_elements.data_flow import DataFlow
+from rafcon.statemachine.state_elements.data_port import DataPort, InputDataPort
+from rafcon.statemachine.state_elements.outcome import Outcome
+from rafcon.statemachine.state_elements.scope import ScopedVariable
+from rafcon.statemachine.state_elements.transition import Transition
+
+from rafcon.mvc.models.abstract_state import AbstractStateModel
+from rafcon.mvc.models.state_machine import StateMachineModel
+from rafcon.mvc.utils.notification_overview import NotificationOverview
+
+from rafcon.utils import log
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
 logger = log.get_logger(__name__)
 

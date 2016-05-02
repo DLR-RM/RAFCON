@@ -1,9 +1,7 @@
 from gtkmvc import ModelMT
 
 from rafcon.mvc.models.state_element import StateElementModel
-
-from rafcon.statemachine.transition import Transition
-
+from rafcon.statemachine.state_elements.transition import Transition
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

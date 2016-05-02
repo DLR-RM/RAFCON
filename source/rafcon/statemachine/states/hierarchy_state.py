@@ -12,7 +12,7 @@ import traceback
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-from rafcon.statemachine.outcome import Outcome
+from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.enums import StateExecutionState
 import rafcon.statemachine.singleton as singleton
 from rafcon.statemachine.enums import MethodName

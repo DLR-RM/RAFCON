@@ -10,7 +10,7 @@
 
 from gtkmvc import Observable
 
-from rafcon.statemachine.state_element import StateElement
+from rafcon.statemachine.state_elements.state_element import StateElement
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

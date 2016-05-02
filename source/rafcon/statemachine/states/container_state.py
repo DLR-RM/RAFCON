@@ -7,22 +7,24 @@
 
 
 """
-from threading import Condition
 import copy
+from threading import Condition
+
 from gtkmvc import Observable
+from rafcon.statemachine.state_elements.scope import ScopedData, ScopedVariable
 
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.transition import Transition
-from rafcon.statemachine.outcome import Outcome
-from rafcon.statemachine.data_flow import DataFlow
-from rafcon.statemachine.scope import ScopedData, ScopedVariable
 from rafcon.statemachine.id_generator import *
-from rafcon.statemachine.validity_check.validity_checker import ValidityChecker
-from rafcon.statemachine.storage import storage
 from rafcon.statemachine.singleton import state_machine_execution_engine
-from rafcon.utils.type_helpers import type_inherits_of_type
+from rafcon.statemachine.state_elements.data_flow import DataFlow
+from rafcon.statemachine.state_elements.outcome import Outcome
+from rafcon.statemachine.state_elements.transition import Transition
+from rafcon.statemachine.states.state import State
+from rafcon.statemachine.storage import storage
+from rafcon.statemachine.validity_check.validity_checker import ValidityChecker
 from rafcon.utils import log
+from rafcon.utils.type_helpers import type_inherits_of_type
+
 logger = log.get_logger(__name__)
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 

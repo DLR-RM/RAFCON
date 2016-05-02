@@ -8,11 +8,10 @@
 
 """
 
-
 from gtkmvc import Observable
 
-from rafcon.statemachine.state_element import StateElement
 from rafcon.statemachine.id_generator import generate_data_flow_id
+from rafcon.statemachine.state_elements.state_element import StateElement
 
 
 class DataFlow(StateElement):

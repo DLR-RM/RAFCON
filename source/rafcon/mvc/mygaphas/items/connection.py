@@ -1,24 +1,21 @@
-from weakref import ref
 from pango import FontDescription, SCALE
+from weakref import ref
 
 import cairo
 from gaphas.state import observers
 
-from rafcon.mvc.utils import constants
-
-from rafcon.statemachine.scope import ScopedVariable
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-
 from rafcon.mvc.config import global_gui_config as gui_config
-from rafcon.mvc.runtime_config import global_runtime_config
-from rafcon.mvc.models.transition import TransitionModel
 from rafcon.mvc.models.data_flow import DataFlowModel
-
+from rafcon.mvc.models.transition import TransitionModel
 from rafcon.mvc.mygaphas.constraint import KeepRelativePositionConstraint, KeepPortDistanceConstraint
 from rafcon.mvc.mygaphas.items.line import PerpLine
 from rafcon.mvc.mygaphas.items.ports import PortView, ScopedVariablePortView
-from rafcon.mvc.mygaphas.utils.enums import SnappedSide
 from rafcon.mvc.mygaphas.utils import gap_draw_helper
+from rafcon.mvc.mygaphas.utils.enums import SnappedSide
+from rafcon.mvc.runtime_config import global_runtime_config
+from rafcon.mvc.utils import constants
+from rafcon.statemachine.state_elements.scope import ScopedVariable
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
 
 class ConnectionView(PerpLine):

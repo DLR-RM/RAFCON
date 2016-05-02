@@ -1,12 +1,11 @@
 from gtkmvc import ModelMT
+
 from rafcon.mvc.models.abstract_state import AbstractStateModel
-
-from rafcon.statemachine.outcome import Outcome
-
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel
-
+from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 

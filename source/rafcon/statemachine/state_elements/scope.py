@@ -8,14 +8,13 @@
 
 """
 
-import time
 import datetime
+import time
 
 from gtkmvc import Observable
+
 from rafcon.statemachine.enums import DataPortType
-
-from rafcon.statemachine.data_port import DataPort
-
+from rafcon.statemachine.state_elements.data_port import DataPort
 from rafcon.utils import type_helpers
 
 
