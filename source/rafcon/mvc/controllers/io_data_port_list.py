@@ -405,7 +405,7 @@ class DataPortListController(ExtendedController):
             if data_type_module != '__builtin__':
                 data_type_name = data_type_module + '.' + data_type_name
             if idp_model.data_port.default_value is None:
-                default_value = "<None>"
+                default_value = "None"
             else:
                 default_value = idp_model.data_port.default_value
 
