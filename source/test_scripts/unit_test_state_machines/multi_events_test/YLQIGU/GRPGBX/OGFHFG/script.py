@@ -5,8 +5,8 @@ def print_state_events(state):
 
 def execute(self, inputs, outputs, gvm):
     self.logger.debug("Hello world")
-    self.logger.debug("Value of _interruption_events: {0}".format(str(self._interruption_events)))
-    self.logger.debug("Value of _unpause_events: {0}".format(str(self._unpause_events)))
+    self.logger.debug("Value of _interruption_events: {0}".format(str(self._interrupted)))
+    self.logger.debug("Value of _unpause_events: {0}".format(str(self._unpaused)))
     
     gvm.set_variable("sm_status", 0)
     

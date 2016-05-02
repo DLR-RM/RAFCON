@@ -70,9 +70,9 @@ class State(Observable, YAMLObject, JSONObject):
         # a flag which shows if the state is paused
         self._paused = threading.Event()
         # a multi_event listening to both paused and preempted event
-        self._interruption_events = multi_event.create(self._preempted, self._paused)
+        self._interrupted = multi_event.create(self._preempted, self._paused)
         # a multi_event listening to both started and preempted event
-        self._unpause_events = multi_event.create(self._preempted, self._started)
+        self._unpaused = multi_event.create(self._preempted, self._started)
         # a queue to signal a preemptive concurrency state, that the execution of the state finished
         self._concurrency_queue = None
         # the final outcome of a state, when it finished execution
@@ -965,7 +965,7 @@ class State(Observable, YAMLObject, JSONObject):
         :return: True, is an event was set, False if the timeout was reached
         :rtype: bool
         """
-        return self._interruption_events.wait(timeout)
+        return self._interrupted.wait(timeout)
 
     def wait_for_unpause(self, timeout=None):
         """Wait for any of the events started or preempted to be set
@@ -974,7 +974,7 @@ class State(Observable, YAMLObject, JSONObject):
         :return: True, is an event was set, False if the timeout was reached
         :rtype: bool
         """
-        return self._unpause_events.wait(timeout)
+        return self._unpaused.wait(timeout)
 
     @property
     def concurrency_queue(self):
