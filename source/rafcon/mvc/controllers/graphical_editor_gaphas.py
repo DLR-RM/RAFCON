@@ -18,7 +18,7 @@ from rafcon.mvc import statemachine_helper
 
 from rafcon.mvc.models.signals import MetaSignalMsg
 from rafcon.mvc.models.state_machine import StateMachineModel
-from rafcon.mvc.models import ContainerStateModel, StateModel, AbstractStateModel, TransitionModel, DataFlowModel
+from rafcon.mvc.models import ContainerStateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
 from rafcon.mvc.views.graphical_editor_gaphas import GraphicalEditorView
@@ -253,7 +253,7 @@ class GraphicalEditorController(ExtendedController):
             # logger.info("update_view")
             self.update_view()
             # and try to do specific update
-            if isinstance(overview['model'][-1], StateModel):
+            if isinstance(overview['model'][-1], AbstractStateModel):
                 state_m = overview['model'][-1]
                 # logger.info("update_state")
             elif isinstance(overview['model'][-1], StateMachineModel):
@@ -426,7 +426,7 @@ class GraphicalEditorController(ExtendedController):
             # ----------------------------------
             elif method_name == 'name':
                 # The name of a state was changed
-                if not isinstance(model, StateModel):
+                if not isinstance(model, AbstractStateModel):
                     parent_model = model.parent
                 # The name of a port (input, output, scoped var, outcome) was changed
                 else:
