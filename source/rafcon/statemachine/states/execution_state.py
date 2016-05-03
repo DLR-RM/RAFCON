@@ -9,19 +9,21 @@
 """
 
 import traceback
+import sys
+import os
 
 from gtkmvc import Observable
 
 from rafcon.statemachine.states.state import State
-from rafcon.utils import log
-logger = log.get_logger(__name__)
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.script import Script
 from rafcon.statemachine.enums import StateExecutionState
 
+from rafcon.utils import log
+logger = log.get_logger(__name__)
+
 
 class ExecutionState(State):
-
     """A class to represent a state for executing arbitrary functions
 
     This kind of state does not have any child states.
@@ -110,8 +112,15 @@ class ExecutionState(State):
 
                 return self.finalize(outcome)
 
-        except Exception, e:
-            logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            formatted_exc = traceback.format_exception(exc_type, exc_value, exc_traceback)
+            truncated_exc = []
+            for line in formatted_exc:
+                if os.path.join("rafcon", "statemachine") not in line:
+                    truncated_exc.append(line)
+            logger.error("{0} had an internal error: {1}: {2}\n{3}".format(self, type(e).__name__, e,
+                                                                           ''.join(truncated_exc)))
             # write error to the output_data of the state
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
