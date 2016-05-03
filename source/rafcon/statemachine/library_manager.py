@@ -85,6 +85,8 @@ class LibraryManager(Observable):
 
     @staticmethod
     def _clean_path(path):
+        path = path.replace('"', '')
+        path = path.replace("'", '')
         # Replace ~ with /home/user
         path = os.path.expanduser(path)
         # Replace environment variables
