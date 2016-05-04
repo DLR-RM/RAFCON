@@ -1335,7 +1335,9 @@ class StateAction(Action):
                              'add_input_data_port', 'remove_input_data_port',  # LibraryState
                              'add_output_data_port', 'remove_output_data_port',
                              'set_input_runtime_value', 'set_output_runtime_value',
-                             'set_use_input_runtime_value', 'set_use_output_runtime_value']
+                             'set_use_input_runtime_value', 'set_use_output_runtime_value',
+                             'input_data_port_runtime_values', 'output_data_port_runtime_values',
+                             'use_runtime_value_input_data_ports', 'use_runtime_value_output_data_ports']
     possible_args = ['name', 'description', 'script_text', 'start_state_id',  # ContainerState
                      'library_name', 'library_path', 'version', 'state_copy',  # LibraryState
                      'input_data_port_runtime_values', 'output_data_port_runtime_values',
@@ -1358,7 +1360,8 @@ class StateAction(Action):
         self.action_type = overview['method_name'][-1]
         self.before_overview = overview
         self.state_machine = state_machine_model.state_machine
-
+        if self.action_type not in self.possible_method_names:
+            logger.error("action_type: '{0}' not in {1}".format(self.action_type, self.possible_method_names))
         assert self.action_type in self.possible_method_names
         assert isinstance(self.before_overview['instance'][-1], State)
         self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
