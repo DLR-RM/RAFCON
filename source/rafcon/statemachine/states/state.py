@@ -87,7 +87,7 @@ class State(Observable, YAMLObject, JSONObject):
 
         if name is None:
             name = "Untitled"
-        self.name = name
+        self.name = str(name) if isinstance(name, (int, float)) else name
         if state_id is None:
             self._state_id = state_id_generator()
         else:
