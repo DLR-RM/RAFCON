@@ -36,8 +36,17 @@ class StateHelper(object):
         state_copy = storage.load_state_from_path(os.path.join(temporary_storage_path, source_state.state_id))
 
         from rafcon.statemachine.states.execution_state import ExecutionState
-        if isinstance(state_copy, ExecutionState):
-            state_copy.script_text = source_state.script_text
+        from rafcon.statemachine.states.container_state import ContainerState
+
+        def check_for_source_scripts(state_copy, source_state):
+
+            if isinstance(state_copy, ExecutionState):
+                state_copy.script_text = source_state.script_text
+            if isinstance(state_copy, ContainerState):
+                for state_id, state in state_copy.states.iteritems():
+                    check_for_source_scripts(state, source_state.states[state_id])
+
+        check_for_source_scripts(state_copy, source_state)
         state_copy.change_state_id()
 
         return state_copy
