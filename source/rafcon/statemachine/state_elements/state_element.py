@@ -14,6 +14,9 @@ from yaml import YAMLObject
 from jsonconversion.jsonobject import JSONObject
 from weakref import ref
 
+from rafcon.utils import log
+logger = log.get_logger(__name__)
+
 
 class StateElement(Observable, YAMLObject, JSONObject):
     """A base class for all elements of a state (ports, connections)
@@ -35,6 +38,12 @@ class StateElement(Observable, YAMLObject, JSONObject):
             raise NotImplementedError
 
         self.parent = parent
+
+    def __eq__(self, other):
+        # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}".format(self, other))
+        if not isinstance(other, self.__class__):
+            return False
+        return str(self) == str(other)
 
     @property
     def parent(self):

@@ -7,7 +7,7 @@
 
 
 """
-import copy
+from copy import copy, deepcopy
 from threading import Condition
 
 from gtkmvc import Observable
@@ -122,6 +122,34 @@ class ContainerState(State):
 
     def __str__(self):
         return "{0} [{1} child states]".format(super(ContainerState, self).__str__(), len(self.states))
+
+    def __eq__(self, other):
+        # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}".format(self, other))
+        if not isinstance(other, self.__class__):
+            return False
+        try:
+            diff_states = [self.states[state_id] == state for state_id, state in other.states.iteritems()]
+            diff_states.append(len(self.states) == len(other.states))
+        except KeyError:
+            return False
+        return all(diff_states) and str(self) == str(other)
+
+    def __copy__(self):
+        input_data_ports = {elem_id: copy(elem) for elem_id, elem in self._input_data_ports.iteritems()}
+        output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.iteritems()}
+        outcomes = {elem_id: copy(elem) for elem_id, elem in self._outcomes.iteritems()}
+        states = {elem_id: copy(elem) for elem_id, elem in self._states.iteritems()}
+        scoped_variables = {elem_id: copy(elem) for elem_id, elem in self._scoped_variables.iteritems()}
+        data_flows = {elem_id: copy(elem) for elem_id, elem in self._data_flows.iteritems()}
+        transitions = {elem_id: copy(elem) for elem_id, elem in self._transitions.iteritems()}
+
+        state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, outcomes, states,
+                               transitions, data_flows, self.start_state_id, scoped_variables, None)
+        # state.script_text = copy(self.script_text)
+        state.description = deepcopy(self.description)
+        return state
+
+    __deepcopy__ = __copy__
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- execution functions -------------------------------------
@@ -707,7 +735,7 @@ class ContainerState(State):
                         key = str(data_flow.from_key)+data_flow.from_state
                         if key in self.scoped_data:
                             if actual_value is None or actual_value_time < self.scoped_data[key].timestamp:
-                                actual_value = copy.deepcopy(self.scoped_data[key].value)
+                                actual_value = deepcopy(self.scoped_data[key].value)
                                 actual_value_time = self.scoped_data[key].timestamp
 
             if actual_value is not None:
@@ -854,7 +882,7 @@ class ContainerState(State):
                             # if self.scoped_data[scoped_data_key].timestamp > actual_value_time is True
                             # the data of a previous execution of the same state is overwritten
                             if actual_value is None or self.scoped_data[scoped_data_key].timestamp > actual_value_time:
-                                actual_value = copy.deepcopy(self.scoped_data[scoped_data_key].value)
+                                actual_value = deepcopy(self.scoped_data[scoped_data_key].value)
                                 actual_value_time = self.scoped_data[scoped_data_key].timestamp
                         else:
                             if not self.backward_execution:

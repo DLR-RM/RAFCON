@@ -1,3 +1,4 @@
+from copy import copy, deepcopy
 from gtkmvc import ModelMT
 
 from rafcon.mvc.models.state_element import StateElementModel
@@ -26,6 +27,24 @@ class ScopedVariableModel(StateElementModel):
 
         assert isinstance(scoped_variable, ScopedVariable)
         self.scoped_variable = scoped_variable
+
+    def __str__(self):
+        return "Model of ScopedVariable: {0}".format(self.scoped_variable)
+
+    def __eq__(self, other):
+        # logger.info("compare method")
+        if isinstance(other, ScopedVariableModel):
+            return self.scoped_variable == other.scoped_variable and self.meta == other.meta
+        else:
+            return False
+
+    def __copy__(self):
+        scoped_variable = copy(self.scoped_variable)
+        scoped_variable_m = self.__class__(scoped_variable, parent=None, meta=None)
+        scoped_variable_m.meta = deepcopy(self.meta)
+        return scoped_variable_m
+
+    __deepcopy__ = __copy__
 
     @ModelMT.observe("scoped_variable", before=True, after=True)
     def model_changed(self, model, prop_name, info):

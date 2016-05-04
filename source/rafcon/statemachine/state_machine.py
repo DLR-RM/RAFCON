@@ -8,6 +8,8 @@
 
 """
 
+from copy import copy
+
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 
@@ -61,6 +63,13 @@ class StateMachine(Observable, JSONObject):
             self.last_update = get_current_time_string()
 
         self.execution_history = ExecutionHistory()
+
+    def __copy__(self):
+        sm = self.__class__(copy(self._root_state), self.version, self.creation_time, self.last_update)
+        sm._marked_dirty = self._marked_dirty
+        return sm
+
+    __deepcopy__ = __copy__
 
     @classmethod
     def from_dict(cls, dictionary):

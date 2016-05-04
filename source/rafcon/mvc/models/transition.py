@@ -1,3 +1,4 @@
+from copy import copy, deepcopy
 from gtkmvc import ModelMT
 
 from rafcon.mvc.models.state_element import StateElementModel
@@ -28,6 +29,21 @@ class TransitionModel(StateElementModel):
 
     def __str__(self):
         return "Model of Transition: {0}".format(self.transition)
+
+    def __eq__(self, other):
+        # logger.info("compare method")
+        if isinstance(other, TransitionModel):
+            return self.transition == other.transition and self.meta == other.meta
+        else:
+            return False
+
+    def __copy__(self):
+        transition = copy(self.transition)
+        transition_m = self.__class__(transition, parent=None, meta=None)
+        transition.meta = deepcopy(self.meta)
+        return transition_m
+
+    __deepcopy__ = __copy__
 
     @ModelMT.observe("transition", before=True, after=True)
     def model_changed(self, model, prop_name, info):

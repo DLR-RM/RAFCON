@@ -1,3 +1,4 @@
+from copy import copy, deepcopy
 from gtkmvc import ModelMT
 
 from rafcon.mvc.models.state_element import StateElementModel
@@ -28,6 +29,21 @@ class OutcomeModel(StateElementModel):
 
     def __str__(self):
         return "Model of Outcome: {0}".format(self.outcome)
+
+    def __eq__(self, other):
+        # logger.info("compare method")
+        if isinstance(other, OutcomeModel):
+            return self.outcome == other.outcome and self.meta == other.meta
+        else:
+            return False
+
+    def __copy__(self):
+        outcome = copy(self.outcome)
+        outcome_m = self.__class__(outcome, parent=None, meta=None)
+        outcome_m.meta = deepcopy(self.meta)
+        return outcome_m
+
+    __deepcopy__ = __copy__
 
     @ModelMT.observe("outcome", before=True, after=True)
     def model_changed(self, model, prop_name, info):

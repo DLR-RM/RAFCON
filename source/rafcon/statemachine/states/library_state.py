@@ -7,6 +7,8 @@
 
 
 """
+from copy import copy
+
 from gtkmvc import Observable
 
 from rafcon.statemachine.enums import StateExecutionState
@@ -98,6 +100,26 @@ class LibraryState(State):
                 self.use_runtime_value_output_data_ports[key] = True
 
         self.initialized = True
+
+    def __eq__(self, other):
+        # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}".format(self, other))
+        if not isinstance(other, self.__class__):
+            return False
+        return str(self) == str(other) and self._state_copy == other.state_copy
+
+    def __copy__(self):
+        outcomes = {elem_id: copy(elem) for elem_id, elem in self.outcomes.iteritems()}
+        state = self.__class__(self._library_path, self._library_name, self._version,  # library specific attributes
+                               # the following are the container state specific attributes
+                               self._name, self._state_id, outcomes,
+                               copy(self.input_data_port_runtime_values), copy(self.use_runtime_value_input_data_ports),
+                               copy(self.output_data_port_runtime_values), copy(self.use_runtime_value_output_data_ports),
+                               False)
+
+        # overwrite may by default set True flags by False
+        state.use_runtime_value_input_data_ports = copy(self.use_runtime_value_input_data_ports)
+        state.use_runtime_value_output_data_ports = copy(self.use_runtime_value_output_data_ports)
+        return state
 
     def run(self):
         """ This defines the sequence of actions that are taken when the library state is executed

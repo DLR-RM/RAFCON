@@ -50,6 +50,11 @@ class Outcome(StateElement):
     def __str__(self):
         return "Outcome '{0}' [{1}]".format(self.name, self.outcome_id)
 
+    def __copy__(self):
+        return self.__class__(self._outcome_id, self._name, None)
+
+    __deepcopy__ = __copy__
+
     @classmethod
     def from_dict(cls, dictionary):
         return Outcome(dictionary['outcome_id'], dictionary['name'])

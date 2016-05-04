@@ -57,6 +57,11 @@ class DataFlow(StateElement):
         return "Data flow - from_state: %s, from_key: %s, to_state: %s, to_key: %s, id: %s" % \
                (self._from_state, self._from_key, self._to_state, self._to_key, self._data_flow_id)
 
+    def __copy__(self):
+        return self.__class__(self._from_state, self._from_key, self._to_state, self._to_key, self._data_flow_id, None)
+
+    __deepcopy__ = __copy__
+
     @classmethod
     def from_dict(cls, dictionary):
         from_state = dictionary['from_state']

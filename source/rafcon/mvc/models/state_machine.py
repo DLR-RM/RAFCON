@@ -1,5 +1,6 @@
 import os
 import threading
+from copy import copy, deepcopy
 from gtkmvc import ModelMT, Signal
 
 from rafcon.mvc.models import ContainerStateModel, StateModel
@@ -83,8 +84,23 @@ class StateMachineModel(ModelMT):
         self.root_state.register_observer(self)
         self.register_observer(self)
 
+    def __eq__(self, other):
+        # logger.info("compare method")
+        if isinstance(other, StateMachineModel):
+            return self.root_state == other.root_state and self.meta == other.meta
+        else:
+            return False
+
     def __destroy__(self):
         self.destroy()
+
+    def __copy__(self):
+        sm_m = self.__class__(copy(self.state_machine), self.sm_manager_model)
+        sm_m.root_state.copy_meta_data_from_state_m(self.root_state)
+        sm_m.meta = deepcopy(self.meta)
+        return sm_m
+
+    __deepcopy__ = __copy__
 
     def destroy(self):
         self.auto_backup.destroy()

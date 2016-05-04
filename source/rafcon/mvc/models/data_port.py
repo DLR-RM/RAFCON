@@ -1,3 +1,4 @@
+from copy import copy, deepcopy
 from gtkmvc import ModelMT
 
 from rafcon.mvc.models.state_element import StateElementModel
@@ -29,6 +30,21 @@ class DataPortModel(StateElementModel):
 
     def __str__(self):
         return "Model of DataPort: {0}".format(self.data_port)
+
+    def __eq__(self, other):
+        # logger.info("compare method")
+        if isinstance(other, DataPortModel):
+            return self.data_port == other.data_port and self.meta == other.meta
+        else:
+            return False
+
+    def __copy__(self):
+        data_port = copy(self.data_port)
+        data_port_m = self.__class__(data_port, parent=None, meta=None)
+        data_port_m.meta = deepcopy(self.meta)
+        return data_port_m
+
+    __deepcopy__ = __copy__
 
     @ModelMT.observe("data_port", before=True, after=True)
     def model_changed(self, model, prop_name, info):

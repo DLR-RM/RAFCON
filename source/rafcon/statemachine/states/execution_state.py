@@ -11,6 +11,7 @@
 import traceback
 import sys
 import os
+from copy import copy, deepcopy
 
 from gtkmvc import Observable
 
@@ -40,6 +41,23 @@ class ExecutionState(State):
         self.logger = log.get_logger(self.name)
         # here all persistent variables that should be available for the next state run should be stored
         self.persistent_variables = {}
+
+    def __eq__(self, other):
+        # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}\n{2}\n{3}".format(self, other, self.script_text, other.script_text))
+        if not isinstance(other, self.__class__):
+            return False
+        return str(self) == str(other) and self.script_text == other.script_text
+
+    def __copy__(self):
+        input_data_ports = {elem_id: copy(elem) for elem_id, elem in self._input_data_ports.iteritems()}
+        output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.iteritems()}
+        outcomes = {elem_id: copy(elem) for elem_id, elem in self._outcomes.iteritems()}
+        state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, outcomes, None)
+        state.script_text = deepcopy(self.script_text)
+        state.description = deepcopy(self.description)
+        return state
+
+    __deepcopy__ = __copy__
 
     @classmethod
     def from_dict(cls, dictionary):

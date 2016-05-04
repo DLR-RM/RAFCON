@@ -110,6 +110,15 @@ class State(Observable, YAMLObject, JSONObject):
     # ----------------------------------- generic methods -----------------------------------------
     # ---------------------------------------------------------------------------------------------
 
+    def __str__(self):
+        return "{2} with name '{0}' and id '{1}'".format(self.name, self.state_id, type(self).__name__)
+
+    def __eq__(self, other):
+        # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}".format(self, other))
+        if not isinstance(other, self.__class__):
+            return False
+        return str(self) == str(other)
+
     def to_dict(self):
         return self.state_to_dict(self)
 
@@ -673,9 +682,6 @@ class State(Observable, YAMLObject, JSONObject):
 
         self._state_id = state_id
 
-    def __str__(self):
-        return "{2} with name '{0}' and id '{1}'".format(self.name, self.state_id, type(self).__name__)
-
     def get_states_statistics(self, hierarchy_level):
         """
         Returns the numer of child states. As per default states do not have child states return 1.
@@ -999,7 +1005,7 @@ class State(Observable, YAMLObject, JSONObject):
         """
         return self._final_outcome
 
-    @final_outcome .setter
+    @final_outcome.setter
     #@Observable.observed
     def final_outcome(self, final_outcome):
         if not isinstance(final_outcome, Outcome):

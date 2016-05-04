@@ -62,6 +62,11 @@ class ScopedVariable(DataPort):
         return "ScopedVariable '{0}' [{1}] ({3} {2})".format(self.name, self.data_port_id, self.data_type,
                                                              self.default_value)
 
+    def __copy__(self):
+        return self.__class__(self._name, self._data_type, self._default_value, self._data_port_id, None)
+
+    __deepcopy__ = __copy__
+
     @classmethod
     def from_dict(cls, dictionary):
         if 'scoped_variable_id' in dictionary:  # This is needed for backwards compatibility

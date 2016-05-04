@@ -77,6 +77,8 @@ class AutoBackupModel(ModelMT):
         actual_time = time.time()
         self.timer_request_lock.acquire()
         sm = self.state_machine_model.state_machine
+        # TODO check for self._timer_request_time is None to avoid and reset auto-backup in case
+        # print str(self.timed_temp_storage_interval), str(actual_time), str(self._timer_request_time)
         if self.timed_temp_storage_interval < actual_time - self._timer_request_time:
             # logger.info("{0} Perform timed auto-backup of state-machine {1}.".format(time.time(),
             #                                                                          sm.state_machine_id))

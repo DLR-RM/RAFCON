@@ -1,3 +1,4 @@
+from copy import copy, deepcopy
 from os.path import join
 
 from rafcon.statemachine.states.state import State
@@ -39,6 +40,20 @@ class LibraryStateModel(AbstractStateModel):
 
         if load_meta_data:
             self.load_meta_data()
+
+    def __eq__(self, other):
+        # logger.info("compare method")
+        if isinstance(other, LibraryStateModel):
+            return self.state == other.state and self.meta == other.meta
+        else:
+            return False
+
+    def __copy__(self):
+        state_m = AbstractStateModel.__copy__(self)
+        state_m.state_copy.copy_meta_data_from_state_m(self.state_copy)
+        return state_m
+
+    __deepcopy__ = __copy__
 
     def _load_input_data_port_models(self):
         """Reloads the input data port models directly from the the state"""

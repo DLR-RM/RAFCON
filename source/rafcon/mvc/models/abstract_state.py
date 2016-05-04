@@ -1,5 +1,5 @@
 import os.path
-from copy import deepcopy
+from copy import copy, deepcopy
 from weakref import ref
 
 from rafcon.mvc.models.signals import MetaSignalMsg, Notification
@@ -14,6 +14,18 @@ from rafcon.utils.vividict import Vividict
 from gtkmvc import ModelMT, Signal
 
 logger = log.get_logger(__name__)
+
+
+def diff_for_state_element_lists(self_list_of_elements, other_list_of_elements, name):
+    id_name = name + '_id' if 'scope' not in name else 'data_port_id'
+    self_dict = {getattr(getattr(elem, name), id_name): elem for elem in self_list_of_elements}
+    try:
+        # print "diff ", name
+        diff_list = [self_dict[getattr(getattr(elem, name), id_name)] == elem for elem in other_list_of_elements]
+        diff_list.append(len(self_list_of_elements) == len(other_list_of_elements))
+    except KeyError:
+        return [False]
+    return diff_list
 
 
 def get_state_model_class_for_state(state):
@@ -96,6 +108,25 @@ class AbstractStateModel(ModelMT):
 
     def __str__(self):
         return "Model of state: {0}".format(self.state)
+
+    def __eq__(self, other):
+        # logger.info("compare method")
+        if isinstance(other, AbstractStateModel):
+            if not all(diff_for_state_element_lists(self.input_data_ports, other.input_data_ports, 'data_port')) or \
+                    not all(diff_for_state_element_lists(self.output_data_ports, other.output_data_ports, 'data_port')) or \
+                    not all(diff_for_state_element_lists(self.outcomes, other.outcomes, 'outcome')):
+                return False
+            return self.state == other.state and self.meta == other.meta
+        else:
+            return False
+
+    def __copy__(self):
+        state = copy(self.state)
+        state_m = self.__class__(state, parent=None, meta=None, load_meta_data=False)
+        state_m.copy_meta_data_from_state_m(self)
+        return state_m
+
+    __deepcopy__ = __copy__
 
     @property
     def parent(self):

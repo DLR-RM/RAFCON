@@ -37,7 +37,7 @@ class DataPort(StateElement):
         if type(self) == DataPort and not force_type:
             raise NotImplementedError
         super(DataPort, self).__init__()
-
+        self._was_forced_type = force_type
         if data_port_id is None:
             self._data_port_id = generate_data_port_id([])
             logger.warn("Look out: Instantiation of a data port without specifying its id is not recommended! The "
@@ -59,6 +59,12 @@ class DataPort(StateElement):
         return "DataPort '{0}' [{1}] ({3} {2})".format(self.name, self.data_port_id, self.data_type, self.default_value)
 
     yaml_tag = u'!DataPort'
+
+    def __copy__(self):
+        return self.__class__(self._name, self._data_type, self._default_value, self._data_port_id, None,
+                              self._was_forced_type)
+
+    __deepcopy__ = __copy__
 
     @classmethod
     def from_dict(cls, dictionary):

@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import copy, deepcopy
 from os.path import join
 
 from gtkmvc import ModelMT
@@ -6,7 +6,7 @@ from gtkmvc import ModelMT
 from rafcon.statemachine.states.container_state import ContainerState
 
 from rafcon.mvc.models.state import StateModel
-from rafcon.mvc.models.abstract_state import AbstractStateModel
+from rafcon.mvc.models.abstract_state import AbstractStateModel, diff_for_state_element_lists
 from rafcon.mvc.models.transition import TransitionModel
 from rafcon.mvc.models.data_flow import DataFlowModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
@@ -37,7 +37,7 @@ class ContainerStateModel(StateModel):
         """Constructor
         """
         assert isinstance(container_state, ContainerState)
-        StateModel.__init__(self, container_state, parent, meta)
+        super(ContainerStateModel, self).__init__(container_state, parent, meta)
 
         self.states = {}
         self.transitions = []
@@ -68,6 +68,24 @@ class ContainerStateModel(StateModel):
 
         # this class is an observer of its own properties:
         self.register_observer(self)
+
+    def __eq__(self, other):
+        # logger.info("compare method {0} {1}".format(type(self), type(other)))
+        if isinstance(other, ContainerStateModel):
+            if not AbstractStateModel.__eq__(self, other) or \
+                    not all(diff_for_state_element_lists(self.scoped_variables, other.scoped_variables, 'scoped_variable')) or \
+                    not all(diff_for_state_element_lists(self.data_flows, other.data_flows, 'data_flow')) or \
+                    not all(diff_for_state_element_lists(self.transitions, other.transitions, 'transition')):
+                return False
+            try:
+                diff_states = [self.states[state_id] == state for state_id, state in other.states.iteritems()]
+                diff_states.append(len(self.states) == len(other.states))
+            except KeyError:
+                return False
+            print other.states.keys()
+            return all(diff_states) and self.state == other.state and self.meta == other.meta
+        else:
+            return False
 
     @ModelMT.observe("state", before=True, after=True)
     def model_changed(self, model, prop_name, info):
@@ -123,7 +141,7 @@ class ContainerStateModel(StateModel):
                 changed_list._notify_method_after(self.state, cause, None, (self.state,), info)
 
         # Finally call the method of the base class, to forward changes in ports and outcomes
-        StateModel.model_changed(self, model, prop_name, info)
+        super(ContainerStateModel, self).model_changed(model, prop_name, info)
 
     def update_child_models(self, _, name, info):
         """ This method is always triggered when the state model changes
