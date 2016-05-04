@@ -2,7 +2,6 @@ import sys
 import logging
 import gtk
 import threading
-import time
 import os
 from os.path import dirname, join
 
@@ -10,13 +9,13 @@ from os.path import dirname, join
 from rafcon.utils import log
 
 # core elements
+import rafcon.statemachine.config
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.state_machine import StateMachine
 
 # mvc elements
-from rafcon.mvc.models import GlobalVariableManagerModel
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.graphical_editor import GraphicalEditor as OpenGLEditor
 from rafcon.mvc.mygaphas.view import ExtendedGtkView as GaphasEditor
@@ -26,6 +25,7 @@ import rafcon.mvc.statemachine_helper as statemachine_helper
 
 # singleton elements
 import rafcon.mvc.singleton
+import rafcon.statemachine.singleton
 
 # test environment elements
 import testing_utils
@@ -42,8 +42,9 @@ def setup_module(module):
     library_paths["generic"] = rafcon.__path__[0] + "/../libraries/generic"
 
 
-def teardown_module(module):
-    testing_utils.reload_config()
+def wait_for_gui():
+    while gtk.events_pending():
+        gtk.main_iteration(False)
 
 
 def create_models(*args, **kargs):
@@ -116,7 +117,7 @@ def select_and_paste_state(statemachine_model, source_state_model, target_state_
     main_window_controller.view['main_window'].grab_focus()
     focus_graphical_editor_in_page(page)
     call_gui_callback(menu_bar_ctrl.on_paste_clipboard_activate, None, None)
-    time.sleep(1.0)
+    wait_for_gui()
     print target_state_model.state.states.keys()
     assert len(target_state_model.state.states) == old_child_state_count + 1
     return target_state_model, old_child_state_count
@@ -163,10 +164,9 @@ def trigger_gui_signals(*args):
                                                                                       "basic_turtle_demo_sm")
     assert len(sm_manager_model.state_machines) == current_sm_length + 2
 
-    sleep_time_short = 1.0
     sm_m = sm_manager_model.state_machines[first_sm_id + 2]
     sm_m.history.fake = True
-    time.sleep(sleep_time_short)
+    wait_for_gui()
     # MAIN_WINDOW NEEDS TO BE FOCUSED (for global input focus) TO OPERATE PASTE IN GRAPHICAL VIEWER
     main_window_controller.view['main_window'].grab_focus()
     sm_manager_model.selected_state_machine_id = first_sm_id + 2
@@ -174,7 +174,7 @@ def trigger_gui_signals(*args):
     page_id = state_machines_ctrl.get_page_id(first_sm_id + 2)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
     focus_graphical_editor_in_page(page)
-    time.sleep(sleep_time_short)
+    wait_for_gui()
 
     #########################################################
     # select & copy an execution state -> and paste it somewhere
@@ -239,8 +239,8 @@ def test_gui(caplog):
                                                   editor_type='LogicDataGrouped')
 
     # Wait for GUI to initialize
-    while gtk.events_pending():
-        gtk.main_iteration(False)
+    wait_for_gui()
+
     thread = threading.Thread(target=trigger_gui_signals, args=[testing_utils.sm_manager_model, main_window_controller])
     thread.start()
     gtk.main()
