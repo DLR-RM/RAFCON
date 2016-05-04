@@ -58,18 +58,23 @@ class LoggingView(View):
         self.text_view.scroll_mark_onscreen(self.text_view.get_buffer().get_insert())
 
     def print_message(self, message, log_level, new=True):
+        # return
         self._lock.acquire()
         # Store all new log entries
         if new:
             self._log_entries.append((log_level, message))
         if log_level <= 10 and self.debug:
-            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color")
+            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
+                          priority=glib.PRIORITY_LOW)
         elif 10 < log_level <= 20 and self.info:
-            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_info_color")
+            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_info_color",
+                          priority=glib.PRIORITY_LOW)
         elif 20 < log_level <= 30 and self.warning:
-            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_warning_color")
+            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_warning_color",
+                          priority=glib.PRIORITY_LOW)
         elif 30 < log_level and self.error:
-            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_error_color")
+            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_error_color",
+                          priority=glib.PRIORITY_LOW)
         self._lock.release()
 
     def print_to_text_view(self, text, text_buf, use_tag=None):
