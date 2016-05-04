@@ -1,3 +1,4 @@
+from copy import copy
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -144,7 +145,7 @@ class Clipboard(Observable):
 
         target_state = target_state_m.state
 
-        orig_state_copy = StateHelper.get_state_copy(self.state_core_object_copies[0])
+        orig_state_copy = self.state_core_object_copies[0]
         orig_state_copy_m = self.state_model_copies[0]
 
         target_state.add_state(orig_state_copy)
@@ -206,6 +207,11 @@ class Clipboard(Observable):
             state_model_copy = state_m_class(state_copy)
             state_model_copy.copy_meta_data_from_state_m(state_model)
             self.state_model_copies.append(state_model_copy)
+
+            # TODO debug menu bar test problems for enabling to use direct copy method -> copy meta data and core object
+            # state_model_copy = copy(state_model)
+            # self.state_core_object_copies.append(state_model_copy.state)
+            # self.state_model_copies.append(state_model_copy)
             # TODO: create transition copies, only relevant in multi-selection scenario
             # TODO: create data flow copies, only relevant in multi-selection scenario
 
