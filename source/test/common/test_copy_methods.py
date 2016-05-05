@@ -445,7 +445,7 @@ if __name__ == '__main__':
     # import re
     # import copy
     # cProfile.run('test_state_add_remove_notification(None)')
-    # test_complex(None)
+    # test_complex(False, None)
     # test_simple(None)
     pytest.main(['-s', __file__])
 

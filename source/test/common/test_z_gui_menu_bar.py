@@ -252,4 +252,4 @@ def test_gui(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    pytest.main(['-s', __file__])

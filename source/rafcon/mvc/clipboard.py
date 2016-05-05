@@ -8,6 +8,7 @@ from gtkmvc import Observable
 from rafcon.mvc.selection import Selection
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.statemachine.states.state_helper import StateHelper
+from rafcon.statemachine.id_generator import state_id_generator
 
 ClipboardType = Enum('CLIPBOARD_TYPE', 'CUT COPY')
 
@@ -132,6 +133,17 @@ class Clipboard(Observable):
             for s_id, state_m in state_m_copy.states.iteritems():
                 self.copy_meta_data_of_state_model(state_m, orig_state_m.states[s_id])
 
+    def prepare_new_copy(self):
+        # in future
+        # self.state_model_copies[0] = copy(self.state_model_copies[0])
+        # self.state_core_object_copies[0] = self.state_model_copies[0].state
+
+        # at the moment
+        # old = self.state_core_object_copies[0]
+        self.state_core_object_copies[0] = copy(self.state_core_object_copies[0])
+        # assert not id(old) == id(self.state_core_object_copies[0])
+        # assert old == self.state_core_object_copies[0]
+
     def paste(self, target_state_m):
         assert isinstance(target_state_m, ContainerStateModel)
 
@@ -146,10 +158,23 @@ class Clipboard(Observable):
         target_state = target_state_m.state
 
         orig_state_copy = self.state_core_object_copies[0]
+        self.prepare_new_copy()  # threaded in future
         orig_state_copy_m = self.state_model_copies[0]
+
+        # secure that state_id is not target state state_id or of one state in its sub-hierarchy level
+        old_state_id = orig_state_copy.state_id
+        new_state_id = old_state_id
+        while new_state_id in target_state.states.iterkeys() or new_state_id == target_state.state_id:
+            new_state_id = state_id_generator()
+
+        if not new_state_id == old_state_id:
+            logger.debug("Re-organize state_id of paste state from '{0}' to '{1}'".format(old_state_id, new_state_id))
+            StateHelper.reset_state_id(orig_state_copy, new_state_id)
 
         target_state.add_state(orig_state_copy)
 
+        # TODO define a way to hand model copy directly to target model to save resources (takes half of the copy time)
+        # The models can be pre-generated in threads while editing is still possible -> scales better
         new_state_copy_m = target_state_m.states[orig_state_copy.state_id]
 
         self.copy_meta_data_of_state_model(orig_state_copy_m, new_state_copy_m)
@@ -157,6 +182,7 @@ class Clipboard(Observable):
         if self.clipboard_type is ClipboardType.CUT:
             # delete the original state
             # Note: change this when implementing multi selection
+            # TODO cut now can be realized directly after the copy has been generated
             if len(self.selected_state_models) == 1:
                 source_state_id = self.selected_state_models[0].state.state_id
                 parent_of_source_state = self.selected_state_models[0].state.parent
@@ -197,23 +223,14 @@ class Clipboard(Observable):
         self.selected_data_flow_models = selection.get_data_flows()
         # create state copies
         for state_model in self.selected_state_models:
-            # copy core object
-            core_state = state_model.state
-            state_copy = StateHelper.get_state_copy(core_state)
-            self.state_core_object_copies.append(state_copy)
 
-            # copy meta data
-            state_m_class = type(state_model)
-            state_model_copy = state_m_class(state_copy)
-            state_model_copy.copy_meta_data_from_state_m(state_model)
+            # direct model copy -> copy meta data and core object
+            state_model_copy = copy(state_model)
+            self.state_core_object_copies.append(state_model_copy.state)
             self.state_model_copies.append(state_model_copy)
 
-            # TODO debug menu bar test problems for enabling to use direct copy method -> copy meta data and core object
-            # state_model_copy = copy(state_model)
-            # self.state_core_object_copies.append(state_model_copy.state)
-            # self.state_model_copies.append(state_model_copy)
-            # TODO: create transition copies, only relevant in multi-selection scenario
-            # TODO: create data flow copies, only relevant in multi-selection scenario
+        # TODO: create transition copies, only relevant in multi-selection scenario
+        # TODO: create data flow copies, only relevant in multi-selection scenario
 
 
 # To enable copy, cut and paste between state machines a global clipboard is used
