@@ -71,15 +71,15 @@ class StateMachineModel(ModelMT):
 
         self.storage_lock = threading.Lock()
 
-        from rafcon.mvc.models.modification_history import ModificationsHistoryModel
-        history_enabled = global_gui_config.get_config_value('HISTORY_ENABLED')
-        self.history = ModificationsHistoryModel(self)
-        if not history_enabled:
-            self.history.fake = True
+        if global_gui_config.get_config_value('HISTORY_ENABLED'):
+            from rafcon.mvc.models.modification_history import ModificationsHistoryModel
+            self.history = ModificationsHistoryModel(self)
+        else:
             logger.info("The modification history is disabled")
 
-        from rafcon.mvc.models.auto_backup import AutoBackupModel
-        self.auto_backup = AutoBackupModel(self)
+        if global_gui_config.get_config_value('AUTO_BACKUP_ENABLED'):
+            from rafcon.mvc.models.auto_backup import AutoBackupModel
+            self.auto_backup = AutoBackupModel(self)
 
         self.root_state.register_observer(self)
         self.register_observer(self)
