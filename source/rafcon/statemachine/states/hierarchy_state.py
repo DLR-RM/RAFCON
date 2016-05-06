@@ -110,8 +110,8 @@ class HierarchyState(ContainerState):
                 if not self.backward_execution:  # only add history item if it is not a backward execution
                     self.execution_history.add_call_history_item(child_state, MethodName.EXECUTE, self)
 
-                logger.debug("Preparing next child state: {0}{1}".format(child_state, " (backwards)" if
-                             self.backward_execution else ""))
+                # logger.debug("Preparing next child state: {0}{1}".format(child_state, " (backwards)" if
+                #              self.backward_execution else ""))
                 child_state.input_data = self.get_inputs_for_state(child_state)
                 child_state.output_data = self.create_output_dictionary_for_state(child_state)
                 if last_error is not None:
