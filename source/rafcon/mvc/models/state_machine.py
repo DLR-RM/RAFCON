@@ -103,7 +103,9 @@ class StateMachineModel(ModelMT):
     __deepcopy__ = __copy__
 
     def destroy(self):
-        self.auto_backup.destroy()
+        if getattr(self, "auto_backup", None):
+            self.auto_backup.destroy()
+            self.auto_backup = None
 
     @ModelMT.observe("state_machine", after=True)
     def marked_dirty_flag_changed(self, model, prop_name, info):
