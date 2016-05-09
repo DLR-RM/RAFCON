@@ -313,6 +313,9 @@ class ActionDummy:
     def set_after(self, overview=None):
         self.after_overview = overview
 
+    def get_storage(self):
+        pass
+
     def undo(self):
         pass
 
