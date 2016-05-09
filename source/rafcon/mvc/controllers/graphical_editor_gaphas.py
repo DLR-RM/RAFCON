@@ -251,7 +251,7 @@ class GraphicalEditorController(ExtendedController):
         if 'redo' in overview['meta_signal'][-1]['origin'] or 'undo' in overview['meta_signal'][-1]['origin']:
             # logger.info("meta_changed: \n{0}".format(default_overview))
             # logger.info("update_view")
-            self.update_view()
+            # self.update_view()
             # and try to do specific update
             if isinstance(overview['model'][-1], AbstractStateModel):
                 state_m = overview['model'][-1]
@@ -263,7 +263,8 @@ class GraphicalEditorController(ExtendedController):
                 state_m = overview['model'][-1].parent
                 logger.info("update_parent_state".format(state_m.state.get_path()))
             state_v = self.canvas.get_view_for_model(state_m)
-            self.canvas.request_update(state_v, matrix=False)
+            state_v.apply_meta_data()
+            self.canvas.request_update(state_v, matrix=True)
 
     @ExtendedController.observe("state_machine", before=True)
     def state_machine_change(self, model, prop_name, info):
@@ -294,9 +295,8 @@ class GraphicalEditorController(ExtendedController):
                 return
 
             if method_name == 'state_execution_status':
-                state_v = self.canvas.get_view_for_core_element(arguments[0])
-                if state_v:
-                    self.canvas.request_update(state_v)
+                state_v = self.canvas.get_view_for_model(model)
+                self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'add_state':
                 if self._change_state_type:
                     return
@@ -437,9 +437,6 @@ class GraphicalEditorController(ExtendedController):
                     self.canvas.request_update(state_v.name_view, matrix=False)
                 else:
                     self.canvas.request_update(state_v, matrix=False)
-            elif method_name == 'state_execution_status':
-                state_v = self.canvas.get_view_for_model(model)
-                self.canvas.request_update(state_v, matrix=False)
             elif method_name in ['change_state_type', 'change_root_state_type']:
                 self._change_state_type = False
                 if method_name == 'change_state_type':
@@ -472,11 +469,12 @@ class GraphicalEditorController(ExtendedController):
                                 self.canvas.remove(child_v)
                 else:
                     # Remove all child states, as StateModels cannot have children
-                    for child_state_v in self.canvas.get_children(state_v):
-                        if isinstance(child_state_v, StateView):
-                            child_state_v.remove()
-                        elif not isinstance(child_state_v, NameView):  # Don't remove the name view
-                            self.canvas.remove(child_state_v)
+                    children = self.canvas.get_children(state_v)[:]
+                    for child_v in children:
+                        if isinstance(child_v, StateView):
+                            child_v.remove()
+                        elif not isinstance(child_v, NameView):  # Don't remove the name view
+                            self.canvas.remove(child_v)
                 parent_v = self.canvas.get_parent(state_v)
                 if parent_v:
                     self.canvas.request_update(parent_v)
@@ -791,7 +789,7 @@ class GraphicalEditorController(ExtendedController):
 
             self.draw_data_flows(state_m, hierarchy_level)
 
-            return state_v
+        return state_v
 
     def draw_transitions(self, parent_state_m, hierarchy_level):
         """Draws the transitions belonging to a state

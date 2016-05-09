@@ -56,21 +56,53 @@ def start_state_machine(setup_config):
     return sm
 
 
-def check_for_sm_finished(sm, monitoring_manager=None):
+def check_for_sm_finished(sm):
+
+    # wait for the state machine to start
+    while len(sm.execution_history.history_items) < 1:
+        time.sleep(0.1)
+
     while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
         try:
             sm.root_state.concurrency_queue.get(timeout=10.0)
-        except Empty, e:
+        except Empty:
             pass
         # no logger output here to make it easier for the parser
         print "RAFCON live signal"
 
-    sm.root_state.join()
-
-    # stop the networking if the monitoring plugin is enabled
-    if monitoring_manager:
+    if "twisted" in sys.modules.keys():
         from twisted.internet import reactor
         reactor.callFromThread(reactor.stop)
+
+
+def start_profiler(logger):
+    profiler_run = global_config.get_config_value("PROFILER_RUN", False)
+    if profiler_run:
+        try:
+            import profiling.tracing
+            profiler = profiling.tracing.TracingProfiler()
+            logger.debug("The profiler has been started")
+            profiler.start()
+        except ImportError:
+            profiler = None
+            logger.error("Cannot run profiler due to missing Python package 'profiling'")
+        return profiler
+
+
+def stop_profiler(profiler, logger):
+    profiler.stop()
+
+    if global_config.get_config_value("PROFILER_VIEWER", True):
+        profiler.run_viewer()
+
+    result_path = global_config.get_config_value("PROFILER_RESULT_PATH")
+    if os.path.isdir(os.path.dirname(result_path)):
+        import pickle
+        result = profiler.result()
+        with open(result_path, 'wb') as f:
+            pickle.dump((profiler.__class__, result), f, pickle.HIGHEST_PROTOCOL)
+        logger.info("The profiler result has been dumped. Run the following command for inspection:")
+        logger.info("$ profiling view {}".format(result_path))
 
 
 if __name__ == '__main__':
@@ -120,18 +152,21 @@ if __name__ == '__main__':
     # Initialize libraries
     sm_singletons.library_manager.initialize()
 
-    sm = start_state_machine(setup_config)
-
     plugins.run_post_inits(setup_config)
+    
+    profiler = start_profiler(logger)
 
-    if "twisted" in sys.modules.keys():
-        from twisted.internet import reactor
-        reactor.run()
-    else:
-        pass
+    try:
+        sm = start_state_machine(setup_config)
 
-    sm.root_state.join()
+        if "twisted" in sys.modules.keys():
+            from twisted.internet import reactor
+            reactor.run()
 
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
-    logger.info("State machine execution finished!")
+        rafcon.statemachine.singleton.state_machine_execution_engine.join()
+        logger.info("State machine execution finished!")
+
+    finally:
+        if profiler:
+            stop_profiler(profiler, logger)
 
