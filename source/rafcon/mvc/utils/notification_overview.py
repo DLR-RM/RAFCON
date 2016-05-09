@@ -1,4 +1,5 @@
 import datetime
+from rafcon.utils import constants
 
 
 class NotificationOverview(dict):
@@ -6,10 +7,11 @@ class NotificationOverview(dict):
                   'prop_name': None, 'args': (), 'kwargs': {}, 'info': {}}
     # TODO comment
 
-    def __init__(self, info=None, with_prints=False):
+    def __init__(self, info=None, with_prints=False, initiator_string=None):
 
         if info is None:
             info = self.empty_info
+        self.initiator = initiator_string
         self.info = info
         self.__type = 'before'
         if 'after' in info:
@@ -23,10 +25,19 @@ class NotificationOverview(dict):
         dict.__init__(self, overview_dict)
         self.__description = s
         if self.with_prints:
-            print str(self)
+            print "\nNotificationOverview {}\n".format(str(self))
+    #     self.store_debug_log_file("\nNotificationOverview {}\n".format(str(self)))
+    #
+    # def store_debug_log_file(self, string):
+    #     with open(constants.RAFCON_TEMP_PATH_BASE + '/NO_debug_log_file.txt', 'a+') as f:
+    #         f.write(string)
+    #     f.closed
 
     def __str__(self):
-        return self.__description
+        if self.initiator is not None:
+            return "Initiator: {}\n".format(self.initiator) + self.__description
+        else:
+            return self.__description
 
     def __setitem__(self, key, value):
         if key in ['info', 'model', 'prop_name', 'instance', 'method_name', 'level']:

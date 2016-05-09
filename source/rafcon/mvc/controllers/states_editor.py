@@ -24,8 +24,8 @@ from rafcon.mvc.selection import Selection
 from rafcon.mvc.config import global_gui_config
 
 from rafcon.mvc.utils.notification_overview import NotificationOverview
-from rafcon.mvc.utils import constants
-from rafcon.mvc.utils import helpers
+from rafcon.mvc.utils import constants, helpers
+from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS as EXECUTION_TRIGGERED_METHODS
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -522,9 +522,15 @@ class StatesEditorController(ExtendedController):
     @ExtendedController.observe("state", after=True)
     @ExtendedController.observe("states", after=True)
     def notify_state_name_change(self, model, prop_name, info):
-        """Checks whether the name of s state was changed and changes the tab label accordingly
+        """Checks whether the name of a state was changed and change the tab label accordingly
         """
-        overview = NotificationOverview(info)
+        # avoid updates or checks because of execution status updates
+        if prop_name == 'states' and 'kwargs' in info and 'method_name' in info['kwargs'] and \
+                info['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS or \
+                prop_name == 'state' and 'method_name' in info and info['method_name'] in EXECUTION_TRIGGERED_METHODS:
+            return
+
+        overview = NotificationOverview(info, False, self.__class__.__name__)
         changed_model = overview['model'][-1]
         method_name = overview['method_name'][-1]
         if isinstance(changed_model, AbstractStateModel) and method_name in ['name', 'script_text']:
@@ -536,9 +542,9 @@ class StatesEditorController(ExtendedController):
         :param rafcon.statemachone.states.state.State state_m: State model who's tab label is to be updated
         """
         state_identifier = self.get_state_identifier(state_m)
-        if state_identifier not in self.tabs:
+        if state_identifier not in self.tabs and state_identifier not in self.closed_tabs:
             return
-        tab_info = self.tabs[state_identifier]
+        tab_info = self.tabs[state_identifier] if state_identifier in self.tabs else self.closed_tabs[state_identifier]
         page = tab_info['page']
         set_tab_label_texts(page.title_label, state_m, tab_info['source_code_view_is_dirty'])
 

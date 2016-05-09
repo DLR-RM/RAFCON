@@ -19,6 +19,7 @@ from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.utils import log
+from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS as EXECUTION_TRIGGERED_METHODS
 from rafcon.mvc import statemachine_helper
 
 logger = log.get_logger(__name__)
@@ -112,12 +113,18 @@ class StateMachineTreeController(ExtendedController):
 
     @ExtendedController.observe("state", after=True)  # root_state
     @ExtendedController.observe("states", after=True)
-    def states_update(self, model, property, info):
+    def states_update(self, model, prop_name, info):
 
-        overview = NotificationOverview(info, False)
+        # avoid updates or checks because of execution status updates
+        if prop_name == 'states' and 'kwargs' in info and 'method_name' in info['kwargs'] and \
+                info['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS or \
+                prop_name == 'state' and 'method_name' in info and info['method_name'] in EXECUTION_TRIGGERED_METHODS:
+            return
+
+        overview = NotificationOverview(info, False, self.__class__.__name__)
 
         if overview['prop_name'][-1] == 'state' and \
-                        overview['method_name'][-1] in ["name"]:  # , "add_state", "remove_state"]:
+                overview['method_name'][-1] in ["name"]:  # , "add_state", "remove_state"]:
             self.update_tree_store_row(overview['model'][-1])
         elif overview['prop_name'][-1] == 'state' and \
                 overview['method_name'][-1] in ["add_state", "remove_state", "change_state_type"]:

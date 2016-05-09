@@ -18,8 +18,8 @@ from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.utils import log, constants
-from rafcon.utils import type_helpers
+from rafcon.utils import log, type_helpers
+from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS, RAFCON_TEMP_PATH_BASE
 
 logger = log.get_logger(__name__)
 PORT_TYPE_TAG = {InputDataPort: 'IP', OutputDataPort: 'OP', ScopedVariable: 'SV'}
@@ -366,7 +366,11 @@ class StateDataFlowsListController(ExtendedController):
     @ExtendedController.observe("state", after=True)
     def after_notification_state(self, model, prop_name, info):
         # The method causing the change raised an exception, thus nothing was changed
-        overview = NotificationOverview(info)
+        # avoid updates because of execution status updates
+        if info['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
+            return
+
+        overview = NotificationOverview(info, True, self.__class__.__name__)
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
@@ -382,10 +386,15 @@ class StateDataFlowsListController(ExtendedController):
     @ExtendedController.observe("data_flows", after=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
         # The method causing the change raised an exception, thus nothing was changed
-        # overview = NotificationOverview(info)
+        # overview = NotificationOverview(info, False, 'DataFlowWidget')
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
+
+        # avoid updates because of execution status updates
+        if 'kwargs' in info and 'method_name' in info['kwargs'] and \
+                info['kwargs']['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
+            return
 
         # self.notification_logs(model, prop_name, info)
         if self.no_update and info.method_name in ["change_state_type", "change_root_state_type"]:
@@ -400,13 +409,13 @@ class StateDataFlowsListController(ExtendedController):
         except Exception as e:
             if self.debug_log:
                 import traceback
-                self.store_debug_log_file(NotificationOverview(info))
+                self.store_debug_log_file(NotificationOverview(info, True, self.__class__.__name__))
                 self.store_debug_log_file(str(traceback.format_exc()))
             logger.error("update of data_flow widget fails while detecting change in state %s %s" %
                          (self.model.state.name, self.model.state.state_id))
 
     def store_debug_log_file(self, string):
-        with open(constants.RAFCON_TEMP_PATH_BASE + '/data_flow_widget_debug_log_file.txt', 'a+') as f:
+        with open(RAFCON_TEMP_PATH_BASE + '/data_flow_widget_debug_log_file.txt', 'a+') as f:
             f.write(string)
         f.closed
 

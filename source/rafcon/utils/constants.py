@@ -21,3 +21,5 @@ except OSError:  # Raised when directory is already existing, thus can be ignore
     pass
 
 RAFCON_TEMP_PATH_STORAGE = tempfile.mkdtemp(dir=RAFCON_TEMP_PATH_BASE)
+
+BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS = ['state_execution_status']

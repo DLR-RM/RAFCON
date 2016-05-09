@@ -19,6 +19,7 @@ from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.utils import log
+from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 from rafcon.mvc.gui_helper import format_cell
 
 logger = log.get_logger(__name__)
@@ -587,8 +588,13 @@ class StateTransitionsListController(ExtendedController):
 
     @ExtendedController.observe("state", after=True)
     def after_notification_state(self, model, prop_name, info):
+
+        # avoid updates because of execution status updates
+        if info['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
+            return
+
+        overview = NotificationOverview(info, False, self.__class__.__name__)
         # The method causing the change raised an exception, thus nothing was changed
-        overview = NotificationOverview(info)
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
@@ -609,6 +615,11 @@ class StateTransitionsListController(ExtendedController):
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
+
+        # avoid updates because of execution status updates
+        if 'kwargs' in info and 'method_name' in info['kwargs'] and \
+                info['kwargs']['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
+            return
 
         # self.notification_logs(model, prop_name, info)
         if self.no_update and info.method_name in ["change_state_type", "change_root_state_type"]:
