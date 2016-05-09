@@ -403,7 +403,7 @@ class ModificationsHistoryModel(ModelMT):
         if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1] or \
                 overview['meta_signal'][-1]['change'] == 'all':  # avoid strange change: 'all' TODO test why those occur
             return
-        if self.busy:
+        if self.busy or self.actual_action is None and overview['meta_signal'][-1]['change'] == 'append_to_last_change':
             return
 
         if overview['meta_signal'][-1]['change'] == 'append_to_last_change':

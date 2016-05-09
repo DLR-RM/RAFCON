@@ -789,6 +789,11 @@ class GraphicalEditorController(ExtendedController):
 
             self.draw_data_flows(state_m, hierarchy_level)
 
+        try:
+            self._meta_data_changed(None, state_m, 'append_to_last_change', True)
+        except Exception as e:
+            logger.error('Error while trying to emit meta data signal {}'.format(e))
+
         return state_v
 
     def draw_transitions(self, parent_state_m, hierarchy_level):
