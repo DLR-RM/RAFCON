@@ -46,6 +46,8 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
         self.state_machine_manager = state_machine_manager
 
         view['reload_button'].connect('clicked', self.reload_history)
+        view['clean_button'].connect('clicked', self.clean_history)
+        self._start_idx = 0
 
         self.state_machine_execution_model = rafcon.mvc.singleton.state_machine_execution_model
         self.observe_model(self.state_machine_execution_model)
@@ -111,8 +113,8 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
         """ Arranges to put execution-history widget page to become top page in notebook when execution starts and stops
         and resets the boolean of modification_history_was_focused to False each time this notification are observed.
         """
-        from rafcon.mvc.utils.notification_overview import NotificationOverview
-        overview = NotificationOverview(info)
+        # from rafcon.mvc.utils.notification_overview import NotificationOverview
+        # overview = NotificationOverview(info)
         # logger.info("execution_engine runs method '{1}' and has status {0}"
         #             "".format(str(state_machine_execution_engine.status.execution_mode).split('.')[-1],
         #                       overview['method_name'][-1]))
@@ -125,6 +127,15 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
         if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
             self.update()
 
+    def clean_history(self, widget, event=None):
+        """Triggered when the 'Clean History' button is clicked.
+
+        Empties the execution history tree by adjusting the start index and updates tree store and view.
+        """
+        active_sm = self.state_machine_manager.get_active_state_machine()
+        self._start_idx = len(active_sm.execution_history.history_items)
+        self.update()
+
     def reload_history(self, widget, event=None):
         """Triggered when the 'Reload History' button is clicked."""
         self.update()
@@ -135,7 +146,12 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
         if not active_sm:
             return
         execution_history_items = active_sm.execution_history.history_items
-        for item in execution_history_items:
+
+        # in case the length of the items list was changed by others
+        if len(execution_history_items) < self._start_idx:
+            self._start_idx = 0
+
+        for item in execution_history_items[self._start_idx:]:
             if isinstance(item, ConcurrencyItem):
                 self.insert_rec(None, item.state_reference.name, item.execution_histories, None)
             elif isinstance(item, CallItem):
