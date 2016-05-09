@@ -56,19 +56,21 @@ def start_state_machine(setup_config):
     return sm
 
 
-def check_for_sm_finished(sm, monitoring_manager=None):
+def check_for_sm_finished(sm):
+
+    # wait for the state machine to start
+    while len(sm.execution_history.history_items) < 1:
+        time.sleep(0.1)
+
     while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
         try:
             sm.root_state.concurrency_queue.get(timeout=10.0)
-        except Empty, e:
+        except Empty:
             pass
         # no logger output here to make it easier for the parser
         print "RAFCON live signal"
 
-    sm.root_state.join()
-
-    # stop the networking if the monitoring plugin is enabled
-    if monitoring_manager:
+    if "twisted" in sys.modules.keys():
         from twisted.internet import reactor
         reactor.callFromThread(reactor.stop)
 
@@ -120,18 +122,14 @@ if __name__ == '__main__':
     # Initialize libraries
     sm_singletons.library_manager.initialize()
 
-    sm = start_state_machine(setup_config)
-
     plugins.run_post_inits(setup_config)
+
+    sm = start_state_machine(setup_config)
 
     if "twisted" in sys.modules.keys():
         from twisted.internet import reactor
         reactor.run()
-    else:
-        pass
 
-    sm.root_state.join()
-
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.statemachine.singleton.state_machine_execution_engine.join()
     logger.info("State machine execution finished!")
 
