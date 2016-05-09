@@ -13,7 +13,7 @@ from yaml_configuration.config import config_path
 from rafcon.utils import log
 import rafcon.utils.filesystem as filesystem
 
-from rafcon.statemachine.start import state_machine_path
+from rafcon.statemachine.start import state_machine_path, start_profiler, stop_profiler
 from rafcon.statemachine.config import global_config
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
@@ -132,19 +132,26 @@ if __name__ == '__main__':
 
     plugins.run_post_inits(setup_config)
 
-    # check if twisted is imported
-    if "twisted" in sys.modules.keys():
-        from twisted.internet import reactor
-        reactor.run()
-    else:
-        gtk.main()
+    profiler = start_profiler(logger)
 
-    logger.info("Joined root state")
+    try:
+        # check if twisted is imported
+        if "twisted" in sys.modules.keys():
+            from twisted.internet import reactor
+            reactor.run()
+        else:
+            gtk.main()
 
-    # If there is a running state-machine, wait for it to be finished before exiting
-    sm = sm_singletons.state_machine_manager.get_active_state_machine()
-    if sm:
-        sm.root_state.join()
+        logger.info("Joined root state")
+
+        # If there is a running state-machine, wait for it to be finished before exiting
+        sm = sm_singletons.state_machine_manager.get_active_state_machine()
+        if sm:
+            sm.root_state.join()
+
+    finally:
+        if profiler:
+            stop_profiler(profiler, logger)
 
     logger.info("Exiting ...")
 
