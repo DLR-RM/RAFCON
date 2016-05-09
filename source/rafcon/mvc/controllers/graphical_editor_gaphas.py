@@ -294,9 +294,8 @@ class GraphicalEditorController(ExtendedController):
                 return
 
             if method_name == 'state_execution_status':
-                state_v = self.canvas.get_view_for_core_element(arguments[0])
-                if state_v:
-                    self.canvas.request_update(state_v)
+                state_v = self.canvas.get_view_for_model(model)
+                self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'add_state':
                 if self._change_state_type:
                     return
@@ -437,9 +436,6 @@ class GraphicalEditorController(ExtendedController):
                     self.canvas.request_update(state_v.name_view, matrix=False)
                 else:
                     self.canvas.request_update(state_v, matrix=False)
-            elif method_name == 'state_execution_status':
-                state_v = self.canvas.get_view_for_model(model)
-                self.canvas.request_update(state_v, matrix=False)
             elif method_name in ['change_state_type', 'change_root_state_type']:
                 self._change_state_type = False
                 if method_name == 'change_state_type':
