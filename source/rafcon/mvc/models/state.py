@@ -5,6 +5,7 @@ from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.utils import log
+from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 
 logger = log.get_logger(__name__)
 
@@ -53,13 +54,13 @@ class StateModel(AbstractStateModel):
             self.update_models(model, prop_name, info)
 
         # mark the state machine this state belongs to as dirty
-        no_save_change = info["method_name"] in ["active", "child_execution", "state_execution_status"]
+        no_save_change = info["method_name"] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
         if isinstance(model, AbstractStateModel) and prop_name == "state" and no_save_change:
             # do not track the active flag when marking the sm dirty
             pass
         else:
             # if the state_execution state is changed the sm must not be marked dirty
-            if "after" in info and info["method_name"] != "state_execution_status":
+            if "after" in info and info["method_name"] not in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
                 self._mark_state_machine_as_dirty()
 
         changed_list = None

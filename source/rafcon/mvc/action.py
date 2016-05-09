@@ -38,7 +38,7 @@ from rafcon.mvc.utils.notification_overview import NotificationOverview
 
 from rafcon.utils import log
 from rafcon.utils.storage_utils import substitute_modules
-from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 
 logger = log.get_logger(__name__)
 
@@ -1323,10 +1323,9 @@ class OutcomeAction(Action):
 
 class StateAction(Action):
 
-    not_possible_method_names = ['state_execution_status',  # observed but should be ignored
-                                 'input_data', 'output_data', 'concurrency_queue', 'state_id',  # any not observed
+    not_possible_method_names = ['input_data', 'output_data', 'concurrency_queue', 'state_id',  # any not observed
                                  'final_outcome', 'preempted', 'active', 'is_root_state',  # any not observed
-                                 'scoped_data', 'v_checker']
+                                 'scoped_data', 'v_checker'].extend(BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS)
     possible_method_names = ['parent',  # will be ignored
                              'name', 'description', 'script', 'script_text',  # State
                              'outcomes', 'input_data_ports', 'output_data_ports',  # State
