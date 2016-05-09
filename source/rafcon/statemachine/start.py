@@ -86,7 +86,7 @@ def start_profiler(logger):
         except ImportError:
             profiler = None
             logger.error("Cannot run profiler due to missing Python package 'profiling'")
-    return profiler
+        return profiler
 
 
 def stop_profiler(profiler, logger):
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     try:
         sm = start_state_machine(setup_config)
 
-	if "twisted" in sys.modules.keys():
+        if "twisted" in sys.modules.keys():
             from twisted.internet import reactor
             reactor.run()
 
