@@ -258,7 +258,10 @@ class StateView(Element):
         self._transparent = True
 
     def apply_meta_data(self):
+        logger.info("apply state meta {}".format(self.model.state.get_path()))
         state_meta = self.model.meta['gui']['editor_gaphas']
+        logger.info("rel_pos {}".format(state_meta['rel_pos']))
+        logger.info("size {}".format(state_meta['size']))
         self.position = state_meta['rel_pos']
         self.width = state_meta['size'][0]
         self.height = state_meta['size'][1]
@@ -739,6 +742,8 @@ class NameView(Element):
 
     def apply_meta_data(self):
         name_meta = self.parent.model.meta['gui']['editor_gaphas']['name']
+        logger.info("name rel_pos {}".format(name_meta['rel_pos']))
+        logger.info("name size {}".format(name_meta['size']))
         self.position = name_meta['rel_pos']
         self.width = name_meta['size'][0]
         self.height = name_meta['size'][1]
