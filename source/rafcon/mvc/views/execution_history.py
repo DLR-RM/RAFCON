@@ -9,6 +9,7 @@ class ExecutionHistoryTreeView(View, gtk.TreeView):
     def __init__(self):
         View.__init__(self)
         gtk.TreeView.__init__(self)
+        self.set_name("history_tree")
 
         tvcolumn = gtk.TreeViewColumn('History', gtk.CellRendererText(), text=0)
         self.append_column(tvcolumn)

@@ -32,7 +32,8 @@ class AutoBackupModel(ModelMT):
         assert isinstance(state_machine_model, StateMachineModel)
         self.state_machine_model = state_machine_model
         self.observe_model(self.state_machine_model)
-        self.observe_model(self.state_machine_model.history)
+        if global_gui_config.get_config_value('HISTORY_ENABLED'):
+            self.observe_model(self.state_machine_model.history)
 
         self.timed_temp_storage_enabled = global_gui_config.get_config_value('AUTO_BACKUP_ENABLED')
         self.only_fix_interval = global_gui_config.get_config_value('AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL')
