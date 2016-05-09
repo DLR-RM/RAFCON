@@ -330,6 +330,7 @@ class MetaAction:
         self.type = "change " + overview['meta_signal'][-1]['change']
         overview['method_name'].append("change " + overview['meta_signal'][-1]['change'])
         overview['info'][-1]['method_name'] = "change " + overview['meta_signal'][-1]['change']
+        overview['model'][-1].meta = copy.deepcopy(overview['model'][-1].meta)
         overview['instance'].append(overview['model'][-1])
         overview['info'][-1]['instance'] = overview['model'][-1]
         self.state_machine = state_machine_model.state_machine
@@ -356,6 +357,7 @@ class MetaAction:
             logger.warning("The version_id of an action is not allowed to be modify after first assignment")
 
     def set_after(self, overview):
+        overview['model'][-1].meta = copy.deepcopy(overview['model'][-1].meta)
         self.after_overview = overview
         self.after_storage = self.get_storage()  # tuple of state and states-list of storage tuple
 
@@ -370,6 +372,7 @@ class MetaAction:
     def undo(self):
         # TODO check why levels are not working
         state_m = self.get_state_model_changed()
+        # logger.info("META-Action undo {}".format(state_m.state.get_path()))
         if self.before_overview['meta_signal'][-1]['affects_children']:
             insert_state_meta_data(meta_dict=self.before_storage, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))
@@ -384,6 +387,7 @@ class MetaAction:
     def redo(self):
         # TODO check why levels are not working
         state_m = self.get_state_model_changed()
+        # logger.info("META-Action undo {}".format(state_m.state.get_path()))
         if self.before_overview['meta_signal'][-1]['affects_children']:
             insert_state_meta_data(meta_dict=self.after_storage, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))

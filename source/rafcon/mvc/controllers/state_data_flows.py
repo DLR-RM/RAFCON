@@ -370,7 +370,7 @@ class StateDataFlowsListController(ExtendedController):
         if info['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
             return
 
-        overview = NotificationOverview(info, True, self.__class__.__name__)
+        overview = NotificationOverview(info, False, self.__class__.__name__)
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return

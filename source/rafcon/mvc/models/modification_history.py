@@ -397,7 +397,7 @@ class ModificationsHistoryModel(ModelMT):
     def meta_changed_notify_after(self, changed_model, prop_name, info):
         if not self.with_meta_data_actions:
             return
-        overview = NotificationOverview(info, True, self.__class__.__name__)
+        overview = NotificationOverview(info, False, self.__class__.__name__)
         # logger.info("meta_changed: \n{0}".format(overview))
         # WORKAROUND: avoid multiple signals of the root_state, by comparing first and last model in overview
         if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1] or \
@@ -411,10 +411,10 @@ class ModificationsHistoryModel(ModelMT):
             self.actual_action.after_storage = self.actual_action.get_storage()
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
         else:
-            if isinstance(overview['model'][0], AbstractStateModel):
-                changed_parent_model = overview['model'][0]
+            if isinstance(overview['model'][-1], AbstractStateModel):
+                changed_parent_model = overview['model'][-1]
             else:
-                changed_parent_model = overview['model'][0].parent
+                changed_parent_model = overview['model'][-1].parent
             self.actual_action = MetaAction(changed_parent_model.state.get_path(),
                                             state_machine_model=self.state_machine_model,
                                             overview=overview)
