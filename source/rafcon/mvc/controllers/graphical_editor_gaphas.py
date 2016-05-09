@@ -468,11 +468,12 @@ class GraphicalEditorController(ExtendedController):
                                 self.canvas.remove(child_v)
                 else:
                     # Remove all child states, as StateModels cannot have children
-                    for child_state_v in self.canvas.get_children(state_v):
-                        if isinstance(child_state_v, StateView):
-                            child_state_v.remove()
-                        elif not isinstance(child_state_v, NameView):  # Don't remove the name view
-                            self.canvas.remove(child_state_v)
+                    children = self.canvas.get_children(state_v)[:]
+                    for child_v in children:
+                        if isinstance(child_v, StateView):
+                            child_v.remove()
+                        elif not isinstance(child_v, NameView):  # Don't remove the name view
+                            self.canvas.remove(child_v)
                 parent_v = self.canvas.get_parent(state_v)
                 if parent_v:
                     self.canvas.request_update(parent_v)
@@ -787,7 +788,7 @@ class GraphicalEditorController(ExtendedController):
 
             self.draw_data_flows(state_m, hierarchy_level)
 
-            return state_v
+        return state_v
 
     def draw_transitions(self, parent_state_m, hierarchy_level):
         """Draws the transitions belonging to a state
