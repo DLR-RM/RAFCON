@@ -251,7 +251,7 @@ class GraphicalEditorController(ExtendedController):
         if 'redo' in overview['meta_signal'][-1]['origin'] or 'undo' in overview['meta_signal'][-1]['origin']:
             # logger.info("meta_changed: \n{0}".format(default_overview))
             # logger.info("update_view")
-            self.update_view()
+            # self.update_view()
             # and try to do specific update
             if isinstance(overview['model'][-1], AbstractStateModel):
                 state_m = overview['model'][-1]
@@ -263,7 +263,8 @@ class GraphicalEditorController(ExtendedController):
                 state_m = overview['model'][-1].parent
                 # logger.info("update_parent_state")
             state_v = self.canvas.get_view_for_model(state_m)
-            self.canvas.request_update(state_v, matrix=False)
+            state_v.apply_meta_data()
+            self.canvas.request_update(state_v, matrix=True)
 
     @ExtendedController.observe("state_machine", before=True)
     def state_machine_change(self, model, prop_name, info):
