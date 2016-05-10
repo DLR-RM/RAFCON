@@ -90,9 +90,6 @@ class HierarchyState(ContainerState):
                     else:
                         break
 
-                # if execution_mode is StateMachineExecutionStatus.STOPPED:
-                #     # this will be caught at the end of the run method
-                #     raise RuntimeError("child_state stopped")
                 elif execution_mode == StateMachineExecutionStatus.BACKWARD:
                     self.backward_execution = True
                     last_history_item = self.execution_history.pop_last_item()
@@ -189,9 +186,6 @@ class HierarchyState(ContainerState):
             return self.finalize(self.final_outcome)
 
         except Exception, e:
-            # if str(e) == "child_state stopped" or str(e) == "state stopped":
-            #     logger.debug("{0} was stopped!".format(self))
-            # else:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
 
             self.output_data["error"] = e
