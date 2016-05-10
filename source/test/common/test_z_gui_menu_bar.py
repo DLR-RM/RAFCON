@@ -166,6 +166,7 @@ def trigger_gui_signals(*args):
     assert len(sm_manager_model.state_machines) == current_sm_length + 2
 
     sm_m = sm_manager_model.state_machines[first_sm_id + 2]
+    sm_m.history.fake = True
     wait_for_gui()
     # MAIN_WINDOW NEEDS TO BE FOCUSED (for global input focus) TO OPERATE PASTE IN GRAPHICAL VIEWER
     main_window_controller.view['main_window'].grab_focus()
@@ -225,7 +226,6 @@ def test_gui(caplog):
     testing_utils.start_rafcon()
     testing_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    print dir(gui_config.global_gui_config)
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     library_paths["ros"] = rafcon.__path__[0] + "/../test_scripts/ros_libraries"
