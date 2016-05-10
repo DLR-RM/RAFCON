@@ -166,7 +166,6 @@ def trigger_gui_signals(*args):
     assert len(sm_manager_model.state_machines) == current_sm_length + 2
 
     sm_m = sm_manager_model.state_machines[first_sm_id + 2]
-    sm_m.history.fake = True
     wait_for_gui()
     # MAIN_WINDOW NEEDS TO BE FOCUSED (for global input focus) TO OPERATE PASTE IN GRAPHICAL VIEWER
     main_window_controller.view['main_window'].grab_focus()
