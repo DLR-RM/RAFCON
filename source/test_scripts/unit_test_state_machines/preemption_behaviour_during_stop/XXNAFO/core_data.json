@@ -1,0 +1,69 @@
+{
+    "__jsonqualname__": "rafcon.statemachine.states.hierarchy_state.HierarchyState", 
+    "data_flows": {}, 
+    "description": null, 
+    "input_data_ports": {}, 
+    "name": "preemtion_test_root", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {}, 
+    "scoped_variables": {}, 
+    "state_id": "XXNAFO", 
+    "transitions": {
+        "1": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
+            "from_outcome": null, 
+            "from_state": null, 
+            "to_outcome": null, 
+            "to_state": "RMZVDZ", 
+            "transition_id": 1
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
+            "from_outcome": -2, 
+            "from_state": "RMZVDZ", 
+            "to_outcome": null, 
+            "to_state": "GVSRTS", 
+            "transition_id": 2
+        }, 
+        "3": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "RMZVDZ", 
+            "to_outcome": null, 
+            "to_state": "KRAQEG", 
+            "transition_id": 3
+        }, 
+        "4": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "KRAQEG", 
+            "to_outcome": 0, 
+            "to_state": "XXNAFO", 
+            "transition_id": 4
+        }, 
+        "5": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "GVSRTS", 
+            "to_outcome": null, 
+            "to_state": "KRAQEG", 
+            "transition_id": 5
+        }
+    }
+}

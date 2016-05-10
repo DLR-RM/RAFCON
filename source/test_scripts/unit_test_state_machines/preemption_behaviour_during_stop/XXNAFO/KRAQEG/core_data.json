@@ -1,0 +1,25 @@
+{
+    "__jsonqualname__": "rafcon.statemachine.states.execution_state.ExecutionState", 
+    "description": null, 
+    "input_data_ports": {}, 
+    "name": "s3", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {}, 
+    "state_id": "KRAQEG"
+}
