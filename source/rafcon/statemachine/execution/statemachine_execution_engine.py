@@ -246,8 +246,8 @@ class StatemachineExecutionEngine(Observable):
             pass
 
         elif self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
-            logger.debug("Execution engine stopped. State '{0}' is going to quit!".format(state.name))
-            pass
+            logger.debug("Execution engine stopped. State '{0}' is going to quit in the case of "
+                         "no preemption handling has to be done!".format(state.name))
 
         elif self._status.execution_mode is StateMachineExecutionStatus.PAUSED:
             try:
