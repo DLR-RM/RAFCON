@@ -6,17 +6,17 @@
     "name": "preemption_behaviour_test", 
     "outcomes": {
         "-2": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
             "name": "preempted", 
             "outcome_id": -2
         }, 
         "-1": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
             "name": "aborted", 
             "outcome_id": -1
         }, 
         "0": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
             "name": "success", 
             "outcome_id": 0
         }
@@ -26,7 +26,7 @@
     "state_id": "FYMCWW", 
     "transitions": {
         "1": {
-            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
             "from_outcome": 0, 
             "from_state": "TYYIIU", 
             "to_outcome": 0, 
@@ -34,7 +34,7 @@
             "transition_id": 1
         }, 
         "2": {
-            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
             "from_outcome": 0, 
             "from_state": "LGQFZM", 
             "to_outcome": 0, 
