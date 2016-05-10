@@ -2,7 +2,7 @@
     "__jsonqualname__": "rafcon.statemachine.states.execution_state.ExecutionState", 
     "description": null, 
     "input_data_ports": {}, 
-    "name": "s3", 
+    "name": "s2", 
     "outcomes": {
         "-2": {
             "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
@@ -21,5 +21,5 @@
         }
     }, 
     "output_data_ports": {}, 
-    "state_id": "DDSVOQ"
+    "state_id": "GVSRTS"
 }

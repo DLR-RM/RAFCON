@@ -104,8 +104,8 @@ class ExecutionHistory:
 
 class HistoryItem:
 
-    """An abstract class that servers a data structure to hold all important information of a certain point in time
-    during the execution of a state machine. A history item is a element in doubly linked history item list.
+    """An abstract class that serves as a data structure to hold all important information of a certain point in time
+    during the execution of a state machine. A history item is an element in a doubly linked history item list.
 
     :ivar state_reference: a reference to the state performing a certain action that is going to be saved
     :ivar path: the state path

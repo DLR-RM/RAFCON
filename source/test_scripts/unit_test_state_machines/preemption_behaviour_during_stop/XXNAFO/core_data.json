@@ -3,7 +3,7 @@
     "data_flows": {}, 
     "description": null, 
     "input_data_ports": {}, 
-    "name": "p2", 
+    "name": "preemtion_test_root", 
     "outcomes": {
         "-2": {
             "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
@@ -23,46 +23,46 @@
     }, 
     "output_data_ports": {}, 
     "scoped_variables": {}, 
-    "state_id": "LGQFZM", 
+    "state_id": "XXNAFO", 
     "transitions": {
         "1": {
             "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
             "from_outcome": null, 
             "from_state": null, 
             "to_outcome": null, 
-            "to_state": "HMJXNW", 
+            "to_state": "RMZVDZ", 
             "transition_id": 1
         }, 
         "2": {
             "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
             "from_outcome": -2, 
-            "from_state": "HMJXNW", 
+            "from_state": "RMZVDZ", 
             "to_outcome": null, 
-            "to_state": "BEGSOW", 
+            "to_state": "GVSRTS", 
             "transition_id": 2
         }, 
         "3": {
             "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
             "from_outcome": 0, 
-            "from_state": "HMJXNW", 
+            "from_state": "RMZVDZ", 
             "to_outcome": null, 
-            "to_state": "DDSVOQ", 
+            "to_state": "KRAQEG", 
             "transition_id": 3
         }, 
         "4": {
             "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
             "from_outcome": 0, 
-            "from_state": "BEGSOW", 
-            "to_outcome": null, 
-            "to_state": "DDSVOQ", 
+            "from_state": "KRAQEG", 
+            "to_outcome": 0, 
+            "to_state": "XXNAFO", 
             "transition_id": 4
         }, 
         "5": {
             "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
             "from_outcome": 0, 
-            "from_state": "DDSVOQ", 
-            "to_outcome": 0, 
-            "to_state": "LGQFZM", 
+            "from_state": "GVSRTS", 
+            "to_outcome": null, 
+            "to_state": "KRAQEG", 
             "transition_id": 5
         }
     }
