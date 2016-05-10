@@ -287,7 +287,8 @@ class GraphicalEditorController(ExtendedController):
 
             if method_name == 'state_execution_status':
                 state_v = self.canvas.get_view_for_model(model)
-                self.canvas.request_update(state_v, matrix=False)
+                if state_v:  # Children of LibraryStates are not modeled, yet
+                    self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'add_state':
                 if self._change_state_type:
                     return
