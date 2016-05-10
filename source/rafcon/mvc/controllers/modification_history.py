@@ -219,7 +219,7 @@ class ModificationHistoryTreeController(ExtendedController):
             parameters = []
             if action.before_overview['type'] == 'signal':
                 # logger.info(action.before_overview._overview_dict)
-                parameters.append(str(action.before_overview['model'][-1].meta))
+                parameters.append(str(action.meta))
             else:
                 for index, value in enumerate(action.before_overview['args'][-1]):
                     if not index == 0:
