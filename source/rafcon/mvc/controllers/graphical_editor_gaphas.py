@@ -238,30 +238,21 @@ class GraphicalEditorController(ExtendedController):
     def _meta_data_changed(self, view, model, name, affects_children):
         msg = MetaSignalMsg('graphical_editor_gaphas', name, affects_children)
         model.meta_signal.emit(msg)
-        # logger.info("meta data '{0}' of model '{1}' changed".format(name, model))
-        # History.meta_changed_notify_after(self, model, name, affects_children)
 
-    # @ExtendedController.observe("meta_signal", signal=True)  # meta data of root_state_model changed -> not possible -> this controller is not observing the root_state
     @ExtendedController.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
     def meta_changed_notify_after(self, changed_model, prop_name, info):
         from rafcon.mvc.utils.notification_overview import NotificationOverview
         overview = NotificationOverview(info, False, self.__class__.__name__)
-        # logger.info("meta_changed: \n{0}".format(overview))
-        # try to do general update
         if 'redo' in overview['meta_signal'][-1]['origin'] or 'undo' in overview['meta_signal'][-1]['origin']:
-            # logger.info("meta_changed: \n{0}".format(default_overview))
-            # logger.info("update_view")
-            # self.update_view()
-            # and try to do specific update
             if isinstance(overview['model'][-1], AbstractStateModel):
                 state_m = overview['model'][-1]
-                logger.info("update_state {}".format(state_m.state.get_path()))
+                # logger.info("update_state {}".format(state_m.state.get_path()))
             elif isinstance(overview['model'][-1], StateMachineModel):
                 state_m = overview['model'][-1].root_state
-                logger.info("update_root_state {}".format(state_m.state.get_path()))
+                # logger.info("update_root_state {}".format(state_m.state.get_path()))
             else:
                 state_m = overview['model'][-1].parent
-                logger.info("update_parent_state".format(state_m.state.get_path()))
+                # logger.info("update_parent_state".format(state_m.state.get_path()))
             state_v = self.canvas.get_view_for_model(state_m)
             state_v.apply_meta_data()
             self.canvas.request_update(state_v, matrix=True)
