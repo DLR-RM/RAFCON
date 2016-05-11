@@ -1,0 +1,80 @@
+{
+    "gui": {
+        "editor_opengl": {
+            "outcome_pos": {
+                "-1": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1405.1588239519883, 
+                        -923.8054558382358
+                    ]
+                }, 
+                "-2": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1400.7577965259886, 
+                        -923.8054558382358
+                    ]
+                }, 
+                "0": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1407.3593376649883, 
+                        -934.8080244032354
+                    ]
+                }
+            }, 
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    10.896772296312975, 
+                    -3.0762310718236137
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    2.7466754390108084, 
+                    2.6527664038246552
+                ]
+            }
+        }
+    }, 
+    "input_data_port1": {
+        "gui": {
+            "editor_opengl": {
+                "outer_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1389.1535641710136, 
+                        -948.0111066812349
+                    ]
+                }, 
+                "outer_connector_radius": 0.4584403568749798
+            }
+        }
+    }, 
+    "input_data_port3": {
+        "gui": {
+            "editor_opengl": {
+                "outer_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1389.1535641710136, 
+                        -952.0453818217347
+                    ]
+                }, 
+                "outer_connector_radius": 0.4584403568749798
+            }
+        }
+    }, 
+    "outcome-1": {
+        "gui": {}
+    }, 
+    "outcome-2": {
+        "gui": {}
+    }, 
+    "outcome0": {
+        "gui": {}
+    }
+}

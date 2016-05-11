@@ -1,0 +1,80 @@
+{
+    "gui": {
+        "editor_opengl": {
+            "outcome_pos": {
+                "-1": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1461.3340812387185, 
+                        -721.7248866037692
+                    ]
+                }, 
+                "-2": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1456.9330538127188, 
+                        -721.7248866037692
+                    ]
+                }, 
+                "0": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1463.5345949517184, 
+                        -732.7274551687688
+                    ]
+                }
+            }, 
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    14.896685789168174, 
+                    -3.8306956085984623
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    3.870040671927985, 
+                    3.308338576680023
+                ]
+            }
+        }
+    }, 
+    "input_data_port2": {
+        "gui": {
+            "editor_opengl": {
+                "outer_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1445.3288214577437, 
+                        -745.9305374467682
+                    ]
+                }, 
+                "outer_connector_radius": 0.4584403568749798
+            }
+        }
+    }, 
+    "outcome-1": {
+        "gui": {}
+    }, 
+    "outcome-2": {
+        "gui": {}
+    }, 
+    "outcome0": {
+        "gui": {}
+    }, 
+    "output_data_port3": {
+        "gui": {
+            "editor_opengl": {
+                "outer_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1454.4960940668523, 
+                        -749.964812587268
+                    ]
+                }, 
+                "outer_connector_radius": 0.4584403568749798
+            }
+        }
+    }
+}

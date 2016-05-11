@@ -1,0 +1,47 @@
+{
+    "gui": {
+        "editor_opengl": {
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    100, 
+                    100
+                ]
+            }
+        }
+    }, 
+    "outcome-1": {}, 
+    "outcome-2": {}, 
+    "outcome0": {}, 
+    "outcome1": {}, 
+    "transition1": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }, 
+            "editor_opengl": {
+                "waypoints": {}
+            }
+        }
+    }, 
+    "transition2": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }, 
+            "editor_opengl": {
+                "waypoints": {}
+            }
+        }
+    }, 
+    "transition5": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }, 
+            "editor_opengl": {
+                "waypoints": {}
+            }
+        }
+    }
+}
