@@ -541,7 +541,7 @@ class LogicPortView(PortView):
     A logic port is either a income our an outcome.
     """
 
-    def draw(self, context, state):
+    def draw(self, context, state, highlight):
         raise NotImplementedError
 
 
@@ -550,7 +550,7 @@ class IncomeView(LogicPortView):
         super(IncomeView, self).__init__(in_port=True, port_side_size=port_side_size, parent=parent,
                                          side=SnappedSide.LEFT)
 
-    def draw(self, context, state):
+    def draw(self, context, state, highlight=False):
         self.draw_port(context, gui_config.gtk_colors['LABEL'], state.transparent)
 
 
@@ -575,8 +575,10 @@ class OutcomeView(LogicPortView):
     def name(self):
         return self.outcome_m.outcome.name
 
-    def draw(self, context, state):
-        if self.outcome_id == -2:
+    def draw(self, context, state, highlight=False):
+        if highlight:
+            fill_color = gui_config.gtk_colors['STATE_ACTIVE']
+        elif self.outcome_id == -2:
             fill_color = gui_config.gtk_colors['PREEMPTED']
         elif self.outcome_id == -1:
             fill_color = gui_config.gtk_colors['ABORTED']
