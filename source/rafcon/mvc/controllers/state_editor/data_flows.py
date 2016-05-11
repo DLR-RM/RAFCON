@@ -419,7 +419,6 @@ class StateDataFlowsListController(ExtendedController):
     def store_debug_log_file(self, string):
         with open(RAFCON_TEMP_PATH_BASE + '/data_flow_widget_debug_log_file.txt', 'a+') as f:
             f.write(string)
-        f.closed
 
     def notification_logs(self, model, prop_name, info):
 

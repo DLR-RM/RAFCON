@@ -54,7 +54,6 @@ class StatemachineExecutionEngine(Observable):
         self.run_to_states = []
         self.state_machine_running = False
 
-    # TODO: pause all external modules
     @Observable.observed
     def pause(self):
         """Set the execution mode to paused
