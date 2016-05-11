@@ -1042,14 +1042,6 @@ class State(Observable, YAMLObject, JSONObject):
         else:
             return True
 
-    # @active.setter
-    # @Observable.observed
-    # def active(self, active):
-    #     if not isinstance(active, bool):
-    #         raise TypeError("active must be of type bool")
-    #
-    #     self._active = active
-
     @property
     def state_execution_status(self):
         """Property for the _state_execution_status field
