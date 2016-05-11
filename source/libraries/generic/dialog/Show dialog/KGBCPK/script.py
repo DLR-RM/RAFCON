@@ -14,9 +14,16 @@ def on_dialog_key_press(dialog, event, key_mapping, buttons):
             buttons[i].clicked()
     pass
 
-def show_dialog(self, event, text, subtext, options, key_mapping, result):
+
+def show_dialog(event, text, subtext, options, key_mapping, result):
     import gtk
+    try:
+        from rafcon.mvc.singleton import main_window_controller
+    except ImportError:
+        main_window_controller = None
     dialog = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
+    if main_window_controller:
+        dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_geometry_hints(min_width=700)
     result[1] = dialog
     text = "<span size='50000'>" + text + "</span>"
@@ -62,10 +69,10 @@ def show_dialog(self, event, text, subtext, options, key_mapping, result):
     result[0] = res
     event.set()
 
+
 def execute(self, inputs, outputs, gvm):
     import gobject
-    import threading
-    
+
     # self_preempted is a threading.Event object
     event = self._preempted
     result = [None, None]  # first entry is the dialog return value, second one is the dialog object
@@ -75,7 +82,7 @@ def execute(self, inputs, outputs, gvm):
     options = inputs['options']
     key_mapping = inputs['key_mapping']
     
-    gobject.idle_add(show_dialog, self, event, text, subtext, options, key_mapping, result)
+    gobject.idle_add(show_dialog, event, text, subtext, options, key_mapping, result)
     
     # Event is either set by the dialog or by an external preemption request
     event.wait()
