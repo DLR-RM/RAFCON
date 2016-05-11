@@ -11,13 +11,12 @@
 import gtk
 import gobject
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-from rafcon.utils import log
 
 from rafcon.mvc import singleton as mvc_singleton
 
-
+from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 # TODO Comment

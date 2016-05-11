@@ -1,25 +1,20 @@
-from rafcon_server.mvc.models.connection_manager import ConnectionManagerModel
+import os
 
 from rafcon.network.protobuf import yaml_transmission_pb2
 from rafcon.network.network_config import global_net_config
+import gtk
+from twisted.internet import reactor
 
+from rafcon_server.mvc.models.connection_manager import ConnectionManagerModel
 from rafcon.utils import filesystem
 from rafcon.utils import constants
 from rafcon.utils import storage_utils
-
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine import interface
 from rafcon.statemachine.storage.storage import StateMachineStorage
 from rafcon.statemachine.singleton import global_storage, state_machine_execution_engine, state_machine_manager
 from rafcon.statemachine.enums import StateMachineExecutionStatus
-
-from rafcon.mvc import singleton  # Keep for loading statemachines from folder
-from rafcon.mvc.controllers.extended_controller import ExtendedController
-
-import gtk
-import os
-from twisted.internet import reactor
-
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

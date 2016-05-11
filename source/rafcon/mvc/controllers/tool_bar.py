@@ -8,7 +8,7 @@
 
 """
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc import singleton as mvc_singleton
 from rafcon.utils import log
 

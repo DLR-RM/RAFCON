@@ -10,13 +10,14 @@
 
 import gtk
 from gtk import ListStore
-from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.models.container_state import ContainerStateModel
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.utils import log
 
+from rafcon.statemachine.states.library_state import LibraryState
+
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
+from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.utils.comparison import compare_variables
+from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 

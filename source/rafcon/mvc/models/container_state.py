@@ -82,7 +82,6 @@ class ContainerStateModel(StateModel):
                 diff_states.append(len(self.states) == len(other.states))
             except KeyError:
                 return False
-            print other.states.keys()
             return all(diff_states) and self.state == other.state and self.meta == other.meta
         else:
             return False

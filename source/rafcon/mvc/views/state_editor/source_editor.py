@@ -1,6 +1,7 @@
 import gtk
+
 from rafcon.mvc.utils import constants
-from rafcon.mvc.views.editor import EditorView, gtksourceview2
+from rafcon.mvc.views.utils.editor import EditorView, gtksourceview2
 
 
 class SourceEditorView(EditorView):

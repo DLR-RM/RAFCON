@@ -11,16 +11,13 @@
 
 import gtk
 import gobject
-import threading
 
 import rafcon
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.statemachine.state_machine_manager import StateMachineManager
 from rafcon.statemachine.execution.execution_history import ConcurrencyItem, CallItem
 from rafcon.utils import log
-
 from rafcon.statemachine.singleton import state_machine_execution_engine
-
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
 logger = log.get_logger(__name__)

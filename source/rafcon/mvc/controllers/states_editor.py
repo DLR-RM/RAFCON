@@ -11,23 +11,21 @@
 
 import gtk
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.controllers.state_editor import StateEditorController
-
-from rafcon.mvc.views.state_editor import StateEditorView
-
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.controllers.state_editor.state_editor import StateEditorController
+from rafcon.mvc.views.state_editor.state_editor import StateEditorView
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.models.abstract_state import AbstractStateModel
-
 from rafcon.mvc.selection import Selection
+
 from rafcon.mvc.config import global_gui_config
 
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.mvc.utils import constants, helpers
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS as EXECUTION_TRIGGERED_METHODS
-
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 STATE_NAME_MAX_CHARS = 16

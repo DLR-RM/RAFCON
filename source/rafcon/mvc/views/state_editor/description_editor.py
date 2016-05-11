@@ -1,4 +1,4 @@
-from rafcon.mvc.views.editor import EditorView, gtksourceview2
+from rafcon.mvc.views.utils.editor import EditorView, gtksourceview2
 
 
 class DescriptionEditorView(EditorView):

@@ -8,9 +8,9 @@
 
 """
 
-from rafcon.mvc.controllers.editor import EditorController
 from rafcon.statemachine.states.library_state import LibraryState
 
+from rafcon.mvc.controllers.utils.editor import EditorController
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

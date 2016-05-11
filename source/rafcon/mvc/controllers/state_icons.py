@@ -10,15 +10,13 @@
 
 import gtk
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
-
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 
 import rafcon.mvc.statemachine_helper as statemachine_helper
-
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

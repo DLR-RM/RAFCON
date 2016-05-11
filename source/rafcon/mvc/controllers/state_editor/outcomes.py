@@ -12,12 +12,14 @@
 import gtk
 import gobject
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.models.container_state import ContainerStateModel
-from rafcon.mvc.statemachine_helper import insert_self_transition_meta_data
 from rafcon.statemachine.states.library_state import LibraryState
 
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.models.container_state import ContainerStateModel
+from rafcon.mvc.statemachine_helper import insert_self_transition_meta_data
+
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 

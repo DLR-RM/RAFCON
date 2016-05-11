@@ -8,21 +8,22 @@
 
 """
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.controllers.state_overview import StateOverviewController
-from rafcon.mvc.controllers.source_editor import SourceEditorController
-from rafcon.mvc.controllers.description_editor import DescriptionEditorController
-from rafcon.mvc.controllers.io_data_port_list import DataPortListController
-from rafcon.mvc.controllers.scoped_variable_list import ScopedVariableListController
-from rafcon.mvc.controllers.state_outcomes import StateOutcomesEditorController
-from rafcon.mvc.controllers.linkage_overview import LinkageOverviewController
+from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.mvc.controllers.state_transitions import StateTransitionsEditorController
-from rafcon.mvc.controllers.state_data_flows import StateDataFlowsEditorController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.controllers.state_editor.overview import StateOverviewController
+from rafcon.mvc.controllers.state_editor.source_editor import SourceEditorController
+from rafcon.mvc.controllers.state_editor.description_editor import DescriptionEditorController
+from rafcon.mvc.controllers.state_editor.io_data_port_list import DataPortListController
+from rafcon.mvc.controllers.state_editor.scoped_variable_list import ScopedVariableListController
+from rafcon.mvc.controllers.state_editor.outcomes import StateOutcomesEditorController
+from rafcon.mvc.controllers.state_editor.linkage_overview import LinkageOverviewController
+from rafcon.mvc.controllers.state_editor.transitions import StateTransitionsEditorController
+from rafcon.mvc.controllers.state_editor.data_flows import StateDataFlowsEditorController
+
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc import gui_helper
 from rafcon.mvc.config import global_gui_config
-from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.mvc.utils import constants
 from rafcon.utils import log
 

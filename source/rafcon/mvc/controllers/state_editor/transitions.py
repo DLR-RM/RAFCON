@@ -12,15 +12,16 @@
 import gtk
 import gobject
 
-from rafcon.mvc.models.container_state import ContainerStateModel
-from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.utils.notification_overview import NotificationOverview
-
 from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.utils import log
-from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
+from rafcon.mvc.models.container_state import ContainerStateModel
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.utils.notification_overview import NotificationOverview
+
 from rafcon.mvc.gui_helper import format_cell
+
+from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
+from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 

@@ -8,15 +8,16 @@
 
 """
 
-import gtk
 import os
+
+import gtk
 from pylint import epylint as lint
 
-from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
-
-from rafcon.mvc.controllers.editor import EditorController
 from rafcon.statemachine.states.library_state import LibraryState
 
+from rafcon.mvc.controllers.utils.editor import EditorController
+
+from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

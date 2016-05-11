@@ -1,15 +1,15 @@
-import gtk
 from gtkmvc import View
-from rafcon.mvc.views.source_editor import SourceEditorView
-from rafcon.mvc.views.description_editor import DescriptionEditorView
-from rafcon.mvc.views.state_outcomes import StateOutcomesEditorView
-from rafcon.mvc.views.state_overview import StateOverviewView
-from rafcon.mvc.views.input_port_list import InputPortsListView
-from rafcon.mvc.views.output_port_list import OutputPortsListView
-from rafcon.mvc.views.scoped_variables_list import ScopedVariablesListView
-from rafcon.mvc.views.state_transitions import StateTransitionsEditorView
-from rafcon.mvc.views.state_data_flows import StateDataFlowsEditorView
-from rafcon.mvc.views.linkage_overview import LinkageOverviewView
+
+from rafcon.mvc.views.state_editor.source_editor import SourceEditorView
+from rafcon.mvc.views.state_editor.description_editor import DescriptionEditorView
+from rafcon.mvc.views.state_editor.outcomes import StateOutcomesEditorView
+from rafcon.mvc.views.state_editor.overview import StateOverviewView
+from rafcon.mvc.views.state_editor.input_port_list import InputPortsListView
+from rafcon.mvc.views.state_editor.output_port_list import OutputPortsListView
+from rafcon.mvc.views.state_editor.scoped_variables_list import ScopedVariablesListView
+from rafcon.mvc.views.state_editor.transitions import StateTransitionsEditorView
+from rafcon.mvc.views.state_editor.data_flows import StateDataFlowsEditorView
+from rafcon.mvc.views.state_editor.linkage_overview import LinkageOverviewView
 from rafcon.mvc.utils import constants
 from rafcon.mvc import gui_helper
 

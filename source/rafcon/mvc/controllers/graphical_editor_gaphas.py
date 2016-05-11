@@ -10,10 +10,14 @@
 
 from functools import partial
 
+from gtk.gdk import ACTION_COPY
+from gtk import DEST_DEFAULT_ALL
+from gaphas.aspect import InMotion, ItemFinder
+
 from rafcon.statemachine.enums import StateType
 
 from rafcon.mvc.clipboard import global_clipboard
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc import statemachine_helper
 
 from rafcon.mvc.models.signals import MetaSignalMsg
@@ -25,21 +29,15 @@ from rafcon.mvc.views.graphical_editor_gaphas import GraphicalEditorView
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 from rafcon.mvc.mygaphas.items.connection import DataFlowView, TransitionView
 from rafcon.mvc.mygaphas import guide
+from rafcon.mvc.mygaphas.canvas import MyCanvas
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
-
-from rafcon.mvc.mygaphas.canvas import MyCanvas
 
 from rafcon.mvc import singleton as mvc_singleton
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-
-from gtk.gdk import ACTION_COPY
-from gtk import DEST_DEFAULT_ALL
-
-from gaphas.aspect import InMotion, ItemFinder
 
 
 class GraphicalEditorController(ExtendedController):

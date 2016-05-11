@@ -11,15 +11,17 @@
 
 import gobject
 from gtk import ListStore, TreeStore
-from rafcon.statemachine.state_elements.scope import ScopedVariable
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.models.container_state import ContainerStateModel
-from rafcon.mvc.utils.notification_overview import NotificationOverview
+from rafcon.statemachine.state_elements.scope import ScopedVariable
 from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.utils import log, type_helpers
+
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.models.container_state import ContainerStateModel
+from rafcon.mvc.utils.notification_overview import NotificationOverview
+
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS, RAFCON_TEMP_PATH_BASE
+from rafcon.utils import log, type_helpers
 
 logger = log.get_logger(__name__)
 PORT_TYPE_TAG = {InputDataPort: 'IP', OutputDataPort: 'OP', ScopedVariable: 'SV'}

@@ -10,19 +10,17 @@
 
 import sys
 import time
-
-from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
+import itertools
+from copy import copy
+from functools import partial
+from math import sin, cos, atan2
 
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
 from gtk.gdk import keyval_name
 from gtk.gdk import ACTION_COPY
 from gtk import DEST_DEFAULT_ALL
 import gobject
-import itertools
-from copy import copy
-from functools import partial
 
-from math import sin, cos, atan2
 from rafcon.statemachine.enums import StateType
 
 from rafcon.mvc.config import global_gui_config
@@ -37,8 +35,9 @@ from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.views.graphical_editor import Direction
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 
+from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

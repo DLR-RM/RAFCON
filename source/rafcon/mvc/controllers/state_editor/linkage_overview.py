@@ -8,16 +8,12 @@
 
 """
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
 from gtkmvc import Model
 
-from rafcon.mvc.controllers.io_data_port_list import DataPortListController
-from rafcon.mvc.controllers.scoped_variable_list import ScopedVariableListController
-from rafcon.mvc.controllers.state_outcomes import StateOutcomesEditorController
-
-
-# from rafcon.utils import log
-# logger = log.get_logger(__name__)
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.controllers.state_editor.io_data_port_list import DataPortListController
+from rafcon.mvc.controllers.state_editor.scoped_variable_list import ScopedVariableListController
+from rafcon.mvc.controllers.state_editor.outcomes import StateOutcomesEditorController
 
 
 class LinkageOverviewController(ExtendedController, Model):
