@@ -15,7 +15,7 @@ logger = log.get_logger(__name__)
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.enums import StateExecutionState
 import rafcon.statemachine.singleton as singleton
-from rafcon.statemachine.enums import MethodName
+from rafcon.statemachine.enums import CallType
 from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 
@@ -63,7 +63,7 @@ class HierarchyState(ContainerState):
                 self.scoped_data = last_history_item.scoped_data
 
             else:  # forward_execution
-                self.execution_history.add_call_history_item(self, MethodName.CALL_CONTAINER_STATE, self)
+                self.execution_history.add_call_history_item(self, CallType.CONTAINER, self)
                 child_state = self.get_start_state(set_final_outcome=True)
                 while child_state is None:
                     child_state = self.handle_no_start_state()
@@ -105,7 +105,7 @@ class HierarchyState(ContainerState):
                     break
 
                 if not self.backward_execution:  # only add history item if it is not a backward execution
-                    self.execution_history.add_call_history_item(child_state, MethodName.EXECUTE, self)
+                    self.execution_history.add_call_history_item(child_state, CallType.EXECUTE, self)
 
                 # logger.debug("Preparing next child state: {0}{1}".format(child_state, " (backwards)" if
                 #              self.backward_execution else ""))
@@ -145,7 +145,7 @@ class HierarchyState(ContainerState):
                 else:
                     self.add_state_execution_output_to_scoped_data(child_state.output_data, child_state)
                     self.update_scoped_variables_with_output_dictionary(child_state.output_data, child_state)
-                    self.execution_history.add_return_history_item(child_state, MethodName.EXECUTE, self)
+                    self.execution_history.add_return_history_item(child_state, CallType.EXECUTE, self)
                     # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
                     transition = self.get_transition_for_outcome(child_state, child_state.final_outcome)
 
@@ -171,7 +171,7 @@ class HierarchyState(ContainerState):
             ########################################################
 
             if not self.backward_execution:
-                self.execution_history.add_return_history_item(self, MethodName.CALL_CONTAINER_STATE, self)
+                self.execution_history.add_return_history_item(self, CallType.CONTAINER, self)
 
             self.write_output_data()
             self.check_output_data_type()

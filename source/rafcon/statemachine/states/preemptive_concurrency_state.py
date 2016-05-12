@@ -14,7 +14,7 @@ import traceback
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.states.concurrency_state import ConcurrencyState
 from rafcon.statemachine.enums import StateExecutionState
-from rafcon.statemachine.enums import MethodName
+from rafcon.statemachine.enums import CallType
 from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -60,7 +60,7 @@ class PreemptiveConcurrencyState(ConcurrencyState):
                 if not self.backward_execution:
                     # care for the history items; this item is only for execution visualization
                     concurrency_history_item.execution_histories[index].add_call_history_item(
-                        state, MethodName.EXECUTE, self)
+                        state, CallType.EXECUTE, self)
                 else:  # backward execution
                     last_history_item = concurrency_history_item.execution_histories[index].pop_last_item()
                     assert isinstance(last_history_item, ReturnItem)
@@ -96,7 +96,7 @@ class PreemptiveConcurrencyState(ConcurrencyState):
                 if not self.backward_execution:
                     state.concurrency_queue = None
                     # add the data of all child states to the scoped data and the scoped variables
-                    state.execution_history.add_return_history_item(state, MethodName.EXECUTE, self)
+                    state.execution_history.add_return_history_item(state, CallType.EXECUTE, self)
                 else:
                     last_history_item = concurrency_history_item.execution_histories[history_index].pop_last_item()
                     assert isinstance(last_history_item, CallItem)
@@ -131,7 +131,7 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             # finalize
             #######################################################
 
-            self.execution_history.add_return_history_item(self, MethodName.CALL_CONTAINER_STATE, self)
+            self.execution_history.add_return_history_item(self, CallType.CONTAINER, self)
             self.write_output_data()
             self.check_output_data_type()
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE

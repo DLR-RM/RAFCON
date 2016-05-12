@@ -10,7 +10,7 @@
 from gtkmvc import Observable
 
 from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.enums import MethodName
+from rafcon.statemachine.enums import CallType
 from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
 from rafcon.statemachine.enums import StateExecutionState
 
@@ -44,7 +44,7 @@ class ConcurrencyState(ContainerState):
             assert isinstance(concurrency_history_item, ConcurrencyItem)
 
         else:  # forward_execution
-            self.execution_history.add_call_history_item(self, MethodName.CALL_CONTAINER_STATE, self)
+            self.execution_history.add_call_history_item(self, CallType.CONTAINER, self)
             concurrency_history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
         return concurrency_history_item
 

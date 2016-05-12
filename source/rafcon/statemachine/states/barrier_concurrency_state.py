@@ -18,7 +18,7 @@ from rafcon.statemachine.enums import StateExecutionState
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
-from rafcon.statemachine.enums import MethodName
+from rafcon.statemachine.enums import CallType
 from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
 
 from rafcon.utils import log
@@ -106,7 +106,7 @@ class BarrierConcurrencyState(ConcurrencyState):
                     if not self.backward_execution:
                         # care for the history items; this item is only for execution visualization
                         concurrency_history_item.execution_histories[history_index].add_call_history_item(
-                            state, MethodName.EXECUTE, self)
+                            state, CallType.EXECUTE, self)
                     else:  # backward execution
                         last_history_item = concurrency_history_item.execution_histories[history_index].pop_last_item()
                         assert isinstance(last_history_item, ReturnItem)
@@ -130,7 +130,7 @@ class BarrierConcurrencyState(ConcurrencyState):
 
                     # care for the history items
                     if not self.backward_execution:
-                        state.execution_history.add_return_history_item(state, MethodName.EXECUTE, self)
+                        state.execution_history.add_return_history_item(state, CallType.EXECUTE, self)
                     else:
                         last_history_item = concurrency_history_item.execution_histories[history_index].pop_last_item()
                         assert isinstance(last_history_item, CallItem)
@@ -195,7 +195,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             # finalize
             #######################################################
 
-            self.execution_history.add_return_history_item(self, MethodName.CALL_CONTAINER_STATE, self)
+            self.execution_history.add_return_history_item(self, CallType.CONTAINER, self)
             self.write_output_data()
             self.check_output_data_type()
             self.output_data['error'] = decider_state_error
