@@ -123,10 +123,10 @@ class HistoryItem:
         self.next = None
 
     def __str__(self):
-        return "History element with reference state name %s (time: %s)\n" % (self.state_reference.name, self.timestamp)
+        return "HistoryItem with reference state name %s (time: %s)\n" % (self.state_reference.name, self.timestamp)
 
 
-class ScriptItem(HistoryItem):
+class ScopedDataItem(HistoryItem):
     """A abstract class to hold different types of method calls/returns.
 
     :ivar method_name: the name of the method for which a history item is created
@@ -141,32 +141,32 @@ class ScriptItem(HistoryItem):
         self.scoped_data = copy.deepcopy(state_for_scoped_data._scoped_data)
 
     def __str__(self):
-        return "ScriptItem %s" % (HistoryItem.__str__(self))
+        return "SingleItem %s" % (HistoryItem.__str__(self))
 
 
-class CallItem(ScriptItem):
+class CallItem(ScopedDataItem):
     """A class to hold-call events of different methods.
 
     """
     def __init__(self, state, prev, method_name, state_for_scoped_data):
-        ScriptItem.__init__(self, state, prev, method_name, state_for_scoped_data)
+        ScopedDataItem.__init__(self, state, prev, method_name, state_for_scoped_data)
 
     def __str__(self):
-        return "CallItem %s" % (ScriptItem.__str__(self))
+        return "CallItem %s" % (ScopedDataItem.__str__(self))
 
 
-class ReturnItem(ScriptItem):
+class ReturnItem(ScopedDataItem):
     """A class to hold return-events of different methods.
 
     """
     def __init__(self, state, prev, method_name, state_for_scoped_data):
-        ScriptItem.__init__(self, state, prev, method_name, state_for_scoped_data)
+        ScopedDataItem.__init__(self, state, prev, method_name, state_for_scoped_data)
 
         self.outcome = None
         self.outcome = state.final_outcome
 
     def __str__(self):
-        return "ReturnItem %s" % (ScriptItem.__str__(self))
+        return "ReturnItem %s" % (ScopedDataItem.__str__(self))
 
 
 class ConcurrencyItem(HistoryItem):

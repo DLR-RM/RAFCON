@@ -39,7 +39,6 @@ class ExecutionHistoryView(View, gtk.ScrolledWindow):
         history_vbox.pack_end(button_box, False, True, 0)
         history_vbox.pack_end(self, True, True, 0)
 
-
         self.add(history_tree)
         self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.show_all()

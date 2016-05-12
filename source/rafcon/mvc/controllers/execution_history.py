@@ -1,32 +1,34 @@
 """
 .. module:: execution_history
    :platform: Unix, Windows
-   :synopsis: A module holds a controller for ExecutionHistoryView (list/tree) and offers information about the
-     execution.
+   :synopsis: A module holding a controller for the ExecutionHistoryView (list/tree) holding information about the
+     execution history
 
-.. moduleauthor:: Sebastian Brunner
+.. moduleauthor:: Matthias Buettner
 
 
 """
 
 import gtk
 import gobject
-import threading
 
 import rafcon
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+
 from rafcon.statemachine.state_machine_manager import StateMachineManager
 from rafcon.statemachine.execution.execution_history import ConcurrencyItem, CallItem
-from rafcon.utils import log
-
 from rafcon.statemachine.singleton import state_machine_execution_engine
-
 from rafcon.statemachine.enums import StateMachineExecutionStatus
+
+from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
+from rafcon.mvc.views.execution_history import ExecutionHistoryView
+
+from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
 
-class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
+class ExecutionHistoryTreeController(ExtendedController):
     """Controller handling the execution history.
 
     :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel model: The state machine manager model,
@@ -37,13 +39,17 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
     """
 
     def __init__(self, model=None, view=None, state_machine_manager=None):
-        ExtendedController.__init__(self, model, view)
-        self.history_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT)
-        self.history_tree = view['history_tree']
-        self.history_tree.set_model(self.history_tree_store)
 
+        assert isinstance(model, StateMachineManagerModel)
+        assert isinstance(view, ExecutionHistoryView)
         assert isinstance(state_machine_manager, StateMachineManager)
         self.state_machine_manager = state_machine_manager
+
+        ExtendedController.__init__(self, model, view)
+        self.history_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT)
+        # a TreeView
+        self.history_tree = view['history_tree']
+        self.history_tree.set_model(self.history_tree_store)
 
         view['reload_button'].connect('clicked', self.reload_history)
         view['clean_button'].connect('clicked', self.clean_history)
@@ -60,6 +66,7 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
     def register_view(self, view):
         self.history_tree.connect('button_press_event', self.right_click)
 
+    # TODO: unused
     def switch_state_machine_execution_manager_model(self, new_state_machine_execution_engine):
         """
         Switch the state machine execution engine model to observe.
@@ -71,7 +78,8 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
         self.observe_model(self.state_machine_execution_model)
 
     def right_click(self, widget, event=None):
-        """Triggered when right click is pressed in the history tree.
+        """Triggered when right click is pressed in the history tree. The method shows all scoped data for an execution
+        step as tooltip.
         """
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             x = int(event.x)
@@ -149,7 +157,8 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
 
         # in case the length of the items list was changed by others
         if len(execution_history_items) < self._start_idx:
-            self._start_idx = 0
+            raise RuntimeError("This should not happen! len(execution_history_items) < self._start_idx")
+            # self._start_idx = 0
 
         for item in execution_history_items[self._start_idx:]:
             if isinstance(item, ConcurrencyItem):
@@ -159,10 +168,10 @@ class ExecutionHistoryTreeController(ExtendedController):  # (Controller):
             else:
                 self.insert_rec(None, item.state_reference.name + " - Return", None, item.scoped_data)
 
-    def insert_rec(self, parent, history_item_name, history_item_children, history_item_scoped_data):
+    def insert_rec(self, parent, history_item_name, children_execution_histories, history_item_scoped_data):
         tree_item = self.history_tree_store.insert_after(parent, None, (history_item_name, history_item_scoped_data))
-        if isinstance(history_item_children, dict):
-            for child_history_number, child_history in history_item_children.iteritems():
+        if isinstance(children_execution_histories, dict):
+            for child_history_number, child_history in children_execution_histories.iteritems():
                 for item in child_history.history_items:
                     if isinstance(item, ConcurrencyItem):
                         self.insert_rec(tree_item, item.state_reference.name, item.execution_histories, None)
