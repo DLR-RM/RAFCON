@@ -1,10 +1,10 @@
 """
 .. module:: execution_history
    :platform: Unix, Windows
-   :synopsis: A module holding a controller for the ExecutionHistoryView (list/tree) holding information about the
-     execution history
+   :synopsis: A module holding a controller for the ExecutionHistoryView holding information about the
+     execution history in a execution tree
 
-.. moduleauthor:: Matthias Buettner
+.. moduleauthor:: Sebastian Brunner
 
 
 """
@@ -18,8 +18,9 @@ from rafcon.statemachine.state_machine_manager import StateMachineManager
 from rafcon.statemachine.execution.execution_history import ConcurrencyItem, CallItem
 from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.enums import StateMachineExecutionStatus
+from rafcon.statemachine.enums import CallType
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.views.execution_history import ExecutionHistoryView
 
@@ -109,23 +110,17 @@ class ExecutionHistoryTreeController(ExtendedController):
                 popup_menu.popup(None, None, None, event.button, time)
             return True
 
-    # @ExtendedController.observe("execution_history", after=True)
+    # TODO: implement! To do this efficiently a mechanism is needed that does not regenerate the whole tree view
+    # TODO: the appropriate statemachine would have to be observed as well
+    # @ExtendedController.observe("execution_history_container", after=True)
     # def model_changed(self, model, prop_name, info):
-    #     logger.warning("execution_history changed")
-    #     print info
-    #     #self.update()  # TODO: only update when execution mode is not RUNNING (while running history not interesting)
-    #                     # TODO: update when finished RUNNING all states or other state activated
+    #     #self.update()
 
     @ExtendedController.observe("execution_engine", after=True)
     def execution_history_focus(self, model, prop_name, info):
         """ Arranges to put execution-history widget page to become top page in notebook when execution starts and stops
         and resets the boolean of modification_history_was_focused to False each time this notification are observed.
         """
-        # from rafcon.mvc.utils.notification_overview import NotificationOverview
-        # overview = NotificationOverview(info)
-        # logger.info("execution_engine runs method '{1}' and has status {0}"
-        #             "".format(str(state_machine_execution_engine.status.execution_mode).split('.')[-1],
-        #                       overview['method_name'][-1]))
         if state_machine_execution_engine.status.execution_mode in \
                 [StateMachineExecutionStatus.STARTED, StateMachineExecutionStatus.STOPPED]:
             if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):
@@ -140,8 +135,7 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         Empties the execution history tree by adjusting the start index and updates tree store and view.
         """
-        active_sm = self.state_machine_manager.get_active_state_machine()
-        self._start_idx = len(active_sm.execution_history.history_items)
+        self.state_machine_manager.get_active_state_machine().execution_history_container.clean_execution_histories()
         self.update()
 
     def reload_history(self, widget, event=None):
@@ -153,29 +147,57 @@ class ExecutionHistoryTreeController(ExtendedController):
         active_sm = self.state_machine_manager.get_active_state_machine()
         if not active_sm:
             return
-        execution_history_items = active_sm.execution_history.history_items
 
-        # in case the length of the items list was changed by others
-        if len(execution_history_items) < self._start_idx:
-            raise RuntimeError("This should not happen! len(execution_history_items) < self._start_idx")
-            # self._start_idx = 0
+        execution_history_container = active_sm.execution_history_container
 
-        for item in execution_history_items[self._start_idx:]:
-            if isinstance(item, ConcurrencyItem):
-                self.insert_rec(None, item.state_reference.name, item.execution_histories, None)
-            elif isinstance(item, CallItem):
-                self.insert_rec(None, item.state_reference.name + " - Call", None, item.scoped_data)
-            else:
-                self.insert_rec(None, item.state_reference.name + " - Return", None, item.scoped_data)
+        for execution_history in execution_history_container.execution_histories:
+            if len(execution_history.history_items) > 0:
+                history_item = execution_history.history_items[0]
+                tree_item = self.history_tree_store.insert_after(
+                    None, None, (history_item.state_reference.name, history_item.scoped_data))
+                self.insert_recursively(tree_item, execution_history.history_items, 1)
 
-    def insert_rec(self, parent, history_item_name, children_execution_histories, history_item_scoped_data):
-        tree_item = self.history_tree_store.insert_after(parent, None, (history_item_name, history_item_scoped_data))
-        if isinstance(children_execution_histories, dict):
-            for child_history_number, child_history in children_execution_histories.iteritems():
-                for item in child_history.history_items:
-                    if isinstance(item, ConcurrencyItem):
-                        self.insert_rec(tree_item, item.state_reference.name, item.execution_histories, None)
-                    elif isinstance(item, CallItem):
-                        self.insert_rec(tree_item, item.state_reference.name + " - Call", None, item.scoped_data)
+    def insert_recursively(self, parent, execution_items, index):
+        if index >= len(execution_items):
+            return
+        history_item = execution_items[index]
+        new_index = index + 1
+        if isinstance(history_item, ConcurrencyItem):
+            # do not create tree item to avoid duplicate hierarchies
+            # tree_item = self.history_tree_store.insert_before(parent, None, (history_item.state_reference.name, None))
+            self.insert_concurrency(parent, history_item.execution_histories)
+        else:
+            if isinstance(history_item, CallItem):
+                tree_item = self.history_tree_store.insert_before(
+                    parent, None, (history_item.state_reference.name + " - Call", history_item.scoped_data))
+                if history_item.call_type is CallType.EXECUTE:
+                    # jump over the next call history item with call type CONTAINER to avoid duplicate tree entries
+                    if len(execution_items) > index + 1:
+                        next_history_item = execution_items[index + 1]
+                        if next_history_item.call_type is CallType.CONTAINER:
+                            self.insert_recursively(tree_item, execution_items, new_index + 1)
+                        else:
+                            self.insert_recursively(parent, execution_items, new_index)
                     else:
-                        self.insert_rec(tree_item, item.state_reference.name + " - Return", None, item.scoped_data)
+                        self.insert_recursively(parent, execution_items, new_index)
+
+                else:
+                    self.insert_recursively(tree_item, execution_items, new_index)
+            else:  # history_item is ReturnItem
+                tree_item = self.history_tree_store.insert_before(
+                    parent, None, (history_item.state_reference.name + " - Return", history_item.scoped_data))
+                if history_item.call_type is CallType.EXECUTE:
+                    self.insert_recursively(parent, execution_items, new_index)
+                else:
+                    self.insert_recursively(self.history_tree_store.iter_parent(parent), execution_items, new_index)
+
+    def insert_concurrency(self, parent, children_execution_histories):
+        assert isinstance(children_execution_histories, dict)
+        for child_history_number, child_history in children_execution_histories.iteritems():
+            if len(child_history.history_items) >= 1:
+                first_history_item = child_history.history_items[0]
+                # comment this item out to avoid duplicate hierarchies
+                # tree_item = self.history_tree_store.insert_before(
+                #     parent, None, (first_history_item.state_reference.name + " - Concurrency Branch", first_history_item.scoped_data))
+                self.insert_recursively(parent, child_history.history_items, 1)
+

@@ -10,7 +10,7 @@
 import time
 import copy
 
-from rafcon.statemachine.enums import MethodName
+from rafcon.statemachine.enums import CallType
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -127,7 +127,7 @@ class HistoryItem:
 
 
 class ScopedDataItem(HistoryItem):
-    """A abstract class to hold different types of method calls/returns.
+    """A abstract class to represent history items which contains the scoped data of a state
 
     :ivar method_name: the name of the method for which a history item is created
     :ivar state_for_scoped_data: the state of which the scoped data will be stored as the context data that is necessary
@@ -137,7 +137,7 @@ class ScopedDataItem(HistoryItem):
 
     def __init__(self, state, prev, method_name, state_for_scoped_data):
         HistoryItem.__init__(self, state, prev)
-        self.method_name = method_name
+        self.call_type = method_name
         self.scoped_data = copy.deepcopy(state_for_scoped_data._scoped_data)
 
     def __str__(self):
@@ -145,7 +145,7 @@ class ScopedDataItem(HistoryItem):
 
 
 class CallItem(ScopedDataItem):
-    """A class to hold-call events of different methods.
+    """A history item to represent a state call
 
     """
     def __init__(self, state, prev, method_name, state_for_scoped_data):
@@ -155,8 +155,19 @@ class CallItem(ScopedDataItem):
         return "CallItem %s" % (ScopedDataItem.__str__(self))
 
 
+# class CallItemRoot(CallItem):
+#     """A history item to represent a root state call
+#
+#     """
+#     def __init__(self, state, prev, method_name, state_for_scoped_data):
+#         CallItem.__init__(self, state, prev, method_name, state_for_scoped_data)
+#
+#     def __str__(self):
+#         return "CallItemRoot %s" % (ScopedDataItem.__str__(self))
+
+
 class ReturnItem(ScopedDataItem):
-    """A class to hold return-events of different methods.
+    """A history item to represent the return of a root state call
 
     """
     def __init__(self, state, prev, method_name, state_for_scoped_data):
@@ -167,6 +178,17 @@ class ReturnItem(ScopedDataItem):
 
     def __str__(self):
         return "ReturnItem %s" % (ScopedDataItem.__str__(self))
+
+
+# class ReturnItemRoot(ReturnItem):
+#     """A history item to represent the return of a root state call
+#
+#     """
+#     def __init__(self, state, prev, method_name, state_for_scoped_data):
+#         ReturnItem.__init__(self, state, prev, method_name, state_for_scoped_data)
+#
+#     def __str__(self):
+#         return "ReturnItemRoot %s" % (ScopedDataItem.__str__(self))
 
 
 class ConcurrencyItem(HistoryItem):
@@ -182,3 +204,19 @@ class ConcurrencyItem(HistoryItem):
 
     def __str__(self):
         return "ConcurrencyItem %s" % (HistoryItem.__str__(self))
+
+
+class ExecutionHistoryContainer:
+    """ A class to hold several execution histories
+
+    """
+
+    def __init__(self):
+        self.execution_histories = []
+
+    def add_execution_history(self, execution_history):
+        self.execution_histories.append(execution_history)
+
+    def clean_execution_histories(self):
+        del self.execution_histories
+        self.execution_histories = []
