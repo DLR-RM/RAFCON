@@ -12,16 +12,17 @@ import traceback
 
 from gtkmvc import Observable
 
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.states.concurrency_state import ConcurrencyState
 from rafcon.statemachine.enums import StateExecutionState
-from rafcon.statemachine.execution.execution_history import ConcurrencyItem
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
+from rafcon.statemachine.enums import MethodName
+from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
+
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 class BarrierConcurrencyState(ConcurrencyState):
@@ -31,6 +32,21 @@ class BarrierConcurrencyState(ConcurrencyState):
         Note: In the backward execution case the decider state does not have to be backward executed, as it only
         decides the outcome of the barrier concurrency state. In a backward execution the logic flow obviously already
         exists.
+
+        The order of history items for the concurrency state is:
+        Call - Concurrency - Return
+        and for the backward case:
+        Return - Concurrency - Call
+
+        For the children of the concurrency state the history items are:
+        In the forward case:
+            Call: Before calling the child
+            Return: After executing the child
+        In the backward case:
+            Pop Return: Before backward executing the child
+            Pop Call: After backward executing the child
+
+        The decider state is not considered in the backward execution case.
 
     """
     yaml_tag = u'!BarrierConcurrencyState'
@@ -68,67 +84,70 @@ class BarrierConcurrencyState(ConcurrencyState):
         """
         logger.debug("Starting execution of {0}{1}".format(self, " (backwards)" if self.backward_execution else ""))
         self.setup_run()
-        # data to be accessed by the decider
+
+        # data to be accessed by the decider state
         child_errors = {}
         final_outcomes_dict = {}
         decider_state = self.states[UNIQUE_DECIDER_STATE_ID]
 
         try:
 
+            concurrency_history_item = self.setup_forward_or_backward_execution()
+
             #######################################################
             # start child threads
             #######################################################
 
-            if self.backward_execution:
-                history_item = self.execution_history.get_last_history_item()
-                assert isinstance(history_item, ConcurrencyItem)
-                # history_item.state_reference must be "self" in this case
-
-            else:  # forward_execution
-                history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
-
             self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
-            # start all threads
-            for key, state in self.states.iteritems():
-                # skip the decider state
-                if key is not decider_state.state_id:
+
+            for history_index, state in enumerate(self.states.itervalues()):
+                # do not execute the decider state yet
+                if state is not decider_state:
+                    if not self.backward_execution:
+                        # care for the history items; this item is only for execution visualization
+                        concurrency_history_item.execution_histories[history_index].add_call_history_item(
+                            state, MethodName.EXECUTE, self)
+                    else:  # backward execution
+                        last_history_item = concurrency_history_item.execution_histories[history_index].pop_last_item()
+                        assert isinstance(last_history_item, ReturnItem)
                     state_input = self.get_inputs_for_state(state)
                     state_output = self.create_output_dictionary_for_state(state)
                     state.input_data = state_input
                     state.output_data = state_output
-
-            for history_index, state in enumerate(self.states.itervalues()):
-                state.start(history_item.execution_histories[history_index], self.backward_execution)
+                    state.start(concurrency_history_item.execution_histories[history_index], self.backward_execution)
 
             #######################################################
             # wait for all child threads to finish
             #######################################################
 
-            for key, state in self.states.iteritems():
+            for history_index, state in enumerate(self.states.itervalues()):
                 # skip the decider state
-                if key is not decider_state.state_id:
+                if state is not decider_state:
                     state.join()
+                    state.state_execution_status = StateExecutionState.INACTIVE
                     self.add_state_execution_output_to_scoped_data(state.output_data, state)
                     self.update_scoped_variables_with_output_dictionary(state.output_data, state)
-                    state.state_execution_status = StateExecutionState.INACTIVE
-                    # save the errors of the child state executions
+
+                    # care for the history items
+                    if not self.backward_execution:
+                        state.execution_history.add_return_history_item(state, MethodName.EXECUTE, self)
+                    else:
+                        last_history_item = concurrency_history_item.execution_histories[history_index].pop_last_item()
+                        assert isinstance(last_history_item, CallItem)
+
+                    # save the errors of the child state executions for the decider state
                     if 'error' in state.output_data:
                         child_errors[state.state_id] = (state.name, state.output_data['error'])
                     final_outcomes_dict[state.state_id] = (state.name, state.final_outcome)
 
-            # in the backward executing case, only backward execute the entry function and return
+            #######################################################
+            # handle backward execution case
+            #######################################################
+
             if len(self.states) > 0:
                 first_state = self.states.itervalues().next()
                 if first_state.backward_execution:
-                    # backward_execution needs to be True to signal the parent container state the backward execution
-                    self.backward_execution = True
-                    # pop the ConcurrencyItem as we are leaving the barrier concurrency state
-                    last_history_item = self.execution_history.pop_last_item()
-                    assert isinstance(last_history_item, ConcurrencyItem)
-
-                    # do not write the output of the entry script
-                    self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-                    return self.finalize()
+                    return self.finalize_backward_execution()
                 else:
                     self.backward_execution = False
 
@@ -156,12 +175,15 @@ class BarrierConcurrencyState(ConcurrencyState):
             self.add_state_execution_output_to_scoped_data(decider_state.output_data, decider_state)
             self.update_scoped_variables_with_output_dictionary(decider_state.output_data, decider_state)
 
-            # transition calculation
+            #######################################################
+            # handle no transition
+            #######################################################
+
             transition = self.get_transition_for_outcome(decider_state, decider_state.final_outcome)
 
             if transition is None:
                 transition = self.handle_no_transition(decider_state)
-            # it the transition is still None, then the child_state was preempted or aborted, in this case return
+            # if the transition is still None, then the child_state was preempted or aborted, in this case return
             decider_state.state_execution_status = StateExecutionState.INACTIVE
             if transition is None:
                 # this is the case if the user stops the sm execution, this will be caught at the end of the run method
@@ -170,18 +192,17 @@ class BarrierConcurrencyState(ConcurrencyState):
             outcome = self.outcomes[transition.to_outcome]
 
             #######################################################
-            # decider execution finished
+            # finalize
             #######################################################
 
+            self.execution_history.add_return_history_item(self, MethodName.CALL_CONTAINER_STATE, self)
             self.write_output_data()
             self.check_output_data_type()
             self.output_data['error'] = decider_state_error
-
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
 
             if self.preempted:
                 outcome = Outcome(-2, "preempted")
-
             return self.finalize(outcome)
 
         except Exception, e:
@@ -221,8 +242,8 @@ class BarrierConcurrencyState(ConcurrencyState):
 
     # @Observable.observed
     # def remove_transition(self, transition_id, force=False):
-    #     """ Overwrite the parent class remove_transition method by checking if the user tries to delete a transition of
-    #     a non decider state and prevents the operation in this case.
+    #     """ Overwrite the parent class remove_transition method by checking if the user tries to delete a transition
+    #     of a non decider state and prevents the operation in this case.
     #
     #     :param transition_id: the id of the transition to remove
     #     :return:

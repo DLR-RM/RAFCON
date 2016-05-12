@@ -10,6 +10,9 @@
 from gtkmvc import Observable
 
 from rafcon.statemachine.states.container_state import ContainerState
+from rafcon.statemachine.enums import MethodName
+from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
+from rafcon.statemachine.enums import StateExecutionState
 
 
 class ConcurrencyState(ContainerState):
@@ -29,6 +32,36 @@ class ConcurrencyState(ContainerState):
 
     def _check_start_transition(self, start_transition):
         return False, "No start transitions are allowed in concurrency state"
+
+    def setup_forward_or_backward_execution(self):
+        if self.backward_execution:
+            # pop the return item of this concurrency state to get the correct scoped data
+            last_history_item = self.execution_history.pop_last_item()
+            assert isinstance(last_history_item, ReturnItem)
+            self.scoped_data = last_history_item.scoped_data
+            # get the concurrency item for the children execution historys
+            concurrency_history_item = self.execution_history.get_last_history_item()
+            assert isinstance(concurrency_history_item, ConcurrencyItem)
+
+        else:  # forward_execution
+            self.execution_history.add_call_history_item(self, MethodName.CALL_CONTAINER_STATE, self)
+            concurrency_history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
+        return concurrency_history_item
+
+    def finalize_backward_execution(self):
+        # backward_execution needs to be True to signal the parent container state the backward execution
+        self.backward_execution = True
+        # pop the ConcurrencyItem as we are leaving the barrier concurrency state
+        last_history_item = self.execution_history.pop_last_item()
+        assert isinstance(last_history_item, ConcurrencyItem)
+
+        last_history_item = self.execution_history.pop_last_item()
+        assert isinstance(last_history_item, CallItem)
+        # this copy is convenience and not required here
+        self.scoped_data = last_history_item.scoped_data
+        # do not write the output of the entry script
+        self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+        return self.finalize()
 
         # @Observable.observed
         # def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None):

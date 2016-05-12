@@ -11,13 +11,13 @@
 import Queue
 import traceback
 
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.states.concurrency_state import ConcurrencyState
 from rafcon.statemachine.enums import StateExecutionState
-from rafcon.statemachine.execution.execution_history import ConcurrencyItem
+from rafcon.statemachine.enums import MethodName
+from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 class PreemptiveConcurrencyState(ConcurrencyState):
@@ -45,32 +45,34 @@ class PreemptiveConcurrencyState(ConcurrencyState):
         self.setup_run()
 
         try:
-            #######################################################
-            # start threads
-            #######################################################
 
-            if self.backward_execution:
-                history_item = self.execution_history.get_last_history_item()
-                assert isinstance(history_item, ConcurrencyItem)
-                # history_item.state_reference must be "self" in this case
+            concurrency_history_item = self.setup_forward_or_backward_execution()
 
-            else:  # forward_execution
-                history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
+            #######################################################
+            # start child threads
+            #######################################################
 
             self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
             concurrency_queue = Queue.Queue(maxsize=0)  # infinite Queue size
 
-            for queue_ids, (key, state) in enumerate(self.states.iteritems()):
+            for index, state in enumerate(self.states.itervalues()):
+
+                if not self.backward_execution:
+                    # care for the history items; this item is only for execution visualization
+                    concurrency_history_item.execution_histories[index].add_call_history_item(
+                        state, MethodName.EXECUTE, self)
+                else:  # backward execution
+                    last_history_item = concurrency_history_item.execution_histories[index].pop_last_item()
+                    assert isinstance(last_history_item, ReturnItem)
+
                 state.concurrency_queue = concurrency_queue
-                state.concurrency_queue_id = queue_ids
+                state.concurrency_queue_id = index
 
                 state_input = self.get_inputs_for_state(state)
                 state_output = self.create_output_dictionary_for_state(state)
                 state.input_data = state_input
                 state.output_data = state_output
-
-            for history_index, state in enumerate(self.states.itervalues()):
-                state.start(history_item.execution_histories[history_index], self.backward_execution)
+                state.start(concurrency_history_item.execution_histories[index], self.backward_execution)
 
             #######################################################
             # wait for the first threads to finish
@@ -79,59 +81,63 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             finished_thread_id = concurrency_queue.get()
             self.states[finished_thread_id].join()
 
-            # in the backward executing case, only backward execute the entry function and return
-            if self.states[finished_thread_id].backward_execution:
-                # wait until all states finished their jobs in the backward execution case
-                for key, state in self.states.iteritems():
-                    state.join()
-                    state.state_execution_status = StateExecutionState.INACTIVE
-
-                # backward_execution needs to be True to signal the parent container state the backward execution
-                self.backward_execution = True
-                # pop the ConcurrencyItem as we are leaving the barrier concurrency state
-                last_history_item = self.execution_history.pop_last_item()
-                assert isinstance(last_history_item, ConcurrencyItem)
-
-                # do not write the output of the entry script
-                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-                return self.finalize()
-
-            else:
-                self.backward_execution = False
-
             # preempt all child states
             for state_id, state in self.states.iteritems():
                 state.recursively_preempt_states()
 
-            for key, state in self.states.iteritems():
+            # join all states
+            for history_index, state in enumerate(self.states.itervalues()):
                 state.join()
-                state.concurrency_queue = None
-                # add the data of all child states to the scoped data and the scoped variables
+                state.state_execution_status = StateExecutionState.INACTIVE
                 self.add_state_execution_output_to_scoped_data(state.output_data, state)
                 self.update_scoped_variables_with_output_dictionary(state.output_data, state)
-                state.state_execution_status = StateExecutionState.INACTIVE
 
+                # care for the history items
+                if not self.backward_execution:
+                    state.concurrency_queue = None
+                    # add the data of all child states to the scoped data and the scoped variables
+                    state.execution_history.add_return_history_item(state, MethodName.EXECUTE, self)
+                else:
+                    last_history_item = concurrency_history_item.execution_histories[history_index].pop_last_item()
+                    assert isinstance(last_history_item, CallItem)
+
+            #######################################################
+            # handle backward execution case
+            #######################################################
+
+            if self.states[finished_thread_id].backward_execution:
+                return self.finalize_backward_execution()
+
+            else:
+                self.backward_execution = False
+
+            #######################################################
+            # handle no transition
+            #######################################################
+
+            transition = self.get_transition_for_outcome(self.states[finished_thread_id],
+                                                         self.states[finished_thread_id].final_outcome)
+
+            if transition is None:
+                transition = self.handle_no_transition(self.states[finished_thread_id])
+            # it the transition is still None, then the state was preempted or aborted, in this case return
+            if transition is None:
+                outcome = Outcome(-1, "aborted")
+                self.output_data["error"] = RuntimeError("state aborted")
+            else:
+                outcome = self.outcomes[transition.to_outcome]
+
+            #######################################################
+            # finalize
+            #######################################################
+
+            self.execution_history.add_return_history_item(self, MethodName.CALL_CONTAINER_STATE, self)
             self.write_output_data()
             self.check_output_data_type()
-
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
 
             if self.preempted:
                 outcome = Outcome(-2, "preempted")
-
-            else:
-                transition = self.get_transition_for_outcome(self.states[finished_thread_id],
-                                                             self.states[finished_thread_id].final_outcome)
-
-                if transition is None:
-                    transition = self.handle_no_transition(self.states[finished_thread_id])
-                # it the transition is still None, then the state was preempted or aborted, in this case return
-                if transition is None:
-                    outcome = Outcome(-1, "aborted")
-                    self.output_data["error"] = RuntimeError("state aborted")
-                else:
-                    outcome = self.outcomes[transition.to_outcome]
-
             return self.finalize(outcome)
 
         except Exception, e:
