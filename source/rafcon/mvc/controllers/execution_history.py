@@ -143,6 +143,10 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.update()
 
     def update(self):
+        """
+        rebuild the tree view of the history item tree store
+        :return:
+        """
         self.history_tree_store.clear()
         active_sm = self.state_machine_manager.get_active_state_machine()
         if not active_sm:
@@ -157,10 +161,17 @@ class ExecutionHistoryTreeController(ExtendedController):
                     None, None, (history_item.state_reference.name, history_item.scoped_data))
                 self.insert_recursively(tree_item, execution_history.history_items, 1)
 
-    def insert_recursively(self, parent, execution_items, index):
-        if index >= len(execution_items):
+    def insert_recursively(self, parent, history_items, index):
+        """
+        Recursively insert a list of history items into a the tree store
+        :param parent: the parent to add the next history item to
+        :param history_items: all history items of a certain state machine execution
+        :param index: the index of the current history item
+        :return:
+        """
+        if index >= len(history_items):
             return
-        history_item = execution_items[index]
+        history_item = history_items[index]
         new_index = index + 1
         if isinstance(history_item, ConcurrencyItem):
             # do not create tree item to avoid duplicate hierarchies
@@ -172,26 +183,32 @@ class ExecutionHistoryTreeController(ExtendedController):
                     parent, None, (history_item.state_reference.name + " - Call", history_item.scoped_data))
                 if history_item.call_type is CallType.EXECUTE:
                     # jump over the next call history item with call type CONTAINER to avoid duplicate tree entries
-                    if len(execution_items) > index + 1:
-                        next_history_item = execution_items[index + 1]
+                    if len(history_items) > index + 1:
+                        next_history_item = history_items[index + 1]
                         if next_history_item.call_type is CallType.CONTAINER:
-                            self.insert_recursively(tree_item, execution_items, new_index + 1)
+                            self.insert_recursively(tree_item, history_items, new_index + 1)
                         else:
-                            self.insert_recursively(parent, execution_items, new_index)
+                            self.insert_recursively(parent, history_items, new_index)
                     else:
-                        self.insert_recursively(parent, execution_items, new_index)
+                        self.insert_recursively(parent, history_items, new_index)
 
                 else:
-                    self.insert_recursively(tree_item, execution_items, new_index)
+                    self.insert_recursively(tree_item, history_items, new_index)
             else:  # history_item is ReturnItem
                 tree_item = self.history_tree_store.insert_before(
                     parent, None, (history_item.state_reference.name + " - Return", history_item.scoped_data))
                 if history_item.call_type is CallType.EXECUTE:
-                    self.insert_recursively(parent, execution_items, new_index)
+                    self.insert_recursively(parent, history_items, new_index)
                 else:
-                    self.insert_recursively(self.history_tree_store.iter_parent(parent), execution_items, new_index)
+                    self.insert_recursively(self.history_tree_store.iter_parent(parent), history_items, new_index)
 
     def insert_concurrency(self, parent, children_execution_histories):
+        """
+        Recursively add the child execution histories of an concurrency state.
+        :param parent: the parent to add the next history item to
+        :param children_execution_histories: a list of all child execution histories
+        :return:
+        """
         assert isinstance(children_execution_histories, dict)
         for child_history_number, child_history in children_execution_histories.iteritems():
             if len(child_history.history_items) >= 1:
