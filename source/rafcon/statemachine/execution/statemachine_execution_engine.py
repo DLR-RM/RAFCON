@@ -53,6 +53,8 @@ class StatemachineExecutionEngine(Observable):
         self._run_to_states = []
         self.run_to_states = []
         self.state_machine_running = False
+        self.synchronization_counter = 0
+        self.synchronization_lock = Lock()
 
     # TODO: pause all external modules
     @Observable.observed
@@ -240,6 +242,9 @@ class StatemachineExecutionEngine(Observable):
         :param state: the state that as for the execution mode is only passed for debugging reasons
         :return: the current state machine execution status
         """
+        self.synchronization_lock.acquire()
+        self.synchronization_counter += 1
+        self.synchronization_lock.release()
 
         if self._status.execution_mode is StateMachineExecutionStatus.STARTED:
             # logger.debug("Execution engine started!")

@@ -134,8 +134,8 @@ class HierarchyState(ContainerState):
                     self.scoped_data = last_history_item.scoped_data
 
                     # this is a look-ahead step to directly leave this hierarchy-state if the last child_state
-                    # was executed; this leads to the backward and forward execution of a hierarchy child_state having the
-                    # exact same number of steps
+                    # was executed; this leads to the backward and forward execution of a hierarchy child_state
+                    # having the exact same number of steps
                     last_history_item = self.execution_history.get_last_history_item()
                     if last_history_item.state_reference is self:
                         last_history_item = self.execution_history.pop_last_item()

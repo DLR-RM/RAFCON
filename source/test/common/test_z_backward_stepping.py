@@ -43,27 +43,53 @@ def create_models():
     return logger, global_var_manager_model
 
 
+def wait_for_execution_engine_sync_counter(target_value, timeout=2):
+    print "++++++++++ waiting for execution engine sync for ", str(target_value), " steps ++++++++++"
+    execution_engine = rafcon.statemachine.singleton.state_machine_execution_engine
+    import datetime
+    current_time = datetime.datetime.now()
+    while True:
+        execution_engine.synchronization_lock.acquire()
+        if execution_engine.synchronization_counter == target_value:
+            execution_engine.synchronization_counter = 0
+            execution_engine.synchronization_lock.release()
+            break
+        execution_engine.synchronization_lock.release()
+        if (datetime.datetime.now() - current_time).seconds > timeout:
+            raise RuntimeError("Something went wrong")
+        time.sleep(0.01)
+
+
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(*args):
     main_window_controller = args[0]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
     call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
-    number_of_steps = 9
-    # TODO: This time is dangerous! If the PC where this test runs is too slow the test will fail! Redesign test!
-    # Experience values: on a 64bit Intel Xeon with 1,2 GHz 8 core PC 0.03 are safe enough
-    sleep_time = 0.05
-    time.sleep(sleep_time)
-    for i in range(number_of_steps):
-        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
-        time.sleep(sleep_time)
+    wait_for_execution_engine_sync_counter(1)
 
-    for i in range(number_of_steps):
+    # forward
+    for i in range(4):
+        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+        wait_for_execution_engine_sync_counter(3)
+
+    for i in range(4):
+        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+        wait_for_execution_engine_sync_counter(1)
+
+    # # backward
+    for i in range(3):
         call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
-        time.sleep(sleep_time)
+        wait_for_execution_engine_sync_counter(1)
+
+    for i in range(4):
+        call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+        wait_for_execution_engine_sync_counter(3)
+
+    call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
     sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
-    time.sleep(sleep_time)
+    time.sleep(0.1)
     for key, sd in sm.root_state.scoped_data.iteritems():
         if sd.name == "beer_number":
             assert sd.value == 100
