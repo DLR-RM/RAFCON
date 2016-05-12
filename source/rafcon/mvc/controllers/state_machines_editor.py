@@ -8,23 +8,24 @@
 
 """
 
-import gtk
 import copy
 import collections
+
+import gtk
 
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.graphical_editor import GraphicalEditorController
 from rafcon.mvc.views.graphical_editor import GraphicalEditorView
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.state_machine import StateMachineModel, StateMachine
 
 from rafcon.mvc.config import global_gui_config
+
 from rafcon.mvc.utils import constants
 from rafcon.mvc.utils import helpers
-
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

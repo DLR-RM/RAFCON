@@ -8,10 +8,10 @@
 
 """
 
-import gtk
 import sys
 from functools import partial
-# from twisted.internet import reactor
+
+import gtk
 
 from rafcon.statemachine import interface
 from rafcon.statemachine.enums import StateMachineExecutionStatus
@@ -23,8 +23,8 @@ from rafcon.statemachine.singleton import state_machine_manager, library_manager
 import rafcon.statemachine.singleton as core_singletons
 from rafcon.mvc import gui_helper
 from rafcon.mvc import singleton as mvc_singleton
-from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.views.about_dialog import MyAboutDialog
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.views.utils.about_dialog import MyAboutDialog
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 

@@ -8,20 +8,22 @@
 
 """
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.controllers.state_overview import StateOverviewController
-from rafcon.mvc.controllers.source_editor import SourceEditorController
-from rafcon.mvc.controllers.io_data_port_list import DataPortListController
-from rafcon.mvc.controllers.scoped_variable_list import ScopedVariableListController
-from rafcon.mvc.controllers.state_outcomes import StateOutcomesEditorController
-from rafcon.mvc.controllers.linkage_overview import LinkageOverviewController
+from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.mvc.controllers.state_transitions import StateTransitionsEditorController
-from rafcon.mvc.controllers.state_data_flows import StateDataFlowsEditorController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.controllers.state_editor.overview import StateOverviewController
+from rafcon.mvc.controllers.state_editor.source_editor import SourceEditorController
+from rafcon.mvc.controllers.state_editor.description_editor import DescriptionEditorController
+from rafcon.mvc.controllers.state_editor.io_data_port_list import DataPortListController
+from rafcon.mvc.controllers.state_editor.scoped_variable_list import ScopedVariableListController
+from rafcon.mvc.controllers.state_editor.outcomes import StateOutcomesEditorController
+from rafcon.mvc.controllers.state_editor.linkage_overview import LinkageOverviewController
+from rafcon.mvc.controllers.state_editor.transitions import StateTransitionsEditorController
+from rafcon.mvc.controllers.state_editor.data_flows import StateDataFlowsEditorController
+
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc import gui_helper
 from rafcon.mvc.config import global_gui_config
-from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.mvc.utils import constants
 from rafcon.utils import log
 
@@ -60,6 +62,8 @@ class StateEditorController(ExtendedController):
 
         self.add_controller('linkage_overview_ctrl', LinkageOverviewController(model, view['linkage_overview']))
 
+        self.add_controller('description_ctrl', DescriptionEditorController(model, view['description_view']))
+
         view['inputs_view'].show()
         view['outputs_view'].show()
         view['scopes_view'].show()
@@ -79,9 +83,6 @@ class StateEditorController(ExtendedController):
             view['scopes_view'].show()
             source_page = view['main_notebook_1'].page_num(view['source_viewport'])
             view['main_notebook_1'].remove_page(source_page)
-
-        view['description_text_view'].connect('focus-out-event', self.change_description)
-        view['description_text_view'].connect('size-allocate', self.scroll_to_bottom)
 
         for notebook_name in view.notebook_names:
             notebook = view[notebook_name]
@@ -147,22 +148,6 @@ class StateEditorController(ExtendedController):
         the State.
         """
         # self.adapt(self.__state_property_adapter("name", "input_name"))
-
-    def scroll_to_bottom(self, widget, data=None):
-        scroller = self.view['description_scroller']
-        adj = scroller.get_vadjustment()
-        adj.set_value(adj.get_upper() - adj.get_page_size())
-
-    def change_description(self, textview, otherwidget):
-        if isinstance(self.model.state, LibraryState):
-            return
-        tbuffer = textview.get_buffer()
-        entry_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter()) or None
-
-        if not self.model.state.description == entry_text:
-            logger.debug("Changed description of state {0}".format(self.model.state.name))
-            self.model.state.description = entry_text
-            self.view['description_text_view'].get_buffer().set_text(self.model.state.description)
 
     def rename(self):
         state_overview_controller = self.get_controller('properties_ctrl')

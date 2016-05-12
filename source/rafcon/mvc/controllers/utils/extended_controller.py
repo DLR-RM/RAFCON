@@ -12,6 +12,7 @@ from gtkmvc import Controller
 
 from rafcon.mvc.shortcut_manager import ShortcutManager
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 

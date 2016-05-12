@@ -331,21 +331,22 @@ class StateView(Element):
         self._income.port_side_size = self.border_width
         self._income.draw(context, self)
 
-        for outcome in self._outcomes:
-            outcome.port_side_size = self.border_width
-            outcome.draw(context, self)
+        for outcome_v in self._outcomes:
+            highlight = self.model.state.active and outcome_v.outcome_m.outcome is self.model.state.final_outcome
+            outcome_v.port_side_size = self.border_width
+            outcome_v.draw(context, self, highlight)
 
-        for input in self._inputs:
-            input.port_side_size = self.border_width
-            input.draw(context, self)
+        for input_v in self._inputs:
+            input_v.port_side_size = self.border_width
+            input_v.draw(context, self)
 
-        for output in self._outputs:
-            output.port_side_size = self.border_width
-            output.draw(context, self)
+        for output_v in self._outputs:
+            output_v.port_side_size = self.border_width
+            output_v.draw(context, self)
 
-        for scoped_variable in self._scoped_variables_ports:
-            scoped_variable.port_side_size = self.border_width
-            scoped_variable.draw(context, self)
+        for scoped_variable_v in self._scoped_variables_ports:
+            scoped_variable_v.port_side_size = self.border_width
+            scoped_variable_v.draw(context, self)
 
         if isinstance(self.model, LibraryStateModel) and not self.moving:
             max_width = self.width / 2.

@@ -11,13 +11,12 @@
 import gtk
 import gobject
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-from rafcon.utils import log
 
 from rafcon.mvc import singleton as mvc_singleton
 
-
+from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 # TODO Comment
@@ -219,7 +218,7 @@ class ModificationHistoryTreeController(ExtendedController):
             parameters = []
             if action.before_overview['type'] == 'signal':
                 # logger.info(action.before_overview._overview_dict)
-                parameters.append(str(action.before_overview['model'][-1].meta))
+                parameters.append(str(action.meta))
             else:
                 for index, value in enumerate(action.before_overview['args'][-1]):
                     if not index == 0:

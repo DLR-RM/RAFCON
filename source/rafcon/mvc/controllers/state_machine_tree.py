@@ -8,13 +8,13 @@
 
 """
 
+from functools import partial
+
 import gtk
 import gobject
 
 from rafcon.statemachine.enums import StateType
-from functools import partial
-
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.utils.notification_overview import NotificationOverview

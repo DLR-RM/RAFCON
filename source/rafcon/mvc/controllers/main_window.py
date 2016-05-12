@@ -15,12 +15,10 @@ from rafcon.mvc.controllers.state_icons import StateIconController
 from rafcon.mvc.controllers.state_machine_tree import StateMachineTreeController
 from rafcon.mvc.controllers.modification_history import ModificationHistoryTreeController
 from rafcon.mvc.controllers.library_tree import LibraryTreeController
-
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.library_manager import LibraryManagerModel
 from rafcon.mvc.shortcut_manager import ShortcutManager
-
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.states_editor import StatesEditorController
 from rafcon.mvc.controllers.state_machines_editor import StateMachinesEditorController
 from rafcon.mvc.controllers.menu_bar import MenuBarController
@@ -28,15 +26,12 @@ from rafcon.mvc.controllers.tool_bar import ToolBarController
 from rafcon.mvc.controllers.top_tool_bar import TopToolBarMainWindowController
 from rafcon.mvc.controllers.execution_history import ExecutionHistoryTreeController
 from rafcon.mvc.controllers.undocked_window import UndockedWindowController
-
 from rafcon.statemachine.enums import StateMachineExecutionStatus
-
 import rafcon.mvc.singleton as mvc_singleton
 import rafcon.statemachine.singleton
 import rafcon.statemachine.config
 from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
-
 from rafcon.mvc.utils import constants
 from rafcon.mvc import gui_helper
 from rafcon.utils import log

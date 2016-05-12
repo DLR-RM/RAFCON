@@ -1,4 +1,5 @@
 from gtkmvc import View
+
 from rafcon.mvc.utils import constants
 
 

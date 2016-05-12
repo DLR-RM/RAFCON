@@ -10,17 +10,19 @@
 """
 
 import os
-import gtk
-import gobject
 from functools import partial
 
-import rafcon.mvc.statemachine_helper as statemachine_helper
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+import gtk
+import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.singleton import library_manager
 
+import rafcon.mvc.statemachine_helper as statemachine_helper
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 

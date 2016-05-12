@@ -225,7 +225,6 @@ def test_gui(caplog):
     testing_utils.start_rafcon()
     testing_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    print dir(gui_config.global_gui_config)
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     library_paths["ros"] = rafcon.__path__[0] + "/../test_scripts/ros_libraries"

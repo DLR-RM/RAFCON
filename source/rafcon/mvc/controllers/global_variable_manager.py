@@ -9,16 +9,15 @@
 
 """
 
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
-
 from gtk import ListStore
 import gtk
 
-from rafcon.mvc.controllers.utils import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.extended_controller import ExtendedController
-from rafcon.mvc.utils.comparison import compare_variables
+from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+
+from rafcon.utils import log
+
+logger = log.get_logger(__name__)
 
 
 class GlobalVariableManagerController(ExtendedController):

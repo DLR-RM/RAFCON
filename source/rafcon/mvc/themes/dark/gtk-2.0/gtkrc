@@ -357,6 +357,7 @@ widget "*.lower_right_sidebar" style : highest "main-widget-background"
 style "widget-title" {
     bg[NORMAL]        = @background_menu
 }
+widget "*label_wrapper" style : highest "widget-title"
 widget "*.label_wrapper" style : highest "widget-title"
 widget "*.label_wrapper?" style : highest "widget-title"
 widget "*.source_editor_title_wrapper" style : highest "widget-title"

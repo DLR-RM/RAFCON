@@ -9,10 +9,11 @@
 
 """
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+import gtk
+
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc import singleton as mvc_singleton
 from rafcon.utils import log
-import gtk
 
 logger = log.get_logger(__name__)
 

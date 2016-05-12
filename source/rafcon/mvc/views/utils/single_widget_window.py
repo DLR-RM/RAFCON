@@ -1,5 +1,6 @@
 import gtk
 from gtkmvc import View
+
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

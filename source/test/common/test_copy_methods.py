@@ -4,8 +4,6 @@ import copy
 import time
 import threading
 
-from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
-
 # core elements
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.states.execution_state import ExecutionState
@@ -302,9 +300,9 @@ def run_copy_test(*args):
     # RAFCON_TEMP_PATH_BASE = "/net/notos/home_local/dark_room"
     # RAFCON_TEMP_PATH_BASE = "/volume/USERSTORE/beld_rc/tmp"
     if sm.file_system_path is None:
-        tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/copy_test_' + str(sm.state_machine_id)
+        tmp_sm_system_path = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/copy_test_' + str(sm.state_machine_id)
     else:
-        tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/copy_test' + sm.file_system_path
+        tmp_sm_system_path = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/copy_test' + sm.file_system_path
 
     if len(args) > 1:
         main_window_controller = args[1]
@@ -323,9 +321,9 @@ def run_copy_performance_test_and_check_storage_copy(*args):
     # RAFCON_TEMP_PATH_BASE = "/net/notos/home_local/dark_room"
     # RAFCON_TEMP_PATH_BASE = "/volume/USERSTORE/beld_rc/tmp"
     if sm.file_system_path is None:
-        tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/copy_test_' + str(sm.state_machine_id)
+        tmp_sm_system_path = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/copy_test_' + str(sm.state_machine_id)
     else:
-        tmp_sm_system_path = RAFCON_TEMP_PATH_BASE + '/runtime_backup/copy_test' + sm.file_system_path
+        tmp_sm_system_path = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/copy_test' + sm.file_system_path
 
     # performance tests
     time_only_storage_before = time.time()

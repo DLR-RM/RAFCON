@@ -8,21 +8,22 @@
 
 """
 
-import gtk
 import os
+
+import gtk
 from pylint import epylint as lint
 
-from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
-
-from rafcon.mvc.controllers.extended_controller import ExtendedController
 from rafcon.statemachine.states.library_state import LibraryState
 
+from rafcon.mvc.controllers.utils.editor import EditorController
+
+from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
 
-class SourceEditorController(ExtendedController):
+class SourceEditorController(EditorController):
     """Controller handling the source editor in Execution States.
 
     :param
@@ -36,76 +37,27 @@ class SourceEditorController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor"""
-        ExtendedController.__init__(self, model, view)
+        super(SourceEditorController, self).__init__(model, view, observed_method="script_text")
         self.not_pylint_compatible_modules = ["links_and_nodes"]
-        # self.is_dirty = False
 
     def register_view(self, view):
-        view.get_buffer().connect('changed', self.code_changed)
+        super(SourceEditorController, self).register_view(view)
+
         view['apply_button'].connect('clicked', self.apply_clicked)
         view['cancel_button'].connect('clicked', self.cancel_clicked)
-        view.get_buffer().begin_not_undoable_action()
-        view.set_text(self.model.state.script_text)
-        view.get_buffer().end_not_undoable_action()
 
         if isinstance(self.model.state, LibraryState):
             view.textview.set_sensitive(False)
             view['apply_button'].set_sensitive(False)
             view['cancel_button'].set_sensitive(False)
 
-    def register_adapters(self):
-        pass
+    @property
+    def source_text(self):
+        return self.model.state.script.script
 
-    def register_actions(self, shortcut_manager):
-        """Register callback methods for triggered actions
-
-        :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
-            between shortcuts and actions.
-        """
-        shortcut_manager.add_callback_for_action("copy", self._copy)
-        shortcut_manager.add_callback_for_action("paste", self._paste)
-        shortcut_manager.add_callback_for_action("cut", self._cut)
-        shortcut_manager.add_callback_for_action("undo", self._undo)
-        shortcut_manager.add_callback_for_action("redo", self._redo)
-        shortcut_manager.add_callback_for_action("apply", self._apply)
-
-    def _copy(self, *args):
-        pass
-
-    def _paste(self, *args):
-        pass
-
-    def _cut(self, *args):
-        pass
-
-    def _undo(self, *args):
-        buffer = self.view.textview.get_buffer()
-        if self.view.textview.is_focus() and buffer.can_undo():
-            logger.debug('Run undo on script editor')
-            return buffer.undo()
-        else:
-            return False
-
-    def _redo(self, *args):
-        buffer = self.view.textview.get_buffer()
-        if self.view.textview.is_focus() and buffer.can_redo():
-            logger.debug('Run redo on script editor')
-            return buffer.redo()
-        else:
-            return False
-
-    def _apply(self, *args):
-        if self.view.textview.is_focus():
-            logger.debug("Apply short-cut pressed")
-            tbuffer = self.view.get_buffer()
-            current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
-            if self.model.state.script.script == current_text:
-                logger.debug("Nothing to apply.")
-            else:
-                self.apply_clicked(None)
-            return True
-        else:
-            return False
+    @source_text.setter
+    def source_text(self, text):
+        self.model.state.script.script = text
 
     # ===============================================================
     def code_changed(self, source):
@@ -178,13 +130,6 @@ class SourceEditorController(ExtendedController):
         else:
             self.set_script_text(current_text)
 
-    def set_script_text(self, text):
-        if not self.model.state.script_text == text:
-            self.model.state.script_text = text
-            logger.debug("The script was saved.")
-        else:
-            logger.debug("Script is the same as in storage.")
-
     def filter_out_not_compatible_modules(self, pylint_msg):
         """This method filters out every pylint message that addresses an error of a module that is explicitly ignored
         and added to  self.not_pylint_compatible_modules.
@@ -204,16 +149,3 @@ class SourceEditorController(ExtendedController):
         error_parts = error_parts[2].split(')')
         error = error_parts[1]
         return "Line " + line + ": " + error
-
-    def cancel_clicked(self, button):
-        """Triggered when the Cancel button in the source editor is clicked
-
-        Resets the code in the editor to the last-saved code.
-        """
-        self.view.set_text(self.model.state.script_text)
-
-    @ExtendedController.observe("state", after=True)
-    def after_notification_of_script_text_was_changed(self, model, prop_name, info):
-
-        if "method_name" in info and "script_text" == info['method_name']:
-            self.view.set_text(self.model.state.script_text)

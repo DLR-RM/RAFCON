@@ -14,19 +14,18 @@ from gtk.gdk import keyval_name
 from gtkmvc import Model
 
 from rafcon.statemachine.enums import StateType
-
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.models.signals import MetaSignalMsg
 
-from rafcon.utils import log
 from rafcon.mvc.utils import constants
 from rafcon.mvc.gui_helper import format_cell
+from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 

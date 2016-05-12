@@ -9,7 +9,8 @@
 """
 
 import gtk
-from rafcon.mvc.controllers.extended_controller import ExtendedController
+
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.shortcut_manager import ShortcutManager
 
 
