@@ -3,7 +3,7 @@
     "description": null, 
     "input_data_ports": {
         "1": {
-            "__jsonqualname__": "rafcon.statemachine.data_port.InputDataPort", 
+            "__jsonqualname__": "rafcon.statemachine.state_elements.data_port.InputDataPort", 
             "data_port_id": 1, 
             "data_type": {
                 "__type__": "int"
@@ -12,7 +12,7 @@
             "name": "number"
         }, 
         "3": {
-            "__jsonqualname__": "rafcon.statemachine.data_port.InputDataPort", 
+            "__jsonqualname__": "rafcon.statemachine.state_elements.data_port.InputDataPort", 
             "data_port_id": 3, 
             "data_type": {
                 "__type__": "str"
@@ -24,17 +24,17 @@
     "name": "Sing", 
     "outcomes": {
         "-2": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
             "name": "preempted", 
             "outcome_id": -2
         }, 
         "-1": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
             "name": "aborted", 
             "outcome_id": -1
         }, 
         "0": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
             "name": "success", 
             "outcome_id": 0
         }
