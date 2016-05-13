@@ -187,6 +187,7 @@ class ExecutionHistoryTreeController(ExtendedController):
             # do not create tree item to avoid duplicate hierarchies
             # tree_item = self.history_tree_store.insert_before(parent, None, (history_item.state_reference.name, None))
             self.insert_concurrency(parent, history_item.execution_histories)
+            self.insert_recursively(parent, history_items, new_index)
         else:
             if isinstance(history_item, CallItem):
                 tree_item = self.history_tree_store.insert_before(
