@@ -100,7 +100,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 if scoped_data is None:
                     return
                 for key, data in scoped_data.iteritems():
-                    menu_item_string = "%s (%s - %s):\t%s" % (data.name, key, data.value_type, data.value)
+                    menu_item_string = "%s (%s - %s):\t%s" % (data.name.replace("_", "__"), key, data.value_type, data.value)
                     menu_item = gtk.MenuItem(menu_item_string)
                     menu_item.set_sensitive(False)
                     menu_item.show()
