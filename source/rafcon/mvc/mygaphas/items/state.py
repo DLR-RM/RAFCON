@@ -6,6 +6,8 @@ from copy import copy
 from rafcon.mvc.utils import constants
 from rafcon.utils import log
 
+from rafcon.statemachine.enums import StateExecutionState
+
 from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.mvc.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
@@ -276,7 +278,7 @@ class StateView(Element):
 
         parameters = {
             'hierarchy': self.hierarchy_level,
-            'active':  self.model.state.active,
+            'execution_state':  self.model.state.state_execution_status,
             'selected': self.selected,
             'moving': self.moving,
             'border_width': self.border_width
@@ -300,7 +302,9 @@ class StateView(Element):
             c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
             c.rectangle(nw.x, nw.y, self.width, self.height)
 
-            if self.model.state.active:
+            if self.model.state.state_execution_status == StateExecutionState.WAIT_FOR_NEXT_STATE:
+                c.set_source_color(gui_config.gtk_colors['STATE_WAITING'])
+            elif self.model.state.active:
                 c.set_source_color(gui_config.gtk_colors['STATE_ACTIVE'])
             elif self.selected:
                 c.set_source_color(gui_config.gtk_colors['STATE_SELECTED'])
