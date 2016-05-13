@@ -1,5 +1,30 @@
 #!/opt/python/python2.7/bin/python
 
+import logging
+import os
+import gtk
+import signal
+import argparse
+from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
+import threading
+import sys
+
+import rafcon
+
+from rafcon.utils import log
+
+from rafcon.statemachine.config import global_config
+from rafcon.statemachine.state_machine import StateMachine
+from rafcon.statemachine.states.hierarchy_state import HierarchyState
+import rafcon.statemachine.singleton as sm_singletons
+import rafcon.statemachine.storage.storage as storage
+
+from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.main_window import MainWindowView
+import rafcon.mvc.singleton as mvc_singletons
+from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
+
 
 def setup_logger():
     import sys
@@ -42,7 +67,7 @@ def trigger_gui_signals(*args):
     setup_config = args[2]
     state_machine = args[3]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    menubar_ctrl.on_save_as_activate(None, None, setup_config['sm_paths'][0])
+    menubar_ctrl.on_save_as_activate(None, None, setup_config['target_path'][0])
     import time
     while state_machine.marked_dirty:
         time.sleep(0.1)
@@ -50,32 +75,7 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-def convert(config_path, sm_path):
-    import logging
-    import os
-    import gtk
-    import signal
-    import argparse
-    from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
-    import threading
-    import sys
-    
-    import rafcon
-    
-    from rafcon.utils import log
-    
-    from rafcon.statemachine.config import global_config
-    from rafcon.statemachine.state_machine import StateMachine
-    from rafcon.statemachine.states.hierarchy_state import HierarchyState
-    import rafcon.statemachine.singleton as sm_singletons
-    import rafcon.statemachine.storage.storage as storage
-    
-    from rafcon.mvc.controllers.main_window import MainWindowController
-    from rafcon.mvc.views.main_window import MainWindowView    
-    import rafcon.mvc.singleton as mvc_singletons
-    from rafcon.mvc.config import global_gui_config
-    from rafcon.mvc.runtime_config import global_runtime_config
-
+def convert(config_path, source_path, target_path):
     setup_logger()
     # from rafcon.utils import log
     logger = log.get_logger("start")
@@ -99,7 +99,11 @@ def convert(config_path, sm_path):
     setup_config = {}
     setup_config["config_path"] = config_path
     setup_config["gui_config_path"] = home_path
-    setup_config["sm_paths"] = [sm_path]
+    setup_config["source_path"] = [source_path]
+    if not target_path:
+        setup_config["target_path"] = [source_path]
+    else:
+        setup_config["target_path"] = [target_path]
 
     signal.signal(signal.SIGINT, sm_singletons.signal_handler)
 
@@ -117,11 +121,11 @@ def convert(config_path, sm_path):
     # Create the GUI
     main_window_view = MainWindowView()
 
-    if setup_config['sm_paths']:
-        if len(setup_config['sm_paths']) > 1:
+    if setup_config['source_path']:
+        if len(setup_config['source_path']) > 1:
             logger.error("Only one statemachine is supported yet")
             exit(-1)
-        for path in setup_config['sm_paths']:
+        for path in setup_config['source_path']:
             try:
                 state_machine = storage.load_statemachine_from_path(path)
                 sm_singletons.state_machine_manager.add_state_machine(state_machine)
@@ -144,7 +148,6 @@ def convert(config_path, sm_path):
         screen_height = gtk.gdk.screen_height()
         if position[0] < screen_width and position[1] < screen_height:
             main_window.move(position[0], position[1])
-   
 
     # Wait for GUI to initialize
     while gtk.events_pending():
@@ -160,26 +163,26 @@ def convert(config_path, sm_path):
     logger.debug("Conversion done")
 
 
-def convert_libraries_in_path(config_path, lib_path):
+def convert_libraries_in_path(config_path, lib_path, target_path=None):
     """
-    This
-    :param lib_path:
+    This function resaves all libraries found at the spcified path
+    :param lib_path: the path to look for libraries
     :return:
     """
-    import sys
-    import os
-    from multiprocessing import Process
-
     for lib in os.listdir(lib_path):
         if os.path.isdir(os.path.join(lib_path, lib)) and not '.' == lib[0]:
             if os.path.exists(os.path.join(os.path.join(lib_path, lib), "statemachine.yaml")) or \
                     os.path.exists(os.path.join(os.path.join(lib_path, lib), "statemachine.json")):
                 print "convert " + os.path.join(lib_path, lib)
-                p = Process(target=convert, args=(config_path, os.path.join(lib_path, lib)))
-                p.start()
-                p.join()
+                if not target_path:
+                    convert(config_path, os.path.join(lib_path, lib))
+                else:
+                    convert(config_path, os.path.join(lib_path, lib), os.path.join(target_path, lib))
             else:
-                convert_libraries_in_path(config_path, os.path.join(lib_path, lib))
+                if not target_path:
+                    convert_libraries_in_path(config_path, os.path.join(lib_path, lib))
+                else:
+                    convert_libraries_in_path(config_path, os.path.join(lib_path, lib), os.path.join(target_path, lib))
         else:
             if os.path.isdir(os.path.join(lib_path, lib)) and '.' == lib[0]:
                 print "lib_root_path/lib_path .*-folder are ignored if within lib_path, e.g. -> {0} -> full path is {1}".format(lib, os.path.join(lib_path, lib))
