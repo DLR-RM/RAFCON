@@ -246,6 +246,10 @@ class MainWindowController(ExtendedController):
             self.set_pane_position(config_id)
             # view[constants.PANE_ID[config_id]].get_child2().connect('size-allocate', self.print_paned_pos, config_id)
 
+        if gui_config.get_config_value('AUTO_BACKUP_ENABLED') and gui_config.get_config_value('AUTO_RECOVERY_CHECK'):
+            import rafcon.mvc.models.auto_backup as auto_backup
+            auto_backup.check_for_crashed_rafcon_instances()
+
     def print_paned_pos(self, width, height, config_id):
         pane_id = constants.PANE_ID[config_id]
         view = self.view[pane_id]

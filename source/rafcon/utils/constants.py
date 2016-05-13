@@ -13,7 +13,10 @@ import getpass
 import os
 
 
-RAFCON_TEMP_PATH_BASE = os.path.join(tempfile.gettempdir(), 'rafcon-{0}/{1}'.format(getpass.getuser(), os.getpid()))
+RAFCON_TEMP_PATH_BASE = os.path.join(tempfile.gettempdir(), 'rafcon-{0}'.format(getpass.getuser()), str(os.getpid()))
+
+os.makedirs(RAFCON_TEMP_PATH_BASE)
+RAFCON_INSTANCE_LOCK_FILE = open(os.path.join(RAFCON_TEMP_PATH_BASE, 'lock'), 'a+')
 
 try:
     os.makedirs(RAFCON_TEMP_PATH_BASE)

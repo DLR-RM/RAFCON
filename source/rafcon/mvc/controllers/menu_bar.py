@@ -8,6 +8,7 @@
 
 """
 
+import os
 import sys
 from functools import partial
 
@@ -29,7 +30,7 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
 from rafcon.mvc.utils.dialog import RAFCONDialog
-from rafcon.utils import log
+from rafcon.utils import log, constants
 
 logger = log.get_logger(__name__)
 
@@ -491,6 +492,8 @@ class MenuBarController(ExtendedController):
         glib.idle_add(gtk.main_quit)
         while gtk.events_pending():
             gtk.main_iteration(False)
+        constants.RAFCON_INSTANCE_LOCK_FILE.close()
+        os.remove(constants.RAFCON_INSTANCE_LOCK_FILE.name)
 
     def _prepare_destruction(self):
         """Saves current configuration of windows and panes to the runtime config file, before RAFCON is closed."""
