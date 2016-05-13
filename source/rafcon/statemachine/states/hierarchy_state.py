@@ -54,7 +54,7 @@ class HierarchyState(ContainerState):
             last_error = None
             last_child = None
             last_transition = None
-            self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
+            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
             if self.backward_execution:
                 last_history_item = self.execution_history.pop_last_item()
                 assert isinstance(last_history_item, ReturnItem)
@@ -71,13 +71,14 @@ class HierarchyState(ContainerState):
             ########################################################
             # children execution loop start
             ########################################################
-
             while child_state is not self:
 
                 self.handling_execution_mode = True
                 # depending on the execution mode pause execution
                 execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, child_state)
                 self.handling_execution_mode = False
+                if self.state_execution_status is not StateExecutionState.EXECUTE_CHILDREN:
+                    self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
 
                 self.backward_execution = False
                 if self.preempted:
@@ -92,13 +93,16 @@ class HierarchyState(ContainerState):
                     last_history_item = self.execution_history.pop_last_item()
                     if last_history_item.state_reference is self:
                         # if the the next child_state in the history is self exit this hierarchy-state
+                        if last_child:
+                            # do not set the last state to inactive before executing the new one
+                            last_child.state_execution_status = StateExecutionState.INACTIVE
                         break
                     assert isinstance(last_history_item, ReturnItem)
                     self.scoped_data = last_history_item.scoped_data
                     child_state = last_history_item.state_reference
 
                 if child_state is None:  # This is only the case if this hierarchy-state is started in backward mode,
-                    # but the the user directly switches to the forward execution mode
+                    # but the  user directly switches to the forward execution mode
                     break
 
                 if not self.backward_execution:  # only add history item if it is not a backward execution
@@ -117,15 +121,17 @@ class HierarchyState(ContainerState):
                 child_state.start(self.execution_history, backward_execution=self.backward_execution)
                 child_state.join()
 
+                # set last_error and last_child
                 if child_state.final_outcome is not None:  # final outcome can be None if only one state in a
                     # hierarchy state is executed and immediately backward executed
                     if child_state.final_outcome.outcome_id == -1:  # if the child_state aborted save the error
                         last_error = ""
                         if 'error' in child_state.output_data:
                             last_error = child_state.output_data['error']
+                last_child = child_state
 
                 if child_state.backward_execution:
-                    child_state.state_execution_status = StateExecutionState.INACTIVE
+                    child_state.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                     # the item popped now from the history will be a CallItem and will contain the scoped data,
                     # that was valid before executing the child_state
                     last_history_item = self.execution_history.pop_last_item()
@@ -141,6 +147,7 @@ class HierarchyState(ContainerState):
                         last_history_item = self.execution_history.pop_last_item()
                         assert isinstance(last_history_item, CallItem)
                         self.scoped_data = last_history_item.scoped_data
+                        child_state.state_execution_status = StateExecutionState.INACTIVE
                         break
                 else:
                     self.add_state_execution_output_to_scoped_data(child_state.output_data, child_state)
@@ -157,7 +164,6 @@ class HierarchyState(ContainerState):
                     if transition is None:
                         break
 
-                    last_child = child_state
                     last_transition = transition
                     child_state = self.get_state_for_transition(transition)
                     if transition is not None and child_state is self:
