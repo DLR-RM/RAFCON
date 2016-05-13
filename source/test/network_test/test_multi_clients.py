@@ -270,11 +270,23 @@ def interacting_function_client2(main_window_controller, global_monitoring_manag
 
 
 def launch_client(interacting_function_client, multiprocessing_queue_dict):
+    # explicitly add the monitoring plugin to the RAFCON_PLUGIN_PATH
+    if os.environ.get('RAFCON_PLUGIN_PATH', None):
+        del os.environ['RAFCON_PLUGIN_PATH']
+        os.environ['RAFCON_PLUGIN_PATH'] =\
+            "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
+
     import test.network_test.start_client
     test.network_test.start_client.start_client(interacting_function_client, multiprocessing_queue_dict)
 
 
 def launch_server(interacting_function_handle_server_, multiprocessing_queue_dict):
+    # explicitly add the monitoring plugin to the RAFCON_PLUGIN_PATH
+    if os.environ.get('RAFCON_PLUGIN_PATH', None):
+        del os.environ['RAFCON_PLUGIN_PATH']
+        os.environ['RAFCON_PLUGIN_PATH'] =\
+            "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
+
     import test.network_test.start_server
     server = Process(target=test.network_test.start_server.start_server,
                      args=(interacting_function_handle_server_, multiprocessing_queue_dict))
@@ -339,5 +351,5 @@ def test_multi_clients():
 
 
 if __name__ == '__main__':
-    # test_multi_clients()
-    pytest.main([__file__])
+    test_multi_clients()
+    # pytest.main([__file__])
