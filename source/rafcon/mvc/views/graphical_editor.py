@@ -156,6 +156,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
     state_selected_color = Color.from_hex(0xd7e0ec)  # Color(0.7, 0, 0, 0.8)
     state_active_color = Color.from_hex(0xb7d9b0)  # Color(0.7, 0, 0, 0.8)
     state_child_active_color = Color.from_hex(0xCFDEDD)  # Color(0.7, 0, 0, 0.8)
+    state_waiting_for_next_state_color = Color.from_hex(0xffffcc, 150)
     state_name_color = Color.from_hex(0x0b0b17)  # Color(0.2, 0.2, 0.2, 1)
     border_color = Color.from_hex(0x0b0b17)  # Color(0.2, 0.2, 0.2, 1)
     border_selected_color = Color.from_hex(0x3aaf59)  # Color(0, 0.8, 0.8, 1)
@@ -344,7 +345,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         :param input_ports_m: input ports of the state
         :param output_ports_m: output ports of the state
         :param selected: whether to display the state as selected
-        :param active: whether to display the state as active
+        :param active: in which color to display the state
         :param depth: The z layer
         :return: The OpenGL id and the positions of teh outcomes (as dictionary with outcome id as key)
         """
@@ -367,11 +368,14 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         fill_color = self.state_color
         border_color = self.border_color
 
+        from rafcon.statemachine.enums import StateExecutionState
         border_width = min(size) / 10.
-        if active == 1:
+        if active is StateExecutionState.ACTIVE:
             fill_color = self.state_active_color
-        elif active == 0.5:
+        elif active is StateExecutionState.EXECUTE_CHILDREN:
             fill_color = self.state_child_active_color
+        elif active is StateExecutionState.WAIT_FOR_NEXT_STATE:
+            fill_color = self.state_waiting_for_next_state_color
 
         if selected:
             border_width *= 2

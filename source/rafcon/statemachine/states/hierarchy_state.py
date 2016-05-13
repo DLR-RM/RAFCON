@@ -9,15 +9,14 @@
 """
 import traceback
 
-from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.utils import log
-logger = log.get_logger(__name__)
+from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.state_elements.outcome import Outcome
-from rafcon.statemachine.enums import StateExecutionState
 import rafcon.statemachine.singleton as singleton
-from rafcon.statemachine.enums import CallType
 from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem
-from rafcon.statemachine.enums import StateMachineExecutionStatus
+from rafcon.statemachine.enums import StateExecutionState, CallType, StateMachineExecutionStatus
+
+logger = log.get_logger(__name__)
 
 
 class HierarchyState(ContainerState):
@@ -51,10 +50,9 @@ class HierarchyState(ContainerState):
             self.setup_run()
 
         try:
-
             child_state = None
             last_error = None
-            last_state = None
+            last_child = None
             last_transition = None
             self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
             if self.backward_execution:
@@ -74,7 +72,6 @@ class HierarchyState(ContainerState):
             # children execution loop start
             ########################################################
 
-            # TODO: while True would fit here as well as all exit conditions break explicitly from this loop
             while child_state is not self:
 
                 self.handling_execution_mode = True
@@ -86,7 +83,7 @@ class HierarchyState(ContainerState):
                 if self.preempted:
                     if last_transition and last_transition.from_outcome == -2:
                         # normally execute the next state
-                        logger.debug("Execute preemption handling for '{0}'".format(last_state))
+                        logger.debug("Execute preemption handling for '{0}'".format(last_child))
                     else:
                         break
 
@@ -100,8 +97,8 @@ class HierarchyState(ContainerState):
                     self.scoped_data = last_history_item.scoped_data
                     child_state = last_history_item.state_reference
 
-                if child_state is None:  # This is only the case if this hierarchy-state is started in backward mode, but
-                    # the the user directly switches to the forward execution mode
+                if child_state is None:  # This is only the case if this hierarchy-state is started in backward mode,
+                    # but the the user directly switches to the forward execution mode
                     break
 
                 if not self.backward_execution:  # only add history item if it is not a backward execution
@@ -114,6 +111,9 @@ class HierarchyState(ContainerState):
                 if last_error is not None:
                     child_state.input_data['error'] = last_error
                 last_error = None
+                if last_child:
+                    # do not set the last state to inactive before executing the new one
+                    last_child.state_execution_status = StateExecutionState.INACTIVE
                 child_state.start(self.execution_history, backward_execution=self.backward_execution)
                 child_state.join()
 
@@ -151,13 +151,13 @@ class HierarchyState(ContainerState):
 
                     if transition is None:
                         transition = self.handle_no_transition(child_state)
-                    child_state.state_execution_status = StateExecutionState.INACTIVE
+                    child_state.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
                     # if the transition is still None, then the child_state was preempted or aborted, in this case
                     # return
                     if transition is None:
                         break
 
-                    last_state = child_state
+                    last_child = child_state
                     last_transition = transition
                     child_state = self.get_state_for_transition(transition)
                     if transition is not None and child_state is self:
@@ -165,6 +165,10 @@ class HierarchyState(ContainerState):
 
                     if child_state is self:
                         singleton.state_machine_execution_engine.notify_run_to_states(self)
+
+            if last_child:
+                # do not set the last state to inactive before executing the new one
+                last_child.state_execution_status = StateExecutionState.INACTIVE
 
             ########################################################
             # children execution loop end
