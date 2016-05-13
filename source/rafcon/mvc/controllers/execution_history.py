@@ -47,7 +47,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.state_machine_manager = state_machine_manager
 
         ExtendedController.__init__(self, model, view)
-        self.history_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT)
+        self.history_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT)
         # a TreeView
         self.history_tree = view['history_tree']
         self.history_tree.set_model(self.history_tree_store)
@@ -96,6 +96,7 @@ class ExecutionHistoryTreeController(ExtendedController):
 
                 model, row = self.history_tree.get_selection().get_selected()
                 scoped_data = model[row][1]
+                state_reference = model[row][2]
                 if scoped_data is None:
                     return
                 for key, data in scoped_data.iteritems():
@@ -104,6 +105,13 @@ class ExecutionHistoryTreeController(ExtendedController):
                     menu_item.set_sensitive(False)
                     menu_item.show()
                     popup_menu.append(menu_item)
+
+                if state_reference:
+                    if state_reference.final_outcome:
+                        final_outcome_menu_item = gtk.MenuItem("Final outcome: " + str(state_reference.final_outcome))
+                        final_outcome_menu_item.set_sensitive(False)
+                        final_outcome_menu_item.show()
+                        popup_menu.append(final_outcome_menu_item)
 
                 popup_menu.show()
 
@@ -158,7 +166,9 @@ class ExecutionHistoryTreeController(ExtendedController):
             if len(execution_history.history_items) > 0:
                 history_item = execution_history.history_items[0]
                 tree_item = self.history_tree_store.insert_after(
-                    None, None, (history_item.state_reference.name, history_item.scoped_data))
+                    None, None, (history_item.state_reference.name,
+                                 history_item.scoped_data,
+                                 history_item.state_reference))
                 self.insert_recursively(tree_item, execution_history.history_items, 1)
 
     def insert_recursively(self, parent, history_items, index):
@@ -180,7 +190,9 @@ class ExecutionHistoryTreeController(ExtendedController):
         else:
             if isinstance(history_item, CallItem):
                 tree_item = self.history_tree_store.insert_before(
-                    parent, None, (history_item.state_reference.name + " - Call", history_item.scoped_data))
+                    parent, None, (history_item.state_reference.name + " - Call",
+                                   history_item.scoped_data,
+                                   history_item.state_reference))
                 if history_item.call_type is CallType.EXECUTE:
                     # jump over the next call history item with call type CONTAINER to avoid duplicate tree entries
                     if len(history_items) > index + 1:
@@ -196,7 +208,9 @@ class ExecutionHistoryTreeController(ExtendedController):
                     self.insert_recursively(tree_item, history_items, new_index)
             else:  # history_item is ReturnItem
                 tree_item = self.history_tree_store.insert_before(
-                    parent, None, (history_item.state_reference.name + " - Return", history_item.scoped_data))
+                    parent, None, (history_item.state_reference.name + " - Return",
+                                   history_item.scoped_data,
+                                   history_item.state_reference))
                 if history_item.call_type is CallType.EXECUTE:
                     self.insert_recursively(parent, history_items, new_index)
                 else:
@@ -215,6 +229,8 @@ class ExecutionHistoryTreeController(ExtendedController):
                 first_history_item = child_history.history_items[0]
                 # comment this item out to avoid duplicate hierarchies
                 # tree_item = self.history_tree_store.insert_before(
-                #     parent, None, (first_history_item.state_reference.name + " - Concurrency Branch", first_history_item.scoped_data))
+                #     parent, None, (first_history_item.state_reference.name + " - Concurrency Branch",
+                #                    first_history_item.scoped_data,
+                #                    first_history_item.state_reference))
                 self.insert_recursively(parent, child_history.history_items, 1)
 
