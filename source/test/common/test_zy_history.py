@@ -52,7 +52,7 @@ def on_save_activate(state_machine_m, logger):
         return
 
     logger.debug("Saving state machine to {0}".format(save_path))
-    storage.save_statemachine_to_path(state_machine_m.state_machine,
+    storage.save_state_machine_to_path(state_machine_m.state_machine,
                                       state_machine_m.state_machine.file_system_path, delete_old_state_machine=True)
 
     state_machine_m.root_state.store_meta_data()

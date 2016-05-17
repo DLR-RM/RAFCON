@@ -27,7 +27,7 @@ def test_custom_entry_point(caplog):
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    state_machine = storage.load_statemachine_from_path(testing_utils.get_test_sm_path(
+    state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path(
         "unit_test_state_machines/stepping_test"))
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)

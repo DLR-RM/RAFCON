@@ -91,7 +91,7 @@ def clean_state_machine_paths(state_machine_id):
         del _paths_to_remove_before_sm_save[state_machine_id]
 
 
-def save_statemachine_to_path(state_machine, base_path, delete_old_state_machine=False, save_as=False,
+def save_state_machine_to_path(state_machine, base_path, delete_old_state_machine=False, save_as=False,
                               temporary_storage=False):
     """Saves a state machine recursively to the file system
 
@@ -197,7 +197,7 @@ def save_state_recursively(state, base_path, parent_path, temporary_storage=Fals
             save_state_recursively(state, base_path, state_path, temporary_storage)
 
 
-def load_statemachine_from_path(base_path):
+def load_state_machine_from_path(base_path):
     """Loads a state machine from the given path
 
     :param base_path: An optional base path for the state machine.

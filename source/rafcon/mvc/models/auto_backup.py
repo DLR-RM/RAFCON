@@ -29,7 +29,7 @@ def check_for_crashed_rafcon_instances():
         if response_id == 42:
             for path, pid, lock_file, m_time in found_backups:
                 if path is not None:
-                    state_machine = storage.load_statemachine_from_path(path)
+                    state_machine = storage.load_state_machine_from_path(path)
                     mvc_singleton.state_machine_manager.add_state_machine(state_machine)
                     sm_m = mvc_singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
                     assert sm_m.state_machine is state_machine
@@ -272,7 +272,7 @@ class AutoBackupModel(ModelMT):
         sm = self.state_machine_model.state_machine
         logger.info('Perform auto-backup of state-machine {} to tmp-folder'.format(sm.state_machine_id))
         tmp_sm_system_path = self.tmp_storage_folder()
-        storage.save_statemachine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=False,
+        storage.save_state_machine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=False,
                                           save_as=True, temporary_storage=True)
         self.state_machine_model.store_meta_data(temp_path=tmp_sm_system_path)
         self.last_backup_time = time.time()  # used as 'last-backup' time

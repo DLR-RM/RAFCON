@@ -60,8 +60,8 @@ def test_scoped_variables(caplog):
 
     sm = create_statemachine()
 
-    storage.save_statemachine_to_path(sm, storage_path)
-    sm_loaded = storage.load_statemachine_from_path(storage_path)
+    storage.save_state_machine_to_path(sm, storage_path)
+    sm_loaded = storage.load_state_machine_from_path(storage_path)
 
     state_machine = StateMachine(sm_loaded.root_state)
 
