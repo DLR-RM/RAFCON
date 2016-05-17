@@ -27,7 +27,6 @@ class StateMachineModel(ModelMT):
 
     :param StateMachine state_machine: The state machine to be controlled and modified
     """
-
     state_machine = None
     selection = None
     root_state = None
@@ -91,9 +90,6 @@ class StateMachineModel(ModelMT):
         else:
             return False
 
-    def __destroy__(self):
-        self.destroy()
-
     def __copy__(self):
         sm_m = self.__class__(copy(self.state_machine), self.sm_manager_model)
         sm_m.root_state.copy_meta_data_from_state_m(self.root_state)
@@ -102,7 +98,14 @@ class StateMachineModel(ModelMT):
 
     __deepcopy__ = __copy__
 
+    def __del__(self):
+        self.destroy()
+
+    def __destroy__(self):
+        self.destroy()
+
     def destroy(self):
+        # print "run destroy " + str(self.state_machine.state_machine_id)
         if getattr(self, "auto_backup", None):
             self.auto_backup.destroy()
             self.auto_backup = None

@@ -98,6 +98,7 @@ class StateMachineManager(Observable):
         :param state_machine_id: the id of the state machine to be removed
         """
         if state_machine_id in self._state_machines:
+            logger.debug("Remove state machine with id {0}".format(state_machine_id))
             del self._state_machines[state_machine_id]
             storage.clean_state_machine_paths(state_machine_id)
         else:

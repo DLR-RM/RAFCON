@@ -492,8 +492,6 @@ class MenuBarController(ExtendedController):
         glib.idle_add(gtk.main_quit)
         while gtk.events_pending():
             gtk.main_iteration(False)
-        constants.RAFCON_INSTANCE_LOCK_FILE.close()
-        os.remove(constants.RAFCON_INSTANCE_LOCK_FILE.name)
 
     def _prepare_destruction(self):
         """Saves current configuration of windows and panes to the runtime config file, before RAFCON is closed."""

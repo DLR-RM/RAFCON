@@ -50,10 +50,10 @@ def check_for_crashed_rafcon_instances():
         if response_id in [42, 44]:
             for path, pid, lock_file, m_time in found_backups:
                 if path is None:
-                    logger.info("Clean up lock of RAFCON instance with pid {}".format(pid))
+                    logger.debug("Clean up lock of RAFCON instance with pid {}".format(pid))
                 else:
-                    logger.info("Clean up lock for state machine with path: {0} pid: {1} lock_file: {2}"
-                                "".format(path, pid, lock_file))
+                    logger.debug("Clean up lock for state machine with path: {0} pid: {1} lock_file: {2}"
+                                 "".format(path, pid, lock_file))
                 if path is not None:
                     os.remove(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'runtime_backup', lock_file))
                 if os.path.exists(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'lock')):
@@ -67,8 +67,8 @@ def check_for_crashed_rafcon_instances():
         if not folder == str(os.getpid()):
             rafcon_instance_path_to_check = os.path.join(MY_RAFCON_TEMP_PATH, folder)
             if 'lock' in os.listdir(rafcon_instance_path_to_check):
-                logger.info("There is tmp-data of a crashed instance of RAFCON in path: {}"
-                            "".format(rafcon_instance_path_to_check))
+                logger.info("There is tmp-data of a crashed/killed or badly closed state-machines of a RAFCON instance "
+                            "in path: {}".format(rafcon_instance_path_to_check))
                 restorable_sm.append((None, folder, None, None))
 
             runtime_backup_path_of_rafcon_instance = os.path.join(MY_RAFCON_TEMP_PATH, folder, 'runtime_backup')
@@ -85,7 +85,7 @@ def check_for_crashed_rafcon_instances():
                                 modification_time = time.ctime(os.path.getmtime(os.path.join(MY_RAFCON_TEMP_PATH, folder)))
                                 restorable_sm.append((path, folder, elem, modification_time))
                             else:
-                                logger.warning("dirty_lock file without consistent state machine path {}!".format(path))
+                                logger.warning("dirty_lock file without consistent state machine path {}!".format(full_path))
                                 os.remove(full_path)
 
     # if restorable_sm:
@@ -97,13 +97,19 @@ def check_for_crashed_rafcon_instances():
                          "The following state machines have been modified and not saved: \n" + \
                          "\n".join(["\t - modified: {} path: {}"
                                     "".format(elem[3], elem[0]) if elem[0] is not None else
-                                    "instance with pid: {}".format(elem[1]) for elem in restorable_sm]) + \
+                                    "- instance with pid: {}".format(elem[1]) for elem in restorable_sm]) + \
                          "\n\nThis check and dialog can be disabled by setting 'AUTO_RECOVERY_CHECK': False " \
                          "in the GUI configuration file."
         dialog.set_markup(message_string)
-        dialog.add_button("Open state machines", 42)
+        hbox = dialog.get_action_area()
+        vbox = hbox.parent
+        msg_ctr = vbox.get_children()[0]
+        text_ctr = msg_ctr.get_children()[1]
+        text_ctr.get_children()[0].set_size_request(1400, -1)
+        text_ctr.get_children()[1].set_size_request(1400, -1)
+        dialog.add_button("Open all state machines.", 42)
         dialog.add_button("Remind me later.", 43)
-        dialog.add_button("Ignore -> Remove as Notification.", 44)
+        dialog.add_button("Ignore -> Remove all Notifications.", 44)
         dialog.finalize(on_message_dialog_response_signal, restorable_sm)
 
     return restorable_sm
@@ -127,8 +133,19 @@ class AutoBackupModel(ModelMT):
 
         assert isinstance(state_machine_model, StateMachineModel)
         self.state_machine_model = state_machine_model
-        self.lock_file = None
 
+        # variables used for lock files
+        # TODO reduce those variables
+        self.__destroyed = False
+        self.AUTO_RECOVERY_LOCK_ENABLED = False
+        if os.path.exists(os.path.join(RAFCON_TEMP_PATH_BASE, 'lock')) and \
+                global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
+            self.AUTO_RECOVERY_LOCK_ENABLED = True
+        self.lock_file_lock = threading.Lock()
+        self.lock_file = None
+        self.last_lock_file_name = None
+
+        # general auto-backup variable
         self.timed_temp_storage_enabled = global_gui_config.get_config_value('AUTO_BACKUP_ENABLED')
         self.only_fix_interval = global_gui_config.get_config_value('AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL')
         self.force_temp_storage_interval = global_gui_config.get_config_value('AUTO_BACKUP_FORCED_STORAGE_INTERVAL')
@@ -141,6 +158,7 @@ class AutoBackupModel(ModelMT):
         self.check_for_auto_backup(force=True)
         self.tmp_storage_timed_thread = None
 
+        # register observer at the end after controller is fully initialized
         self.observe_model(self.state_machine_model)
 
         logger.debug("The auto-backup for state-machine {2} is {0} and set to '{1}'"
@@ -152,24 +170,38 @@ class AutoBackupModel(ModelMT):
         self.destroy()
 
     def destroy(self):
+        logger.info('destroy auto backup ' + str(self.state_machine_model.state_machine.state_machine_id))
         if self.tmp_storage_timed_thread is not None:
             self.tmp_storage_timed_thread.cancel()
-        self.clean_lock_file()
+        self.clean_lock_file(True)
 
     def check_lock_file(self):
+        if self.__destroyed:
+            return
         sm = self.state_machine_model.state_machine
-        if sm.marked_dirty and self.lock_file is None:
-            # logger.info('create lock {}'.format(sm.state_machine_id))
+        if sm.marked_dirty and self.lock_file is None and self.AUTO_RECOVERY_LOCK_ENABLED:
+            self.lock_file_lock.acquire()
+            # logger.info('create lock {0} -> path {1}'.format(sm.state_machine_id, self.tmp_storage_folder()))
             self.lock_file = open(RAFCON_RUNTIME_BACKUP_PATH + '/dirty_lock_' + str(sm.state_machine_id), 'a+')
             self.lock_file.write(self.tmp_storage_folder())
             self.lock_file.close()
+            self.last_lock_file_name = self.lock_file.name
+            self.lock_file_lock.release()
 
-    def clean_lock_file(self):
-        if self.lock_file:
+    def clean_lock_file(self, final=False):
+        if self.__destroyed:
+            return
+        if self.lock_file and self.AUTO_RECOVERY_LOCK_ENABLED:
+            self.lock_file_lock.acquire()
+            if final:
+                self.__destroyed = True
             # logger.info('clean lock {}'.format(self.state_machine_model.state_machine.state_machine_id))
-            self.lock_file.close()
-            os.remove(self.lock_file.name)
+            if not self.lock_file.closed:
+                self.lock_file.close()
+            if os.path.exists(self.lock_file.name):
+                os.remove(self.lock_file.name)
             self.lock_file = None
+            self.lock_file_lock.release()
 
     def tmp_storage_folder(self):
         sm = self.state_machine_model.state_machine

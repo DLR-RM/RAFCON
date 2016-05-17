@@ -4,7 +4,6 @@ import logging
 import os
 import gtk
 import signal
-import argparse
 from os.path import realpath, dirname, join, expanduser, expandvars, isdir
 import sys
 
@@ -24,9 +23,11 @@ from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 import rafcon.mvc.singleton as mvc_singletons
 from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.utils import constants
 from rafcon.mvc.runtime_config import global_runtime_config
 
 from rafcon.utils import plugins
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
 
 def setup_logger():
@@ -94,6 +95,11 @@ if __name__ == '__main__':
     # Needed for views, which assume to be in the mvc path and import glade files relatively
     os.chdir(join(rafcon_root_path, 'mvc'))
 
+    # create lock file
+    if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
+        constants.RAFCON_INSTANCE_LOCK_FILE = open(os.path.join(RAFCON_TEMP_PATH_BASE, 'lock'), 'a+')
+        constants.RAFCON_INSTANCE_LOCK_FILE.close()
+
     # Create the GUI-View
     main_window_view = MainWindowView()
 
@@ -152,6 +158,8 @@ if __name__ == '__main__':
     finally:
         if profiler:
             stop_profiler(profiler, logger)
+        if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
+            os.remove(constants.RAFCON_INSTANCE_LOCK_FILE.name)
 
     logger.info("Exiting ...")
 
