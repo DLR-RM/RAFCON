@@ -59,7 +59,7 @@ def start_state_machine(setup_config):
 def check_for_sm_finished(sm):
 
     # wait for the state machine to start
-    while len(sm.execution_history.history_items) < 1:
+    while len(sm.execution_history_container[0].history_items) < 1:
         time.sleep(0.1)
 
     while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
