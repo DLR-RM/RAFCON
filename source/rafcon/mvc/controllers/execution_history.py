@@ -47,7 +47,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.state_machine_manager = state_machine_manager
 
         ExtendedController.__init__(self, model, view)
-        self.history_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT)
+        self.history_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT)
         # a TreeView
         self.history_tree = view['history_tree']
         self.history_tree.set_model(self.history_tree_store)
@@ -78,6 +78,12 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.state_machine_execution_model = new_state_machine_execution_engine
         self.observe_model(self.state_machine_execution_model)
 
+    def append_string_to_menu(self, popup_menu, menu_item_string):
+        menu_item = gtk.MenuItem(menu_item_string)
+        menu_item.set_sensitive(False)
+        menu_item.show()
+        popup_menu.append(menu_item)
+
     def right_click(self, widget, event=None):
         """Triggered when right click is pressed in the history tree. The method shows all scoped data for an execution
         step as tooltip.
@@ -95,23 +101,41 @@ class ExecutionHistoryTreeController(ExtendedController):
                 popup_menu = gtk.Menu()
 
                 model, row = self.history_tree.get_selection().get_selected()
-                scoped_data = model[row][1]
-                state_reference = model[row][2]
+                history_item = model[row][1]
+                scoped_data = history_item.scoped_data
+                input_output_data = history_item.child_state_input_output_data
+                state_reference = history_item.state_reference
+
                 if scoped_data is None:
                     return
+
+                self.append_string_to_menu(popup_menu, "------------------------")
+                self.append_string_to_menu(popup_menu, "Scoped Data: ")
+                self.append_string_to_menu(popup_menu, "------------------------")
                 for key, data in scoped_data.iteritems():
-                    menu_item_string = "%s (%s - %s):\t%s" % (data.name.replace("_", "__"), key, data.value_type, data.value)
-                    menu_item = gtk.MenuItem(menu_item_string)
-                    menu_item.set_sensitive(False)
-                    menu_item.show()
-                    popup_menu.append(menu_item)
+                    menu_item_string = "    %s (%s - %s):\t%s" % (data.name.replace("_", "__"), key, data.value_type, data.value)
+                    self.append_string_to_menu(popup_menu, menu_item_string)
+
+                if input_output_data:
+                    if isinstance(history_item, CallItem):
+                        self.append_string_to_menu(popup_menu, "------------------------")
+                        self.append_string_to_menu(popup_menu, "Input Data:")
+                        self.append_string_to_menu(popup_menu, "------------------------")
+                    else:
+                        self.append_string_to_menu(popup_menu, "------------------------")
+                        self.append_string_to_menu(popup_menu, "Output Data:")
+                        self.append_string_to_menu(popup_menu, "------------------------")
+
+                    for key, data in input_output_data.iteritems():
+                        menu_item_string = "    %s :\t%s" % (key.replace("_", "__"), data)
+                        self.append_string_to_menu(popup_menu, menu_item_string)
 
                 if state_reference:
                     if state_reference.final_outcome:
-                        final_outcome_menu_item = gtk.MenuItem("Final outcome: " + str(state_reference.final_outcome))
-                        final_outcome_menu_item.set_sensitive(False)
-                        final_outcome_menu_item.show()
-                        popup_menu.append(final_outcome_menu_item)
+                        self.append_string_to_menu(popup_menu, "------------------------")
+                        final_outcome_menu_item_string = "Final outcome: " + str(state_reference.final_outcome)
+                        self.append_string_to_menu(popup_menu, final_outcome_menu_item_string)
+                        self.append_string_to_menu(popup_menu, "------------------------")
 
                 popup_menu.show()
 
@@ -167,8 +191,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 history_item = execution_history.history_items[0]
                 tree_item = self.history_tree_store.insert_after(
                     None, None, (history_item.state_reference.name,
-                                 history_item.scoped_data,
-                                 history_item.state_reference))
+                                 history_item))
                 self.insert_recursively(tree_item, execution_history.history_items, 1)
 
     def insert_recursively(self, parent, history_items, index):
@@ -192,8 +215,7 @@ class ExecutionHistoryTreeController(ExtendedController):
             if isinstance(history_item, CallItem):
                 tree_item = self.history_tree_store.insert_before(
                     parent, None, (history_item.state_reference.name + " - Call",
-                                   history_item.scoped_data,
-                                   history_item.state_reference))
+                                   history_item))
                 if history_item.call_type is CallType.EXECUTE:
                     # jump over the next call history item with call type CONTAINER to avoid duplicate tree entries
                     if len(history_items) > index + 1:
@@ -210,8 +232,7 @@ class ExecutionHistoryTreeController(ExtendedController):
             else:  # history_item is ReturnItem
                 tree_item = self.history_tree_store.insert_before(
                     parent, None, (history_item.state_reference.name + " - Return",
-                                   history_item.scoped_data,
-                                   history_item.state_reference))
+                                   history_item))
                 if history_item.call_type is CallType.EXECUTE:
                     self.insert_recursively(parent, history_items, new_index)
                 else:
@@ -231,7 +252,6 @@ class ExecutionHistoryTreeController(ExtendedController):
                 # comment this item out to avoid duplicate hierarchies
                 # tree_item = self.history_tree_store.insert_before(
                 #     parent, None, (first_history_item.state_reference.name + " - Concurrency Branch",
-                #                    first_history_item.scoped_data,
-                #                    first_history_item.state_reference))
+                #                    first_history_item))
                 self.insert_recursively(parent, child_history.history_items, 1)
 
