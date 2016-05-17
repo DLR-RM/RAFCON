@@ -1,0 +1,8 @@
+LIBRARY_PATHS:
+    generic: ${RAFCON_LIB_PATH}/generic
+    ros: ../../../test_scripts/ros_libraries
+    turtle_libraries: ../../../test_scripts/turtle_libraries
+    tutorials: ../../../test_scripts/tutorials
+TYPE: SM_CONFIG
+ENABLE_NETWORK_MONITORING: false
+USE_JSON: true

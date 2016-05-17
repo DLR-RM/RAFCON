@@ -297,7 +297,7 @@ class MainWindowController(ExtendedController):
     def highlight_execution_of_current_sm(self, active):
         if self.get_controller('state_machines_editor_ctrl') is None or \
                 self.get_controller('state_machines_editor_ctrl').view is None:
-            logger.warning("No state machines editor view")
+            logger.debug("No state machines editor view")
             return
         notebook = self.get_controller('state_machines_editor_ctrl').view['notebook']
         page_num = self.get_controller('state_machines_editor_ctrl').view['notebook'].get_current_page()

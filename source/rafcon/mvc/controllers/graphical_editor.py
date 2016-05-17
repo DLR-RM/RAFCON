@@ -21,7 +21,7 @@ from gtk.gdk import ACTION_COPY
 from gtk import DEST_DEFAULT_ALL
 import gobject
 
-from rafcon.statemachine.enums import StateType
+from rafcon.statemachine.enums import StateType, StateExecutionState
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
@@ -1496,17 +1496,25 @@ class GraphicalEditorController(ExtendedController):
             else True
 
         # Is the state active (executing)?
-        active = 0
-        if state_m.state.active or (state_m.state.is_root_state_of_library and state_m.parent.state.active):
+        active = StateExecutionState.INACTIVE
+        self_execution_status = state_m.state.state_execution_status
+        if state_m.parent:
+            parent_execution_status = state_m.parent.state.state_execution_status
+
+        if self_execution_status is not StateExecutionState.INACTIVE or \
+                (state_m.state.is_root_state_of_library and parent_execution_status is not StateExecutionState.INACTIVE):
             if isinstance(state_m, ContainerStateModel) and state_m.state.child_execution:
-                active = 0.5
+                active = StateExecutionState.EXECUTE_CHILDREN
             elif isinstance(state_m, LibraryStateModel) and not state_m.meta['gui']['show_content']:
-                active = 1
+                active = StateExecutionState.ACTIVE
             elif isinstance(state_m, LibraryStateModel) and isinstance(state_m.state_copy, ContainerStateModel) and \
                     state_m.state_copy.state.child_execution:
-                active = 0.5
+                active = StateExecutionState.EXECUTE_CHILDREN
             else:
-                active = 1
+                if self_execution_status is StateExecutionState.WAIT_FOR_NEXT_STATE:
+                    active = StateExecutionState.WAIT_FOR_NEXT_STATE
+                else:
+                    active = StateExecutionState.ACTIVE
 
         is_child_of_library = False
         # Increase hierarchy level if child of a library state

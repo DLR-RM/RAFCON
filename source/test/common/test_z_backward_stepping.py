@@ -4,7 +4,7 @@ import gtk
 import threading
 import time
 import os
-import signal
+import datetime
 
 # general tool elements
 from rafcon.utils import log
@@ -16,6 +16,8 @@ from rafcon.mvc.views.main_window import MainWindowView
 
 from rafcon.statemachine.storage import storage
 import rafcon.mvc.singleton
+import rafcon.mvc.config as gui_config
+from rafcon.statemachine.singleton import state_machine_execution_engine
 
 # test environment elements
 import testing_utils
@@ -43,27 +45,61 @@ def create_models():
     return logger, global_var_manager_model
 
 
+def wait_for_execution_engine_sync_counter(target_value, logger, timeout=5):
+    logger.debug("++++++++++ waiting for execution engine sync for " + str(target_value) + " steps ++++++++++")
+    current_time = datetime.datetime.now()
+    while True:
+        state_machine_execution_engine.synchronization_lock.acquire()
+        if state_machine_execution_engine.synchronization_counter == target_value:
+            state_machine_execution_engine.synchronization_counter = 0
+            state_machine_execution_engine.synchronization_lock.release()
+            break
+        state_machine_execution_engine.synchronization_lock.release()
+        if (datetime.datetime.now() - current_time).seconds > timeout:
+            raise RuntimeError("Something went wrong")
+        time.sleep(0.1)
+
+
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(*args):
     main_window_controller = args[0]
+    logger = args[1]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
-    call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
-    number_of_steps = 9
-    # TODO: This time is dangerous! If the PC where this test runs is too slow the test will fail! Redesign test!
-    # Experience values: on a 64bit Intel Xeon with 1,2 GHz 8 core PC 0.03 are safe enough
-    sleep_time = 0.05
-    time.sleep(sleep_time)
-    for i in range(number_of_steps):
-        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
-        time.sleep(sleep_time)
+    # reset the synchronization counter; although the tests run in different processes they share their memory
+    # as the import statements are at the top of the file and not inside the parallel called functions
+    state_machine_execution_engine.synchronization_lock.acquire()
+    state_machine_execution_engine.synchronization_counter = 0
+    state_machine_execution_engine.synchronization_lock.release()
 
-    for i in range(number_of_steps):
+    call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
+    # Wait for GUI to initialize
+    while gtk.events_pending():
+        gtk.main_iteration(False)
+    wait_for_execution_engine_sync_counter(1, logger)
+
+    # forward
+    for i in range(4):
+        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+        wait_for_execution_engine_sync_counter(3, logger)
+
+    for i in range(4):
+        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+        wait_for_execution_engine_sync_counter(1, logger)
+
+    # # backward
+    for i in range(3):
         call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
-        time.sleep(sleep_time)
+        wait_for_execution_engine_sync_counter(1, logger)
+
+    for i in range(4):
+        call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+        wait_for_execution_engine_sync_counter(3, logger)
+
+    call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
     sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
-    time.sleep(sleep_time)
+    time.sleep(0.1)
     for key, sd in sm.root_state.scoped_data.iteritems():
         if sd.name == "beer_number":
             assert sd.value == 100
@@ -79,6 +115,9 @@ def trigger_gui_signals(*args):
 
 def test_backward_stepping(caplog):
     testing_utils.start_rafcon()
+    testing_utils.remove_all_libraries()
+    gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
+    gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     logger, gvm_model = create_models()
     state_machine = storage.load_statemachine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines"
                                                                                        "/backward_step_barrier_test"))
@@ -93,7 +132,7 @@ def test_backward_stepping(caplog):
     # Wait for GUI to initialize
     while gtk.events_pending():
         gtk.main_iteration(False)
-    thread = threading.Thread(target=trigger_gui_signals, args=[main_window_controller])
+    thread = threading.Thread(target=trigger_gui_signals, args=[main_window_controller, logger])
     thread.start()
     gtk.main()
     logger.debug("Gtk main loop exited!")

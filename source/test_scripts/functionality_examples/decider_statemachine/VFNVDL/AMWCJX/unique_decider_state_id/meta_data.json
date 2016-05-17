@@ -1,0 +1,36 @@
+{
+    "gui": {
+        "editor_gaphas": {
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    12.227640671755722, 
+                    8.69013691603054
+                ]
+            }
+        }, 
+        "editor_opengl": {
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    25.828850587973893, 
+                    -19.274447900560457
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    8.449332551171612, 
+                    8.871873061058556
+                ]
+            }
+        }
+    }, 
+    "input_data_port4": {}, 
+    "input_data_port5": {}, 
+    "input_data_port6": {}, 
+    "outcome-1": {}, 
+    "outcome-2": {}, 
+    "outcome0": {}, 
+    "outcome1": {}
+}

@@ -7,9 +7,15 @@
 
 
 """
+import Queue
+
 from gtkmvc import Observable
 
 from rafcon.statemachine.states.container_state import ContainerState
+from rafcon.statemachine.enums import CallType
+from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
+from rafcon.statemachine.enums import StateExecutionState
+from rafcon.statemachine.state_elements.outcome import Outcome
 
 
 class ConcurrencyState(ContainerState):
@@ -30,30 +36,84 @@ class ConcurrencyState(ContainerState):
     def _check_start_transition(self, start_transition):
         return False, "No start transitions are allowed in concurrency state"
 
-        # @Observable.observed
-        # def add_transition(self, from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id=None):
-        #     """Adds a transition to the container state
-        #
-        #     Note: Either the toState or the toOutcome needs to be "None"
-        #
-        #     :param from_state_id: The source state of the transition
-        #     :param from_outcome: The outcome of the source state to connect the transition to
-        #     :param to_state_id: The target state of the transition
-        #     :param to_outcome: The target outcome of a container state
-        #     :param transition_id: An optional transition id for the new transition
-        #     """
-        #
-        #     transition_id = self.check_transition_id(transition_id)
-        #
-        #     self.basic_transition_checks(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
-        #
-        #     self.check_if_outcome_already_connected(from_state_id, from_outcome)
-        #
-        #     # in concurrency states only transitions to the parents are allowed
-        #     if to_state_id is not None and to_state_id is not self.state_id:  # None means that the target state is
-        #  the containing state
-        #         raise AttributeError("In concurrency states the to_state must be the container state itself")
-        #
-        #     self.create_transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
-        #
-        #     return transition_id
+    def setup_forward_or_backward_execution(self):
+        if self.backward_execution:
+            # pop the return item of this concurrency state to get the correct scoped data
+            last_history_item = self.execution_history.pop_last_item()
+            assert isinstance(last_history_item, ReturnItem)
+            self.scoped_data = last_history_item.scoped_data
+            # get the concurrency item for the children execution historys
+            concurrency_history_item = self.execution_history.get_last_history_item()
+            assert isinstance(concurrency_history_item, ConcurrencyItem)
+
+        else:  # forward_execution
+            self.execution_history.add_call_history_item(self, CallType.CONTAINER, self)
+            concurrency_history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
+        return concurrency_history_item
+
+    def start_child_states(self, concurrency_history_item, do_not_start_state=None):
+        self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
+        # actually the queue is not needed in the barrier concurrency case
+        # to avoid code duplication both concurrency states have the same start child function
+        concurrency_queue = Queue.Queue(maxsize=0)  # infinite Queue size
+
+        for index, state in enumerate(self.states.itervalues()):
+            if state is not do_not_start_state:
+                if not self.backward_execution:
+                    # care for the history items; this item is only for execution visualization
+                    concurrency_history_item.execution_histories[index].add_call_history_item(
+                        state, CallType.EXECUTE, self)
+                else:  # backward execution
+                    last_history_item = concurrency_history_item.execution_histories[index].pop_last_item()
+                    assert isinstance(last_history_item, ReturnItem)
+
+                state.concurrency_queue = concurrency_queue
+                state.concurrency_queue_id = index
+
+                state_input = self.get_inputs_for_state(state)
+                state_output = self.create_output_dictionary_for_state(state)
+                state.input_data = state_input
+                state.output_data = state_output
+                state.start(concurrency_history_item.execution_histories[index], self.backward_execution)
+        return concurrency_queue
+
+    def join_state_and_process_its_data(self, state, history_index, concurrency_history_item):
+        state.join()
+        state.state_execution_status = StateExecutionState.INACTIVE
+        self.add_state_execution_output_to_scoped_data(state.output_data, state)
+        self.update_scoped_variables_with_output_dictionary(state.output_data, state)
+        # care for the history items
+        if not self.backward_execution:
+            state.concurrency_queue = None
+            # add the data of all child states to the scoped data and the scoped variables
+            state.execution_history.add_return_history_item(state, CallType.EXECUTE, self)
+        else:
+            last_history_item = concurrency_history_item.execution_histories[history_index].pop_last_item()
+            assert isinstance(last_history_item, CallItem)
+
+    def finalize_backward_execution(self):
+        # backward_execution needs to be True to signal the parent container state the backward execution
+        self.backward_execution = True
+        # pop the ConcurrencyItem as we are leaving the barrier concurrency state
+        last_history_item = self.execution_history.pop_last_item()
+        assert isinstance(last_history_item, ConcurrencyItem)
+
+        last_history_item = self.execution_history.pop_last_item()
+        assert isinstance(last_history_item, CallItem)
+        # this copy is convenience and not required here
+        self.scoped_data = last_history_item.scoped_data
+        # do not write the output of the entry script
+        self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+        return self.finalize()
+
+    def finalize_concurrency_state(self, outcome):
+        final_outcome = outcome
+        self.execution_history.add_return_history_item(self, CallType.CONTAINER, self)
+        self.write_output_data()
+        self.check_output_data_type()
+        self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+
+        if self.preempted:
+            final_outcome = Outcome(-2, "preempted")
+        return self.finalize(final_outcome)
+
