@@ -136,14 +136,14 @@ def save_statemachine_to_path(state_machine, base_path, delete_old_state_machine
         state_machine.last_update = old_update_time
 
     # add root state recursively
-    save_state_recursively(root_state, base_path, "")
+    save_state_recursively(root_state, base_path, "", temporary_storage)
 
     if state_machine.marked_dirty and not temporary_storage:
         state_machine.marked_dirty = False
     logger.debug("State machine with id {0} was saved at {1}".format(state_machine.state_machine_id, base_path))
 
 
-def save_script_file_for_state_and_source_path(state, base_path, state_path):
+def save_script_file_for_state_and_source_path(state, base_path, state_path, temporary_storage=False):
     """Saves the script file for a state to the directory of the state
 
     The script name will be set to the SCRIPT_FILE constant.
@@ -157,23 +157,19 @@ def save_script_file_for_state_and_source_path(state, base_path, state_path):
         state_path_full = os.path.join(base_path, state_path)
         source_script_file = os.path.join(state.get_file_system_path(), state.script.filename)
         destination_script_file = os.path.join(state_path_full, SCRIPT_FILE)
-        if not source_script_file == destination_script_file:
-            try:
-                if not os.path.exists(source_script_file):
-                    write_file(destination_script_file, state.script_text)
-                else:
-                    shutil.copyfile(source_script_file, destination_script_file)
-            except Exception:
-                logger.exception("Copy of script file failed: {0} -> {1}".format(source_script_file,
-                                                                               destination_script_file))
-                raise
 
+        try:
+            write_file(destination_script_file, state.script_text)
+        except Exception:
+            logger.exception("Storing of script file failed: {0} -> {1}".format(state.get_path(),
+                                                                                destination_script_file))
+            raise
+
+        if not source_script_file == destination_script_file and not temporary_storage:
             state.script.reload_path(SCRIPT_FILE)
-        else:  # load text into script file
-            write_file(source_script_file, state.script_text)
 
 
-def save_state_recursively(state, base_path, parent_path):
+def save_state_recursively(state, base_path, parent_path, temporary_storage=False):
     """Recursively saves a state to a yaml file
 
     It calls this method on all its substates.
@@ -191,14 +187,14 @@ def save_state_recursively(state, base_path, parent_path):
     if not os.path.exists(state_path_full):
         os.makedirs(state_path_full)
     if isinstance(state, ExecutionState):
-        save_script_file_for_state_and_source_path(state, base_path, state_path)
+        save_script_file_for_state_and_source_path(state, base_path, state_path, temporary_storage)
 
     storage_utils.write_dict_to_json(state, os.path.join(state_path_full, FILE_NAME_CORE_DATA))
 
     # create yaml files for all children
     if isinstance(state, ContainerState):
         for state in state.states.itervalues():
-            save_state_recursively(state, base_path, state_path)
+            save_state_recursively(state, base_path, state_path, temporary_storage)
 
 
 def load_statemachine_from_path(base_path):
