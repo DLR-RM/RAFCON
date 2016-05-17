@@ -38,7 +38,7 @@ class ExecutionHistory:
         else:  # this is the case for the very first executed state
             return None
 
-    def add_call_history_item(self, state, method_name, state_for_scoped_data):
+    def add_call_history_item(self, state, method_name, state_for_scoped_data, input_data=None):
         """Adds a new call-history-item to the history item list. A call history items stores information about the point
         in time where a method (entry, execute, exit) of certain state was called.
 
@@ -49,13 +49,13 @@ class ExecutionHistory:
         :return:
 
         """
-        return_item = CallItem(state, self.get_last_history_item(), method_name, state_for_scoped_data)
+        return_item = CallItem(state, self.get_last_history_item(), method_name, state_for_scoped_data, input_data)
         if self.get_last_history_item() is not None:
             self.get_last_history_item().next = return_item
         self.history_items.append(return_item)
         return return_item
 
-    def add_return_history_item(self, state, method_name, state_for_scoped_data):
+    def add_return_history_item(self, state, method_name, state_for_scoped_data, output_data=None):
         """Adds a new return-history-item to the history item list. A return history items stores information about the
         point in time where a method (entry, execute, exit) of certain state returned.
 
@@ -66,7 +66,7 @@ class ExecutionHistory:
         :return:
 
         """
-        return_item = ReturnItem(state, self.get_last_history_item(), method_name, state_for_scoped_data)
+        return_item = ReturnItem(state, self.get_last_history_item(), method_name, state_for_scoped_data, output_data)
         if self.get_last_history_item() is not None:
             self.get_last_history_item().next = return_item
         self.history_items.append(return_item)
@@ -135,10 +135,14 @@ class ScopedDataItem(HistoryItem):
 
     """
 
-    def __init__(self, state, prev, method_name, state_for_scoped_data):
+    def __init__(self, state, prev, method_name, state_for_scoped_data, child_state_input_output_data):
         HistoryItem.__init__(self, state, prev)
         self.call_type = method_name
         self.scoped_data = copy.deepcopy(state_for_scoped_data._scoped_data)
+        if child_state_input_output_data:
+            self.child_state_input_output_data = copy.deepcopy(child_state_input_output_data)
+        else:
+            self.child_state_input_output_data = None
 
     def __str__(self):
         return "SingleItem %s" % (HistoryItem.__str__(self))
@@ -148,8 +152,8 @@ class CallItem(ScopedDataItem):
     """A history item to represent a state call
 
     """
-    def __init__(self, state, prev, method_name, state_for_scoped_data):
-        ScopedDataItem.__init__(self, state, prev, method_name, state_for_scoped_data)
+    def __init__(self, state, prev, method_name, state_for_scoped_data, input_data):
+        ScopedDataItem.__init__(self, state, prev, method_name, state_for_scoped_data, input_data)
 
     def __str__(self):
         return "CallItem %s" % (ScopedDataItem.__str__(self))
@@ -170,8 +174,8 @@ class ReturnItem(ScopedDataItem):
     """A history item to represent the return of a root state call
 
     """
-    def __init__(self, state, prev, method_name, state_for_scoped_data):
-        ScopedDataItem.__init__(self, state, prev, method_name, state_for_scoped_data)
+    def __init__(self, state, prev, method_name, state_for_scoped_data, output_data):
+        ScopedDataItem.__init__(self, state, prev, method_name, state_for_scoped_data, output_data)
 
         self.outcome = None
         self.outcome = state.final_outcome

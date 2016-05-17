@@ -59,10 +59,14 @@ class ConcurrencyState(ContainerState):
 
         for index, state in enumerate(self.states.itervalues()):
             if state is not do_not_start_state:
+
+                state.input_data = self.get_inputs_for_state(state)
+                state.output_data = self.create_output_dictionary_for_state(state)
+
                 if not self.backward_execution:
                     # care for the history items; this item is only for execution visualization
                     concurrency_history_item.execution_histories[index].add_call_history_item(
-                        state, CallType.EXECUTE, self)
+                        state, CallType.EXECUTE, self, state.input_data)
                 else:  # backward execution
                     last_history_item = concurrency_history_item.execution_histories[index].pop_last_item()
                     assert isinstance(last_history_item, ReturnItem)
@@ -70,10 +74,6 @@ class ConcurrencyState(ContainerState):
                 state.concurrency_queue = concurrency_queue
                 state.concurrency_queue_id = index
 
-                state_input = self.get_inputs_for_state(state)
-                state_output = self.create_output_dictionary_for_state(state)
-                state.input_data = state_input
-                state.output_data = state_output
                 state.start(concurrency_history_item.execution_histories[index], self.backward_execution)
         return concurrency_queue
 
@@ -86,9 +86,10 @@ class ConcurrencyState(ContainerState):
         if not self.backward_execution:
             state.concurrency_queue = None
             # add the data of all child states to the scoped data and the scoped variables
-            state.execution_history.add_return_history_item(state, CallType.EXECUTE, self)
+            state.execution_history.add_return_history_item(state, CallType.EXECUTE, self, state.output_data)
         else:
             last_history_item = concurrency_history_item.execution_histories[history_index].pop_last_item()
+            print last_history_item
             assert isinstance(last_history_item, CallItem)
 
     def finalize_backward_execution(self):

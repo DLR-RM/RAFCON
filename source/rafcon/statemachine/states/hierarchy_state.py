@@ -8,6 +8,7 @@
 
 """
 import traceback
+import copy
 
 from rafcon.utils import log
 from rafcon.statemachine.states.container_state import ContainerState
@@ -36,168 +37,220 @@ class HierarchyState(ContainerState):
                                 transitions, data_flows, start_state_id, scoped_variables, v_checker)
         self.handling_execution_mode = False
 
-    def run(self):
-        """ This defines the sequence of actions that are taken when the hierarchy is executed
+        self.child_state = None
+        self.last_error = None
+        self.last_child = None
+        self.last_transition = None
 
-        The input_data and output_data comes with a mapping from names to values,
-        to transfer the data to the correct ports, the input_data.port_id has to be retrieved again
+    def _initialize_hierarchy(self):
+        """ This function covers the whole initialization routine before executing a hierarchy state.
         :return:
         """
         logger.debug("Starting execution of {0}{1}".format(self, " (backwards)" if self.backward_execution else ""))
+
+        # reset variables
+        self.child_state = None
+        self.last_error = None
+        self.last_child = None
+        self.last_transition = None
+
         if self.backward_execution:
             self.setup_backward_run()
         else:  # forward_execution
             self.setup_run()
 
+        self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+        if self.backward_execution:
+            last_history_item = self.execution_history.pop_last_item()
+            assert isinstance(last_history_item, ReturnItem)
+            self.scoped_data = last_history_item.scoped_data
+
+        else:  # forward_execution
+            self.execution_history.add_call_history_item(self, CallType.CONTAINER, self)
+            self.child_state = self.get_start_state(set_final_outcome=True)
+            while self.child_state is None:
+                self.child_state = self.handle_no_start_state()
+
+    def run(self):
+        """ This defines the sequence of actions that are taken when the hierarchy is executed. A hierarchy state
+        executes all its child states recursively. Principally this code collects all input data for the next
+        child state, executes it, stores its output data and determines the next state
+        based on the outcome of the child state.
+        :return:
+        """
+        self._initialize_hierarchy()
         try:
-            child_state = None
-            last_error = None
-            last_child = None
-            last_transition = None
-            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-            if self.backward_execution:
-                last_history_item = self.execution_history.pop_last_item()
-                assert isinstance(last_history_item, ReturnItem)
-                self.scoped_data = last_history_item.scoped_data
-
-            else:  # forward_execution
-                self.execution_history.add_call_history_item(self, CallType.CONTAINER, self)
-                child_state = self.get_start_state(set_final_outcome=True)
-                while child_state is None:
-                    child_state = self.handle_no_start_state()
-                    if self.preempted:
-                        break
-
-            ########################################################
-            # children execution loop start
-            ########################################################
-            while child_state is not self:
-
+            while self.child_state is not self:
                 self.handling_execution_mode = True
-                # depending on the execution mode pause execution
-                execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, child_state)
+                execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, self.child_state)
                 self.handling_execution_mode = False
                 if self.state_execution_status is not StateExecutionState.EXECUTE_CHILDREN:
                     self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
 
                 self.backward_execution = False
                 if self.preempted:
-                    if last_transition and last_transition.from_outcome == -2:
-                        # normally execute the next state
-                        logger.debug("Execute preemption handling for '{0}'".format(last_child))
+                    if self.last_transition and self.last_transition.from_outcome == -2:
+                        logger.debug("Execute preemption handling for '{0}'".format(self.child_state))
                     else:
                         break
-
                 elif execution_mode == StateMachineExecutionStatus.BACKWARD:
-                    self.backward_execution = True
-                    last_history_item = self.execution_history.pop_last_item()
-                    if last_history_item.state_reference is self:
-                        # if the the next child_state in the history is self exit this hierarchy-state
-                        if last_child:
-                            # do not set the last state to inactive before executing the new one
-                            last_child.state_execution_status = StateExecutionState.INACTIVE
+                    break_loop = self._handle_backward_execution_before_child_execution()
+                    if break_loop:
                         break
-                    assert isinstance(last_history_item, ReturnItem)
-                    self.scoped_data = last_history_item.scoped_data
-                    child_state = last_history_item.state_reference
-
-                if child_state is None:  # This is only the case if this hierarchy-state is started in backward mode,
-                    # but the  user directly switches to the forward execution mode
+                # This is only the case if this hierarchy-state is started in backward mode,
+                # but the user directly switches to the forward execution mode
+                if self.child_state is None:
                     break
 
-                if not self.backward_execution:  # only add history item if it is not a backward execution
-                    self.execution_history.add_call_history_item(child_state, CallType.EXECUTE, self)
+                self._execute_current_child()
 
-                # logger.debug("Preparing next child state: {0}{1}".format(child_state, " (backwards)" if
-                #              self.backward_execution else ""))
-                child_state.input_data = self.get_inputs_for_state(child_state)
-                child_state.output_data = self.create_output_dictionary_for_state(child_state)
-                if last_error is not None:
-                    child_state.input_data['error'] = last_error
-                last_error = None
-                if last_child:
-                    # do not set the last state to inactive before executing the new one
-                    last_child.state_execution_status = StateExecutionState.INACTIVE
-                child_state.start(self.execution_history, backward_execution=self.backward_execution)
-                child_state.join()
-
-                # set last_error and last_child
-                if child_state.final_outcome is not None:  # final outcome can be None if only one state in a
-                    # hierarchy state is executed and immediately backward executed
-                    if child_state.final_outcome.outcome_id == -1:  # if the child_state aborted save the error
-                        last_error = ""
-                        if 'error' in child_state.output_data:
-                            last_error = child_state.output_data['error']
-                last_child = child_state
-
-                if child_state.backward_execution:
-                    child_state.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-                    # the item popped now from the history will be a CallItem and will contain the scoped data,
-                    # that was valid before executing the child_state
-                    last_history_item = self.execution_history.pop_last_item()
-                    assert isinstance(last_history_item, CallItem)
-                    # copy the scoped_data of the history from the point before the child_state was executed
-                    self.scoped_data = last_history_item.scoped_data
-
-                    # this is a look-ahead step to directly leave this hierarchy-state if the last child_state
-                    # was executed; this leads to the backward and forward execution of a hierarchy child_state
-                    # having the exact same number of steps
-                    last_history_item = self.execution_history.get_last_history_item()
-                    if last_history_item.state_reference is self:
-                        last_history_item = self.execution_history.pop_last_item()
-                        assert isinstance(last_history_item, CallItem)
-                        self.scoped_data = last_history_item.scoped_data
-                        child_state.state_execution_status = StateExecutionState.INACTIVE
+                if self.backward_execution:
+                    break_loop = self._handle_backward_execution_after_child_execution()
+                    if break_loop:
                         break
                 else:
-                    self.add_state_execution_output_to_scoped_data(child_state.output_data, child_state)
-                    self.update_scoped_variables_with_output_dictionary(child_state.output_data, child_state)
-                    self.execution_history.add_return_history_item(child_state, CallType.EXECUTE, self)
-                    # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
-                    transition = self.get_transition_for_outcome(child_state, child_state.final_outcome)
-
-                    if transition is None:
-                        transition = self.handle_no_transition(child_state)
-                    child_state.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-                    # if the transition is still None, then the child_state was preempted or aborted, in this case
-                    # return
-                    if transition is None:
+                    break_loop = self._handle_forward_execution_after_child_execution()
+                    if break_loop:
                         break
-
-                    last_transition = transition
-                    child_state = self.get_state_for_transition(transition)
-                    if transition is not None and child_state is self:
-                        self.final_outcome = self.outcomes[transition.to_outcome]
-
-                    if child_state is self:
-                        singleton.state_machine_execution_engine.notify_run_to_states(self)
-
-            if last_child:
-                # do not set the last state to inactive before executing the new one
-                last_child.state_execution_status = StateExecutionState.INACTIVE
-
-            ########################################################
-            # children execution loop end
-            ########################################################
-
-            if not self.backward_execution:
-                self.execution_history.add_return_history_item(self, CallType.CONTAINER, self)
-
-            self.write_output_data()
-            self.check_output_data_type()
-            # add error message from child_state to own output_data
-            self.output_data['error'] = last_error
-
-            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
-
-            if self.preempted:
-                self.final_outcome = Outcome(-2, "preempted")
-
-            return self.finalize(self.final_outcome)
+            return self._finalize_hierarchy()
 
         except Exception, e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
-
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
             return self.finalize(Outcome(-1, "aborted"))
+
+    def _handle_backward_execution_before_child_execution(self):
+        """ Sets up all data after receiving a backward execution step from the execution engine
+        :return: a flag to indicate if normal child state execution should abort
+        """
+        self.backward_execution = True
+        last_history_item = self.execution_history.pop_last_item()
+        if last_history_item.state_reference is self:
+            # if the the next child_state in the history is self exit this hierarchy-state
+            if self.child_state:
+                # do not set the last state to inactive before executing the new one
+                self.child_state.state_execution_status = StateExecutionState.INACTIVE
+            return True
+        assert isinstance(last_history_item, ReturnItem)
+        self.scoped_data = last_history_item.scoped_data
+        self.child_state = last_history_item.state_reference
+        return False
+
+    def _execute_current_child(self):
+        """ Collect all data for a child state and execute it.
+        :return:
+        """
+
+        self.child_state.input_data = self.get_inputs_for_state(self.child_state)
+        self.child_state.output_data = self.create_output_dictionary_for_state(self.child_state)
+
+        # process data of last state
+        if self.last_error is not None:
+            self.child_state.input_data['error'] = copy.deepcopy(self.last_error)
+        self.last_error = None
+        if self.last_child:
+            # do not set the last state to inactive before executing the new one
+            self.last_child.state_execution_status = StateExecutionState.INACTIVE
+
+        if not self.backward_execution:  # only add history item if it is not a backward execution
+            self.execution_history.add_call_history_item(
+                self.child_state, CallType.EXECUTE, self, self.child_state.input_data)
+
+        self.child_state.start(self.execution_history, backward_execution=self.backward_execution)
+        self.child_state.join()
+
+        if self.preempted:
+            if self.backward_execution:
+                # this is the case if the user backward step through its state machine and stops it
+                # as preemption behaviour in backward mode is not defined, set the state to forward mode
+                # to ensure clean state machine shutdown
+                self.backward_execution = False
+
+        # set last_error and self.last_child
+        if self.child_state.final_outcome is not None:  # final outcome can be None if only one state in a
+            # hierarchy state is executed and immediately backward executed
+            if self.child_state.final_outcome.outcome_id == -1:  # if the child_state aborted save the error
+                self.last_error = ""
+                if 'error' in self.child_state.output_data:
+                    self.last_error = self.child_state.output_data['error']
+        self.last_child = self.child_state
+
+    def _handle_backward_execution_after_child_execution(self):
+        """Cleanup the former child state execution and prepare for the next state execution in the backward
+        execution case.
+        :return: a flag to indicate if normal child state execution should abort
+        """
+        self.child_state.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+        # the item popped now from the history will be a CallItem and will contain the scoped data,
+        # that was valid before executing the child_state
+        last_history_item = self.execution_history.pop_last_item()
+        assert isinstance(last_history_item, CallItem)
+        # copy the scoped_data of the history from the point before the child_state was executed
+        self.scoped_data = last_history_item.scoped_data
+
+        # this is a look-ahead step to directly leave this hierarchy-state if the last child_state
+        # was executed; this leads to the backward and forward execution of a hierarchy child_state
+        # having the exact same number of steps
+        last_history_item = self.execution_history.get_last_history_item()
+        if last_history_item.state_reference is self:
+            last_history_item = self.execution_history.pop_last_item()
+            assert isinstance(last_history_item, CallItem)
+            self.scoped_data = last_history_item.scoped_data
+            self.child_state.state_execution_status = StateExecutionState.INACTIVE
+            return True
+        return False
+
+    def _handle_forward_execution_after_child_execution(self):
+        """ Cleanup the former child state execution and prepare for the next state execution in the forward
+        execution case.
+        :return: a flag to indicate if normal child state execution should abort
+        """
+        self.execution_history.add_return_history_item(
+            self.child_state, CallType.EXECUTE, self, self.child_state.output_data)
+        self.add_state_execution_output_to_scoped_data(self.child_state.output_data, self.child_state)
+        self.update_scoped_variables_with_output_dictionary(self.child_state.output_data, self.child_state)
+        # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
+        transition = self.get_transition_for_outcome(self.child_state, self.child_state.final_outcome)
+
+        if transition is None:
+            transition = self.handle_no_transition(self.child_state)
+        self.child_state.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+        # if the transition is still None, then the child_state was preempted or aborted, in this case
+        # return
+        if transition is None:
+            return True
+
+        self.last_transition = transition
+        self.child_state = self.get_state_for_transition(transition)
+        if transition is not None and self.child_state is self:
+            self.final_outcome = self.outcomes[transition.to_outcome]
+
+        if self.child_state is self:
+            singleton.state_machine_execution_engine.notify_run_to_states(self)
+        return False
+
+    def _finalize_hierarchy(self):
+        """ This function finalizes the execution of a hierarchy state. It sets the correct status and manages
+        the output data handling.
+        :return:
+        """
+        if self.last_child:
+            self.last_child.state_execution_status = StateExecutionState.INACTIVE
+
+        if not self.backward_execution:
+            self.execution_history.add_return_history_item(self, CallType.CONTAINER, self)
+
+        self.write_output_data()
+        self.check_output_data_type()
+        # add error message from child_state to own output_data
+        self.output_data['error'] = self.last_error
+
+        self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+
+        if self.preempted:
+            self.final_outcome = Outcome(-2, "preempted")
+
+        return self.finalize(self.final_outcome)
+
+
