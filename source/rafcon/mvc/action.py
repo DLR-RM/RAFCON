@@ -12,7 +12,7 @@ import json
 from jsonconversion.decoder import JSONObjectDecoder
 from jsonconversion.encoder import JSONObjectEncoder
 
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.library_state import LibraryState
@@ -44,7 +44,8 @@ logger = log.get_logger(__name__)
 
 core_object_list = [Transition, DataFlow, Outcome, InputDataPort, OutputDataPort, ScopedData, ScopedVariable, Script,
                     GlobalVariableManager, LibraryManager, StateMachine,
-                    ExecutionState, HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState, LibraryState]
+                    ExecutionState, HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState, LibraryState,
+                    DeciderState]
 
 HISTORY_DEBUG_LOG_FILE = RAFCON_TEMP_PATH_BASE + '/test_file.txt'
 
@@ -887,7 +888,8 @@ class CoreObjectIdentifier:
                                    DataFlow.__name__: 'data_flows',
                                    Outcome.__name__: 'outcomes',
                                    Transition.__name__: 'transitions',
-                                   State.__name__: 'states'}
+                                   State.__name__: 'states',
+                                   DeciderState.__name__: 'states'}
 
     def __init__(self, core_obj_or_cls):
         if not(type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list):
@@ -907,7 +909,7 @@ class CoreObjectIdentifier:
 
         if not self._type == 'class':
             if self._type in ['ExecutionState', 'HierarchyState', 'BarrierConcurrencyState',
-                              'PreemptiveConcurrencyState', 'LibraryState']:
+                              'PreemptiveConcurrencyState', 'LibraryState', 'DeciderState']:
                 self._path = core_obj_or_cls.get_path()
                 self._id = core_obj_or_cls.state_id
                 self._sm_id = core_obj_or_cls.get_sm_for_state().state_machine_id
