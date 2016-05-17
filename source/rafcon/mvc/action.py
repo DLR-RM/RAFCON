@@ -1381,6 +1381,14 @@ class StateAction(Action):
             assert self.parent_path == self.object_identifier._path
         self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
         self.after_arguments = None
+        if self.action_type == 'script_text' and isinstance(self.before_overview['args'][-1][1], str):
+            import difflib
+            d = difflib.Differ()
+            diff = list(d.compare(self.before_overview['args'][-1][0].script_text.split('\n'),
+                                  self.before_overview['args'][-1][1].split('\n')))
+            self.script_diff = '\n'.join(diff)
+        else:
+            self.script_diff = None
 
     @staticmethod
     def get_set_of_arguments(s):

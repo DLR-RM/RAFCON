@@ -39,10 +39,10 @@ class ModificationHistoryTreeController(ExtendedController):
         self.tree_folded = False
 
         assert self._mode in ['trail', 'branch']
-        self.history_tree_store = gtk.TreeStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT, str)
-
+        self.history_tree_store = gtk.TreeStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT, str, str)
         if view is not None:
             view['history_tree'].set_model(self.history_tree_store)
+        view['history_tree'].set_tooltip_column(8)
 
         # view.set_hover_expand(True)
 
@@ -216,6 +216,7 @@ class ModificationHistoryTreeController(ExtendedController):
             method_name = action.before_overview['method_name'][-1]
             instance = action.before_overview['instance'][-1]
             parameters = []
+            tool_tip = None
             if action.before_overview['type'] == 'signal':
                 # logger.info(action.before_overview._overview_dict)
                 parameters.append(str(action.meta))
@@ -225,6 +226,16 @@ class ModificationHistoryTreeController(ExtendedController):
                         parameters.append(str(value))
             for name, value in action.before_overview['kwargs'][-1].iteritems():
                 parameters.append("{0}: {1}".format(name, value))
+
+            if hasattr(action, 'action_type') and action.action_type == "script_text" and hasattr(action, 'script_diff'):
+                line = ""
+                for elem in action.script_diff.split('\n'):
+                    print elem
+                    line = elem
+                    if not line.replace(' ', '') == '':
+                        break
+                tool_tip = action.script_diff
+                parameters = [line]  # + "\n -> [hover for source script diff in tooltip.]"]
 
             # find active actions in to be marked in view
             if self._mode == 'trail':
@@ -239,7 +250,7 @@ class ModificationHistoryTreeController(ExtendedController):
                 version_label = 'b.' + str(action.version_id)
 
             tree_row_iter = self.new_change(model, str(method_name).replace('_', ' '), instance, info, version_label, active,
-                                            parent_tree_item, ', '.join(parameters))
+                                            parent_tree_item, ', '.join(parameters), tool_tip)
             self.list_tree_iter[action.version_id] = (tree_row_iter, parent_tree_item)
             return tree_row_iter
 
@@ -319,7 +330,8 @@ class ModificationHistoryTreeController(ExtendedController):
             # foreground = "gray"
             return "#707070"
 
-    def new_change(self, model, method_name, instance, info, version_id, active, parent_tree_item, parameters):
+    def new_change(self, model, method_name, instance, info, version_id, active, parent_tree_item, parameters,
+                   tool_tip=None):
         # Nr, Instance, Method, Details, model
 
         # TODO may useful tooltip
@@ -344,7 +356,8 @@ class ModificationHistoryTreeController(ExtendedController):
                                                         info,
                                                         foreground,
                                                         model,
-                                                        parameters))
+                                                        parameters,
+                                                        tool_tip))
 
         # handle expand-mode
         if parent_tree_item is not None:
