@@ -18,6 +18,7 @@ from rafcon.statemachine.storage import storage
 import rafcon.mvc.singleton
 import rafcon.mvc.config as gui_config
 from rafcon.statemachine.singleton import state_machine_execution_engine
+from rafcon.statemachine.execution.statemachine_status import StateMachineExecutionStatus
 
 # test environment elements
 import testing_utils
@@ -48,6 +49,7 @@ def create_models():
 def wait_for_execution_engine_sync_counter(target_value, logger, timeout=5):
     logger.debug("++++++++++ waiting for execution engine sync for " + str(target_value) + " steps ++++++++++")
     current_time = datetime.datetime.now()
+    # time.sleep(0.3)
     while True:
         state_machine_execution_engine.synchronization_lock.acquire()
         if state_machine_execution_engine.synchronization_counter == target_value:
@@ -99,7 +101,8 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
     sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
-    time.sleep(0.1)
+    while state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+        time.sleep(0.1)
     for key, sd in sm.root_state.scoped_data.iteritems():
         if sd.name == "beer_number":
             assert sd.value == 100
@@ -145,5 +148,5 @@ def test_backward_stepping(caplog):
 
 
 if __name__ == '__main__':
-    # test_backward_stepping(None)
-    pytest.main([__file__])
+    test_backward_stepping(None)
+    # pytest.main([__file__])
