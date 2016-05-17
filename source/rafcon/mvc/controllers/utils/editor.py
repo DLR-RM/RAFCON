@@ -63,7 +63,7 @@ class EditorController(ExtendedController):
 
     def _undo(self, *args):
         buffer = self.view.textview.get_buffer()
-        if self.view.textview.is_focus() and buffer.can_undo():
+        if self.view.textview.is_focus() and hasattr(buffer, 'can_undo') and buffer.can_undo():
             logger.debug('Run undo on {}'.format(self.__class__.__name__))
             return buffer.undo()
         else:
@@ -71,7 +71,7 @@ class EditorController(ExtendedController):
 
     def _redo(self, *args):
         buffer = self.view.textview.get_buffer()
-        if self.view.textview.is_focus() and buffer.can_redo():
+        if self.view.textview.is_focus() and hasattr(buffer, 'can_redo') and buffer.can_redo():
             logger.debug('Run redo on {}'.format(self.__class__.__name__))
             return buffer.redo()
         else:

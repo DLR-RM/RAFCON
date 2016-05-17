@@ -145,7 +145,6 @@ class ContainerState(State):
 
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, outcomes, states,
                                transitions, data_flows, self.start_state_id, scoped_variables, None)
-        # state.script_text = copy(self.script_text)
         state.description = deepcopy(self.description)
         return state
 
