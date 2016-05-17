@@ -217,6 +217,7 @@ def collect_state_model_memory_addresses(state_m, address_book=None):
 
         return address_book
 
+
 def compare_references_to_sm_model_and_core(sm_m, new_sm_m):
     sm = sm_m.state_machine
     new_sm = new_sm_m.state_machine
@@ -304,6 +305,7 @@ def run_copy_test(*args):
     else:
         tmp_sm_system_path = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/copy_test' + sm.file_system_path
 
+    new_sm_m.destroy()
     if len(args) > 1:
         main_window_controller = args[1]
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
@@ -359,6 +361,8 @@ def run_copy_performance_test_and_check_storage_copy(*args):
     time_copy_m_after = time.time()
     model_copy_duration = round(time_copy_m_after*1000000) - round(time_copy_m_before*1000000)
 
+    sm1_m.destroy()
+
     print "only_model_duration: {}".format(only_model_duration)
     print "only_storage_duration: {}".format(only_storage_duration)
     print "storage_copy_duration: {}".format(storage_copy_duration)
@@ -378,14 +382,19 @@ def test_simple(caplog):
     [state, sm_model, state_dict] = create_models()
     run_copy_test(sm_model)
     run_copy_performance_test_and_check_storage_copy(sm_model)
+    sm_model.destroy()
+    # rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
 
     [state, sm_model, state_dict] = create_models_concurrency()
     run_copy_test(sm_model)
     run_copy_performance_test_and_check_storage_copy(sm_model)
+    sm_model.destroy()
+    # rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
     testing_utils.reload_config(config=True, gui_config=False)
     testing_utils.test_multithrading_lock.release()
+
 
 @pytest.mark.parametrize("with_gui", [False])
 def test_complex(with_gui, caplog):
@@ -430,12 +439,23 @@ def test_complex(with_gui, caplog):
         run_copy_test(sm_model)
         print "start thread"
     run_copy_performance_test_and_check_storage_copy(sm_model)
+    sm_model.destroy()
 
     os.chdir(rafcon.__path__[0] + "/../test/common")
+    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    while gtk.events_pending():
+        gtk.main_iteration(False)
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
     testing_utils.reload_config(config=True, gui_config=False)
     testing_utils.test_multithrading_lock.release()
+    # import conftest
+    # import shutil
+    # for elem in os.listdir(testing_utils.constants.RAFCON_TEMP_PATH_BASE):
+    #     path = os.path.join(testing_utils.constants.RAFCON_TEMP_PATH_BASE, elem)
+    #     if os.path.isdir(path) and not path == testing_utils.RAFCON_TEMP_PATH_TEST_BASE:
+    #         shutil.rmtree(path)
+
 
 
 if __name__ == '__main__':
@@ -446,4 +466,3 @@ if __name__ == '__main__':
     # test_complex(False, None)
     # test_simple(None)
     pytest.main(['-s', __file__])
-

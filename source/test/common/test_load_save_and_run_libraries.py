@@ -208,4 +208,4 @@ if __name__ == '__main__':
     # test_hierarchy_state_library(None)
     # test_save_nested_library_state(None)
     # test_nested_library_state_machine(None)
-    pytest.main([__file__])
+    pytest.main(['-s', __file__])
