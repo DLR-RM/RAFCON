@@ -53,11 +53,11 @@ class SourceEditorController(EditorController):
 
     @property
     def source_text(self):
-        return self.model.state.script.script
+        return self.model.state.script_text
 
     @source_text.setter
     def source_text(self, text):
-        self.model.state.script.script = text
+        self.model.state.script_text = text
 
     # ===============================================================
     def code_changed(self, source):

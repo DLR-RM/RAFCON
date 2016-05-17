@@ -15,5 +15,7 @@ class DescriptionEditorView(EditorView):
                 self.textview.set_show_line_numbers(False)
                 self.textview.set_auto_indent(True)
                 self.textview.set_highlight_current_line(True)
+                b = self.textview.get_buffer()
+                b.set_highlight_syntax(False)
         except NameError:
             pass

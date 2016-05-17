@@ -239,8 +239,8 @@ def create_models(*args, **kargs):
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
 
-    for sm_in in rafcon.statemachine.singleton.state_machine_manager.state_machines.values():
-        rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
+    # for sm_in in rafcon.statemachine.singleton.state_machine_manager.state_machines.values():
+    #     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
 
     rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
@@ -1016,6 +1016,8 @@ def test_add_remove_models(caplog):
     do_check_for_state(state_dict, state_name='Container')
     # # assert check_if_all_states_there(state_dict['Container'], state_check_dict1)
     # # assert check_if_all_states_there(state_dict['Container'], state_check_dict2)
+
+    sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1218,6 +1220,8 @@ def test_state_property_modifications_history(caplog):
     check_state_for_all_models(state, state_m)
     sm_model.history.undo()
     sm_model.history.redo()
+
+    sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1264,6 +1268,8 @@ def test_outcome_property_modifications_history(caplog):
 
     # do_check_for_state(state_dict, history_ctrl, state_name='Nested')
     do_check_for_state(state_dict, state_name='Container')
+
+    sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1369,6 +1375,8 @@ def test_transition_property_modifications_history(caplog):
     state_dict['Nested'].transitions[new_df_id].to_state = state1.state_id
     sm_model.history.undo()
     sm_model.history.redo()
+
+    sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1414,6 +1422,8 @@ def test_input_port_modify_notification(caplog):
                                                                                     default_value='awesome_tool')
     sm_model.history.undo()
     sm_model.history.redo()
+
+    sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1458,6 +1468,8 @@ def test_output_port_modify_notification(caplog):
                                                                                       default_value='awesome_tool')
     sm_model.history.undo()
     sm_model.history.redo()
+
+    sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1507,6 +1519,8 @@ def test_scoped_variable_modify_notification(caplog):
                                                                                    default_value='awesome_tool')
     sm_model.history.undo()
     sm_model.history.redo()
+
+    sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1634,6 +1648,8 @@ def test_data_flow_property_modifications_history(caplog):
     state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
     sm_model.history.undo()
     sm_model.history.redo()
+
+    sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 

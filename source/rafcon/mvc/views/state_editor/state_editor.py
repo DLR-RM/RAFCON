@@ -75,7 +75,6 @@ class StateEditorView(View):
         self['new_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
 
-
     def bring_tab_to_the_top(self, tab_label):
         """Find tab with label tab_label in list of notebook's and set it to the current page.
 

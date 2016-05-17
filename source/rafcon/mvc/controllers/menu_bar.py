@@ -8,6 +8,7 @@
 
 """
 
+import os
 import sys
 from functools import partial
 
@@ -29,7 +30,7 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
 from rafcon.mvc.utils.dialog import RAFCONDialog
-from rafcon.utils import log
+from rafcon.utils import log, constants
 
 logger = log.get_logger(__name__)
 

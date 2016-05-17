@@ -2037,4 +2037,4 @@ if __name__ == '__main__':
     # test_state_machine_modifications_with_gui(True, None)
     # test_state_type_change_bugs_with_gui(False, None)
     # test_state_type_change_bugs_with_gui(True, None)
-    pytest.main([__file__])
+    pytest.main(['-s', __file__])
