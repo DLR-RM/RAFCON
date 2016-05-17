@@ -230,7 +230,6 @@ class ModificationHistoryTreeController(ExtendedController):
             if hasattr(action, 'action_type') and action.action_type == "script_text" and hasattr(action, 'script_diff'):
                 line = ""
                 for elem in action.script_diff.split('\n'):
-                    print elem
                     line = elem
                     if not line.replace(' ', '') == '':
                         break
