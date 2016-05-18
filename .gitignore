@@ -6,6 +6,10 @@
 
 workspace.xml
 
+# visio:
+.attribute*
+.access*
+
 # LN Manager
 *.lnc_process_window_positions
 
