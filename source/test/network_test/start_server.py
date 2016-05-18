@@ -48,7 +48,7 @@ def start_server(interacting_function, queue_dict):
     from rafcon.statemachine.states.execution_state import ExecutionState
     from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
     from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-    from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
+    from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 
     from rafcon.utils import log
     from rafcon.utils import plugins

@@ -18,7 +18,7 @@ from rafcon.statemachine.storage import storage
 import rafcon.mvc.singleton
 import rafcon.mvc.config as gui_config
 from rafcon.statemachine.singleton import state_machine_execution_engine
-from rafcon.statemachine.execution.statemachine_status import StateMachineExecutionStatus
+from rafcon.statemachine.execution.state_machine_status import StateMachineExecutionStatus
 
 # test environment elements
 import testing_utils

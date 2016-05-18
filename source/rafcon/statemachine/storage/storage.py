@@ -1,7 +1,7 @@
 """
 .. module:: storage
    :platform: Unix, Windows
-   :synopsis: Helper functions to store a statemachine in the local file system and load it from there
+   :synopsis: Helper functions to store a state machine in the local file system and load it from there
 
 .. moduleauthor:: Sebastian Brunner
 """
@@ -277,6 +277,24 @@ def load_state_recursively(parent, state_path=None):
     # TODO: Should be removed with next minor release
     if not os.path.exists(path_core_data):
         path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA_OLD)
+
+    # substitute state machine with state_machine in core json files
+    # import subprocess
+    # # print " ".join(["grep", "-rn", str(path_core_data)])
+    # p = subprocess.Popen(["grep", "-rn", "statemachine", str(path_core_data)],
+    #                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # out, err = p.communicate()
+    # # print out, '\n len={}'.format(len(out))
+    # if out:
+    #     # print " ".join(["sed", "-i", "'s/statemachine/state_machine/g'", str(path_core_data)])
+    #     f1 = open(path_core_data, 'r')
+    #     f2 = open(path_core_data + '.tmp', 'w')
+    #     for line in f1:
+    #         f2.write(line.replace("statemachine", "state_machine"))
+    #     f1.close()
+    #     f2.close()
+    #     shutil.copyfile(f2.name, f1.name)
+    #     os.remove(f2.name)
 
     try:
         state_info = load_data_file(path_core_data)

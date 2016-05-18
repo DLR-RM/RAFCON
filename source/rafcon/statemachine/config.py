@@ -22,14 +22,14 @@ DEFAULT_CONFIG = filesystem.read_file(path.dirname(__file__), CONFIG_FILE)
 
 class Config(DefaultConfig):
     """
-    Class to hold and load the global statemachine configurations.
+    Class to hold and load the global state machine configurations.
     """
 
     def __init__(self, logger_object=None):
         super(Config, self).__init__(DEFAULT_CONFIG, logger_object)
         self.load(CONFIG_FILE)
         if self.get_config_value("TYPE") != "SM_CONFIG":
-            raise ConfigError("Type should be SM_CONFIG for statemachine configuration. "
+            raise ConfigError("Type should be SM_CONFIG for state machine configuration. "
                               "Please add \"TYPE: SM_CONFIG\" to your config.yaml file.")
 
     def load(self, config_file=None, path=None):
@@ -38,5 +38,5 @@ class Config(DefaultConfig):
         super(Config, self).load(config_file, path)
 
 
-# This variable holds the global configuration parameters for the statemachine
+# This variable holds the global configuration parameters for the state machine
 global_config = Config(logger)

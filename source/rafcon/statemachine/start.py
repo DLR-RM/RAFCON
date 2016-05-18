@@ -27,7 +27,7 @@ import rafcon.utils.filesystem as filesystem
 from rafcon.statemachine.config import global_config
 import rafcon.statemachine.singleton as sm_singletons
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
+from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.statemachine.enums import StateExecutionState
 
 from rafcon.utils import log
@@ -48,7 +48,7 @@ def state_machine_path(path):
 
 def start_state_machine(setup_config):
     time.sleep(1.0)
-    sm = StatemachineExecutionEngine.execute_state_machine_from_path(setup_config['sm_path'],
+    sm = StateMachineExecutionEngine.execute_state_machine_from_path(setup_config['sm_path'],
                                                                      start_state_path=setup_config['start_state_path'],
                                                                      wait_for_execution_finished=False)
     sm_thread = threading.Thread(target=check_for_sm_finished, args=[sm, ])

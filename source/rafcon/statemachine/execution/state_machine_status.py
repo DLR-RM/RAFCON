@@ -36,7 +36,7 @@ class StateMachineStatus(Observable):
         # StateMachineExecutionEngine class
         self._execution_mode = None
         self.execution_mode = execution_mode
-        logger.debug("Statemachine status is set to %s" % str(execution_mode))
+        logger.debug("State machine status is set to %s" % str(execution_mode))
         self.execution_condition_variable = Condition()
 
     #########################################################################

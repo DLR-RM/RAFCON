@@ -3,7 +3,7 @@ import threading
 import time
 
 # core elements
-from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
+from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 
 # singleton elements
 from rafcon.statemachine.singleton import state_machine_manager
@@ -44,7 +44,7 @@ def test_multi_events(caplog):
                                                 args=[global_variable_manager, state_machine_execution_engine])
     execution_trigger_thread.start()
 
-    sm = StatemachineExecutionEngine.execute_state_machine_from_path(
+    sm = StateMachineExecutionEngine.execute_state_machine_from_path(
         testing_utils.get_test_sm_path("unit_test_state_machines/multi_events_test"))
 
     execution_trigger_thread.join()

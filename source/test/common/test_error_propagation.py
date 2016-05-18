@@ -1,7 +1,7 @@
 import pytest
 
 # core elements
-from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
+from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
@@ -18,7 +18,7 @@ def test_error_propagation(caplog):
     state_machine_manager.delete_all_state_machines()
     testing_utils.test_multithrading_lock.acquire()
 
-    sm = StatemachineExecutionEngine.execute_state_machine_from_path(
+    sm = StateMachineExecutionEngine.execute_state_machine_from_path(
         testing_utils.get_test_sm_path("unit_test_state_machines/error_propagation_test"))
     state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert sm.root_state.output_data["error_check"] == "successfull"

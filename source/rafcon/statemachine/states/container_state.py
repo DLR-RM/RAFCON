@@ -31,7 +31,7 @@ from rafcon.statemachine.enums import StateMachineExecutionStatus
 
 class ContainerState(State):
 
-    """A class for representing a state in the statemachine
+    """A class for representing a state in the state machine
 
     Only the variables are listed that are not already contained in the state base class
 

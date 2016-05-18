@@ -1,7 +1,7 @@
 """
-.. module:: statemachine_execution_engine
+.. module:: state_machine_execution_engine
    :platform: Unix, Windows
-   :synopsis: A module that cares for the execution of the statemachine
+   :synopsis: A module that cares for the execution of the state machine
 
 .. moduleauthor:: Sebastian Brunner
 
@@ -14,15 +14,15 @@ import Queue
 from threading import Lock
 
 from gtkmvc import Observable
-from rafcon.statemachine.execution.statemachine_status import StateMachineStatus
+from rafcon.statemachine.execution.state_machine_status import StateMachineStatus
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
 
-class StatemachineExecutionEngine(Observable):
-    """A class that cares for the execution of the statemachine
+class StateMachineExecutionEngine(Observable):
+    """A class that cares for the execution of the state machine
 
     :ivar state_machine_manager: holds the state machine manager of all states that can be executed
     :ivar status: holds the current execution status of the state machine
@@ -44,9 +44,9 @@ class StatemachineExecutionEngine(Observable):
         self.execution_engine = self
         self._status = None
         self.status = StateMachineStatus(StateMachineExecutionStatus.STOPPED)
-        # TODO: write validity checker of the statemachine
+        # TODO: write validity checker of the state machine
         self._validity_checker = None
-        logger.debug("Statemachine execution engine initialized")
+        logger.debug("State machine execution engine initialized")
         self.start_state_paths = []
 
         self.execution_engine_lock = Lock()

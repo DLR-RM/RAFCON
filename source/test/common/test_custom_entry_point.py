@@ -1,5 +1,5 @@
 # core elements
-from rafcon.statemachine.execution.statemachine_execution_engine import StatemachineExecutionEngine
+from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
@@ -18,7 +18,7 @@ def test_custom_entry_point(caplog):
     testing_utils.test_multithrading_lock.acquire()
 
     start_state_id = "RWUZOP/ZDWBKU/HADSLI"
-    sm = StatemachineExecutionEngine.execute_state_machine_from_path(
+    sm = StateMachineExecutionEngine.execute_state_machine_from_path(
         testing_utils.get_test_sm_path("unit_test_state_machines/test_custom_entry_point"),
         start_state_id)
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
