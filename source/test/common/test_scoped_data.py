@@ -15,7 +15,7 @@ import testing_utils
 import pytest
 
 
-def create_statemachine():
+def create_state_machine():
     state1 = ExecutionState("first_state", path=rafcon.__path__[0] + "/../test_scripts", filename="scoped_data_test_state1.py")
     state1.add_outcome("first_outcome", 3)
     state1.add_input_data_port("data_input_port1", "float")
@@ -55,7 +55,7 @@ def create_statemachine():
 def test_scoped_data(caplog):
     storage_path = testing_utils.get_unique_temp_path()
 
-    sm = create_statemachine()
+    sm = create_state_machine()
 
     storage.save_state_machine_to_path(sm, storage_path)
     sm_loaded = storage.load_state_machine_from_path(storage_path)

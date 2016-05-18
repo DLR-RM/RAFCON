@@ -1438,7 +1438,7 @@ def trigger_state_type_change_tests(*args):
 
     if with_gui:
         state_machine_path = TEST_PATH + '_state_type_change_with_gui'
-        # TODO the next lines should not to be necessary to save the statemachine at the end
+        # TODO the next lines should not to be necessary to save the state machine at the end
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
         save_state_machine(sm_model, state_machine_path, logger, with_gui, menubar_ctrl)
 

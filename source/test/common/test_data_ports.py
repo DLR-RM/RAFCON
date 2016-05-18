@@ -16,7 +16,7 @@ import rafcon.statemachine.singleton
 import testing_utils
 
 
-def create_statemachine():
+def create_state_machine():
     state1 = ExecutionState("MyFirstState", path=rafcon.__path__[0] + "/../test_scripts",
                             filename="default_data_port_test_state.py")
     state1.add_outcome("first_outcome", 3)
@@ -47,7 +47,7 @@ def test_default_values_of_data_ports(caplog):
     storage_path = testing_utils.get_unique_temp_path()
     print storage_path
 
-    sm = create_statemachine()
+    sm = create_state_machine()
 
     storage.save_state_machine_to_path(sm, storage_path)
     sm_loaded = storage.load_state_machine_from_path(storage_path)

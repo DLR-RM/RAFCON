@@ -16,7 +16,7 @@ import testing_utils
 import pytest
 
 
-def create_statemachine():
+def create_state_machine():
     state1 = ExecutionState("DummyState1", path=rafcon.__path__[0] + "/../test_scripts", filename="transition_test_state.py")
     state1.add_outcome('dummy_outcome_1', 3)
     state1.add_outcome('dummy_outcome_2', 4)
@@ -69,7 +69,7 @@ def test_transition_creation(caplog):
 
     storage_path = testing_utils.get_unique_temp_path()
 
-    sm = create_statemachine()
+    sm = create_state_machine()
 
     storage.save_state_machine_to_path(sm, storage_path)
     sm_loaded = storage.load_state_machine_from_path(storage_path)

@@ -167,7 +167,7 @@ def check_state_machine_storage(state_machine, path, missing_elements, existing_
 
     # check state-meta data exists (transitions and so on)
     file_path = os.path.join(path, storage.STATEMACHINE_FILE)
-    check_file(file_path, "statemachine data", missing_elements, existing_elements)
+    check_file(file_path, "state machine data", missing_elements, existing_elements)
 
     # check if optional gui-meta-data exists
     if check_meta_data:
@@ -218,7 +218,7 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, 
         old_without_base = None
     if with_print and missing_elements:
         print 30*"#"
-        print "statemachine %s with root_state.state_id %s MISSING the following FILES" % \
+        print "State machine %s with root_state.state_id %s MISSING the following FILES" % \
               (sm_m.state_machine.state_machine_id, root_state.state_id)
         print 30*"#"
         for path in missing_elements:
@@ -228,7 +228,7 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, 
                 print path, " ... but does not exist before"
     else:
         print 30*"#"
-        print "All Files and Folders where Found of statemachine %s with root_state.state_id %s" % \
+        print "All Files and Folders where Found of state machine %s with root_state.state_id %s" % \
               (sm_m.state_machine.state_machine_id, root_state.state_id)
         print 30*"#"
 

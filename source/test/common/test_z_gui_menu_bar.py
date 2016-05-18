@@ -21,7 +21,7 @@ from rafcon.mvc.views.graphical_editor import GraphicalEditor as OpenGLEditor
 from rafcon.mvc.mygaphas.view import ExtendedGtkView as GaphasEditor
 from rafcon.mvc.views.main_window import MainWindowView
 
-import rafcon.mvc.state_machine_helper as statemachine_helper
+import rafcon.mvc.state_machine_helper as state_machine_helper
 
 # singleton elements
 import rafcon.mvc.singleton
@@ -95,25 +95,25 @@ def focus_graphical_editor_in_page(page):
     graphical_controller.grab_focus()
 
 
-def select_and_paste_state(statemachine_model, source_state_model, target_state_model, menu_bar_ctrl, operation,
+def select_and_paste_state(state_machine_model, source_state_model, target_state_model, menu_bar_ctrl, operation,
                            main_window_controller, page):
     """Select a particular state and perform an operation on it (Copy or Cut) and paste it somewhere else. At the end,
     verify that the operation was completed successfully.
 
-    :param statemachine_model: The statemachine model where the operation will be conducted
+    :param state_machine_model: The state machine model where the operation will be conducted
     :param source_state_model: The state model, on which the operation will be performed
     :param target_state_model: The state model, where the source state will be pasted
     :param menu_bar_ctrl: The menu_bar controller, through which copy, cut & paste actions are triggered
     :param operation: String indicating the operation to be performed (Copy or Cut)
     :param main_window_controller: The MainWindow Controller
-    :param page: The notebook page of the corresponding statemachine in the statemachines editor
+    :param page: The notebook page of the corresponding state machine in the state machines editor
     :return: The target state model, and the child state count before pasting
     """
     print "\n\n %s \n\n" % source_state_model.state.name
-    call_gui_callback(statemachine_model.selection.set, [source_state_model])
+    call_gui_callback(state_machine_model.selection.set, [source_state_model])
     call_gui_callback(getattr(menu_bar_ctrl, 'on_{}_selection_activate'.format(operation)), None, None)
     print "\n\n %s \n\n" % target_state_model.state.name
-    call_gui_callback(statemachine_model.selection.set, [target_state_model])
+    call_gui_callback(state_machine_model.selection.set, [target_state_model])
     old_child_state_count = len(target_state_model.state.states)
     main_window_controller.view['main_window'].grab_focus()
     focus_graphical_editor_in_page(page)
@@ -196,7 +196,7 @@ def trigger_gui_signals(*args):
     ##########################################################
     # create complex state with all elements
     lib_state = LibraryState("generic/dialog", "Dialog [3 options]", "0.1", "Dialog [3 options]")
-    call_gui_callback(statemachine_helper.insert_state, lib_state, True)
+    call_gui_callback(state_machine_helper.insert_state, lib_state, True)
     assert len(state_m.state.states) == old_child_state_count + 2
 
     for state in state_m.state.states.values():

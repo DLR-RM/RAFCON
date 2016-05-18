@@ -14,7 +14,7 @@ import testing_utils
 import pytest
 
 
-def create_statemachine():
+def create_state_machine():
     state1 = ExecutionState("scoped_data_test_state", path=testing_utils.TEST_SM_PATH,
                             filename="scoped_variable_test_state.py")
     state1.add_outcome("loop", 1)
@@ -58,7 +58,7 @@ def test_scoped_variables(caplog):
 
     storage_path = testing_utils.get_unique_temp_path()
 
-    sm = create_statemachine()
+    sm = create_state_machine()
 
     storage.save_state_machine_to_path(sm, storage_path)
     sm_loaded = storage.load_state_machine_from_path(storage_path)

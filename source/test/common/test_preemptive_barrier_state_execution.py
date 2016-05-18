@@ -14,7 +14,7 @@ import testing_utils
 import pytest
 
 
-def create_preemption_statemachine():
+def create_preemption_state_machine():
     state1 = ExecutionState("FirstState", path=rafcon.__path__[0] + "/../test_scripts", filename="concurrence_preemption1.py")
     state1.add_outcome("FirstOutcome", 3)
     input_state1 = state1.add_input_data_port("input_data_port1", "float")
@@ -38,7 +38,7 @@ def create_preemption_statemachine():
 
 def test_concurrency_preemption_state_execution(caplog):
 
-    preemption_state_sm = create_preemption_statemachine()
+    preemption_state_sm = create_preemption_state_machine()
 
     testing_utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
@@ -58,7 +58,7 @@ def test_concurrency_preemption_save_load(caplog):
 
     storage_path = testing_utils.get_unique_temp_path()
 
-    preemption_state_sm = create_preemption_statemachine()
+    preemption_state_sm = create_preemption_state_machine()
 
     storage.save_state_machine_to_path(preemption_state_sm, storage_path)
     storage.load_state_machine_from_path(storage_path)
