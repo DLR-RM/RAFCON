@@ -216,7 +216,7 @@ class StateMachineModel(ModelMT):
     def change_root_state_type(self, model, prop_name, info):
         if info.method_name != 'change_root_state_type':
             return
-        from rafcon.mvc import statemachine_helper
+        from rafcon.mvc import state_machine_helper
 
         state_m = self.root_state
 
@@ -233,7 +233,7 @@ class StateMachineModel(ModelMT):
             self.selection.remove(state_m)
 
             # Extract child models of state, as they have to be applied to the new state model
-            child_models = statemachine_helper.extract_child_models_of_of_state(state_m, new_state_class)
+            child_models = state_machine_helper.extract_child_models_of_of_state(state_m, new_state_class)
             self.change_root_state_type.__func__.child_models = child_models  # static variable of class method
             self.suppress_new_root_state_model_one_time = True
 
@@ -248,7 +248,7 @@ class StateMachineModel(ModelMT):
 
                 # Create a new state model based on the new state and apply the extracted child models
                 child_models = self.change_root_state_type.__func__.child_models
-                new_state_m = statemachine_helper.create_state_model_for_state(new_state, child_models)
+                new_state_m = state_machine_helper.create_state_model_for_state(new_state, child_models)
 
                 new_state_m.register_observer(self)
                 self.root_state = new_state_m

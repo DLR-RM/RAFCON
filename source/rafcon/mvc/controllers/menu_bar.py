@@ -324,7 +324,7 @@ class MenuBarController(ExtendedController):
         :param data: optional data
         """
         if force:
-            self.refresh_libs_and_statemachines()
+            self.refresh_libs_and_state_machines()
         else:
             all_tabs = self.states_editor_ctrl.tabs.values()
             all_tabs.extend(self.states_editor_ctrl.closed_tabs.values())
@@ -334,7 +334,7 @@ class MenuBarController(ExtendedController):
 
                 def on_message_dialog_response_signal(widget, response_id):
                     if response_id == 42:
-                        self.refresh_libs_and_statemachines()
+                        self.refresh_libs_and_state_machines()
                     else:
                         logger.debug("Refresh canceled")
                     widget.destroy()
@@ -356,9 +356,9 @@ class MenuBarController(ExtendedController):
                 dialog.add_button("Cancel", 43)
                 dialog.finalize(on_message_dialog_response_signal)
             else:
-                self.refresh_libs_and_statemachines()
+                self.refresh_libs_and_state_machines()
 
-    def refresh_libs_and_statemachines(self):
+    def refresh_libs_and_state_machines(self):
         """Deletes all libraries and state machines and reloads them freshly from the file system."""
         library_manager.refresh_libraries()
 

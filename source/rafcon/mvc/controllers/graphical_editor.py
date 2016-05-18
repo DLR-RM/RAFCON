@@ -26,7 +26,7 @@ from rafcon.statemachine.enums import StateType, StateExecutionState
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.mvc.clipboard import global_clipboard
-from rafcon.mvc import statemachine_helper
+from rafcon.mvc import state_machine_helper
 from rafcon.mvc.models.signals import MetaSignalMsg
 from rafcon.mvc.models import ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.library_state import LibraryStateModel
@@ -478,7 +478,7 @@ class GraphicalEditorController(ExtendedController):
         if self.changed_models:
             if len(self.changed_models) > 1:
                 self.changes_affect_children = True
-                self.changed_models = statemachine_helper.reduce_to_parent_states(self.changed_models)
+                self.changed_models = state_machine_helper.reduce_to_parent_states(self.changed_models)
             if len(self.changed_models) > 1:
                 parent_m = self.root_state_m
             else:
@@ -1119,7 +1119,7 @@ class GraphicalEditorController(ExtendedController):
 
                 affects_children = len(self.model.selection) > 1
                 if affects_children:
-                    reduced_list = statemachine_helper.reduce_to_parent_states(self.model.selection)
+                    reduced_list = state_machine_helper.reduce_to_parent_states(self.model.selection)
                     if len(reduced_list) > 1:
                         parent_m = self.root_state_m
                     else:
@@ -2097,7 +2097,7 @@ class GraphicalEditorController(ExtendedController):
 
     def _delete_selection(self, *args):
         if self.view.editor.is_focus():
-            return statemachine_helper.delete_selected_elements(self.model)
+            return state_machine_helper.delete_selected_elements(self.model)
 
     def _add_new_state(self, *args, **kwargs):
         """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
@@ -2107,7 +2107,7 @@ class GraphicalEditorController(ExtendedController):
         if not self.view.editor.is_focus():
             return
         state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-        return statemachine_helper.add_new_state(self.model, state_type)
+        return state_machine_helper.add_new_state(self.model, state_type)
 
     def _toggle_data_flow_visibility(self, *args):
         if self.view.editor.is_focus():

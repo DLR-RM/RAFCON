@@ -160,7 +160,7 @@ class ExecutionHistoryTreeController(ExtendedController):
             return True
 
     # TODO: implement! To do this efficiently a mechanism is needed that does not regenerate the whole tree view
-    # TODO: the appropriate statemachine would have to be observed as well
+    # TODO: the appropriate state machine would have to be observed as well
     # @ExtendedController.observe("execution_history_container", after=True)
     # def model_changed(self, model, prop_name, info):
     #     #self.update()

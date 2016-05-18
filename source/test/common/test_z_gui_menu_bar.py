@@ -21,7 +21,7 @@ from rafcon.mvc.views.graphical_editor import GraphicalEditor as OpenGLEditor
 from rafcon.mvc.mygaphas.view import ExtendedGtkView as GaphasEditor
 from rafcon.mvc.views.main_window import MainWindowView
 
-import rafcon.mvc.statemachine_helper as statemachine_helper
+import rafcon.mvc.state_machine_helper as statemachine_helper
 
 # singleton elements
 import rafcon.mvc.singleton

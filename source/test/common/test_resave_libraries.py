@@ -5,7 +5,7 @@ import tempfile
 import pytest
 
 import rafcon
-import rafcon.mvc.resave_statemachines as resave
+import rafcon.mvc.resave_state_machines as resave
 import testing_utils
 
 

@@ -15,7 +15,7 @@ from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 
-import rafcon.mvc.statemachine_helper as statemachine_helper
+import rafcon.mvc.state_machine_helper as state_machine_helper
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.utils import log
 
@@ -111,5 +111,5 @@ class StateIconController(ExtendedController):
         elif selected_path == "BS":
             state = BarrierConcurrencyState()
 
-        if statemachine_helper.insert_state(state, False):
+        if state_machine_helper.insert_state(state, False):
             return state.state_id

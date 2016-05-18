@@ -462,7 +462,7 @@ class Action:
             #     logger.info("state is root_state -> take root_state for undo")
             # else:
             if self.state_machine.get_state_by_path(self.parent_path).parent is not None:
-                logger.warning("statemachine could not get state by path -> take root_state for undo")
+                logger.warning("State machine could not get state by path -> take root_state for undo")
             state = self.state_machine.root_state
         else:
             state = self.state_machine.get_state_by_path(self.parent_path)
@@ -722,7 +722,7 @@ class StateMachineAction(Action):
         self.with_print = False
 
     def set_root_state_to_version(self, state, storage_version):
-        import rafcon.mvc.statemachine_helper as statemachine_helper
+        import rafcon.mvc.state_machine_helper as state_machine_helper
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s  || %s || StateMachineAction\n\n\n\n\n\n\n" % (state.get_path(), state))
         # self.state_machine.root_state = get_state_from_state_tuple(storage_version)
         root_state_version_from_storage = get_state_from_state_tuple(storage_version)
@@ -731,19 +731,19 @@ class StateMachineAction(Action):
 
         if self.with_print:
             print "\n#H# TRY STATE_HELPER ", type(root_state_version_from_storage), \
-                isinstance(root_state_version_from_storage, statemachine_helper.HierarchyState), "\n"
-        if isinstance(root_state_version_from_storage, statemachine_helper.HierarchyState):
-            new_state_class = statemachine_helper.HierarchyState
-        elif isinstance(root_state_version_from_storage, statemachine_helper.BarrierConcurrencyState):
-            new_state_class = statemachine_helper.BarrierConcurrencyState
-        elif isinstance(root_state_version_from_storage, statemachine_helper.PreemptiveConcurrencyState):
-            new_state_class = statemachine_helper.PreemptiveConcurrencyState
+                isinstance(root_state_version_from_storage, state_machine_helper.HierarchyState), "\n"
+        if isinstance(root_state_version_from_storage, state_machine_helper.HierarchyState):
+            new_state_class = state_machine_helper.HierarchyState
+        elif isinstance(root_state_version_from_storage, state_machine_helper.BarrierConcurrencyState):
+            new_state_class = state_machine_helper.BarrierConcurrencyState
+        elif isinstance(root_state_version_from_storage, state_machine_helper.PreemptiveConcurrencyState):
+            new_state_class = state_machine_helper.PreemptiveConcurrencyState
         else:
             if self.with_print:
                 logger.info("SM set_root_state_to_version: with NO type change")
-            new_state_class = statemachine_helper.ExecutionState
+            new_state_class = state_machine_helper.ExecutionState
         # logger.debug("DO root version change")
-        new_state = statemachine_helper.create_new_state_from_state_with_type(state, new_state_class)
+        new_state = state_machine_helper.create_new_state_from_state_with_type(state, new_state_class)
 
         g_sm_editor = self.stop_graphical_viewer()
 

@@ -123,14 +123,14 @@ def convert(config_path, source_path, target_path):
 
     if setup_config['source_path']:
         if len(setup_config['source_path']) > 1:
-            logger.error("Only one statemachine is supported yet")
+            logger.error("Only one state machine is supported yet")
             exit(-1)
         for path in setup_config['source_path']:
             try:
                 state_machine = storage.load_state_machine_from_path(path)
                 sm_singletons.state_machine_manager.add_state_machine(state_machine)
             except Exception as e:
-                logger.error("Could not load state-machine {0}: {1}".format(path, e))
+                logger.error("Could not load state machine {0}: {1}".format(path, e))
     else:
         logger.error("You need to specify exactly one state machine to be converted!")
 

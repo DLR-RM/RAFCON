@@ -130,7 +130,7 @@ class StateMachine(Observable, JSONObject):
 
     @Observable.observed
     def change_root_state_type(self, new_state_class):
-        from rafcon.mvc.statemachine_helper import create_new_state_from_state_with_type
+        from rafcon.mvc.state_machine_helper import create_new_state_from_state_with_type
 
         state = self.root_state
         state_id = state.state_id

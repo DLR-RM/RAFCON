@@ -214,7 +214,7 @@ class ContainerStateModel(StateModel):
     def change_state_type(self, model, prop_name, info):
         if info.method_name != 'change_state_type':
             return
-        from rafcon.mvc import statemachine_helper
+        from rafcon.mvc import state_machine_helper
 
         old_state = info.args[1]
         new_state_class = info.args[2]
@@ -230,7 +230,7 @@ class ContainerStateModel(StateModel):
             state_machine_m.selection.remove(state_m)
 
             # Extract child models of state, as they have to be applied to the new state model
-            child_models = statemachine_helper.extract_child_models_of_of_state(state_m, new_state_class)
+            child_models = state_machine_helper.extract_child_models_of_of_state(state_m, new_state_class)
             self.change_state_type.__func__.child_models = child_models  # static variable of class method
 
         # After the state has been changed in the core, we create a new model for it with all information extracted
@@ -243,7 +243,7 @@ class ContainerStateModel(StateModel):
                 new_state = info.result
                 # Create a new state model based on the new state and apply the extracted child models
                 child_models = self.change_state_type.__func__.child_models
-                new_state_m = statemachine_helper.create_state_model_for_state(new_state, child_models)
+                new_state_m = state_machine_helper.create_state_model_for_state(new_state, child_models)
                 # Set this state model (self) to be the parent of our new state model
                 new_state_m.parent = self
                 # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.

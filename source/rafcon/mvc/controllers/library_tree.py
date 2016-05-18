@@ -18,7 +18,7 @@ import gobject
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.singleton import library_manager
 
-import rafcon.mvc.statemachine_helper as statemachine_helper
+import rafcon.mvc.state_machine_helper as state_machine_helper
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 
 from rafcon.utils import log
@@ -174,7 +174,7 @@ class LibraryTreeController(ExtendedController):
         :param time:
         """
         library_state = self._get_selected_library_state()
-        if statemachine_helper.insert_state(library_state, False):
+        if state_machine_helper.insert_state(library_state, False):
             data.set_text(library_state.state_id)
 
     def on_drag_begin(self, widget, context):
@@ -186,7 +186,7 @@ class LibraryTreeController(ExtendedController):
         self.view.drag_source_set_icon_stock(gtk.STOCK_NEW)
 
     def insert_button_clicked(self, widget, as_template=False):
-        statemachine_helper.insert_state(self._get_selected_library_state(), as_template)
+        state_machine_helper.insert_state(self._get_selected_library_state(), as_template)
 
     def open_button_clicked(self, widget):
         try:

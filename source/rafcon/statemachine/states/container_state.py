@@ -332,7 +332,7 @@ class ContainerState(State):
 
     @Observable.observed
     def change_state_type(self, state, new_state_class):
-        from rafcon.mvc.statemachine_helper import create_new_state_from_state_with_type
+        from rafcon.mvc.state_machine_helper import create_new_state_from_state_with_type
 
         state_id = state.state_id
 

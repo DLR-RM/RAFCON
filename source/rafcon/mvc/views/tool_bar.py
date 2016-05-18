@@ -12,16 +12,16 @@ class ToolBarView(View):
         View.__init__(self)
 
         button_new = self['button_new']
-        button_new.set_label_widget(self.get_label_widget(constants.BUTTON_NEW, "New Statemachine"))
+        button_new.set_label_widget(self.get_label_widget(constants.BUTTON_NEW, "New State Machine"))
 
         button_refresh = self['button_refresh']
         button_refresh.set_label_widget(self.get_label_widget(constants.BUTTON_REFR, "Refresh"))
 
         button_open = self['button_open']
-        button_open.set_label_widget(self.get_label_widget(constants.BUTTON_OPEN, "Open Statemachine"))
+        button_open.set_label_widget(self.get_label_widget(constants.BUTTON_OPEN, "Open State Machine"))
 
         button_save = self['button_save']
-        button_save.set_label_widget(self.get_label_widget(constants.BUTTON_SAVE, "Save Statemachine"))
+        button_save.set_label_widget(self.get_label_widget(constants.BUTTON_SAVE, "Save State Machine"))
 
         button_refresh_libs = self['button_refresh_libs']
         button_refresh_libs.set_label_widget(self.get_label_widget(constants.BUTTON_REFR, "Refresh Libraries"))

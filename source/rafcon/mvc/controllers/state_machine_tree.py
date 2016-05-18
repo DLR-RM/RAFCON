@@ -20,7 +20,7 @@ from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.utils import log
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS as EXECUTION_TRIGGERED_METHODS
-from rafcon.mvc import statemachine_helper
+from rafcon.mvc import state_machine_helper
 
 logger = log.get_logger(__name__)
 
@@ -105,11 +105,11 @@ class StateMachineTreeController(ExtendedController):
         if not self.view['state_machine_tree_view'].is_focus():
             return
         state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-        return statemachine_helper.add_new_state(self._selected_sm_model, state_type)
+        return state_machine_helper.add_new_state(self._selected_sm_model, state_type)
 
     def _delete_selection(self, *args):
         if self.view['state_machine_tree_view'].is_focus():
-            return statemachine_helper.delete_selected_elements(self._selected_sm_model)
+            return state_machine_helper.delete_selected_elements(self._selected_sm_model)
 
     @ExtendedController.observe("state", after=True)  # root_state
     @ExtendedController.observe("states", after=True)
