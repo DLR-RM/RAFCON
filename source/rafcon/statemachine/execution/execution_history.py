@@ -17,7 +17,7 @@ logger = log.get_logger(__name__)
 
 class ExecutionHistory:
 
-    """A class for the history of a state machine execution
+    """A class for the history of a state machine execution. It stores all history elements in a stack wise fashion.
 
     :ivar history_items: a doubly linked list holding all history items of the
         type :class:`rafcon.statemachine.execution.execution_history.HistoryItem`
@@ -38,41 +38,41 @@ class ExecutionHistory:
         else:  # this is the case for the very first executed state
             return None
 
-    def add_call_history_item(self, state, method_name, state_for_scoped_data, input_data=None):
+    def push_call_history_item(self, state, call_type, state_for_scoped_data, input_data=None):
         """Adds a new call-history-item to the history item list. A call history items stores information about the point
         in time where a method (entry, execute, exit) of certain state was called.
 
         :param state: the state that was called
-        :param method_name: the method of the state that was called
+        :param call_type: the method of the state that was called
         :param state_for_scoped_data: the state of which the scoped data needs to be saved for further usages
             (e.g. backward stepping)
         :return:
 
         """
-        return_item = CallItem(state, self.get_last_history_item(), method_name, state_for_scoped_data, input_data)
+        return_item = CallItem(state, self.get_last_history_item(), call_type, state_for_scoped_data, input_data)
         if self.get_last_history_item() is not None:
             self.get_last_history_item().next = return_item
         self.history_items.append(return_item)
         return return_item
 
-    def add_return_history_item(self, state, method_name, state_for_scoped_data, output_data=None):
+    def push_return_history_item(self, state, call_type, state_for_scoped_data, output_data=None):
         """Adds a new return-history-item to the history item list. A return history items stores information about the
         point in time where a method (entry, execute, exit) of certain state returned.
 
         :param state: the state that returned
-        :param method_name: the method of the state that returned
+        :param call_type: the method of the state that returned
         :param state_for_scoped_data: the state of which the scoped data needs to be saved for further usages (e.g.
             backward stepping)
         :return:
 
         """
-        return_item = ReturnItem(state, self.get_last_history_item(), method_name, state_for_scoped_data, output_data)
+        return_item = ReturnItem(state, self.get_last_history_item(), call_type, state_for_scoped_data, output_data)
         if self.get_last_history_item() is not None:
             self.get_last_history_item().next = return_item
         self.history_items.append(return_item)
         return return_item
 
-    def add_concurrency_history_item(self, state, number_concurrent_threads):
+    def push_concurrency_history_item(self, state, number_concurrent_threads):
         """Adds a new concurrency-history-item to the history item list. A concurrent history item stores information about
         the point in time where a certain number of states is launched concurrently
         (e.g. in a barrier concurrency state).

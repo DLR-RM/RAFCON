@@ -47,8 +47,8 @@ class ConcurrencyState(ContainerState):
             assert isinstance(concurrency_history_item, ConcurrencyItem)
 
         else:  # forward_execution
-            self.execution_history.add_call_history_item(self, CallType.CONTAINER, self)
-            concurrency_history_item = self.execution_history.add_concurrency_history_item(self, len(self.states))
+            self.execution_history.push_call_history_item(self, CallType.CONTAINER, self)
+            concurrency_history_item = self.execution_history.push_concurrency_history_item(self, len(self.states))
         return concurrency_history_item
 
     def start_child_states(self, concurrency_history_item, do_not_start_state=None):
@@ -65,7 +65,7 @@ class ConcurrencyState(ContainerState):
 
                 if not self.backward_execution:
                     # care for the history items; this item is only for execution visualization
-                    concurrency_history_item.execution_histories[index].add_call_history_item(
+                    concurrency_history_item.execution_histories[index].push_call_history_item(
                         state, CallType.EXECUTE, self, state.input_data)
                 else:  # backward execution
                     last_history_item = concurrency_history_item.execution_histories[index].pop_last_item()
@@ -77,19 +77,16 @@ class ConcurrencyState(ContainerState):
                 state.start(concurrency_history_item.execution_histories[index], self.backward_execution)
         return concurrency_queue
 
-    def join_state_and_process_its_data(self, state, history_index, concurrency_history_item):
+    def join_state(self, state, history_index, concurrency_history_item):
         state.join()
         state.state_execution_status = StateExecutionState.INACTIVE
-        self.add_state_execution_output_to_scoped_data(state.output_data, state)
-        self.update_scoped_variables_with_output_dictionary(state.output_data, state)
         # care for the history items
         if not self.backward_execution:
             state.concurrency_queue = None
             # add the data of all child states to the scoped data and the scoped variables
-            state.execution_history.add_return_history_item(state, CallType.EXECUTE, self, state.output_data)
+            state.execution_history.push_return_history_item(state, CallType.EXECUTE, self, state.output_data)
         else:
             last_history_item = concurrency_history_item.execution_histories[history_index].pop_last_item()
-            print last_history_item
             assert isinstance(last_history_item, CallItem)
 
     def finalize_backward_execution(self):
@@ -103,15 +100,14 @@ class ConcurrencyState(ContainerState):
         assert isinstance(last_history_item, CallItem)
         # this copy is convenience and not required here
         self.scoped_data = last_history_item.scoped_data
-        # do not write the output of the entry script
         self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
         return self.finalize()
 
     def finalize_concurrency_state(self, outcome):
         final_outcome = outcome
-        self.execution_history.add_return_history_item(self, CallType.CONTAINER, self)
         self.write_output_data()
         self.check_output_data_type()
+        self.execution_history.push_return_history_item(self, CallType.CONTAINER, self)
         self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
 
         if self.preempted:

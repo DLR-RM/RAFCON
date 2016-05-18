@@ -160,5 +160,5 @@ def test_unique_port_names(caplog):
 if __name__ == '__main__':
     test_default_values_of_data_ports(None)
     test_last_wins_value_collection_for_data_ports(None)
-    # test_unique_port_names(None)
-    pytest.main([__file__])
+    test_unique_port_names(None)
+    # pytest.main([__file__])

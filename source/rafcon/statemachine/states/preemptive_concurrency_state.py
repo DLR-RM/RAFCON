@@ -49,13 +49,16 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             # wait for the first threads to finish
             #######################################################
             finished_thread_id = concurrency_queue.get()
-            self.states[finished_thread_id].join()
+            finisher_state = self.states[finished_thread_id]
+            finisher_state.join()
+            self.add_state_execution_output_to_scoped_data(finisher_state.output_data, finisher_state)
+            self.update_scoped_variables_with_output_dictionary(finisher_state.output_data, finisher_state)
             # preempt all child states
             for state_id, state in self.states.iteritems():
                 state.recursively_preempt_states()
             # join all states
             for history_index, state in enumerate(self.states.itervalues()):
-                self.join_state_and_process_its_data(state, history_index, concurrency_history_item)
+                self.join_state(state, history_index, concurrency_history_item)
 
             #######################################################
             # handle backward execution case
@@ -72,15 +75,15 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             transition = self.get_transition_for_outcome(self.states[finished_thread_id],
                                                          self.states[finished_thread_id].final_outcome)
             if transition is None:
+                # final outcome is set here
                 transition = self.handle_no_transition(self.states[finished_thread_id])
             # it the transition is still None, then the state was preempted or aborted, in this case return
             if transition is None:
-                outcome = Outcome(-1, "aborted")
                 self.output_data["error"] = RuntimeError("state aborted")
             else:
-                outcome = self.outcomes[transition.to_outcome]
+                self.final_outcome = self.outcomes[transition.to_outcome]
 
-            return self.finalize_concurrency_state(outcome)
+            return self.finalize_concurrency_state(self.final_outcome)
 
         except Exception, e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))

@@ -97,7 +97,9 @@ class BarrierConcurrencyState(ConcurrencyState):
             for history_index, state in enumerate(self.states.itervalues()):
                 # skip the decider state
                 if state is not decider_state:
-                    self.join_state_and_process_its_data(state, history_index, concurrency_history_item)
+                    self.join_state(state, history_index, concurrency_history_item)
+                    self.add_state_execution_output_to_scoped_data(state.output_data, state)
+                    self.update_scoped_variables_with_output_dictionary(state.output_data, state)
                     # save the errors of the child state executions for the decider state
                     if 'error' in state.output_data:
                         child_errors[state.state_id] = (state.name, state.output_data['error'])
@@ -112,6 +114,10 @@ class BarrierConcurrencyState(ConcurrencyState):
                     return self.finalize_backward_execution()
                 else:
                     self.backward_execution = False
+
+            #######################################################
+            # execute decider state
+            #######################################################
             decider_state_error = self.run_decider_state(decider_state, child_errors, final_outcomes_dict)
 
             #######################################################
@@ -119,16 +125,16 @@ class BarrierConcurrencyState(ConcurrencyState):
             #######################################################
             transition = self.get_transition_for_outcome(decider_state, decider_state.final_outcome)
             if transition is None:
+                # final outcome is set here
                 transition = self.handle_no_transition(decider_state)
             # if the transition is still None, then the child_state was preempted or aborted, in this case return
             decider_state.state_execution_status = StateExecutionState.INACTIVE
             if transition is None:
-                outcome = Outcome(-1, "aborted")
                 self.output_data["error"] = decider_state_error
             else:
-                outcome = self.outcomes[transition.to_outcome]
+                self.final_outcome = self.outcomes[transition.to_outcome]
 
-            return self.finalize_concurrency_state(outcome)
+            return self.finalize_concurrency_state(self.final_outcome)
 
         except Exception, e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))

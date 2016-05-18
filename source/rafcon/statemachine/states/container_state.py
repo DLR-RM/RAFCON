@@ -885,8 +885,12 @@ class ContainerState(State):
                                 actual_value_time = self.scoped_data[scoped_data_key].timestamp
                         else:
                             if not self.backward_execution:
-                                logger.warn("Output data with name %s was not found in the scoped data. "
-                                             "This normally means a statemachine design error", output_name)
+                                logger.debug(
+                                    "Output data with name {0} of state {1} was not found in the scoped data "
+                                    "of state {2}. Thus the state did not write onto this output. "
+                                    "This can mean a state machine design error.".format(
+                                        str(output_name), str(self.states[data_flow.from_state].get_path()),
+                                        self.get_path()))
             if actual_value is not None:
                 self.output_data[output_name] = actual_value
 

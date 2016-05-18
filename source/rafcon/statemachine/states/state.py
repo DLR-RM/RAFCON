@@ -1076,7 +1076,6 @@ class State(Observable, YAMLObject, JSONObject):
         """
 
         # Set the final outcome of the state
-        # This is the outcome, the state is left on
         if outcome is not None:
             self.final_outcome = outcome
 

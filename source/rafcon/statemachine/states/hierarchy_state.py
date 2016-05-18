@@ -66,7 +66,7 @@ class HierarchyState(ContainerState):
             self.scoped_data = last_history_item.scoped_data
 
         else:  # forward_execution
-            self.execution_history.add_call_history_item(self, CallType.CONTAINER, self)
+            self.execution_history.push_call_history_item(self, CallType.CONTAINER, self)
             self.child_state = self.get_start_state(set_final_outcome=True)
             while self.child_state is None:
                 self.child_state = self.handle_no_start_state()
@@ -154,7 +154,7 @@ class HierarchyState(ContainerState):
             self.last_child.state_execution_status = StateExecutionState.INACTIVE
 
         if not self.backward_execution:  # only add history item if it is not a backward execution
-            self.execution_history.add_call_history_item(
+            self.execution_history.push_call_history_item(
                 self.child_state, CallType.EXECUTE, self, self.child_state.input_data)
 
         self.child_state.start(self.execution_history, backward_execution=self.backward_execution)
@@ -206,7 +206,7 @@ class HierarchyState(ContainerState):
         execution case.
         :return: a flag to indicate if normal child state execution should abort
         """
-        self.execution_history.add_return_history_item(
+        self.execution_history.push_return_history_item(
             self.child_state, CallType.EXECUTE, self, self.child_state.output_data)
         self.add_state_execution_output_to_scoped_data(self.child_state.output_data, self.child_state)
         self.update_scoped_variables_with_output_dictionary(self.child_state.output_data, self.child_state)
@@ -239,12 +239,11 @@ class HierarchyState(ContainerState):
             self.last_child.state_execution_status = StateExecutionState.INACTIVE
 
         if not self.backward_execution:
-            self.execution_history.add_return_history_item(self, CallType.CONTAINER, self)
-
-        self.write_output_data()
-        self.check_output_data_type()
-        # add error message from child_state to own output_data
-        self.output_data['error'] = self.last_error
+            self.execution_history.push_return_history_item(self, CallType.CONTAINER, self)
+            self.write_output_data()
+            self.check_output_data_type()
+            # add error message from child_state to own output_data
+            self.output_data['error'] = self.last_error
 
         self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
 
