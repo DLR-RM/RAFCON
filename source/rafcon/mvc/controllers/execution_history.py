@@ -224,8 +224,8 @@ class ExecutionHistoryTreeController(ExtendedController):
         history_item = history_items[index]
         new_index = index + 1
         if isinstance(history_item, ConcurrencyItem):
-            # do not create tree item to avoid duplicate hierarchies
-            # tree_item = self.history_tree_store.insert_before(parent, None, (history_item.state_reference.name, None))
+            self.history_tree_store.insert_before(parent, None, (history_item.state_reference.name + " - Call",
+                                                                 history_item))
             self.insert_concurrency(parent, history_item.execution_histories)
             self.insert_recursively(parent, history_items, new_index)
         else:
@@ -266,9 +266,8 @@ class ExecutionHistoryTreeController(ExtendedController):
         for child_history_number, child_history in children_execution_histories.iteritems():
             if len(child_history.history_items) >= 1:
                 first_history_item = child_history.history_items[0]
-                # comment this item out to avoid duplicate hierarchies
-                # tree_item = self.history_tree_store.insert_before(
-                #     parent, None, (first_history_item.state_reference.name + " - Concurrency Branch",
-                #                    first_history_item))
+                tree_item = self.history_tree_store.insert_before(
+                    parent, None, (first_history_item.state_reference.name + " - Concurrency Branch",
+                                   first_history_item))
                 self.insert_recursively(parent, child_history.history_items, 1)
 
