@@ -63,8 +63,8 @@ def test_hierarchy_save_load_test(caplog):
     hierarchy_state = create_hierarchy_state()
     sm = StateMachine(hierarchy_state)
 
-    storage.save_statemachine_to_path(sm, storage_path)
-    sm_loaded = storage.load_statemachine_from_path(storage_path)
+    storage.save_state_machine_to_path(sm, storage_path)
+    sm_loaded = storage.load_state_machine_from_path(storage_path)
 
     state_machine = StateMachine(sm_loaded.root_state)
 

@@ -763,7 +763,7 @@ def test_add_remove_models(caplog):
     test_history_path2 = '/home_local/test_history_after'
 
     def store_state_machine(sm_model, path):
-        storage.save_statemachine_to_path(sm_model.state_machine, path, delete_old_state_machine=True)
+        storage.save_state_machine_to_path(sm_model.state_machine, path, delete_old_state_machine=True)
         sm_model.root_state.store_meta_data()
 
     sm_history = sm_model.history

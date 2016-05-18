@@ -49,8 +49,8 @@ def test_default_values_of_data_ports(caplog):
 
     sm = create_statemachine()
 
-    storage.save_statemachine_to_path(sm, storage_path)
-    sm_loaded = storage.load_statemachine_from_path(storage_path)
+    storage.save_state_machine_to_path(sm, storage_path)
+    sm_loaded = storage.load_state_machine_from_path(storage_path)
 
     root_state = sm_loaded.root_state
 
@@ -73,7 +73,7 @@ def test_last_wins_value_collection_for_data_ports(caplog):
 
     storage_path = testing_utils.get_unique_temp_path()
 
-    sm_loaded = storage.load_statemachine_from_path(rafcon.__path__[0] +
+    sm_loaded = storage.load_state_machine_from_path(rafcon.__path__[0] +
                                                     "/../test_scripts/unit_test_state_machines/last_data_wins_test")
 
     root_state = sm_loaded.root_state

@@ -14,6 +14,7 @@ import gobject
 
 import rafcon
 
+from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.state_machine_manager import StateMachineManager
 from rafcon.statemachine.execution.execution_history import ConcurrencyItem, CallItem
 from rafcon.statemachine.singleton import state_machine_execution_engine
@@ -65,7 +66,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         pass
 
     def register_view(self, view):
-        self.history_tree.connect('button_press_event', self.right_click)
+        self.history_tree.connect('button_press_event', self.mouse_click)
 
     # TODO: unused
     def switch_state_machine_execution_manager_model(self, new_state_machine_execution_engine):
@@ -84,10 +85,26 @@ class ExecutionHistoryTreeController(ExtendedController):
         menu_item.show()
         popup_menu.append(menu_item)
 
-    def right_click(self, widget, event=None):
-        """Triggered when right click is pressed in the history tree. The method shows all scoped data for an execution
-        step as tooltip.
+    def mouse_click(self, widget, event=None):
+        """Triggered when mouse click is pressed in the history tree. The method shows all scoped data for an execution
+        step as tooltip or fold and unfold the tree by double-click.
         """
+        if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
+
+            (model, row) = self.history_tree.get_selection().get_selected()
+            if row is not None:
+                histroy_item_path = self.history_tree_store.get_path(row)
+                histroy_item_iter = self.history_tree_store.get_iter(histroy_item_path)
+                # logger.info(history_item.state_reference)
+                # TODO generalize double-click folding and unfolding -> also used in states tree of state machine
+                if histroy_item_path is not None and self.history_tree_store.iter_n_children(histroy_item_iter):
+                    if self.history_tree.row_expanded(histroy_item_path):
+                        self.history_tree.collapse_row(histroy_item_path)
+                    else:
+                        self.history_tree.expand_to_path(histroy_item_path)
+
+            return True
+
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             x = int(event.x)
             y = int(event.y)
@@ -138,8 +155,8 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.append_string_to_menu(popup_menu, "------------------------")
 
                 popup_menu.show()
-
                 popup_menu.popup(None, None, None, event.button, time)
+
             return True
 
     # TODO: implement! To do this efficiently a mechanism is needed that does not regenerate the whole tree view

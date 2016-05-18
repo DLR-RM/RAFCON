@@ -237,7 +237,7 @@ class MenuBarController(ExtendedController):
             load_path = path
 
         try:
-            state_machine = storage.load_statemachine_from_path(load_path)
+            state_machine = storage.load_state_machine_from_path(load_path)
             state_machine_manager.add_state_machine(state_machine)
         except (ValueError, IOError) as e:
             logger.error('Error while trying to open state machine: {0}'.format(e))
@@ -286,7 +286,7 @@ class MenuBarController(ExtendedController):
         logger.debug("Saving state machine to {0}".format(save_path))
 
         state_machine = self.model.get_selected_state_machine_model().state_machine
-        storage.save_statemachine_to_path(state_machine, state_machine.file_system_path,
+        storage.save_state_machine_to_path(state_machine, state_machine.file_system_path,
                                           delete_old_state_machine=False, save_as=save_as)
 
         self.model.get_selected_state_machine_model().store_meta_data()

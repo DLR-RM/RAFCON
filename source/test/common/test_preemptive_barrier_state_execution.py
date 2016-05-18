@@ -60,8 +60,8 @@ def test_concurrency_preemption_save_load(caplog):
 
     preemption_state_sm = create_preemption_statemachine()
 
-    storage.save_statemachine_to_path(preemption_state_sm, storage_path)
-    storage.load_statemachine_from_path(storage_path)
+    storage.save_state_machine_to_path(preemption_state_sm, storage_path)
+    storage.load_state_machine_from_path(storage_path)
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id

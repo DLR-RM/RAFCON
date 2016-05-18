@@ -59,8 +59,8 @@ def test_concurrency_barrier_save_load(caplog):
 
     state_machine = StateMachine(concurrency_barrier_state)
     test_path = testing_utils.get_unique_temp_path()
-    storage.save_statemachine_to_path(state_machine, test_path)
-    sm_loaded = storage.load_statemachine_from_path(test_path)
+    storage.save_state_machine_to_path(state_machine, test_path)
+    sm_loaded = storage.load_state_machine_from_path(test_path)
 
     root_state = sm_loaded.root_state
     input_data = {"input_data_port1": 0.1, "input_data_port2": 0.1}

@@ -48,7 +48,7 @@ def test_preemption_behaviour_during_stop(caplog):
     testing_utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
 
-    state_machine = storage.load_statemachine_from_path(testing_utils.get_test_sm_path(
+    state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path(
         "unit_test_state_machines/preemption_behaviour_during_stop"))
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
 

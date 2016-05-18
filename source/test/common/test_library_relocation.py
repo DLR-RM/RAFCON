@@ -58,7 +58,7 @@ def test_library_relocation(caplog):
     # Initialize libraries
     sm_singletons.library_manager.initialize()
 
-    state_machine = storage.load_statemachine_from_path(testing_utils.get_test_sm_path(
+    state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path(
         "unit_test_state_machines/library_relocation_test"))
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)

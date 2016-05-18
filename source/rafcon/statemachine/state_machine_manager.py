@@ -46,7 +46,7 @@ class StateMachineManager(Observable):
     def refresh_state_machines(self, sm_ids, state_machine_id_to_path):
         from rafcon.statemachine.storage import storage
         for sm_idx in range(len(state_machine_id_to_path)):
-            state_machine = storage.load_statemachine_from_path(state_machine_id_to_path[sm_ids[sm_idx]])
+            state_machine = storage.load_state_machine_from_path(state_machine_id_to_path[sm_ids[sm_idx]])
             self.add_state_machine(state_machine)
 
     def get_sm_id_for_root_state_id(self, root_state_id):

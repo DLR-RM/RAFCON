@@ -17,7 +17,7 @@ def test_execute_script_returns_none(caplog):
 
     rafcon.statemachine.singleton.library_manager.initialize()
 
-    state_machine = storage.load_statemachine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/return_none_test_sm"))
+    state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/return_none_test_sm"))
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     if testing_utils.sm_manager_model is None:
