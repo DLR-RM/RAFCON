@@ -62,7 +62,7 @@ class ConcurrencyState(ContainerState):
             assert isinstance(concurrency_history_item, ConcurrencyItem)
 
         else:  # forward_execution
-            self.execution_history.push_call_history_item(self, CallType.CONTAINER, self)
+            self.execution_history.push_call_history_item(self, CallType.CONTAINER, self, self.input_data)
             concurrency_history_item = self.execution_history.push_concurrency_history_item(self, len(self.states))
         return concurrency_history_item
 
@@ -148,7 +148,7 @@ class ConcurrencyState(ContainerState):
         final_outcome = outcome
         self.write_output_data()
         self.check_output_data_type()
-        self.execution_history.push_return_history_item(self, CallType.CONTAINER, self)
+        self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
         self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
 
         if self.preempted:
