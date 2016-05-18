@@ -22,6 +22,15 @@ RAFCON_RUNTIME_BACKUP_PATH = os.path.join(RAFCON_TEMP_PATH_BASE, 'runtime_backup
 if not os.path.exists(RAFCON_RUNTIME_BACKUP_PATH):
     os.makedirs(RAFCON_RUNTIME_BACKUP_PATH)
 
+from sys import platform as _platform
+if _platform == "linux" or _platform == "linux2":
+    import subprocess
+    p = subprocess.Popen(['ps', '-A', '-o', 'pid'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = p.communicate()
+    process_id_list = ''.join(out).replace(' ', '').replace('PID', '').split('\n')
+else:
+    process_id_list = []
+
 
 def check_for_crashed_rafcon_instances():
 
@@ -64,7 +73,7 @@ def check_for_crashed_rafcon_instances():
     # find crashed RAFCON instances and not stored state machine with backups
     restorable_sm = []
     for folder in os.listdir(MY_RAFCON_TEMP_PATH):
-        if not folder == str(os.getpid()):
+        if not folder == str(os.getpid()) and folder not in process_id_list:
             rafcon_instance_path_to_check = os.path.join(MY_RAFCON_TEMP_PATH, folder)
             if 'lock' in os.listdir(rafcon_instance_path_to_check):
                 logger.info("There is tmp-data of a crashed/killed or badly closed state-machines of a RAFCON instance "

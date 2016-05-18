@@ -159,7 +159,10 @@ if __name__ == '__main__':
         if profiler:
             stop_profiler(profiler, logger)
         if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
-            os.remove(constants.RAFCON_INSTANCE_LOCK_FILE.name)
+            if os.path.exists(constants.RAFCON_INSTANCE_LOCK_FILE.name):
+                os.remove(constants.RAFCON_INSTANCE_LOCK_FILE.name)
+            else:
+                logger.warning("External remove of lock file detected!")
 
     logger.info("Exiting ...")
 
