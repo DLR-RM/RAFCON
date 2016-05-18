@@ -19,7 +19,7 @@ logger = log.get_logger(__name__)
 
 MY_RAFCON_TEMP_PATH = str(os.path.sep).join(RAFCON_TEMP_PATH_BASE.split(os.path.sep)[:-1])
 RAFCON_RUNTIME_BACKUP_PATH = os.path.join(RAFCON_TEMP_PATH_BASE, 'runtime_backup')
-if os.path.exists(RAFCON_RUNTIME_BACKUP_PATH):
+if not os.path.exists(RAFCON_RUNTIME_BACKUP_PATH):
     os.makedirs(RAFCON_RUNTIME_BACKUP_PATH)
 
 
