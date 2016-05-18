@@ -92,8 +92,12 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             return self.finalize(Outcome(-1, "aborted"))
 
     def _check_transition_validity(self, check_transition):
-        # Transition of BarrierConcurrencyStates must least fulfill the condition of a ContainerState
-        # Start transitions are already forbidden in the ConcurrencyState
+        """ Transition of BarrierConcurrencyStates must least fulfill the condition of a ContainerState.
+        Start transitions are forbidden in the ConcurrencyState
+
+        :param check_transition: the transition to check for validity
+        :return:
+        """
         valid, message = super(PreemptiveConcurrencyState, self)._check_transition_validity(check_transition)
         if not valid:
             return False, message

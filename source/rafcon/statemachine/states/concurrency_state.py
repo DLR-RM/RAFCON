@@ -31,12 +31,27 @@ class ConcurrencyState(ContainerState):
                                 data_flows, start_state_id, scoped_variables, v_checker)
 
     def run(self, *args, **kwargs):
+        """ The abstract run method that has to be implemented by all concurrency states.
+
+        :param args: list of optional arguments
+        :param kwargs: optional keyword arguments
+        :return:
+        """
         raise NotImplementedError("The ContainerState.run() function has to be implemented!")
 
-    def _check_start_transition(self, start_transition):
+    def _check_start_transition(self, transition):
+        """ Each concurrency state has to check the validity of their own transitions.
+
+        :param transition: the transition to be checked
+        :return:
+        """
         return False, "No start transitions are allowed in concurrency state"
 
     def setup_forward_or_backward_execution(self):
+        """ Sets up the execution of the concurrency states dependent on if the state is executed forward of backward.
+
+        :return:
+        """
         if self.backward_execution:
             # pop the return item of this concurrency state to get the correct scoped data
             last_history_item = self.execution_history.pop_last_item()
@@ -52,6 +67,14 @@ class ConcurrencyState(ContainerState):
         return concurrency_history_item
 
     def start_child_states(self, concurrency_history_item, do_not_start_state=None):
+        """ Utility function to start all child states of the concurrency state.
+
+        :param concurrency_history_item: each concurrent child branch gets an execution history stack of this
+                                        concurrency history item
+        :param do_not_start_state: optionally the id of a state can be passed, that must not be started (e.g. in the
+                                    case of the barrier concurrency state the decider state)
+        :return:
+        """
         self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
         # actually the queue is not needed in the barrier concurrency case
         # to avoid code duplication both concurrency states have the same start child function
@@ -78,6 +101,15 @@ class ConcurrencyState(ContainerState):
         return concurrency_queue
 
     def join_state(self, state, history_index, concurrency_history_item):
+        """ a utility function to join a state
+
+        :param state: the state to join
+        :param history_index: the index of the execution history stack in the concurrency history item
+                                for the given state
+        :param concurrency_history_item: the concurrency history item that stores the execution history stacks of all
+                                        children
+        :return:
+        """
         state.join()
         state.state_execution_status = StateExecutionState.INACTIVE
         # care for the history items
@@ -90,6 +122,10 @@ class ConcurrencyState(ContainerState):
             assert isinstance(last_history_item, CallItem)
 
     def finalize_backward_execution(self):
+        """ Utility function to finalize the backward execution of the concurrency state.
+
+        :return:
+        """
         # backward_execution needs to be True to signal the parent container state the backward execution
         self.backward_execution = True
         # pop the ConcurrencyItem as we are leaving the barrier concurrency state
@@ -104,6 +140,11 @@ class ConcurrencyState(ContainerState):
         return self.finalize()
 
     def finalize_concurrency_state(self, outcome):
+        """ Utility function to finalize the forward execution of the concurrency state.
+
+        :param outcome:
+        :return:
+        """
         final_outcome = outcome
         self.write_output_data()
         self.check_output_data_type()

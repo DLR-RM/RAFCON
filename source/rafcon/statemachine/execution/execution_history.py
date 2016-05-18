@@ -159,17 +159,6 @@ class CallItem(ScopedDataItem):
         return "CallItem %s" % (ScopedDataItem.__str__(self))
 
 
-# class CallItemRoot(CallItem):
-#     """A history item to represent a root state call
-#
-#     """
-#     def __init__(self, state, prev, method_name, state_for_scoped_data):
-#         CallItem.__init__(self, state, prev, method_name, state_for_scoped_data)
-#
-#     def __str__(self):
-#         return "CallItemRoot %s" % (ScopedDataItem.__str__(self))
-
-
 class ReturnItem(ScopedDataItem):
     """A history item to represent the return of a root state call
 
@@ -182,17 +171,6 @@ class ReturnItem(ScopedDataItem):
 
     def __str__(self):
         return "ReturnItem %s" % (ScopedDataItem.__str__(self))
-
-
-# class ReturnItemRoot(ReturnItem):
-#     """A history item to represent the return of a root state call
-#
-#     """
-#     def __init__(self, state, prev, method_name, state_for_scoped_data):
-#         ReturnItem.__init__(self, state, prev, method_name, state_for_scoped_data)
-#
-#     def __str__(self):
-#         return "ReturnItemRoot %s" % (ScopedDataItem.__str__(self))
 
 
 class ConcurrencyItem(HistoryItem):

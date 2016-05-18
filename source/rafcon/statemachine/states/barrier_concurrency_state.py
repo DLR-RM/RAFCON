@@ -143,6 +143,14 @@ class BarrierConcurrencyState(ConcurrencyState):
             return self.finalize(Outcome(-1, "aborted"))
 
     def run_decider_state(self, decider_state, child_errors, final_outcomes_dict):
+        """ Runs the decider state of the barrier concurrency state. The decider state decides on which outcome the
+        barrier concurrency is left.
+
+        :param decider_state: the decider state of the barrier concurrency state
+        :param child_errors: error of the concurrent branches
+        :param final_outcomes_dict: dictionary of all outcomes of the concurrent branches
+        :return:
+        """
         decider_state.state_execution_status = StateExecutionState.ACTIVE
         # forward the decider specific data
         decider_state.child_errors = child_errors
@@ -162,8 +170,12 @@ class BarrierConcurrencyState(ConcurrencyState):
         return decider_state_error
 
     def _check_transition_validity(self, check_transition):
-        # Transition of BarrierConcurrencyStates must least fulfill the condition of a ContainerState
-        # Start transitions are already forbidden in the ConcurrencyState
+        """ Transition of BarrierConcurrencyStates must least fulfill the condition of a ContainerState.
+        Start transitions are forbidden in the ConcurrencyState.
+
+        :param check_transition: the transition to check for validity
+        :return:
+        """
         valid, message = super(BarrierConcurrencyState, self)._check_transition_validity(check_transition)
         if not valid:
             return False, message
@@ -192,8 +204,7 @@ class BarrierConcurrencyState(ConcurrencyState):
 
     @Observable.observed
     def add_state(self, state, storage_load=False):
-        """
-        Overwrite the parent class add_state method by adding the automatic transition generation for the decider_state.
+        """ Overwrite the parent class add_state method by adding the automatic transition generation for the decider_state.
 
         :param state: The state to be added
         :return:
@@ -209,6 +220,11 @@ class BarrierConcurrencyState(ConcurrencyState):
     @ContainerState.states.setter
     @Observable.observed
     def states(self, states):
+        """ Overwrite the setter of the container state base class as special handling for the decider state is needed.
+
+        :param states: the dictionary of new states
+        :return:
+        """
         # First safely remove all existing states (recursively!), as they will be replaced
         state_ids = self.states.keys()
         for state_id in state_ids:
@@ -270,7 +286,6 @@ class BarrierConcurrencyState(ConcurrencyState):
 
 
 class DeciderState(ExecutionState):
-
     """A class to represent a state for deciding the exit of barrier concurrency state
 
     """
@@ -287,8 +302,7 @@ class DeciderState(ExecutionState):
         self.final_outcomes_dict = {}
 
     def get_outcome_for_state_name(self, name):
-        """
-        Returns the final outcome of the child state specified by name.
+        """ Returns the final outcome of the child state specified by name.
 
         Note: This is utility function that is used by the programmer to make a decision based on the final outcome
         of its child states. A state is not uniquely specified by the name, but as the programmer normally does not want
@@ -305,8 +319,7 @@ class DeciderState(ExecutionState):
         return return_value
 
     def get_outcome_for_state_id(self, state_id):
-        """
-        Returns the final outcome of the child state specified by the state_id.
+        """ Returns the final outcome of the child state specified by the state_id.
 
         :param state_id: The id of the state to get the final outcome for.
         :return:
@@ -319,8 +332,7 @@ class DeciderState(ExecutionState):
         return return_value
 
     def get_errors_for_state_name(self, name):
-        """
-        Returns the error message of the child state specified by name.
+        """ Returns the error message of the child state specified by name.
 
         Note: This is utility function that is used by the programmer to make a decision based on the final outcome
         of its child states. A state is not uniquely specified by the name, but as the programmer normally does not want
