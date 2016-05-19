@@ -87,7 +87,7 @@ def create_turtle_statemachine(example_path):
     move_turtle_hierarchy_state.add_transition(wait2.state_id, 0, clear_field.state_id, None)
 
     wait3 = LibraryState(name="Wait3", library_path="generic", library_name="wait")
-    wait3.add_outcome("Success", 0)
+    # wait3.add_outcome("Success", 0)
     move_turtle_hierarchy_state.add_state(wait3)
     move_turtle_hierarchy_state.add_transition(clear_field.state_id, 0, wait3.state_id, None)
 
