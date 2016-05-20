@@ -34,7 +34,8 @@ class DescriptionEditorController(EditorController):
 
         if isinstance(self.model.state, LibraryState):
             view.textview.set_sensitive(False)
-            view.textview.get_buffer().set_text(self.model.state.state_copy.description)
+            description = self.model.state.state_copy.description if self.model.state.state_copy.description is not None else ''
+            view.textview.get_buffer().set_text(description)
         else:
             view.textview.connect('focus-out-event', self.on_focus_out)
 
