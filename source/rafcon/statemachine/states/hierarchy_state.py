@@ -206,10 +206,10 @@ class HierarchyState(ContainerState):
         execution case.
         :return: a flag to indicate if normal child state execution should abort
         """
-        self.execution_history.push_return_history_item(
-            self.child_state, CallType.EXECUTE, self, self.child_state.output_data)
         self.add_state_execution_output_to_scoped_data(self.child_state.output_data, self.child_state)
         self.update_scoped_variables_with_output_dictionary(self.child_state.output_data, self.child_state)
+        self.execution_history.push_return_history_item(
+            self.child_state, CallType.EXECUTE, self, self.child_state.output_data)
         # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
         transition = self.get_transition_for_outcome(self.child_state, self.child_state.final_outcome)
 
@@ -239,11 +239,11 @@ class HierarchyState(ContainerState):
             self.last_child.state_execution_status = StateExecutionState.INACTIVE
 
         if not self.backward_execution:
+            self.output_data['error'] = self.last_error
             self.write_output_data()
             self.check_output_data_type()
             self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
             # add error message from child_state to own output_data
-            self.output_data['error'] = self.last_error
 
         self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
 
