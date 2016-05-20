@@ -24,9 +24,8 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-def create_turtle_statemachine(example_path):
+def create_turtle_statemachine(base_path, example_path):
     basic_turtle_demo_state = HierarchyState("BasicTurtleDemo")
-    basic_turtle_demo_state.add_outcome("Success", 0)
     init_ros_node = LibraryState("ros_libraries", "init_ros_node", "0.1", "init ros node")
 
     basic_turtle_demo_state.add_state(init_ros_node)
@@ -37,7 +36,6 @@ def create_turtle_statemachine(example_path):
     ########################################################
 
     preemptive_concurrency_state = PreemptiveConcurrencyState("Turtle Concurrency State")
-    # preemptive_concurrency_state.add_outcome("Success", 0)
     basic_turtle_demo_state.add_state(preemptive_concurrency_state)
     basic_turtle_demo_state.add_transition(init_ros_node.state_id, 0, preemptive_concurrency_state.state_id, None)
     basic_turtle_demo_state.add_transition(preemptive_concurrency_state.state_id, 0, basic_turtle_demo_state.state_id, 0)
@@ -59,7 +57,6 @@ def create_turtle_statemachine(example_path):
     # Move Turtle Hierarchy State
     ########################################################
     move_turtle_hierarchy_state = HierarchyState("Move Turtle Hierarchy State")
-    move_turtle_hierarchy_state.add_outcome("Success", 0)
     preemptive_concurrency_state.add_state(move_turtle_hierarchy_state)
     preemptive_concurrency_state.add_transition(move_turtle_hierarchy_state.state_id, 0,
                                                 preemptive_concurrency_state.state_id, 0)
@@ -68,8 +65,7 @@ def create_turtle_statemachine(example_path):
     move_turtle_hierarchy_state.add_state(spawn_turtle)
     move_turtle_hierarchy_state.set_start_state(spawn_turtle.state_id)
 
-    wait1 = ExecutionState("Wait1", path=os.path.join(example_path, "basic_turtle_demo"), filename="wait.py")
-    wait1.add_outcome("Success", 0)
+    wait1 = ExecutionState("Wait1", path=base_path, filename="wait.py")
     move_turtle_hierarchy_state.add_state(wait1)
     move_turtle_hierarchy_state.add_transition(spawn_turtle.state_id, 0, wait1.state_id, None)
 
@@ -77,8 +73,7 @@ def create_turtle_statemachine(example_path):
     move_turtle_hierarchy_state.add_state(teleport_turtle)
     move_turtle_hierarchy_state.add_transition(wait1.state_id, 0, teleport_turtle.state_id, None)
 
-    wait2 = ExecutionState("Wait2", path=os.path.join(example_path, "basic_turtle_demo"), filename="wait.py")
-    wait2.add_outcome("Success", 0)
+    wait2 = ExecutionState("Wait2", path=base_path, filename="wait.py")
     move_turtle_hierarchy_state.add_state(wait2)
     move_turtle_hierarchy_state.add_transition(teleport_turtle.state_id, 0, wait2.state_id, None)
 
@@ -87,7 +82,6 @@ def create_turtle_statemachine(example_path):
     move_turtle_hierarchy_state.add_transition(wait2.state_id, 0, clear_field.state_id, None)
 
     wait3 = LibraryState(name="Wait3", library_path="generic", library_name="wait")
-    # wait3.add_outcome("Success", 0)
     move_turtle_hierarchy_state.add_state(wait3)
     move_turtle_hierarchy_state.add_transition(clear_field.state_id, 0, wait3.state_id, None)
 
@@ -95,8 +89,7 @@ def create_turtle_statemachine(example_path):
     move_turtle_hierarchy_state.add_state(set_velocity1)
     move_turtle_hierarchy_state.add_transition(wait3.state_id, 0, set_velocity1.state_id, None)
 
-    wait4 = ExecutionState("Wait4", path=os.path.join(example_path, "basic_turtle_demo"), filename="wait_medium.py")
-    wait4.add_outcome("Success", 0)
+    wait4 = ExecutionState("Wait4", path=base_path, filename="wait.py")
     move_turtle_hierarchy_state.add_state(wait4)
     move_turtle_hierarchy_state.add_transition(set_velocity1.state_id, 0, wait4.state_id, None)
 
@@ -136,9 +129,10 @@ def run_turtle_demo():
         example_path = os.path.join(rafcon.__path__[0], os.pardir, "test_scripts", "tutorials")
     rafcon.statemachine.singleton.library_manager.initialize()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    base_path = os.path.dirname(os.path.abspath(__file__))
     os.chdir(rafcon.__path__[0] + "/mvc")
 
-    basic_turtle_demo_state = create_turtle_statemachine(example_path)
+    basic_turtle_demo_state = create_turtle_statemachine(base_path, example_path)
     state_machine = StateMachine(basic_turtle_demo_state)
 
     # # load the state machine
