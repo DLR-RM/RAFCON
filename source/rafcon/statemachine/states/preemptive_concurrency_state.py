@@ -81,6 +81,8 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             if transition is None:
                 self.output_data["error"] = RuntimeError("state aborted")
             else:
+                if 'error' in self.states[finished_thread_id].output_data:
+                    self.output_data["error"] = self.states[finished_thread_id].output_data['error']
                 self.final_outcome = self.outcomes[transition.to_outcome]
 
             return self.finalize_concurrency_state(self.final_outcome)

@@ -129,9 +129,12 @@ class BarrierConcurrencyState(ConcurrencyState):
                 transition = self.handle_no_transition(decider_state)
             # if the transition is still None, then the child_state was preempted or aborted, in this case return
             decider_state.state_execution_status = StateExecutionState.INACTIVE
+
             if transition is None:
-                self.output_data["error"] = decider_state_error
+                self.output_data["error"] = RuntimeError("state aborted")
             else:
+                if decider_state_error:
+                    self.output_data["error"] = decider_state_error
                 self.final_outcome = self.outcomes[transition.to_outcome]
 
             return self.finalize_concurrency_state(self.final_outcome)

@@ -146,7 +146,7 @@ class HierarchyState(ContainerState):
         self.child_state.output_data = self.create_output_dictionary_for_state(self.child_state)
 
         # process data of last state
-        if self.last_error is not None:
+        if self.last_error:
             self.child_state.input_data['error'] = copy.deepcopy(self.last_error)
         self.last_error = None
         if self.last_child:
@@ -239,7 +239,8 @@ class HierarchyState(ContainerState):
             self.last_child.state_execution_status = StateExecutionState.INACTIVE
 
         if not self.backward_execution:
-            self.output_data['error'] = self.last_error
+            if self.last_error:
+                self.output_data['error'] = copy.deepcopy(self.last_error)
             self.write_output_data()
             self.check_output_data_type()
             self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
