@@ -304,7 +304,7 @@ class State(Observable, YAMLObject, JSONObject):
         return data_port_id
 
     @Observable.observed
-    def remove_input_data_port(self, data_port_id):
+    def remove_input_data_port(self, data_port_id, force=False):
         """Remove an input data port from the state
 
         :param data_port_id: the id or the output data port to remove
@@ -359,7 +359,7 @@ class State(Observable, YAMLObject, JSONObject):
         return data_port_id
 
     @Observable.observed
-    def remove_output_data_port(self, data_port_id):
+    def remove_output_data_port(self, data_port_id, force=False):
         """Remove an output data port from the state
 
         :param data_port_id: the id of the output data port to remove
@@ -497,18 +497,19 @@ class State(Observable, YAMLObject, JSONObject):
         return outcome_id
 
     @Observable.observed
-    def remove_outcome(self, outcome_id):
+    def remove_outcome(self, outcome_id, force=False):
         """Remove an outcome from the state
 
         :param outcome_id: the id of the outcome to remove
 
         """
-        if outcome_id not in self.outcomes:
-            raise AttributeError("There is no outcome_id %s" % str(outcome_id))
+        if not force:
+            if outcome_id not in self.outcomes:
+                raise AttributeError("There is no outcome_id %s" % str(outcome_id))
 
-        if outcome_id == -1 or outcome_id == -2:
-            raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able to "
-                                 "return aborted or preempted")
+            if outcome_id == -1 or outcome_id == -2:
+                raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able"
+                                     "to return aborted or preempted")
 
         # Remove internal transitions to this outcome
         self.remove_outcome_hook(outcome_id)
@@ -695,6 +696,21 @@ class State(Observable, YAMLObject, JSONObject):
         :return:
         """
         return 0
+
+    def destruct(self):
+        """ Removes all the state elements.
+
+        :return:
+        """
+        for in_key in self.input_data_ports.keys():
+            self.remove_input_data_port(in_key, True)
+
+        for out_key in self.output_data_ports.keys():
+            self.remove_output_data_port(out_key, True)
+
+        for outcome_key in self.outcomes.keys():
+            if outcome_key is not -1 and outcome_key is not -2:
+                self.remove_outcome(outcome_key, True)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

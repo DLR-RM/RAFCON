@@ -327,6 +327,7 @@ class ContainerState(State):
                 for data_flow_id in self.states[state_id].data_flows.keys():
                     self.states[state_id].remove_data_flow(data_flow_id)
 
+        self.states[state_id].destruct()
         # final delete the state it self
         del self.states[state_id]
 
