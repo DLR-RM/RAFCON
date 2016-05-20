@@ -14,9 +14,8 @@ import gobject
 
 import rafcon
 
-from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.state_machine_manager import StateMachineManager
-from rafcon.statemachine.execution.execution_history import ConcurrencyItem, CallItem
+from rafcon.statemachine.execution.execution_history import ConcurrencyItem, CallItem, ScopedDataItem
 from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.statemachine.enums import CallType
@@ -87,7 +86,8 @@ class ExecutionHistoryTreeController(ExtendedController):
 
     def mouse_click(self, widget, event=None):
         """Triggered when mouse click is pressed in the history tree. The method shows all scoped data for an execution
-        step as tooltip or fold and unfold the tree by double-click.
+        step as tooltip or fold and unfold the tree by double-click and select respective state for double clicked
+        element.
         """
         if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
 
@@ -102,6 +102,11 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.history_tree.collapse_row(histroy_item_path)
                     else:
                         self.history_tree.expand_to_path(histroy_item_path)
+
+                active_sm_m = self.model.get_selected_state_machine_model()
+                ref_state_m = active_sm_m.get_state_model_by_path(model[row][1].state_reference.get_path())
+                if ref_state_m and active_sm_m:
+                    active_sm_m.selection.set(ref_state_m)
 
             return True
 
@@ -119,12 +124,11 @@ class ExecutionHistoryTreeController(ExtendedController):
 
                 model, row = self.history_tree.get_selection().get_selected()
                 history_item = model[row][1]
+                if not isinstance(history_item, ScopedDataItem) or history_item.scoped_data is None:
+                    return
                 scoped_data = history_item.scoped_data
                 input_output_data = history_item.child_state_input_output_data
                 state_reference = history_item.state_reference
-
-                if scoped_data is None:
-                    return
 
                 self.append_string_to_menu(popup_menu, "------------------------")
                 self.append_string_to_menu(popup_menu, "Scoped Data: ")
