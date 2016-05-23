@@ -524,7 +524,7 @@ class ContainerState(State):
             raise AttributeError("The transition_id must not be -1 (Aborted) or -2 (Preempted)")
         if transition_id not in self._transitions:
             raise AttributeError("The transition_id %s does not exist" % str(transition_id))
-        self._transitions.pop(transition_id, None)
+        del self._transitions[transition_id]
 
     def remove_outcome_hook(self, outcome_id):
         """Removes internal transition going to the outcome
@@ -571,7 +571,7 @@ class ContainerState(State):
         """
         if data_flow_id not in self.data_flows:
             raise AttributeError("The data_flow_id %s does not exist" % str(data_flow_id))
-        self.data_flows.pop(data_flow_id, None)
+        del self.data_flows[data_flow_id]
 
     def remove_data_flows_with_data_port_id(self, data_port_id):
         """Remove an data ports whose from_key or to_key equals the passed data_port_id
@@ -590,7 +590,6 @@ class ContainerState(State):
 
             for data_flow_id in data_flow_ids_to_remove:
                 self.parent.remove_data_flow(data_flow_id)
-                # del self.parent.data_flows[data_flow_id]
 
         # delete all data flows in self related to data_port_id and self.state_id
         data_flow_ids_to_remove = []

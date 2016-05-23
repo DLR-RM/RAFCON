@@ -45,6 +45,9 @@ class StateElement(Observable, YAMLObject, JSONObject):
             return False
         return str(self) == str(other)
 
+    def __del__(self):
+        self._parent = None
+
     @property
     def parent(self):
         """Getter for the parent state of the state element

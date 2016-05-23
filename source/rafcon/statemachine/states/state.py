@@ -110,8 +110,14 @@ class State(Observable, YAMLObject, JSONObject):
     # ----------------------------------- generic methods -----------------------------------------
     # ---------------------------------------------------------------------------------------------
 
+    def __del__(self):
+        self._parent = None
+
     def __str__(self):
         return "{2} with name '{0}' and id '{1}'".format(self.name, self.state_id, type(self).__name__)
+
+    def id(self):
+        return self
 
     def __eq__(self, other):
         # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}".format(self, other))
@@ -333,7 +339,6 @@ class State(Observable, YAMLObject, JSONObject):
 
             for data_flow_id in data_flow_ids_to_remove:
                 self.parent.remove_data_flow(data_flow_id)
-                # del self.parent.data_flows[data_flow_id]
 
     @Observable.observed
     def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
@@ -510,7 +515,6 @@ class State(Observable, YAMLObject, JSONObject):
             if outcome_id == -1 or outcome_id == -2:
                 raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able"
                                      "to return aborted or preempted")
-
         # Remove internal transitions to this outcome
         self.remove_outcome_hook(outcome_id)
 
@@ -522,7 +526,7 @@ class State(Observable, YAMLObject, JSONObject):
                     break  # found the one outgoing transition
 
         # delete outcome it self
-        self._outcomes.pop(outcome_id, None)
+        del self._outcomes[outcome_id]
 
     def remove_outcome_hook(self, outcome_id):
         """Hook for adding more logic when removing an outcome
