@@ -62,7 +62,10 @@ class StateDataFlowsListController(ExtendedController):
         self.data_flow_dict = {'internal': {},
                                'external': {}}
         self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
+        self.no_update_state_destruction = False
+        self.no_update_self_or_parent_state_destruction = False
         self.debug_log = False
+        self._actual_overview = None
 
         # register other model and fill tree_store the model of the view
         if not model.state.is_root_state:
@@ -358,6 +361,28 @@ class StateDataFlowsListController(ExtendedController):
                                                   True,
                                                   '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True])
 
+    @ExtendedController.observe("root_state", assigned=True)
+    def root_state_changed(self, model, prop_name, info):
+        """ Relieve all observed models to avoid updates on old root state.
+        """
+        # TODO may re-observe if the states-editor supports this feature
+        self.relieve_all_models()
+
+    @ExtendedController.observe("state", before=True)
+    def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
+        """ Set the no update flag to avoid updates in between of a state removal.
+        """
+        if info['method_name'] == "remove_state":
+            if info.instance.state_id == self.model.state.state_id:
+                self.no_update_state_destruction = True
+                # print "NOUPDATE ", self.no_update_state_destruction, self.model.state.state_id
+            else:
+                if info.args[1] == self.model.state.state_id or \
+                        not self.model.state.is_root_state and info.args[1] == self.model.parent.state.state_id:
+                    self.no_update_self_or_parent_state_destruction = True
+                    self.relieve_all_models()
+                # print "DNOUPDATE_PARENT ", self.no_update_self_or_parent_state_destruction, info.args[1], self.model.state.state_id
+
     @ExtendedController.observe("change_state_type", before=True)
     @ExtendedController.observe("change_root_state_type", before=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
@@ -369,15 +394,28 @@ class StateDataFlowsListController(ExtendedController):
     def after_notification_state(self, model, prop_name, info):
         # The method causing the change raised an exception, thus nothing was changed
         # avoid updates because of execution status updates
+        if info['method_name'] == "remove_state":
+            if info.instance.state_id == self.model.state.state_id:
+                self.no_update_state_destruction = True
+                # print "DNOUPDATE ", self.no_update_state_destruction, self.model.state.state_id
+            # TODO introduce re-observe new objects to use commented code
+            # else:
+            #     if info.args[1] == self.model.state.state_id or \
+            #             not self.model.state.is_root_state and info.args[1] == self.model.parent.state.state_id:
+            #         self.no_update_self_or_parent_state_destruction = False
+            #     # print "DNOUPDATE_PARENT ", self.no_update_self_or_parent_state_destruction, info.args[1], self.model.state.state_id
+
         if info['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
+        self._actual_overview = overview
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
         if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state:
             self.update()
+        self._actual_overview = None
 
     @ExtendedController.observe("states", after=True)
     @ExtendedController.observe("change_state_type", after=True)
@@ -403,15 +441,25 @@ class StateDataFlowsListController(ExtendedController):
             # print "DO_UNLOCK DATA-FLOW WIDGET"
             self.no_update = False
 
-        if self.no_update:
+        if self.no_update or self.no_update_state_destruction or self.no_update_self_or_parent_state_destruction:
             return
+
+        overview = NotificationOverview(info, False, self.__class__.__name__)
+        # print self, overview
+
+        # avoid updates because of unimportant methods
+        if overview['prop_name'][0] in ['states', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'data_flows'] and \
+                overview['method_name'][-1] not in ['append', '__setitem__', '__delitem__', 'name', 'change_data_type',
+                                                    'from_key', 'to_key', 'from_state', 'to_state']:
+            return
+        # print "DUPDATE ", self, overview
 
         try:
             self.update()
         except Exception as e:
             if self.debug_log:
                 import traceback
-                self.store_debug_log_file(NotificationOverview(info, True, self.__class__.__name__))
+                self.store_debug_log_file(str(overview))
                 self.store_debug_log_file(str(traceback.format_exc()))
             logger.error("update of data_flow widget fails while detecting change in state %s %s" %
                          (self.model.state.name, self.model.state.state_id))
@@ -638,10 +686,14 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                         break
             if model.state.state_id in [data_flow.from_state, data_flow.to_state]:
                 from_key_port = from_state.get_data_port_by_id(data_flow.from_key)
+                if from_key_port is None:
+                    continue
                 from_key_label = PORT_TYPE_TAG.get(type(from_key_port), 'None') + '.' + \
                                  from_key_port.data_type.__name__ + '.' + \
                                  from_key_port.name
                 to_key_port = to_state.get_data_port_by_id(data_flow.to_key)
+                if to_key_port is None:
+                    continue
                 to_key_label = PORT_TYPE_TAG.get(type(to_key_port), 'None') + '.' + \
                                to_key_port.data_type.__name__ + '.' + \
                                to_key_port.name

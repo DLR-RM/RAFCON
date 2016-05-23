@@ -20,7 +20,7 @@ from rafcon.mvc.utils.notification_overview import NotificationOverview
 
 from rafcon.mvc.gui_helper import format_cell
 
-from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
+from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS, RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -41,7 +41,6 @@ class StateTransitionsListController(ExtendedController):
     def __init__(self, model, view):
         """Constructor
         """
-        ExtendedController.__init__(self, model, view)
 
         # TreeStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
         #                   name-color, to-state-color, transition-object, state-object, is_editable
@@ -50,9 +49,19 @@ class StateTransitionsListController(ExtendedController):
                                         gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
         self.combo = {}
         self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
+        self.no_update_state_destruction = False
+        self.no_update_self_or_parent_state_destruction = False
+        self.debug_log = False
+        self._actual_overview = None
 
+        ExtendedController.__init__(self, model, view)
         if not self.model.state.is_root_state:
             self.observe_model(self.model.parent)
+            if self.model.parent.parent is not None:
+                self.observe_model(self.model.parent.parent)
+        else:
+            if self.model.parent is not None:
+                self.observe_model(self.model.parent)
 
         self.update()
         view.get_top_widget().set_model(self.tree_store)
@@ -580,9 +589,33 @@ class StateTransitionsListController(ExtendedController):
                                               True,  # is_external
                                               t, self.model.state, True])
 
+    @ExtendedController.observe("root_state", assigned=True)
+    def root_state_changed(self, model, prop_name, info):
+        """ Relieve all observed models to avoid updates on old root state.
+        """
+        # TODO may re-observe if the states-editor supports this feature
+        self.relieve_all_models()
+
+    @ExtendedController.observe("state", before=True)
+    def before_notification_state(self, model, prop_name, info):
+        """ Set the no update flag to avoid updates in between of a state removal.
+        """
+
+        # avoid updates because of state destruction
+        if info['method_name'] == "remove_state":
+            if info.instance.state_id == self.model.state.state_id:
+                self.no_update_state_destruction = True
+                # print "TNOUPDATE ", self.no_update_state_destruction, self.model.state.state_id
+            else:
+                if info.args[1] == self.model.state.state_id or \
+                        not self.model.state.is_root_state and info.args[1] == self.model.parent.state.state_id:
+                    self.no_update_self_or_parent_state_destruction = True
+                    self.relieve_all_models()
+                # print "TNOUPDATE_PARENT ", self.no_update_self_or_parent_state_destruction, info.args[1], self.model.state.state_id
+
     @ExtendedController.observe("change_root_state_type", before=True)
     @ExtendedController.observe("change_state_type", before=True)
-    def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
+    def before_notification_of_type_change(self, model, prop_name, info):
         """ Set the no update flag to avoid updates in between of a state-type-change.
         """
         self.no_update = True
@@ -594,13 +627,28 @@ class StateTransitionsListController(ExtendedController):
         if info['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
             return
 
+        # avoid updates because of state destruction
+        if info['method_name'] == "remove_state":
+            if info.instance.state_id == self.model.state.state_id:
+
+                self.no_update_state_destruction = False
+                # print "TNOUPDATE ", self.no_update_state_destruction, self.model.state.state_id
+            # TODO introduce re-observe new objects to use commented code
+            # else:
+            #     if info.args[1] == self.model.state.state_id or \
+            #             not self.model.state.is_root_state and info.args[1] == self.model.parent.state.state_id:
+            #         self.no_update_self_or_parent_state_destruction = False
+            #     # print "TNOUPDATE_PARENT ", self.no_update_self_or_parent_state_destruction, info.args[1], self.model.state.state_id
+
         overview = NotificationOverview(info, False, self.__class__.__name__)
+        self._actual_overview = overview
         # The method causing the change raised an exception, thus nothing was changed
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
         if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state:
             self.update()
+        self._actual_overview = None
 
     @ExtendedController.observe("states", after=True)
     @ExtendedController.observe("transitions", after=True)
@@ -612,7 +660,6 @@ class StateTransitionsListController(ExtendedController):
         states list has been changed.
         """
         # The method causing the change raised an exception, thus nothing was changed
-        # overview = NotificationOverview(info)
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
@@ -627,14 +674,35 @@ class StateTransitionsListController(ExtendedController):
             # print "DO_UNLOCK TRANSITION WIDGET"
             self.no_update = False
 
-        if self.no_update:
+        if self.no_update or self.no_update_state_destruction or self.no_update_self_or_parent_state_destruction:
             return
 
+        overview = NotificationOverview(info, False, self.__class__.__name__)
+        # print self, overview
+
+        if overview['prop_name'][0] in ['states', 'outcomes', 'transitions'] and \
+                overview['method_name'][-1] not in ['append', '__setitem__', '__delitem__', 'name',
+                                                    'from_outcome', 'to_outcome', 'from_state', 'to_state',
+                                                    'modify_origin', 'modify_target']:
+            return
+        # print "TUPDATE ", self, overview
+
         try:
+            self._actual_overview = overview
             self.update()
         except KeyError as e:
-            logger.error("update of transition widget fails while detecting list change of state %s %s" %
-                         (self.model.state.name, self.model.state.state_id))
+            if self.debug_log:
+                import traceback
+                self.store_debug_log_file(str(overview))
+                self.store_debug_log_file(str(traceback.format_exc()))
+            logger.error("update of transition widget fails while detecting list change of state %s %s %s\n%s" %
+                         (self.model.state.name, self.model.state.state_id, e, self))
+            print self._actual_overview
+        self._actual_overview = None
+
+    def store_debug_log_file(self, string):
+        with open(RAFCON_TEMP_PATH_BASE + '/transition_widget_debug_log_file.txt', 'a+') as f:
+            f.write(string)
 
     def notification_logs(self, model, prop_name, info):
         # logger.debug("IP OP SV or DF %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
