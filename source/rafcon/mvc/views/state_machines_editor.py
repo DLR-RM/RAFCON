@@ -69,7 +69,7 @@ class PlusAddNotebook(gtk.Notebook):
         if pb_x <= event.x <= pb_x + pb_width and pb_y <= event.y <= pb_y + pb_height \
                 and self.add_visible and event.state & gtk.gdk.BUTTON1_MASK:
             self.emit("add_state_machine")
-            return
+            return True
 
         for i in range(0, self.get_n_pages()):
             alloc = self.get_tab_label(self.get_nth_page(i)).get_allocation()
@@ -79,7 +79,7 @@ class PlusAddNotebook(gtk.Notebook):
             if alloc.x < mouse_x < alloc.x + alloc.width and alloc.y < mouse_y < alloc.y + alloc.height and \
                             event.state & gtk.gdk.BUTTON2_MASK:
                 self.emit("close_state_machine", i)
-                return
+                return True
 
     def do_expose_event(self, event):
 
