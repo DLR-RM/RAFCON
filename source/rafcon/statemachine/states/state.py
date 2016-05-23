@@ -503,10 +503,10 @@ class State(Observable, YAMLObject, JSONObject):
         :param outcome_id: the id of the outcome to remove
 
         """
+        if outcome_id not in self.outcomes:
+            raise AttributeError("There is no outcome_id %s" % str(outcome_id))
+        
         if not force:
-            if outcome_id not in self.outcomes:
-                raise AttributeError("There is no outcome_id %s" % str(outcome_id))
-
             if outcome_id == -1 or outcome_id == -2:
                 raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able"
                                      "to return aborted or preempted")
