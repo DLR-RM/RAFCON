@@ -10,7 +10,7 @@
 import os
 
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 
 
@@ -58,7 +58,7 @@ class StateHelper(object):
             raise ValueError("Reset state id only valid if no parent is assigned yet.")
         old_state_id = state._state_id
         state._state_id = new_state_id
-        if not isinstance(state, LibraryState):
+        if isinstance(state, ContainerState):
             for df in state.data_flows.itervalues():
                 if old_state_id == df.from_state:
                     df.from_state = state.state_id
