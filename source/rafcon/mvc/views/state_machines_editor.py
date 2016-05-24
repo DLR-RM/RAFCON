@@ -32,7 +32,7 @@ class PlusAddNotebook(gtk.Notebook):
     pixbuf_data = [
         "13 13 2 1",
         "  c None",
-        "x c %s" % gui_config.colors['TEXT_DARK'],
+        "x c %s" % gui_config.colors['TEXT'],
         "     xxx     ",
         "     xxx     ",
         "     xxx     ",
@@ -66,7 +66,8 @@ class PlusAddNotebook(gtk.Notebook):
         pb_width = self.pixbuf.get_width()
         pb_height = self.pixbuf.get_height()
 
-        if pb_x <= event.x <= pb_x + pb_width and pb_y <= event.y <= pb_y + pb_height \
+        if pb_x - constants.ICON_MARGIN <= event.x <= pb_x + pb_width + constants.ICON_MARGIN and \
+                pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN \
                 and self.add_visible and event.state & gtk.gdk.BUTTON1_MASK:
             self.emit("add_state_machine")
             return True
@@ -91,8 +92,8 @@ class PlusAddNotebook(gtk.Notebook):
 
             self.add_visible = x < self.get_allocation().x + self.get_allocation().width - self.pixbuf.get_width()
 
-            # if self.add_visible:
-            #     self.window.draw_pixbuf(None, self.pixbuf, 0, 0, x, y, -1, -1, gtk.gdk.RGB_DITHER_NONE, 0, 0)
+            if self.add_visible:
+                self.window.draw_pixbuf(None, self.pixbuf, 0, 0, x, y, -1, -1, gtk.gdk.RGB_DITHER_NONE, 0, 0)
 
         return True
 
