@@ -7,7 +7,8 @@ from pango import SCALE
 from rafcon.mvc.config import global_gui_config
 
 from rafcon.mvc.mygaphas.constraint import KeepPointWithinConstraint, KeepPortDistanceConstraint
-from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, PortView
+from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView,\
+                                            InputPortView, OutputPortView, LogicPortView, PortView
 from rafcon.mvc.mygaphas.utils.enums import SnappedSide
 from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_text_layout
 from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
@@ -174,7 +175,8 @@ class PerpLine(Line):
         draw_line_end(self._handles[-1].pos, self._tail_angle, self.draw_tail)
         cr.stroke()
 
-        if self.name:
+        if self.name and (isinstance(self.from_port, LogicPortView) or
+                          global_gui_config.get_config_value("SHOW_NAMES_ON_DATA_FLOWS", default=True)):
             self._draw_name(context)
 
     def _draw_name(self, context):
