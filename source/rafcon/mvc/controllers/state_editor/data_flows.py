@@ -445,12 +445,12 @@ class StateDataFlowsListController(ExtendedController):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
-        # print self, overview
+        # print self, self.model.state.get_path(), overview
 
         # avoid updates because of unimportant methods
         if overview['prop_name'][0] in ['states', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'data_flows'] and \
-                overview['method_name'][-1] not in ['append', '__setitem__', '__delitem__', 'name', 'change_data_type',
-                                                    'from_key', 'to_key', 'from_state', 'to_state']:
+                overview['method_name'][-1] not in ['append', '__setitem__', '__delitem__', 'remove', 'name',
+                                                    'change_data_type', 'from_key', 'to_key', 'from_state', 'to_state']:
             return
         # print "DUPDATE ", self, overview
 

@@ -678,10 +678,10 @@ class StateTransitionsListController(ExtendedController):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
-        # print self, overview
+        # print self, self.model.state.get_path(), overview
 
         if overview['prop_name'][0] in ['states', 'outcomes', 'transitions'] and \
-                overview['method_name'][-1] not in ['append', '__setitem__', '__delitem__', 'name',
+                overview['method_name'][-1] not in ['append', '__setitem__', '__delitem__', 'remove', 'name',
                                                     'from_outcome', 'to_outcome', 'from_state', 'to_state',
                                                     'modify_origin', 'modify_target']:
             return
