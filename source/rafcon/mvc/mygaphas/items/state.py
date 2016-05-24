@@ -260,7 +260,6 @@ class StateView(Element):
         self._transparent = True
 
     def apply_meta_data(self):
-        print "apply meta data"
         # logger.info("apply state meta {}".format(self.model.state.get_path()))
         state_meta = self.model.meta['gui']['editor_gaphas']
         # logger.info("rel_pos {}".format(state_meta['rel_pos']))
@@ -278,6 +277,10 @@ class StateView(Element):
             update_port_position(self.income, state_meta['income'])
         for outcome_v in self.outcomes:
             update_port_position(outcome_v, outcome_v.outcome_m.meta['gui']['editor_gaphas'])
+        for data_port_v in self.inputs + self.outputs:
+            update_port_position(data_port_v, data_port_v.port_m.meta['gui']['editor_gaphas'])
+        for scoped_port_v in self.scoped_variables:
+            update_port_position(scoped_port_v, scoped_port_v.model.meta['gui']['editor_gaphas'])
 
         self.name_view.apply_meta_data()
 
@@ -555,6 +558,7 @@ class StateView(Element):
             pos_x = 0
             pos_y = self.height - self._calculate_port_pos_on_line(num_inputs, self.height)
             port_meta['rel_pos'] = pos_x, pos_y
+            print "initial input meta data", port_meta['rel_pos']
         input_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(input_port_v)
 

@@ -241,7 +241,6 @@ class GraphicalEditorController(ExtendedController):
     def meta_changed_notify_after(self, changed_model, prop_name, info):
         from rafcon.mvc.utils.notification_overview import NotificationOverview
         overview = NotificationOverview(info, False, self.__class__.__name__)
-        print "mta origin", overview['meta_signal'][-1]['origin']
         if overview['meta_signal'][-1]['origin'] in ['undo', 'redo_meta_action', 'copy_state_m']:
             if isinstance(overview['model'][-1], AbstractStateModel):
                 state_m = overview['model'][-1]
