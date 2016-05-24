@@ -558,7 +558,6 @@ class StateView(Element):
             pos_x = 0
             pos_y = self.height - self._calculate_port_pos_on_line(num_inputs, self.height)
             port_meta['rel_pos'] = pos_x, pos_y
-            print "initial input meta data", port_meta['rel_pos']
         input_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(input_port_v)
 
