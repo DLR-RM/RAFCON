@@ -9,8 +9,9 @@ Subpackages
 
 .. toctree::
 
-    rafcon.statemachine.states
     rafcon.statemachine.execution
+    rafcon.statemachine.state_elements
+    rafcon.statemachine.states
     rafcon.statemachine.storage
     rafcon.statemachine.validity_check
 
@@ -18,13 +19,9 @@ config
 ------
 .. automodule:: rafcon.statemachine.config
 
-data_flow
----------
-.. automodule:: rafcon.statemachine.data_flow
-
-data_port
----------
-.. automodule:: rafcon.statemachine.data_port
+custom_exceptions
+-----------------
+.. automodule:: rafcon.statemachine.custom_exceptions
 
 enums
 -----
@@ -46,14 +43,6 @@ library_manager
 ---------------
 .. automodule:: rafcon.statemachine.library_manager
 
-outcome
--------
-.. automodule:: rafcon.statemachine.outcome
-
-scope
------
-.. automodule:: rafcon.statemachine.scope
-
 script
 ------
 .. automodule:: rafcon.statemachine.script
@@ -69,7 +58,3 @@ state_machine
 state_machine_manager
 ---------------------
 .. automodule:: rafcon.statemachine.state_machine_manager
-
-transition module
------------------
-.. automodule:: rafcon.statemachine.transition

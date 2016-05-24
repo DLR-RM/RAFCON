@@ -19,5 +19,4 @@ Finally, rafcon.utils hold several helping modules, for example for logging.
 
     rafcon.statemachine
     rafcon.mvc
-    rafcon.network
     rafcon.utils

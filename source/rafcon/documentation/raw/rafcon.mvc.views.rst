@@ -89,12 +89,12 @@ SourceEditorView (in source_editor)
 
 .. automodule:: rafcon.mvc.views.source_editor
 
-StateDataFlowsEditorView (in state_data_flows)
+StateDataFlowsEditorView (in data_flows)
 ----------------------------------------------
 
 A module to view the data flow of a respective state (internal, external)
 
-.. automodule:: rafcon.mvc.views.state_data_flows
+.. automodule:: rafcon.mvc.views.state_editor.data_flows
 
 StateEditorView (in state_editor)
 ---------------------------------

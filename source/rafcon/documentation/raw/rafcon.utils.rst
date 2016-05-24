@@ -20,6 +20,18 @@ log
 ---
 .. automodule:: rafcon.utils.log
 
+multi_event
+-----------
+.. automodule:: rafcon.utils.multi_event
+
+plugins
+-------
+.. automodule:: rafcon.utils.plugins
+
+singleton
+---------
+.. automodule:: rafcon.utils.singleton
+
 storage_utils
 -------------
 .. automodule:: rafcon.utils.storage_utils
