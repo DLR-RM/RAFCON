@@ -260,6 +260,7 @@ class StateView(Element):
         self._transparent = True
 
     def apply_meta_data(self):
+        print "apply meta data"
         # logger.info("apply state meta {}".format(self.model.state.get_path()))
         state_meta = self.model.meta['gui']['editor_gaphas']
         # logger.info("rel_pos {}".format(state_meta['rel_pos']))
@@ -267,6 +268,26 @@ class StateView(Element):
         self.position = state_meta['rel_pos']
         self.width = state_meta['size'][0]
         self.height = state_meta['size'][1]
+
+        if isinstance(state_meta['income']['rel_pos'], tuple):
+            print "set income pos", state_meta['income']['rel_pos']
+            self.income.handle.pos = state_meta['income']['rel_pos']
+        for outcome_v in self.outcomes:
+            outcome_meta = outcome_v.outcome_m.meta['gui']['editor_gaphas']
+            if isinstance(outcome_meta['rel_pos'], tuple):
+                print "set outcome pos", outcome_meta['rel_pos'], "was", outcome_v.handle.pos
+                print "side before", outcome_v.side
+                outcome_v.handle.pos = outcome_meta['rel_pos']
+                self.port_constraints[outcome_v].update_position(outcome_meta['rel_pos'])
+                # print "side after", outcome_v.side
+                # self.port_constraints[outcome_v].set_nearest_border()
+                # print "side after2", outcome_v.side
+                # self.port_constraints[outcome_v].solve()
+
+        # for constraint in self.port_constraints.itervalues():
+        #     print "constraint", constraint
+        #     constraint.update_port_side()
+
         self.name_view.apply_meta_data()
 
     def draw(self, context):

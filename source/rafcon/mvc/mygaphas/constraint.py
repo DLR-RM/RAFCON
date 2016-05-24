@@ -150,6 +150,11 @@ class PortRectConstraint(Constraint):
         self._distance_to_border = self._port.port_side_size / 2.
         self.update_port_side()
 
+    def update_position(self, p):
+        self._initial_pos.x = p[0]
+        self._initial_pos.y = p[1]
+        self.update_port_side()
+
     def update_port_side(self):
         """Updates the initial position of the port
 
