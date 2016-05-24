@@ -15,13 +15,17 @@ class Singleton(type):
     The meta class ensures that the class can only be instantiated once. Usage:
 
     .. code-block:: python
-        class Logger(object):
-        __metaclass__ = Singleton
 
-        Or in Python3
+        class Logger(object):
+            __metaclass__ = Singleton
+
+    Or in Python3
+
+    .. code-block:: python
 
         class Logger(metaclass=Singleton):
             pass
+
     """
     _instances = {}
 

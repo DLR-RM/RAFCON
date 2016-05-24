@@ -37,11 +37,11 @@ class BarrierConcurrencyState(ConcurrencyState):
 
         For the children of the concurrency state the history items are:
         In the forward case:
-            Call: Before calling the child
-            Return: After executing the child
+        - Call: Before calling the child
+        - Return: After executing the child
         In the backward case:
-            Pop Return: Before backward executing the child
-            Pop Call: After backward executing the child
+        - Pop Return: Before backward executing the child
+        - Pop Call: After backward executing the child
 
         The decider state is not considered in the backward execution case.
 
