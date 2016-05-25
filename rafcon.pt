@@ -1,19 +1,17 @@
 #
 # RAFCON -- RMC awesome flow control
-# ptfile v2
-# created by brun_sb
 #
 
 PTVERSION           = 2
 NAME                = rafcon 
 MAINTAINER          = Sebastian Brunner <sebastian.brunner@dlr.de>, Rico Belder <rico.belder@dlr.de>, Franz Steinmetz <franz.steinmetz@dlr.de>
 DESCRIPTION         = RMC awesome flow control -- This is a package to program and visualize complex robot tasks.
-VERSION             = 0.7.5
+VERSION             = 0.7.6
 DOCUMENTATION       = https://rmintra01.robotic.dlr.de/wiki/RAFCON
 MANTIS_PROJECT      = DLR Flow-Control
 SUPPORTED_LANGUAGES = python
 DEPENDS = 
-DEPENDS.sled11*     = gtk_etc==0, gtk_etc_python==0, python-jsonconversion==0.1, python_yaml_configuration==0, rafcon_monitoring_plugin==0.0
+DEPENDS.sled11*     = gtk_etc==0, gtk_etc_python==0, python-jsonconversion==0.1, python_yaml_configuration==0
 DEPENDS.osl*        = python-gtkmvc==1.99, python-gaphas==0.7, python-jsonconversion==0.1, python_yaml_configuration==0
 
 ARCHS               = sled11-x86-gcc4.x, sled11-x86_64-gcc4.x, osl42-x86_64
