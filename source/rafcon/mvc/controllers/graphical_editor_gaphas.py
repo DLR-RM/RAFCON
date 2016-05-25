@@ -237,6 +237,15 @@ class GraphicalEditorController(ExtendedController):
         msg = MetaSignalMsg('graphical_editor_gaphas', name, affects_children)
         model.meta_signal.emit(msg)
 
+    def recursive_update(self, state_m, go_on=True):
+            state_v = self.canvas.get_view_for_model(state_m)
+            if state_v is not None:
+                state_v.apply_meta_data()
+                self.canvas.request_update(state_v, matrix=True)
+                if isinstance(state_m, ContainerStateModel) and go_on:
+                    for s_m in state_m.states.itervalues():
+                        self.recursive_update(s_m, go_on)
+
     @ExtendedController.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
     def meta_changed_notify_after(self, changed_model, prop_name, info):
         from rafcon.mvc.utils.notification_overview import NotificationOverview
@@ -253,9 +262,15 @@ class GraphicalEditorController(ExtendedController):
                 # logger.info("update_parent_state".format(state_m.state.get_path()))
                 # updated_m = overview['model'][-1]  # TODO in future only update respective model
                 # logger.info("update_state_element " + str(updated_m))
-            state_v = self.canvas.get_view_for_model(state_m)
-            state_v.apply_meta_data()
-            self.canvas.request_update(state_v, matrix=True)
+            # print "GAPHAS ", info['arg'].change, info, prop_name
+            if info['arg'].change == 'all':
+                self.recursive_update(state_m)
+            else:
+                self.recursive_update(state_m, go_on=False)
+
+    def manual_notify_after(self, model):
+        # print "GAPHAS ", model
+        self.recursive_update(model)
 
     @ExtendedController.observe("state_machine", before=True)
     def state_machine_change(self, model, prop_name, info):
@@ -354,10 +369,13 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'remove_outcome':
                 state_m = model
                 state_v = self.canvas.get_view_for_model(state_m)
-                for outcome_v in state_v.outcomes:
-                    if outcome_v.outcome_id == arguments[1]:
-                        state_v.remove_outcome(outcome_v)
-                        self.canvas.request_update(state_v, matrix=False)
+                if state_v is None:
+                    logger.debug("no state_v found for method_name '{}'".format(method_name))
+                else:
+                    for outcome_v in state_v.outcomes:
+                        if outcome_v.outcome_id == arguments[1]:
+                            state_v.remove_outcome(outcome_v)
+                            self.canvas.request_update(state_v, matrix=False)
 
             # ----------------------------------
             #           DATA PORTS
@@ -379,17 +397,23 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'remove_input_data_port':
                 state_m = model
                 state_v = self.canvas.get_view_for_model(state_m)
-                for input_port_v in state_v.inputs:
-                    if input_port_v.port_id == arguments[1]:
-                        state_v.remove_input_port(input_port_v)
-                        self.canvas.request_update(state_v, matrix=False)
+                if state_v is None:
+                    logger.debug("no state_v found for method_name '{}'".format(method_name))
+                else:
+                    for input_port_v in state_v.inputs:
+                        if input_port_v.port_id == arguments[1]:
+                            state_v.remove_input_port(input_port_v)
+                            self.canvas.request_update(state_v, matrix=False)
             elif method_name == 'remove_output_data_port':
                 state_m = model
                 state_v = self.canvas.get_view_for_model(state_m)
-                for output_port_v in state_v.outputs:
-                    if output_port_v.port_id == arguments[1]:
-                        state_v.remove_output_port(output_port_v)
-                        self.canvas.request_update(state_v, matrix=False)
+                if state_v is None:
+                    logger.debug("no state_v found for method_name '{}'".format(method_name))
+                else:
+                    for output_port_v in state_v.outputs:
+                        if output_port_v.port_id == arguments[1]:
+                            state_v.remove_output_port(output_port_v)
+                            self.canvas.request_update(state_v, matrix=False)
             elif method_name in ['data_type', 'change_data_type']:
                 pass
             elif method_name == 'default_value':
@@ -408,10 +432,13 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'remove_scoped_variable':
                 state_m = model
                 state_v = self.canvas.get_view_for_model(state_m)
-                for scoped_variable_v in state_v.scoped_variables:
-                    if scoped_variable_v.port_id == arguments[1]:
-                        state_v.remove_scoped_variable(scoped_variable_v)
-                        self.canvas.request_update(state_v, matrix=False)
+                if state_v is None:
+                    logger.debug("no state_v found for method_name '{}'".format(method_name))
+                else:
+                    for scoped_variable_v in state_v.scoped_variables:
+                        if scoped_variable_v.port_id == arguments[1]:
+                            state_v.remove_scoped_variable(scoped_variable_v)
+                            self.canvas.request_update(state_v, matrix=False)
 
             # ----------------------------------
             #        STATE MISCELLANEOUS
@@ -478,7 +505,8 @@ class GraphicalEditorController(ExtendedController):
                 logger.debug("Method '%s' not caught in GraphicalViewer" % method_name)
 
             if method_name in ['add_state', 'add_transition', 'add_data_flow', 'add_outcome', 'add_input_data_port',
-                               'add_output_data_port', 'add_scoped_variable', 'data_flow_change', 'transition_change']:
+                               'add_output_data_port', 'add_scoped_variable', 'data_flow_change', 'transition_change',
+                               'change_state_type', 'change_root_state_type']:
                 try:
                     self._meta_data_changed(None, model, 'append_to_last_change', True)
                 except Exception as e:

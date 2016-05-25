@@ -220,12 +220,12 @@ def meta_dump_or_deepcopy(meta):
 
 
     # print meta_str
-    if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR'):
-        meta_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
-                              indent=4, check_circular=False, sort_keys=True)
-        return json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
-    else:
-        return copy.deepcopy(meta)
+    # if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR'):
+    #     meta_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+    #                           indent=4, check_circular=False, sort_keys=True)
+    #     return json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
+    # else:
+    return copy.deepcopy(meta)
 
 
 def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=False, level=None):
@@ -561,9 +561,7 @@ class Action:
                                                          with_print=False)
 
         # We are only interested in OpenGL editors, not Gaphas ones
-        if g_sm_editor and not isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
-            g_sm_editor = False
-        if g_sm_editor:
+        if g_sm_editor and isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
             g_sm_editor.suspend_drawing = True
 
         return g_sm_editor
@@ -573,10 +571,14 @@ class Action:
         """ Enables and re-initiate graphical viewer's drawing process.
         :param g_sm_editor: graphical state machine editor
         """
-        if g_sm_editor:
+        import rafcon.mvc.controllers.graphical_editor as graphical_editor_opengl
+        import rafcon.mvc.controllers.graphical_editor_gaphas as graphical_editor_gaphas
+        if g_sm_editor and isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
             g_sm_editor.suspend_drawing = False
             # TODO integrate meta-data affects_children status
             responsible_m.meta_signal.emit(MetaSignalMsg("undo_redo_action", "all", True))
+        if g_sm_editor and isinstance(g_sm_editor, graphical_editor_gaphas.GraphicalEditorController):
+            g_sm_editor.manual_notify_after(responsible_m)
 
     def redo(self):
         """ General Redo, that takes all elements in the parent path state stored of the before action state machine status.
@@ -629,11 +631,11 @@ class Action:
                     state.remove_transition(t_id)
 
             for old_state_id in state.states.keys():
-                try:
-                    state.remove_state(old_state_id, force=True)
-                except Exception as e:
-                    print "ERROR: ", old_state_id, UNIQUE_DECIDER_STATE_ID, state
-                    raise e
+                # try:
+                state.remove_state(old_state_id, force=True)
+                # except Exception as e:
+                #     print "ERROR: ", old_state_id, UNIQUE_DECIDER_STATE_ID, state
+                #     raise e
 
         if is_root:
             for outcome_id in state.outcomes.keys():

@@ -433,10 +433,13 @@ class ModificationsHistoryModel(ModelMT):
             else:
                 return
 
-        if overview['meta_signal'][-1]['change'] == 'append_to_last_change':
+        if self.actual_action is None or overview['meta_signal'][-1]['change'] == 'append_to_last_change':
             # update last actions after_storage -> meta-data
             if self.actual_action is not None:
                 self.actual_action.after_storage = self.actual_action.get_storage()
+            else:
+                self.actual_action = []
+                self.meta_changed_notify_after(changed_model, prop_name, info)
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
         else:
             if isinstance(overview['model'][-1], AbstractStateModel):

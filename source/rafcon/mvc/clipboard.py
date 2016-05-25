@@ -128,7 +128,8 @@ class Clipboard(Observable):
 
     def copy_meta_data_of_state_model(self, orig_state_m, state_m_copy):
         state_m_copy.copy_meta_data_from_state_m(orig_state_m)
-        state_m_copy.meta["gui"]["editor"]["rel_pos"] = [1, 1]
+        if 'editor' in state_m_copy.meta:
+            state_m_copy.meta["gui"]["editor"]["rel_pos"] = [1, 1]
         if isinstance(state_m_copy, ContainerStateModel):
             for s_id, state_m in state_m_copy.states.iteritems():
                 self.copy_meta_data_of_state_model(state_m, orig_state_m.states[s_id])
