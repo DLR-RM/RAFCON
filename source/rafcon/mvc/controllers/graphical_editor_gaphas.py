@@ -246,30 +246,28 @@ class GraphicalEditorController(ExtendedController):
                     for s_m in state_m.states.itervalues():
                         self.recursive_update(s_m, go_on)
 
-    @ExtendedController.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
-    def meta_changed_notify_after(self, changed_model, prop_name, info):
-        from rafcon.mvc.utils.notification_overview import NotificationOverview
-        overview = NotificationOverview(info, False, self.__class__.__name__)
-        if overview['meta_signal'][-1]['origin'] in ['undo', 'redo_meta_action', 'copy_state_m']:
-            if isinstance(overview['model'][-1], AbstractStateModel):
-                state_m = overview['model'][-1]
-                # logger.info("update_state {}".format(state_m.state.get_path()))
-            elif isinstance(overview['model'][-1], StateMachineModel):
-                state_m = overview['model'][-1].root_state
-                # logger.info("update_root_state {}".format(state_m.state.get_path()))
-            else:
-                state_m = overview['model'][-1].parent
-                # logger.info("update_parent_state".format(state_m.state.get_path()))
-                # updated_m = overview['model'][-1]  # TODO in future only update respective model
-                # logger.info("update_state_element " + str(updated_m))
-            # print "GAPHAS ", info['arg'].change, info, prop_name
-            if info['arg'].change == 'all':
-                self.recursive_update(state_m)
-            else:
-                self.recursive_update(state_m, go_on=False)
+    @ExtendedController.observe("state_meta_signal", signal=True)
+    def meta_changed_notify_after(self, state_machine_m, _, info):
+        """Handle notification about the change of a state's meta data
+
+        The meta data of the affected state(s) are read and the view updated accordingly.
+        :param StateMachineModel state_machine_m: Always the state machine model belonging to this editor
+        :param str _: Always "state_meta_signal"
+        :param dict info: Information about the change, contains the MetaSignalMessage in the 'arg' key value
+        """
+        meta_signal_message = info['arg']
+        if meta_signal_message.origin == "graphical_editor_gaphas":  # Ignore changes caused by ourself
+            return
+        notification = meta_signal_message.notification
+        if not notification:    # For changes applied to the root state, there are always two notifications
+            return              # Ignore the one with less information
+        state_m = notification.model
+        if meta_signal_message.affects_children == "all":
+            self.recursive_update(state_m)
+        else:
+            self.recursive_update(state_m, go_on=False)
 
     def manual_notify_after(self, model):
-        # print "GAPHAS ", model
         self.recursive_update(model)
 
     @ExtendedController.observe("state_machine", before=True)
