@@ -392,6 +392,23 @@ class ModificationsHistoryModel(ModelMT):
 
         self.change_count += 1
 
+    def is_gaphas_editor(self):
+        import rafcon.mvc.singleton as mvc_singleton
+        import rafcon.mvc.controllers.graphical_editor as graphical_editor_opengl
+        mw_ctrl = mvc_singleton.main_window_controller
+        g_sm_editor = None
+        if mw_ctrl:
+            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
+                                                                    self.state_machine_model.state_machine.state_machine_id],
+                                                         with_print=False)
+
+        # # We are only interested in OpenGL editors, not Gaphas ones
+        # if g_sm_editor and not isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
+        #     return False
+        # else:
+        #     return True
+        return True
+
     @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state_model changed
     # @ModelMT.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
     def meta_changed_notify_after(self, changed_model, prop_name, info):
@@ -400,15 +417,25 @@ class ModificationsHistoryModel(ModelMT):
         overview = NotificationOverview(info, False, self.__class__.__name__)
         # logger.info("meta_changed: \n{0}".format(overview))
         # WORKAROUND: avoid multiple signals of the root_state, by comparing first and last model in overview
-        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1] or \
-                overview['meta_signal'][-1]['change'] == 'all':  # avoid strange change: 'all' TODO test why those occur
+        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:  # TODO test why those occur
+            # print "ALL"
             return
+        if overview['meta_signal'][-1]['change'] == 'all':  # avoid strange change: 'all'
+            if self.is_gaphas_editor():
+                print "ALL"
+            else:
+                return
         if self.busy or self.actual_action is None and overview['meta_signal'][-1]['change'] == 'append_to_last_change':
-            return
+            # print "BUSY", self.busy
+            if self.is_gaphas_editor() and not self.busy:
+                pass
+            else:
+                return
 
         if overview['meta_signal'][-1]['change'] == 'append_to_last_change':
-             # update last actions after_storage -> meta-data
-            self.actual_action.after_storage = self.actual_action.get_storage()
+            # update last actions after_storage -> meta-data
+            if self.actual_action is not None:
+                self.actual_action.after_storage = self.actual_action.get_storage()
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
         else:
             if isinstance(overview['model'][-1], AbstractStateModel):
