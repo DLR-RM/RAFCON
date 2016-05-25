@@ -422,7 +422,8 @@ class ModificationsHistoryModel(ModelMT):
             return
         if overview['meta_signal'][-1]['change'] == 'all':  # avoid strange change: 'all'
             if self.is_gaphas_editor():
-                print "ALL"
+                # print "ALL"
+                pass
             else:
                 return
         if self.busy or self.actual_action is None and overview['meta_signal'][-1]['change'] == 'append_to_last_change':

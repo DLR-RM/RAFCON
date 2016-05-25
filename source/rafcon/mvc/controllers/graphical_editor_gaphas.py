@@ -251,6 +251,8 @@ class GraphicalEditorController(ExtendedController):
             else:
                 state_m = overview['model'][-1].parent
                 # logger.info("update_parent_state".format(state_m.state.get_path()))
+                # updated_m = overview['model'][-1]  # TODO in future only update respective model
+                # logger.info("update_state_element " + str(updated_m))
             state_v = self.canvas.get_view_for_model(state_m)
             state_v.apply_meta_data()
             self.canvas.request_update(state_v, matrix=True)
@@ -474,6 +476,14 @@ class GraphicalEditorController(ExtendedController):
                 pass
             else:
                 logger.debug("Method '%s' not caught in GraphicalViewer" % method_name)
+
+            if method_name in ['add_state', 'add_transition', 'add_data_flow', 'add_outcome', 'add_input_data_port',
+                               'add_output_data_port', 'add_scoped_variable', 'data_flow_change', 'transition_change']:
+                try:
+                    self._meta_data_changed(None, model, 'append_to_last_change', True)
+                except Exception as e:
+                    logger.error('Error while trying to emit meta data signal {}'.format(e))
+
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_change(self, model, prop_name, info):
@@ -780,11 +790,6 @@ class GraphicalEditorController(ExtendedController):
             self.draw_transitions(state_m, hierarchy_level)
 
             self.draw_data_flows(state_m, hierarchy_level)
-
-        try:
-            self._meta_data_changed(None, state_m, 'append_to_last_change', True)
-        except Exception as e:
-            logger.error('Error while trying to emit meta data signal {}'.format(e))
 
         return state_v
 

@@ -220,12 +220,12 @@ def meta_dump_or_deepcopy(meta):
 
 
     # print meta_str
-    # if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR'):
-    #     meta_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
-    #                           indent=4, check_circular=False, sort_keys=True)
-    #     return json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
-    # else:
-    return copy.deepcopy(meta)
+    if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR'):
+        meta_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+                              indent=4, check_circular=False, sort_keys=True)
+        return json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
+    else:
+        return copy.deepcopy(meta)
 
 
 def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=False, level=None):
@@ -453,6 +453,7 @@ class MetaAction:
 
     def undo(self):
         # TODO check why levels are not working
+        # TODO in future emit signal only for respective model
         state_m = self.get_state_model_changed()
         # logger.info("META-Action undo {}".format(state_m.state.get_path()))
         if self.before_overview['meta_signal'][-1]['affects_children']:
@@ -468,6 +469,7 @@ class MetaAction:
 
     def redo(self):
         # TODO check why levels are not working
+        # TODO in future emit signal only for respective model
         state_m = self.get_state_model_changed()
         # logger.info("META-Action undo {}".format(state_m.state.get_path()))
         if self.before_overview['meta_signal'][-1]['affects_children']:
@@ -1222,6 +1224,7 @@ class DataFlowAction(Action):
         self.parent_path = parent_path
         self.action_type = overview['method_name'][-1]
         self.before_overview = overview
+        self.state_machine_model = state_machine_model
         self.state_machine = state_machine_model.state_machine
 
         assert self.action_type in self.possible_method_names
@@ -1271,6 +1274,7 @@ class TransitionAction(Action):
         self.parent_path = parent_path
         self.action_type = overview['method_name'][-1]
         self.before_overview = overview
+        self.state_machine_model = state_machine_model
         self.state_machine = state_machine_model.state_machine
 
         assert self.action_type in self.possible_method_names
