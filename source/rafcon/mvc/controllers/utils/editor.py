@@ -62,6 +62,8 @@ class EditorController(ExtendedController):
         pass
 
     def _undo(self, *args):
+        if not self.view:
+            return
         buffer = self.view.textview.get_buffer()
         if self.view.textview.is_focus() and hasattr(buffer, 'can_undo') and buffer.can_undo():
             logger.debug('Run undo on {}'.format(self.__class__.__name__))
@@ -70,6 +72,8 @@ class EditorController(ExtendedController):
             return False
 
     def _redo(self, *args):
+        if not self.view:
+            return
         buffer = self.view.textview.get_buffer()
         if self.view.textview.is_focus() and hasattr(buffer, 'can_redo') and buffer.can_redo():
             logger.debug('Run redo on {}'.format(self.__class__.__name__))
@@ -78,7 +82,8 @@ class EditorController(ExtendedController):
             return False
 
     def _apply(self, *args):
-        if self.view.textview.is_focus():
+
+        if self.view and self.view.textview.is_focus():
             logger.debug("Apply short-cut pressed {}".format(self.__class__.__name__))
             tbuffer = self.view.get_buffer()
             current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
