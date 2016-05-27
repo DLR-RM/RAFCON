@@ -8,6 +8,7 @@ to define specific _-Action-Classes for simple/specific edit actions.
 """
 import copy
 import json
+from gtkmvc import ModelMT
 
 from jsonconversion.decoder import JSONObjectDecoder
 from jsonconversion.encoder import JSONObjectEncoder
@@ -484,8 +485,11 @@ class MetaAction:
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
 
 
-class Action:
+class Action(ModelMT):
+    __version_id = None
+
     def __init__(self, parent_path, state_machine_model, overview):
+        ModelMT.__init__(self)
         assert isinstance(overview, NotificationOverview)
         self.type = overview['method_name'][-1]
         self.state_machine = state_machine_model.state_machine
@@ -504,7 +508,7 @@ class Action:
         self.after_info = None
         self.after_storage = None  # tuple of state and states-list of storage tuple
 
-        self.__version_id = None
+        # self.__version_id = None
 
     @property
     def version_id(self):
@@ -552,6 +556,7 @@ class Action:
         :return: g_sm_editor -> the actual graphical viewer for further use
         """
         import rafcon.mvc.controllers.graphical_editor as graphical_editor_opengl
+        import rafcon.mvc.controllers.graphical_editor_gaphas as graphical_editor_gaphas
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
         mw_ctrl = mvc_singleton.main_window_controller
         g_sm_editor = None
@@ -595,6 +600,7 @@ class Action:
         self.set_state_to_version(self.get_state_changed(), self.before_storage)
 
     def set_state_to_version(self, state, storage_version):
+        import rafcon.mvc.state_machine_helper as state_machine_helper
         # print state.get_path(), '\n', storage_version[4]
         assert state.get_path() == storage_version[4]
         # print self.parent_path, self.parent_path.split('/'), len(self.parent_path.split('/'))
@@ -605,6 +611,32 @@ class Action:
 
         g_sm_editor = self.stop_graphical_viewer()
 
+        # if self.type == 'change_state_type':
+        #     self.storage_version_for_state_type_change_signal_hook = storage_version
+        #     assert isinstance(self.state_machine_model.root_state.state, State)
+        #     state_parent = self.before_overview["instance"][-1]
+        #     old_state_changed_ref = self.before_overview["args"][-1][1]
+        #     state = self.state_machine.get_state_by_path(old_state_changed_ref.get_path())
+        #     old_state_changed_in_storage = storage_version_of_state.states[state.state_id]
+        #     if isinstance(old_state_changed_in_storage, state_machine_helper.HierarchyState):
+        #         new_state_class = state_machine_helper.HierarchyState
+        #     elif isinstance(old_state_changed_in_storage, state_machine_helper.BarrierConcurrencyState):
+        #         new_state_class = state_machine_helper.BarrierConcurrencyState
+        #     elif isinstance(old_state_changed_in_storage, state_machine_helper.PreemptiveConcurrencyState):
+        #         new_state_class = state_machine_helper.PreemptiveConcurrencyState
+        #     else:
+        #         logger.info("SM set_root_state_to_version: with NO type change")
+        #         new_state_class = state_machine_helper.ExecutionState
+        #
+        #     old_root_state_m = self.state_machine_model.root_state
+        #     self.observe_model(self.state_machine_model.root_state)
+        #
+        #     state_parent.change_state_type(state, new_state_class)
+        #     self.storage_version_for_state_type_change_signal_hook = None
+        #     actual_state_model = self.state_machine_model.get_state_model_by_path(old_state_changed_ref.get_path())
+        #     self.relieve_model(old_root_state_m)
+        # else:
+
         self.update_state(state, storage_version_of_state)
 
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
@@ -612,6 +644,19 @@ class Action:
         insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
 
         self.run_graphical_viewer(g_sm_editor, actual_state_model)
+
+    @ModelMT.observe("state_type_changed_signal", signal=True)
+    def hook_for_type_change_operation(self, model, prop_name, info):
+        g_sm_editor = self.stop_graphical_viewer()
+        msg = info['arg']
+        new_state_m = msg.new_state_m
+        logger.info("action state-type-change hook for root {}".format(new_state_m))
+        storage_version = self.storage_version_for_state_type_change_signal_hook
+        root_state_version_from_storage = get_state_from_state_tuple(storage_version)
+
+        self.update_state(new_state_m.state, root_state_version_from_storage)
+
+        insert_state_meta_data(meta_dict=storage_version[3], state_model=new_state_m)  # self.state_machine_model.root_state)
 
     def update_state(self, state, stored_state):
 
@@ -792,12 +837,14 @@ class Action:
             logger.warning("Type: {0} is no valid core object that can be removed.".format(type(core_obj)))
 
 
-class StateMachineAction(Action):
+class StateMachineAction(Action, ModelMT):
     def __init__(self, parent_path, state_machine_model, overview):
+        ModelMT.__init__(self)
         assert isinstance(overview['model'][0].state_machine, StateMachine)
         Action.__init__(self, parent_path, state_machine_model, overview)
 
         self.with_print = False
+        self.storage_version_for_state_type_change_signal_hook = None
 
     def set_root_state_to_version(self, state, storage_version):
         import rafcon.mvc.state_machine_helper as state_machine_helper
@@ -820,24 +867,43 @@ class StateMachineAction(Action):
             if self.with_print:
                 logger.info("SM set_root_state_to_version: with NO type change")
             new_state_class = state_machine_helper.ExecutionState
-        # logger.debug("DO root version change")
-        new_state = state_machine_helper.create_new_state_from_state_with_type(state, new_state_class)
-
+        logger.debug("DO root version change " + self.type)
+                 # logger.debug("DO root version change")
+        # observe root state model (type change signal)
         g_sm_editor = self.stop_graphical_viewer()
 
-        self.update_state(new_state, root_state_version_from_storage)
+        if self.type == 'change_root_state_type':
+            self.storage_version_for_state_type_change_signal_hook = storage_version
+            assert isinstance(self.state_machine_model.root_state.state, State)
+            old_root_state_m = self.state_machine_model.root_state
+            self.observe_model(self.state_machine_model.root_state)
 
-        if self.with_print:
-            logger.info("SM set_root_state_to_version: insert new root state")
-        self.state_machine.root_state = new_state  # root_state_version_fom_storage
-        # self.state_machine.root_state.script = storage_version[2]
-        if self.with_print:
-            logger.info("SM set_root_state_to_version: insert old meta data")
-        insert_state_meta_data(meta_dict=storage_version[3], state_model=self.state_machine_model.root_state)
-        if self.with_print:
-            logger.info("SM set_root_state_to_version: FINISHED")
+            self.state_machine.change_root_state_type(new_state_class)
+            self.storage_version_for_state_type_change_signal_hook = None
+            self.relieve_model(old_root_state_m)
+        else:
+            new_state = state_machine_helper.create_new_state_from_state_with_type(state, new_state_class)
+
+            self.update_state(new_state, root_state_version_from_storage)
+
+            self.state_machine.root_state = new_state  # root_state_version_fom_storage
+            # self.state_machine.root_state.script = storage_version[2]
+            insert_state_meta_data(meta_dict=storage_version[3], state_model=self.state_machine_model.root_state)
 
         self.run_graphical_viewer(g_sm_editor, self.state_machine_model.root_state)
+
+    @ModelMT.observe("state_type_changed_signal", signal=True)
+    def hook_for_type_change_operation(self, model, prop_name, info):
+        g_sm_editor = self.stop_graphical_viewer()
+        msg = info['arg']
+        new_state_m = msg.new_state_m
+        logger.info("action state-type-change hook for root {}".format(new_state_m))
+        storage_version = self.storage_version_for_state_type_change_signal_hook
+        root_state_version_from_storage = get_state_from_state_tuple(storage_version)
+
+        self.update_state(new_state_m.state, root_state_version_from_storage)
+
+        insert_state_meta_data(meta_dict=storage_version[3], state_model=new_state_m)  # self.state_machine_model.root_state)
 
     def redo(self):
         # print "#H# STATE_MACHINE_REDO STARTED"

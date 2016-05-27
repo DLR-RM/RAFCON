@@ -271,16 +271,18 @@ class GraphicalEditorController(ExtendedController):
             logger.info("Meta data operation on state model without view: {}".format(state_m))
 
     @ExtendedController.observe("state_machine", before=True)
-    def state_machine_change(self, model, prop_name, info):
+    def state_machine_change_before(self, model, prop_name, info):
+        # print "CHECK CHANGE_STATE_TYPE"
         if 'method_name' in info and info['method_name'] == 'root_state_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
-            if method_name == 'change_state_type':
+            if method_name in ['change_state_type', 'change_root_state_type']:  #
+                # print "CHANGE_STATE_TYPE TRUE " + method_name
                 self._change_state_type = True
                 return
 
     @ExtendedController.observe("state_machine", after=True)
-    def state_machine_change(self, model, prop_name, info):
+    def state_machine_change_after(self, model, prop_name, info):
         """Called on any change within th state machine
 
         This method is called, when any state, transition, data flow, etc. within the state machine changes. This
@@ -293,7 +295,8 @@ class GraphicalEditorController(ExtendedController):
 
         if 'method_name' in info and info['method_name'] == 'root_state_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
-
+            if self._change_state_type and method_name not in ['change_state_type', 'change_root_state_type']:
+                return
             # The method causing the change raised an exception, thus nothing was changed
             if (isinstance(result, str) and "CRASH" in result) or isinstance(result, Exception):
                 return
@@ -455,6 +458,7 @@ class GraphicalEditorController(ExtendedController):
                 else:
                     self.canvas.request_update(state_v, matrix=False)
             elif method_name in ['change_state_type', 'change_root_state_type']:
+                # print "CHANGE_STATE_TYPE FALSE " + method_name
                 self._change_state_type = False
                 if method_name == 'change_state_type':
                     old_state = arguments[1]
@@ -494,7 +498,11 @@ class GraphicalEditorController(ExtendedController):
                             self.canvas.remove(child_v)
                 parent_v = self.canvas.get_parent(state_v)
                 if parent_v:
+                    # print "UPDATE PARENT " + method_name, new_state_m.parent
                     self.canvas.request_update(parent_v)
+                else:
+                    # print "UPDATE STATE " + method_name, new_state_m
+                    self.canvas.request_update(state_v)
             elif method_name == 'parent':
                 pass
             elif method_name == 'description':
@@ -509,7 +517,6 @@ class GraphicalEditorController(ExtendedController):
                     self._meta_data_changed(None, model, 'append_to_last_change', True)
                 except Exception as e:
                     logger.error('Error while trying to emit meta data signal {}'.format(e))
-
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_change(self, model, prop_name, info):
