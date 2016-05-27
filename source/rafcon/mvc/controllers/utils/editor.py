@@ -105,7 +105,8 @@ class EditorController(ExtendedController):
 
     # ===============================================================
     def code_changed(self, source):
-        self.view.apply_tag('default')
+        if self.view:
+            self.view.apply_tag('default')
 
     def apply_clicked(self, button):
         """Triggered when the Apply-Shortcut in the editor is triggered.
@@ -136,5 +137,5 @@ class EditorController(ExtendedController):
     @ExtendedController.observe("state", after=True)
     def after_notification_of_script_text_was_changed(self, model, prop_name, info):
 
-        if "method_name" in info and self._observed_method == info['method_name']:
+        if self.view and "method_name" in info and self._observed_method == info['method_name']:
             self.view.set_text(self.source_text)
