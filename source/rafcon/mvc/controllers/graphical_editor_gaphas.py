@@ -733,6 +733,7 @@ class GraphicalEditorController(ExtendedController):
     def setup_canvas(self):
 
         self.setup_state(self.root_state_m, rel_pos=(10, 10))
+        self._meta_data_changed(None, self.root_state_m, 'append_to_last_change', True)
 
     def setup_state(self, state_m, parent=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
 

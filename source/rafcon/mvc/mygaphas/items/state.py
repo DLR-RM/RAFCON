@@ -260,11 +260,9 @@ class StateView(Element):
     def background(self):
         self._transparent = True
 
-    def apply_meta_data(self):
-        # logger.info("apply state meta {}".format(self.model.state.get_path()))
+    def apply_meta_data(self, recursive=False):
         state_meta = self.model.meta['gui']['editor_gaphas']
-        # logger.info("rel_pos {}".format(state_meta['rel_pos']))
-        # logger.info("size {}".format(state_meta['size']))
+        
         self.position = state_meta['rel_pos']
         self.width = state_meta['size'][0]
         self.height = state_meta['size'][1]
@@ -284,6 +282,11 @@ class StateView(Element):
             update_port_position(scoped_port_v, scoped_port_v.model.meta['gui']['editor_gaphas'])
 
         self.name_view.apply_meta_data()
+
+        if isinstance(self.model, ContainerStateModel) and recursive:
+            for state_v in self.canvas.get_children(self):
+                if isinstance(state_v, StateView):
+                    state_v.apply_meta_data(recursive=True)
 
     def draw(self, context):
         if self.moving and self.parent and self.parent.moving:
