@@ -663,7 +663,7 @@ class StateTransitionsListController(ExtendedController):
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
-
+        return
         # avoid updates because of execution status updates
         if 'kwargs' in info and 'method_name' in info['kwargs'] and \
                 info['kwargs']['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
