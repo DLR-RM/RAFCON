@@ -117,11 +117,12 @@ class StateView(Element):
     def remove(self):
         """Remove recursively all children and then the StateView itself
         """
-        children = self.canvas.get_children(self)
+        children = self.canvas.get_children(self)[:]
         for child in children:
             if isinstance(child, StateView):
                 child.remove()
-            self.canvas.remove(child)
+            if isinstance(child, NameView):
+                self.canvas.remove(child)
         self.remove_keep_rect_within_constraint_from_parent()
         self.canvas.remove(self)
 
