@@ -439,7 +439,6 @@ class ModificationsHistoryModel(ModelMT):
                 self.actual_action.after_storage = self.actual_action.get_storage()
             else:
                 self.actual_action = []
-                self.meta_changed_notify_after(changed_model, prop_name, info)
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
         else:
             if isinstance(overview['model'][-1], AbstractStateModel):
