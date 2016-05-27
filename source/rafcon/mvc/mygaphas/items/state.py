@@ -262,7 +262,7 @@ class StateView(Element):
 
     def apply_meta_data(self, recursive=False):
         state_meta = self.model.meta['gui']['editor_gaphas']
-        
+
         self.position = state_meta['rel_pos']
         self.width = state_meta['size'][0]
         self.height = state_meta['size'][1]

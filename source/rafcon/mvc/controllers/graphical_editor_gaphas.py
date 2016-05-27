@@ -237,15 +237,6 @@ class GraphicalEditorController(ExtendedController):
         msg = MetaSignalMsg('graphical_editor_gaphas', name, affects_children)
         model.meta_signal.emit(msg)
 
-    def recursive_update(self, state_m, go_on=True):
-            state_v = self.canvas.get_view_for_model(state_m)
-            if state_v is not None:
-                state_v.apply_meta_data()
-                self.canvas.request_update(state_v, matrix=True)
-                if isinstance(state_m, ContainerStateModel) and go_on:
-                    for s_m in state_m.states.itervalues():
-                        self.recursive_update(s_m, go_on)
-
     @ExtendedController.observe("state_meta_signal", signal=True)
     def meta_changed_notify_after(self, state_machine_m, _, info):
         """Handle notification about the change of a state's meta data
@@ -262,13 +253,16 @@ class GraphicalEditorController(ExtendedController):
         if not notification:    # For changes applied to the root state, there are always two notifications
             return              # Ignore the one with less information
         state_m = notification.model
-        if meta_signal_message.affects_children == "all":
-            self.recursive_update(state_m)
-        else:
-            self.recursive_update(state_m, go_on=False)
 
-    def manual_notify_after(self, model):
-        self.recursive_update(model)
+        state_v = self.canvas.get_view_for_model(state_m)
+        state_v.apply_meta_data(recursive=meta_signal_message.affects_children)
+        self.canvas.request_update(state_v, matrix=True)
+
+    def manual_notify_after(self, state_m):
+        state_v = self.canvas.get_view_for_model(state_m)
+        if state_v:
+            state_v.apply_meta_data(recursive=True)
+            self.canvas.request_update(state_v, matrix=True)
 
     @ExtendedController.observe("state_machine", before=True)
     def state_machine_change(self, model, prop_name, info):
