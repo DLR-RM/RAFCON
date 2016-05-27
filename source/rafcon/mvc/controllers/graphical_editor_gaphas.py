@@ -255,14 +255,20 @@ class GraphicalEditorController(ExtendedController):
         state_m = notification.model
 
         state_v = self.canvas.get_view_for_model(state_m)
-        state_v.apply_meta_data(recursive=meta_signal_message.affects_children)
-        self.canvas.request_update(state_v, matrix=True)
+        # TODO: This check should be removed in the future
+        if state_v:
+            state_v.apply_meta_data(recursive=meta_signal_message.affects_children)
+            self.canvas.request_update(state_v, matrix=True)
+        else:
+            logger.info("Meta data operation on state model without view: {}".format(state_m))
 
     def manual_notify_after(self, state_m):
         state_v = self.canvas.get_view_for_model(state_m)
         if state_v:
             state_v.apply_meta_data(recursive=True)
             self.canvas.request_update(state_v, matrix=True)
+        else:
+            logger.info("Meta data operation on state model without view: {}".format(state_m))
 
     @ExtendedController.observe("state_machine", before=True)
     def state_machine_change(self, model, prop_name, info):
