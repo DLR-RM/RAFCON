@@ -681,9 +681,10 @@ class StateTransitionsListController(ExtendedController):
         # print self, self.model.state.get_path(), overview
 
         if overview['prop_name'][0] in ['states', 'outcomes', 'transitions'] and \
-                overview['method_name'][-1] not in ['append', '__setitem__', '__delitem__', 'remove', 'name',
+                overview['method_name'][-1] not in ['append', '__setitem__', 'name',  # , '__delitem__', 'remove'
                                                     'from_outcome', 'to_outcome', 'from_state', 'to_state',
                                                     'modify_origin', 'modify_target']:
+            # TODO check why while deletion sometimes model and core lists are not consistent
             return
         # print "TUPDATE ", self, overview
 
