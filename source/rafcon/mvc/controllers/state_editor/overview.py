@@ -160,12 +160,12 @@ class StateOverviewController(ExtendedController, Model):
 
     @Model.observe('is_start', assign=True)
     def notify_is_start(self, model, prop_name, info):
-        if not self.view['is_start_state_checkbutton'].get_active() == self.model.is_start:
+        if self.view is not None and not self.view['is_start_state_checkbutton'].get_active() == self.model.is_start:
             self.view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
 
     @Model.observe('state', after=True)
     def notify_name_change(self, model, prop_name, info):
-        if info['method_name'] == 'name':
+        if self.view is not None and info['method_name'] == 'name':
             self.view['entry_name'].set_text(self.model.state.name)
 
     def change_name(self, entry, event):
