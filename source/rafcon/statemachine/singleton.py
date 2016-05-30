@@ -66,4 +66,4 @@ state_machine_manager = StateMachineManager()
 state_machine_execution_engine = StateMachineExecutionEngine(state_machine_manager)
 
 
-argument_parser = argparse.ArgumentParser(description='Start RAFCON')
+argument_parser = argparse.ArgumentParser(description='Start RAFCON', fromfile_prefix_chars='@')
