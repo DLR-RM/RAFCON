@@ -52,6 +52,13 @@ class BarrierConcurrencyState(ConcurrencyState):
                  states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None,
                  v_checker=None, decider_state=None, load_from_storage=False):
 
+        if decider_state is not None:
+            if isinstance(decider_state, DeciderState):
+                decider_state.state_id = UNIQUE_DECIDER_STATE_ID
+                states[UNIQUE_DECIDER_STATE_ID] = decider_state
+            else:
+                logger.warning("Argument decider_state has to be instance of DeciderState not {}".format(decider_state))
+
         if not load_from_storage:
             if states is not None and UNIQUE_DECIDER_STATE_ID not in states:
                 states[UNIQUE_DECIDER_STATE_ID] = (DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID))
@@ -289,7 +296,9 @@ class BarrierConcurrencyState(ConcurrencyState):
 
 
 class DeciderState(ExecutionState):
-    """A class to represent a state for deciding the exit of barrier concurrency state
+    """A class to represent a state for deciding the exit of barrier concurrency state.
+
+    This type of ExecutionState has initial always the UNIQUE_DECIDER_STATE_ID.
 
     """
 
@@ -298,6 +307,8 @@ class DeciderState(ExecutionState):
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  path=None, filename=None, check_path=True):
 
+        if state_id is None:
+            state_id = UNIQUE_DECIDER_STATE_ID
         ExecutionState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path,
                                 filename, check_path)
 
