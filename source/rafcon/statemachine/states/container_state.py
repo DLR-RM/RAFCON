@@ -493,7 +493,6 @@ class ContainerState(State):
         self._transitions_cv.notify_all()
         self._transitions_cv.release()
         # self.create_transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
-        print self.transitions[transition_id]
         return transition_id
 
     def get_transition_for_outcome(self, state, outcome):
