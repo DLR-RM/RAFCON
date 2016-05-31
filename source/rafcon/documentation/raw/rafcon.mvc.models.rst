@@ -1,5 +1,5 @@
 MVC Models (rafcon.mvc.models)
-====================================
+==============================
 
 This package contains all models of the MVC architecture.
 
@@ -26,6 +26,12 @@ ContainerStateModel (in container_state)
 ----------------------------------------
 
 .. automodule:: rafcon.mvc.models.container_state
+
+
+LibraryStateModel (in library_state)
+------------------------------------
+
+.. automodule:: rafcon.mvc.models.library_state
 
 
 StateElementModel (in state_element)
@@ -74,6 +80,10 @@ ModificationsHistoryModel (in modification_history)
 
 .. automodule:: rafcon.mvc.models.modification_history
 
+AutoBackupModel (in auto_backup)
+--------------------------------
+
+.. automodule:: rafcon.mvc.models.auto_backup
 
 StateMachineManagerModel (in state_machine_manager)
 ---------------------------------------------------
@@ -91,3 +101,8 @@ LibraryManagerModel (in library_manager)
 ----------------------------------------
 
 .. automodule:: rafcon.mvc.models.library_manager
+
+StateMachineExecutionEngineModel (in state_machine_execution_engine)
+--------------------------------------------------------------------
+
+.. automodule:: rafcon.mvc.models.state_machine_execution_engine
