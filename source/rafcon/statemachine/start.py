@@ -207,7 +207,7 @@ if __name__ == '__main__':
 
     post_setup_plugins(user_input)
 
-    profiler = start_profiler(logger)
+    profiler = start_profiler()
     try:
         sm = start_state_machine(user_input.state_machine_path, user_input.start_state_path)
 
@@ -220,4 +220,4 @@ if __name__ == '__main__':
         logger.info("State machine execution finished!")
     finally:
         if profiler:
-            stop_profiler(profiler, logger)
+            stop_profiler(profiler)
