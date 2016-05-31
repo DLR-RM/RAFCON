@@ -207,11 +207,13 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         execution_history_container = active_sm.execution_history_container
 
+        execution_number = 0
         for execution_history in execution_history_container.execution_histories:
             if len(execution_history.history_items) > 0:
+                execution_number += 1
                 history_item = execution_history.history_items[0]
                 tree_item = self.history_tree_store.insert_after(
-                    None, None, (history_item.state_reference.name,
+                    None, None, (history_item.state_reference.name + " - Run " + str(execution_number),
                                  history_item))
                 self.insert_recursively(tree_item, execution_history.history_items, 1)
 
