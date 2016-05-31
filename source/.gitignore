@@ -56,12 +56,6 @@ coverage.xml
 # Django stuff:
 *.log
 
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
 #
 # This part is responsible for not need Sphinx files (for documentation)
 #
@@ -71,8 +65,8 @@ target/
 .static
 .templates
 #documentation
-**/awesome_tool/documentation/*
-!**/awesome_tool/documentation/raw
+**/rafcon/documentation/*
+!**/rafcon/documentation/raw
 **/pycharmSphinxTest/documentation/*
 
 #
@@ -86,10 +80,6 @@ target/
 # This part is responsible for generated files while storing a statemachine
 #
 
-test_scripts/stored_statemachine
-test_scripts/libraries
-test_scripts/basic_turtle_demo_sm
-
 #
 # Do not commit gui files
 #
@@ -101,9 +91,3 @@ test_scripts/basic_turtle_demo_sm
 **/statemachine.yaml
 **/meta_data.json
 
-#
-# Do not commit metafiles from AptanaStudio3 (for HTML)
-#
-/awesome_server/.metadata/*
-/awesome_tool/network/html_files/.metadata/*
-/awesome_tool/network/html_files/.project
