@@ -1,4 +1,4 @@
-
+from rafcon.mvc.mygaphas.items.connection import ConnectionView
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -33,12 +33,20 @@ def calc_rel_pos_to_parent(canvas, item, handle):
     """
     from gaphas.item import NW
 
-    parent = canvas.get_parent(item)
-    if parent:
-        abs_pos_handle = canvas.project(parent, handle.pos)
-        abs_pos_state = canvas.project(parent, parent.handles()[NW].pos)
+    if isinstance(item, ConnectionView):
+        state_v = canvas.get_parent(item)
+        abs_pos_handle = canvas.project(state_v, handle.pos)
+        abs_pos_state = canvas.project(state_v, state_v.handles()[NW].pos)
         rel_x = abs_pos_handle[0].value - abs_pos_state[0].value
         rel_y = abs_pos_handle[1].value - abs_pos_state[1].value
+        return rel_x, rel_y
+
+    parent = canvas.get_parent(item)
+    if parent:
+        abs_pos_handle = canvas.project(item, handle.pos)
+        abs_pos_parent = canvas.project(parent, parent.handles()[NW].pos)
+        rel_x = abs_pos_handle[0].value - abs_pos_parent[0].value
+        rel_y = abs_pos_handle[1].value - abs_pos_parent[1].value
     else:
         pos = canvas.project(item, item.handles()[NW].pos)
         rel_x = pos[0].value
@@ -247,19 +255,19 @@ def add_transition_to_state(from_port, to_port):
         return False
 
 
-def convert_handles_pos_list_to_rel_pos_list(canvas, transition):
+def convert_handles_pos_list_to_rel_pos_list(canvas, transition_v):
     """This method takes the waypoints of a connection and returns all relative positions of these waypoints.
 
     :param canvas: Canvas to check relative position in
-    :param transition: Transition to extract all relative waypoint positions
+    :param transition_v: Transition view to extract all relative waypoint positions
     :return: List with all relative positions of the given transition
     """
-    handles_list = transition.handles()
+    handles_list = transition_v.handles()
     rel_pos_list = []
     for handle in handles_list:
-        if handle in transition.end_handles_perp():
+        if handle in transition_v.end_handles_perp():
             continue
-        rel_pos_list.append(calc_rel_pos_to_parent(canvas, transition, handle))
+        rel_pos_list.append(calc_rel_pos_to_parent(canvas, transition_v, handle))
     return rel_pos_list
 
 
@@ -338,6 +346,7 @@ def update_meta_data_for_name_view(graphical_editor_view, name_v, publish=True):
     meta_gaphas['rel_pos'] = rel_pos
 
     if publish:
+        print "emit", meta_gaphas
         graphical_editor_view.emit('meta_data_changed', state_v.model, "name_size", False)
 
 
