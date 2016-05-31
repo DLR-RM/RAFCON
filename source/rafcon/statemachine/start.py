@@ -47,7 +47,9 @@ def post_setup_plugins(parser_result):
 
     :param dict parser_result: Dictionary with the parsed arguments
     """
-    plugins.run_post_inits(vars(parser_result))
+    if not isinstance(parser_result, dict):
+        parser_result = vars(parser_result)
+    plugins.run_post_inits(parser_result)
 
 
 def setup_environment():
