@@ -66,11 +66,6 @@ NetworkController (in network_connections)
 
 .. automodule:: rafcon.mvc.controllers.network_connections
 
-SingleWidgetWindowController (in single_widget_window)
-------------------------------------------------------
-
-.. automodule:: rafcon.mvc.controllers.single_widget_window
-
 ModificationHistoryTreeController (in modification_history)
 -----------------------------------------------------------
 

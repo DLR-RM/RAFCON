@@ -11,16 +11,16 @@ execution_history
     :undoc-members:
     :show-inheritance:
 
-statemachine_execution_engine
------------------------------
-.. automodule:: rafcon.statemachine.execution.statemachine_execution_engine
+state_machine_execution_engine
+------------------------------
+.. automodule:: rafcon.statemachine.execution.state_machine_execution_engine
     :members:
     :undoc-members:
     :show-inheritance:
 
-statemachine_status
--------------------
-.. automodule:: rafcon.statemachine.execution.statemachine_status
+state_machine_status
+--------------------
+.. automodule:: rafcon.statemachine.execution.state_machine_status
     :members:
     :undoc-members:
     :show-inheritance:

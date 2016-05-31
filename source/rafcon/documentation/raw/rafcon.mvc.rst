@@ -49,9 +49,9 @@ singleton
     :undoc-members:
     :show-inheritance:
 
-statemachine_helper
--------------------
-.. automodule:: rafcon.mvc.statemachine_helper
+state_machine_helper
+--------------------
+.. automodule:: rafcon.mvc.state_machine_helper
     :members:
     :undoc-members:
     :show-inheritance:

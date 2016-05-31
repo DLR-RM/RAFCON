@@ -7,7 +7,7 @@ MVC View Utils  (rafcon.mvc.views.utils)
 MyAboutDialog (in about_dialog)
 -------------------------------
 
-.. automodule:: rafcon.mvc.views.about_dialog
+.. automodule:: rafcon.mvc.views.utils.about_dialog
 
 EditorView (in editor)
 ----------------------
