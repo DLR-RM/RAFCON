@@ -88,30 +88,37 @@ class MoveItemTool(ItemTool):
 
     def on_button_release(self, event):
 
+        position_changed = False
         for inmotion in self._movable_items:
             inmotion.move((event.x, event.y))
             rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
                                                         inmotion.item.handles()[NW])
             if isinstance(inmotion.item, StateView):
                 state_m = inmotion.item.model
-                state_m.meta['gui']['editor_gaphas']['rel_pos'] = rel_pos
-                state_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
+                if state_m.meta['gui']['editor_gaphas']['rel_pos'] != rel_pos:
+                    position_changed = True
+                    state_m.meta['gui']['editor_gaphas']['rel_pos'] = rel_pos
+                    state_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
             elif isinstance(inmotion.item, NameView):
                 state_m = self.view.canvas.get_parent(inmotion.item).model
-                state_m.meta['gui']['editor_gaphas']['name']['rel_pos'] = rel_pos
+                if state_m.meta['gui']['editor_gaphas']['name']['rel_pos'] != rel_pos:
+                    state_m.meta['gui']['editor_gaphas']['name']['rel_pos'] = rel_pos
+                    position_changed = True
 
         if isinstance(self._item, StateView):
             self._item.moving = False
             self.view.canvas.request_update(self._item)
-            self._graphical_editor_view.emit('meta_data_changed', self._item.model, "position", True)
+            if position_changed:
+                self._graphical_editor_view.emit('meta_data_changed', self._item.model, "position", True)
 
             self._item = None
 
             self.view.redraw_complete_screen()
 
         if isinstance(self.view.focused_item, NameView):
-            self._graphical_editor_view.emit('meta_data_changed', self.view.focused_item.parent.model,
-                                             "name_position", False)
+            if position_changed:
+                self._graphical_editor_view.emit('meta_data_changed', self.view.focused_item.parent.model,
+                                                 "name_position", False)
 
         return super(MoveItemTool, self).on_button_release(event)
 
