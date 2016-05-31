@@ -11,11 +11,11 @@ import imp
 import yaml
 from gtkmvc import Observable
 
-from rafcon.statemachine.enums import DEFAULT_SCRIPT_PATH
-from rafcon.statemachine.id_generator import *
+from rafcon.statemachine.id_generator import generate_script_id
 import rafcon.statemachine.singleton
 
 from rafcon.utils import filesystem
+from rafcon.statemachine.storage.storage import SCRIPT_FILE
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -40,39 +40,20 @@ class Script(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!Script'
 
-    def __init__(self, path=None, filename=None, check_path=True, state=None):
+    def __init__(self, path=None, filename=None, check_path=True, parent=None):
 
         Observable.__init__(self)
-
-        self._path = path
-        self._filename = filename
+        self._path = None
+        self._filename = None
         self._compiled_module = None
         self._script_id = generate_script_id()
-        self._state = state
+        self._parent = None
+        self._check_path = check_path
+
         self.script = DEFAULT_SCRIPT
-
-        if path is None:
-            self._path = os.path.join(DEFAULT_SCRIPT_PATH, state.get_path())
-            if not os.path.exists(self._path):
-                os.makedirs(self._path)
-            if not filename:
-                self._filename = "tmp_script.file"
-            filesystem.write_file(os.path.join(self._path, self._filename), self.script)
-
-        if check_path:
-            if not os.path.exists(self._path):
-                raise RuntimeError("Script path '{}' does not exist".format(self._path))
-            if not os.path.exists(os.path.join(self._path, self._filename)):
-                raise RuntimeError("Script '{}' does not exist".format(os.path.join(self._path, self._filename)))
-
-            # load and build the module per default else the default scripts will be loaded in self.script
-            self._load_script()
-            self.build_module()
-
-    def reload_path(self, filename=None):
-        self._path = self._state.get_file_system_path()
-        if filename:
-            self._filename = filename
+        self.filename = filename
+        self.path = path
+        self.parent = parent
 
     def execute(self, state, inputs=None, outputs=None, backward_execution=False):
         """Execute the user 'execute' function specified in the script
@@ -103,11 +84,11 @@ class Script(Observable, yaml.YAMLObject):
     def _load_script(self):
         """Loads the script from the filesystem
         """
-        script_text = filesystem.read_file(self._path, self._filename)
+        script_text = filesystem.read_file(self.path, self.filename)
 
         if not script_text:
-            raise IOError("Script file could not be opened or was empty: {0}".format(os.path.join(self._path,
-                                                                                                  self._filename)))
+            raise IOError("Script file could not be opened or was empty: {0}".format(os.path.join(self.path,
+                                                                                                  self.filename)))
         self.script = script_text
 
     def build_module(self):
@@ -115,12 +96,12 @@ class Script(Observable, yaml.YAMLObject):
         """
         try:
             imp.acquire_lock()
-            module_name = os.path.splitext(self._filename)[0] + str(self._script_id)
+            module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
 
             # load module
             tmp_module = imp.new_module(module_name)
 
-            code = compile(self.script, '%s (%s)' % (self._filename, self._script_id), 'exec')
+            code = compile(self.script, '%s (%s)' % (self.filename, self._script_id), 'exec')
 
             try:
                 exec code in tmp_module.__dict__
@@ -135,7 +116,7 @@ class Script(Observable, yaml.YAMLObject):
     @classmethod
     def to_yaml(cls, dumper, data):
         #TODO:implement
-        dict_representation={}
+        dict_representation = {}
         node = dumper.represent_mapping(u'!Script', dict_representation)
         return node
 
@@ -144,16 +125,68 @@ class Script(Observable, yaml.YAMLObject):
         #TODO:implement
         return None
 
-#########################################################################
-# Properties for all class fields that must be observed by gtkmvc
-#########################################################################
+    @property
+    def parent(self):
+        """Property for the _parent field
+
+        """
+        return self._parent() if self._parent is not None else None
+
+    @parent.setter
+    def parent(self, value):
+        from weakref import ref
+        from rafcon.statemachine.states.execution_state import ExecutionState
+        if value is not None and not isinstance(value, ExecutionState):
+            raise TypeError("The parent of a script has to be a ExecutionState or None.")
+        self._parent = ref(value) if value is not None else None
 
     @property
     def filename(self):
         """Property for the _filename field
 
         """
-        return self._filename
+        return self._filename if self._filename is not None else SCRIPT_FILE
+
+    @filename.setter
+    def filename(self, value):
+        if value is not None and not isinstance(value, str):
+            raise TypeError("The filename of a script has to be a string or None to use the default value.")
+        self._filename = value
+
+    @property
+    def path(self):
+        return self._path if self._path is not None or self.parent is None else self.parent.get_file_system_path()
+
+    @path.setter
+    def path(self, value):
+        if value is not None:
+            if not isinstance(value, str):
+                raise TypeError("The path of a script has to be a string or None to use the default value.")
+
+            if self._check_path:
+                if not os.path.exists(value):
+                    raise RuntimeError("Script path '{}' does not exist".format(value))
+                if not os.path.exists(os.path.join(value, self._filename)):
+                    raise RuntimeError("Script '{}' does not exist".format(os.path.join(value, self._filename)))
+
+                # load and build the module per default else the default scripts will be loaded in self.script
+                old_path = self._path
+                self._path = value
+                try:
+                    self._load_script()
+                    self.build_module()
+                except:
+                    self._path = old_path
+                    raise
+        else:
+            if self.parent is not None:
+                value = self.parent.get_file_system_path()
+
+        self._path = value
+
+#########################################################################
+# Properties for all class fields that must be observed by gtkmvc
+#########################################################################
 
     @property
     def compiled_module(self):
@@ -161,7 +194,6 @@ class Script(Observable, yaml.YAMLObject):
         """
         return self._compiled_module
 
-    # this setter should actually never be called as the module will be compiled by the build_module() function
     @compiled_module.setter
     @Observable.observed
     def compiled_module(self, compiled_module):

@@ -793,7 +793,7 @@ def test_add_remove_models(caplog):
 
         from rafcon.statemachine.states.container_state import ContainerState
         if isinstance(state, ContainerState):
-            script = Script(state=state)
+            script = Script(parent=None)
         else:
             script = state.script
         state_dict = {'states': {}, 'data_flows': {}, 'transitions': {},
@@ -1139,8 +1139,8 @@ def test_state_property_modifications_history(caplog):
     sm_model.history.redo()
 
     # script(self, script) Script
-    state_dict['Nested'].script = Script(state=state_dict['Nested'])
-    state_dict['Nested'].script = Script(state=state_dict['Nested'])
+    state_dict['Nested2'].script = Script(parent=state_dict['Nested2'])
+    state_dict['Nested2'].script = Script(parent=state_dict['Nested2'])
     sm_model.history.undo()
     sm_model.history.redo()
 

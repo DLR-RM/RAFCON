@@ -83,7 +83,7 @@ def get_state_tuple(state, state_m=None):
 
     if not isinstance(state, ExecutionState):
         script_content = "Dummy Script"
-        script = Script(state=state)
+        script = Script(parent=None)
     else:
         script_content = state.script.script
         script = state.script

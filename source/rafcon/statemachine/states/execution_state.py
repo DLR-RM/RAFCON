@@ -37,7 +37,7 @@ class ExecutionState(State):
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
         self._script = None
-        self.script = Script(path, filename, check_path=check_path, state=self)
+        self.script = Script(path, filename, check_path=check_path, parent=self)
         self.logger = log.get_logger(self.name)
         # here all persistent variables that should be available for the next state run should be stored
         self.persistent_variables = {}
@@ -164,7 +164,7 @@ class ExecutionState(State):
     @script.setter
     @Observable.observed
     def script(self, script):
-        if script._state is not self:
+        if script.parent is not self:
             raise AttributeError("The script of a ExecutionState has to reference the state it-self.")
         self._script = script
 

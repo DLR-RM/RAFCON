@@ -155,7 +155,7 @@ def save_script_file_for_state_and_source_path(state, base_path, state_path, tem
     from rafcon.statemachine.states.execution_state import ExecutionState
     if isinstance(state, ExecutionState):
         state_path_full = os.path.join(base_path, state_path)
-        source_script_file = os.path.join(state.get_file_system_path(), state.script.filename)
+        source_script_file = os.path.join(state.script.path, state.script.filename)
         destination_script_file = os.path.join(state_path_full, SCRIPT_FILE)
 
         try:
@@ -166,7 +166,9 @@ def save_script_file_for_state_and_source_path(state, base_path, state_path, tem
             raise
 
         if not source_script_file == destination_script_file and not temporary_storage:
-            state.script.reload_path(SCRIPT_FILE)
+            state.script.filename = SCRIPT_FILE
+            state.script.path = state_path_full
+
 
 
 def save_state_recursively(state, base_path, parent_path, temporary_storage=False):
@@ -317,8 +319,7 @@ def load_state_recursively(parent, state_path=None):
 
     from rafcon.statemachine.states.execution_state import ExecutionState
     if isinstance(state, ExecutionState):
-        state.script.reload_path(SCRIPT_FILE)
-        script = read_file(state.get_file_system_path(), state.script.filename)
+        script = read_file(state.script.path, state.script.filename)
         state.script_text = script
 
     one_of_my_child_states_not_found = False
