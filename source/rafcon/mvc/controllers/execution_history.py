@@ -11,6 +11,7 @@
 
 import gtk
 import gobject
+import sys
 
 import rafcon
 
@@ -40,6 +41,9 @@ class ExecutionHistoryTreeController(ExtendedController):
     """
 
     def __init__(self, model=None, view=None, state_machine_manager=None):
+
+        # TODO: Remove quick fix for long execution histories
+        sys.setrecursionlimit(100000)
 
         assert isinstance(model, StateMachineManagerModel)
         assert isinstance(view, ExecutionHistoryView)
