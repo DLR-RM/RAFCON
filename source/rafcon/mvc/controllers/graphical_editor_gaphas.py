@@ -634,13 +634,13 @@ class GraphicalEditorController(ExtendedController):
 
         self.canvas.disconnect_item(transition_v)
         transition_v.remove_connection_from_ports()
-        self.draw_transition(transition_m, transition_v, parent_state_m, parent_state_v, False)
+        self.add_transition(transition_m, transition_v, parent_state_m, parent_state_v, False)
         self.canvas.update()
 
     def connect_data_flow_handle_to_state(self, data_flow_v, data_flow_m, parent_state_m):
         self.canvas.disconnect_item(data_flow_v)
         data_flow_v.remove_connection_from_ports()
-        self.draw_data_flow(data_flow_m, data_flow_v, parent_state_m)
+        self.add_data_flow(data_flow_m, data_flow_v, parent_state_m)
         self.canvas.update()
 
     @staticmethod
@@ -657,7 +657,7 @@ class GraphicalEditorController(ExtendedController):
 
         self.canvas.add(new_transition_v, parent_state_v)
 
-        self.draw_transition(transition_m, new_transition_v, parent_state_m, parent_state_v)
+        self.add_transition(transition_m, new_transition_v, parent_state_m, parent_state_v)
 
     def add_data_flow_view_for_model(self, data_flow_m, parent_state_m):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
@@ -688,7 +688,7 @@ class GraphicalEditorController(ExtendedController):
 
         self.canvas.add(new_data_flow_v, parent_state_v)
 
-        self.draw_data_flow(data_flow_m, new_data_flow_v, parent_state_m)
+        self.add_data_flow(data_flow_m, new_data_flow_v, parent_state_m)
 
     def _remove_connection_view(self, parent_state_m, transitions=True):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
@@ -821,13 +821,13 @@ class GraphicalEditorController(ExtendedController):
 
                 self.setup_state(child_state, state_v, child_rel_pos, child_size, hierarchy_level + 1)
 
-            self.draw_transitions(state_m, hierarchy_level)
+            self.add_transitions(state_m, hierarchy_level)
 
-            self.draw_data_flows(state_m, hierarchy_level)
+            self.add_data_flows(state_m, hierarchy_level)
 
         return state_v
 
-    def draw_transitions(self, parent_state_m, hierarchy_level):
+    def add_transitions(self, parent_state_m, hierarchy_level):
         """Draws the transitions belonging to a state
 
         The method takes all transitions from the given state and calculates their start and end point positions.
@@ -842,9 +842,9 @@ class GraphicalEditorController(ExtendedController):
             transition_v = TransitionView(transition_m, hierarchy_level)
             self.canvas.add(transition_v, parent_state_v)
 
-            self.draw_transition(transition_m, transition_v, parent_state_m, parent_state_v)
+            self.add_transition(transition_m, transition_v, parent_state_m, parent_state_v)
 
-    def draw_transition(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
+    def add_transition(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
 
         transition_meta_gaphas = transition_m.meta['gui']['editor_gaphas']
         transition_meta_opengl = transition_m.meta['gui']['editor_opengl']
@@ -897,7 +897,7 @@ class GraphicalEditorController(ExtendedController):
             except KeyError:
                 pass
 
-    def draw_data_flows(self, parent_state_m, hierarchy_level):
+    def add_data_flows(self, parent_state_m, hierarchy_level):
         """Draw all data flows contained in the given container state
 
         The method takes all data flows from the given state and calculates their start and end point positions.
@@ -933,9 +933,9 @@ class GraphicalEditorController(ExtendedController):
             data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
             self.canvas.add(data_flow_v, parent_state_v)
 
-            self.draw_data_flow(data_flow_m, data_flow_v, parent_state_m)
+            self.add_data_flow(data_flow_m, data_flow_v, parent_state_m)
 
-    def draw_data_flow(self, data_flow_m, data_flow_v, parent_state_m):
+    def add_data_flow(self, data_flow_m, data_flow_v, parent_state_m):
         # Get id and references to the from and to state
         from_state_id = data_flow_m.data_flow.from_state
         from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
