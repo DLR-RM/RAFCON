@@ -4,6 +4,14 @@ MVC Views (in rafcon.mvc.views)
 .. contents::
     :backlinks: top
 
+Subpackages
+-----------
+
+.. toctree::
+
+    rafcon.mvc.views.state_editor
+    rafcon.mvc.views.utils
+
 GraphicalEditor (in graphical_editor)
 -------------------------------------
 
@@ -13,11 +21,6 @@ GraphicalEditor (in graphical_editor_gaphas)
 --------------------------------------------
 
 .. automodule:: rafcon.mvc.views.graphical_editor_gaphas
-
-MyAboutDialog (in about_dialog)
--------------------------------
-
-.. automodule:: rafcon.mvc.views.about_dialog
 
 ExecutionHistoryTreeView (in execution_history)
 -----------------------------------------------
@@ -29,30 +32,10 @@ GlobalVariableEditorView (in global_variable_editor)
 
 .. automodule:: rafcon.mvc.views.global_variable_editor
 
-InputPortsListView (in input_port_list)
----------------------------------------
-
-.. automodule:: rafcon.mvc.views.input_port_list
-
-OutputPortsListView (in output_port_list)
------------------------------------------
-
-.. automodule:: rafcon.mvc.views.output_port_list
-
-ScopedVariablesListView (in scoped_variables_list)
---------------------------------------------------
-
-.. automodule:: rafcon.mvc.views.scoped_variables_list
-
 LibraryTreeView (in library_tree)
 ---------------------------------
 
 .. automodule:: rafcon.mvc.views.library_tree
-
-LinkageOverview (in linkage_overview)
--------------------------------------
-
-.. automodule:: rafcon.mvc.views.linkage_overview
 
 LoggingView (in logging)
 ------------------------
@@ -79,30 +62,6 @@ NetworkConnectionsView (in network_connections)
 
 .. automodule:: rafcon.mvc.views.network_connections
 
-SingleWidgetWindowView (in single_widget_window)
-------------------------------------------------
-
-.. automodule:: rafcon.mvc.views.single_widget_window
-
-SourceEditorView (in source_editor)
------------------------------------
-
-.. automodule:: rafcon.mvc.views.source_editor
-
-StateDataFlowsEditorView (in data_flows)
-----------------------------------------------
-
-A module to view the data flow of a respective state (internal, external)
-
-.. automodule:: rafcon.mvc.views.state_editor.data_flows
-
-StateEditorView (in state_editor)
----------------------------------
-
-A module to view the all aspects of a respective state.
-
-.. automodule:: rafcon.mvc.views.state_editor
-
 StateMachineTreeView (in state_machine_tree)
 --------------------------------------------
 
@@ -112,23 +71,6 @@ StateMachinesEditorView (in state_machines_editor)
 --------------------------------------------------
 
 .. automodule:: rafcon.mvc.views.state_machines_editor
-
-StateOutcomesEditorView (in state_outcomes)
--------------------------------------------
-
-.. automodule:: rafcon.mvc.views.state_outcomes
-
-StateOverviewView (in state_overview)
--------------------------------------
-
-.. automodule:: rafcon.mvc.views.state_overview
-
-StateTransitionsEditorView (in state_transitions)
--------------------------------------------------
-
-A module to view the logical connections (transitions) of a respective state (internal, external).
-
-.. automodule:: rafcon.mvc.views.state_transitions
 
 StatesEditorView (in states_editor)
 -----------------------------------
