@@ -256,7 +256,10 @@ class PerpLine(Line):
 
     def add_waypoint(self, pos):
         handle = self._create_handle(pos)
-        self._handles.insert(-1, handle)
+        if self._to_waypoint:
+            self._handles.insert(-2, handle)
+        else:
+            self._handles.insert(-1, handle)
         self._keep_handle_in_parent_state(handle)
         self._update_ports()
 

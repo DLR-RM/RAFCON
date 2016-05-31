@@ -278,15 +278,20 @@ class StateView(Element):
             update_port_position(outcome_v, outcome_v.outcome_m.meta['gui']['editor_gaphas'])
         for data_port_v in self.inputs + self.outputs:
             update_port_position(data_port_v, data_port_v.port_m.meta['gui']['editor_gaphas'])
-        for scoped_port_v in self.scoped_variables:
-            update_port_position(scoped_port_v, scoped_port_v.model.meta['gui']['editor_gaphas'])
 
         self.name_view.apply_meta_data()
 
-        if isinstance(self.model, ContainerStateModel) and recursive:
-            for state_v in self.canvas.get_children(self):
-                if isinstance(state_v, StateView):
-                    state_v.apply_meta_data(recursive=True)
+        if isinstance(self.model, ContainerStateModel):
+            for scoped_port_v in self.scoped_variables:
+                update_port_position(scoped_port_v, scoped_port_v.model.meta['gui']['editor_gaphas'])
+            for transition_m in self.model.transitions:
+                transition_v = self.canvas.get_view_for_model(transition_m)
+                transition_v.apply_meta_data()
+
+            if recursive:
+                for state_v in self.canvas.get_children(self):
+                    if isinstance(state_v, StateView):
+                        state_v.apply_meta_data(recursive=True)
 
     def draw(self, context):
         if self.moving and self.parent and self.parent.moving:

@@ -35,10 +35,10 @@ def calc_rel_pos_to_parent(canvas, item, handle):
 
     parent = canvas.get_parent(item)
     if parent:
-        c_pos = canvas.project(item, handle.pos)
-        p_pos = canvas.project(parent, parent.handles()[NW].pos)
-        rel_x = c_pos[0].value - p_pos[0].value
-        rel_y = c_pos[1].value - p_pos[1].value
+        abs_pos_handle = canvas.project(parent, handle.pos)
+        abs_pos_state = canvas.project(parent, parent.handles()[NW].pos)
+        rel_x = abs_pos_handle[0].value - abs_pos_state[0].value
+        rel_y = abs_pos_handle[1].value - abs_pos_state[1].value
     else:
         pos = canvas.project(item, item.handles()[NW].pos)
         rel_x = pos[0].value
