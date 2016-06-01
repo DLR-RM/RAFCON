@@ -279,6 +279,9 @@ def launch_client(interacting_function_client, multiprocessing_queue_dict):
     import test.network_test.start_client
     test.network_test.start_client.start_client(interacting_function_client, multiprocessing_queue_dict)
 
+    import sys
+    sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
+
 
 def launch_server(interacting_function_handle_server_, multiprocessing_queue_dict):
     # explicitly add the monitoring plugin to the RAFCON_PLUGIN_PATH
@@ -290,6 +293,10 @@ def launch_server(interacting_function_handle_server_, multiprocessing_queue_dic
     import test.network_test.start_server
     server = Process(target=test.network_test.start_server.start_server,
                      args=(interacting_function_handle_server_, multiprocessing_queue_dict))
+
+    import sys
+    sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
+    
     return server
 
 
