@@ -4,6 +4,9 @@ import threading
 import time
 import pytest
 
+import sys
+sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
+
 from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor

@@ -296,7 +296,7 @@ def launch_server(interacting_function_handle_server_, multiprocessing_queue_dic
 
     import sys
     sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
-    
+
     return server
 
 
