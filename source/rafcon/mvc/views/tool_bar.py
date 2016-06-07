@@ -1,11 +1,10 @@
 import gtk
 from gtkmvc import View
 from rafcon.mvc.utils import constants
-from rafcon.mvc.config import global_gui_config as gui_config
 
 
 class ToolBarView(View):
-    builder = './glade/tool_bar.glade'
+    builder = constants.get_glade_path("tool_bar.glade")
     top = 'toolbar'
 
     def __init__(self):

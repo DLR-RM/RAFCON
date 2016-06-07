@@ -268,10 +268,8 @@ def test_state_type_change_test(with_gui, caplog):
         logger.debug("Gtk main loop exited!")
         thread.join()
         logger.debug("Joined test triggering thread!")
-        os.chdir(testing_utils.TEST_SM_PATH + "/../test/common")
         test_multithrading_lock.release()
     else:
-        os.chdir(testing_utils.TEST_SM_PATH + "/../test/common")
         thread.join()
 
     testing_utils.reload_config()

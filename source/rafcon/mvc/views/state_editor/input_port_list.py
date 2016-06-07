@@ -1,8 +1,9 @@
 from gtkmvc import View
+from rafcon.mvc.utils import constants
 
 
 class InputPortsListView(View):
-    builder = './glade/input_ports_list_widget.glade'
+    builder = constants.get_glade_path("input_ports_list_widget.glade")
     top = 'input_ports_tree_view'
 
     def __init__(self):

@@ -141,7 +141,6 @@ def test_backward_stepping(caplog):
     logger.debug("Gtk main loop exited!")
     thread.join()
     logger.debug("Joined test triggering thread!")
-    os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
     testing_utils.reload_config()
     testing_utils.test_multithrading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)

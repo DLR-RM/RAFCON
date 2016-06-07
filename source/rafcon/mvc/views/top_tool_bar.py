@@ -5,7 +5,7 @@ from rafcon.mvc import gui_helper
 
 
 class TopToolBarView(View):
-    builder = './glade/top_tool_bar.glade'
+    builder = constants.get_glade_path("top_tool_bar.glade")
     top = 'top_toolbar'
 
     def __init__(self):

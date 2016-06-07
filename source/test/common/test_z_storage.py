@@ -287,7 +287,6 @@ def test_storage_with_gui(caplog):
     missing_elements, _ = check_that_all_files_are_there(sm_m, check_meta_data=True, with_print=False)
     assert len(missing_elements) == 0
 
-    os.chdir(rafcon.__path__[0] + "/../test/common")
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 

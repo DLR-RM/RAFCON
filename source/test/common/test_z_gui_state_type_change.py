@@ -700,7 +700,6 @@ def test_state_type_change_test(caplog):
         logger.debug("Gtk main loop exited!")
 
     thread.join()
-    os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
 
     testing_utils.reload_config()
     test_multithrading_lock.release()

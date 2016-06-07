@@ -441,7 +441,6 @@ def test_complex(with_gui, caplog):
     run_copy_performance_test_and_check_storage_copy(sm_model)
     sm_model.destroy()
 
-    os.chdir(rafcon.__path__[0] + "/../test/common")
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     while gtk.events_pending():
         gtk.main_iteration(False)

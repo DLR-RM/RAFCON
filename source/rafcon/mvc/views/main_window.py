@@ -20,7 +20,7 @@ from rafcon.mvc import gui_helper
 
 
 class MainWindowView(View):
-    builder = './glade/main_window.glade'
+    builder = constants.get_glade_path("main_window.glade")
     top = 'main_window'
 
     def __init__(self):

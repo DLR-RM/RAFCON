@@ -5,7 +5,7 @@ from rafcon.mvc.utils import constants
 
 
 class StateTransitionsListView(View):
-    builder = './glade/transition_list_widget.glade'
+    builder = constants.get_glade_path("transition_list_widget.glade")
     top = 'tree_view'
 
     def __init__(self):
@@ -17,7 +17,7 @@ class StateTransitionsListView(View):
 
 
 class StateTransitionsEditorView(View):
-    builder = './glade/state_transitions_widget.glade'
+    builder = constants.get_glade_path("state_transitions_widget.glade")
     top = 'vbox2'
 
     def __init__(self):
