@@ -80,12 +80,12 @@ def trigger_gui_signals(*args):
     wait_for_execution_engine_sync_counter(1, logger)
 
     # forward
-    for i in range(4):
+    for i in range(5):
         call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
     # # backward
-    for i in range(3):
+    for i in range(4):
         call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
@@ -103,15 +103,21 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-def test_backward_stepping(caplog):
+def test_backward_stepping_execution_test(caplog):
     testing_utils.start_rafcon()
     testing_utils.remove_all_libraries()
+    # Load test library
+    config_path = rafcon.__path__[0] + "/../test/common/configs_for_start_script_test/valid_config/"
+    testing_utils.global_config.load('config.yaml', config_path)
+    rafcon.statemachine.singleton.library_manager.initialize()
+
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     logger, gvm_model = create_models()
     state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines"
-                                                                                       "/backward_stepping_execution_state_test"))
+                                                                                       "/backward_step_library_execution_test"))
     main_window_view = MainWindowView()
+
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     if testing_utils.sm_manager_model is None:
         testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
@@ -135,5 +141,5 @@ def test_backward_stepping(caplog):
 
 
 if __name__ == '__main__':
-    test_backward_stepping(None)
+    test_backward_stepping_execution_test(None)
     # pytest.main([__file__])
