@@ -130,7 +130,6 @@ def run_turtle_demo():
     rafcon.statemachine.singleton.library_manager.initialize()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     base_path = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(rafcon.__path__[0] + "/mvc")
 
     basic_turtle_demo_state = create_turtle_statemachine(base_path, example_path)
     state_machine = StateMachine(basic_turtle_demo_state)

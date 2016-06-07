@@ -87,10 +87,6 @@ def start_client(interacting_function, queue_dict):
     setup_config = dict()
     setup_config["net_config_path"] = os.path.abspath(path=os.path.dirname(os.path.abspath(__file__))+"/client")
 
-    # Make mvc directory the working directory
-    # Needed for views, which assume to be in the mvc path and import glade files relatively
-    os.chdir(join(rafcon_root_path, 'mvc'))
-
     # Initialize library
     sm_singletons.library_manager.initialize()
 

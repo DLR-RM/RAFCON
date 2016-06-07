@@ -5,7 +5,7 @@ from rafcon.mvc import gui_helper
 
 
 class StateDataFlowsListView(View):
-    builder = './glade/data_flow_list_widget.glade'
+    builder = constants.get_glade_path("data_flow_list_widget.glade")
     top = 'tree_view'
 
     def __init__(self):
@@ -17,7 +17,7 @@ class StateDataFlowsListView(View):
 
 
 class StateDataFlowsEditorView(View):
-    builder = './glade/state_data_flows_widget.glade'
+    builder = constants.get_glade_path("state_data_flows_widget.glade")
     top = 'data_flows_container'
 
     def __init__(self):

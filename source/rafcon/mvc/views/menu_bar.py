@@ -7,7 +7,7 @@ from rafcon.mvc.gui_helper import set_label_markup
 
 
 class MenuBarView(View):
-    builder = './glade/menu_bar.glade'
+    builder = constants.get_glade_path("menu_bar.glade")
     top = 'menubar'
 
     buttons = {

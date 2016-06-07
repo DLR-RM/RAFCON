@@ -176,7 +176,6 @@ def test_drag_and_drop_test(caplog):
         logger.debug("Joined currently executing state machine!")
         thread.join()
         logger.debug("Joined test triggering thread!")
-    os.chdir(testing_utils.TEST_SM_PATH + "/../test/common")
     test_multithrading_lock.release()
 
     testing_utils.reload_config()

@@ -1,5 +1,12 @@
 import gtk
 
+
+def get_glade_path(glade_file):
+    from os import path
+    mvc_dir = path.dirname(path.dirname(__file__))
+    return path.join(mvc_dir, "glade", glade_file)
+
+
 FONTS = ["DIN Next LT Pro", "FontAwesome"]
 INTERFACE_FONT = FONTS[0]
 ICON_FONT = FONTS[1]

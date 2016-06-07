@@ -6,7 +6,7 @@ class UndockedWindowView(View):
     """
 
     """
-    builder = './glade/undocked_window.glade'
+    builder = constants.get_glade_path("undocked_window.glade")
     top = 'undock_window'
 
     def __init__(self, title):

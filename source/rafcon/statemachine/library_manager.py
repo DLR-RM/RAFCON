@@ -18,10 +18,10 @@ import rafcon.statemachine.config as config
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
-if not sys.version_info < (2, 7):
-    from collections import OrderedDict as ordered_dict
-else:
-    ordered_dict = dict
+try:
+    from collections import OrderedDict
+except ImportError:
+    OrderedDict = dict
 
 
 class LibraryManager(Observable):
@@ -80,7 +80,7 @@ class LibraryManager(Observable):
             self._load_library_from_root_path(library_key, library_path)
             logger.debug("Adding library '{1}' from {0}".format(library_path, library_key))
 
-        self._libraries = ordered_dict(sorted(self._libraries.items()))
+        self._libraries = OrderedDict(sorted(self._libraries.items()))
         logger.debug("Initialization of LibraryManager done")
 
     @staticmethod
@@ -104,7 +104,7 @@ class LibraryManager(Observable):
         self._library_paths[library_key] = library_path
         self._libraries[library_key] = {}
         self._load_nested_libraries(library_path, self._libraries[library_key])
-        self._libraries[library_key] = ordered_dict(sorted(self._libraries[library_key].items()))
+        self._libraries[library_key] = OrderedDict(sorted(self._libraries[library_key].items()))
 
     @classmethod
     def _load_nested_libraries(cls, library_path, target_dict):
@@ -125,7 +125,7 @@ class LibraryManager(Observable):
                 else:
                     target_dict[library_name] = {}
                     cls._load_nested_libraries(full_library_path, target_dict[library_name])
-                    target_dict[library_name] = ordered_dict(sorted(target_dict[library_name].items()))
+                    target_dict[library_name] = OrderedDict(sorted(target_dict[library_name].items()))
 
     @Observable.observed
     def refresh_libraries(self):

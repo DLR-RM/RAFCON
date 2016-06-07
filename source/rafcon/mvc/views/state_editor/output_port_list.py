@@ -1,8 +1,9 @@
 from gtkmvc import View
+from rafcon.mvc.utils import constants
 
 
 class OutputPortsListView(View):
-    builder = './glade/output_ports_list_widget.glade'
+    builder = constants.get_glade_path("output_ports_list_widget.glade")
     top = 'output_ports_tree_view'
 
     def __init__(self):

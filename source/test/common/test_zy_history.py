@@ -1291,7 +1291,6 @@ def test_data_flow_property_modifications_history(caplog):
 def test_type_modifications_without_gui(caplog):
     with_gui = False
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    os.chdir(rafcon.__path__[0] + "/mvc")
     signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
@@ -1306,7 +1305,6 @@ def test_type_modifications_without_gui(caplog):
     sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
     print "start thread"
     trigger_state_type_change_tests(sm_manager_model, None, sm_m, state_dict, with_gui, logger)
-    os.chdir(rafcon.__path__[0] + "/../test")
 
     testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
@@ -1339,7 +1337,6 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
         logger.debug("Gtk main loop exited!")
         test_multithrading_lock.release()
 
-    os.chdir(rafcon.__path__[0] + "/../test/common")
     thread.join()
     testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
@@ -1380,13 +1377,11 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
             logger.debug("Gtk main loop exited!")
             test_multithrading_lock.release()
 
-        os.chdir(rafcon.__path__[0] + "/../test/common")
         thread.join()
     else:
         testing_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
         print "start thread"
         trigger_state_type_change_typical_bug_tests(testing_utils.sm_manager_model, None, sm_m, state_dict, with_gui, logger)
-        os.chdir(rafcon.__path__[0] + "/../test")
 
     testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)

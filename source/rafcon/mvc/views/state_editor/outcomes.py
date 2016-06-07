@@ -7,7 +7,7 @@ from rafcon.mvc.utils import constants
 
 
 class StateOutcomesTreeView(View):
-    builder = './glade/outcome_list_widget.glade'
+    builder = constants.get_glade_path("outcome_list_widget.glade")
     top = 'tree_view'
 
     def __init__(self):

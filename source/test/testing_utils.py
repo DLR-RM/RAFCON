@@ -1,6 +1,6 @@
 import signal
 import tempfile
-from os import mkdir, chdir, environ
+from os import mkdir, environ
 from os.path import join, dirname, realpath
 from threading import Lock, Condition
 
@@ -101,6 +101,5 @@ def start_rafcon():
     environ['RAFCON_LIB_PATH'] = join(dirname(RAFCON_PATH), 'libraries')
     rafcon.statemachine.singleton.library_manager.initialize()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    chdir(rafcon.__path__[0] + "/mvc")
 
 sm_manager_model = None

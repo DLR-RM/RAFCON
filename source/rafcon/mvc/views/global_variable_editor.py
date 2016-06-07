@@ -3,7 +3,7 @@ from rafcon.mvc.utils import constants
 
 
 class GlobalVariableEditorView(View):
-    builder = './glade/global_variable_editor_widget.glade'
+    builder = constants.get_glade_path("global_variable_editor_widget.glade")
     top = 'global_variable_vbox'
 
     def __init__(self):

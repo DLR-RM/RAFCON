@@ -15,7 +15,7 @@ from rafcon.mvc import gui_helper
 
 
 class StateEditorView(View):
-    builder = './glade/state_editor_ld_widget_tab.glade'
+    builder = constants.get_glade_path("state_editor_ld_widget_tab.glade")
     top = 'main_frame_vbox'
 
     def __init__(self):

@@ -166,7 +166,6 @@ def test_window_positions(caplog):
 
     gtk.main()
     thread.join()
-    os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
     testing_utils.test_multithrading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=warnings)
 
@@ -187,7 +186,6 @@ def test_pane_positions(caplog):
 
     gtk.main()
     thread.join()
-    os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
     testing_utils.test_multithrading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=warnings)
 

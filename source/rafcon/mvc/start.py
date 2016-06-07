@@ -60,10 +60,6 @@ def pre_setup_plugins():
 
 def setup_mvc_environment():
     setup_environment()
-    # Make mvc directory the working directory
-    # Needed for views, which assume to be in the mvc path and import glade files relatively
-    rafcon_root_path = dirname(realpath(rafcon.__file__))
-    os.chdir(join(rafcon_root_path, 'mvc'))
 
 
 def setup_argument_parser():

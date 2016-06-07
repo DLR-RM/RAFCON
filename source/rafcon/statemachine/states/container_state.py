@@ -13,7 +13,7 @@ from threading import Condition
 from gtkmvc import Observable
 from rafcon.statemachine.state_elements.scope import ScopedData, ScopedVariable
 
-from rafcon.statemachine.enums import DataPortType, StateExecutionState
+from rafcon.statemachine.enums import DataPortType, StateExecutionState, StateMachineExecutionStatus
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.state_elements.data_flow import DataFlow
@@ -22,11 +22,15 @@ from rafcon.statemachine.state_elements.transition import Transition
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.validity_check.validity_checker import ValidityChecker
-from rafcon.utils import log
 from rafcon.utils.type_helpers import type_inherits_of_type
 
+try:
+    from collections import OrderedDict
+except ImportError:
+    OrderedDict = dict
+
+from rafcon.utils import log
 logger = log.get_logger(__name__)
-from rafcon.statemachine.enums import StateMachineExecutionStatus
 
 
 class ContainerState(State):
@@ -47,7 +51,7 @@ class ContainerState(State):
                  states=None, transitions=None, data_flows=None, start_state_id=None,
                  scoped_variables=None, v_checker=None):
 
-        self._states = {}
+        self._states = OrderedDict()
         self._transitions = {}
         self._data_flows = {}
         self._scoped_variables = {}

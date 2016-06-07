@@ -111,10 +111,6 @@ def convert(config_path, source_path, target_path):
     global_gui_config.load(path=setup_config['gui_config_path'])
     global_runtime_config.load(path=setup_config['gui_config_path'])
 
-    # Make mvc directory the working directory
-    # Needed for views, which assume to be in the mvc path and import glade files relatively
-    os.chdir(join(rafcon_root_path, 'mvc'))
-
     # Initialize library
     sm_singletons.library_manager.initialize()
 

@@ -7,7 +7,7 @@ from rafcon.mvc import gui_helper
 
 
 class LinkageOverviewDataView(View):
-    builder = './glade/linkage_overview_data.glade'
+    builder = constants.get_glade_path("linkage_overview_data.glade")
     top = 'tree_view'
 
     def __init__(self):
@@ -15,7 +15,7 @@ class LinkageOverviewDataView(View):
 
 
 class LinkageOverviewLogicView(View):
-    builder = './glade/linkage_overview_logic.glade'
+    builder = constants.get_glade_path("linkage_overview_logic.glade")
     top = 'tree_view'
 
     def __init__(self):
@@ -32,7 +32,7 @@ class LinkageOverviewLogicView(View):
 
 
 class LinkageOverviewView(View):
-    builder = './glade/linkage_overview.glade'
+    builder = constants.get_glade_path("linkage_overview.glade")
     top = 'linkage_container'
 
     def __init__(self):
