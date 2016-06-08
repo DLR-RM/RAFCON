@@ -30,7 +30,8 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
 from rafcon.mvc.utils.dialog import RAFCONDialog
-from rafcon.utils import log, constants
+from rafcon.utils import plugins
+from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
@@ -527,6 +528,9 @@ class MenuBarController(ExtendedController):
         # Should close all tabs
         core_singletons.state_machine_manager.delete_all_state_machines()
         # Recursively destroys the main window
+
+        plugins.run_hook("pre_main_window_destruction", mvc_singleton.main_window_controller)
+
         mvc_singleton.main_window_controller.destroy()
         self.logging_view.quit_flag = True
         glib.idle_add(log.unregister_logging_view, 'main')

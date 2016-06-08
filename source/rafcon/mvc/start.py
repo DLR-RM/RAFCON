@@ -172,6 +172,8 @@ if __name__ == '__main__':
             sm.root_state.join()
 
     finally:
+        plugins.run_hook("post_main_window_destruction")
+
         if profiler:
             stop_profiler(profiler)
         if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):

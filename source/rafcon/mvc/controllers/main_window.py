@@ -34,6 +34,7 @@ from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.mvc.utils import constants
 from rafcon.mvc import gui_helper
+from rafcon.utils import plugins
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -249,6 +250,8 @@ class MainWindowController(ExtendedController):
         if gui_config.get_config_value('AUTO_BACKUP_ENABLED') and gui_config.get_config_value('AUTO_RECOVERY_CHECK'):
             import rafcon.mvc.models.auto_backup as auto_backup
             auto_backup.check_for_crashed_rafcon_instances()
+
+        plugins.run_hook("main_window_setup", self)
 
     def print_paned_pos(self, width, height, config_id):
         pane_id = constants.PANE_ID[config_id]
