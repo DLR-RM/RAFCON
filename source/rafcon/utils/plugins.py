@@ -43,11 +43,24 @@ def load_plugins():
             logger.error("Could not import plugin '{}': {}".format(plugin_name, e))
 
 
+def run_hook(hook_name, *args, **kwargs):
+    """Runs the passed hook on all registered plugins
+
+    The function checks, whether the hook is available in the plugin.
+
+    :param hook_name: Name of the hook, corresponds to the function name being called
+    :param args: Arguments
+    :param kwargs: Keyword arguments
+    """
+    for module in plugin_dict.itervalues():
+        if hasattr(module, "hooks") and callable(getattr(module.hooks, hook_name, None)):
+            getattr(module.hooks, hook_name)(*args, **kwargs)
+
+
 def run_pre_inits():
     """Runs the pre_init methods of all registered plugins
     """
-    for module in plugin_dict.itervalues():
-        module.hooks.pre_init()
+    run_hook("pre_init")
 
 
 def run_post_inits(setup_config):
@@ -55,6 +68,5 @@ def run_post_inits(setup_config):
 
     :param setup_config:
     """
-    for module in plugin_dict.itervalues():
-        module.hooks.post_init(setup_config)
+    run_hook("post_init", setup_config)
 
