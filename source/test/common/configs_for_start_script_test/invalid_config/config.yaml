@@ -1,0 +1,6 @@
+#LIBRARY_PATHS:
+    generic: ${RAFCON_LIB_PATH}/generic
+PROFILER_RESULT_PATH: /tmp/rafcon_profiler_result.prf
+PROFILER_RUN: false
+PROFILER_VIEWER: true
+TYPE: SM_CONFIG
