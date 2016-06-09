@@ -25,29 +25,37 @@
     "scoped_variables": {}, 
     "state_id": "KUQPVY", 
     "transitions": {
+        "1": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "IGGTFV", 
+            "to_outcome": null, 
+            "to_state": "VXANCF", 
+            "transition_id": 1
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "VXANCF", 
+            "to_outcome": null, 
+            "to_state": "XHOUIU", 
+            "transition_id": 2
+        }, 
         "3": {
             "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
             "from_outcome": null, 
             "from_state": null, 
             "to_outcome": null, 
-            "to_state": "IGGTFV", 
+            "to_state": "OCTHXG", 
             "transition_id": 3
         }, 
-        "5": {
+        "4": {
             "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
             "from_outcome": 0, 
-            "from_state": "IGGTFV", 
+            "from_state": "OCTHXG", 
             "to_outcome": null, 
-            "to_state": "QCPJND", 
-            "transition_id": 5
-        }, 
-        "6": {
-            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
-            "from_outcome": 0, 
-            "from_state": "QCPJND", 
-            "to_outcome": null, 
-            "to_state": "JMOSVV", 
-            "transition_id": 6
+            "to_state": "IGGTFV", 
+            "transition_id": 4
         }, 
         "10": {
             "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
@@ -56,30 +64,6 @@
             "to_outcome": 0, 
             "to_state": "KUQPVY", 
             "transition_id": 10
-        }, 
-        "14": {
-            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
-            "from_outcome": 0, 
-            "from_state": "JMOSVV", 
-            "to_outcome": null, 
-            "to_state": "VXANCF", 
-            "transition_id": 14
-        }, 
-        "15": {
-            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
-            "from_outcome": 0, 
-            "from_state": "VXANCF", 
-            "to_outcome": null, 
-            "to_state": "WPIIRZ", 
-            "transition_id": 15
-        }, 
-        "16": {
-            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
-            "from_outcome": 0, 
-            "from_state": "WPIIRZ", 
-            "to_outcome": null, 
-            "to_state": "XHOUIU", 
-            "transition_id": 16
         }
     }
 }
