@@ -65,7 +65,7 @@ class StateMachineExecutionEngine(Observable):
             self.state_machine_manager.get_active_state_machine().root_state.recursively_pause_states()
 
         logger.debug("Pause execution ...")
-        self._status.execution_mode = StateMachineExecutionStatus.PAUSED
+        self.set_execution_mode(StateMachineExecutionStatus.PAUSED, notify=False)
 
 
     @Observable.observed
@@ -81,18 +81,15 @@ class StateMachineExecutionEngine(Observable):
             self.state_machine_manager.get_active_state_machine().root_state.recursively_resume_states()
 
         if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
-            self._status.execution_mode = StateMachineExecutionStatus.STARTED
             logger.debug("Resume execution engine ...")
             self.run_to_states = []
-            self._status.execution_condition_variable.acquire()
-            self._status.execution_condition_variable.notify_all()
-            self._status.execution_condition_variable.release()
+            self.set_execution_mode(StateMachineExecutionStatus.STARTED)
         else:
             # do not start another state machine before the old one did not finish its execution
             while self.state_machine_running:
                 time.sleep(1.0)
-            self._status.execution_mode = StateMachineExecutionStatus.STARTED
             logger.debug("Start execution engine ...")
+            self.set_execution_mode(StateMachineExecutionStatus.STARTED)
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
 
@@ -130,8 +127,8 @@ class StateMachineExecutionEngine(Observable):
     @Observable.observed
     def set_execution_mode_to_stopped(self):
         """Stop and reset execution engine"""
-        self._status.execution_mode = StateMachineExecutionStatus.STOPPED
         self.run_to_states = []
+        self.set_execution_mode(StateMachineExecutionStatus.STOPPED)
 
     @Observable.observed
     def step_mode(self):
@@ -139,12 +136,9 @@ class StateMachineExecutionEngine(Observable):
         """
         logger.debug("Activate step mode")
         if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
-            self._status.execution_mode = StateMachineExecutionStatus.FORWARD_INTO
-            self._status.execution_condition_variable.acquire()
-            self._status.execution_condition_variable.notify_all()
-            self._status.execution_condition_variable.release()
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
         else:
-            self._status.execution_mode = StateMachineExecutionStatus.FORWARD_INTO
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
             self._run_active_state_machine()
         self.run_to_states = []
 
@@ -169,41 +163,29 @@ class StateMachineExecutionEngine(Observable):
         """Take a backward step for all active states in the state machine
         """
         logger.debug("Executing backward step ...")
-        self._status.execution_mode = StateMachineExecutionStatus.BACKWARD
         self.run_to_states = []
-        self._status.execution_condition_variable.acquire()
-        self._status.execution_condition_variable.notify_all()
-        self._status.execution_condition_variable.release()
+        self.set_execution_mode(StateMachineExecutionStatus.BACKWARD)
 
     def step_into(self):
         """Take a forward step (into) for all active states in the state machine
         """
         logger.debug("Execution step into ...")
-        self._status.execution_mode = StateMachineExecutionStatus.FORWARD_INTO
         self.run_to_states = []
-        self._status.execution_condition_variable.acquire()
-        self._status.execution_condition_variable.notify_all()
-        self._status.execution_condition_variable.release()
+        self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
 
     def step_over(self):
         """Take a forward step (over) for all active states in the state machine
         """
         logger.debug("Execution step over ...")
-        self._status.execution_mode = StateMachineExecutionStatus.FORWARD_OVER
         self.run_to_states = []
-        self._status.execution_condition_variable.acquire()
-        self._status.execution_condition_variable.notify_all()
-        self._status.execution_condition_variable.release()
+        self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OVER)
 
     def step_out(self):
         """Take a forward step (out) for all active states in the state machine
         """
         logger.debug("Execution step out ...")
-        self._status.execution_mode = StateMachineExecutionStatus.FORWARD_OUT
         self.run_to_states = []
-        self._status.execution_condition_variable.acquire()
-        self._status.execution_condition_variable.notify_all()
-        self._status.execution_condition_variable.release()
+        self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OUT)
 
     def run_to_selected_state(self, path, state_machine_id=None):
         """Take a forward step (out) for all active states in the state machine
@@ -216,13 +198,10 @@ class StateMachineExecutionEngine(Observable):
             logger.debug("Resume execution engine and run to selected state!")
             self.run_to_states = []
             self.run_to_states.append(path)
-            self._status.execution_mode = StateMachineExecutionStatus.RUN_TO_SELECTED_STATE
-            self._status.execution_condition_variable.acquire()
-            self._status.execution_condition_variable.notify_all()
-            self._status.execution_condition_variable.release()
+            self.set_execution_mode(StateMachineExecutionStatus.RUN_TO_SELECTED_STATE)
         else:
             logger.debug("Start execution engine and run to selected state!")
-            self._status.execution_mode = StateMachineExecutionStatus.RUN_TO_SELECTED_STATE
+            self.set_execution_mode(StateMachineExecutionStatus.RUN_TO_SELECTED_STATE)
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
             self.run_to_states = []
@@ -367,7 +346,7 @@ class StateMachineExecutionEngine(Observable):
         return sm
 
     @Observable.observed
-    def set_execution_mode(self, execution_mode):
+    def set_execution_mode(self, execution_mode, notify=True):
         """
         An observed setter for the execution mode of the state machine status. This is necessary for the
         monitoring client to update the local state machine in the same way as the root state machine of the server.
@@ -377,6 +356,10 @@ class StateMachineExecutionEngine(Observable):
         if not isinstance(execution_mode, StateMachineExecutionStatus):
             raise TypeError("status must be of type StateMachineStatus")
         self._status.execution_mode = execution_mode
+        if notify:
+            self._status.execution_condition_variable.acquire()
+            self._status.execution_condition_variable.notify_all()
+            self._status.execution_condition_variable.release()
 
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc
