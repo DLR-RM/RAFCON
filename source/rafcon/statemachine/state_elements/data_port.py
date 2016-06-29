@@ -45,6 +45,9 @@ class DataPort(StateElement):
         else:
             self._data_port_id = data_port_id
 
+        if self.name == "error":
+            self.error_name_print()
+
         self.name = name
         if data_type is not None:
             self.data_type = data_type
@@ -54,6 +57,11 @@ class DataPort(StateElement):
         self.parent = parent
 
         # logger.debug("DataPort with name %s initialized" % self.name)
+
+    def error_name_print(self):
+        logger.warn("The name of the created data port is error. "
+            "This name is internally used for error propagation as well. "
+            "Only proceed if you know, what you are doing, other rename the data port to something else!")
 
     def __str__(self):
         return "DataPort '{0}' [{1}] ({3} {2})".format(self.name, self.data_port_id, self.data_type, self.default_value)
@@ -115,6 +123,8 @@ class DataPort(StateElement):
         if len(name) < 1:
             raise ValueError("Name cannot be empty")
 
+        if name == "error":
+            self.error_name_print()
         self._change_property_with_validity_check('_name', name)
 
     @property
