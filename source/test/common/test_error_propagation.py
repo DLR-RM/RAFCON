@@ -19,7 +19,7 @@ def test_error_propagation(caplog):
     testing_utils.test_multithrading_lock.acquire()
 
     sm = StateMachineExecutionEngine.execute_state_machine_from_path(
-        testing_utils.get_test_sm_path("unit_test_state_machines/error_propagation_test"))
+        path=testing_utils.get_test_sm_path("unit_test_state_machines/error_propagation_test"))
     state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert sm.root_state.output_data["error_check"] == "successfull"
 

@@ -321,7 +321,7 @@ class StateMachineExecutionEngine(Observable):
                     self.run_to_states.append(parent_path)
 
     @staticmethod
-    def execute_state_machine_from_path(path, start_state_path=None, wait_for_execution_finished=True):
+    def execute_state_machine_from_path(state_machine=None, path=None, start_state_path=None, wait_for_execution_finished=True):
         """
         A helper function to start an arbitrary state machine at a given path.
         :param path: The path where the state machine resides
@@ -332,8 +332,9 @@ class StateMachineExecutionEngine(Observable):
         import rafcon.statemachine.singleton
         from rafcon.statemachine.storage import storage
         rafcon.statemachine.singleton.library_manager.initialize()
-        state_machine = storage.load_state_machine_from_path(path)
-        rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+        if not state_machine:
+            state_machine = storage.load_state_machine_from_path(path)
+            rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
         rafcon.statemachine.singleton.state_machine_execution_engine.start(start_state_path=start_state_path)
         sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
 

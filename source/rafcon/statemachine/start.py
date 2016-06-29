@@ -121,7 +121,7 @@ def start_state_machine(state_machine_path, start_state_path=None):
     :param str start_state_path: The state path to the desired first state
     :return StateMachine: The loaded state machine
     """
-    state_machine = StateMachineExecutionEngine.execute_state_machine_from_path(state_machine_path,
+    state_machine = StateMachineExecutionEngine.execute_state_machine_from_path(path=state_machine_path,
                                                                                 start_state_path=start_state_path,
                                                                                 wait_for_execution_finished=False)
 
@@ -209,6 +209,7 @@ if __name__ == '__main__':
 
     profiler = start_profiler()
     try:
+
         sm = start_state_machine(user_input.state_machine_path, user_input.start_state_path)
 
         if reactor_required():

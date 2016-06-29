@@ -25,7 +25,8 @@ def test_preemption_behaviour_in_preemption_state(caplog):
     testing_utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
 
-    sm = StateMachineExecutionEngine.execute_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/preemption_behaviour_test_sm"))
+    sm = StateMachineExecutionEngine.execute_state_machine_from_path(
+        path=testing_utils.get_test_sm_path("unit_test_state_machines/preemption_behaviour_test_sm"))
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
     from rafcon.statemachine.singleton import global_variable_manager
     assert global_variable_manager.get_variable("s2") == 1.0

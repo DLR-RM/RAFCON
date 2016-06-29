@@ -34,13 +34,15 @@ def signal_handler(signal, frame):
     # shutdown twisted correctly
     try:
         # check if monitoring plugin is loaded
-        from plugins.monitoring.monitoring_manager import global_monitoring_manager
+        from monitoring.monitoring_manager import global_monitoring_manager
         from twisted.internet import reactor
         print "Shutting down monitoring manager"
         global_monitoring_manager.shutdown()
         print "Shutting down twisted"
         if reactor.running:
             reactor.callFromThread(reactor.stop)
+        print "Shutting down monitoring manager again"
+        global_monitoring_manager.shutdown()
     except ImportError, e:
         # plugin not found
         pass
@@ -48,9 +50,12 @@ def signal_handler(signal, frame):
     # import sys
     # sys.exit(0)
 
-    # this is a ugly process shutdown method, but works if gtk process are blocking
-    import os
-    os._exit(0)
+    import time
+    time.sleep(100)
+
+    # # this is a ugly process shutdown method, but works if gtk process are blocking
+    # import os
+    # os._exit(0)
 
 
 # This variable holds the global variable manager singleton
