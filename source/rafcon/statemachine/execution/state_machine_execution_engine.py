@@ -135,12 +135,12 @@ class StateMachineExecutionEngine(Observable):
         """Set the execution mode to stepping mode. Transitions are only triggered if a new step is triggered
         """
         logger.debug("Activate step mode")
-        if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
-            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
-        else:
+        self.run_to_states = []
+        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
             self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
             self._run_active_state_machine()
-        self.run_to_states = []
+        else:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
 
     def _run_active_state_machine(self):
         """Store running state machine and observe its status"""
@@ -171,21 +171,33 @@ class StateMachineExecutionEngine(Observable):
         """
         logger.debug("Execution step into ...")
         self.run_to_states = []
-        self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
+        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
+            self._run_active_state_machine()
+        else:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
 
     def step_over(self):
         """Take a forward step (over) for all active states in the state machine
         """
         logger.debug("Execution step over ...")
         self.run_to_states = []
-        self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OVER)
+        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OVER)
+            self._run_active_state_machine()
+        else:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OVER)
 
     def step_out(self):
         """Take a forward step (out) for all active states in the state machine
         """
         logger.debug("Execution step out ...")
         self.run_to_states = []
-        self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OUT)
+        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OUT)
+            self._run_active_state_machine()
+        else:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OUT)
 
     def run_to_selected_state(self, path, state_machine_id=None):
         """Take a forward step (out) for all active states in the state machine
@@ -288,8 +300,13 @@ class StateMachineExecutionEngine(Observable):
                     self.run_to_states.append(parent_path)
                 else:
                     # this is the case if step_out is called from the highest level
-                    # this is handled in the same way as the FORWARD_OVER
-                    self.run_to_states.append(state.get_path())
+
+                    # OLD convenience: this is handled in the same way as the FORWARD_OVER
+                    # self.run_to_states.append(state.get_path())
+
+                    # just run the state machine to the end in this case
+                    self.run_to_states = []
+                    self.set_execution_mode(StateMachineExecutionStatus.STARTED)
             elif self._status.execution_mode is StateMachineExecutionStatus.RUN_TO_SELECTED_STATE:
                 # "Run to states were already updated thus doing nothing"
                 pass
