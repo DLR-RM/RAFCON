@@ -65,7 +65,7 @@ class StateMachineExecutionEngine(Observable):
             self.state_machine_manager.get_active_state_machine().root_state.recursively_pause_states()
 
         logger.debug("Pause execution ...")
-        self.set_execution_mode(StateMachineExecutionStatus.PAUSED, notify=False)
+        self.set_execution_mode(StateMachineExecutionStatus.PAUSED)
 
 
     @Observable.observed
@@ -245,11 +245,12 @@ class StateMachineExecutionEngine(Observable):
                          "no preemption handling has to be done!".format(state.name))
 
         elif self._status.execution_mode is StateMachineExecutionStatus.PAUSED:
-            try:
-                self._status.execution_condition_variable.acquire()
-                self._status.execution_condition_variable.wait()
-            finally:
-                self._status.execution_condition_variable.release()
+            while self._status.execution_mode is StateMachineExecutionStatus.PAUSED:
+                try:
+                    self._status.execution_condition_variable.acquire()
+                    self._status.execution_condition_variable.wait()
+                finally:
+                    self._status.execution_condition_variable.release()
 
         else:  # all other step modes
             logger.debug("Stepping mode: waiting for next step!")
