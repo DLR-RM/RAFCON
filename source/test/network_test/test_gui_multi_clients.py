@@ -151,20 +151,20 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
 
     # test dis- enabled by server run
     print "dis- /enabled test by server"
-    from monitoring.controllers import server_controller
+    from monitoring import server
     from monitoring.monitoring_manager import global_monitoring_manager
-    for address in server_controller.network_manager_model.connected_ip_port:
+    for address in server.network_manager_model.connected_ip_port:
         global_monitoring_manager.disable(address)
-        while not server_controller.network_manager_model.get_connected_status(address) == "disabled":
+        while not server.network_manager_model.get_connected_status(address) == "disabled":
             time.sleep(0.01)
     queue_dict[CLIENT1_QUEUE].put("disabled")
     queue_dict[CLIENT1_TO_SERVER].get()
     assert gvm.get_variable("count_counter") == 0
     assert gvm.get_variable("sing_counter") == 0
     assert gvm.get_variable("decimate_counter") == 0
-    for address in server_controller.network_manager_model.connected_ip_port:
+    for address in server.network_manager_model.connected_ip_port:
         global_monitoring_manager.disable(address)
-        while not server_controller.network_manager_model.get_connected_status(address) == "connected":
+        while not server.network_manager_model.get_connected_status(address) == "connected":
             time.sleep(0.01)
     # queue_dict[CLIENT1_QUEUE].put("enable")
     # queue_dict[CLIENT1_TO_SERVER].get()
@@ -429,7 +429,8 @@ def launch_client(interacting_function_client, multiprocessing_queue_dict):
     # explicitly add the monitoring plugin to the RAFCON_PLUGIN_PATH
     if os.environ.get('RAFCON_PLUGIN_PATH', False):
         del os.environ['RAFCON_PLUGIN_PATH']
-    os.environ['RAFCON_PLUGIN_PATH'] = "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
+    os.environ['RAFCON_PLUGIN_PATH'] = \
+        "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
 
     import test.network_test.start_client
     test.network_test.start_client.start_client(interacting_function_client, multiprocessing_queue_dict)
@@ -442,7 +443,8 @@ def launch_server(interacting_function_handle_server_, multiprocessing_queue_dic
     # explicitly add the monitoring plugin to the RAFCON_PLUGIN_PATH
     if os.environ.get('RAFCON_PLUGIN_PATH', False):
         del os.environ['RAFCON_PLUGIN_PATH']
-    os.environ['RAFCON_PLUGIN_PATH'] = "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
+    os.environ['RAFCON_PLUGIN_PATH'] = \
+        "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
 
     import test.network_test.start_server
     server = Process(target=test.network_test.start_server.start_server,
