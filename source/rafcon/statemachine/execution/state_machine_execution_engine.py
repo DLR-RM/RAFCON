@@ -122,7 +122,10 @@ class StateMachineExecutionEngine(Observable):
         self._status.execution_condition_variable.release()
 
     def join(self):
-        self.__wait_for_finishing_thread.join()
+        if self.__wait_for_finishing_thread:
+            self.__wait_for_finishing_thread.join()
+        else:
+            logger.warn("Cannot join as state machine was not started yet.")
 
     @Observable.observed
     def set_execution_mode_to_stopped(self):
