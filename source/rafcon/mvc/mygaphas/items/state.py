@@ -183,8 +183,7 @@ class StateView(Element):
 
     @property
     def border_width(self):
-        return constants.BORDER_WIDTH_ROOT_STATE / pow(constants.BORDER_WIDTH_HIERARCHY_SCALE_FACTOR,
-                                                       self.hierarchy_level - 1)
+        return min(self._get_width(), self._get_height()) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
 
     @property
     def parent(self):
