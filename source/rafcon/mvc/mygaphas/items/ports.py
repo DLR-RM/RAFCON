@@ -577,7 +577,7 @@ class OutcomeView(LogicPortView):
 
     def draw(self, context, state, highlight=False):
         if highlight:
-            fill_color = gui_config.gtk_colors['STATE_ACTIVE']
+            fill_color = gui_config.gtk_colors['STATE_ACTIVE_BORDER']
         elif self.outcome_id == -2:
             fill_color = gui_config.gtk_colors['PREEMPTED']
         elif self.outcome_id == -1:

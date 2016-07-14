@@ -276,11 +276,11 @@ class StateView(Element):
         nw = self._handles[NW].pos
 
         parameters = {
-            'hierarchy': self.hierarchy_level,
             'execution_state':  self.model.state.state_execution_status,
             'selected': self.selected,
             'moving': self.moving,
-            'border_width': self.border_width
+            'border_width': self.border_width,
+            'transparent': self._transparent
         }
 
         upper_left_corner = (nw.x.value, nw.y.value)
@@ -297,35 +297,37 @@ class StateView(Element):
             # print "draw state"
             c = self._image_cache.get_context_for_image(current_zoom)
             multiplicator = self._image_cache.multiplicator
+            default_line_width = self.border_width / 35. * multiplicator
 
-            c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
             c.rectangle(nw.x, nw.y, self.width, self.height)
 
+            state_background_color = gui_config.gtk_colors['STATE_BACKGROUND']
+            state_border_color = gui_config.gtk_colors['STATE_BORDER']
+            state_border_outline_color = gui_config.gtk_colors['STATE_BORDER_OUTLINE']
+
             if self.model.state.state_execution_status == StateExecutionState.WAIT_FOR_NEXT_STATE:
-                c.set_source_color(gui_config.gtk_colors['STATE_WAITING'])
+                state_border_color = gui_config.gtk_colors['STATE_WAITING_BORDER']
+                state_border_outline_color = gui_config.gtk_colors['STATE_WAITING_BORDER_OUTLINE']
             elif self.model.state.active:
-                c.set_source_color(gui_config.gtk_colors['STATE_ACTIVE'])
+                state_border_color = gui_config.gtk_colors['STATE_ACTIVE_BORDER']
+                state_border_outline_color = gui_config.gtk_colors['STATE_ACTIVE_BORDER_OUTLINE']
             elif self.selected:
-                c.set_source_color(gui_config.gtk_colors['STATE_SELECTED'])
-            else:
-                c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_BORDER'], self._transparent))
+                state_border_color = gui_config.gtk_colors['STATE_SELECTED_BORDER']
+                state_border_outline_color = gui_config.gtk_colors['STATE_SELECTED_BORDER_OUTLINE']
+
+            c.set_source_rgba(*get_col_rgba(state_border_color, self._transparent))
             c.fill_preserve()
-            if self.model.state.active:
-                c.set_source_color(gui_config.gtk_colors['STATE_ACTIVE_BORDER'])
-                c.set_line_width(.25 / self.hierarchy_level * multiplicator)
-            elif self.selected:
-                c.set_source_color(gui_config.gtk_colors['STATE_SELECTED_OUTER_BOUNDARY'])
-                c.set_line_width(.25 / self.hierarchy_level * multiplicator)
-            else:
-                c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self._transparent))
+            # The line gets cropped at the context border, therefore the line width must be doubled
+            c.set_line_width(default_line_width * 2)
             c.stroke()
 
             inner_nw, inner_se = self.get_state_drawing_area(self)
             c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_BACKGROUND']))
+            c.set_source_rgba(*get_col_rgba(state_background_color))
             c.fill_preserve()
-            c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
-            c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self._transparent))
+            c.set_line_width(default_line_width)
             c.stroke()
 
             # Copy image surface to current cairo context
