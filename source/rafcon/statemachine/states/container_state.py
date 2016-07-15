@@ -834,24 +834,21 @@ class ContainerState(State):
         :return:
         """
         old_state_id = self.state_id
-        State.change_state_id(self, state_id)
-        while self.state_id == old_state_id:
-            old_state_id = self.state_id
-            self.change_state_id()
-
+        super(ContainerState, self).change_state_id(state_id)
+        # Use private variables to change ids to prevent validity checks
         # change id in all transitions
-        for trans_id, transition in self.transitions.iteritems():
+        for transition in self.transitions.itervalues():
             if transition.from_state == old_state_id:
-                transition.from_state = self.state_id
+                transition._from_state = self.state_id
             if transition.to_state == old_state_id:
-                transition.to_state = self.state_id
+                transition._to_state = self.state_id
 
         # change id in all data_flows
-        for df_id, data_flow in self.data_flows.iteritems():
+        for data_flow in self.data_flows.itervalues():
             if data_flow.from_state == old_state_id:
-                data_flow.from_state = self.state_id
+                data_flow._from_state = self.state_id
             if data_flow.to_state == old_state_id:
-                data_flow.to_state = self.state_id
+                data_flow._to_state = self.state_id
 
     def get_state_for_transition(self, transition):
         """Calculate the target state of a transition
