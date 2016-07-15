@@ -564,22 +564,18 @@ class MenuBarController(ExtendedController):
 
     def on_group_states_activate(self, widget, data=None):
         logger.debug("try to group")
-        state_m_list = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
-        logger.info(str(state_m_list))
+        state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
         if isinstance(state_m_list[0].parent, StateModel):
-            pass
-            # logger.info("do group")
-            # state_m_list[0].parent.state.group([state_m.state.state_id for state_m in state_m_list])
+            logger.debug("do group")
+            state_m_list[0].parent.state.group_states([state_m.state.state_id for state_m in state_m_list])
 
     def on_ungroup_state_activate(self, widget, data=None):
         logger.debug("try to ungroup")
-        state_m_list = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
-        logger.info(str(state_m_list))
+        state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
         if len(state_m_list) == 1 and isinstance(state_m_list[0], ContainerStateModel) and \
                 not state_m_list[0].state.is_root_state:
-            pass
-            # logger.info("do ungroup")
-            # state_m_list[0].parent.state.ungroup(state_m_list[0].state.state_id)
+            logger.debug("do ungroup")
+            state_m_list[0].parent.state.ungroup_state(state_m_list[0].state.state_id)
 
     def on_undo_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action("undo", None, None)

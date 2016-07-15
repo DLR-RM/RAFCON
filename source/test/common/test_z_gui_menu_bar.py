@@ -212,6 +212,21 @@ def trigger_gui_signals(*args):
     # increase complexity by doing it twice -> increase the hierarchy-level
     copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menubar_ctrl)
 
+    ##########################################################
+    # group states
+    # TODO improve test to related data flows
+    state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
+    state_ids_old = [state_id for state_id in state_m_parent.state.states]
+    call_gui_callback(state_m_parent.state.group_states, ['PAYECU', 'UEPNNW', 'KQDJYS'])
+
+    ##########################################################
+    # ungroup new state
+    state_new = None
+    for state_id in state_m_parent.state.states:
+        if state_id not in state_ids_old:
+            state_new = state_m_parent.state.states[state_id]
+    call_gui_callback(state_m_parent.state.ungroup_state, state_new.state_id)
+
     call_gui_callback(menubar_ctrl.on_refresh_libraries_activate, None)
     call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
     assert len(sm_manager_model.state_machines) == 1

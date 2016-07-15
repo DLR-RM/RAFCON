@@ -261,9 +261,15 @@ class ContainerState(State):
 
     @Observable.observed
     def group_states(self, state_ids, scoped_variables=None):
-        raise NotImplementedError("group_states is not implemented yet fully")
+        """ Group states and scoped varaibles into a new hierarchy state and remain internal connections.
 
-        assert all([state_id in [state.state_id for state in self.states] for state_id in state_ids])
+        :param state_ids: state_id's of all states that are to be grouped.
+        :param scoped_variables: data_port_id's of all scoped variables that are to be grouped, too.
+        :return:
+        """
+        # TODO remain all related linkage by adding outcomes and input output port to new hierarchy state
+
+        assert all([state_id in [state_id for state in self.states] for state_id in state_ids])
         if scoped_variables is None:
             scoped_variables = []
         assert all([p_id in [sv.data_port_id for sv in self.scoped_variables] for p_id in scoped_variables])
@@ -271,10 +277,10 @@ class ContainerState(State):
         related_transitions = {'internal': [], 'ingoing': [], 'outgoing': []}
         related_data_flows = {'internal': [], 'ingoing': [], 'outgoing': []}
 
-        other_child_state_ids = [state.state_id for state in self.states if state.state_id not in state_ids]
+        other_child_state_ids = [state_id for state_id in self.states if state_id not in state_ids]
 
         # find all related transitions
-        for t, t_id in self.transitions.iteritems():
+        for t_id, t in self.transitions.iteritems():
             # check if internal of new hierarchy state
             if t.from_state in state_ids and t.to_state in state_ids:
                 related_transitions['internal'].append(t_id)
@@ -284,7 +290,7 @@ class ContainerState(State):
                 related_transitions['outgoing'].append(t_id)
 
         # find all related data flows
-        for df, df_id in self.data_flows.iteritems():
+        for df_id, df in self.data_flows.iteritems():
             # check if internal of new hierarchy state
             if df.from_state in state_ids and df.to_state in state_ids or \
                     df.from_state in state_ids and self.state_id == df.to_state and df.to_key in scoped_variables or \
@@ -297,9 +303,45 @@ class ContainerState(State):
                     self.state_id == df.from_state and df.from_key in scoped_variables:
                 related_data_flows['outgoing'].append(df_id)
 
+        states_to_group = {state_id: self.states[state_id] for state_id in state_ids}
+        transitions_internal = {t_id: self.transitions[t_id] for t_id in related_transitions['internal']}
+        data_flows_internal = {df_id: self.data_flows[df_id] for df_id in related_data_flows['internal']}
+        [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
+        from rafcon.statemachine.states.hierarchy_state import HierarchyState
+        s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal)
+        # logger.info("new grouped state {}".format(s))
+        return self.add_state(s)
+
     @Observable.observed
     def ungroup_state(self, state_id):
-        raise NotImplementedError("ungroup_state is not implemented yet")
+        """ Ungroup state with state id state_id into its parent and remain internal linkage in parent.
+
+        :param state_id: State that is to be ungrouped.
+        :return:
+        """
+        # TODO remain all related linkage like before by outcomes and data_ports by adding data_flow and transition
+
+        transitions_internal = []
+        for t_id, t in self.states[state_id].transitions.iteritems():
+            # check if internal of hierarchy state
+            if t.from_state in self.states[state_id].states and t.to_state in self.states[state_id].states:
+                transitions_internal.append(t)
+        data_flows_internal = []
+        for df_id, df in self.states[state_id].data_flows.iteritems():
+            # check if internal of hierarchy state
+            if df.from_state in self.states[state_id].states and df.to_state in self.states[state_id].states:
+                data_flows_internal.append(df)
+
+        child_states = [self.states[state_id].states[child_state_id] for child_state_id in self.states[state_id].states]
+        self.remove_state(state_id, recursive_deletion=False)
+        state_id_dict = {}
+        for state in child_states:
+            new_state_id = self.add_state(state)
+            state_id_dict[state.state_id] = new_state_id
+        for t in transitions_internal:
+            self.add_transition(state_id_dict[t.from_state], t.from_outcome, state_id_dict[t.to_state], t.to_outcome)
+        for df in data_flows_internal:
+            self.add_data_flow(state_id_dict[df.from_state], df.from_key, state_id_dict[df.to_state], df.to_key)
 
     @Observable.observed
     def add_state(self, state, storage_load=False):
@@ -309,6 +351,7 @@ class ContainerState(State):
 
         """
         assert isinstance(state, State)
+        # logger.info("add state {}".format(state))
         # TODO: add validity checks for states and then remove this check
         if state.state_id in self._states.iterkeys():
             raise AttributeError("State id %s already exists in the container state", state.state_id)
@@ -326,7 +369,7 @@ class ContainerState(State):
         return state.state_id
 
     @Observable.observed
-    def remove_state(self, state_id, recursive_deletion=True, force=True):
+    def remove_state(self, state_id, recursive_deletion=True, force=True, destruct=True):
         """Remove a state from the container state.
 
         :param state_id: the id of the state to remove
@@ -373,7 +416,8 @@ class ContainerState(State):
                 for data_flow_id in self.states[state_id].data_flows.keys():
                     self.states[state_id].remove_data_flow(data_flow_id)
 
-        self.states[state_id].destruct()
+        if destruct:
+            self.states[state_id].destruct()
         # final delete the state it self
         del self.states[state_id]
 

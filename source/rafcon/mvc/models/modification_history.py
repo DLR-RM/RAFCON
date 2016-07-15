@@ -289,8 +289,8 @@ class ModificationsHistoryModel(ModelMT):
                 assert False  # should never happen
             else:  # FAILURE
                 logger.warning("History may need update, tried to start observation of new action that is not classifiable "
-                            "\n%s \n%s \n%s \n%s",
-                            overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
+                               "\n%s \n%s \n%s \n%s",
+                               overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
                 assert False  # should never happen
 
             return result
@@ -389,6 +389,7 @@ class ModificationsHistoryModel(ModelMT):
         except:
             logger.exception("Failure occurred while finishing action")
             # traceback.print_exc(file=sys.stdout)
+            raise
 
         self.change_count += 1
 
@@ -588,7 +589,8 @@ class ModificationsHistoryModel(ModelMT):
             # logger.debug("History BEFORE {0}".format(overview))  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             # modifications of parent are not observed
-            if overview['method_name'][-1] == 'parent':
+            if overview['method_name'][-1] == 'parent' or \
+                    overview['method_name'][-1] in ['group_states', 'ungroup_state']:
                 return
 
             # increase counter and generate new action if not locked by action that is performed
@@ -634,7 +636,8 @@ class ModificationsHistoryModel(ModelMT):
                 return self._interrupt_actual_action(info)
 
             # modifications of parent are not observed
-            if overview['method_name'][-1] == 'parent':
+            if overview['method_name'][-1] == 'parent' or \
+                    overview['method_name'][-1] in ['group_states', 'ungroup_state']:
                 return
 
             # decrease counter and finish action when reaching count=0
