@@ -233,7 +233,7 @@ class StateMachinesEditorController(ExtendedController):
         for p in range(number_of_pages):
             page = self.view["notebook"].get_nth_page(p)
             label = self.view["notebook"].get_tab_label(page).get_children()[0]
-            label.modify_fg(gtk.STATE_ACTIVE_BORDER, old_label_colors[p])
+            label.modify_fg(gtk.STATE_ACTIVE, old_label_colors[p])
             label.modify_fg(gtk.STATE_INSENSITIVE, old_label_colors[p])
 
     @ExtendedController.observe("state_machines", after=True)
