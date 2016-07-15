@@ -165,8 +165,12 @@ class PortView(object):
         state_v = self.parent
         center = self.handle.pos
         margin = self.port_side_size / 4.
-        upper_left = center[0] - self.port_size[0] - margin, center[1] - self.port_size[1] - margin
-        lower_right = center[0] + self.port_size[0] + margin, center[1] + self.port_size[1] + margin
+        if self.side in [SnappedSide.LEFT, SnappedSide.RIGHT]:
+            height, width = self.port_size
+        else:
+            width, height = self.port_size
+        upper_left = center[0] - width / 2 - margin, center[1] - height / 2 - margin
+        lower_right = center[0] + width / 2 + margin, center[1] + height / 2 + margin
         port_upper_left = view.get_matrix_i2v(state_v).transform_point(*upper_left)
         port_lower_right = view.get_matrix_i2v(state_v).transform_point(*lower_right)
         size = port_lower_right[0] - port_upper_left[0], port_lower_right[1] - port_upper_left[1]
