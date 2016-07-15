@@ -36,6 +36,7 @@ from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.views.graphical_editor import Direction
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.controllers.right_click_menu.state import StateRightClickMenuControllerOpenGLEditor
 
 from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 from rafcon.utils import log
@@ -98,6 +99,7 @@ class GraphicalEditorController(ExtendedController):
         """Constructor"""
         assert isinstance(model, StateMachineModel)
         ExtendedController.__init__(self, model, view)
+        self.state_right_click_ctrl = StateRightClickMenuControllerOpenGLEditor(model, view)
 
         self.root_state_m = model.root_state
 

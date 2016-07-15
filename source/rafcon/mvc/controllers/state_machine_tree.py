@@ -21,6 +21,7 @@ from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.utils import log
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS as EXECUTION_TRIGGERED_METHODS
 from rafcon.mvc import state_machine_helper
+from rafcon.mvc.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
 
 logger = log.get_logger(__name__)
 
@@ -44,6 +45,7 @@ class StateMachineTreeController(ExtendedController):
         assert isinstance(model, StateMachineManagerModel)
 
         ExtendedController.__init__(self, model, view)
+        self.state_right_click_ctrl = StateMachineTreeRightClickMenuController(model, view)
 
         self.view_is_registered = False
         self.tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT, str)

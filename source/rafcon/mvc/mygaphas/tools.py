@@ -20,6 +20,7 @@ from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortVi
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 from rafcon.mvc.mygaphas.utils import gap_helper
 
+from rafcon.mvc.controllers.right_click_menu.state import StateRightClickMenuGapahs
 from rafcon.mvc.utils import constants
 from rafcon.utils import log
 
@@ -65,6 +66,7 @@ class MoveItemTool(ItemTool):
 
     def on_button_press(self, event):
         super(MoveItemTool, self).on_button_press(event)
+        # logger.info("MoveClick" + str(event))
 
         item = self.get_item()
         if isinstance(item, StateView):
@@ -82,9 +84,10 @@ class MoveItemTool(ItemTool):
             self._graphical_editor_view.emit('new_state_selection', self.view.focused_item)
 
         if event.button == 3:
-            self._graphical_editor_view.emit('deselect_states')
-
-        return True
+            # self._graphical_editor_view.emit('deselect_states')
+            return False
+        else:
+            return True
 
     def on_button_release(self, event):
 
@@ -789,3 +792,13 @@ class ConnectHandleMoveTool(HandleMoveTool):
                 self.connect(item, handle, (event.x, event.y))
         finally:
             return super(ConnectHandleMoveTool, self).on_button_release(event)
+
+
+class RightClickTool(ItemTool):
+
+    def __init__(self, view=None, buttons=(3,)):
+        super(RightClickTool, self).__init__(view, buttons)
+        self.sm_right_click_menu = StateRightClickMenuGapahs()
+
+    def on_button_press(self, event):
+        self.sm_right_click_menu.mouse_click(None, event)
