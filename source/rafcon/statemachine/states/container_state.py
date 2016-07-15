@@ -273,7 +273,7 @@ class ContainerState(State):
         assert all([state_id in [state_id for state in self.states] for state_id in state_ids])
         if scoped_variables is None:
             scoped_variables = []
-        assert all([p_id in [sv.data_port_id for sv in self.scoped_variables] for p_id in scoped_variables])
+        assert all([p_id in self.scoped_variables.keys() for p_id in scoped_variables])
 
         related_transitions = {'internal': [], 'ingoing': [], 'outgoing': []}
         related_data_flows = {'internal': [], 'ingoing': [], 'outgoing': []}
@@ -307,9 +307,12 @@ class ContainerState(State):
         states_to_group = {state_id: self.states[state_id] for state_id in state_ids}
         transitions_internal = {t_id: self.transitions[t_id] for t_id in related_transitions['internal']}
         data_flows_internal = {df_id: self.data_flows[df_id] for df_id in related_data_flows['internal']}
+        scoped_variables_to_group = {dp_id: self.scoped_variables[dp_id] for dp_id in scoped_variables}
         [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
+        [self.remove_scoped_variable(sv_id) for sv_id in scoped_variables]
         from rafcon.statemachine.states.hierarchy_state import HierarchyState
-        s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal)
+        s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
+                           scoped_variables=scoped_variables_to_group)
         return self.add_state(s)
 
     @Observable.observed
@@ -334,11 +337,16 @@ class ContainerState(State):
                 data_flows_internal.append(df)
 
         child_states = [self.states[state_id].states[child_state_id] for child_state_id in self.states[state_id].states]
+        child_scoped_variables = [sv for sv_id, sv in self.states[state_id].scoped_variables.iteritems()]
         self.remove_state(state_id, recursive_deletion=False)
         state_id_dict = {}
         for state in child_states:
             new_state_id = self.add_state(state)
             state_id_dict[state.state_id] = new_state_id
+        for sv in child_scoped_variables:
+            self.add_scoped_variable(name=sv.name, data_type=sv.data_type, default_value=sv.default_value)
+        # TODO check for data_port_ids, too
+
         for t in transitions_internal:
             self.add_transition(state_id_dict[t.from_state], t.from_outcome, state_id_dict[t.to_state], t.to_outcome)
         for df in data_flows_internal:

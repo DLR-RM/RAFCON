@@ -24,6 +24,7 @@ from rafcon.statemachine.singleton import state_machine_manager, library_manager
 import rafcon.statemachine.singleton as core_singletons
 from rafcon.mvc.models.state import StateModel
 from rafcon.mvc.models.container_state import ContainerStateModel
+from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc import gui_helper
 from rafcon.mvc import singleton as mvc_singleton
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
@@ -565,9 +566,16 @@ class MenuBarController(ExtendedController):
     def on_group_states_activate(self, widget, data=None):
         logger.debug("try to group")
         state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
-        if isinstance(state_m_list[0].parent, StateModel):
+        all_elements = self.model.get_selected_state_machine_model().selection.get_all()
+        selected_sv = [elem.scoped_variable for elem in all_elements if isinstance(elem, ScopedVariableModel)]
+        if state_m_list and isinstance(state_m_list[0].parent, StateModel) or selected_sv:
             logger.debug("do group")
-            state_m_list[0].parent.state.group_states([state_m.state.state_id for state_m in state_m_list])
+            state_ids_of_selected_states = [state_m.state.state_id for state_m in state_m_list]
+            dp_ids_of_selected_sv = [sv.data_port_id for sv in selected_sv]
+            if state_m_list:
+                state_m_list[0].parent.state.group_states(state_ids_of_selected_states, dp_ids_of_selected_sv)
+            else:
+                selected_sv[0].parent.group_states(state_ids_of_selected_states, dp_ids_of_selected_sv)
 
     def on_ungroup_state_activate(self, widget, data=None):
         logger.debug("try to ungroup")
