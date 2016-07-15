@@ -92,7 +92,7 @@ def clean_state_machine_paths(state_machine_id):
 
 
 def save_state_machine_to_path(state_machine, base_path, delete_old_state_machine=False, save_as=False,
-                              temporary_storage=False):
+                               temporary_storage=False):
     """Saves a state machine recursively to the file system
 
     :param rafcon.statemachine.state_machine.StateMachine state_machine: the state_machine to be saved
