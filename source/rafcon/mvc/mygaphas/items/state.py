@@ -333,24 +333,19 @@ class StateView(Element):
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
-        self._income.port_side_size = self.border_width
         self._income.draw(context, self)
 
         for outcome_v in self._outcomes:
             highlight = self.model.state.active and outcome_v.outcome_m.outcome is self.model.state.final_outcome
-            outcome_v.port_side_size = self.border_width
             outcome_v.draw(context, self, highlight)
 
         for input_v in self._inputs:
-            input_v.port_side_size = self.border_width
             input_v.draw(context, self)
 
         for output_v in self._outputs:
-            output_v.port_side_size = self.border_width
             output_v.draw(context, self)
 
         for scoped_variable_v in self._scoped_variables_ports:
-            scoped_variable_v.port_side_size = self.border_width
             scoped_variable_v.draw(context, self)
 
         if isinstance(self.model, LibraryStateModel) and not self.moving:
@@ -480,7 +475,7 @@ class StateView(Element):
         raise AttributeError("Port with id '{0}' not found in state".format(port_id, self.model.state.name))
 
     def add_income(self):
-        income_v = IncomeView(self, self.border_width)
+        income_v = IncomeView(self)
         self._ports.append(income_v.port)
         self._handles.append(income_v.handle)
         self._map_handles_port_v[income_v.handle] = income_v
@@ -497,7 +492,7 @@ class StateView(Element):
         return income_v
 
     def add_outcome(self, outcome_m):
-        outcome_v = OutcomeView(outcome_m, self, self.border_width)
+        outcome_v = OutcomeView(outcome_m, self)
         self._outcomes.append(outcome_v)
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
@@ -530,7 +525,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[outcome_v])
 
     def add_input_port(self, port_m):
-        input_port_v = InputPortView(self, port_m, self.border_width)
+        input_port_v = InputPortView(self, port_m)
         self._inputs.append(input_port_v)
         self._ports.append(input_port_v.port)
         self._handles.append(input_port_v.handle)
@@ -557,7 +552,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[input_port_v])
 
     def add_output_port(self, port_m):
-        output_port_v = OutputPortView(self, port_m, self.border_width)
+        output_port_v = OutputPortView(self, port_m)
         self._outputs.append(output_port_v)
         self._ports.append(output_port_v.port)
         self._handles.append(output_port_v.handle)
@@ -584,7 +579,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
 
     def add_scoped_variable(self, scoped_variable_m):
-        scoped_variable_port_v = ScopedVariablePortView(self, self.border_width, scoped_variable_m)
+        scoped_variable_port_v = ScopedVariablePortView(self, scoped_variable_m)
         self._scoped_variables_ports.append(scoped_variable_port_v)
         self._ports.append(scoped_variable_port_v.port)
         self._handles.append(scoped_variable_port_v.handle)
