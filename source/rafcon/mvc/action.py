@@ -370,7 +370,6 @@ class MetaAction:
         self.after_storage = self.get_storage()  # tuple of state and states-list of storage tuple
 
     def get_storage(self):
-
         state_model = self.state_machine_model.get_state_model_by_path(self.parent_path)
         return get_state_element_meta(state_model)
 
@@ -555,9 +554,9 @@ class Action:
             for old_state_id in state.states.keys():
                 try:
                     state.remove_state(old_state_id, force=True)
-                except Exception as e:
+                except Exception:
                     print "ERROR: ", old_state_id, UNIQUE_DECIDER_STATE_ID, state
-                    raise e
+                    raise
 
         if is_root:
             for outcome_id in state.outcomes.keys():
