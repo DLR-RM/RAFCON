@@ -260,6 +260,48 @@ class ContainerState(State):
     # ---------------------------------------------------------------------------------------------
 
     @Observable.observed
+    def group_states(self, state_ids, scoped_variables=None):
+        raise NotImplementedError("group_states is not implemented yet fully")
+
+        assert all([state_id in [state.state_id for state in self.states] for state_id in state_ids])
+        if scoped_variables is None:
+            scoped_variables = []
+        assert all([p_id in [sv.data_port_id for sv in self.scoped_variables] for p_id in scoped_variables])
+
+        related_transitions = {'internal': [], 'ingoing': [], 'outgoing': []}
+        related_data_flows = {'internal': [], 'ingoing': [], 'outgoing': []}
+
+        other_child_state_ids = [state.state_id for state in self.states if state.state_id not in state_ids]
+
+        # find all related transitions
+        for t, t_id in self.transitions.iteritems():
+            # check if internal of new hierarchy state
+            if t.from_state in state_ids and t.to_state in state_ids:
+                related_transitions['internal'].append(t_id)
+            elif t.to_state in state_ids:
+                related_transitions['ingoing'].append(t_id)
+            elif t.from_state in state_ids:
+                related_transitions['outgoing'].append(t_id)
+
+        # find all related data flows
+        for df, df_id in self.data_flows.iteritems():
+            # check if internal of new hierarchy state
+            if df.from_state in state_ids and df.to_state in state_ids or \
+                    df.from_state in state_ids and self.state_id == df.to_state and df.to_key in scoped_variables or \
+                    self.state_id == df.from_state and df.from_key in scoped_variables and df.to_state in state_ids:
+                related_data_flows['internal'].append(df_id)
+            elif df.to_state in state_ids or \
+                    self.state_id == df.to_state and df.to_key in scoped_variables:
+                related_data_flows['ingoing'].append(df_id)
+            elif df.from_state in state_ids or \
+                    self.state_id == df.from_state and df.from_key in scoped_variables:
+                related_data_flows['outgoing'].append(df_id)
+
+    @Observable.observed
+    def ungroup_state(self, state_id):
+        raise NotImplementedError("ungroup_state is not implemented yet")
+
+    @Observable.observed
     def add_state(self, state, storage_load=False):
         """Adds a state to the container state.
 

@@ -38,6 +38,7 @@ SHORTCUTS:
     abort: Escape
     add: <Control>A             # In graphical editor: add execution state
     add2: <Control><Shift>A     # In graphical editor: add hierarchy state
+    apply: <Control><Shift>E
     backward_step: F9
     close: <Control>W
     copy: <Control>C
@@ -67,18 +68,21 @@ SHORTCUTS:
     right:
     - <Control>Right
     - <Control><Shift>Right
+    run_to_selected: <Control><Shift>R
     save: <Control>S
     save_as: <Control><Shift>S
     show_aborted_preempted: <Control>P
     show_data_flows: <Control>D
     show_data_values: <Control>L
     start: F5
+    start_from_selected: <Control>R
     step: F4
     step_mode: F6
     stop: F8
     undo: <Control>Z
-    ungroup: <Control>U
+    ungroup: 
+    - <Control>U
+    - <Control><Shift>G
     up:
     - <Control>Up
     - <Control><Shift>Up
-    apply: <Control><Shift>E

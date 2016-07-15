@@ -22,6 +22,8 @@ from rafcon.statemachine.storage import storage
 from rafcon.statemachine.singleton import state_machine_manager, library_manager
 
 import rafcon.statemachine.singleton as core_singletons
+from rafcon.mvc.models.state import StateModel
+from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc import gui_helper
 from rafcon.mvc import singleton as mvc_singleton
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
@@ -94,7 +96,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('delete', 'activate', self.on_delete_activate)
         self.connect_button_to_function('add_state', 'activate', self.on_add_state_activate)
         self.connect_button_to_function('group_states', 'activate', self.on_add_state_activate)
-        self.connect_button_to_function('ungroup_states', 'activate', self.on_ungroup_states_activate)
+        self.connect_button_to_function('ungroup_state', 'activate', self.on_ungroup_state_activate)
         self.connect_button_to_function('undo', 'activate', self.on_undo_activate)
         self.connect_button_to_function('redo', 'activate', self.on_redo_activate)
         self.connect_button_to_function('grid', 'activate', self.on_grid_toggled)
@@ -153,9 +155,15 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('new', partial(self.call_action_callback, "on_new_activate"))
         self.add_callback_to_shortcut_manager('quit', partial(self.call_action_callback, "on_quit_activate"))
 
+        self.add_callback_to_shortcut_manager('group', partial(self.call_action_callback, "on_group_states_activate"))
+        self.add_callback_to_shortcut_manager('ungroup', partial(self.call_action_callback, "on_ungroup_state_activate"))
+
         self.add_callback_to_shortcut_manager('start', partial(self.call_action_callback, "on_start_activate"))
         self.add_callback_to_shortcut_manager('start_from_selected', partial(self.call_action_callback,
-                                                                    "on_start_from_selected_state_activate"))
+                                                                             "on_start_from_selected_state_activate"))
+        self.add_callback_to_shortcut_manager('run_to_selected', partial(self.call_action_callback,
+                                                                         "on_run_to_selected_state_activate"))
+
         self.add_callback_to_shortcut_manager('stop', partial(self.call_action_callback, "on_stop_activate"))
         self.add_callback_to_shortcut_manager('pause', partial(self.call_action_callback, "on_pause_activate"))
         self.add_callback_to_shortcut_manager('step_mode', partial(self.call_action_callback, "on_step_mode_activate"))
@@ -554,11 +562,24 @@ class MenuBarController(ExtendedController):
     def on_add_state_activate(self, widget, method=None, *arg):
         self.shortcut_manager.trigger_action("add", None, None)
 
-    def on_ungroup_states_activate(self, widget, data=None):
-        pass
-
     def on_group_states_activate(self, widget, data=None):
-        pass
+        logger.debug("try to group")
+        state_m_list = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+        logger.info(str(state_m_list))
+        if isinstance(state_m_list[0].parent, StateModel):
+            pass
+            # logger.info("do group")
+            # state_m_list[0].parent.state.group([state_m.state.state_id for state_m in state_m_list])
+
+    def on_ungroup_state_activate(self, widget, data=None):
+        logger.debug("try to ungroup")
+        state_m_list = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+        logger.info(str(state_m_list))
+        if len(state_m_list) == 1 and isinstance(state_m_list[0], ContainerStateModel) and \
+                not state_m_list[0].state.is_root_state:
+            pass
+            # logger.info("do ungroup")
+            # state_m_list[0].parent.state.ungroup(state_m_list[0].state.state_id)
 
     def on_undo_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action("undo", None, None)
@@ -630,6 +651,7 @@ class MenuBarController(ExtendedController):
         self.state_machine_execution_engine.start(self.model.selected_state_machine_id)
 
     def on_start_from_selected_state_activate(self, widget, data=None):
+        logger.debug("Run from selected state ...")
         sel = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
         state_list = sel.get_states()
         if len(state_list) is not 1:

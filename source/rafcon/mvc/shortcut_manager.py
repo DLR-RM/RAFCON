@@ -128,7 +128,7 @@ class ShortcutManager:
         :param str action: The name of the action that was triggered
         :param key_value: The key value of the shortcut that caused the trigger
         :param modifier_mask: The modifier mask of the shortcut that caused the trigger
-        :return: Whether a callbacl was triggered
+        :return: Whether a callback was triggered
         :rtype: bool
         """
         res = False
