@@ -51,21 +51,3 @@ class StateHelper(object):
         state_copy.change_state_id()
 
         return state_copy
-
-    @staticmethod
-    def reset_state_id(state, new_state_id):
-        if state.parent:
-            raise ValueError("Reset state id only valid if no parent is assigned yet.")
-        old_state_id = state._state_id
-        state._state_id = new_state_id
-        if isinstance(state, ContainerState):
-            for df in state.data_flows.itervalues():
-                if old_state_id == df.from_state:
-                    df.from_state = state.state_id
-                if old_state_id == df.to_state:
-                    df.to_state = state.state_id
-            for t in state.transitions.itervalues():
-                if old_state_id == t.from_state:
-                    t.from_state = state.state_id
-                if old_state_id == t.to_state:
-                    t.to_state = state.state_id

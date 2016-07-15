@@ -168,8 +168,8 @@ class Clipboard(Observable):
             new_state_id = state_id_generator()
 
         if not new_state_id == old_state_id:
-            logger.debug("Re-organize state_id of paste state from '{0}' to '{1}'".format(old_state_id, new_state_id))
-            StateHelper.reset_state_id(orig_state_copy, new_state_id)
+            logger.debug("Change state_id of pasted state from '{0}' to '{1}'".format(old_state_id, new_state_id))
+            orig_state_copy.change_state_id(new_state_id)
 
         target_state.add_state(orig_state_copy)
 
