@@ -148,7 +148,7 @@ class ContainerState(State):
         transitions = {elem_id: copy(elem) for elem_id, elem in self._transitions.iteritems()}
 
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, outcomes, states,
-                               transitions, data_flows, self.start_state_id, scoped_variables, None)
+                               transitions, data_flows, None, scoped_variables, None)
         state.description = deepcopy(self.description)
         return state
 
