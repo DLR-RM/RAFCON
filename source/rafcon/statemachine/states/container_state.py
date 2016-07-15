@@ -261,7 +261,8 @@ class ContainerState(State):
 
     @Observable.observed
     def group_states(self, state_ids, scoped_variables=None):
-        """ Group states and scoped varaibles into a new hierarchy state and remain internal connections.
+        """ Group states and scoped variables into a new hierarchy state and remain internal connections.
+            Interconnecting transitions and data flows to parent and other child states are removed, at the moment.
 
         :param state_ids: state_id's of all states that are to be grouped.
         :param scoped_variables: data_port_id's of all scoped variables that are to be grouped, too.
@@ -309,12 +310,12 @@ class ContainerState(State):
         [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
         from rafcon.statemachine.states.hierarchy_state import HierarchyState
         s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal)
-        # logger.info("new grouped state {}".format(s))
         return self.add_state(s)
 
     @Observable.observed
     def ungroup_state(self, state_id):
         """ Ungroup state with state id state_id into its parent and remain internal linkage in parent.
+            Interconnecting transitions and data flows to parent and other child states are removed, at the moment.
 
         :param state_id: State that is to be ungrouped.
         :return:
