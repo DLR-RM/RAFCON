@@ -21,11 +21,14 @@ from rafcon.mvc.mygaphas.utils import gap_draw_helper
 from rafcon.mvc.mygaphas.utils.enums import SnappedSide, Direction
 from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
+from rafcon.utils import log
+logger = log.get_logger(__name__)
+
 
 class PortView(object):
-    def __init__(self, in_port, port_side_size, name=None, parent=None, side=SnappedSide.RIGHT):
+    def __init__(self, in_port, name=None, parent=None, side=SnappedSide.RIGHT):
         self.handle = Handle(connectable=True)
-        self.port = RectanglePointPort(self.handle.pos, port_side_size, port_side_size)
+        self.port = RectanglePointPort(self.handle.pos, self)
         self._side = None
         self.side = side
         self._parent = parent
@@ -44,9 +47,6 @@ class PortView(object):
         self._name = name
 
         self._is_in_port = in_port
-
-        self._port_side_size = port_side_size
-        self.update_port_side_size()
 
         self.label_print_inside = True
 
@@ -67,13 +67,10 @@ class PortView(object):
 
     @property
     def port_side_size(self):
-        return self._port_side_size
-
-    @port_side_size.setter
-    def port_side_size(self, port_side_size):
-        self._port_side_size = port_side_size
-        self.port.width = port_side_size
-        self.port.height = port_side_size
+        if not self.parent:
+            logger.warn("PortView without parent: {}".format(self))
+            return 1
+        return self.parent.border_width
 
     @property
     def name(self):
@@ -168,8 +165,12 @@ class PortView(object):
         state_v = self.parent
         center = self.handle.pos
         margin = self.port_side_size / 4.
-        upper_left = center[0] - self.port_size[0] - margin, center[1] - self.port_size[1] - margin
-        lower_right = center[0] + self.port_size[0] + margin, center[1] + self.port_size[1] + margin
+        if self.side in [SnappedSide.LEFT, SnappedSide.RIGHT]:
+            height, width = self.port_size
+        else:
+            width, height = self.port_size
+        upper_left = center[0] - width / 2 - margin, center[1] - height / 2 - margin
+        lower_right = center[0] + width / 2 + margin, center[1] + height / 2 + margin
         port_upper_left = view.get_matrix_i2v(state_v).transform_point(*upper_left)
         port_lower_right = view.get_matrix_i2v(state_v).transform_point(*lower_right)
         size = port_lower_right[0] - port_upper_left[0], port_lower_right[1] - port_upper_left[1]
@@ -181,7 +182,6 @@ class PortView(object):
     def draw_port(self, context, fill_color, transparent, draw_label=True, value=None):
         c = context.cairo
         view = self._parent.canvas.get_first_view()
-        self.update_port_side_size()
         side_length = self.port_side_size
 
         direction = None
@@ -355,7 +355,8 @@ class PortView(object):
         c = context
 
         width, height = self.port_size
-        c.set_line_width(self.port_side_size * 0.03 * self._port_image_cache.multiplicator)
+        c.set_line_width(self.port_side_size / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR *
+                         self._port_image_cache.multiplicator)
 
         # Save/restore context, as we move and rotate the connector to the desired pose
         cur_point = c.get_current_point()
@@ -527,13 +528,6 @@ class PortView(object):
         elif direction is Direction.LEFT:
             context.rotate(deg2rad(-90))
 
-    def update_port_side_size(self):
-        return
-        # if self._parent:
-        #     self._port_side_size = min(self._parent.width, self._parent.height) / 20.
-        # else:
-        #     self._port_side_size = 5.
-
 
 class LogicPortView(PortView):
     """Base class for ports connecting transitions
@@ -546,18 +540,16 @@ class LogicPortView(PortView):
 
 
 class IncomeView(LogicPortView):
-    def __init__(self, parent, port_side_size):
-        super(IncomeView, self).__init__(in_port=True, port_side_size=port_side_size, parent=parent,
-                                         side=SnappedSide.LEFT)
+    def __init__(self, parent):
+        super(IncomeView, self).__init__(in_port=True, parent=parent, side=SnappedSide.LEFT)
 
     def draw(self, context, state, highlight=False):
         self.draw_port(context, gui_config.gtk_colors['LABEL'], state.transparent)
 
 
 class OutcomeView(LogicPortView):
-    def __init__(self, outcome_m, parent, port_side_size):
-        super(OutcomeView, self).__init__(in_port=False, port_side_size=port_side_size, name=outcome_m.outcome.name,
-                                          parent=parent)
+    def __init__(self, outcome_m, parent):
+        super(OutcomeView, self).__init__(in_port=False, name=outcome_m.outcome.name, parent=parent)
 
         assert isinstance(outcome_m, OutcomeModel)
         self._outcome_m = ref(outcome_m)
@@ -577,7 +569,7 @@ class OutcomeView(LogicPortView):
 
     def draw(self, context, state, highlight=False):
         if highlight:
-            fill_color = gui_config.gtk_colors['STATE_ACTIVE']
+            fill_color = gui_config.gtk_colors['STATE_ACTIVE_BORDER']
         elif self.outcome_id == -2:
             fill_color = gui_config.gtk_colors['PREEMPTED']
         elif self.outcome_id == -1:
@@ -595,8 +587,8 @@ class OutcomeView(LogicPortView):
 
 
 class ScopedVariablePortView(PortView):
-    def __init__(self, parent, port_side_size, scoped_variable_m):
-        super(ScopedVariablePortView, self).__init__(False, port_side_size, parent=parent, side=SnappedSide.TOP)
+    def __init__(self, parent, scoped_variable_m):
+        super(ScopedVariablePortView, self).__init__(False, parent=parent, side=SnappedSide.TOP)
 
         assert isinstance(scoped_variable_m, ScopedVariableModel)
         self._scoped_variable_m = ref(scoped_variable_m)
@@ -614,15 +606,12 @@ class ScopedVariablePortView(PortView):
     def name(self):
         return self.model.scoped_variable.name
 
-    @PortView.port_side_size.setter
-    def port_side_size(self, port_side_size):
-        # Methods needs to be overwritten, to prevent the change of the port size here, as the port size is
-        # calculated in the draw method, depending on the length of the port name
-        self._port_side_size = port_side_size
+    @PortView.port_size.getter
+    def port_size(self):
+        return self._last_label_size
 
     def draw(self, context, state):
         c = context.cairo
-        self.update_port_side_size()
         side_length = self.port_side_size
 
         parameters = {
@@ -654,8 +643,6 @@ class ScopedVariablePortView(PortView):
             extents = self._draw_rectangle_path(c, name_size[0], side_length, only_get_extents=True)
 
             port_size = extents[2] - extents[0], extents[3] - extents[1]
-            self.port.width = port_size[0]
-            self.port.height = port_size[1]
             self._last_label_size = port_size
             self._last_label_span = name_size[0]
 
@@ -780,10 +767,9 @@ class ScopedVariablePortView(PortView):
 
 
 class DataPortView(PortView):
-    def __init__(self, in_port, parent, port_m, side, port_side_size):
+    def __init__(self, in_port, parent, port_m, side):
         assert isinstance(port_m, DataPortModel)
-        super(DataPortView, self).__init__(in_port=in_port, port_side_size=port_side_size, name=port_m.data_port.name,
-                                           parent=parent, side=side)
+        super(DataPortView, self).__init__(in_port=in_port, name=port_m.data_port.name, parent=parent, side=side)
 
         self._port_m = ref(port_m)
         self.sort = port_m.data_port.data_port_id
@@ -811,8 +797,8 @@ class DataPortView(PortView):
 
 
 class InputPortView(DataPortView):
-    def __init__(self, parent, port_m, port_side_size):
-        super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT, port_side_size)
+    def __init__(self, parent, port_m):
+        super(InputPortView, self).__init__(True, parent, port_m, SnappedSide.LEFT)
         self.label_print_inside = False
 
     def draw(self, context, state):
@@ -823,8 +809,8 @@ class InputPortView(DataPortView):
 
 
 class OutputPortView(DataPortView):
-    def __init__(self, parent, port_m, port_side_size):
-        super(OutputPortView, self).__init__(False, parent, port_m, SnappedSide.RIGHT, port_side_size)
+    def __init__(self, parent, port_m):
+        super(OutputPortView, self).__init__(False, parent, port_m, SnappedSide.RIGHT)
         self.label_print_inside = True
 
     def draw(self, context, state):

@@ -4,10 +4,7 @@ from gaphas.connector import PointPort
 
 class RectanglePointPort(PointPort):
 
-    _width = 0
-    _height = 0
-
-    def __init__(self, point, width, height):
+    def __init__(self, point, port_v=None):
         """Rectangular port class
 
         The class inherits from PointPort. Handles connected to the port also always connected to the center of the
@@ -15,28 +12,22 @@ class RectanglePointPort(PointPort):
         from the edges of this rectangle.
 
         :param point: The center point of the rectangle
-        :param width: The width of the rectangle
-        :param height: The height of the rectangle
+        :param port_v: The port view belonging to the port
         """
         super(RectanglePointPort, self).__init__(point)
-        self.width = width
-        self.height = height
+        self.port_v = port_v
 
     @property
     def width(self):
-        return self._width
-
-    @width.setter
-    def width(self, width):
-        self._width = abs(width)
+        if not self.port_v:
+            return 1
+        return self.port_v.port_size[0]
 
     @property
     def height(self):
-        return self._height
-
-    @height.setter
-    def height(self, height):
-        self._height = abs(height)
+        if not self.port_v:
+            return 1
+        return self.port_v.port_size[1]
 
     def glue(self, pos):
         """Calculates the distance between the given position and the port

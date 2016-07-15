@@ -183,8 +183,7 @@ class StateView(Element):
 
     @property
     def border_width(self):
-        return constants.BORDER_WIDTH_ROOT_STATE / pow(constants.BORDER_WIDTH_HIERARCHY_SCALE_FACTOR,
-                                                       self.hierarchy_level - 1)
+        return min(self._get_width(), self._get_height()) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
 
     @property
     def parent(self):
@@ -277,11 +276,11 @@ class StateView(Element):
         nw = self._handles[NW].pos
 
         parameters = {
-            'hierarchy': self.hierarchy_level,
             'execution_state':  self.model.state.state_execution_status,
             'selected': self.selected,
             'moving': self.moving,
-            'border_width': self.border_width
+            'border_width': self.border_width,
+            'transparent': self._transparent
         }
 
         upper_left_corner = (nw.x.value, nw.y.value)
@@ -298,58 +297,55 @@ class StateView(Element):
             # print "draw state"
             c = self._image_cache.get_context_for_image(current_zoom)
             multiplicator = self._image_cache.multiplicator
+            default_line_width = self.border_width / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR * multiplicator
 
-            c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
             c.rectangle(nw.x, nw.y, self.width, self.height)
 
+            state_background_color = gui_config.gtk_colors['STATE_BACKGROUND']
+            state_border_color = gui_config.gtk_colors['STATE_BORDER']
+            state_border_outline_color = gui_config.gtk_colors['STATE_BORDER_OUTLINE']
+
             if self.model.state.state_execution_status == StateExecutionState.WAIT_FOR_NEXT_STATE:
-                c.set_source_color(gui_config.gtk_colors['STATE_WAITING'])
+                state_border_color = gui_config.gtk_colors['STATE_WAITING_BORDER']
+                state_border_outline_color = gui_config.gtk_colors['STATE_WAITING_BORDER_OUTLINE']
             elif self.model.state.active:
-                c.set_source_color(gui_config.gtk_colors['STATE_ACTIVE'])
+                state_border_color = gui_config.gtk_colors['STATE_ACTIVE_BORDER']
+                state_border_outline_color = gui_config.gtk_colors['STATE_ACTIVE_BORDER_OUTLINE']
             elif self.selected:
-                c.set_source_color(gui_config.gtk_colors['STATE_SELECTED'])
-            else:
-                c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_BORDER'], self._transparent))
+                state_border_color = gui_config.gtk_colors['STATE_SELECTED_BORDER']
+                state_border_outline_color = gui_config.gtk_colors['STATE_SELECTED_BORDER_OUTLINE']
+
+            c.set_source_rgba(*get_col_rgba(state_border_color, self._transparent))
             c.fill_preserve()
-            if self.model.state.active:
-                c.set_source_color(gui_config.gtk_colors['STATE_ACTIVE_BORDER'])
-                c.set_line_width(.25 / self.hierarchy_level * multiplicator)
-            elif self.selected:
-                c.set_source_color(gui_config.gtk_colors['STATE_SELECTED_OUTER_BOUNDARY'])
-                c.set_line_width(.25 / self.hierarchy_level * multiplicator)
-            else:
-                c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self._transparent))
+            # The line gets cropped at the context border, therefore the line width must be doubled
+            c.set_line_width(default_line_width * 2)
             c.stroke()
 
             inner_nw, inner_se = self.get_state_drawing_area(self)
             c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_BACKGROUND']))
+            c.set_source_rgba(*get_col_rgba(state_background_color))
             c.fill_preserve()
-            c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
-            c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self._transparent))
+            c.set_line_width(default_line_width)
             c.stroke()
 
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
-        self._income.port_side_size = self.border_width
         self._income.draw(context, self)
 
         for outcome_v in self._outcomes:
             highlight = self.model.state.active and outcome_v.outcome_m.outcome is self.model.state.final_outcome
-            outcome_v.port_side_size = self.border_width
             outcome_v.draw(context, self, highlight)
 
         for input_v in self._inputs:
-            input_v.port_side_size = self.border_width
             input_v.draw(context, self)
 
         for output_v in self._outputs:
-            output_v.port_side_size = self.border_width
             output_v.draw(context, self)
 
         for scoped_variable_v in self._scoped_variables_ports:
-            scoped_variable_v.port_side_size = self.border_width
             scoped_variable_v.draw(context, self)
 
         if isinstance(self.model, LibraryStateModel) and not self.moving:
@@ -479,7 +475,7 @@ class StateView(Element):
         raise AttributeError("Port with id '{0}' not found in state".format(port_id, self.model.state.name))
 
     def add_income(self):
-        income_v = IncomeView(self, self.border_width)
+        income_v = IncomeView(self)
         self._ports.append(income_v.port)
         self._handles.append(income_v.handle)
         self._map_handles_port_v[income_v.handle] = income_v
@@ -496,7 +492,7 @@ class StateView(Element):
         return income_v
 
     def add_outcome(self, outcome_m):
-        outcome_v = OutcomeView(outcome_m, self, self.border_width)
+        outcome_v = OutcomeView(outcome_m, self)
         self._outcomes.append(outcome_v)
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
@@ -529,7 +525,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[outcome_v])
 
     def add_input_port(self, port_m):
-        input_port_v = InputPortView(self, port_m, self.border_width)
+        input_port_v = InputPortView(self, port_m)
         self._inputs.append(input_port_v)
         self._ports.append(input_port_v.port)
         self._handles.append(input_port_v.handle)
@@ -556,7 +552,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[input_port_v])
 
     def add_output_port(self, port_m):
-        output_port_v = OutputPortView(self, port_m, self.border_width)
+        output_port_v = OutputPortView(self, port_m)
         self._outputs.append(output_port_v)
         self._ports.append(output_port_v.port)
         self._handles.append(output_port_v.handle)
@@ -583,7 +579,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
 
     def add_scoped_variable(self, scoped_variable_m):
-        scoped_variable_port_v = ScopedVariablePortView(self, self.border_width, scoped_variable_m)
+        scoped_variable_port_v = ScopedVariablePortView(self, scoped_variable_m)
         self._scoped_variables_ports.append(scoped_variable_port_v)
         self._ports.append(scoped_variable_port_v.port)
         self._handles.append(scoped_variable_port_v.handle)
