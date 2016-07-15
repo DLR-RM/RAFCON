@@ -7,7 +7,6 @@ from enum import Enum
 from gtkmvc import Observable
 from rafcon.mvc.selection import Selection
 from rafcon.mvc.models.container_state import ContainerStateModel
-from rafcon.statemachine.states.state_helper import StateHelper
 from rafcon.statemachine.id_generator import state_id_generator
 
 ClipboardType = Enum('CLIPBOARD_TYPE', 'CUT COPY')
