@@ -589,8 +589,7 @@ class ModificationsHistoryModel(ModelMT):
             # logger.debug("History BEFORE {0}".format(overview))  # \n%s \n%s \n%s" % (model, prop_name, info))
 
             # modifications of parent are not observed
-            if overview['method_name'][-1] == 'parent' or \
-                    overview['method_name'][-1] in ['group_states', 'ungroup_state']:
+            if overview['method_name'][-1] == 'parent':
                 return
 
             # increase counter and generate new action if not locked by action that is performed
@@ -636,8 +635,7 @@ class ModificationsHistoryModel(ModelMT):
                 return self._interrupt_actual_action(info)
 
             # modifications of parent are not observed
-            if overview['method_name'][-1] == 'parent' or \
-                    overview['method_name'][-1] in ['group_states', 'ungroup_state']:
+            if overview['method_name'][-1] == 'parent':
                 return
 
             # decrease counter and finish action when reaching count=0
