@@ -335,7 +335,6 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
 
     while remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
         time.sleep(0.01)
-    print "leaved"
     global_monitoring_manager.reconnect(address)
 
     # since the engine changes back to monitoring engine after connection, we need to import it again
