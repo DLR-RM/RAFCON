@@ -256,16 +256,15 @@ class GraphicalEditorController(ExtendedController):
             self.canvas.request_update(state_v, matrix=True)
 
     @ExtendedController.observe("state_machine", before=True)
-    def state_machine_change(self, model, prop_name, info):
+    def state_machine_before_change(self, model, prop_name, info):
         if 'method_name' in info and info['method_name'] == 'root_state_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
-            if method_name == 'change_state_type':
+            if method_name in ['change_state_type', 'change_root_state_type']:
                 self._change_state_type = True
-                return
 
     @ExtendedController.observe("state_machine", after=True)
-    def state_machine_change(self, model, prop_name, info):
+    def state_machine_after_change(self, model, prop_name, info):
         """Called on any change within th state machine
 
         This method is called, when any state, transition, data flow, etc. within the state machine changes. This
