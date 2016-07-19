@@ -310,11 +310,12 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     from rafcon.statemachine.enums import StateMachineExecutionStatus
     from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
     from monitoring.monitoring_execution_engine import MonitoringExecutionEngine
+    from monitoring.model.network_model import network_manager_model
 
     # test disconnect
     queue_dict[CLIENT1_QUEUE].get()
 
-    for address in client_controller.network_manager_model.connected_ip_port:
+    for address in network_manager_model.connected_ip_port:
         global_monitoring_manager.disconnect(address)
 
     # while not client_controller.network_manager_model.get_connected_status(address) == "disconnected":
@@ -339,7 +340,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
 
     # since the engine changes back to monitoring engine after connection, we need to import it again
 
-    while not client_controller.network_manager_model.get_connected_status(address) == "connected":
+    while not network_manager_model.get_connected_status(address) == "connected":
         time.sleep(0.01)
 
     import rafcon.statemachine.singleton as core_singletons
@@ -354,8 +355,8 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     # test disabled
     queue_dict[CLIENT1_QUEUE].get()
 
-    for address in client_controller.network_manager_model.connected_ip_port:
-        while not client_controller.network_manager_model.get_connected_status(address) == "disabled":
+    for address in network_manager_model.connected_ip_port:
+        while not network_manager_model.get_connected_status(address) == "disabled":
             time.sleep(0.01)
 
     # since the engine changed to local after disabling, we need to import it again
@@ -373,8 +374,8 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     queue_dict[CLIENT1_QUEUE].get()
 
     queue_dict[CLIENT1_TO_CLIENT2].put("reload your engine")
-    for address in client_controller.network_manager_model.connected_ip_port:
-        while not client_controller.network_manager_model.get_connected_status(address) == "connected":
+    for address in network_manager_model.connected_ip_port:
+        while not network_manager_model.get_connected_status(address) == "connected":
             time.sleep(0.01)
 
     queue_dict[CLIENT2_TO_CLIENT1].get()
@@ -391,11 +392,11 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     ''''''
     # apply config test
     queue_dict[CLIENT1_QUEUE].get()
-    client_controller.network_manager_model.set_config_value('CLIENT_ID', 'apply_test_client_id')
+    network_manager_model.set_config_value('CLIENT_ID', 'apply_test_client_id')
     while not client_controller.global_network_config.get_config_value('CLIENT_ID') == 'apply_test_client_id':
         time.sleep(0.01)
     global_monitoring_manager.endpoint.registered_to_server = False
-    global_monitoring_manager.reinitialize(client_controller.network_manager_model.connected_ip_port)
+    global_monitoring_manager.reinitialize(network_manager_model.connected_ip_port)
     while not global_monitoring_manager.endpoint.registered_to_server:
         time.sleep(0.01)
     # here is a function needed which ensures that the client is disconnected and reconnected again
