@@ -70,6 +70,17 @@ class ModificationsHistoryModel(ModelMT):
         self.with_debug_logs = False
         self.with_meta_data_actions = True
 
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        Unregisters itself as observer from the state machine and the root state
+        """
+        try:
+            self.relieve_model(self.state_machine_model)
+            self.relieve_model(self.state_machine_model.root_state)
+        except KeyError:  # Might happen if the observer was already unregistered
+            pass
+
     def get_state_element_meta_from_internal_tmp_storage(self, state_path):
         path_elements = state_path.split('/')
         path_elements.pop(0)

@@ -128,6 +128,21 @@ class AbstractStateModel(ModelMT):
 
     __deepcopy__ = __copy__
 
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        Recursively unregisters all observers and removes references to child models
+        """
+        try:
+            self.unregister_observer(self)
+        except KeyError:  # Might happen if the observer was already unregistered
+            pass
+        for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
+            port.prepare_destruction()
+        del self.input_data_ports[:]
+        del self.output_data_ports[:]
+        del self.outcomes[:]
+
     @property
     def parent(self):
         if not self._parent:

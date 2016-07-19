@@ -10,8 +10,8 @@
 
 from functools import partial
 
+import gtk
 from gtk.gdk import ACTION_COPY
-from gtk import DEST_DEFAULT_ALL
 from gaphas.aspect import InMotion, ItemFinder
 
 from rafcon.statemachine.enums import StateType
@@ -65,7 +65,7 @@ class GraphicalEditorController(ExtendedController):
 
         view.setup_canvas(self.canvas, self.zoom)
 
-        view.editor.drag_dest_set(DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
+        view.editor.drag_dest_set(gtk.DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -256,16 +256,15 @@ class GraphicalEditorController(ExtendedController):
             self.canvas.request_update(state_v, matrix=True)
 
     @ExtendedController.observe("state_machine", before=True)
-    def state_machine_change(self, model, prop_name, info):
+    def state_machine_before_change(self, model, prop_name, info):
         if 'method_name' in info and info['method_name'] == 'root_state_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
-            if method_name == 'change_state_type':
+            if method_name in ['change_state_type', 'change_root_state_type']:
                 self._change_state_type = True
-                return
 
     @ExtendedController.observe("state_machine", after=True)
-    def state_machine_change(self, model, prop_name, info):
+    def state_machine_after_change(self, model, prop_name, info):
         """Called on any change within th state machine
 
         This method is called, when any state, transition, data flow, etc. within the state machine changes. This
@@ -278,6 +277,12 @@ class GraphicalEditorController(ExtendedController):
 
         if 'method_name' in info and info['method_name'] == 'root_state_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
+
+            # Always update canvas and handle all events in the gtk queue before performing any changes
+            self.canvas.update_now()
+            import gtk
+            while gtk.events_pending():
+                gtk.main_iteration(False)
 
             # The method causing the change raised an exception, thus nothing was changed
             if (isinstance(result, str) and "CRASH" in result) or isinstance(result, Exception):
@@ -476,18 +481,35 @@ class GraphicalEditorController(ExtendedController):
                 logger.debug("Method '%s' not caught in GraphicalViewer" % method_name)
 
     @ExtendedController.observe("root_state", assign=True)
-    def root_state_change(self, model, prop_name, info):
+    def root_state_change(self, state_machine_m, prop_name, info):
         """Called when the root state was exchanged
 
         Exchanges the local reference to the root state and redraws.
 
-        :param rafcon.mvc.models.state_machine.StateMachineModel model: The state machine model
+        :param rafcon.mvc.models.state_machine.StateMachineModel state_machine_m: The state machine model
         :param str prop_name: The root state
         :param dict info: Information about the change
         """
-        if self.root_state_m is not model.root_state:
+        if self.root_state_m is not state_machine_m.root_state:
+            if self._change_state_type:
+                return
             logger.debug("The root state was exchanged")
-            self.root_state_m = model.root_state
+
+            # Always update canvas and handle all events in the gtk queue before performing any changes
+            self.canvas.update_now()
+            while gtk.events_pending():
+                gtk.main_iteration(False)
+
+            # Remove old root state view
+            root_state_v = self.canvas.get_root_items()[0]
+            try:
+                root_state_v.remove()
+            except KeyError:
+                pass
+
+            # Create and and new root state view from new root state model
+            self.root_state_m = state_machine_m.root_state
+            self.setup_state(self.root_state_m)
 
     @ExtendedController.observe("selection", after=True)
     def selection_change(self, model, prop_name, info):

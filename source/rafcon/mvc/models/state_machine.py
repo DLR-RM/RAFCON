@@ -110,6 +110,20 @@ class StateMachineModel(ModelMT):
             self.auto_backup.destroy()
             self.auto_backup = None
 
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        Unregisters itself as observer from the state machine and the root state
+        """
+        if global_gui_config.get_config_value('HISTORY_ENABLED'):
+            self.history.prepare_destruction()
+        try:
+            self.unregister_observer(self)
+            self.root_state.register_observer(self)
+        except KeyError:  # Might happen if the observer was already unregistered
+            pass
+        self.root_state.prepare_destruction()
+
     @ModelMT.observe("state_machine", after=True)
     def marked_dirty_flag_changed(self, model, prop_name, info):
         if info.method_name != 'marked_dirty':
@@ -204,7 +218,10 @@ class StateMachineModel(ModelMT):
             self.suppress_new_root_state_model_one_time = False
             return
         # print "ASSIGN ROOT_STATE", model, prop_name, info
-        self.root_state.unregister_observer(self)
+        try:
+            self.root_state.unregister_observer(self)
+        except KeyError:
+            pass
         if isinstance(self.state_machine.root_state, ContainerState):  # could not be a LibraryState
             self.root_state = ContainerStateModel(self.state_machine.root_state)
         else:
@@ -223,6 +240,7 @@ class StateMachineModel(ModelMT):
         # Before the root state type is actually changed, we extract the information from the old state model and remove
         # the model from the selection
         if 'before' in info:
+            state_m.unregister_observer(state_m)
             # robust check for new_state_class-argument
             if len(info.args) > 1:
                 new_state_class = info.args[1]

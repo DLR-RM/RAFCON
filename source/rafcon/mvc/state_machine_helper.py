@@ -294,18 +294,36 @@ def create_state_model_for_state(new_state, state_element_models):
 
     # insert and link original state model attributes (child-models) into/with new state model (the new parent)
     for prop_name, value in state_element_models.iteritems():
-        # look_out: all model properties get overwritten here
-        new_state_m.__setattr__(prop_name, value)
-        # Set the parent of all child models to the new state model
         if prop_name == "states":
+            # First, all automatically generated child states must be removed
+            child_state_ids = [state_id for state_id in new_state_m.states]
+            for child_state_id in child_state_ids:
+                if child_state_id != UNIQUE_DECIDER_STATE_ID:
+                    new_state_m.states[child_state_id].prepare_destruction()
+                    del new_state_m.states[child_state_id]
+
+            # Then, the old state models can be assigned
+            new_state_m.__setattr__(prop_name, value)
             for state_m in new_state_m.states.itervalues():
                 state_m.parent = new_state_m
+
             # Delete decider state model, if existing
             if UNIQUE_DECIDER_STATE_ID in new_state_m.states:
                 del new_state_m.states[UNIQUE_DECIDER_STATE_ID]
-        if prop_name in ['outcomes', 'input_data_ports', 'output_data_ports', 'data_flows', 'scoped_variables']:
+
+        elif prop_name in ['outcomes', 'input_data_ports', 'output_data_ports', 'data_flows', 'scoped_variables']:
+            # First, all automatically generated child elements must be removed
+            for model in new_state_m.__getattribute__(prop_name):
+                model.prepare_destruction()
+            del new_state_m.__getattribute__(prop_name)[:]
+
+            # Then, the old state element models can be assigned
+            new_state_m.__setattr__(prop_name, value)
             for model in new_state_m.__getattribute__(prop_name):
                 model.parent = new_state_m
+        else:
+            # Only the old meta data is left to be assigned
+            new_state_m.__setattr__(prop_name, value)
 
     # handle special case of BarrierConcurrencyState -> re-insert decider state model
     if isinstance(new_state, BarrierConcurrencyState):
