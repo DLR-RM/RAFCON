@@ -204,7 +204,10 @@ class StateMachineModel(ModelMT):
             self.suppress_new_root_state_model_one_time = False
             return
         # print "ASSIGN ROOT_STATE", model, prop_name, info
-        self.root_state.unregister_observer(self)
+        try:
+            self.root_state.unregister_observer(self)
+        except KeyError:
+            pass
         if isinstance(self.state_machine.root_state, ContainerState):  # could not be a LibraryState
             self.root_state = ContainerStateModel(self.state_machine.root_state)
         else:
@@ -223,6 +226,7 @@ class StateMachineModel(ModelMT):
         # Before the root state type is actually changed, we extract the information from the old state model and remove
         # the model from the selection
         if 'before' in info:
+            state_m.unregister_observer(state_m)
             # robust check for new_state_class-argument
             if len(info.args) > 1:
                 new_state_class = info.args[1]

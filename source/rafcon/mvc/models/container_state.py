@@ -215,6 +215,7 @@ class ContainerStateModel(StateModel):
         if info.method_name != 'change_state_type':
             return
         from rafcon.mvc import state_machine_helper
+        import rafcon.mvc.singleton as mvc_singleton
 
         old_state = info.args[1]
         new_state_class = info.args[2]
@@ -224,8 +225,8 @@ class ContainerStateModel(StateModel):
         # Before the state type is actually changed, we extract the information from the old state model and remove
         # the model from the selection
         if 'before' in info:
+            state_m.unregister_observer(state_m)
             # remove selection from StateMachineModel.selection -> find state machine model
-            import rafcon.mvc.singleton as mvc_singleton
             state_machine_m = mvc_singleton.state_machine_manager_model.get_sm_m_for_state_model(state_m)
             state_machine_m.selection.remove(state_m)
 
