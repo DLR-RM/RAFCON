@@ -438,12 +438,15 @@ class ModificationsHistoryModel(ModelMT):
                 pass
             else:
                 return
+        # TODO Refactor next two condition treatments
         if self.busy or self.actual_action is None and overview['meta_signal'][-1]['change'] == 'append_to_last_change':
             # print "BUSY", self.busy
             if self.is_gaphas_editor() and not self.busy:
                 pass
             else:
                 return
+        if overview['meta_signal'][-1]['origin'] == 'load_meta_data':
+            return
 
         if self.actual_action is None or overview['meta_signal'][-1]['change'] == 'append_to_last_change':
             # update last actions after_storage -> meta-data
