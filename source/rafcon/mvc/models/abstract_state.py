@@ -322,7 +322,7 @@ class AbstractStateModel(ModelMT):
             source_outcome_m = source_state_m.get_outcome_m(outcome_m.outcome.outcome_id)
             outcome_m.meta = deepcopy(source_outcome_m.meta)
 
-        self.meta_signal.emit(MetaSignalMsg("copy_meta_data_from_state_m", "all", True))
+        self.meta_signal.emit(MetaSignalMsg("copy_state_m", "all", True))
 
     def _parse_for_element_meta_data(self, meta_data):
         """Load meta data for state elements

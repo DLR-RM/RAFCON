@@ -117,11 +117,12 @@ class StateView(Element):
     def remove(self):
         """Remove recursively all children and then the StateView itself
         """
-        children = self.canvas.get_children(self)
+        children = self.canvas.get_children(self)[:]
         for child in children:
             if isinstance(child, StateView):
                 child.remove()
-            self.canvas.remove(child)
+            if isinstance(child, NameView):
+                self.canvas.remove(child)
         self.remove_keep_rect_within_constraint_from_parent()
         self.canvas.remove(self)
 
@@ -258,15 +259,38 @@ class StateView(Element):
     def background(self):
         self._transparent = True
 
-    def apply_meta_data(self):
-        # logger.info("apply state meta {}".format(self.model.state.get_path()))
+    def apply_meta_data(self, recursive=False):
         state_meta = self.model.meta['gui']['editor_gaphas']
-        # logger.info("rel_pos {}".format(state_meta['rel_pos']))
-        # logger.info("size {}".format(state_meta['size']))
+
         self.position = state_meta['rel_pos']
         self.width = state_meta['size'][0]
         self.height = state_meta['size'][1]
+
+        def update_port_position(port_v, meta_data):
+            if isinstance(meta_data['rel_pos'], tuple):
+                port_v.handle.pos = meta_data['rel_pos']
+                self.port_constraints[port_v].update_position(meta_data['rel_pos'])
+
+        if isinstance(state_meta['income']['rel_pos'], tuple):
+            update_port_position(self.income, state_meta['income'])
+        for outcome_v in self.outcomes:
+            update_port_position(outcome_v, outcome_v.outcome_m.meta['gui']['editor_gaphas'])
+        for data_port_v in self.inputs + self.outputs:
+            update_port_position(data_port_v, data_port_v.port_m.meta['gui']['editor_gaphas'])
+
         self.name_view.apply_meta_data()
+
+        if isinstance(self.model, ContainerStateModel):
+            for scoped_port_v in self.scoped_variables:
+                update_port_position(scoped_port_v, scoped_port_v.model.meta['gui']['editor_gaphas'])
+            for transition_m in self.model.transitions:
+                transition_v = self.canvas.get_view_for_model(transition_m)
+                transition_v.apply_meta_data()
+
+            if recursive:
+                for state_v in self.canvas.get_children(self):
+                    if isinstance(state_v, StateView):
+                        state_v.apply_meta_data(recursive=True)
 
     def draw(self, context):
         if self.moving and self.parent and self.parent.moving:

@@ -125,13 +125,6 @@ class Clipboard(Observable):
         self.clipboard_type = ClipboardType.CUT
         self.__create_core_object_copies(selection)
 
-    def copy_meta_data_of_state_model(self, orig_state_m, state_m_copy):
-        state_m_copy.copy_meta_data_from_state_m(orig_state_m)
-        state_m_copy.meta["gui"]["editor"]["rel_pos"] = [1, 1]
-        if isinstance(state_m_copy, ContainerStateModel):
-            for s_id, state_m in state_m_copy.states.iteritems():
-                self.copy_meta_data_of_state_model(state_m, orig_state_m.states[s_id])
-
     def prepare_new_copy(self):
         # in future
         # self.state_model_copies[0] = copy(self.state_model_copies[0])
@@ -176,7 +169,7 @@ class Clipboard(Observable):
         # The models can be pre-generated in threads while editing is still possible -> scales better
         new_state_copy_m = target_state_m.states[orig_state_copy.state_id]
 
-        self.copy_meta_data_of_state_model(orig_state_copy_m, new_state_copy_m)
+        new_state_copy_m.copy_meta_data_from_state_m(orig_state_copy_m)
 
         if self.clipboard_type is ClipboardType.CUT:
             # delete the original state

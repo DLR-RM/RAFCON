@@ -272,6 +272,7 @@ def load_state_recursively(parent, state_path=None):
     :return:
     """
     from rafcon.statemachine.states.state import State
+    from rafcon.statemachine.states.container_state import ContainerState
     from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
     path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA)
@@ -291,7 +292,7 @@ def load_state_recursively(parent, state_path=None):
         state_id = state_info["state_id"]
         dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id)
         # set parent of dummy state
-        if isinstance(parent, State):
+        if isinstance(parent, ContainerState):
             parent.add_state(dummy_state, storage_load=True)
         else:
             dummy_state.parent = parent
@@ -309,7 +310,7 @@ def load_state_recursively(parent, state_path=None):
 
     # set parent of state
     if parent:
-        if isinstance(parent, State):
+        if isinstance(parent, ContainerState):
             parent.add_state(state, storage_load=True)
         else:
             state.parent = parent
