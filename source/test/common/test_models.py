@@ -246,7 +246,7 @@ def create_models(*args, **kargs):
     rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
     sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
-    sm_m.history.fake = True
+    # sm_m.history.fake = True
 
     return ctr_state, sm_m, state_dict
 
@@ -766,7 +766,6 @@ def test_add_remove_models(caplog):
         storage.save_state_machine_to_path(sm_model.state_machine, path, delete_old_state_machine=True)
         sm_model.root_state.store_meta_data()
 
-    sm_history = sm_model.history
 
     state1 = HierarchyState('state1')
     input_state1 = state1.add_input_data_port("input", "str", "zero")
@@ -780,7 +779,6 @@ def test_add_remove_models(caplog):
 
     state_dict['Nested'].add_state(state1)
     state_dict['Nested'].add_state(state2)
-    sm_history.modifications.reset()
     state_dict['state1'] = state1
     state_dict['state2'] = state2
 
@@ -1070,24 +1068,17 @@ def test_state_property_modifications_history(caplog):
     output_res_state2 = state2.add_output_data_port("res", "int")
 
     state_dict['Nested'].add_state(state1)
-    assert len(sm_model.history.modifications.single_trail_history()) == 2
     state_dict['Nested'].add_state(state2)
-    assert len(sm_model.history.modifications.single_trail_history()) == 3
     output_res_nested = state_dict['Nested'].add_output_data_port("res", "int")
-    assert len(sm_model.history.modifications.single_trail_history()) == 4
 
     oc_again_state1 = state1.add_outcome("again")
-    assert len(sm_model.history.modifications.single_trail_history()) == 5
     oc_counted_state1 = state1.add_outcome("counted")
-    assert len(sm_model.history.modifications.single_trail_history()) == 6
 
     oc_done_state2 = state2.add_outcome("done")
     oc_best_state2 = state2.add_outcome("best")
     oc_full_state2 = state2.add_outcome("full")
-    assert len(sm_model.history.modifications.single_trail_history()) == 9
 
     oc_great_nested = state_dict['Nested'].add_outcome("great")
-    assert len(sm_model.history.modifications.single_trail_history()) == 10
 
     #######################################
     # Properties of State #################
@@ -1095,13 +1086,9 @@ def test_state_property_modifications_history(caplog):
 
     # name(self, name)
     state_dict['Nested'].name = 'nested'
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # parent(self, parent) State
     state_dict['Nested'].parent = state_dict['State3']
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # input_data_ports(self, input_data_ports) None or dict
     state_dict['Nested'].input_data_ports = {}
@@ -1109,8 +1096,6 @@ def test_state_property_modifications_history(caplog):
     state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
     print "CHECK INPUTS_LIST_ASSIGNMENT"
     check_state_for_all_models(state, state_m)
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # output_data_ports(self, output_data_ports) None or dict
     print "DO OUTPUTS_LIST_ASSIGNMENT"
@@ -1119,8 +1104,6 @@ def test_state_property_modifications_history(caplog):
     state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
     print "CHECK OUTPUTS_LIST_ASSIGNMENT"
     check_state_for_all_models(state, state_m)
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # outcomes(self, outcomes) None or dict
     print "DO OUTCOMES_LIST_ASSIGNMENT"
@@ -1129,43 +1112,24 @@ def test_state_property_modifications_history(caplog):
     state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
     print "CHECK OUTCOMES_LIST_ASSIGNMENT"
     check_state_for_all_models(state, state_m)
-    sm_model.history.undo()
-    sm_model.history.redo()
+
     state_dict['Nested'].outcomes = {}
     state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
     state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
     check_state_for_all_models(state, state_m)
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # script(self, script) Script
     state_dict['Nested2'].script = Script(parent=state_dict['Nested2'])
     state_dict['Nested2'].script = Script(parent=state_dict['Nested2'])
-    sm_model.history.undo()
-    sm_model.history.redo()
-
-    # state_type(self, state_type) StateType
-    state_dict['Nested'].state_type = StateType.PREEMPTION_CONCURRENCY
-    sm_model.history.undo()
-    sm_model.history.redo()
-    state_dict['Nested'].state_type = StateType.HIERARCHY
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # description(self, description) str
     state_dict['Nested'].description = "awesome"
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # # active(self, active) bool
     # state_dict['Nested'].active = True
-    # sm_model.history.undo()
-    # sm_model.history.redo()
 
     # # child_execution(self, child_execution) bool
     # state_dict['Nested'].child_execution = True
-    # sm_model.history.undo()
-    # sm_model.history.redo()
     # TODO introduce state.execution_status and so on
 
     ############################################
@@ -1175,13 +1139,9 @@ def test_state_property_modifications_history(caplog):
     # set_start_state(self, state) State or state_id
     state1_m = sm_model.get_state_model_by_path(state1.get_path())
     state_dict['Nested'].set_start_state(state1_m.state.state_id)
-    sm_model.history.undo()
-    sm_model.history.redo()
     # set_start_state(self, start_state)
     state2_m = sm_model.get_state_model_by_path(state2.get_path())
     state_dict['Nested'].set_start_state(state2_m.state)
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # states(self, states) None or dict
     state_dict['Nested'].states = {}
@@ -1194,32 +1154,24 @@ def test_state_property_modifications_history(caplog):
     state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
     state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
     check_state_for_all_models(state, state_m)
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # transitions(self, transitions) None or dict
     state_dict['Nested'].transitions = {}
     state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
     state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
     check_state_for_all_models(state, state_m)
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # data_flows(self, data_flows) None or dict
     state_dict['Nested'].data_flows = {}
     state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
     state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
     check_state_for_all_models(state, state_m)
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # scoped_variables(self, scoped_variables) None or dict
     state_dict['Nested'].scoped_variables = {}
     state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
     state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
     check_state_for_all_models(state, state_m)
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
@@ -1241,8 +1193,6 @@ def test_outcome_property_modifications_history(caplog):
         for outcome_id, outcome in state_dict['Nested2'].outcomes.iteritems():
             if not outcome_id < 0:
                 outcome.name = "new_name_" + str(outcome_id)
-                sm_model.history.undo()
-                sm_model.history.redo()
                 # resolve reference
                 state_dict['Nested2'] = sm_model.get_state_model_by_path(state_dict['Nested2'].get_path()).state
 
@@ -1255,16 +1205,12 @@ def test_outcome_property_modifications_history(caplog):
         outcome_models_observer_dict = {}
         for outcome_id, outcome in state_dict['Nested'].outcomes.iteritems():
             outcome.name = "new_name_" + str(outcome_id)
-            sm_model.history.undo()
-            sm_model.history.redo()
             # resolve reference
             state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
         # outcome_id(self, outcome_id) -> no data_fow_id setter anymore
         # state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
         # state_dict['Nested'].outcomes.values()[0].outcome_id += 10
-        # sm_model.history.undo()
-        # sm_model.history.redo()
 
     # do_check_for_state(state_dict, history_ctrl, state_name='Nested')
     do_check_for_state(state_dict, state_name='Container')
@@ -1316,30 +1262,20 @@ def test_transition_property_modifications_history(caplog):
     # modify_origin(self, from_state, from_outcome)
     state_dict['Nested'].transitions[new_trans_id].modify_origin(from_state=state2.state_id,
                                                                  from_outcome=oc_full_state2)
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # from_outcome(self, from_outcome)
     state_dict['Nested'].transitions[new_trans_id].from_outcome = oc_done_state2
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # to_state(self, to_state)
     state_dict['Nested'].transitions[new_trans_id].to_state = state2.state_id
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # to_outcome(self, to_outcome)
     # Invalid change of outcome! to_outcome must be None as transition goes to child state
     # state_dict['Nested'].transitions[new_trans_id].to_outcome = oc_great_nested
-    # sm_model.history.undo()
-    # sm_model.history.redo()
 
     # transition_id(self, transition_id) -> no transition_id setter anymore
     # state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
     # state_dict['Nested'].transitions[new_trans_id].transition_id += 1
-    # sm_model.history.undo()
-    # sm_model.history.redo()
 
     # reset observer and testbed
     state_dict['Nested'].remove_transition(new_trans_id)
@@ -1347,34 +1283,25 @@ def test_transition_property_modifications_history(caplog):
                                                     from_outcome=outcome_again_state1,
                                                     to_state_id=state1.state_id,
                                                     to_outcome=None)
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     ##### modify from parent state #######
     # modify_transition_from_state(self, transition_id, from_state, from_outcome)
     # state_dict['Nested'].modify_transition_from_state(new_df_id, from_state=state2.state_id,
     #                                                   from_outcome=oc_full_state2)
     state_dict['Nested'].transitions[new_df_id].modify_origin(state2.state_id, oc_full_state2)
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     # modify_transition_from_outcome(self, transition_id, from_outcome)
     # state_dict['Nested'].modify_transition_from_outcome(new_df_id, from_outcome=oc_done_state2)
     state_dict['Nested'].transitions[new_df_id].from_outcome = oc_done_state2
-    sm_model.history.undo()
-    sm_model.history.redo()
-
-    # modify_transition_to_outcome(self, transition_id, to_outcome)
-    # Invalid target: to_outcome must be None as transition goes to child state
-    # state_dict['Nested'].modify_transition_to_outcome(new_df_id, to_outcome=oc_great_nested)
-    # sm_model.history.undo()
-    # sm_model.history.redo()
 
     # modify_transition_to_state(self, transition_id, to_state, to_outcome)
     # state_dict['Nested'].modify_transition_to_state(new_df_id, to_state=state1.state_id)
     state_dict['Nested'].transitions[new_df_id].to_state = state1.state_id
-    sm_model.history.undo()
-    sm_model.history.redo()
+
+    # modify_transition_to_outcome(self, transition_id, to_outcome)
+    state_dict['Nested'].transitions[new_df_id].modify_target(to_state=state_dict['Nested'].state_id,
+                                                              to_outcome=0)
+    state_dict['Nested'].transitions[new_df_id].to_outcome = oc_great_nested
 
     sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
@@ -1395,33 +1322,23 @@ def test_input_port_modify_notification(caplog):
     # create testbed
     [state, sm_model, state_dict] = create_models()
     new_input_data_port_id = state_dict['Nested2'].add_input_data_port(name='new_input', data_type='str')
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     ################################
     # check for modification of name
     state_dict['Nested2'].input_data_ports[new_input_data_port_id].name = 'changed_new_input_name'
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     #####################################
     # check for modification of data_type
     state_dict['Nested2'].input_data_ports[new_input_data_port_id].data_type = 'int'
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     #########################################
     # check for modification of default_value
     state_dict['Nested2'].input_data_ports[new_input_data_port_id].default_value = 5
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     ###########################################
     # check for modification of change_datatype
     state_dict['Nested2'].input_data_ports[new_input_data_port_id].change_data_type(data_type='str',
                                                                                     default_value='awesome_tool')
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
@@ -1447,27 +1364,19 @@ def test_output_port_modify_notification(caplog):
     ################################
     # check for modification of name
     state_dict['Nested2'].output_data_ports[new_output_data_port_id].name = 'changed_new_output_name'
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     #####################################
     # check for modification of data_type
     state_dict['Nested2'].output_data_ports[new_output_data_port_id].data_type = 'int'
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     #########################################
     # check for modification of default_value
     state_dict['Nested2'].output_data_ports[new_output_data_port_id].default_value = 5
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     ###########################################
     # check for modification of change_datatype
     state_dict['Nested2'].output_data_ports[new_output_data_port_id].change_data_type(data_type='str',
                                                                                       default_value='awesome_tool')
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
@@ -1492,24 +1401,18 @@ def test_scoped_variable_modify_notification(caplog):
     ################################
     # check for modification of name
     state_dict['Nested'].scoped_variables[new_scoped_variable_id].name = 'changed_new_scoped_var_name'
-    sm_model.history.undo()
-    sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     #####################################
     # check for modification of data_type
     state_dict['Nested'].scoped_variables[new_scoped_variable_id].data_type = 'int'
-    sm_model.history.undo()
-    sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     #########################################
     # check for modification of default_value
     state_dict['Nested'].scoped_variables[new_scoped_variable_id].default_value = 5
-    sm_model.history.undo()
-    sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
@@ -1517,8 +1420,6 @@ def test_scoped_variable_modify_notification(caplog):
     # check for modification of change_datatype
     state_dict['Nested'].scoped_variables[new_scoped_variable_id].change_data_type(data_type='str',
                                                                                    default_value='awesome_tool')
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
@@ -1569,36 +1470,26 @@ def test_data_flow_property_modifications_history(caplog):
     ##### modify from data_flow #######
     # modify_origin(self, from_state, from_key)
     state_dict['Nested'].data_flows[new_df_id].modify_origin(from_state=state1.state_id, from_key=output_state1)
-    sm_model.history.undo()
-    sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     # from_key(self, from_key)
     state_dict['Nested'].data_flows[new_df_id].from_key = output_count_state1
-    sm_model.history.undo()
-    sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     # modify_target(self, to_state, to_key)
     state_dict['Nested'].data_flows[new_df_id].modify_target(to_state=state2.state_id, to_key=input_par_state2)
-    sm_model.history.undo()
-    sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     # to_key(self, to_key)
     state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
-    sm_model.history.undo()
-    sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     # data_flow_id(self, data_flow_id)  -> no data_fow_id setter anymore
     # state_dict['Nested'].data_flows[new_df_id].data_flow_id += 1
-    # sm_model.history.undo()
-    # #sm_model.history.redo()
     #
     # # resolve reference
     # state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
@@ -1606,15 +1497,11 @@ def test_data_flow_property_modifications_history(caplog):
 
     # reset observer and testbed
     state_dict['Nested'].remove_data_flow(new_df_id)
-    sm_model.history.undo()
-    sm_model.history.redo()
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
     new_df_id = state_dict['Nested'].add_data_flow(from_state_id=state2.state_id,
                                                    from_data_port_id=output_res_state2,
                                                    to_state_id=state_dict['Nested'].state_id,
                                                    to_data_port_id=output_res_nested)
-    sm_model.history.undo()
-    sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
@@ -1622,32 +1509,24 @@ def test_data_flow_property_modifications_history(caplog):
     # modify_data_flow_from_state(self, data_flow_id, from_state, from_key)
     # state_dict['Nested'].modify_data_flow_from_state(new_df_id, from_state=state1.state_id, from_key=output_state1)
     state_dict['Nested'].data_flows[new_df_id].modify_origin(state1.state_id, output_state1)
-    sm_model.history.undo()
-    sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     # modify_data_flow_from_key(self, data_flow_id, from_key)
     # state_dict['Nested'].modify_data_flow_from_key(new_df_id, from_key=output_count_state1)
     state_dict['Nested'].data_flows[new_df_id].from_key = output_count_state1
-    sm_model.history.undo()
-    sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     # modify_data_flow_to_state(self, data_flow_id, to_state, to_key)
     # state_dict['Nested'].modify_data_flow_to_state(new_df_id, to_state=state2.state_id, to_key=input_par_state2)
     state_dict['Nested'].data_flows[new_df_id].modify_target(state2.state_id, input_par_state2)
-    sm_model.history.undo()
-    sm_model.history.redo()
     # resolve reference
     state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
 
     # modify_data_flow_to_key(self, data_flow_id, to_key)
     # state_dict['Nested'].modify_data_flow_to_key(new_df_id, to_key=input_number_state2)
     state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
-    sm_model.history.undo()
-    sm_model.history.redo()
 
     sm_model.destroy()
     testing_utils.assert_logger_warnings_and_errors(caplog)
