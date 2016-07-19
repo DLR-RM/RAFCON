@@ -693,8 +693,11 @@ class StateView(Element):
                 port_v.handle.pos = new_rel_pos
 
             name_v = state.name_view
-            name_v.width *= width_factor
-            name_v.height *= height_factor
+            # use the meta data, as it might not have been applied yet (e. g. after a paste operation)
+            old_size = name_v.parent.model.meta['gui']['editor_gaphas']['name']['size']
+            name_v.width = old_size[0] * width_factor
+            name_v.height = old_size[1] * height_factor
+            name_v.parent.model.meta['gui']['editor_gaphas']['name']['size'] = (name_v.width, name_v.height)
 
             if isinstance(state.model, ContainerStateModel):
                 for transition_v in state.get_transitions():
