@@ -110,6 +110,20 @@ class StateMachineModel(ModelMT):
             self.auto_backup.destroy()
             self.auto_backup = None
 
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        Unregisters itself as observer from the state machine and the root state
+        """
+        if global_gui_config.get_config_value('HISTORY_ENABLED'):
+            self.history.prepare_destruction()
+        try:
+            self.unregister_observer(self)
+            self.root_state.register_observer(self)
+        except KeyError:  # Might happen if the observer was already unregistered
+            pass
+        self.root_state.prepare_destruction()
+
     @ModelMT.observe("state_machine", after=True)
     def marked_dirty_flag_changed(self, model, prop_name, info):
         if info.method_name != 'marked_dirty':

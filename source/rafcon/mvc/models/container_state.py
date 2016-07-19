@@ -86,6 +86,24 @@ class ContainerStateModel(StateModel):
         else:
             return False
 
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        Recursively unregisters all observers and removes references to child models. Extends the destroy method of
+        the base class by child elements of a container state.
+        """
+        super(ContainerStateModel, self).prepare_destruction()
+        for scoped_variable in self.scoped_variables:
+            scoped_variable.prepare_destruction()
+        del self.scoped_variables[:]
+        for connection in self.transitions[:] + self.data_flows[:]:
+            connection.prepare_destruction()
+        del self.transitions[:]
+        del self.data_flows[:]
+        for state in self.states.itervalues():
+            state.prepare_destruction()
+        self.states.clear()
+
     @ModelMT.observe("state", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         """This method notifies the model lists and the parent state about changes
