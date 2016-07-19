@@ -115,7 +115,7 @@ class StateMachineModel(ModelMT):
 
         Unregisters itself as observer from the state machine and the root state
         """
-        if global_gui_config.get_config_value('HISTORY_ENABLED'):
+        if hasattr(self, "history") and self.history:
             self.history.prepare_destruction()
         try:
             self.unregister_observer(self)
