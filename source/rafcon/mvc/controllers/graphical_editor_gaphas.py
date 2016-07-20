@@ -172,8 +172,12 @@ class GraphicalEditorController(ExtendedController):
         if self.view.editor.is_focus():
             logger.debug("Paste")
 
-            current_selection = self.model.selection
+            # Always update canvas and handle all events in the gtk queue before performing any changes
+            self.canvas.update_now()
+            while gtk.events_pending():
+                gtk.main_iteration(False)
 
+            current_selection = self.model.selection
             if len(current_selection) != 1 or len(current_selection.get_states()) < 1:
                 logger.error("Please select a single state for pasting the clipboard")
                 return
@@ -209,6 +213,7 @@ class GraphicalEditorController(ExtendedController):
             new_state_v = self.canvas.get_view_for_model(state_copy_m)
             new_state_v.width = new_size[0]
             new_state_v.height = new_size[1]
+            state_copy_m.meta['gui']['editor_gaphas']['size'] = (new_state_v.width, new_state_v.height)
 
             new_state_v.resize_all_children(old_size, True)
 
@@ -249,18 +254,20 @@ class GraphicalEditorController(ExtendedController):
         meta_signal_message = info['arg']
         if meta_signal_message.origin == "graphical_editor_gaphas":  # Ignore changes caused by ourself
             return
+        if meta_signal_message.origin == "load_meta_data":  # Meta data can't be applied, as the view has not yet
+            return                                          # been created
         notification = meta_signal_message.notification
         if not notification:    # For changes applied to the root state, there are always two notifications
             return              # Ignore the one with less information
         state_m = notification.model
-
         state_v = self.canvas.get_view_for_model(state_m)
-        # TODO: This check should be removed in the future
-        if state_v:
-            state_v.apply_meta_data(recursive=meta_signal_message.affects_children)
-            self.canvas.request_update(state_v, matrix=True)
-        else:
-            logger.info("Meta data operation on state model without view: {}".format(state_m))
+
+        # Always update canvas and handle all events in the gtk queue before performing any changes
+        self.canvas.update_now()
+        while gtk.events_pending():
+            gtk.main_iteration(False)
+        state_v.apply_meta_data(recursive=meta_signal_message.affects_children)
+        self.canvas.request_update(state_v, matrix=True)
 
     def manual_notify_after(self, state_m):
         state_v = self.canvas.get_view_for_model(state_m)
@@ -298,7 +305,6 @@ class GraphicalEditorController(ExtendedController):
 
             # Always update canvas and handle all events in the gtk queue before performing any changes
             self.canvas.update_now()
-            import gtk
             while gtk.events_pending():
                 gtk.main_iteration(False)
 
@@ -720,6 +726,7 @@ class GraphicalEditorController(ExtendedController):
         children = self.canvas.get_children(parent_state_v)
         for child in list(children):
             if transitions and isinstance(child, TransitionView) and child.model not in available_connections:
+                child.remove_all_waypoints()
                 child.remove_connection_from_ports()
                 self.canvas.remove(child)
             elif not transitions and isinstance(child, DataFlowView) and child.model not in available_connections:

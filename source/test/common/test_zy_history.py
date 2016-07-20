@@ -1319,7 +1319,7 @@ def trigger_state_type_change_tests(*args):
     save_state_machine(sm_model, state_machine_path + '_after1', logger, with_gui, menubar_ctrl)
 
     assert len(sm_model.history.modifications.single_trail_history()) == 2
-    logger.info("BCS -> HS")
+    logger.info("BCS -> HS (undo)")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
     else:
@@ -1336,7 +1336,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
-    logger.info("HS -> BCS")
+    logger.info("HS -> BCS (redo)")
     if with_gui:
         call_gui_callback(sm_model.history.redo)
     else:
@@ -1356,7 +1356,7 @@ def trigger_state_type_change_tests(*args):
     # BCS -> HS
     save_state_machine(sm_model, state_machine_path + '_before2', logger, with_gui, menubar_ctrl)
     sm_model.state_machine.file_system_path = state_machine_path
-    logger.info("BCS -> HS")
+    logger.info("BCS -> HS 2")
     if with_gui:
         # do state_type_change with gui
         # - get state-editor controller and find right row in combo box
@@ -1384,7 +1384,7 @@ def trigger_state_type_change_tests(*args):
     save_state_machine(sm_model, state_machine_path + '_after2', logger, with_gui, menubar_ctrl)
 
     assert len(sm_model.history.modifications.single_trail_history()) == 3
-    logger.info("HS -> BCS")
+    logger.info("HS -> BCS 2 (undo)")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
     else:
@@ -1397,7 +1397,7 @@ def trigger_state_type_change_tests(*args):
 
     save_state_machine(sm_model, state_machine_path + '_undo2', logger, with_gui, menubar_ctrl)
 
-    logger.info("BCS -> HS")
+    logger.info("BCS -> HS 2 (redo)")
     if with_gui:
         call_gui_callback(sm_model.history.redo)
     else:
@@ -1542,7 +1542,7 @@ def trigger_state_type_change_tests(*args):
         check_state_editor_models(sm_m, state_m, main_window_controller, logger)
 
     # HS -> BCS
-    logger.info("HS -> BCS")
+    logger.info("HS -> BCS root")
     if with_gui:
         # do state_type_change with gui
         # - do state selection to generate state editor widget
@@ -1565,8 +1565,11 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
 
+    # import time
+    # time.sleep(100)
+
     assert len(sm_model.history.modifications.single_trail_history()) == 6
-    logger.info("BCS -> HS")
+    logger.info("BCS -> HS root (undo)")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
     else:
@@ -1579,7 +1582,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
-    logger.info("HS -> BCS")
+    logger.info("HS -> BCS root (redo)")
     if with_gui:
         call_gui_callback(sm_model.history.redo)
     else:
@@ -1595,7 +1598,7 @@ def trigger_state_type_change_tests(*args):
 
     # BCS -> HS
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
-    logger.info("BCS -> HS")
+    logger.info("BCS -> HS root 2")
     if with_gui:
         # do state_type_change with gui
         # - do state selection to generate state editor widget
@@ -1616,7 +1619,7 @@ def trigger_state_type_change_tests(*args):
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
 
     assert len(sm_model.history.modifications.single_trail_history()) == 7
-    logger.info("HS -> BCS")
+    logger.info("HS -> BCS root 2 (undo)")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
     else:
@@ -1629,7 +1632,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
-    logger.info("BCS -> HS")
+    logger.info("BCS -> HS root 2 (redo)")
     if with_gui:
         call_gui_callback(sm_model.history.redo)
     else:

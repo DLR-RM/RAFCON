@@ -659,73 +659,63 @@ class StateView(Element):
         return pos
 
     def resize_all_children(self, old_size, paste=False):
-        from rafcon.mvc.mygaphas.utils import gap_helper
-        new_size = (self.width, self.height)
-        canvas = self.canvas
+        def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
+            new_rel_pos_x = old_rel_pos[0] * new_parent_size[0] / old_parent_size[0]
+            new_rel_pos_y = old_rel_pos[1] * new_parent_size[1] / old_parent_size[1]
+            return new_rel_pos_x, new_rel_pos_y
 
-        def resize_child(state, old_size, new_size, paste):
-            def calc_abs_pos(item, pos):
-                projection = canvas.project(item, pos)
-                return projection[0].value, projection[1].value
+        def set_item_properties(item, item_meta, size, rel_pos):
+            item.width = size[0]
+            item.height = size[1]
+            item.position = rel_pos
+            item_meta['size'] = size
+            item_meta['re_pos'] = rel_pos
 
-            def handle_set_rel_pos(item, handle_pos, new_pos, parent_abs_pos, old_size=None):
-                projection = canvas.project(item, handle_pos)
-                projection[0].value = parent_abs_pos[0] + new_pos[0]
-                projection[1].value = parent_abs_pos[1] + new_pos[1]
-                if isinstance(item, StateView) and old_size:
-                    item.handles()[SE].pos.x = item.handles()[NW].pos.x + old_size[0]
-                    item.handles()[SE].pos.y = item.handles()[NW].pos.y + old_size[1]
+        def resize_state_v(state_v, old_state_size, new_state_size, use_meta_data):
+            width_factor = float(new_state_size[0]) / old_state_size[0]
+            height_factor = float(new_state_size[1]) / old_state_size[1]
 
-            state_abs_pos = calc_abs_pos(state, state.handles()[NW].pos)
+            # Set new state view properties
+            old_state_rel_pos = state_v.position
+            new_state_rel_pos = calc_new_rel_pos(old_state_rel_pos, old_state_size, new_state_size)
+            set_item_properties(state_v, state_v.model.meta['gui']['editor_gaphas'], new_state_size, new_state_rel_pos)
 
-            width_factor = float(new_size[0]) / old_size[0]
-            height_factor = float(new_size[1]) / old_size[1]
+            # Set new name view properties
+            name_v = state_v.name_view
+            if use_meta_data:
+                old_name_size = state_v.model.meta['gui']['editor_gaphas']['name']['size']
+            else:
+                old_name_size = (name_v.width, name_v.height)
+            new_name_size = (old_name_size[0] * width_factor, old_name_size[1] * height_factor)
+            old_name_rel_pos = state_v.model.meta['gui']['editor_gaphas']['name']['rel_pos']
+            new_name_rel_pos = calc_new_rel_pos(old_name_rel_pos, old_state_size, new_state_size)
+            set_item_properties(name_v, state_v.model.meta['gui']['editor_gaphas'], new_name_size, new_name_rel_pos)
 
-            def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
-                old_rel_pos_x_rel = old_rel_pos[0] / old_parent_size[0]
-                old_rel_pos_y_rel = old_rel_pos[1] / old_parent_size[1]
-                new_rel_pos_x = new_parent_size[0] * old_rel_pos_x_rel
-                new_rel_pos_y = new_parent_size[1] * old_rel_pos_y_rel
-                return new_rel_pos_x, new_rel_pos_y
+            # Set new port view properties
+            for port_v in state_v.get_all_ports():
+                new_port_rel_pos = calc_new_rel_pos(port_v.handle.pos, old_state_size, new_state_size)
+                port_v.handle.pos = new_port_rel_pos
 
-            for port_v in state.get_all_ports():
-                new_rel_pos = calc_new_rel_pos(port_v.handle.pos, old_size, new_size)
-                port_v.handle.pos = new_rel_pos
-
-            name_v = state.name_view
-            name_v.width *= width_factor
-            name_v.height *= height_factor
-
-            if isinstance(state.model, ContainerStateModel):
-                for transition_v in state.get_transitions():
+            if isinstance(state_v.model, ContainerStateModel):
+                for transition_v in state_v.get_transitions():
                     for waypoint in transition_v.waypoints:
-                        old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, transition_v, waypoint)
-                        new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
-                        handle_set_rel_pos(transition_v, waypoint.pos, new_rel_pos, state_abs_pos)
+                        old_rel_pos = self.canvas.get_matrix_i2i(transition_v, transition_v.parent).transform_point(
+                            *waypoint.pos)
+                        new_rel_pos = calc_new_rel_pos(old_rel_pos, old_state_size, new_state_size)
+                        waypoint.pos = self.canvas.get_matrix_i2i(transition_v.parent, transition_v).transform_point(
+                            *new_rel_pos)
 
-                for child_state_v in state.child_state_views():
-                    if not paste:
-                        old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, child_state_v, child_state_v.handles()[NW])
-                        new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
-                        handle_set_rel_pos(child_state_v, child_state_v.handles()[NW].pos, new_rel_pos, state_abs_pos,
-                                           (child_state_v.width, child_state_v.height))
-
-                        old_size = (child_state_v.width, child_state_v.height)
+                for child_state_v in state_v.child_state_views():
+                    if use_meta_data:
+                        old_child_size = child_state_v.model.meta['gui']['editor_gaphas']['size']
                     else:
-                        meta_rel_pos = child_state_v.model.meta['gui']['editor_gaphas']['rel_pos']
-                        new_rel_pos = calc_new_rel_pos(meta_rel_pos, old_size, new_size)
+                        old_child_size = (child_state_v.width, child_state_v.height)
 
-                        child_state_v.matrix.translate(*new_rel_pos)
+                    new_child_size = (old_child_size[0] * width_factor, old_child_size[1] * height_factor)
+                    resize_state_v(child_state_v, old_child_size, new_child_size, use_meta_data)
 
-                        old_size = child_state_v.model.meta['gui']['editor_gaphas']['size']
-
-                    new_size = (old_size[0] * width_factor, old_size[1] * height_factor)
-                    child_state_v.width = new_size[0]
-                    child_state_v.height = new_size[1]
-
-                    resize_child(child_state_v, old_size, new_size, paste)
-
-        resize_child(self, old_size, new_size, paste)
+        new_size = (self.width, self.height)
+        resize_state_v(self, old_size, new_size, paste)
 
 
 class NameView(Element):

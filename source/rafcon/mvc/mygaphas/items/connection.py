@@ -89,14 +89,11 @@ class TransitionView(ConnectionView):
 
     def apply_meta_data(self):
         # 1st remove all waypoints
-        waypoints = self.waypoints
-        for waypoint in waypoints:
-            self._handles.remove(waypoint)
-            self._update_ports()
+        self.remove_all_waypoints()
 
         # 2nd recreate all waypoints from meta data
-        for waypoint in self.model.meta['gui']['editor_gaphas']['waypoints']:
-            self.add_waypoint(waypoint)
+        for waypoint_pos in self.model.meta['gui']['editor_gaphas']['waypoints']:
+            self.add_waypoint(waypoint_pos)
 
 
 class DataFlowView(ConnectionView):

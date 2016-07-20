@@ -71,17 +71,42 @@ class KeepRectangleWithinConstraint(Constraint):
             _update(self.child_nw[1], self.child_se[1].value - child_height)
 
 
-class KeepPointWithinConstraint(KeepRectangleWithinConstraint):
-    """Ensure that the children is within its parent
+class KeepPointWithinConstraint(Constraint):
+    """Ensure that the point is within its parent
 
     Attributes:
      - parent_nw: NW coordinates of parent
      - parent_se: SE coordinates of parent
-     - child_pos: coordinates of child
+     - child: coordinates of child
     """
 
-    def __init__(self, parent_nw, parent_se, child_pos, margin=None):
-        super(KeepPointWithinConstraint, self).__init__(parent_nw, parent_se, child_pos, child_pos)
+    def __init__(self, parent_nw, parent_se, child, margin=None):
+        super(KeepPointWithinConstraint, self).__init__(parent_nw[0], parent_nw[1], parent_se[0], parent_se[1],
+                                                        child[0], child[1])
+        self.parent_nw = parent_nw
+        self.parent_se = parent_se
+        self.child = child
+
+        self.margin = margin
+        min_margin = 0  # (parent_se[0].value - parent_nw[0].value) / 1000.
+        if margin is None or margin < min_margin:
+            self.margin = min_margin
+
+    def solve_for(self, var=None):
+        """
+        Ensure that the children is within its parent
+        """
+        if self.parent_nw[0].value > self.child[0].value - self.margin:
+            _update(self.child[0], self.parent_nw[0].value + self.margin)
+        # Right edge (east)
+        if self.parent_se[0].value < self.child[0].value + self.margin:
+            _update(self.child[0], self.parent_se[0].value - self.margin)
+        # Upper edge (north)
+        if self.parent_nw[1].value > self.child[1].value - self.margin:
+            _update(self.child[1], self.parent_nw[1].value + self.margin)
+        # Lower edge (south)
+        if self.parent_se[1].value < self.child[1].value + self.margin:
+            _update(self.child[1], self.parent_se[1].value - self.margin)
 
 
 class KeepRelativePositionConstraint(Constraint):
