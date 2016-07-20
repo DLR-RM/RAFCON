@@ -177,17 +177,17 @@ def trigger_gui_signals(*args):
     wait_for_gui()
 
     #########################################################
-    # select & copy an execution state -> and paste it somewhere
+    print "select & copy an execution state -> and paste it somewhere"
     select_and_paste_state(sm_m, sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ'), sm_m.get_state_model_by_path(
         'CDMJPK/RMKGEW'), menubar_ctrl, 'copy', main_window_controller, page)
 
     ###########################################################
-    # select & copy a hierarchy state -> and paste it some where
+    print "select & copy a hierarchy state -> and paste it some where"
     select_and_paste_state(sm_m, sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY'),
                            sm_m.get_state_model_by_path('CDMJPK'), menubar_ctrl, 'copy', main_window_controller, page)
 
     ##########################################################
-    # select a library state -> and paste it some where WITH CUT !!!
+    print "select a library state -> and paste it some where WITH CUT !!!"
     state_m, old_child_state_count = select_and_paste_state(sm_m,
                                                             sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY'),
                                                             sm_m.get_state_model_by_path('CDMJPK'), menubar_ctrl, 'cut',
@@ -207,9 +207,10 @@ def trigger_gui_signals(*args):
     state_m_to_copy = sm_m.get_state_model_by_path('CDMJPK/' + new_template_state.state_id)
 
     ##########################################################
-    # copy & paste complex state into itself
+    print "copy & paste complex state into itself"
+
     copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menubar_ctrl)
-    # increase complexity by doing it twice -> increase the hierarchy-level
+    print "increase complexity by doing it twice -> increase the hierarchy-level"
     copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menubar_ctrl)
 
     ##########################################################
