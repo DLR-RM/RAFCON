@@ -726,6 +726,7 @@ class GraphicalEditorController(ExtendedController):
         children = self.canvas.get_children(parent_state_v)
         for child in list(children):
             if transitions and isinstance(child, TransitionView) and child.model not in available_connections:
+                child.remove_all_waypoints()
                 child.remove_connection_from_ports()
                 self.canvas.remove(child)
             elif not transitions and isinstance(child, DataFlowView) and child.model not in available_connections:
