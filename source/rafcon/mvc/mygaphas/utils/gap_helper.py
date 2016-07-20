@@ -34,12 +34,7 @@ def calc_rel_pos_to_parent(canvas, item, handle):
     from gaphas.item import NW
 
     if isinstance(item, ConnectionView):
-        state_v = canvas.get_parent(item)
-        abs_pos_handle = canvas.project(state_v, handle.pos)
-        abs_pos_state = canvas.project(state_v, state_v.handles()[NW].pos)
-        rel_x = abs_pos_handle[0].value - abs_pos_state[0].value
-        rel_y = abs_pos_handle[1].value - abs_pos_state[1].value
-        return rel_x, rel_y
+        return item.canvas.get_matrix_i2i(item, item.parent).transform_point(*handle.pos)
 
     parent = canvas.get_parent(item)
     if parent:
@@ -255,7 +250,7 @@ def add_transition_to_state(from_port, to_port):
         return False
 
 
-def convert_handles_pos_list_to_rel_pos_list(canvas, transition_v):
+def get_relative_positions_of_waypoints(transition_v):
     """This method takes the waypoints of a connection and returns all relative positions of these waypoints.
 
     :param canvas: Canvas to check relative position in
@@ -267,7 +262,8 @@ def convert_handles_pos_list_to_rel_pos_list(canvas, transition_v):
     for handle in handles_list:
         if handle in transition_v.end_handles_perp():
             continue
-        rel_pos_list.append(calc_rel_pos_to_parent(canvas, transition_v, handle))
+        rel_pos = transition_v.canvas.get_matrix_i2i(transition_v, transition_v.parent).transform_point(*handle.pos)
+        rel_pos_list.append(rel_pos)
     return rel_pos_list
 
 
@@ -284,7 +280,7 @@ def update_meta_data_for_transition_waypoints(graphical_editor_view, transition_
 
     transition_m = transition_v.model
     transition_meta_gaphas = transition_m.meta['gui']['editor_gaphas']
-    waypoint_list = convert_handles_pos_list_to_rel_pos_list(graphical_editor_view.editor.canvas, transition_v)
+    waypoint_list = get_relative_positions_of_waypoints(transition_v)
     if waypoint_list != last_waypoint_list:
         transition_meta_gaphas['waypoints'] = waypoint_list
         graphical_editor_view.emit('meta_data_changed', transition_m, "Move waypoint", True)
