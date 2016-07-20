@@ -213,6 +213,7 @@ class GraphicalEditorController(ExtendedController):
             new_state_v = self.canvas.get_view_for_model(state_copy_m)
             new_state_v.width = new_size[0]
             new_state_v.height = new_size[1]
+            state_copy_m.meta['gui']['editor_gaphas']['size'] = (new_state_v.width, new_state_v.height)
 
             new_state_v.resize_all_children(old_size, True)
 
