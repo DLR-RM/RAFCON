@@ -172,8 +172,12 @@ class GraphicalEditorController(ExtendedController):
         if self.view.editor.is_focus():
             logger.debug("Paste")
 
-            current_selection = self.model.selection
+            # Always update canvas and handle all events in the gtk queue before performing any changes
+            self.canvas.update_now()
+            while gtk.events_pending():
+                gtk.main_iteration(False)
 
+            current_selection = self.model.selection
             if len(current_selection) != 1 or len(current_selection.get_states()) < 1:
                 logger.error("Please select a single state for pasting the clipboard")
                 return
@@ -300,7 +304,6 @@ class GraphicalEditorController(ExtendedController):
 
             # Always update canvas and handle all events in the gtk queue before performing any changes
             self.canvas.update_now()
-            import gtk
             while gtk.events_pending():
                 gtk.main_iteration(False)
 
