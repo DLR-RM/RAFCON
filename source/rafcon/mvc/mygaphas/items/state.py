@@ -1,21 +1,13 @@
 from weakref import ref
 from pango import SCALE, FontDescription, WRAP_WORD
-from math import pow
 from copy import copy
-
-from rafcon.mvc.utils import constants
-from rafcon.utils import log
-
-from rafcon.statemachine.enums import StateExecutionState
-
-from rafcon.mvc.config import global_gui_config as gui_config
-from rafcon.mvc.runtime_config import global_runtime_config
-from rafcon.mvc.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
-
 import cairo
+
 from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
 from gaphas.matrix import Matrix
+
+from rafcon.statemachine.enums import StateExecutionState
 
 from rafcon.mvc.mygaphas.constraint import KeepRectangleWithinConstraint, PortRectConstraint
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
@@ -26,6 +18,11 @@ from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_col_rgba
 from rafcon.mvc.mygaphas.utils import gap_draw_helper
 from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
+from rafcon.mvc.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
+from rafcon.mvc.config import global_gui_config as gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
+from rafcon.mvc.utils import constants
+from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -129,13 +126,13 @@ class StateView(Element):
     @staticmethod
     def add_keep_rect_within_constraint(canvas, parent, child):
         solver = canvas.solver
-        port_side_size = parent.border_width
 
         child_nw_abs = canvas.project(child, child.handles()[NW].pos)
         child_se_abs = canvas.project(child, child.handles()[SE].pos)
         parent_nw_abs = canvas.project(parent, parent.handles()[NW].pos)
         parent_se_abs = canvas.project(parent, parent.handles()[SE].pos)
-        constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs, child_nw_abs, child_se_abs, child, port_side_size)
+        constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs,
+                                                   child_nw_abs, child_se_abs, child, lambda: parent.border_width)
         solver.add_constraint(constraint)
         parent.keep_rect_constraints[child] = constraint
 

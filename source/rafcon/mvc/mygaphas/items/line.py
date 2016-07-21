@@ -327,6 +327,7 @@ class PerpLine(Line):
         if parent is None:
             return
         handle_pos = ItemProjection(handle.pos, self, self.parent)
-        constraint = KeepPointWithinConstraint(parent.handles()[NW].pos, parent.handles()[SE].pos, handle_pos)
+        constraint = KeepPointWithinConstraint(parent.handles()[NW].pos, parent.handles()[SE].pos,
+                                               handle_pos, lambda: parent.border_width)
         solver.add_constraint(constraint)
         self._waypoint_constraints.append(constraint)
