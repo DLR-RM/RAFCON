@@ -275,45 +275,126 @@ class ContainerState(State):
             scoped_variables = []
         assert all([p_id in self.scoped_variables.keys() for p_id in scoped_variables])
 
-        related_transitions = {'internal': [], 'ingoing': [], 'outgoing': []}
-        related_data_flows = {'internal': [], 'ingoing': [], 'outgoing': []}
-
-        other_child_state_ids = [state_id for state_id in self.states if state_id not in state_ids]
-
         # find all related transitions
-        for t_id, t in self.transitions.iteritems():
+        related_transitions = {'internal': [], 'ingoing': [], 'outgoing': []}
+        for t in self.transitions.itervalues():
             # check if internal of new hierarchy state
             if t.from_state in state_ids and t.to_state in state_ids:
-                related_transitions['internal'].append(t_id)
+                related_transitions['internal'].append(t)
             elif t.to_state in state_ids:
-                related_transitions['ingoing'].append(t_id)
+                related_transitions['ingoing'].append(t)
             elif t.from_state in state_ids:
-                related_transitions['outgoing'].append(t_id)
+                related_transitions['outgoing'].append(t)
 
         # find all related data flows
-        for df_id, df in self.data_flows.iteritems():
+        related_data_flows = {'internal': [], 'ingoing': [], 'outgoing': []}
+        for df in self.data_flows.itervalues():
             # check if internal of new hierarchy state
             if df.from_state in state_ids and df.to_state in state_ids or \
                     df.from_state in state_ids and self.state_id == df.to_state and df.to_key in scoped_variables or \
                     self.state_id == df.from_state and df.from_key in scoped_variables and df.to_state in state_ids:
-                related_data_flows['internal'].append(df_id)
+                related_data_flows['internal'].append(df)
             elif df.to_state in state_ids or \
                     self.state_id == df.to_state and df.to_key in scoped_variables:
-                related_data_flows['ingoing'].append(df_id)
+                related_data_flows['ingoing'].append(df)
             elif df.from_state in state_ids or \
                     self.state_id == df.from_state and df.from_key in scoped_variables:
-                related_data_flows['outgoing'].append(df_id)
+                related_data_flows['outgoing'].append(df)
 
+        # all states
         states_to_group = {state_id: self.states[state_id] for state_id in state_ids}
-        transitions_internal = {t_id: self.transitions[t_id] for t_id in related_transitions['internal']}
-        data_flows_internal = {df_id: self.data_flows[df_id] for df_id in related_data_flows['internal']}
+        # all internal scoped variables
         scoped_variables_to_group = {dp_id: self.scoped_variables[dp_id] for dp_id in scoped_variables}
+        # all internal transitions
+        transitions_internal = {t.transition_id: t for t in related_transitions['internal']}
+        # all internal data flows
+        data_flows_internal = {df.data_flow_id: df for df in related_data_flows['internal']}
+
+        def find_logical_destinations_of_transitions(transitions):
+            destinations = {}
+            for t in transitions:
+                if (t.to_state, t.to_outcome) in destinations:
+                    destinations[(t.to_state, t.to_outcome)].append(t)
+                else:
+                    destinations[(t.to_state, t.to_outcome)] = [t]
+            return destinations
+
+        # transition from ingoing transition
+        ingoing_logical_destinations = find_logical_destinations_of_transitions(related_transitions['ingoing'])
+        if len(ingoing_logical_destinations) > 1:
+            logger.warning("There is only one ingoing transition on a state possible. \n"
+                           "The following transitions are removed by 'group_states': \n{}"
+                           "".format('\n'.join([str(destination) for destination in ingoing_logical_destinations.items()[1:]])))
+        ingoing_transitions = None
+        if len(ingoing_logical_destinations) > 0:
+            ingoing_transitions = ingoing_logical_destinations.items()[0][1]
+        # transitions from outgoing transitions
+        transitions_outgoing = {t.transition_id: t for t in related_transitions['outgoing']}
+        outgoing_logical_destinations = find_logical_destinations_of_transitions(related_transitions['outgoing'])
+
+        # input data ports from ingoing data flows
+        # internal data flows from ingoing data flows
+        # external data flows from ingoing data flows
+        # output data ports from outgoing data flows
+        # internal data flows from outgoing data flows
+        # external data flows from outgoing data flows
+
         [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
         [self.remove_scoped_variable(sv_id) for sv_id in scoped_variables]
         from rafcon.statemachine.states.hierarchy_state import HierarchyState
         s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
                            scoped_variables=scoped_variables_to_group)
-        return self.add_state(s)
+        self.add_state(s)
+
+        if ingoing_transitions:
+            t = ingoing_transitions[0]
+            s.add_transition(None, None, t.to_state, t.to_outcome)
+            for t in ingoing_transitions:
+                self.add_transition(t.from_state, t.from_outcome, s.state_id, None)
+        # outcomes from outgoing transitions
+        outcomes_outgoing_transitions = {}
+        new_outcome_ids = {}
+        state_outcomes_by_name = {oc.name: oc_id for oc_id, oc in s.outcomes.iteritems()}
+        for goal, transitions in outgoing_logical_destinations.iteritems():
+            t = transitions[0]
+            name = s.states[t.from_state].outcomes[t.from_outcome].name
+            # print (t.to_state, t.to_outcome)
+            # print outcomes_outgoing_transitions
+            if goal in outcomes_outgoing_transitions:
+                # logger.info("old outcome {}".format((t.to_state, t.to_outcome)))
+                name = outcomes_outgoing_transitions[goal]
+            else:
+                number_str = ""
+                number_of_str = 0
+                # logger.info("new outcome {}".format((t.to_state, t.to_outcome)))
+                while name + number_str in new_outcome_ids.keys():
+                    number_str = "_{}".format(number_of_str)
+                    number_of_str += 1
+                    name += number_str
+                outcomes_outgoing_transitions[goal] = name
+            # print outcomes_outgoing_transitions, "\n", new_outcome_ids
+            if name not in new_outcome_ids:
+                if name in state_outcomes_by_name:
+                    new_outcome_ids[name] = state_outcomes_by_name[name]
+                    # logger.info("old outcome_id {0}\n{1}".format(state_outcomes_by_name[name], new_outcome_ids))
+                else:
+                    new_outcome_ids[name] = s.add_outcome(name=name)
+                    # logger.info("new outcome_id {0}\n{1}".format(new_outcome_ids[name], new_outcome_ids))
+            # else:
+            #     logger.info("name {0} in {1} -> {2}".format(name, new_outcome_ids, outcomes_outgoing_transitions))
+        # external outgoing transitions
+        for goal, name in outcomes_outgoing_transitions.iteritems():
+            try:
+                self.add_transition(s.state_id, new_outcome_ids[name], goal[0], goal[1])
+            except Exception:
+                logger.warning("\n".join(str(t) for t in self.transitions.values()))
+                logger.warning("seems to exist {0}".format((s.state_id, new_outcome_ids[name], goal[0], goal[1])))
+        # internal outgoing transitions
+        for t_id, t in transitions_outgoing.iteritems():
+            name = outcomes_outgoing_transitions[(t.to_state, t.to_outcome)]
+            s.add_transition(t.from_state, t.from_outcome, s.state_id, new_outcome_ids[name])
+
+        return
 
     @Observable.observed
     def ungroup_state(self, state_id):
@@ -323,21 +404,41 @@ class ContainerState(State):
         :param state_id: State that is to be ungrouped.
         :return:
         """
+        state = self.states[state_id]
         # TODO remain all related linkage like before by outcomes and data_ports by adding data_flow and transition
+        related_transitions = {'internal': [], 'ingoing': [], 'outgoing': []}
+        for t_id, t in state.transitions.iteritems():
+            # check if internal of new hierarchy state
+            if t.from_state in state.states and t.to_state in state.states:
+                related_transitions['internal'].append(t)
+            elif t.to_state in state.states:
+                related_transitions['ingoing'].append(t)
+            elif t.from_state in state.states:
+                related_transitions['outgoing'].append(t)
 
-        transitions_internal = []
-        for t_id, t in self.states[state_id].transitions.iteritems():
+        related_data_flows = {'internal': [], 'ingoing': [], 'outgoing': []}
+        for df_id, df in state.data_flows.iteritems():
             # check if internal of hierarchy state
-            if t.from_state in self.states[state_id].states and t.to_state in self.states[state_id].states:
-                transitions_internal.append(t)
-        data_flows_internal = []
-        for df_id, df in self.states[state_id].data_flows.iteritems():
-            # check if internal of hierarchy state
-            if df.from_state in self.states[state_id].states and df.to_state in self.states[state_id].states:
-                data_flows_internal.append(df)
+            if df.from_state in state.states and df.to_state in state.states or \
+                    df.from_state in state.states and self.state_id == df.to_state and df.to_key in state.scoped_variables or \
+                    self.state_id == df.from_state and df.from_key in state.scoped_variables and df.to_state in state.states:
+                related_data_flows['internal'].append(df)
+            elif df.to_state in state.states or \
+                    self.state_id == df.to_state and df.to_key in state.scoped_variables:
+                related_data_flows['ingoing'].append(df)
+            elif df.from_state in self.states[state_id].states or \
+                    self.state_id == df.from_state and df.from_key in state.scoped_variables:
+                related_data_flows['outgoing'].append(df)
+            # if df.from_state in self.states[state_id].states and df.to_state in self.states[state_id].states:
+            #     data_flows_internal.append(df)
 
-        child_states = [self.states[state_id].states[child_state_id] for child_state_id in self.states[state_id].states]
-        child_scoped_variables = [sv for sv_id, sv in self.states[state_id].scoped_variables.iteritems()]
+        # ingoing logical linkage to rebuild
+        external_ingoing_logical_transitions = [t for t in self.transitions.values() if t.to_state == state_id]
+        # outgoing logical transitions to rebuild
+        external_outgoing_logical_transitions = [t for t in self.transitions.values() if t.from_state == state_id]
+
+        child_states = [state.states[child_state_id] for child_state_id in state.states]
+        child_scoped_variables = [sv for sv_id, sv in state.scoped_variables.iteritems()]
         self.remove_state(state_id, recursive_deletion=False)
         state_id_dict = {}
         for state in child_states:
@@ -347,9 +448,18 @@ class ContainerState(State):
             self.add_scoped_variable(name=sv.name, data_type=sv.data_type, default_value=sv.default_value)
         # TODO check for data_port_ids, too
 
-        for t in transitions_internal:
+        for t in related_transitions['internal']:
             self.add_transition(state_id_dict[t.from_state], t.from_outcome, state_id_dict[t.to_state], t.to_outcome)
-        for df in data_flows_internal:
+        assert len(related_transitions['ingoing']) <= 1
+        if related_transitions['ingoing']:
+            ingoing_t = related_transitions['ingoing'][0]
+            for t in external_ingoing_logical_transitions:
+                self.add_transition(t.from_state, t.from_outcome, ingoing_t.to_state, ingoing_t.to_outcome)
+        for ext_t in external_outgoing_logical_transitions:
+            for t in related_transitions['outgoing']:
+                if (t.to_state, t.to_outcome) == (ext_t.from_state, ext_t.from_outcome):
+                    self.add_transition(t.from_state, t.from_outcome, ext_t.to_state, ext_t.to_outcome)
+        for df in related_data_flows['internal']:
             self.add_data_flow(state_id_dict[df.from_state], df.from_key, state_id_dict[df.to_state], df.to_key)
 
     @Observable.observed
