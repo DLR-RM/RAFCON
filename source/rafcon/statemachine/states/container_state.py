@@ -399,13 +399,14 @@ class ContainerState(State):
     @Observable.observed
     def ungroup_state(self, state_id):
         """ Ungroup state with state id state_id into its parent and remain internal linkage in parent.
-            Interconnecting transitions and data flows to parent and other child states are removed, at the moment.
+            Interconnecting transitions and data flows to parent and other child states are preserved except:
+            - a transition that is going from income to outcome directly and
+            - a data-flow that is linking input and output directly.
 
         :param state_id: State that is to be ungrouped.
         :return:
         """
         state = self.states[state_id]
-        # TODO remain all related linkage like before by outcomes and data_ports by adding data_flow and transition
         related_transitions = {'internal': [], 'ingoing': [], 'outgoing': []}
         for t_id, t in state.transitions.iteritems():
             # check if internal of new hierarchy state
@@ -415,6 +416,9 @@ class ContainerState(State):
                 related_transitions['ingoing'].append(t)
             elif t.from_state in state.states:
                 related_transitions['outgoing'].append(t)
+            else:
+                print "no relation"
+                # raise AttributeError("All transition have to be ingoing, outgoing or internal.")
 
         related_data_flows = {'internal': [], 'ingoing': [], 'outgoing': []}
         for df_id, df in state.data_flows.iteritems():
@@ -424,43 +428,90 @@ class ContainerState(State):
                     self.state_id == df.from_state and df.from_key in state.scoped_variables and df.to_state in state.states:
                 related_data_flows['internal'].append(df)
             elif df.to_state in state.states or \
-                    self.state_id == df.to_state and df.to_key in state.scoped_variables:
+                    state.state_id == df.to_state and df.to_key in state.scoped_variables or \
+                    df.to_state == df.from_state and df.from_key in state.input_data_ports:
                 related_data_flows['ingoing'].append(df)
             elif df.from_state in self.states[state_id].states or \
-                    self.state_id == df.from_state and df.from_key in state.scoped_variables:
+                    state.state_id == df.from_state and df.from_key in state.scoped_variables or \
+                    df.to_state == df.from_state and df.to_key in state.output_data_ports:
                 related_data_flows['outgoing'].append(df)
-            # if df.from_state in self.states[state_id].states and df.to_state in self.states[state_id].states:
-            #     data_flows_internal.append(df)
+            else:
+                print "no relation"
+                # raise AttributeError("All data flow have to be ingoing, outgoing or internal.")
+
+        # print "ingoing df: \n" + '\n'.join([str(df) for df in related_data_flows['ingoing']])
 
         # ingoing logical linkage to rebuild
         external_ingoing_logical_transitions = [t for t in self.transitions.values() if t.to_state == state_id]
-        # outgoing logical transitions to rebuild
+        # outgoing logical linkage to rebuild
         external_outgoing_logical_transitions = [t for t in self.transitions.values() if t.from_state == state_id]
+        # ingoing data linkage to rebuild
+        ingoing_data_linkage_for_port = {}
+        for df in related_data_flows['ingoing']:
+            if (df.from_state, df.from_key) in ingoing_data_linkage_for_port:
+                ingoing_data_linkage_for_port[(df.from_state, df.from_key)]['internal'].append(df)
+            else:
+                ingoing_data_linkage_for_port[(df.from_state, df.from_key)] = {'external': [], 'internal': [df]}
+            if not ingoing_data_linkage_for_port[(df.from_state, df.from_key)]['external']:
+                for ext_df in self.data_flows.itervalues():
+                    if (ext_df.to_state, ext_df.to_key) == (df.from_state, df.from_key):
+                        ingoing_data_linkage_for_port[(df.from_state, df.from_key)]['external'].append(ext_df)
+        # outgoing data linkage to rebuild
+        outgoing_data_linkage_for_port = {}
+        for df in related_data_flows['outgoing']:
+            if (df.to_state, df.to_key) in outgoing_data_linkage_for_port:
+                outgoing_data_linkage_for_port[(df.to_state, df.to_key)]['internal'].append(df)
+            else:
+                outgoing_data_linkage_for_port[(df.to_state, df.to_key)] = {'external': [], 'internal': [df]}
+            if not outgoing_data_linkage_for_port[(df.to_state, df.to_key)]['external']:
+                for ext_df in self.data_flows.itervalues():
+                    if (ext_df.from_state, ext_df.from_key) == (df.to_state, df.to_key):
+                        outgoing_data_linkage_for_port[(df.to_state, df.to_key)]['external'].append(ext_df)
 
         child_states = [state.states[child_state_id] for child_state_id in state.states]
         child_scoped_variables = [sv for sv_id, sv in state.scoped_variables.iteritems()]
         self.remove_state(state_id, recursive_deletion=False)
         state_id_dict = {}
+        sv_id_dict = {}
         for state in child_states:
             new_state_id = self.add_state(state)
             state_id_dict[state.state_id] = new_state_id
         for sv in child_scoped_variables:
-            self.add_scoped_variable(name=sv.name, data_type=sv.data_type, default_value=sv.default_value)
-        # TODO check for data_port_ids, too
+            new_sv_id = self.add_scoped_variable(name=sv.name, data_type=sv.data_type, default_value=sv.default_value)
+            sv_id_dict[sv.data_port_id] = new_sv_id
 
+        # re-create transitions
         for t in related_transitions['internal']:
             self.add_transition(state_id_dict[t.from_state], t.from_outcome, state_id_dict[t.to_state], t.to_outcome)
         assert len(related_transitions['ingoing']) <= 1
         if related_transitions['ingoing']:
             ingoing_t = related_transitions['ingoing'][0]
             for t in external_ingoing_logical_transitions:
-                self.add_transition(t.from_state, t.from_outcome, ingoing_t.to_state, ingoing_t.to_outcome)
+                self.add_transition(t.from_state, t.from_outcome, state_id_dict[ingoing_t.to_state], ingoing_t.to_outcome)
         for ext_t in external_outgoing_logical_transitions:
             for t in related_transitions['outgoing']:
                 if (t.to_state, t.to_outcome) == (ext_t.from_state, ext_t.from_outcome):
-                    self.add_transition(t.from_state, t.from_outcome, ext_t.to_state, ext_t.to_outcome)
+                    self.add_transition(state_id_dict[t.from_state], t.from_outcome, ext_t.to_state, ext_t.to_outcome)
+
+        # re-create data flow linkage
         for df in related_data_flows['internal']:
             self.add_data_flow(state_id_dict[df.from_state], df.from_key, state_id_dict[df.to_state], df.to_key)
+        for data_port_linkage in ingoing_data_linkage_for_port.itervalues():
+            for ext_df in data_port_linkage['external']:
+                for df in data_port_linkage['internal']:
+                    # print "ingoing: ", ext_df, df
+                    if df.to_state not in state_id_dict and df.to_state == state_id:
+                        self.add_data_flow(ext_df.from_state, ext_df.from_key, self.state_id, sv_id_dict[df.to_key])
+                    else:
+                        self.add_data_flow(ext_df.from_state, ext_df.from_key, state_id_dict[df.to_state], df.to_key)
+        for data_port_linkage in outgoing_data_linkage_for_port.itervalues():
+            for ext_df in data_port_linkage['external']:
+                for df in data_port_linkage['internal']:
+                    # print "outgoing: ", ext_df, df
+                    if df.from_state not in state_id_dict and df.from_state == state_id:
+                        self.add_data_flow(self.state_id, sv_id_dict[df.from_key], ext_df.to_state, ext_df.to_key)
+                    else:
+                        self.add_data_flow(state_id_dict[df.from_state], df.from_key, ext_df.to_state, ext_df.to_key)
 
     @Observable.observed
     def add_state(self, state, storage_load=False):
