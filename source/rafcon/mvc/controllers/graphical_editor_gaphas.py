@@ -216,6 +216,7 @@ class GraphicalEditorController(ExtendedController):
             state_copy_m.meta['gui']['editor_gaphas']['size'] = (new_state_v.width, new_state_v.height)
 
             new_state_v.resize_all_children(old_size, True)
+            self._meta_data_changed(new_state_v, state_copy_m, 'all', True)
 
     def _select_new_states(self, view, states):
         if states and isinstance(states, StateView):
