@@ -38,15 +38,9 @@ def calc_rel_pos_to_parent(canvas, item, handle):
 
     parent = canvas.get_parent(item)
     if parent:
-        abs_pos_handle = canvas.project(item, handle.pos)
-        abs_pos_parent = canvas.project(parent, parent.handles()[NW].pos)
-        rel_x = abs_pos_handle[0].value - abs_pos_parent[0].value
-        rel_y = abs_pos_handle[1].value - abs_pos_parent[1].value
+        return item.canvas.get_matrix_i2i(item, parent).transform_point(*handle.pos)
     else:
-        pos = canvas.project(item, item.handles()[NW].pos)
-        rel_x = pos[0].value
-        rel_y = pos[1].value
-    return rel_x, rel_y
+        return item.canvas.get_matrix_i2c(item).transform_point(*item.handles()[NW].pos)
 
 
 def assert_exactly_one_true(bool_list):
