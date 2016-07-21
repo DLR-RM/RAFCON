@@ -555,39 +555,42 @@ class StateTransitionsListController(ExtendedController):
                 len(self.model.parent.state.transitions) > 0:
             for transition_id in self.combo['external'].keys():
                 # print "TRANSITION_ID: ", transition_id, self.model.parent.state.transitions
-                t = self.model.parent.state.transitions[transition_id]
-                # logger.info(str(t))
-                from_state = None
-                if t.from_state is not None:
-                    from_state = self.model.parent.states[t.from_state].state
+                try:
+                    t = self.model.parent.state.transitions[transition_id]
+                    # logger.info(str(t))
+                    from_state = None
+                    if t.from_state is not None:
+                        from_state = self.model.parent.states[t.from_state].state
 
-                if from_state is None:
-                    from_state_label = "parent (" + self.model.state.parent.name + ")"
-                    from_outcome_label = ""
-                elif from_state.state_id == self.model.state.state_id:
-                    from_state_label = "self (" + from_state.name + ")"
-                    from_outcome_label = from_state.outcomes[t.from_outcome].name
-                else:
-                    from_state_label = from_state.name
-                    from_outcome_label = from_state.outcomes[t.from_outcome].name
-
-                if t.to_state == self.model.parent.state.state_id:
-                    to_state_label = 'parent (' + self.model.parent.state.name + ")"
-                    to_outcome_label = self.model.parent.state.outcomes[t.to_outcome].name
-                else:
-                    if t.to_state == self.model.state.state_id:
-                        to_state_label = "self (" + self.model.state.name + ")"
+                    if from_state is None:
+                        from_state_label = "parent (" + self.model.state.parent.name + ")"
+                        from_outcome_label = ""
+                    elif from_state.state_id == self.model.state.state_id:
+                        from_state_label = "self (" + from_state.name + ")"
+                        from_outcome_label = from_state.outcomes[t.from_outcome].name
                     else:
-                        to_state_label = self.model.parent.state.states[t.to_state].name
-                    to_outcome_label = None
+                        from_state_label = from_state.name
+                        from_outcome_label = from_state.outcomes[t.from_outcome].name
 
-                self.tree_store.append(None, [transition_id,  # id
-                                              from_state_label,  # from-state
-                                              from_outcome_label,  # from-outcome
-                                              to_state_label,  # to-state
-                                              to_outcome_label,  # to-outcome
-                                              True,  # is_external
-                                              t, self.model.state, True])
+                    if t.to_state == self.model.parent.state.state_id:
+                        to_state_label = 'parent (' + self.model.parent.state.name + ")"
+                        to_outcome_label = self.model.parent.state.outcomes[t.to_outcome].name
+                    else:
+                        if t.to_state == self.model.state.state_id:
+                            to_state_label = "self (" + self.model.state.name + ")"
+                        else:
+                            to_state_label = self.model.parent.state.states[t.to_state].name
+                        to_outcome_label = None
+
+                    self.tree_store.append(None, [transition_id,  # id
+                                                  from_state_label,  # from-state
+                                                  from_outcome_label,  # from-outcome
+                                                  to_state_label,  # to-state
+                                                  to_outcome_label,  # to-outcome
+                                                  True,  # is_external
+                                                  t, self.model.state, True])
+                except Exception as e:
+                    logger.warning("There was a problem while updating the data-flow widget TreeStore. {0}".format(e))
 
     @ExtendedController.observe("root_state", assigned=True)
     def root_state_changed(self, model, prop_name, info):
