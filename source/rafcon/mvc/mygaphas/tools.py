@@ -225,20 +225,19 @@ class HoverItemTool(HoverTool):
             self._prev_hovered_item = self.view.hovered_item
 
 
-class MultiselectionTool(RubberbandTool):
+class MultiSelectionTool(RubberbandTool):
     def __init__(self, graphical_editor_view, view=None):
-        super(MultiselectionTool, self).__init__(view)
+        super(MultiSelectionTool, self).__init__(view)
 
         self._graphical_editor_view = graphical_editor_view
 
     def on_button_press(self, event):
-        if event.state & gtk.gdk.CONTROL_MASK and event.state & gtk.gdk.SHIFT_MASK:
-            return super(MultiselectionTool, self).on_button_press(event)
+        if event.state & gtk.gdk.SHIFT_MASK:
+            return super(MultiSelectionTool, self).on_button_press(event)
         return False
 
     def on_motion_notify(self, event):
-        if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & gtk.gdk.CONTROL_MASK and \
-                        event.state & gtk.gdk.SHIFT_MASK:
+        if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & gtk.gdk.SHIFT_MASK:
             view = self.view
             self.queue_draw(view)
             self.x1, self.y1 = event.x, event.y
@@ -248,8 +247,8 @@ class MultiselectionTool(RubberbandTool):
     def on_button_release(self, event):
         self.queue_draw(self.view)
         x0, y0, x1, y1 = self.x0, self.y0, self.x1, self.y1
-        # Hold down ALT-key to add selection to current selection
-        if event.state & gtk.gdk.MOD1_MASK:
+        # Hold down Ctrl-key to add selection to current selection
+        if event.state & gtk.gdk.CONTROL_MASK:
             items_to_deselect = []
         else:
             items_to_deselect = list(self.view.selected_items)
