@@ -310,6 +310,14 @@ class ContainerState(State):
         # all internal data flows
         data_flows_internal = {df.data_flow_id: df for df in related_data_flows['internal']}
 
+        [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
+        [self.remove_scoped_variable(sv_id) for sv_id in scoped_variables]
+        # TODO if the version is final create the ingoing and outgoing internal linkage before and hand it while state creation
+        from rafcon.statemachine.states.hierarchy_state import HierarchyState
+        s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
+                           scoped_variables=scoped_variables_to_group)
+        self.add_state(s)
+
         def find_logical_destinations_of_transitions(transitions):
             destinations = {}
             for t in transitions:
@@ -331,20 +339,6 @@ class ContainerState(State):
         # transitions from outgoing transitions
         transitions_outgoing = {t.transition_id: t for t in related_transitions['outgoing']}
         outgoing_logical_destinations = find_logical_destinations_of_transitions(related_transitions['outgoing'])
-
-        # input data ports from ingoing data flows
-        # internal data flows from ingoing data flows
-        # external data flows from ingoing data flows
-        # output data ports from outgoing data flows
-        # internal data flows from outgoing data flows
-        # external data flows from outgoing data flows
-
-        [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
-        [self.remove_scoped_variable(sv_id) for sv_id in scoped_variables]
-        from rafcon.statemachine.states.hierarchy_state import HierarchyState
-        s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
-                           scoped_variables=scoped_variables_to_group)
-        self.add_state(s)
 
         if ingoing_transitions:
             t = ingoing_transitions[0]
@@ -393,6 +387,51 @@ class ContainerState(State):
         for t_id, t in transitions_outgoing.iteritems():
             name = outcomes_outgoing_transitions[(t.to_state, t.to_outcome)]
             s.add_transition(t.from_state, t.from_outcome, s.state_id, new_outcome_ids[name])
+
+        # outgoing data linkage to rebuild
+        outgoing_data_linkage_for_port = {}
+        for df in related_data_flows['outgoing']:
+            if (df.from_state, df.from_key) in outgoing_data_linkage_for_port:
+                outgoing_data_linkage_for_port[(df.from_state, df.from_key)]['external'].append(df)
+            else:
+                outgoing_data_linkage_for_port[(df.from_state, df.from_key)] = {'external': [df], 'internal': [df]}
+        for data_port_linkage in outgoing_data_linkage_for_port:
+            # output data ports from outgoing data flows
+
+            # internal data flows from outgoing data flows
+            # external data flows from outgoing data flows
+
+        # ingoing data linkage to rebuild
+        input_port_names = []
+        ingoing_data_linkage_for_port = {'from': {}, 'to': {}}
+        for df in related_data_flows['ingoing']:
+            if (df.to_state, df.to_key) in ingoing_data_linkage_for_port['to']:
+                ingoing_data_linkage_for_port['to'][(df.to_state, df.to_key)]['external'].append(df)
+            else:
+                ingoing_data_linkage_for_port['to'][(df.to_state, df.to_key)] = {'external': [df], 'internal': [df]}
+            if (df.from_state, df.from_key) in ingoing_data_linkage_for_port['from']:
+                ingoing_data_linkage_for_port['from'][(df.from_state, df.from_key)]['internal'].append(df)
+            else:
+                ingoing_data_linkage_for_port['from'][(df.from_state, df.from_key)] = {'external': [df], 'internal': [df]}
+        avoided_in_from = []
+        for goal, data_port_linkage in ingoing_data_linkage_for_port['to'].iteritems():
+            if len(data_port_linkage['external']) > 1:
+                for df in data_port_linkage['external'].itervalues():
+                    avoided_in_from.append(df)
+            else:
+                del ingoing_data_linkage_for_port['to'][goal]
+        to_be_deleted = []
+        for goal, data_port_linkage in ingoing_data_linkage_for_port['from'].iteritems():
+            data_port_linkage['external'] = filter(lambda df: df not in avoided_in_from, data_port_linkage['external'])
+            data_port_linkage['internal'] = filter(lambda df: df not in avoided_in_from, data_port_linkage['internal'])
+            if data_port_linkage['internal'] and data_port_linkage['external']:
+
+            else:
+                to_be_deleted.append(goal)
+            # input data ports from ingoing data flows
+            # internal data flows from ingoing data flows
+            # external data flows from ingoing data flows
+        for goal, data_port_linkage in ingoing_data_linkage_for_port['to'].iteritems():
 
         return
 
