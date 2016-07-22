@@ -10,7 +10,7 @@ from rafcon.mvc.config import global_gui_config
 
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.item import NW
-from gaphas.aspect import HandleFinder, ItemConnectionSink, Connector
+from gaphas.aspect import HandleFinder, ItemConnectionSink, Connector, InMotion
 
 from rafcon.mvc.mygaphas.aspect import HandleInMotion, StateHandleFinder
 from rafcon.mvc.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, \
@@ -61,33 +61,39 @@ class MoveItemTool(ItemTool):
     def __init__(self, graphical_editor_view, view=None, buttons=(1,)):
         super(MoveItemTool, self).__init__(view, buttons)
         self._graphical_editor_view = graphical_editor_view
+        self._move_name_v = False
 
         self._item = None
 
+    def movable_items(self):
+        if self._move_name_v:
+            return [InMotion(self._item, self.view)]
+        else:
+            return super(MoveItemTool, self).movable_items()
+
     def on_button_press(self, event):
-        super(MoveItemTool, self).on_button_press(event)
-        # logger.info("MoveClick" + str(event))
+        if event.button not in self._buttons:
+            return False  # Only handle events for registered buttons (left mouse clicks)
 
-        item = self.get_item()
-        if isinstance(item, StateView):
-            self._item = item
+        if event.state & gtk.gdk.SHIFT_MASK:
+            return False  # Mouse clicks with pressed shift key are handled in another tool
 
-        if (isinstance(self.view.focused_item, NameView) and not
-                mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.is_selected(
-                self.view.focused_item.parent.model)):
-            self.view.focused_item = self.view.focused_item.parent
-            self._item = self.view.focused_item
+        self._item = self.get_item()
+
+        # NameView can only be moved when the Ctrl-key is pressed
+        self._move_name_v = isinstance(self._item, NameView) and event.state & gtk.gdk.CONTROL_MASK
+
+        if self._item in self.view.selected_items and event.state & gtk.gdk.CONTROL_MASK:
+            self.view.unselect_item(self._item)
+        else:
+            if not event.state & gtk.gdk.CONTROL_MASK:
+                del self.view.selected_items
+            self.view.focused_item = self._item
 
         if not self.view.is_focus():
             self.view.grab_focus()
-        if isinstance(self.view.focused_item, StateView):
-            self._graphical_editor_view.emit('new_state_selection', self.view.focused_item)
 
-        if event.button == 3:
-            # self._graphical_editor_view.emit('deselect_states')
-            return False
-        else:
-            return True
+        return True
 
     def on_button_release(self, event):
 
@@ -112,10 +118,6 @@ class MoveItemTool(ItemTool):
             self.view.canvas.request_update(self._item)
             if position_changed:
                 self._graphical_editor_view.emit('meta_data_changed', self._item.model, "position", True)
-
-            self._item = None
-
-            self.view.redraw_complete_screen()
 
         if isinstance(self.view.focused_item, NameView):
             if position_changed:
@@ -236,8 +238,6 @@ class MultiSelectionTool(RubberbandTool):
         for item in items_to_deselect:
             if item in self.view.selected_items:
                 self.view.unselect_item(item)
-
-        self._graphical_editor_view.emit('new_state_selection', self.view.selected_items)
 
         return True
 

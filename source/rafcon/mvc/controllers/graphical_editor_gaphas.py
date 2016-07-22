@@ -17,7 +17,6 @@ from gaphas.aspect import InMotion, ItemFinder
 from rafcon.statemachine.enums import StateType
 
 from rafcon.mvc.clipboard import global_clipboard
-from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc import state_machine_helper
 
 from rafcon.mvc.models.signals import MetaSignalMsg
@@ -25,16 +24,14 @@ from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.models import ContainerStateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.views.graphical_editor_gaphas import GraphicalEditorView
+
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 from rafcon.mvc.mygaphas.items.connection import DataFlowView, TransitionView
-from rafcon.mvc.mygaphas import guide
+from rafcon.mvc.mygaphas.items.ports import OutcomeView, DataPortView, ScopedVariablePortView
 from rafcon.mvc.mygaphas.canvas import MyCanvas
-
-from rafcon.mvc.config import global_gui_config
-from rafcon.mvc.runtime_config import global_runtime_config
-
-from rafcon.mvc import singleton as mvc_singleton
+from rafcon.mvc.mygaphas import guide
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -71,8 +68,8 @@ class GraphicalEditorController(ExtendedController):
         """Called when the View was registered"""
         assert self.view == view
         self.setup_canvas()
-        self.view.connect('new_state_selection', self._select_new_states)
-        self.view.connect('deselect_states', self._deselect_states)
+
+        self.view.editor.connect('selection-changed', self._update_selection_from_gaphas)
         self.view.connect('remove_state_from_state_machine', self._remove_state_view)
         self.view.connect('meta_data_changed', self._meta_data_changed)
         self.view.editor.connect("drag-data-received", self.on_drag_data_received)
@@ -127,14 +124,17 @@ class GraphicalEditorController(ExtendedController):
         :param y: Integer: y-position of mouse
         :param time:
         """
-        selected = self.view.editor.focused_item
-        hovered = ItemFinder(self.view.editor).get_item_at_point((x,y))
+        hovered = ItemFinder(self.view.editor).get_item_at_point((x, y))
         if isinstance(hovered, NameView):
             hovered = hovered.parent
-        if selected is not hovered and hovered is None:
-            self.view.emit('deselect_states')
-        elif selected is not hovered and isinstance(hovered.model, ContainerStateModel):
-            self.view.emit('new_state_selection', hovered)
+        if hovered is None:
+            self.view.editor.unselect_all()
+        elif isinstance(hovered.model, ContainerStateModel):
+            if len(self.view.editor.selected_items) == 1 and hovered in self.view.editor.selected_items:
+                return
+            if len(self.view.editor.selected_items) > 0:
+                self.view.editor.unselect_all()
+            self.view.editor.focused_item = hovered
 
     def update_view(self, *args):
         self.canvas.update_root_items()
@@ -219,26 +219,53 @@ class GraphicalEditorController(ExtendedController):
             new_state_v.resize_all_children(old_size, True)
             self._meta_data_changed(new_state_v, state_copy_m, 'all', True)
 
-    def _select_new_states(self, view, states):
-        if states and isinstance(states, StateView):
-            state_m = states.model
-            if not self.model.selection.is_selected(state_m):
-                self.deselect_all_items()
-                self.model.selection.clear()
-                self.model.selection.set(state_m)
-        elif isinstance(states, set):
-            states_to_select = []
-            for state in states:
-                if isinstance(state, StateView):
-                    state_m = state.model
-                    if not self.model.selection.is_selected(state_m):
-                        states_to_select.append(state.model)
-            self.model.selection.clear()
-            self.model.selection.set(states_to_select)
+    def _update_selection_from_gaphas(self, view, selected_items):
+        selected_items = self.view.editor.selected_items
+        selected_models = []
+        for item in selected_items:
+            if isinstance(item, StateView):
+                selected_models.append(item.model)
+            elif isinstance(item, NameView):
+                selected_models.append(item.parent.model)
+            elif isinstance(item, (TransitionView, DataFlowView)):
+                selected_models.append(item.model)
+            elif isinstance(item, OutcomeView):
+                selected_models.append(item.outcome_m)
+            elif isinstance(item, DataPortView):
+                selected_models.append(item.port_m)
+            elif isinstance(item, ScopedVariablePortView):
+                selected_models.append(item.model)
+            else:
+                logger.debug("Cannot select item {}".format(item))
+        new_selected_models = any([model not in self.model.selection for model in selected_models])
+        if new_selected_models or len(self.model.selection) != len(selected_models):
+            self.model.selection.set(selected_models)
 
-    def _deselect_states(self, view):
-        self.deselect_all_items()
-        self.model.selection.clear()
+    def _update_selection_from_external(self):
+        selected_items = [self.canvas.get_view_for_model(model) for model in self.model.selection]
+        select_items = filter(lambda item: item not in self.view.editor.selected_items, selected_items)
+        deselect_items = filter(lambda item: item not in selected_items, self.view.editor.selected_items)
+        for item in deselect_items:
+            self.view.editor.selected_items.discard(item)
+            self.view.editor.queue_draw_item(item)
+        for item in select_items:
+            self.view.editor.selected_items.add(item)
+            self.view.editor.queue_draw_item(item)
+        if select_items or deselect_items:
+            self.view.editor.emit('selection-changed', self.view.editor.selected_items)
+        # TODO: Jump to the selected state in the view and adjust the zoom
+        # state_v = None
+
+        # if global_runtime_config.get_config_value("DATA_FLOW_MODE"):
+        #     for data_flow in self.get_connected_data_flows(state_v):
+        #         data_flow.show()
+        #     self.set_non_active_states_transparent(True, state_v)
+        # else:
+        #     for data_flow in self.get_connected_data_flows(state_v):
+        #         data_flow.hide()
+        #     self.set_non_active_states_transparent(False, state_v)
+        #
+        # self.view.editor.focused_item = state_v
 
     def _meta_data_changed(self, view, model, name, affects_children):
         msg = MetaSignalMsg('graphical_editor_gaphas', name, affects_children)
@@ -565,34 +592,11 @@ class GraphicalEditorController(ExtendedController):
 
         Updates the local selection and redraws.
 
-        :param rafcon.mvc.selection.Selection model: The state machine model
+        :param rafcon.mvc.models.state_machine.StateMachineModel model: The state machine model
         :param str prop_name: The selection
         :param dict info: Information about the change
         """
-        self.deselect_all_items()
-        self.handle_selected_states(info['args'][0].get_states())
-
-    def handle_selected_states(self, selected_state_m_list):
-        state_v = None
-
-        for state_m in selected_state_m_list:
-            state_v = self.canvas.get_view_for_model(state_m)
-            if state_v is not None:
-                state_v.selected = True
-                self.view.editor.select_item(state_v)
-                if global_runtime_config.get_config_value("DATA_FLOW_MODE"):
-                    for data_flow in self.get_connected_data_flows(state_v):
-                        data_flow.show()
-                    self.set_non_active_states_transparent(True, state_v)
-                else:
-                    for data_flow in self.get_connected_data_flows(state_v):
-                        data_flow.hide()
-                    self.set_non_active_states_transparent(False, state_v)
-            else:
-                logger.info("canvas could not get state-view "
-                            "for selected state with path {0}".format(state_m.state.get_path()))
-
-        self.view.editor.focused_item = state_v
+        self._update_selection_from_external()
 
     def set_non_active_states_transparent(self, transparent, state_v):
         if transparent:
@@ -646,15 +650,6 @@ class GraphicalEditorController(ExtendedController):
             elif isinstance(model, DataFlowModel):
                 method_name = 'data_flow_change'
         return method_name, model, result, args, instance
-
-    def deselect_all_items(self):
-        for item in self.view.editor.canvas.get_all_items():
-            if isinstance(item, StateView):
-                item.selected = False
-                item.foreground()
-            elif isinstance(item, DataFlowView) and not global_gui_config.get_config_value("SHOW_DATA_FLOWS"):
-                item.hide()
-        self.view.editor.unselect_all()
 
     def connect_transition_handle_to_state(self, transition_v, transition_m, parent_state_m):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
