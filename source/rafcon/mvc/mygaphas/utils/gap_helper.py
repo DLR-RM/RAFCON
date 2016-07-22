@@ -336,7 +336,6 @@ def update_meta_data_for_name_view(graphical_editor_view, name_v, publish=True):
     meta_gaphas['rel_pos'] = rel_pos
 
     if publish:
-        print "emit", meta_gaphas
         graphical_editor_view.emit('meta_data_changed', state_v.model, "name_size", False)
 
 
