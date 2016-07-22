@@ -54,8 +54,6 @@ class StateView(Element):
         self.keep_rect_constraints = {}
         self.port_constraints = {}
 
-        self.hovered = False
-        self.selected = False
         self._moving = False
         self._transparent = False
 
@@ -75,6 +73,14 @@ class StateView(Element):
             name_meta['rel_pos'] = (0, 0)
         name_pos = name_meta['rel_pos']
         self.name_view.matrix.translate(*name_pos)
+
+    @property
+    def selected(self):
+        return self in self.canvas.get_first_view().selected_items
+
+    @property
+    def hovered(self):
+        return self is self.canvas.get_first_view().hovered_item
 
     def setup_canvas(self):
         self._income = self.add_income()

@@ -196,10 +196,7 @@ class HoverItemTool(HoverTool):
             else:
                 self.view.window.set_cursor(gtk.gdk.Cursor(constants.SELECT_CURSOR))
 
-        if self._prev_hovered_item and self.view.hovered_item is not self._prev_hovered_item:
-            self._prev_hovered_item.hovered = False
         if isinstance(self.view.hovered_item, StateView):
-            self.view.hovered_item.hovered = True
             self._prev_hovered_item = self.view.hovered_item
 
 
