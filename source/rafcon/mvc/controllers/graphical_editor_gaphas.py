@@ -223,18 +223,11 @@ class GraphicalEditorController(ExtendedController):
         selected_items = self.view.editor.selected_items
         selected_models = []
         for item in selected_items:
-            if isinstance(item, StateView):
+            if isinstance(item, (StateView, TransitionView, DataFlowView, OutcomeView, DataPortView,
+                                 ScopedVariablePortView)):
                 selected_models.append(item.model)
             elif isinstance(item, NameView):
                 selected_models.append(item.parent.model)
-            elif isinstance(item, (TransitionView, DataFlowView)):
-                selected_models.append(item.model)
-            elif isinstance(item, OutcomeView):
-                selected_models.append(item.outcome_m)
-            elif isinstance(item, DataPortView):
-                selected_models.append(item.port_m)
-            elif isinstance(item, ScopedVariablePortView):
-                selected_models.append(item.model)
             else:
                 logger.debug("Cannot select item {}".format(item))
         new_selected_models = any([model not in self.model.selection for model in selected_models])

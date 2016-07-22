@@ -277,9 +277,9 @@ class StateView(Element):
         if isinstance(state_meta['income']['rel_pos'], tuple):
             update_port_position(self.income, state_meta['income'])
         for outcome_v in self.outcomes:
-            update_port_position(outcome_v, outcome_v.outcome_m.meta['gui']['editor_gaphas'])
+            update_port_position(outcome_v, outcome_v.model.meta['gui']['editor_gaphas'])
         for data_port_v in self.inputs + self.outputs:
-            update_port_position(data_port_v, data_port_v.port_m.meta['gui']['editor_gaphas'])
+            update_port_position(data_port_v, data_port_v.model.meta['gui']['editor_gaphas'])
 
         self.name_view.apply_meta_data()
 
@@ -363,7 +363,7 @@ class StateView(Element):
         self._income.draw(context, self)
 
         for outcome_v in self._outcomes:
-            highlight = self.model.state.active and outcome_v.outcome_m.outcome is self.model.state.final_outcome
+            highlight = self.model.state.active and outcome_v.model.outcome is self.model.state.final_outcome
             outcome_v.draw(context, self, highlight)
 
         for input_v in self._inputs:
@@ -536,7 +536,7 @@ class StateView(Element):
                 # Distribute outcomes on the right side of the state, starting from top
                 outcome_v.side = SnappedSide.RIGHT
                 pos_x = self.width
-                num_outcomes = len([o for o in self.outcomes if o.outcome_m.outcome.outcome_id >= 0])
+                num_outcomes = len([o for o in self.outcomes if o.model.outcome.outcome_id >= 0])
                 pos_y = self._calculate_port_pos_on_line(num_outcomes, self.height)
             port_meta['rel_pos'] = pos_x, pos_y
         outcome_v.handle.pos = port_meta['rel_pos']

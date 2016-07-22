@@ -556,16 +556,16 @@ class OutcomeView(LogicPortView):
         self.sort = outcome_m.outcome.outcome_id
 
     @property
-    def outcome_m(self):
+    def model(self):
         return self._outcome_m()
 
     @property
     def outcome_id(self):
-        return self.outcome_m.outcome.outcome_id
+        return self.model.outcome.outcome_id
 
     @property
     def name(self):
-        return self.outcome_m.outcome.name
+        return self.model.outcome.name
 
     def draw(self, context, state, highlight=False):
         if highlight:
@@ -780,16 +780,16 @@ class DataPortView(PortView):
         self.fill_color = gui_config.gtk_colors['DATA_PORT']
 
     @property
-    def port_m(self):
+    def model(self):
         return self._port_m()
 
     @property
     def port_id(self):
-        return self.port_m.data_port.data_port_id
+        return self.model.data_port.data_port_id
 
     @property
     def name(self):
-        return self.port_m.data_port.name
+        return self.model.data_port.name
 
     def draw(self, context, state):
         draw_label = state.selected or state.show_data_port_label or context.draw_all
