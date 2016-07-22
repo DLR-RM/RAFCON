@@ -115,7 +115,8 @@ class GraphicalEditorController(ExtendedController):
         pos_start = item.model.meta['gui']['editor_gaphas']['rel_pos']
         motion = InMotion(item, self.view.editor)
         motion.start_move(self.view.editor.get_matrix_i2v(item).transform_point(pos_start[0], pos_start[1]))
-        motion.move((x,y))
+        motion.move((x, y))
+        motion.stop_move()
 
     def on_drag_motion(self, widget, context, x, y, time):
         """Changes the selection on mouse over during drag motion

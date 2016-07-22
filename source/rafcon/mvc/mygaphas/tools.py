@@ -109,7 +109,6 @@ class MoveItemTool(ItemTool):
                     position_changed = True
 
         if isinstance(self._item, StateView):
-            self._item.moving = False
             self.view.canvas.request_update(self._item)
             if position_changed:
                 self._graphical_editor_view.emit('meta_data_changed', self._item.model, "position", True)
@@ -124,27 +123,6 @@ class MoveItemTool(ItemTool):
                                                  "name_position", False)
 
         return super(MoveItemTool, self).on_button_release(event)
-
-    def on_motion_notify(self, event):
-        """Normally do nothing.
-
-        If a button is pressed move the items around.
-        """
-        if event.state & gtk.gdk.BUTTON_PRESS_MASK:
-
-            if self._item and not self._item.moving:
-                self._item.moving = True
-
-            if not self._movable_items:
-                # Start moving
-                self._movable_items = set(self.movable_items())
-                for inmotion in self._movable_items:
-                    inmotion.start_move((event.x, event.y))
-
-            for inmotion in self._movable_items:
-                inmotion.move((event.x, event.y))
-
-            return True
 
 
 class HoverItemTool(HoverTool):
