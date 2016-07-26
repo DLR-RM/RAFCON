@@ -71,6 +71,7 @@ SHORTCUTS:
     run_to_selected: <Control><Shift>R
     save: <Control>S
     save_as: <Control><Shift>S
+    save_state_as: <Control><Alt>S
     show_aborted_preempted: <Control>P
     show_data_flows: <Control>D
     show_data_values: <Control>L

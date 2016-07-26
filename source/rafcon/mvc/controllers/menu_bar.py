@@ -330,7 +330,7 @@ class MenuBarController(ExtendedController):
             import copy
             state_m = copy.copy(selected_states[0])
             from rafcon.mvc.models.state_machine import StateMachineModel
-            sm_m = StateMachineModel(state_machine=StateMachine(root_state=state_m.state))
+            sm_m = StateMachineModel(StateMachine(root_state=state_m.state), self.model)
             sm_m.root_state = state_m
             from rafcon.statemachine.storage.storage import save_state_machine_to_path
             path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
@@ -338,9 +338,10 @@ class MenuBarController(ExtendedController):
                 save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
                 sm_m.store_meta_data()
             # check if state machine is in library path
-            if path in library_manager._library_paths:
-                logger.info("DIALOG TO REQUEST SUBSTITUTION")
-                logger.info("DIALOG TO REQUEST REFRESH OF LIBRARY-TREE")
+            if any([root_path == path[:len(root_path)] for root_path in library_manager._library_paths.values()]):
+                logger.info("DIALOG TO REQUEST SUBSTITUTION has to be insert here.")
+                logger.info("DIALOG TO REQUEST REFRESH OF LIBRARY-TREE has to be insert here.")
+            logger.info("DIALOG TO REQUEST opening of new state machine has to be insert here.")
         else:
             logger.warning("Multiple states can not be saved as state machine directly. Group them before.")
 
