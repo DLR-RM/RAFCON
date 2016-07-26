@@ -152,6 +152,8 @@ class MenuBarController(ExtendedController):
         """
         self.add_callback_to_shortcut_manager('save', partial(self.call_action_callback, "on_save_activate"))
         self.add_callback_to_shortcut_manager('save_as', partial(self.call_action_callback, "on_save_as_activate"))
+        self.add_callback_to_shortcut_manager('save_state_as', partial(self.call_action_callback,
+                                                                       "on_save_selected_state_as_activate"))
         self.add_callback_to_shortcut_manager('open', partial(self.call_action_callback, "on_open_activate"))
         self.add_callback_to_shortcut_manager('new', partial(self.call_action_callback, "on_new_activate"))
         self.add_callback_to_shortcut_manager('quit', partial(self.call_action_callback, "on_quit_activate"))
@@ -297,7 +299,7 @@ class MenuBarController(ExtendedController):
 
         state_machine = self.model.get_selected_state_machine_model().state_machine
         storage.save_state_machine_to_path(state_machine, state_machine.file_system_path,
-                                          delete_old_state_machine=False, save_as=save_as)
+                                           delete_old_state_machine=False, save_as=save_as)
 
         self.model.get_selected_state_machine_model().store_meta_data()
         logger.debug("Successfully saved state machine and its meta data.")
@@ -313,6 +315,29 @@ class MenuBarController(ExtendedController):
                 return False
         self.model.get_selected_state_machine_model().state_machine.file_system_path = path
         return self.on_save_activate(widget, data, save_as=True)
+
+    def on_save_selected_state_as_activate(self, widget=None, data=None, path=None):
+        selected_states = self.model.get_selected_state_machine_model().selection.get_states()
+        logger.info("Save state as state machine. \n" + str(selected_states))
+        logger.info("library_paths: " + str(library_manager._library_paths))
+        if selected_states and len(selected_states) == 1:
+            import copy
+            state_m = copy.copy(selected_states[0])
+            from rafcon.mvc.models.state_machine import StateMachineModel
+            sm_m = StateMachineModel(StateMachine(root_state=state_m.state), self.model)
+            sm_m.root_state = state_m
+            from rafcon.statemachine.storage.storage import save_state_machine_to_path
+            path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
+            if path:
+                save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
+                sm_m.store_meta_data()
+            # check if state machine is in library path
+            if any([root_path == path[:len(root_path)] for root_path in library_manager._library_paths.values()]):
+                logger.info("DIALOG TO REQUEST SUBSTITUTION has to be insert here.")
+                logger.info("DIALOG TO REQUEST REFRESH OF LIBRARY-TREE has to be insert here.")
+            logger.info("DIALOG TO REQUEST opening of new state machine has to be insert here.")
+        else:
+            logger.warning("Multiple states can not be saved as state machine directly. Group them before.")
 
     def on_menu_properties_activate(self, widget, data=None):
         # TODO: implement
