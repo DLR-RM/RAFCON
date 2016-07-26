@@ -134,8 +134,8 @@ def start_state_machine(state_machine_path, start_state_path=None):
 def stop_reactor_on_state_machine_finish(state_machine):
 
     # wait for the state machine to start
-    # in the case of the monitoring execution engine there are no execution histories yet
-    if len(state_machine.execution_history_container.execution_histories) > 0:
+    from rafcon.statemachine.states.execution_state import ExecutionState
+    if not isinstance(state_machine.root_state, ExecutionState):
         while len(state_machine.execution_history_container.execution_histories[0].history_items) < 1:
             time.sleep(0.1)
     else:
