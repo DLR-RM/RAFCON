@@ -437,7 +437,7 @@ class MenuBarController(ExtendedController):
         if self.check_sm_running():
             return True  # prevents closing operation
 
-        self._prepare_destruction()
+        self.prepare_destruction()
         return False
 
     def check_sm_modified(self):
@@ -450,7 +450,7 @@ class MenuBarController(ExtendedController):
                             is not StateMachineExecutionStatus.STOPPED:
                         self.check_sm_running()
                     else:
-                        self._prepare_destruction()
+                        self.prepare_destruction()
                         self.on_destroy(None)
                 elif response_id == 43:
                     logger.debug("Close main window canceled")
@@ -478,7 +478,7 @@ class MenuBarController(ExtendedController):
                     self.state_machine_execution_engine.stop()
                     logger.debug("State machine is shut down now!")
                     widget.destroy()
-                    self._prepare_destruction()
+                    self.prepare_destruction()
                     self.on_destroy(None)
                 elif response_id == 43:
                     logger.debug("State machine will stay running!")
@@ -528,7 +528,7 @@ class MenuBarController(ExtendedController):
         while gtk.events_pending():
             gtk.main_iteration(False)
 
-    def _prepare_destruction(self):
+    def prepare_destruction(self):
         """Saves current configuration of windows and panes to the runtime config file, before RAFCON is closed."""
         logger.debug("Saving runtime config")
 
