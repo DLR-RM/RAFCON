@@ -211,7 +211,7 @@ if __name__ == '__main__':
             sm.root_state.join()
 
     finally:
-        plugins.run_hook("post_main_window_destruction")
+        plugins.run_hook("post_destruction")
 
         if profiler:
             stop_profiler(profiler)

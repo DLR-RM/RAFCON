@@ -530,10 +530,11 @@ class MenuBarController(ExtendedController):
 
     def prepare_destruction(self):
         """Saves current configuration of windows and panes to the runtime config file, before RAFCON is closed."""
+        plugins.run_hook("pre_destruction")
+
         logger.debug("Saving runtime config")
 
         global_runtime_config.store_widget_properties(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
-
         global_runtime_config.store_widget_properties(self.main_window_view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['right_h_pane'], 'RIGHT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['central_v_pane'], 'CONSOLE_DOCKED')
@@ -562,8 +563,6 @@ class MenuBarController(ExtendedController):
         # Should close all tabs
         core_singletons.state_machine_manager.delete_all_state_machines()
         # Recursively destroys the main window
-
-        plugins.run_hook("pre_main_window_destruction", mvc_singleton.main_window_controller)
 
         mvc_singleton.main_window_controller.destroy()
         self.logging_view.quit_flag = True
