@@ -151,7 +151,9 @@ def stop_reactor_on_state_machine_finish(state_machine):
 
     if reactor_required():
         from twisted.internet import reactor
-        reactor.callFromThread(reactor.stop)
+        if reactor.running:
+            plugins.run_hook("pre_destruction")
+            reactor.callFromThread(reactor.stop)
 
 
 def reactor_required():
@@ -179,12 +181,11 @@ def signal_handler(signal, frame):
         import traceback
         print "Could not stop statemachine: {0} {1}".format(e.message, traceback.format_exc())
 
-    plugins.run_hook("pre_destruction")
-
     # shutdown twisted correctly
     if reactor_required():
         from twisted.internet import reactor
         if reactor.running:
+            plugins.run_hook("pre_destruction")
             reactor.callFromThread(reactor.stop)
 
     plugins.run_hook("post_destruction")
@@ -259,6 +260,8 @@ if __name__ == '__main__':
 
         rafcon.statemachine.singleton.state_machine_execution_engine.join()
         logger.info("State machine execution finished!")
+
+        plugins.run_hook("post_destruction")
     finally:
         if profiler:
             stop_profiler(profiler)
