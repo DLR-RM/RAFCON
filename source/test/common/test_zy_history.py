@@ -1141,7 +1141,7 @@ def test_data_flow_property_modifications_history(caplog):
 def test_type_modifications_without_gui(caplog):
     with_gui = False
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
+    signal.signal(signal.SIGINT, rafcon.statemachine.start.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
     print "create model"

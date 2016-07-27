@@ -437,7 +437,7 @@ class MenuBarController(ExtendedController):
         if self.check_sm_running():
             return True  # prevents closing operation
 
-        self._prepare_destruction()
+        self.prepare_destruction()
         return False
 
     def check_sm_modified(self):
@@ -450,7 +450,7 @@ class MenuBarController(ExtendedController):
                             is not StateMachineExecutionStatus.STOPPED:
                         self.check_sm_running()
                     else:
-                        self._prepare_destruction()
+                        self.prepare_destruction()
                         self.on_destroy(None)
                 elif response_id == 43:
                     logger.debug("Close main window canceled")
@@ -478,7 +478,7 @@ class MenuBarController(ExtendedController):
                     self.state_machine_execution_engine.stop()
                     logger.debug("State machine is shut down now!")
                     widget.destroy()
-                    self._prepare_destruction()
+                    self.prepare_destruction()
                     self.on_destroy(None)
                 elif response_id == 43:
                     logger.debug("State machine will stay running!")
@@ -528,12 +528,13 @@ class MenuBarController(ExtendedController):
         while gtk.events_pending():
             gtk.main_iteration(False)
 
-    def _prepare_destruction(self):
+    def prepare_destruction(self):
         """Saves current configuration of windows and panes to the runtime config file, before RAFCON is closed."""
+        plugins.run_hook("pre_destruction")
+
         logger.debug("Saving runtime config")
 
         global_runtime_config.store_widget_properties(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
-
         global_runtime_config.store_widget_properties(self.main_window_view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['right_h_pane'], 'RIGHT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['central_v_pane'], 'CONSOLE_DOCKED')
@@ -555,15 +556,9 @@ class MenuBarController(ExtendedController):
 
         import glib
 
-        # We decided on not saving the configuration when exiting
-        # glib.idle_add(rafcon.statemachine.config.global_config.save_configuration)
-        # glib.idle_add(rafcon.mvc.config.global_gui_config.save_configuration)
-
         # Should close all tabs
         core_singletons.state_machine_manager.delete_all_state_machines()
         # Recursively destroys the main window
-
-        plugins.run_hook("pre_main_window_destruction", mvc_singleton.main_window_controller)
 
         mvc_singleton.main_window_controller.destroy()
         self.logging_view.quit_flag = True
