@@ -212,14 +212,15 @@ class BarrierConcurrencyState(ConcurrencyState):
 
         return True, message
 
-    @Observable.observed
     def add_state(self, state, storage_load=False):
-        """ Overwrite the parent class add_state method by adding the automatic transition generation for the decider_state.
+        """Overwrite the parent class add_state method
+
+         Add automatic transition generation for the decider_state.
 
         :param state: The state to be added
         :return:
         """
-        state_id = ContainerState.add_state(self, state)
+        state_id = super(BarrierConcurrencyState, self).add_state(state)
         if not storage_load and state.state_id is not UNIQUE_DECIDER_STATE_ID:
             # the transitions must only be created for the initial add_state call and not during each load procedure
             for o_id, o in state.outcomes.iteritems():
@@ -253,7 +254,6 @@ class BarrierConcurrencyState(ConcurrencyState):
             for state in states.itervalues():
                 self.add_state(state)
 
-    @Observable.observed
     def remove_state(self, state_id, recursive_deletion=True, force=False):
         """ Overwrite the parent class remove state method by checking if the user tries to delete the decider state
 
