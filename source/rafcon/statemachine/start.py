@@ -228,8 +228,7 @@ def stop_profiler(profiler):
 
 
 if __name__ == '__main__':
-
-    signal.signal(signal.SIGINT, sm_singletons.signal_handler)
+    register_signal_handlers(signal_handler)
 
     logger.info("initialize RAFCON ... ")
 

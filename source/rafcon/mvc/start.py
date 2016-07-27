@@ -5,18 +5,14 @@ import logging
 import signal
 import gtk
 import threading
-import time
 from yaml_configuration.config import config_path
-from Queue import Empty
 
-import rafcon
 from rafcon.statemachine.start import parse_state_machine_path, start_profiler, stop_profiler, setup_environment, \
-    reactor_required, setup_configuration, post_setup_plugins
+    reactor_required, setup_configuration, post_setup_plugins, register_signal_handlers, SIGNALS_TO_NAMES_DICT
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton as sm_singletons
-from rafcon.statemachine.enums import StateExecutionState
 from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 
 import rafcon.mvc.singleton as mvc_singletons
@@ -187,7 +183,7 @@ def signal_handler(signal, frame):
 
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGINT, sm_singletons.signal_handler)
+    register_signal_handlers(signal_handler)
 
     setup_gtkmvc_logger()
     pre_setup_plugins()
