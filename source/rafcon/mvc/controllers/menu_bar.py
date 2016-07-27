@@ -556,10 +556,6 @@ class MenuBarController(ExtendedController):
 
         import glib
 
-        # We decided on not saving the configuration when exiting
-        # glib.idle_add(rafcon.statemachine.config.global_config.save_configuration)
-        # glib.idle_add(rafcon.mvc.config.global_gui_config.save_configuration)
-
         # Should close all tabs
         core_singletons.state_machine_manager.delete_all_state_machines()
         # Recursively destroys the main window

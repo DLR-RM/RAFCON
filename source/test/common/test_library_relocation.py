@@ -38,7 +38,7 @@ def open_folder(query):
 
 def test_library_relocation(caplog):
 
-    signal.signal(signal.SIGINT, sm_singletons.signal_handler)
+    signal.signal(signal.SIGINT, rafcon.statemachine.start.signal_handler)
     testing_utils.test_multithrading_lock.acquire()
 
     testing_utils.remove_all_libraries()

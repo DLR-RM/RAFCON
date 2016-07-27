@@ -104,7 +104,7 @@ def convert(config_path, source_path, target_path):
     else:
         setup_config["target_path"] = [target_path]
 
-    signal.signal(signal.SIGINT, sm_singletons.signal_handler)
+    signal.signal(signal.SIGINT, rafcon.statemachine.start.signal_handler)
 
     global_config.load(path=setup_config['config_path'])
     global_gui_config.load(path=setup_config['gui_config_path'])
