@@ -670,9 +670,10 @@ class StateView(Element):
         def set_item_properties(item, item_meta, size, rel_pos):
             item.width = size[0]
             item.height = size[1]
-            item.position = rel_pos
             item_meta['size'] = size
-            item_meta['rel_pos'] = rel_pos
+            if item is not self:
+                item.position = rel_pos
+                item_meta['rel_pos'] = rel_pos
 
         def resize_state_v(state_v, old_state_size, new_state_size, use_meta_data):
             width_factor = float(new_state_size[0]) / old_state_size[0]
