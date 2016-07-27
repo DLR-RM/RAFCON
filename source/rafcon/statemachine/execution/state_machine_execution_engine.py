@@ -121,9 +121,9 @@ class StateMachineExecutionEngine(Observable):
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
 
-    def join(self):
+    def join(self, timeout=None):
         if self.__wait_for_finishing_thread:
-            self.__wait_for_finishing_thread.join()
+            self.__wait_for_finishing_thread.join(timeout)
         else:
             logger.warn("Cannot join as state machine was not started yet.")
 
