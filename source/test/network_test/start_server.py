@@ -58,7 +58,8 @@ def start_server(interacting_function, queue_dict):
     plugins.load_plugins()
     plugins.run_pre_inits()
 
-    signal.signal(signal.SIGINT, rafcon.mvc.start.signal_handler)
+    from rafcon.mvc.start import signal_handler
+    signal.signal(signal.SIGINT, signal_handler)
 
     global_config.load(path=os.path.dirname(os.path.abspath(__file__)))
 

@@ -78,7 +78,8 @@ def start_client(interacting_function, queue_dict):
         # set env variable RAFCON_LIB_PATH to the library directory of RAFCON (when not using RMPM)
         os.environ['RAFCON_LIB_PATH'] = join(dirname(rafcon_root_path), 'libraries')
 
-    signal.signal(signal.SIGINT, rafcon.mvc.start.signal_handler)
+    from rafcon.mvc.start import signal_handler
+    signal.signal(signal.SIGINT, signal_handler)
 
     global_config.load(path=os.path.dirname(os.path.abspath(__file__)))
     global_gui_config.load(path=os.path.dirname(os.path.abspath(__file__)))
