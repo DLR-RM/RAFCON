@@ -333,9 +333,61 @@ class MenuBarController(ExtendedController):
                 sm_m.store_meta_data()
             # check if state machine is in library path
             if any([root_path == path[:len(root_path)] for root_path in library_manager._library_paths.values()]):
+                # TODO use a check box dialog with three check boxes and an confirmation and cancel button
                 logger.info("DIALOG TO REQUEST SUBSTITUTION has to be insert here.")
-                logger.info("DIALOG TO REQUEST REFRESH OF LIBRARY-TREE has to be insert here.")
-            logger.info("DIALOG TO REQUEST opening of new state machine has to be insert here.")
+                # logger.info("DIALOG TO REQUEST REFRESH OF LIBRARY-TREE has to be insert here.")
+
+                def on_message_dialog_response_signal(widget, response_id):
+                    if response_id in [42, 43, 44]:
+                        widget.destroy()
+                    if response_id == 42:
+                        logger.debug("Library refresh is triggered.")
+                        self.on_refresh_libraries_activate(None)
+                    elif response_id == 43:
+                        logger.debug("Refresh all is triggered.")
+                        self.on_refresh_all_activate(None)
+                    elif response_id == 44:
+                        pass
+                    else:
+                        logger.warning("Response id: {} is not considered".format(response_id))
+
+                dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+                message_string = "You stored your state machine in a path that is included into the library-paths." \
+                                 "Do you want to refresh the library-tree or refresh all or may consider this later " \
+                                 "manually?"
+                dialog.set_markup(message_string)
+                dialog.add_button("Refresh-Library-Tree", 42)
+                dialog.add_button("Refresh-All", 43)
+                dialog.add_button("May later manually", 44)
+                dialog.grab_focus()
+                dialog.finalize(on_message_dialog_response_signal)
+                dialog.run()
+
+            # logger.info("DIALOG TO REQUEST opening of new state machine has to be insert here.")
+
+            def on_message_dialog_response_signal(widget, response_id):
+                if response_id == 42:
+                    logger.debug("Open state machine.")
+                    try:
+                        state_machine = storage.load_state_machine_from_path(path)
+                        state_machine_manager.add_state_machine(state_machine)
+                    except (ValueError, IOError) as e:
+                        logger.error('Error while trying to open state machine: {0}'.format(e))
+                elif response_id == 43:
+                    pass
+                else:
+                    logger.warning("Response id: {} is not considered".format(response_id))
+                if response_id in [42, 43]:
+                    widget.destroy()
+
+            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+            message_string = "Should the newly from state created state machine be re-open?"
+            dialog.set_markup(message_string)
+            dialog.add_button("Yes", 42)
+            dialog.add_button("No", 43)
+            dialog.grab_focus()
+            dialog.finalize(on_message_dialog_response_signal)
+            dialog.run()
         else:
             logger.warning("Multiple states can not be saved as state machine directly. Group them before.")
 
