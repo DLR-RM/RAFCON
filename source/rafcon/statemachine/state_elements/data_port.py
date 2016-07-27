@@ -203,7 +203,7 @@ class DataPort(StateElement):
 
         if default_value is not None:
             # If the default value is passed as string, we have to convert it to the data type
-            if isinstance(default_value, (str, basestring)):
+            if isinstance(default_value, basestring):
                 if len(default_value) > 1 and default_value[0] == '$':
                     return default_value
                 if default_value == "None":
