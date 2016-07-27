@@ -160,6 +160,43 @@ def reactor_required():
     return False
 
 
+SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n)  for n in dir(signal) if n.startswith('SIG') and '_' not in n)
+
+
+def signal_handler(signal, frame):
+    from rafcon.statemachine.enums import StateMachineExecutionStatus
+    from rafcon.statemachine.singleton import state_machine_execution_engine
+
+    try:
+        # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
+        print "Signal '{}' received.\n" \
+              "Execution engine will be stopped and program will be shutdown!".format(SIGNALS_TO_NAMES_DICT.get(
+            signal, "[unknown]"))
+        if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+            state_machine_execution_engine.stop()
+            state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
+    except Exception as e:
+        import traceback
+        print "Could not stop statemachine: {0} {1}".format(e.message, traceback.format_exc())
+
+    plugins.run_hook("pre_destruction")
+
+    # shutdown twisted correctly
+    if reactor_required():
+        from twisted.internet import reactor
+        if reactor.running:
+            reactor.callFromThread(reactor.stop)
+
+    plugins.run_hook("post_destruction")
+
+
+def register_signal_handlers(callback):
+    signal.signal(signal.SIGINT, callback)
+    signal.signal(signal.SIGHUP, callback)
+    signal.signal(signal.SIGQUIT, callback)
+    signal.signal(signal.SIGTERM, callback)
+
+
 def start_profiler():
     profiler_run = global_config.get_config_value("PROFILER_RUN", False)
     if profiler_run:
