@@ -30,7 +30,7 @@ class MenuBarView(View):
         'paste_clipboard':      constants.BUTTON_PASTE,
         'add_state':            constants.BUTTON_ADD,
         'group_states':         constants.BUTTON_GROUP,
-        'ungroup_states':       constants.BUTTON_UNGR,
+        'ungroup_state':        constants.BUTTON_UNGR,
         'delete':               constants.BUTTON_DEL,
         'undo':                 constants.BUTTON_UNDO,
         'redo':                 constants.BUTTON_REDO,

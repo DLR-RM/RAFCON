@@ -1,6 +1,7 @@
 from cairo import ANTIALIAS_NONE, Matrix
 
 from rafcon.mvc.config import global_gui_config as gui_config
+from rafcon.mvc.utils import constants
 
 from gaphas.aspect import PaintFocused, ItemPaintFocused
 from gaphas.painter import HandlePainter, BoundingBoxPainter, CairoBoundingBoxContext
@@ -37,8 +38,8 @@ class CornerHandlePainter(HandlePainter):
             opacity = 1
 
         side_length = self._get_handle_side_length(item)
-
-        cairo.set_line_width(self.view.get_zoom_factor() / 4.)
+        line_width = side_length / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR * 2
+        cairo.set_line_width(line_width)
 
         for index, handle in enumerate(item.handles()):
             if index >= 4:

@@ -10,7 +10,7 @@ from rafcon.mvc.config import global_gui_config
 
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
 from gaphas.item import NW
-from gaphas.aspect import HandleFinder, ItemConnectionSink, Connector
+from gaphas.aspect import HandleFinder, ItemConnectionSink, Connector, InMotion
 
 from rafcon.mvc.mygaphas.aspect import HandleInMotion, StateHandleFinder
 from rafcon.mvc.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, \
@@ -20,6 +20,7 @@ from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortVi
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 from rafcon.mvc.mygaphas.utils import gap_helper
 
+from rafcon.mvc.controllers.right_click_menu.state import StateRightClickMenuGapahs
 from rafcon.mvc.utils import constants
 from rafcon.utils import log
 
@@ -60,81 +61,70 @@ class MoveItemTool(ItemTool):
     def __init__(self, graphical_editor_view, view=None, buttons=(1,)):
         super(MoveItemTool, self).__init__(view, buttons)
         self._graphical_editor_view = graphical_editor_view
+        self._move_name_v = False
 
         self._item = None
 
+    def movable_items(self):
+        if self._move_name_v:
+            return [InMotion(self._item, self.view)]
+        else:
+            return super(MoveItemTool, self).movable_items()
+
     def on_button_press(self, event):
-        super(MoveItemTool, self).on_button_press(event)
+        if event.button not in self._buttons:
+            return False  # Only handle events for registered buttons (left mouse clicks)
 
-        item = self.get_item()
-        if isinstance(item, StateView):
-            self._item = item
+        if event.state & gtk.gdk.SHIFT_MASK:
+            return False  # Mouse clicks with pressed shift key are handled in another tool
 
-        if (isinstance(self.view.focused_item, NameView) and not
-                mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.is_selected(
-                self.view.focused_item.parent.model)):
-            self.view.focused_item = self.view.focused_item.parent
-            self._item = self.view.focused_item
+        self._item = self.get_item()
+
+        # NameView can only be moved when the Ctrl-key is pressed
+        self._move_name_v = isinstance(self._item, NameView) and event.state & gtk.gdk.CONTROL_MASK
+
+        if self._item in self.view.selected_items and event.state & gtk.gdk.CONTROL_MASK:
+            self.view.unselect_item(self._item)
+        else:
+            if not event.state & gtk.gdk.CONTROL_MASK:
+                del self.view.selected_items
+            self.view.focused_item = self._item
 
         if not self.view.is_focus():
             self.view.grab_focus()
-        if isinstance(self.view.focused_item, StateView):
-            self._graphical_editor_view.emit('new_state_selection', self.view.focused_item)
-
-        if event.button == 3:
-            self._graphical_editor_view.emit('deselect_states')
 
         return True
 
     def on_button_release(self, event):
 
+        position_changed = False
         for inmotion in self._movable_items:
             inmotion.move((event.x, event.y))
             rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
                                                         inmotion.item.handles()[NW])
             if isinstance(inmotion.item, StateView):
                 state_m = inmotion.item.model
-                state_m.meta['gui']['editor_gaphas']['rel_pos'] = rel_pos
-                state_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
+                if state_m.meta['gui']['editor_gaphas']['rel_pos'] != rel_pos:
+                    position_changed = True
+                    state_m.meta['gui']['editor_gaphas']['rel_pos'] = rel_pos
+                    state_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
             elif isinstance(inmotion.item, NameView):
                 state_m = self.view.canvas.get_parent(inmotion.item).model
-                state_m.meta['gui']['editor_gaphas']['name']['rel_pos'] = rel_pos
+                if state_m.meta['gui']['editor_gaphas']['name']['rel_pos'] != rel_pos:
+                    state_m.meta['gui']['editor_gaphas']['name']['rel_pos'] = rel_pos
+                    position_changed = True
 
         if isinstance(self._item, StateView):
-            self._item.moving = False
             self.view.canvas.request_update(self._item)
-            self._graphical_editor_view.emit('meta_data_changed', self._item.model, "position", True)
-
-            self._item = None
-
-            self.view.redraw_complete_screen()
+            if position_changed:
+                self._graphical_editor_view.emit('meta_data_changed', self._item.model, "position", True)
 
         if isinstance(self.view.focused_item, NameView):
-            self._graphical_editor_view.emit('meta_data_changed', self.view.focused_item.parent.model,
-                                             "name_position", False)
+            if position_changed:
+                self._graphical_editor_view.emit('meta_data_changed', self.view.focused_item.parent.model,
+                                                 "name_position", False)
 
         return super(MoveItemTool, self).on_button_release(event)
-
-    def on_motion_notify(self, event):
-        """Normally do nothing.
-
-        If a button is pressed move the items around.
-        """
-        if event.state & gtk.gdk.BUTTON_PRESS_MASK:
-
-            if self._item and not self._item.moving:
-                self._item.moving = True
-
-            if not self._movable_items:
-                # Start moving
-                self._movable_items = set(self.movable_items())
-                for inmotion in self._movable_items:
-                    inmotion.start_move((event.x, event.y))
-
-            for inmotion in self._movable_items:
-                inmotion.move((event.x, event.y))
-
-            return True
 
 
 class HoverItemTool(HoverTool):
@@ -208,27 +198,23 @@ class HoverItemTool(HoverTool):
             else:
                 self.view.window.set_cursor(gtk.gdk.Cursor(constants.SELECT_CURSOR))
 
-        if self._prev_hovered_item and self.view.hovered_item is not self._prev_hovered_item:
-            self._prev_hovered_item.hovered = False
         if isinstance(self.view.hovered_item, StateView):
-            self.view.hovered_item.hovered = True
             self._prev_hovered_item = self.view.hovered_item
 
 
-class MultiselectionTool(RubberbandTool):
+class MultiSelectionTool(RubberbandTool):
     def __init__(self, graphical_editor_view, view=None):
-        super(MultiselectionTool, self).__init__(view)
+        super(MultiSelectionTool, self).__init__(view)
 
         self._graphical_editor_view = graphical_editor_view
 
     def on_button_press(self, event):
-        if event.state & gtk.gdk.CONTROL_MASK and event.state & gtk.gdk.SHIFT_MASK:
-            return super(MultiselectionTool, self).on_button_press(event)
+        if event.state & gtk.gdk.SHIFT_MASK:
+            return super(MultiSelectionTool, self).on_button_press(event)
         return False
 
     def on_motion_notify(self, event):
-        if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & gtk.gdk.CONTROL_MASK and \
-                        event.state & gtk.gdk.SHIFT_MASK:
+        if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & gtk.gdk.SHIFT_MASK:
             view = self.view
             self.queue_draw(view)
             self.x1, self.y1 = event.x, event.y
@@ -238,8 +224,8 @@ class MultiselectionTool(RubberbandTool):
     def on_button_release(self, event):
         self.queue_draw(self.view)
         x0, y0, x1, y1 = self.x0, self.y0, self.x1, self.y1
-        # Hold down ALT-key to add selection to current selection
-        if event.state & gtk.gdk.MOD1_MASK:
+        # Hold down Ctrl-key to add selection to current selection
+        if event.state & gtk.gdk.CONTROL_MASK:
             items_to_deselect = []
         else:
             items_to_deselect = list(self.view.selected_items)
@@ -252,8 +238,6 @@ class MultiselectionTool(RubberbandTool):
         for item in items_to_deselect:
             if item in self.view.selected_items:
                 self.view.unselect_item(item)
-
-        self._graphical_editor_view.emit('new_state_selection', self.view.selected_items)
 
         return True
 
@@ -789,3 +773,13 @@ class ConnectHandleMoveTool(HandleMoveTool):
                 self.connect(item, handle, (event.x, event.y))
         finally:
             return super(ConnectHandleMoveTool, self).on_button_release(event)
+
+
+class RightClickTool(ItemTool):
+
+    def __init__(self, view=None, buttons=(3,)):
+        super(RightClickTool, self).__init__(view, buttons)
+        self.sm_right_click_menu = StateRightClickMenuGapahs()
+
+    def on_button_press(self, event):
+        self.sm_right_click_menu.mouse_click(None, event)

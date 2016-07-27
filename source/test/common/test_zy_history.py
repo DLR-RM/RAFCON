@@ -92,165 +92,9 @@ def save_and_quit(sm_model, path, menubar_ctrl, with_gui):
         call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-class NotificationLogObserver(Observer):
-    """ This observer is a abstract class to counts and store notification
-    """
-
-    def __init__(self, model, with_print=False):
-
-        self.log = {"before": {}, "after": {}}
-        self.reset()
-        self.observed_model = model
-        self.with_print = with_print
-        self.no_failure = True
-
-        Observer.__init__(self, model)
-
-    def reset(self):
-        """ Initiate and reset the log dictionary """
-
-    def get_number_of_notifications(self):
-        nr = 0
-        for key, l in self.log['before'].iteritems():
-            nr += len(l)
-        for key, l in self.log['after'].iteritems():
-            nr += len(l)
-        return nr
-
-
-class StateNotificationLogObserver(NotificationLogObserver):
-    """ This observer counts and stores notification of StateModel-Class
-    """
-
-    def __init__(self, model, with_print=False):
-        NotificationLogObserver.__init__(self, model, with_print)
-
-    def reset(self):
-        self.log = {"before": {'states': [], 'state': [],
-                               'outcomes': [], 'input_data_ports': [], 'output_data_ports': [], 'scoped_variables': [],
-                               'transitions': [], 'data_flows': [], 'is_start': []},
-                    "after": {'states': [], 'state': [],
-                              'outcomes': [], 'input_data_ports': [], 'output_data_ports': [], 'scoped_variables': [],
-                              'transitions': [], 'data_flows': [], 'is_start': []}}
-        self.no_failure = True
-
-    @Observer.observe('states', before=True)
-    @Observer.observe("state", before=True)
-    @Observer.observe("outcomes", before=True)
-    @Observer.observe("input_data_ports", before=True)
-    @Observer.observe("output_data_ports", before=True)
-    @Observer.observe("scoped_variables", before=True)
-    @Observer.observe("transitions", before=True)
-    @Observer.observe("data_flows", before=True)
-    @Observer.observe("is_start", before=True)
-    def notification_before(self, model, prop_name, info):
-        # print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-        #       (prop_name, info.instance, info.method_name, info.result)
-        #if info.method_name in self.method_list:
-        if prop_name in self.log['before']:
-            self.log['before'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
-            if self.with_print:
-                print "++++++++ log BEFORE instance '%s' and property '%s' in state %s" % \
-                      (info.instance, prop_name, self.observed_model.state.name)
-                print "observer: ", self
-        else:
-            print "!!!! NOT a prop_name '%s' to be observed in BEFORE %s %s" % (prop_name, model, info)
-            self.no_failure = False
-
-        self.parent_state_of_notification_source(model, prop_name, info, before_after='before')
-
-    @Observer.observe('states', after=True)
-    @Observer.observe("state", after=True)
-    @Observer.observe("outcomes", after=True)
-    @Observer.observe("input_data_ports", after=True)
-    @Observer.observe("output_data_ports", after=True)
-    @Observer.observe("scoped_variables", after=True)
-    @Observer.observe("transitions", after=True)
-    @Observer.observe("data_flows", after=True)
-    @Observer.observe("is_start", after=True)
-    def notification_after(self, model, prop_name, info):
-        if prop_name in self.log['after']:
-            self.log['after'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
-            if self.with_print:
-                print "++++++++ log AFTER instance '%s' and property '%s' in state %s" % \
-                      (info.instance, prop_name, self.observed_model.state.name)
-                print "observer: ", self
-        else:
-            print "!!!! NOT a prop_name '%s' to be observed in AFTER %s %s" % (prop_name, model, info)
-            self.no_failure = False
-
-        self.parent_state_of_notification_source(model, prop_name, info, before_after='after')
-
-    def parent_state_of_notification_source(self, model, prop_name, info, before_after):
-        if self.with_print:
-            print "----- xxxxxxx %s \n%s\n%s\n%s\n" % (before_after, model, prop_name, info)
-
-        def set_dict(info, d):
-            d['model'].append(info['model'])
-            d['prop_name'].append(info['prop_name'])
-            d['instance'].append(info['instance'])
-            d['method_name'].append(info['method_name'])
-            if self.with_print:
-                print "set"
-
-        def find_parent(info, elem):
-            elem['info'].append(info)
-            if 'kwargs' in info and info['kwargs']:
-                if self.with_print:
-                    print 'kwargs'
-                elem['level'].append('kwargs')
-                set_dict(info, elem)
-                find_parent(info['kwargs'], elem)
-            elif 'info' in info and info['info']:
-                if self.with_print:
-                    print 'info'
-                elem['level'].append('info')
-                set_dict(info, elem)
-                find_parent(info['info'], elem)
-            elif 'info' in info:
-                set_dict(info, elem)
-            elif 'kwargs' in info:
-                set_dict(info, elem)
-            else:
-                if self.with_print:
-                    print 'assert info: %s elem: %s' % (info, elem)
-                # assert False
-            return elem
-
-        overview = find_parent(info, {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'level': [],
-                                      'info': []})
-        # info_print = ''
-        # for elem in overview['info']:
-        #     info_print += "\n" + str(elem)
-        # print info_print
-        if self.with_print:
-            print overview['model']
-            print overview['prop_name']
-            print overview['instance']
-            print overview['method_name']
-            print overview['level']
-            print overview['prop_name'][-1]
-        if overview['prop_name'][-1] == 'state':
-            if self.with_print:
-                print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
-            assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
-        else:
-            if overview['model'][-1].state.is_root_state:
-                overview['model'][-1].state.get_path()
-                if self.with_print:
-                    print "Path_root: ", overview['model'][-1].state.get_path()
-            else:
-                overview['model'][-1].parent.state.get_path()
-                if self.with_print:
-                    print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
-                        overview['model'][-1].parent.state.get_path()
-                assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().\
-                    split('/')[0]
-        return overview
-
-
 def create_models(*args, **kargs):
 
+    global_gui_config.set_config_value('HISTORY_ENABLED', True)
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
     for handler in logging.getLogger('gtkmvc').handlers:
@@ -392,8 +236,6 @@ def test_add_remove_history(caplog):
     state_path_dict = {}
     for key in state_dict.keys():
         state_path_dict[key] = state_dict[key].get_path()
-
-    StateNotificationLogObserver(sm_model.root_state, with_print=False)
 
     def do_check_for_state(state_name):
 
@@ -680,6 +522,7 @@ def test_add_remove_history(caplog):
     # assert check_if_all_states_there(state_dict['Container'], state_check_dict1)
     # assert check_if_all_states_there(state_dict['Container'], state_check_dict2)
 
+    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -851,6 +694,7 @@ def test_state_property_modifications_history(caplog):
 
     save_state_machine(sm_model, TEST_PATH + "_state_properties", logger, with_gui=False)
 
+    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -897,6 +741,7 @@ def test_outcome_property_modifications_history(caplog):
     do_check_for_state(state_dict, state_name='Container')
     save_state_machine(sm_model, TEST_PATH + "_outcome_properties", logger, with_gui=False)
 
+    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1017,6 +862,7 @@ def test_transition_property_modifications_history(caplog):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_transition_properties", logger, with_gui=False)
 
+    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1064,6 +910,7 @@ def test_input_port_modify_notification(caplog):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_input_port_properties", logger, with_gui=False)
 
+    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1110,6 +957,7 @@ def test_output_port_modify_notification(caplog):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_output_port_properties", logger, with_gui=False)
 
+    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1162,6 +1010,7 @@ def test_scoped_variable_modify_notification(caplog):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_scoped_variable_properties", logger, with_gui=False)
 
+    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1285,13 +1134,14 @@ def test_data_flow_property_modifications_history(caplog):
 
     save_state_machine(sm_model, TEST_PATH + "_data_flow_properties", logger, with_gui=False)
 
+    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_type_modifications_without_gui(caplog):
     with_gui = False
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
+    signal.signal(signal.SIGINT, rafcon.statemachine.start.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
     print "create model"
@@ -1469,7 +1319,7 @@ def trigger_state_type_change_tests(*args):
     save_state_machine(sm_model, state_machine_path + '_after1', logger, with_gui, menubar_ctrl)
 
     assert len(sm_model.history.modifications.single_trail_history()) == 2
-    logger.info("BCS -> HS")
+    logger.info("BCS -> HS (undo)")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
     else:
@@ -1486,7 +1336,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
-    logger.info("HS -> BCS")
+    logger.info("HS -> BCS (redo)")
     if with_gui:
         call_gui_callback(sm_model.history.redo)
     else:
@@ -1506,7 +1356,7 @@ def trigger_state_type_change_tests(*args):
     # BCS -> HS
     save_state_machine(sm_model, state_machine_path + '_before2', logger, with_gui, menubar_ctrl)
     sm_model.state_machine.file_system_path = state_machine_path
-    logger.info("BCS -> HS")
+    logger.info("BCS -> HS 2")
     if with_gui:
         # do state_type_change with gui
         # - get state-editor controller and find right row in combo box
@@ -1534,7 +1384,7 @@ def trigger_state_type_change_tests(*args):
     save_state_machine(sm_model, state_machine_path + '_after2', logger, with_gui, menubar_ctrl)
 
     assert len(sm_model.history.modifications.single_trail_history()) == 3
-    logger.info("HS -> BCS")
+    logger.info("HS -> BCS 2 (undo)")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
     else:
@@ -1547,7 +1397,7 @@ def trigger_state_type_change_tests(*args):
 
     save_state_machine(sm_model, state_machine_path + '_undo2', logger, with_gui, menubar_ctrl)
 
-    logger.info("BCS -> HS")
+    logger.info("BCS -> HS 2 (redo)")
     if with_gui:
         call_gui_callback(sm_model.history.redo)
     else:
@@ -1692,7 +1542,7 @@ def trigger_state_type_change_tests(*args):
         check_state_editor_models(sm_m, state_m, main_window_controller, logger)
 
     # HS -> BCS
-    logger.info("HS -> BCS")
+    logger.info("HS -> BCS root")
     if with_gui:
         # do state_type_change with gui
         # - do state selection to generate state editor widget
@@ -1715,8 +1565,11 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
 
+    # import time
+    # time.sleep(100)
+
     assert len(sm_model.history.modifications.single_trail_history()) == 6
-    logger.info("BCS -> HS")
+    logger.info("BCS -> HS root (undo)")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
     else:
@@ -1729,7 +1582,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
-    logger.info("HS -> BCS")
+    logger.info("HS -> BCS root (redo)")
     if with_gui:
         call_gui_callback(sm_model.history.redo)
     else:
@@ -1745,7 +1598,7 @@ def trigger_state_type_change_tests(*args):
 
     # BCS -> HS
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
-    logger.info("BCS -> HS")
+    logger.info("BCS -> HS root 2")
     if with_gui:
         # do state_type_change with gui
         # - do state selection to generate state editor widget
@@ -1766,7 +1619,7 @@ def trigger_state_type_change_tests(*args):
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
 
     assert len(sm_model.history.modifications.single_trail_history()) == 7
-    logger.info("HS -> BCS")
+    logger.info("HS -> BCS root 2 (undo)")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
     else:
@@ -1779,7 +1632,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
-    logger.info("BCS -> HS")
+    logger.info("BCS -> HS root 2 (redo)")
     if with_gui:
         call_gui_callback(sm_model.history.redo)
     else:

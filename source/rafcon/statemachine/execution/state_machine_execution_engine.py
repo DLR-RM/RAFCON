@@ -65,7 +65,7 @@ class StateMachineExecutionEngine(Observable):
             self.state_machine_manager.get_active_state_machine().root_state.recursively_pause_states()
 
         logger.debug("Pause execution ...")
-        self.set_execution_mode(StateMachineExecutionStatus.PAUSED, notify=False)
+        self.set_execution_mode(StateMachineExecutionStatus.PAUSED)
 
 
     @Observable.observed
@@ -121,8 +121,11 @@ class StateMachineExecutionEngine(Observable):
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
 
-    def join(self):
-        self.__wait_for_finishing_thread.join()
+    def join(self, timeout=None):
+        if self.__wait_for_finishing_thread:
+            self.__wait_for_finishing_thread.join(timeout)
+        else:
+            logger.warn("Cannot join as state machine was not started yet.")
 
     @Observable.observed
     def set_execution_mode_to_stopped(self):
@@ -135,12 +138,12 @@ class StateMachineExecutionEngine(Observable):
         """Set the execution mode to stepping mode. Transitions are only triggered if a new step is triggered
         """
         logger.debug("Activate step mode")
-        if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
-            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
-        else:
+        self.run_to_states = []
+        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
             self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
             self._run_active_state_machine()
-        self.run_to_states = []
+        else:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
 
     def _run_active_state_machine(self):
         """Store running state machine and observe its status"""
@@ -171,21 +174,33 @@ class StateMachineExecutionEngine(Observable):
         """
         logger.debug("Execution step into ...")
         self.run_to_states = []
-        self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
+        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
+            self._run_active_state_machine()
+        else:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
 
     def step_over(self):
         """Take a forward step (over) for all active states in the state machine
         """
         logger.debug("Execution step over ...")
         self.run_to_states = []
-        self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OVER)
+        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OVER)
+            self._run_active_state_machine()
+        else:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OVER)
 
     def step_out(self):
         """Take a forward step (out) for all active states in the state machine
         """
         logger.debug("Execution step out ...")
         self.run_to_states = []
-        self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OUT)
+        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OUT)
+            self._run_active_state_machine()
+        else:
+            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OUT)
 
     def run_to_selected_state(self, path, state_machine_id=None):
         """Take a forward step (out) for all active states in the state machine
@@ -233,11 +248,12 @@ class StateMachineExecutionEngine(Observable):
                          "no preemption handling has to be done!".format(state.name))
 
         elif self._status.execution_mode is StateMachineExecutionStatus.PAUSED:
-            try:
-                self._status.execution_condition_variable.acquire()
-                self._status.execution_condition_variable.wait()
-            finally:
-                self._status.execution_condition_variable.release()
+            while self._status.execution_mode is StateMachineExecutionStatus.PAUSED:
+                try:
+                    self._status.execution_condition_variable.acquire()
+                    self._status.execution_condition_variable.wait()
+                finally:
+                    self._status.execution_condition_variable.release()
 
         else:  # all other step modes
             logger.debug("Stepping mode: waiting for next step!")
@@ -288,8 +304,13 @@ class StateMachineExecutionEngine(Observable):
                     self.run_to_states.append(parent_path)
                 else:
                     # this is the case if step_out is called from the highest level
-                    # this is handled in the same way as the FORWARD_OVER
-                    self.run_to_states.append(state.get_path())
+
+                    # OLD convenience: this is handled in the same way as the FORWARD_OVER
+                    # self.run_to_states.append(state.get_path())
+
+                    # just run the state machine to the end in this case
+                    self.run_to_states = []
+                    self.set_execution_mode(StateMachineExecutionStatus.STARTED)
             elif self._status.execution_mode is StateMachineExecutionStatus.RUN_TO_SELECTED_STATE:
                 # "Run to states were already updated thus doing nothing"
                 pass
@@ -321,7 +342,7 @@ class StateMachineExecutionEngine(Observable):
                     self.run_to_states.append(parent_path)
 
     @staticmethod
-    def execute_state_machine_from_path(path, start_state_path=None, wait_for_execution_finished=True):
+    def execute_state_machine_from_path(state_machine=None, path=None, start_state_path=None, wait_for_execution_finished=True):
         """
         A helper function to start an arbitrary state machine at a given path.
         :param path: The path where the state machine resides
@@ -332,8 +353,9 @@ class StateMachineExecutionEngine(Observable):
         import rafcon.statemachine.singleton
         from rafcon.statemachine.storage import storage
         rafcon.statemachine.singleton.library_manager.initialize()
-        state_machine = storage.load_state_machine_from_path(path)
-        rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+        if not state_machine:
+            state_machine = storage.load_state_machine_from_path(path)
+            rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
         rafcon.statemachine.singleton.state_machine_execution_engine.start(start_state_path=start_state_path)
         sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
 

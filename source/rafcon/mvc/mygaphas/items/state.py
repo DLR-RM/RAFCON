@@ -1,21 +1,13 @@
 from weakref import ref
 from pango import SCALE, FontDescription, WRAP_WORD
-from math import pow
 from copy import copy
-
-from rafcon.mvc.utils import constants
-from rafcon.utils import log
-
-from rafcon.statemachine.enums import StateExecutionState
-
-from rafcon.mvc.config import global_gui_config as gui_config
-from rafcon.mvc.runtime_config import global_runtime_config
-from rafcon.mvc.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
-
 import cairo
+
 from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
 from gaphas.matrix import Matrix
+
+from rafcon.statemachine.enums import StateExecutionState
 
 from rafcon.mvc.mygaphas.constraint import KeepRectangleWithinConstraint, PortRectConstraint
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
@@ -26,6 +18,11 @@ from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_col_rgba
 from rafcon.mvc.mygaphas.utils import gap_draw_helper
 from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
+from rafcon.mvc.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
+from rafcon.mvc.config import global_gui_config as gui_config
+from rafcon.mvc.runtime_config import global_runtime_config
+from rafcon.mvc.utils import constants
+from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -57,8 +54,6 @@ class StateView(Element):
         self.keep_rect_constraints = {}
         self.port_constraints = {}
 
-        self.hovered = False
-        self.selected = False
         self._moving = False
         self._transparent = False
 
@@ -78,6 +73,14 @@ class StateView(Element):
             name_meta['rel_pos'] = (0, 0)
         name_pos = name_meta['rel_pos']
         self.name_view.matrix.translate(*name_pos)
+
+    @property
+    def selected(self):
+        return self in self.canvas.get_first_view().selected_items
+
+    @property
+    def hovered(self):
+        return self is self.canvas.get_first_view().hovered_item
 
     def setup_canvas(self):
         self._income = self.add_income()
@@ -117,24 +120,25 @@ class StateView(Element):
     def remove(self):
         """Remove recursively all children and then the StateView itself
         """
-        children = self.canvas.get_children(self)
+        children = self.canvas.get_children(self)[:]
         for child in children:
             if isinstance(child, StateView):
                 child.remove()
-            self.canvas.remove(child)
+            if isinstance(child, NameView):
+                self.canvas.remove(child)
         self.remove_keep_rect_within_constraint_from_parent()
         self.canvas.remove(self)
 
     @staticmethod
     def add_keep_rect_within_constraint(canvas, parent, child):
         solver = canvas.solver
-        port_side_size = parent.border_width
 
         child_nw_abs = canvas.project(child, child.handles()[NW].pos)
         child_se_abs = canvas.project(child, child.handles()[SE].pos)
         parent_nw_abs = canvas.project(parent, parent.handles()[NW].pos)
         parent_se_abs = canvas.project(parent, parent.handles()[SE].pos)
-        constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs, child_nw_abs, child_se_abs, child, port_side_size)
+        constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs,
+                                                   child_nw_abs, child_se_abs, child, lambda: parent.border_width)
         solver.add_constraint(constraint)
         parent.keep_rect_constraints[child] = constraint
 
@@ -183,8 +187,7 @@ class StateView(Element):
 
     @property
     def border_width(self):
-        return constants.BORDER_WIDTH_ROOT_STATE / pow(constants.BORDER_WIDTH_HIERARCHY_SCALE_FACTOR,
-                                                       self.hierarchy_level - 1)
+        return min(self._get_width(), self._get_height()) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
 
     @property
     def parent(self):
@@ -259,15 +262,38 @@ class StateView(Element):
     def background(self):
         self._transparent = True
 
-    def apply_meta_data(self):
-        # logger.info("apply state meta {}".format(self.model.state.get_path()))
+    def apply_meta_data(self, recursive=False):
         state_meta = self.model.meta['gui']['editor_gaphas']
-        # logger.info("rel_pos {}".format(state_meta['rel_pos']))
-        # logger.info("size {}".format(state_meta['size']))
+
         self.position = state_meta['rel_pos']
         self.width = state_meta['size'][0]
         self.height = state_meta['size'][1]
+
+        def update_port_position(port_v, meta_data):
+            if isinstance(meta_data['rel_pos'], tuple):
+                port_v.handle.pos = meta_data['rel_pos']
+                self.port_constraints[port_v].update_position(meta_data['rel_pos'])
+
+        if isinstance(state_meta['income']['rel_pos'], tuple):
+            update_port_position(self.income, state_meta['income'])
+        for outcome_v in self.outcomes:
+            update_port_position(outcome_v, outcome_v.model.meta['gui']['editor_gaphas'])
+        for data_port_v in self.inputs + self.outputs:
+            update_port_position(data_port_v, data_port_v.model.meta['gui']['editor_gaphas'])
+
         self.name_view.apply_meta_data()
+
+        if isinstance(self.model, ContainerStateModel):
+            for scoped_port_v in self.scoped_variables:
+                update_port_position(scoped_port_v, scoped_port_v.model.meta['gui']['editor_gaphas'])
+            for transition_m in self.model.transitions:
+                transition_v = self.canvas.get_view_for_model(transition_m)
+                transition_v.apply_meta_data()
+
+            if recursive:
+                for state_v in self.canvas.get_children(self):
+                    if isinstance(state_v, StateView):
+                        state_v.apply_meta_data(recursive=True)
 
     def draw(self, context):
         if self.moving and self.parent and self.parent.moving:
@@ -277,11 +303,11 @@ class StateView(Element):
         nw = self._handles[NW].pos
 
         parameters = {
-            'hierarchy': self.hierarchy_level,
             'execution_state':  self.model.state.state_execution_status,
             'selected': self.selected,
             'moving': self.moving,
-            'border_width': self.border_width
+            'border_width': self.border_width,
+            'transparent': self._transparent
         }
 
         upper_left_corner = (nw.x.value, nw.y.value)
@@ -298,58 +324,55 @@ class StateView(Element):
             # print "draw state"
             c = self._image_cache.get_context_for_image(current_zoom)
             multiplicator = self._image_cache.multiplicator
+            default_line_width = self.border_width / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR * multiplicator
 
-            c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
             c.rectangle(nw.x, nw.y, self.width, self.height)
 
+            state_background_color = gui_config.gtk_colors['STATE_BACKGROUND']
+            state_border_color = gui_config.gtk_colors['STATE_BORDER']
+            state_border_outline_color = gui_config.gtk_colors['STATE_BORDER_OUTLINE']
+
             if self.model.state.state_execution_status == StateExecutionState.WAIT_FOR_NEXT_STATE:
-                c.set_source_color(gui_config.gtk_colors['STATE_WAITING'])
+                state_border_color = gui_config.gtk_colors['STATE_WAITING_BORDER']
+                state_border_outline_color = gui_config.gtk_colors['STATE_WAITING_BORDER_OUTLINE']
             elif self.model.state.active:
-                c.set_source_color(gui_config.gtk_colors['STATE_ACTIVE'])
+                state_border_color = gui_config.gtk_colors['STATE_ACTIVE_BORDER']
+                state_border_outline_color = gui_config.gtk_colors['STATE_ACTIVE_BORDER_OUTLINE']
             elif self.selected:
-                c.set_source_color(gui_config.gtk_colors['STATE_SELECTED'])
-            else:
-                c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_BORDER'], self._transparent))
+                state_border_color = gui_config.gtk_colors['STATE_SELECTED_BORDER']
+                state_border_outline_color = gui_config.gtk_colors['STATE_SELECTED_BORDER_OUTLINE']
+
+            c.set_source_rgba(*get_col_rgba(state_border_color, self._transparent))
             c.fill_preserve()
-            if self.model.state.active:
-                c.set_source_color(gui_config.gtk_colors['STATE_ACTIVE_BORDER'])
-                c.set_line_width(.25 / self.hierarchy_level * multiplicator)
-            elif self.selected:
-                c.set_source_color(gui_config.gtk_colors['STATE_SELECTED_OUTER_BOUNDARY'])
-                c.set_line_width(.25 / self.hierarchy_level * multiplicator)
-            else:
-                c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self._transparent))
+            # The line gets cropped at the context border, therefore the line width must be doubled
+            c.set_line_width(default_line_width * 2)
             c.stroke()
 
             inner_nw, inner_se = self.get_state_drawing_area(self)
             c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_BACKGROUND']))
+            c.set_source_rgba(*get_col_rgba(state_background_color))
             c.fill_preserve()
-            c.set_line_width(0.1 / self.hierarchy_level * multiplicator)
-            c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self._transparent))
+            c.set_line_width(default_line_width)
             c.stroke()
 
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
-        self._income.port_side_size = self.border_width
         self._income.draw(context, self)
 
         for outcome_v in self._outcomes:
-            highlight = self.model.state.active and outcome_v.outcome_m.outcome is self.model.state.final_outcome
-            outcome_v.port_side_size = self.border_width
+            highlight = self.model.state.active and outcome_v.model.outcome is self.model.state.final_outcome
             outcome_v.draw(context, self, highlight)
 
         for input_v in self._inputs:
-            input_v.port_side_size = self.border_width
             input_v.draw(context, self)
 
         for output_v in self._outputs:
-            output_v.port_side_size = self.border_width
             output_v.draw(context, self)
 
         for scoped_variable_v in self._scoped_variables_ports:
-            scoped_variable_v.port_side_size = self.border_width
             scoped_variable_v.draw(context, self)
 
         if isinstance(self.model, LibraryStateModel) and not self.moving:
@@ -479,7 +502,7 @@ class StateView(Element):
         raise AttributeError("Port with id '{0}' not found in state".format(port_id, self.model.state.name))
 
     def add_income(self):
-        income_v = IncomeView(self, self.border_width)
+        income_v = IncomeView(self)
         self._ports.append(income_v.port)
         self._handles.append(income_v.handle)
         self._map_handles_port_v[income_v.handle] = income_v
@@ -496,7 +519,7 @@ class StateView(Element):
         return income_v
 
     def add_outcome(self, outcome_m):
-        outcome_v = OutcomeView(outcome_m, self, self.border_width)
+        outcome_v = OutcomeView(outcome_m, self)
         self._outcomes.append(outcome_v)
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
@@ -513,7 +536,7 @@ class StateView(Element):
                 # Distribute outcomes on the right side of the state, starting from top
                 outcome_v.side = SnappedSide.RIGHT
                 pos_x = self.width
-                num_outcomes = len([o for o in self.outcomes if o.outcome_m.outcome.outcome_id >= 0])
+                num_outcomes = len([o for o in self.outcomes if o.model.outcome.outcome_id >= 0])
                 pos_y = self._calculate_port_pos_on_line(num_outcomes, self.height)
             port_meta['rel_pos'] = pos_x, pos_y
         outcome_v.handle.pos = port_meta['rel_pos']
@@ -529,7 +552,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[outcome_v])
 
     def add_input_port(self, port_m):
-        input_port_v = InputPortView(self, port_m, self.border_width)
+        input_port_v = InputPortView(self, port_m)
         self._inputs.append(input_port_v)
         self._ports.append(input_port_v.port)
         self._handles.append(input_port_v.handle)
@@ -556,7 +579,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[input_port_v])
 
     def add_output_port(self, port_m):
-        output_port_v = OutputPortView(self, port_m, self.border_width)
+        output_port_v = OutputPortView(self, port_m)
         self._outputs.append(output_port_v)
         self._ports.append(output_port_v.port)
         self._handles.append(output_port_v.handle)
@@ -583,7 +606,7 @@ class StateView(Element):
             self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
 
     def add_scoped_variable(self, scoped_variable_m):
-        scoped_variable_port_v = ScopedVariablePortView(self, self.border_width, scoped_variable_m)
+        scoped_variable_port_v = ScopedVariablePortView(self, scoped_variable_m)
         self._scoped_variables_ports.append(scoped_variable_port_v)
         self._ports.append(scoped_variable_port_v.port)
         self._handles.append(scoped_variable_port_v.handle)
@@ -639,73 +662,64 @@ class StateView(Element):
         return pos
 
     def resize_all_children(self, old_size, paste=False):
-        from rafcon.mvc.mygaphas.utils import gap_helper
-        new_size = (self.width, self.height)
-        canvas = self.canvas
+        def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
+            new_rel_pos_x = old_rel_pos[0] * new_parent_size[0] / old_parent_size[0]
+            new_rel_pos_y = old_rel_pos[1] * new_parent_size[1] / old_parent_size[1]
+            return new_rel_pos_x, new_rel_pos_y
 
-        def resize_child(state, old_size, new_size, paste):
-            def calc_abs_pos(item, pos):
-                projection = canvas.project(item, pos)
-                return projection[0].value, projection[1].value
+        def set_item_properties(item, item_meta, size, rel_pos):
+            item.width = size[0]
+            item.height = size[1]
+            item_meta['size'] = size
+            if item is not self:
+                item.position = rel_pos
+                item_meta['rel_pos'] = rel_pos
 
-            def handle_set_rel_pos(item, handle_pos, new_pos, parent_abs_pos, old_size=None):
-                projection = canvas.project(item, handle_pos)
-                projection[0].value = parent_abs_pos[0] + new_pos[0]
-                projection[1].value = parent_abs_pos[1] + new_pos[1]
-                if isinstance(item, StateView) and old_size:
-                    item.handles()[SE].pos.x = item.handles()[NW].pos.x + old_size[0]
-                    item.handles()[SE].pos.y = item.handles()[NW].pos.y + old_size[1]
+        def resize_state_v(state_v, old_state_size, new_state_size, use_meta_data):
+            width_factor = float(new_state_size[0]) / old_state_size[0]
+            height_factor = float(new_state_size[1]) / old_state_size[1]
 
-            state_abs_pos = calc_abs_pos(state, state.handles()[NW].pos)
+            # Set new state view properties
+            old_state_rel_pos = state_v.position
+            new_state_rel_pos = calc_new_rel_pos(old_state_rel_pos, old_state_size, new_state_size)
+            set_item_properties(state_v, state_v.model.meta['gui']['editor_gaphas'], new_state_size, new_state_rel_pos)
 
-            width_factor = float(new_size[0]) / old_size[0]
-            height_factor = float(new_size[1]) / old_size[1]
+            # Set new name view properties
+            name_v = state_v.name_view
+            if use_meta_data:
+                old_name_size = state_v.model.meta['gui']['editor_gaphas']['name']['size']
+            else:
+                old_name_size = (name_v.width, name_v.height)
+            new_name_size = (old_name_size[0] * width_factor, old_name_size[1] * height_factor)
+            old_name_rel_pos = state_v.model.meta['gui']['editor_gaphas']['name']['rel_pos']
+            new_name_rel_pos = calc_new_rel_pos(old_name_rel_pos, old_state_size, new_state_size)
+            set_item_properties(name_v, state_v.model.meta['gui']['editor_gaphas'], new_name_size, new_name_rel_pos)
 
-            def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
-                old_rel_pos_x_rel = old_rel_pos[0] / old_parent_size[0]
-                old_rel_pos_y_rel = old_rel_pos[1] / old_parent_size[1]
-                new_rel_pos_x = new_parent_size[0] * old_rel_pos_x_rel
-                new_rel_pos_y = new_parent_size[1] * old_rel_pos_y_rel
-                return new_rel_pos_x, new_rel_pos_y
+            # Set new port view properties
+            for port_v in state_v.get_all_ports():
+                new_port_rel_pos = calc_new_rel_pos(port_v.handle.pos, old_state_size, new_state_size)
+                port_v.handle.pos = new_port_rel_pos
 
-            for port_v in state.get_all_ports():
-                new_rel_pos = calc_new_rel_pos(port_v.handle.pos, old_size, new_size)
-                port_v.handle.pos = new_rel_pos
-
-            name_v = state.name_view
-            name_v.width *= width_factor
-            name_v.height *= height_factor
-
-            if isinstance(state.model, ContainerStateModel):
-                for transition_v in state.get_transitions():
+            if isinstance(state_v.model, ContainerStateModel):
+                for transition_v in state_v.get_transitions():
                     for waypoint in transition_v.waypoints:
-                        old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, transition_v, waypoint)
-                        new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
-                        handle_set_rel_pos(transition_v, waypoint.pos, new_rel_pos, state_abs_pos)
+                        old_rel_pos = self.canvas.get_matrix_i2i(transition_v, transition_v.parent).transform_point(
+                            *waypoint.pos)
+                        new_rel_pos = calc_new_rel_pos(old_rel_pos, old_state_size, new_state_size)
+                        waypoint.pos = self.canvas.get_matrix_i2i(transition_v.parent, transition_v).transform_point(
+                            *new_rel_pos)
 
-                for child_state_v in state.child_state_views():
-                    if not paste:
-                        old_rel_pos = gap_helper.calc_rel_pos_to_parent(canvas, child_state_v, child_state_v.handles()[NW])
-                        new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
-                        handle_set_rel_pos(child_state_v, child_state_v.handles()[NW].pos, new_rel_pos, state_abs_pos,
-                                           (child_state_v.width, child_state_v.height))
-
-                        old_size = (child_state_v.width, child_state_v.height)
+                for child_state_v in state_v.child_state_views():
+                    if use_meta_data:
+                        old_child_size = child_state_v.model.meta['gui']['editor_gaphas']['size']
                     else:
-                        meta_rel_pos = child_state_v.model.meta['gui']['editor_gaphas']['rel_pos']
-                        new_rel_pos = calc_new_rel_pos(meta_rel_pos, old_size, new_size)
+                        old_child_size = (child_state_v.width, child_state_v.height)
 
-                        child_state_v.matrix.translate(*new_rel_pos)
+                    new_child_size = (old_child_size[0] * width_factor, old_child_size[1] * height_factor)
+                    resize_state_v(child_state_v, old_child_size, new_child_size, use_meta_data)
 
-                        old_size = child_state_v.model.meta['gui']['editor_gaphas']['size']
-
-                    new_size = (old_size[0] * width_factor, old_size[1] * height_factor)
-                    child_state_v.width = new_size[0]
-                    child_state_v.height = new_size[1]
-
-                    resize_child(child_state_v, old_size, new_size, paste)
-
-        resize_child(self, old_size, new_size, paste)
+        new_size = (self.width, self.height)
+        resize_state_v(self, old_size, new_size, paste)
 
 
 class NameView(Element):

@@ -28,7 +28,8 @@ def test_runtime_values(caplog):
     state_machine_manager.delete_all_state_machines()
     testing_utils.test_multithrading_lock.acquire()
 
-    sm = StateMachineExecutionEngine.execute_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/library_runtime_value_test"))
+    sm = StateMachineExecutionEngine.execute_state_machine_from_path(
+        path=testing_utils.get_test_sm_path("unit_test_state_machines/library_runtime_value_test"))
     state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert sm.root_state.output_data["data_output_port1"] == 114
 

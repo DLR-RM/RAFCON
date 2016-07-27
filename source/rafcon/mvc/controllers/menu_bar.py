@@ -22,6 +22,9 @@ from rafcon.statemachine.storage import storage
 from rafcon.statemachine.singleton import state_machine_manager, library_manager
 
 import rafcon.statemachine.singleton as core_singletons
+from rafcon.mvc.models.state import StateModel
+from rafcon.mvc.models.container_state import ContainerStateModel
+from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc import gui_helper
 from rafcon.mvc import singleton as mvc_singleton
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
@@ -94,7 +97,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('delete', 'activate', self.on_delete_activate)
         self.connect_button_to_function('add_state', 'activate', self.on_add_state_activate)
         self.connect_button_to_function('group_states', 'activate', self.on_add_state_activate)
-        self.connect_button_to_function('ungroup_states', 'activate', self.on_ungroup_states_activate)
+        self.connect_button_to_function('ungroup_state', 'activate', self.on_ungroup_state_activate)
         self.connect_button_to_function('undo', 'activate', self.on_undo_activate)
         self.connect_button_to_function('redo', 'activate', self.on_redo_activate)
         self.connect_button_to_function('grid', 'activate', self.on_grid_toggled)
@@ -149,13 +152,21 @@ class MenuBarController(ExtendedController):
         """
         self.add_callback_to_shortcut_manager('save', partial(self.call_action_callback, "on_save_activate"))
         self.add_callback_to_shortcut_manager('save_as', partial(self.call_action_callback, "on_save_as_activate"))
+        self.add_callback_to_shortcut_manager('save_state_as', partial(self.call_action_callback,
+                                                                       "on_save_selected_state_as_activate"))
         self.add_callback_to_shortcut_manager('open', partial(self.call_action_callback, "on_open_activate"))
         self.add_callback_to_shortcut_manager('new', partial(self.call_action_callback, "on_new_activate"))
         self.add_callback_to_shortcut_manager('quit', partial(self.call_action_callback, "on_quit_activate"))
 
+        self.add_callback_to_shortcut_manager('group', partial(self.call_action_callback, "on_group_states_activate"))
+        self.add_callback_to_shortcut_manager('ungroup', partial(self.call_action_callback, "on_ungroup_state_activate"))
+
         self.add_callback_to_shortcut_manager('start', partial(self.call_action_callback, "on_start_activate"))
         self.add_callback_to_shortcut_manager('start_from_selected', partial(self.call_action_callback,
-                                                                    "on_start_from_selected_state_activate"))
+                                                                             "on_start_from_selected_state_activate"))
+        self.add_callback_to_shortcut_manager('run_to_selected', partial(self.call_action_callback,
+                                                                         "on_run_to_selected_state_activate"))
+
         self.add_callback_to_shortcut_manager('stop', partial(self.call_action_callback, "on_stop_activate"))
         self.add_callback_to_shortcut_manager('pause', partial(self.call_action_callback, "on_pause_activate"))
         self.add_callback_to_shortcut_manager('step_mode', partial(self.call_action_callback, "on_step_mode_activate"))
@@ -288,7 +299,7 @@ class MenuBarController(ExtendedController):
 
         state_machine = self.model.get_selected_state_machine_model().state_machine
         storage.save_state_machine_to_path(state_machine, state_machine.file_system_path,
-                                          delete_old_state_machine=False, save_as=save_as)
+                                           delete_old_state_machine=False, save_as=save_as)
 
         self.model.get_selected_state_machine_model().store_meta_data()
         logger.debug("Successfully saved state machine and its meta data.")
@@ -304,6 +315,29 @@ class MenuBarController(ExtendedController):
                 return False
         self.model.get_selected_state_machine_model().state_machine.file_system_path = path
         return self.on_save_activate(widget, data, save_as=True)
+
+    def on_save_selected_state_as_activate(self, widget=None, data=None, path=None):
+        selected_states = self.model.get_selected_state_machine_model().selection.get_states()
+        logger.info("Save state as state machine. \n" + str(selected_states))
+        logger.info("library_paths: " + str(library_manager._library_paths))
+        if selected_states and len(selected_states) == 1:
+            import copy
+            state_m = copy.copy(selected_states[0])
+            from rafcon.mvc.models.state_machine import StateMachineModel
+            sm_m = StateMachineModel(StateMachine(root_state=state_m.state), self.model)
+            sm_m.root_state = state_m
+            from rafcon.statemachine.storage.storage import save_state_machine_to_path
+            path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
+            if path:
+                save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
+                sm_m.store_meta_data()
+            # check if state machine is in library path
+            if any([root_path == path[:len(root_path)] for root_path in library_manager._library_paths.values()]):
+                logger.info("DIALOG TO REQUEST SUBSTITUTION has to be insert here.")
+                logger.info("DIALOG TO REQUEST REFRESH OF LIBRARY-TREE has to be insert here.")
+            logger.info("DIALOG TO REQUEST opening of new state machine has to be insert here.")
+        else:
+            logger.warning("Multiple states can not be saved as state machine directly. Group them before.")
 
     def on_menu_properties_activate(self, widget, data=None):
         # TODO: implement
@@ -403,7 +437,7 @@ class MenuBarController(ExtendedController):
         if self.check_sm_running():
             return True  # prevents closing operation
 
-        self._prepare_destruction()
+        self.prepare_destruction()
         return False
 
     def check_sm_modified(self):
@@ -416,7 +450,7 @@ class MenuBarController(ExtendedController):
                             is not StateMachineExecutionStatus.STOPPED:
                         self.check_sm_running()
                     else:
-                        self._prepare_destruction()
+                        self.prepare_destruction()
                         self.on_destroy(None)
                 elif response_id == 43:
                     logger.debug("Close main window canceled")
@@ -444,7 +478,7 @@ class MenuBarController(ExtendedController):
                     self.state_machine_execution_engine.stop()
                     logger.debug("State machine is shut down now!")
                     widget.destroy()
-                    self._prepare_destruction()
+                    self.prepare_destruction()
                     self.on_destroy(None)
                 elif response_id == 43:
                     logger.debug("State machine will stay running!")
@@ -494,12 +528,13 @@ class MenuBarController(ExtendedController):
         while gtk.events_pending():
             gtk.main_iteration(False)
 
-    def _prepare_destruction(self):
+    def prepare_destruction(self):
         """Saves current configuration of windows and panes to the runtime config file, before RAFCON is closed."""
+        plugins.run_hook("pre_destruction")
+
         logger.debug("Saving runtime config")
 
         global_runtime_config.store_widget_properties(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
-
         global_runtime_config.store_widget_properties(self.main_window_view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['right_h_pane'], 'RIGHT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['central_v_pane'], 'CONSOLE_DOCKED')
@@ -521,15 +556,9 @@ class MenuBarController(ExtendedController):
 
         import glib
 
-        # We decided on not saving the configuration when exiting
-        # glib.idle_add(rafcon.statemachine.config.global_config.save_configuration)
-        # glib.idle_add(rafcon.mvc.config.global_gui_config.save_configuration)
-
         # Should close all tabs
         core_singletons.state_machine_manager.delete_all_state_machines()
         # Recursively destroys the main window
-
-        plugins.run_hook("pre_main_window_destruction", mvc_singleton.main_window_controller)
 
         mvc_singleton.main_window_controller.destroy()
         self.logging_view.quit_flag = True
@@ -554,11 +583,27 @@ class MenuBarController(ExtendedController):
     def on_add_state_activate(self, widget, method=None, *arg):
         self.shortcut_manager.trigger_action("add", None, None)
 
-    def on_ungroup_states_activate(self, widget, data=None):
-        pass
-
     def on_group_states_activate(self, widget, data=None):
-        pass
+        logger.debug("try to group")
+        state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
+        all_elements = self.model.get_selected_state_machine_model().selection.get_all()
+        selected_sv = [elem.scoped_variable for elem in all_elements if isinstance(elem, ScopedVariableModel)]
+        if state_m_list and isinstance(state_m_list[0].parent, StateModel) or selected_sv:
+            logger.debug("do group")
+            state_ids_of_selected_states = [state_m.state.state_id for state_m in state_m_list]
+            dp_ids_of_selected_sv = [sv.data_port_id for sv in selected_sv]
+            if state_m_list:
+                state_m_list[0].parent.state.group_states(state_ids_of_selected_states, dp_ids_of_selected_sv)
+            else:
+                selected_sv[0].parent.group_states(state_ids_of_selected_states, dp_ids_of_selected_sv)
+
+    def on_ungroup_state_activate(self, widget, data=None):
+        logger.debug("try to ungroup")
+        state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
+        if len(state_m_list) == 1 and isinstance(state_m_list[0], ContainerStateModel) and \
+                not state_m_list[0].state.is_root_state:
+            logger.debug("do ungroup")
+            state_m_list[0].parent.state.ungroup_state(state_m_list[0].state.state_id)
 
     def on_undo_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action("undo", None, None)
@@ -630,6 +675,7 @@ class MenuBarController(ExtendedController):
         self.state_machine_execution_engine.start(self.model.selected_state_machine_id)
 
     def on_start_from_selected_state_activate(self, widget, data=None):
+        logger.debug("Run from selected state ...")
         sel = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
         state_list = sel.get_states()
         if len(state_list) is not 1:

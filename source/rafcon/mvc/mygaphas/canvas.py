@@ -1,4 +1,4 @@
-from gaphas.canvas import Canvas
+from gaphas.canvas import Canvas, VariableProjection
 
 
 class MyCanvas(Canvas):
@@ -19,8 +19,12 @@ class MyCanvas(Canvas):
         """
         from rafcon.mvc.mygaphas.items.state import StateView
         from rafcon.mvc.mygaphas.items.connection import DataFlowView, TransitionView
+        from rafcon.mvc.mygaphas.items.ports import OutcomeView
+        from rafcon.mvc.mygaphas.items.ports import ScopedVariablePortView, DataPortView
+
         for item in self.get_all_items():
-            if isinstance(item, (StateView, TransitionView, DataFlowView)) and item.model is model:
+            if isinstance(item, (StateView, TransitionView, DataFlowView, OutcomeView, DataPortView,
+                                 ScopedVariablePortView)) and item.model is model:
                 return item
         return None
 
@@ -70,3 +74,53 @@ class MyCanvas(Canvas):
                     item.model.data_flow.data_flow_id == element_id:
                 return item
         return None
+
+
+class ItemProjection(object):
+    """Project a point of item A into the coordinate system of item B.
+
+    The class os based on the implementation of gaphas.canvas.CanvasProjection.
+    """
+
+    def __init__(self, point, item_point, item_target):
+        self._point = point
+        self._item_point = item_point
+        self._item_target = item_target
+
+    def _on_change_x(self, value):
+        canvas = self._item_point.canvas
+        self._px = value
+        self._point.x.value, self._point.y.value = canvas.get_matrix_i2i(self._item_target,
+                                                                         self._item_point).transform_point(value,
+                                                                                                           self._py)
+        canvas.request_update(self._item_point, matrix=False)
+
+    def _on_change_y(self, value):
+        canvas = self._item_point.canvas
+        self._py = value
+        self._point.x.value, self._point.y.value = canvas.get_matrix_i2i(self._item_target,
+                                                                         self._item_point).transform_point(self._px,
+                                                                                                           value)
+        canvas.request_update(self._item_point, matrix=False)
+
+    def _get_value(self):
+        """
+        Return two delegating variables. Each variable should contain
+        a value attribute with the real value.
+        """
+        x, y = self._point.x, self._point.y
+        self._px, self._py = self._item_point.canvas.get_matrix_i2i(self._item_point,
+                                                                    self._item_target).transform_point(x, y)
+        return self._px, self._py
+
+    pos = property(lambda self: map(VariableProjection,
+                                    self._point, self._get_value(),
+                                    (self._on_change_x, self._on_change_y)))
+
+    def __getitem__(self, key):
+        # Note: we can not use bound methods as callbacks, since that will
+        #       cause pickle to fail.
+        return self.pos[key]
+
+    def __iter__(self):
+        return iter(self.pos)

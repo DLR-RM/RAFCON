@@ -7,7 +7,6 @@ from enum import Enum
 from gtkmvc import Observable
 from rafcon.mvc.selection import Selection
 from rafcon.mvc.models.container_state import ContainerStateModel
-from rafcon.statemachine.states.state_helper import StateHelper
 from rafcon.statemachine.id_generator import state_id_generator
 
 ClipboardType = Enum('CLIPBOARD_TYPE', 'CUT COPY')
@@ -126,13 +125,6 @@ class Clipboard(Observable):
         self.clipboard_type = ClipboardType.CUT
         self.__create_core_object_copies(selection)
 
-    def copy_meta_data_of_state_model(self, orig_state_m, state_m_copy):
-        state_m_copy.copy_meta_data_from_state_m(orig_state_m)
-        state_m_copy.meta["gui"]["editor"]["rel_pos"] = [1, 1]
-        if isinstance(state_m_copy, ContainerStateModel):
-            for s_id, state_m in state_m_copy.states.iteritems():
-                self.copy_meta_data_of_state_model(state_m, orig_state_m.states[s_id])
-
     def prepare_new_copy(self):
         # in future
         # self.state_model_copies[0] = copy(self.state_model_copies[0])
@@ -168,8 +160,8 @@ class Clipboard(Observable):
             new_state_id = state_id_generator()
 
         if not new_state_id == old_state_id:
-            logger.debug("Re-organize state_id of paste state from '{0}' to '{1}'".format(old_state_id, new_state_id))
-            StateHelper.reset_state_id(orig_state_copy, new_state_id)
+            logger.debug("Change state_id of pasted state from '{0}' to '{1}'".format(old_state_id, new_state_id))
+            orig_state_copy.change_state_id(new_state_id)
 
         target_state.add_state(orig_state_copy)
 
@@ -177,7 +169,7 @@ class Clipboard(Observable):
         # The models can be pre-generated in threads while editing is still possible -> scales better
         new_state_copy_m = target_state_m.states[orig_state_copy.state_id]
 
-        self.copy_meta_data_of_state_model(orig_state_copy_m, new_state_copy_m)
+        new_state_copy_m.copy_meta_data_from_state_m(orig_state_copy_m)
 
         if self.clipboard_type is ClipboardType.CUT:
             # delete the original state

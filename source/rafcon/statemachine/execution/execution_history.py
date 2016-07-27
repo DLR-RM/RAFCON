@@ -49,7 +49,8 @@ class ExecutionHistory:
         :return:
 
         """
-        return_item = CallItem(state, self.get_last_history_item(), call_type, state_for_scoped_data, input_data)
+        return_item = CallItem(state, self.get_last_history_item(), call_type, state_for_scoped_data, input_data,
+                               state.run_id)
         if self.get_last_history_item() is not None:
             self.get_last_history_item().next = return_item
         self.history_items.append(return_item)
@@ -66,9 +67,11 @@ class ExecutionHistory:
         :return:
 
         """
-        return_item = ReturnItem(state, self.get_last_history_item(), call_type, state_for_scoped_data, output_data)
+        return_item = ReturnItem(state, self.get_last_history_item(), call_type, state_for_scoped_data, output_data,
+                                 state.run_id)
         if self.get_last_history_item() is not None:
             self.get_last_history_item().next = return_item
+
         self.history_items.append(return_item)
         return return_item
 
@@ -82,7 +85,7 @@ class ExecutionHistory:
         :return:
 
         """
-        return_item = ConcurrencyItem(state, self.get_last_history_item(), number_concurrent_threads)
+        return_item = ConcurrencyItem(state, self.get_last_history_item(), number_concurrent_threads, state.run_id)
         if self.get_last_history_item() is not None:
             self.get_last_history_item().next = return_item
         self.history_items.append(return_item)
@@ -115,10 +118,11 @@ class HistoryItem:
 
     """
 
-    def __init__(self, state, prev):
+    def __init__(self, state, prev, run_id):
         self.state_reference = state
         self.path = state.get_path()
         self.timestamp = time.time()
+        self.run_id = run_id
         self.prev = prev
         self.next = None
 
@@ -135,8 +139,8 @@ class ScopedDataItem(HistoryItem):
 
     """
 
-    def __init__(self, state, prev, method_name, state_for_scoped_data, child_state_input_output_data):
-        HistoryItem.__init__(self, state, prev)
+    def __init__(self, state, prev, method_name, state_for_scoped_data, child_state_input_output_data, run_id):
+        HistoryItem.__init__(self, state, prev, run_id)
         self.call_type = method_name
         self.scoped_data = copy.deepcopy(state_for_scoped_data._scoped_data)
         if child_state_input_output_data:
@@ -152,8 +156,8 @@ class CallItem(ScopedDataItem):
     """A history item to represent a state call
 
     """
-    def __init__(self, state, prev, method_name, state_for_scoped_data, input_data):
-        ScopedDataItem.__init__(self, state, prev, method_name, state_for_scoped_data, input_data)
+    def __init__(self, state, prev, method_name, state_for_scoped_data, input_data, run_id):
+        ScopedDataItem.__init__(self, state, prev, method_name, state_for_scoped_data, input_data, run_id)
 
     def __str__(self):
         return "CallItem %s" % (ScopedDataItem.__str__(self))
@@ -163,8 +167,8 @@ class ReturnItem(ScopedDataItem):
     """A history item to represent the return of a root state call
 
     """
-    def __init__(self, state, prev, method_name, state_for_scoped_data, output_data):
-        ScopedDataItem.__init__(self, state, prev, method_name, state_for_scoped_data, output_data)
+    def __init__(self, state, prev, method_name, state_for_scoped_data, output_data, run_id):
+        ScopedDataItem.__init__(self, state, prev, method_name, state_for_scoped_data, output_data, run_id)
 
         self.outcome = None
         self.outcome = state.final_outcome
@@ -177,8 +181,8 @@ class ConcurrencyItem(HistoryItem):
     """A class to hold all the data for an invocation of several concurrent threads.
 
     """
-    def __init__(self, container_state, prev, number_concurrent_threads):
-        HistoryItem.__init__(self, container_state, prev)
+    def __init__(self, container_state, prev, number_concurrent_threads, run_id):
+        HistoryItem.__init__(self, container_state, prev, run_id)
         self.execution_histories = {}
 
         for i in range(number_concurrent_threads):

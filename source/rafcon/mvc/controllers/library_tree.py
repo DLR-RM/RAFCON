@@ -50,8 +50,37 @@ class LibraryTreeController(ExtendedController):
         self.view.connect("drag-data-get", self.on_drag_data_get)
         self.view.connect("drag-begin", self.on_drag_begin)
 
+    def generate_right_click_menu(self):
+        menu = gtk.Menu()
+        add_link_menu_item = gtk.ImageMenuItem(gtk.STOCK_ADD)
+        add_link_menu_item.set_label("Add as library (link)")
+        add_link_menu_item.connect("activate", partial(self.insert_button_clicked, as_template=False))
+        add_link_menu_item.set_always_show_image(True)
+
+        add_template_menu_item = gtk.ImageMenuItem(gtk.STOCK_COPY)
+        add_template_menu_item.set_label("Add as template (copy)")
+        add_template_menu_item.connect("activate", partial(self.insert_button_clicked, as_template=True))
+        add_template_menu_item.set_always_show_image(True)
+
+        open_menu_item = gtk.ImageMenuItem(gtk.STOCK_OPEN)
+        open_menu_item.set_label("Open")
+        open_menu_item.connect("activate", self.open_button_clicked)
+        open_menu_item.set_always_show_image(True)
+
+        open_run_menu_item = gtk.ImageMenuItem(gtk.STOCK_MEDIA_PLAY)
+        open_run_menu_item.set_label("Open and run")
+        open_run_menu_item.connect("activate", self.open_run_button_clicked)
+        open_run_menu_item.set_always_show_image(True)
+
+        menu.append(add_link_menu_item)
+        menu.append(add_template_menu_item)
+        menu.append(gtk.SeparatorMenuItem())
+        menu.append(open_menu_item)
+        menu.append(open_run_menu_item)
+        return menu
+
     def mouse_click(self, widget, event=None):
-        # Double click with left mpuse button
+        # Double click with left mouse button
         if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][1], dict):  # double click on folder, not library
@@ -67,33 +96,8 @@ class LibraryTreeController(ExtendedController):
 
         # Single right click
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
-            menu = gtk.Menu()
-            add_link_menu_item = gtk.ImageMenuItem(gtk.STOCK_ADD)
-            add_link_menu_item.set_label("Add as library (link)")
-            add_link_menu_item.connect("activate", partial(self.insert_button_clicked, as_template=False))
-            add_link_menu_item.set_always_show_image(True)
 
-            add_template_menu_item = gtk.ImageMenuItem(gtk.STOCK_COPY)
-            add_template_menu_item.set_label("Add as template (copy)")
-            add_template_menu_item.connect("activate", partial(self.insert_button_clicked, as_template=True))
-            add_template_menu_item.set_always_show_image(True)
-
-            open_menu_item = gtk.ImageMenuItem(gtk.STOCK_OPEN)
-            open_menu_item.set_label("Open")
-            open_menu_item.connect("activate", self.open_button_clicked)
-            open_menu_item.set_always_show_image(True)
-
-            open_run_menu_item = gtk.ImageMenuItem(gtk.STOCK_MEDIA_PLAY)
-            open_run_menu_item.set_label("Open and run")
-            open_run_menu_item.connect("activate", self.open_run_button_clicked)
-            open_run_menu_item.set_always_show_image(True)
-
-            menu.append(add_link_menu_item)
-            menu.append(add_template_menu_item)
-            menu.append(gtk.SeparatorMenuItem())
-            menu.append(open_menu_item)
-            menu.append(open_run_menu_item)
-
+            menu = self.generate_right_click_menu()
             menu.show_all()
             x = int(event.x)
             y = int(event.y)

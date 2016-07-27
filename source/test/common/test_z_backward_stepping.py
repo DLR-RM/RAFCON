@@ -63,7 +63,171 @@ def wait_for_execution_engine_sync_counter(target_value, logger, timeout=5):
 
 
 @log.log_exceptions(None, gtk_quit=True)
-def trigger_gui_signals(*args):
+def trigger_gui_signals_library_state(*args):
+    main_window_controller = args[0]
+    logger = args[1]
+    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+
+    # reset the synchronization counter; although the tests run in different processes they share their memory
+    # as the import statements are at the top of the file and not inside the parallel called functions
+    state_machine_execution_engine.synchronization_lock.acquire()
+    state_machine_execution_engine.synchronization_counter = 0
+    state_machine_execution_engine.synchronization_lock.release()
+
+    call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
+    # Wait for GUI to initialize
+    while gtk.events_pending():
+        gtk.main_iteration(False)
+    wait_for_execution_engine_sync_counter(1, logger)
+
+    # forward
+    for i in range(5):
+        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+        wait_for_execution_engine_sync_counter(1, logger)
+
+    # # backward
+    for i in range(4):
+        call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+        wait_for_execution_engine_sync_counter(1, logger)
+
+    call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+
+    sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
+    while state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+        time.sleep(0.1)
+    for key, sd in sm.root_state.scoped_data.iteritems():
+        if sd.name == "beer_count":
+            assert sd.value == 100
+
+    call_gui_callback(menubar_ctrl.on_stop_activate, None)
+    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
+    call_gui_callback(menubar_ctrl.on_quit_activate, None)
+
+
+def test_backward_stepping_library_state(caplog):
+    testing_utils.start_rafcon()
+    testing_utils.remove_all_libraries()
+    # Load test library
+    config_path = rafcon.__path__[0] + "/../test/common/configs_for_start_script_test/valid_config/"
+    testing_utils.global_config.load('config.yaml', config_path)
+    rafcon.statemachine.singleton.library_manager.initialize()
+
+    gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
+    gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    logger, gvm_model = create_models()
+    state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines"
+                                                                                       "/backward_step_library_execution_test"))
+    main_window_view = MainWindowView()
+
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    if testing_utils.sm_manager_model is None:
+        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
+                                                  editor_type="LogicDataGrouped")
+
+    # Wait for GUI to initialize
+    while gtk.events_pending():
+        gtk.main_iteration(False)
+    thread = threading.Thread(target=trigger_gui_signals_library_state, args=[main_window_controller, logger])
+    thread.start()
+    gtk.main()
+    logger.debug("Gtk main loop exited!")
+    thread.join()
+    logger.debug("Joined test triggering thread!")
+    os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
+    testing_utils.reload_config()
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
+
+
+@log.log_exceptions(None, gtk_quit=True)
+def trigger_gui_signals_preemptive_state(*args):
+    main_window_controller = args[0]
+    logger = args[1]
+    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+    gvm = GlobalVariableManagerModel()
+
+    # reset the synchronization counter; although the tests run in different processes they share their memory
+    # as the import statements are at the top of the file and not inside the parallel called functions
+    state_machine_execution_engine.synchronization_lock.acquire()
+    state_machine_execution_engine.synchronization_counter = 0
+    state_machine_execution_engine.synchronization_lock.release()
+
+    call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
+    # Wait for GUI to initialize
+    while gtk.events_pending():
+        gtk.main_iteration(False)
+
+    wait_for_execution_engine_sync_counter(1, logger)
+
+    # forward
+
+    for i in range(3):
+        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+        wait_for_execution_engine_sync_counter(2, logger)
+
+    for i in range(2):
+        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+        wait_for_execution_engine_sync_counter(1, logger)
+
+    # backward
+    for i in range(1):
+        call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+        wait_for_execution_engine_sync_counter(1, logger)
+
+    for i in range(3):
+        call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+        wait_for_execution_engine_sync_counter(2, logger)
+
+    call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+
+    sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
+
+    while state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+        time.sleep(0.1)
+    beers = gvm.global_variable_manager.get_variable('beers')
+    whiskey = gvm.global_variable_manager.get_variable('whiskey')
+    assert beers == 0
+    assert whiskey == 0
+
+    call_gui_callback(menubar_ctrl.on_stop_activate, None)
+    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
+    call_gui_callback(menubar_ctrl.on_quit_activate, None)
+
+
+def test_backward_stepping_preemptive_state(caplog):
+    testing_utils.start_rafcon()
+    #testing_utils.remove_all_libraries()
+    gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
+    gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    logger, gvm_model = create_models()
+    state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines"
+                                                                                       "/backward_step_preemtive_test"))
+    main_window_view = MainWindowView()
+    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    if testing_utils.sm_manager_model is None:
+        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
+                                                  editor_type="LogicDataGrouped")
+
+    # Wait for GUI to initialize
+    while gtk.events_pending():
+        gtk.main_iteration(False)
+    thread = threading.Thread(target=trigger_gui_signals_preemptive_state, args=[main_window_controller, logger])
+    thread.start()
+    gtk.main()
+    logger.debug("Gtk main loop exited!")
+    thread.join()
+    logger.debug("Joined test triggering thread!")
+    testing_utils.reload_config()
+    testing_utils.test_multithrading_lock.release()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
+
+
+@log.log_exceptions(None, gtk_quit=True)
+def trigger_gui_signals_barrier_state(*args):
     main_window_controller = args[0]
     logger = args[1]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
@@ -116,7 +280,7 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-def test_backward_stepping(caplog):
+def test_backward_stepping_barrier_state(caplog):
     testing_utils.start_rafcon()
     testing_utils.remove_all_libraries()
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
@@ -135,7 +299,7 @@ def test_backward_stepping(caplog):
     # Wait for GUI to initialize
     while gtk.events_pending():
         gtk.main_iteration(False)
-    thread = threading.Thread(target=trigger_gui_signals, args=[main_window_controller, logger])
+    thread = threading.Thread(target=trigger_gui_signals_barrier_state, args=[main_window_controller, logger])
     thread.start()
     gtk.main()
     logger.debug("Gtk main loop exited!")
@@ -147,5 +311,7 @@ def test_backward_stepping(caplog):
 
 
 if __name__ == '__main__':
-    test_backward_stepping(None)
+    test_backward_stepping_barrier_state(None)
+    test_backward_stepping_preemptive_state(None)
+    test_backward_stepping_library_state(None)
     # pytest.main([__file__])

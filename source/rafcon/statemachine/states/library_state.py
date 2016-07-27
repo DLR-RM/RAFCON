@@ -13,9 +13,9 @@ from gtkmvc import Observable
 
 from rafcon.statemachine.enums import StateExecutionState
 from rafcon.statemachine.states.state import State
-from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.singleton import library_manager
+from rafcon.utils import type_helpers
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -82,22 +82,31 @@ class LibraryState(State):
         self.input_data_ports = self.state_copy.input_data_ports
         self.output_data_ports = self.state_copy.output_data_ports
 
-        # handle runtime values
-        # input runtime values
+        # handle input runtime values
         self.input_data_port_runtime_values = input_data_port_runtime_values
         self.use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
-        for key, idp in self.input_data_ports.iteritems():  # check if all input data ports have a runtime value
-            if key not in self.input_data_port_runtime_values.iterkeys():
-                self.input_data_port_runtime_values[key] = idp.default_value
-                self.use_runtime_value_input_data_ports[key] = True
+        for data_port_id, data_port in self.input_data_ports.iteritems():
+            # Ensure that all input data ports have a runtime value
+            if data_port_id not in self.input_data_port_runtime_values.iterkeys():
+                self.input_data_port_runtime_values[data_port_id] = data_port.default_value
+                self.use_runtime_value_input_data_ports[data_port_id] = True
+            # Ensure that str and unicode is correctly differentiated
+            elif isinstance(self.input_data_port_runtime_values[data_port_id], basestring):
+                self.input_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
+                    self.input_data_port_runtime_values[data_port_id], data_port.data_type)
 
-        # output runtime values
+        # handle output runtime values
         self.output_data_port_runtime_values = output_data_port_runtime_values
         self.use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
-        for key, idp in self.output_data_ports.iteritems():  # check if all output data ports have a runtime value
-            if key not in self.output_data_port_runtime_values.iterkeys():
-                self.output_data_port_runtime_values[key] = idp.default_value
-                self.use_runtime_value_output_data_ports[key] = True
+        for data_port_id, data_port in self.output_data_ports.iteritems():
+            # Ensure that all output data ports have a runtime value
+            if data_port_id not in self.output_data_port_runtime_values.iterkeys():
+                self.output_data_port_runtime_values[data_port_id] = data_port.default_value
+                self.use_runtime_value_output_data_ports[data_port_id] = True
+            # Ensure that str and unicode is correctly differentiated
+            elif isinstance(self.output_data_port_runtime_values[data_port_id], basestring):
+                self.output_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
+                    self.output_data_port_runtime_values[data_port_id], data_port.data_type)
 
         self.initialized = True
 

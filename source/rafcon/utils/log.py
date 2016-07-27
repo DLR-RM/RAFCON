@@ -170,7 +170,7 @@ class log_exceptions(object):
             try:
                 return function(*args, **kwargs)
             except:
-                # Only create custom logger if no logger was passed and an exception occured
+                # Only create custom logger if no logger was passed and an exception occurred
                 if not self.logger:
                     self.logger = get_logger(__name__)
                 self.logger.exception("Unexpected error")

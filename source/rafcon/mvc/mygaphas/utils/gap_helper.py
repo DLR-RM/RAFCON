@@ -1,4 +1,4 @@
-
+from rafcon.mvc.mygaphas.items.connection import ConnectionView
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -33,17 +33,14 @@ def calc_rel_pos_to_parent(canvas, item, handle):
     """
     from gaphas.item import NW
 
+    if isinstance(item, ConnectionView):
+        return item.canvas.get_matrix_i2i(item, item.parent).transform_point(*handle.pos)
+
     parent = canvas.get_parent(item)
     if parent:
-        c_pos = canvas.project(item, handle.pos)
-        p_pos = canvas.project(parent, parent.handles()[NW].pos)
-        rel_x = c_pos[0].value - p_pos[0].value
-        rel_y = c_pos[1].value - p_pos[1].value
+        return item.canvas.get_matrix_i2i(item, parent).transform_point(*handle.pos)
     else:
-        pos = canvas.project(item, item.handles()[NW].pos)
-        rel_x = pos[0].value
-        rel_y = pos[1].value
-    return rel_x, rel_y
+        return item.canvas.get_matrix_i2c(item).transform_point(*item.handles()[NW].pos)
 
 
 def assert_exactly_one_true(bool_list):
@@ -247,19 +244,20 @@ def add_transition_to_state(from_port, to_port):
         return False
 
 
-def convert_handles_pos_list_to_rel_pos_list(canvas, transition):
+def get_relative_positions_of_waypoints(transition_v):
     """This method takes the waypoints of a connection and returns all relative positions of these waypoints.
 
     :param canvas: Canvas to check relative position in
-    :param transition: Transition to extract all relative waypoint positions
+    :param transition_v: Transition view to extract all relative waypoint positions
     :return: List with all relative positions of the given transition
     """
-    handles_list = transition.handles()
+    handles_list = transition_v.handles()
     rel_pos_list = []
     for handle in handles_list:
-        if handle in transition.end_handles_perp():
+        if handle in transition_v.end_handles_perp():
             continue
-        rel_pos_list.append(calc_rel_pos_to_parent(canvas, transition, handle))
+        rel_pos = transition_v.canvas.get_matrix_i2i(transition_v, transition_v.parent).transform_point(*handle.pos)
+        rel_pos_list.append(rel_pos)
     return rel_pos_list
 
 
@@ -276,7 +274,7 @@ def update_meta_data_for_transition_waypoints(graphical_editor_view, transition_
 
     transition_m = transition_v.model
     transition_meta_gaphas = transition_m.meta['gui']['editor_gaphas']
-    waypoint_list = convert_handles_pos_list_to_rel_pos_list(graphical_editor_view.editor.canvas, transition_v)
+    waypoint_list = get_relative_positions_of_waypoints(transition_v)
     if waypoint_list != last_waypoint_list:
         transition_meta_gaphas['waypoints'] = waypoint_list
         graphical_editor_view.emit('meta_data_changed', transition_m, "Move waypoint", True)
@@ -295,11 +293,7 @@ def update_meta_data_for_port(graphical_editor_view, item, handle):
         if not handle or handle is port.handle:
             if isinstance(port, IncomeView):
                 port_m = item.model
-            elif isinstance(port, OutcomeView):
-                port_m = port.outcome_m
-            elif isinstance(port, (InputPortView, OutputPortView)):
-                port_m = port.port_m
-            elif isinstance(port, ScopedVariablePortView):
+            elif isinstance(port, (OutcomeView, InputPortView, OutputPortView, ScopedVariablePortView)):
                 port_m = port.model
             else:
                 continue

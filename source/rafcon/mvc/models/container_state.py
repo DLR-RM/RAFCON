@@ -86,6 +86,24 @@ class ContainerStateModel(StateModel):
         else:
             return False
 
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        Recursively unregisters all observers and removes references to child models. Extends the destroy method of
+        the base class by child elements of a container state.
+        """
+        super(ContainerStateModel, self).prepare_destruction()
+        for scoped_variable in self.scoped_variables:
+            scoped_variable.prepare_destruction()
+        del self.scoped_variables[:]
+        for connection in self.transitions[:] + self.data_flows[:]:
+            connection.prepare_destruction()
+        del self.transitions[:]
+        del self.data_flows[:]
+        for state in self.states.itervalues():
+            state.prepare_destruction()
+        self.states.clear()
+
     @ModelMT.observe("state", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         """This method notifies the model lists and the parent state about changes
@@ -215,18 +233,19 @@ class ContainerStateModel(StateModel):
         if info.method_name != 'change_state_type':
             return
         from rafcon.mvc import state_machine_helper
+        import rafcon.mvc.singleton as mvc_singleton
 
         old_state = info.args[1]
         new_state_class = info.args[2]
         state_id = old_state.state_id
         state_m = self.states[state_id]
+        state_machine_m = mvc_singleton.state_machine_manager_model.get_sm_m_for_state_model(state_m)
 
         # Before the state type is actually changed, we extract the information from the old state model and remove
         # the model from the selection
         if 'before' in info:
+            state_m.unregister_observer(state_m)
             # remove selection from StateMachineModel.selection -> find state machine model
-            import rafcon.mvc.singleton as mvc_singleton
-            state_machine_m = mvc_singleton.state_machine_manager_model.get_sm_m_for_state_model(state_m)
             state_machine_m.selection.remove(state_m)
 
             # Extract child models of state, as they have to be applied to the new state model
@@ -250,6 +269,8 @@ class ContainerStateModel(StateModel):
                 self.states[state_id] = new_state_m
 
                 state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
+
+                state_machine_m.selection.add(new_state_m)
 
         info.method_name = 'handled_change_state_type'
         self.model_changed(model, prop_name, info)

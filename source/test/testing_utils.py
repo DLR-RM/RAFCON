@@ -7,6 +7,7 @@ from threading import Lock, Condition
 import rafcon
 from rafcon.utils import log, constants
 from rafcon.statemachine.config import global_config
+from rafcon.mvc.start import signal_handler
 from rafcon.mvc.config import global_gui_config
 
 
@@ -95,7 +96,7 @@ def call_gui_callback(callback, *args):
 
 def start_rafcon():
     test_multithrading_lock.acquire()
-    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
     global_config.load()
     global_gui_config.load()
     environ['RAFCON_LIB_PATH'] = join(dirname(RAFCON_PATH), 'libraries')

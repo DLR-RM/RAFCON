@@ -128,6 +128,21 @@ class AbstractStateModel(ModelMT):
 
     __deepcopy__ = __copy__
 
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        Recursively unregisters all observers and removes references to child models
+        """
+        try:
+            self.unregister_observer(self)
+        except KeyError:  # Might happen if the observer was already unregistered
+            pass
+        for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
+            port.prepare_destruction()
+        del self.input_data_ports[:]
+        del self.output_data_ports[:]
+        del self.outcomes[:]
+
     @property
     def parent(self):
         if not self._parent:
@@ -307,7 +322,7 @@ class AbstractStateModel(ModelMT):
             source_outcome_m = source_state_m.get_outcome_m(outcome_m.outcome.outcome_id)
             outcome_m.meta = deepcopy(source_outcome_m.meta)
 
-        self.meta_signal.emit(MetaSignalMsg("copy_meta_data_from_state_m", "all", True))
+        self.meta_signal.emit(MetaSignalMsg("copy_state_m", "all", True))
 
     def _parse_for_element_meta_data(self, meta_data):
         """Load meta data for state elements

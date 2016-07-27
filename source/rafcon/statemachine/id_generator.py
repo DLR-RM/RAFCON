@@ -10,15 +10,20 @@
 
 import string
 import random
+import uuid
 
 STATE_ID_LENGTH = 6
+RUN_ID_LENGTH = 10
+experiment_id = ''+str(uuid.uuid1())
 
 state_machine_id_counter = 0
 transition_id_counter = 0
 data_flow_id_counter = 0
 script_id_counter = 0
+run_id_counter = 0
 
 used_state_ids = []
+used_run_ids = []
 used_global_variable_ids = []
 
 
@@ -68,6 +73,13 @@ def generate_script_id():
     global script_id_counter
     script_id_counter += 1
     return script_id_counter
+
+
+def run_id_generator():
+    global run_id_counter
+    run_id_counter += 1
+    final_run_id = experiment_id + "." + str(run_id_counter)
+    return final_run_id
 
 
 def state_id_generator(size=STATE_ID_LENGTH, chars=string.ascii_uppercase):

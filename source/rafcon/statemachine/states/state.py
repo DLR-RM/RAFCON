@@ -84,6 +84,7 @@ class State(Observable, YAMLObject, JSONObject):
         self._file_system_path = None
 
         self.thread = None
+        self._run_id = None
 
         if name is None:
             name = "Untitled"
@@ -167,6 +168,7 @@ class State(Observable, YAMLObject, JSONObject):
         :return:
         """
         self.execution_history = execution_history
+        self._run_id = run_id_generator()
         self.backward_execution = copy.copy(backward_execution)
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
@@ -1117,3 +1119,10 @@ class State(Observable, YAMLObject, JSONObject):
         :return: True, if the wait was preempted, False else
         """
         return self._preempted.wait(time)
+
+    @property
+    def run_id(self):
+        """Property for the _run_id field
+
+        """
+        return self._run_id

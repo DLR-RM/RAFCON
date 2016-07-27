@@ -49,14 +49,14 @@ class EditorView(View):
                 b = self.textview.get_buffer()
                 b.set_language(language_manager.get_language(language))
                 b.set_highlight_syntax(True)
-                if global_gui_config.get_config_value(editor_style) and \
-                        style_scheme_manager.get_scheme(global_gui_config.get_config_value(editor_style)):
-                    b.set_style_scheme(style_scheme_manager.get_scheme(
-                        global_gui_config.get_config_value(editor_style))
-                    )
+
+                user_editor_style = global_gui_config.get_config_value(editor_style, "classic")
+                scheme = style_scheme_manager.get_scheme(user_editor_style)
+                if scheme:
+                    b.set_style_scheme(scheme)
                 else:
-                    logger.debug("Edit style '{}' is not supported take "
-                                 "default: 'classic'".format(global_gui_config.get_config_value(editor_style)))
+                    logger.debug("The editor style '{}' is not supported. Using the default 'classic'".format(
+                        user_editor_style))
                     b.set_style_scheme(style_scheme_manager.get_scheme('classic'))
                 self.textview.set_mark_category_pixbuf('INSTRUCTION',
                                                        editor_frame.render_icon(gtk.STOCK_GO_FORWARD,

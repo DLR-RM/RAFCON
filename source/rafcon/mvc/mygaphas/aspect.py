@@ -1,8 +1,9 @@
-from gaphas.geometry import distance_line_point
+from gaphas.geometry import distance_line_point, distance_rectangle_point
 from gaphas.segment import Segment
 from simplegeneric import generic
 
 from gaphas.aspect import HandleFinder, ItemHandleFinder, HandleSelection, ItemHandleSelection, ItemHandleInMotion
+from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_side_length_of_resize_handle
 from rafcon.mvc.mygaphas.items.connection import ConnectionView
 from rafcon.mvc.mygaphas.items.state import StateView
 
@@ -37,9 +38,27 @@ class StateHandleFinder(ItemHandleFinder):
     """
 
     def get_handle_at_point(self, pos, distance=None):
-        if distance:
-            return self.view.get_handle_at_point(pos, distance)
-        return self.view.get_handle_at_point(pos)
+        if not distance:
+            distance = 0
+        for handle in self.item.handles():
+            port_v = self.item.get_port_for_handle(handle)
+            if port_v:  # Either a data port or a logical port
+                port_area = port_v.get_port_area(self.view)
+                if distance_rectangle_point(port_area, pos) <= distance:
+                    return self.item, handle
+            else:  # resize handle
+                side_length_handle = get_side_length_of_resize_handle(self.view, self.item)
+
+                v2i = self.view.get_matrix_v2i(self.item)
+                side_length_handle = v2i.transform_distance(side_length_handle, 0)[0]
+                x, y = v2i.transform_point(*pos)
+
+                hx, hy = handle.pos
+                max_center_distance = side_length_handle / 2 + distance
+                if hx - max_center_distance <= x <= hx + max_center_distance and \
+                   hy - max_center_distance <= y <= hy + max_center_distance:
+                    return self.item, handle
+        return None, None
 
 
 @HandleFinder.when_type(ConnectionView)

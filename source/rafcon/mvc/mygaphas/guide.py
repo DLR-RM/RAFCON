@@ -16,3 +16,11 @@ class GuidedStateInMotion(GuidedItemInMotion):
         exclude_items = all_items - siblings
 
         return exclude_items
+
+    def start_move(self, pos):
+        super(GuidedStateInMotion, self).start_move(pos)
+        self.item.moving = True
+
+    def stop_move(self):
+        super(GuidedStateInMotion, self).stop_move()
+        self.item.moving = False

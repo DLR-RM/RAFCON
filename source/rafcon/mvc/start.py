@@ -4,16 +4,16 @@ import os
 import logging
 import signal
 import gtk
-from os.path import realpath, dirname, join
+import threading
 from yaml_configuration.config import config_path
 
-import rafcon
 from rafcon.statemachine.start import parse_state_machine_path, start_profiler, stop_profiler, setup_environment, \
-    reactor_required, setup_configuration, post_setup_plugins
+    reactor_required, setup_configuration, post_setup_plugins, register_signal_handlers, SIGNALS_TO_NAMES_DICT
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton as sm_singletons
+from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 
 import rafcon.mvc.singleton as mvc_singletons
 from rafcon.mvc.controllers.main_window import MainWindowController
@@ -62,6 +62,28 @@ def setup_mvc_environment():
     setup_environment()
 
 
+def start_state_machine(state_machine, start_state_path, quit_flag):
+    sm_thread = threading.Thread(target=start_stop_state_machine,
+                                 args=[state_machine, start_state_path, quit_flag])
+    sm_thread.start()
+
+
+def start_stop_state_machine(state_machine, start_state_path, quit_flag):
+    # Wait for GUI to initialize
+    while gtk.events_pending():
+        gtk.main_iteration(False)
+
+    StateMachineExecutionEngine.execute_state_machine_from_path(state_machine=state_machine,
+                                                                start_state_path=start_state_path,
+                                                                wait_for_execution_finished=True)
+    if reactor_required():
+        from twisted.internet import reactor
+        reactor.callFromThread(reactor.stop)
+
+    if quit_flag:
+        mvc_singletons.main_window_controller.get_controller('menu_bar_controller').on_quit_activate(None, None)
+
+
 def setup_argument_parser():
     """Sets up teh parser with the required arguments
 
@@ -82,6 +104,14 @@ def setup_argument_parser():
                         default=home_path, nargs='?', const=home_path,
                         help="path to the configuration file gui_config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
+    parser.add_argument('-ss', '--start_state_machine', metavar='path', dest='start_state_machine_flag',
+                        default=False, nargs='?', help="a flag to specify if the state machine should be started "
+                                                       "after launching rafcon")
+    parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path',
+                        default=None, nargs='?', help="path of to the state that should be launched")
+    parser.add_argument('-q', '--quit', metavar='path', dest='quit_flag',
+                        default=False, nargs='?', help="a flag to specify if the gui should quit after launching a "
+                                                       "state machine")
     return parser
 
 
@@ -104,6 +134,7 @@ def open_state_machines(paths):
         try:
             state_machine = storage.load_state_machine_from_path(path)
             sm_singletons.state_machine_manager.add_state_machine(state_machine)
+            return state_machine
         except Exception as e:
             logger.exception("Could not load state machine '{}': {}".format(path, e))
 
@@ -122,8 +153,37 @@ def log_ready_output():
     logger.setLevel(level)
 
 
+def signal_handler(signal, frame):
+    from rafcon.statemachine.enums import StateMachineExecutionStatus
+    from rafcon.statemachine.singleton import state_machine_execution_engine
+
+    try:
+        # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
+        print "Signal '{}' received.\n" \
+              "Execution engine will be stopped and program will be shutdown!".format(SIGNALS_TO_NAMES_DICT.get(
+            signal, "[unknown]"))
+        if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+            state_machine_execution_engine.stop()
+            state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
+    except Exception as e:
+        import traceback
+        print "Could not stop statemachine: {0} {1}".format(e.message, traceback.format_exc())
+
+    mvc_singletons.main_window_controller.get_controller('menu_bar_controller').prepare_destruction()
+
+    # shutdown twisted correctly
+    if reactor_required():
+        from twisted.internet import reactor
+        if reactor.running:
+            reactor.callFromThread(reactor.stop)
+
+    gtk.main_quit()
+
+    plugins.run_hook("post_destruction")
+
+
 if __name__ == '__main__':
-    signal.signal(signal.SIGINT, sm_singletons.signal_handler)
+    register_signal_handlers(signal_handler)
 
     setup_gtkmvc_logger()
     pre_setup_plugins()
@@ -144,7 +204,7 @@ if __name__ == '__main__':
     setup_mvc_configuration(user_input.config_path, user_input.gui_config_path, user_input.gui_config_path)
 
     if user_input.state_machine_paths:
-        open_state_machines(user_input.state_machine_paths)
+        state_machine = open_state_machines(user_input.state_machine_paths)
 
     if user_input.new:
         create_new_state_machine()
@@ -156,6 +216,10 @@ if __name__ == '__main__':
     log_ready_output()
 
     profiler = start_profiler()
+
+    if user_input.start_state_machine_flag:
+        start_state_machine(state_machine, user_input.start_state_path, user_input.quit_flag)
+
     try:
         # check if twisted is imported
         if reactor_required():
@@ -172,7 +236,7 @@ if __name__ == '__main__':
             sm.root_state.join()
 
     finally:
-        plugins.run_hook("post_main_window_destruction")
+        plugins.run_hook("post_destruction")
 
         if profiler:
             stop_profiler(profiler)

@@ -62,7 +62,6 @@ def call_gui_callback(callback, *args):
 
 
 def trigger_gui_signals(*args):
-    print "Triggering save as"
     main_window_controller = args[1]
     setup_config = args[2]
     state_machine = args[3]
@@ -105,7 +104,7 @@ def convert(config_path, source_path, target_path):
     else:
         setup_config["target_path"] = [target_path]
 
-    signal.signal(signal.SIGINT, sm_singletons.signal_handler)
+    signal.signal(signal.SIGINT, rafcon.statemachine.start.signal_handler)
 
     global_config.load(path=setup_config['config_path'])
     global_gui_config.load(path=setup_config['gui_config_path'])
@@ -169,7 +168,6 @@ def convert_libraries_in_path(config_path, lib_path, target_path=None):
         if os.path.isdir(os.path.join(lib_path, lib)) and not '.' == lib[0]:
             if os.path.exists(os.path.join(os.path.join(lib_path, lib), "statemachine.yaml")) or \
                     os.path.exists(os.path.join(os.path.join(lib_path, lib), "statemachine.json")):
-                print "convert " + os.path.join(lib_path, lib)
                 if not target_path:
                     convert(config_path, os.path.join(lib_path, lib))
                 else:

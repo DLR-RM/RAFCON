@@ -6,6 +6,7 @@ from pango import SCALE
 
 from rafcon.mvc.config import global_gui_config
 
+from rafcon.mvc.mygaphas.canvas import ItemProjection
 from rafcon.mvc.mygaphas.constraint import KeepPointWithinConstraint, KeepPortDistanceConstraint
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView,\
                                             InputPortView, OutputPortView, LogicPortView, PortView
@@ -30,6 +31,7 @@ class PerpLine(Line):
         self._to_port = None
         self._to_waypoint = None
         self._to_port_constraint = None
+        self._waypoint_constraints = []
 
         self._arrow_color = None
         self._line_color = None
@@ -258,9 +260,22 @@ class PerpLine(Line):
 
     def add_waypoint(self, pos):
         handle = self._create_handle(pos)
-        self._handles.insert(-1, handle)
+        if self._to_waypoint:
+            self._handles.insert(-2, handle)
+        else:
+            self._handles.insert(-1, handle)
         self._keep_handle_in_parent_state(handle)
         self._update_ports()
+        return handle
+
+    def remove_all_waypoints(self):
+        waypoints = self.waypoints
+        for waypoint in waypoints:
+            self._handles.remove(waypoint)
+        self._update_ports()
+        for constraint in self._waypoint_constraints:
+            self.canvas.solver.remove_constraint(constraint)
+        self._waypoint_constraints = []
 
     def add_perp_waypoint(self, pos=(0, 0), begin=True):
         handle = self._create_handle(pos)
@@ -311,8 +326,8 @@ class PerpLine(Line):
         solver = canvas.solver
         if parent is None:
             return
-        handle_pos_abs = canvas.project(self, handle.pos)
-        parent_nw_abs = canvas.project(parent, parent.handles()[NW].pos)
-        parent_se_abs = canvas.project(parent, parent.handles()[SE].pos)
-        constraint = KeepPointWithinConstraint(parent_nw_abs, parent_se_abs, handle_pos_abs)
+        handle_pos = ItemProjection(handle.pos, self, self.parent)
+        constraint = KeepPointWithinConstraint(parent.handles()[NW].pos, parent.handles()[SE].pos,
+                                               handle_pos, lambda: parent.border_width)
         solver.add_constraint(constraint)
+        self._waypoint_constraints.append(constraint)

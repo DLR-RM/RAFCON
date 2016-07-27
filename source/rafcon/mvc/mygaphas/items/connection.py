@@ -87,6 +87,14 @@ class TransitionView(ConnectionView):
         self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], self.parent.transparent)
         super(TransitionView, self).draw(context)
 
+    def apply_meta_data(self):
+        # 1st remove all waypoints
+        self.remove_all_waypoints()
+
+        # 2nd recreate all waypoints from meta data
+        for waypoint_pos in self.model.meta['gui']['editor_gaphas']['waypoints']:
+            self.add_waypoint(waypoint_pos)
+
 
 class DataFlowView(ConnectionView):
     def __init__(self, data_flow_m, hierarchy_level):

@@ -248,7 +248,7 @@ class StateDataFlowsListController(ExtendedController):
                 if len(state_m.output_data_ports) > 0:
                     new_from_data_port_id = state_m.output_data_ports[0].data_port.data_port_id
 
-        if not new_from_data_port_id:
+        if new_from_data_port_id is None:
             logger.error("Could not change from state: No data port for data flow found")
             return
         try:
@@ -430,7 +430,7 @@ class StateDataFlowsListController(ExtendedController):
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
-
+        return
         # avoid updates because of execution status updates
         if 'kwargs' in info and 'method_name' in info['kwargs'] and \
                 info['kwargs']['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
@@ -450,7 +450,8 @@ class StateDataFlowsListController(ExtendedController):
         # avoid updates because of unimportant methods
         if overview['prop_name'][0] in ['states', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'data_flows'] and \
                 overview['method_name'][-1] not in ['append', '__setitem__', '__delitem__', 'remove', 'name',
-                                                    'change_data_type', 'from_key', 'to_key', 'from_state', 'to_state']:
+                                                    'change_data_type', 'from_key', 'to_key', 'from_state', 'to_state',
+                                                    'modify_origin', 'modify_target']:
             return
         # print "DUPDATE ", self, overview
 
@@ -579,14 +580,18 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                     break
 
             from_key_port = from_state.get_data_port_by_id(data_flow.from_key)
-            from_key_label = PORT_TYPE_TAG.get(type(from_key_port), 'None') + '.' + \
-                             from_key_port.data_type.__name__ + '.' + \
-                             from_key_port.name
+            from_key_label = ''
+            if from_key_port is not None:
+                from_key_label = PORT_TYPE_TAG.get(type(from_key_port), 'None') + '.' + \
+                                 from_key_port.data_type.__name__ + '.' + \
+                                 from_key_port.name
 
             to_key_port = to_state.get_data_port_by_id(data_flow.to_key)
-            to_key_label = PORT_TYPE_TAG.get(type(to_key_port), 'None') + '.' + \
-                           (to_key_port.data_type.__name__ or 'None') + '.' + \
-                           to_key_port.name
+            # to_key_label = ''
+            if to_key_port is not None:
+                to_key_label = PORT_TYPE_TAG.get(type(to_key_port), 'None') + '.' + \
+                               (to_key_port.data_type.__name__ or 'None') + '.' + \
+                               to_key_port.name
             data_flow_dict['internal'][data_flow.data_flow_id] = {'from_state': from_state_label,
                                                                   'from_key': from_key_label,
                                                                   'to_state': to_state_label,

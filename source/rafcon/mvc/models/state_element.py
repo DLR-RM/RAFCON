@@ -66,6 +66,16 @@ class StateElementModel(ModelMT):
         else:
             self._parent = None
 
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        Unregisters the model from observing itself.
+        """
+        try:
+            self.unregister_observer(self)
+        except KeyError:  # Might happen if the observer was already unregistered
+            pass
+
     def model_changed(self, model, prop_name, info):
         """This method notifies the parent state about changes made to the state element
         """

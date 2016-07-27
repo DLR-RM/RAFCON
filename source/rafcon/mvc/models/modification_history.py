@@ -70,6 +70,17 @@ class ModificationsHistoryModel(ModelMT):
         self.with_debug_logs = False
         self.with_meta_data_actions = True
 
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        Unregisters itself as observer from the state machine and the root state
+        """
+        try:
+            self.relieve_model(self.state_machine_model)
+            self.relieve_model(self.state_machine_model.root_state)
+        except KeyError:  # Might happen if the observer was already unregistered
+            pass
+
     def get_state_element_meta_from_internal_tmp_storage(self, state_path):
         path_elements = state_path.split('/')
         path_elements.pop(0)
@@ -289,8 +300,8 @@ class ModificationsHistoryModel(ModelMT):
                 assert False  # should never happen
             else:  # FAILURE
                 logger.warning("History may need update, tried to start observation of new action that is not classifiable "
-                            "\n%s \n%s \n%s \n%s",
-                            overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
+                               "\n%s \n%s \n%s \n%s",
+                               overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
                 assert False  # should never happen
 
             return result
@@ -389,8 +400,26 @@ class ModificationsHistoryModel(ModelMT):
         except:
             logger.exception("Failure occurred while finishing action")
             # traceback.print_exc(file=sys.stdout)
+            raise
 
         self.change_count += 1
+
+    def is_gaphas_editor(self):
+        import rafcon.mvc.singleton as mvc_singleton
+        import rafcon.mvc.controllers.graphical_editor as graphical_editor_opengl
+        mw_ctrl = mvc_singleton.main_window_controller
+        g_sm_editor = None
+        if mw_ctrl:
+            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
+                                                                    self.state_machine_model.state_machine.state_machine_id],
+                                                         with_print=False)
+
+        # # We are only interested in OpenGL editors, not Gaphas ones
+        # if g_sm_editor and not isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
+        #     return False
+        # else:
+        #     return True
+        return True
 
     @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state_model changed
     # @ModelMT.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
@@ -400,15 +429,31 @@ class ModificationsHistoryModel(ModelMT):
         overview = NotificationOverview(info, False, self.__class__.__name__)
         # logger.info("meta_changed: \n{0}".format(overview))
         # WORKAROUND: avoid multiple signals of the root_state, by comparing first and last model in overview
-        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1] or \
-                overview['meta_signal'][-1]['change'] == 'all':  # avoid strange change: 'all' TODO test why those occur
+        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:  # TODO test why those occur
+            # print "ALL"
             return
+        if overview['meta_signal'][-1]['change'] == 'all':  # avoid strange change: 'all'
+            if self.is_gaphas_editor():
+                # print "ALL"
+                pass
+            else:
+                return
+        # TODO Refactor next two condition treatments
         if self.busy or self.actual_action is None and overview['meta_signal'][-1]['change'] == 'append_to_last_change':
+            # print "BUSY", self.busy
+            if self.is_gaphas_editor() and not self.busy:
+                pass
+            else:
+                return
+        if overview['meta_signal'][-1]['origin'] == 'load_meta_data':
             return
 
-        if overview['meta_signal'][-1]['change'] == 'append_to_last_change':
-             # update last actions after_storage -> meta-data
-            self.actual_action.after_storage = self.actual_action.get_storage()
+        if self.actual_action is None or overview['meta_signal'][-1]['change'] == 'append_to_last_change':
+            # update last actions after_storage -> meta-data
+            if self.actual_action is not None:
+                self.actual_action.after_storage = self.actual_action.get_storage()
+            else:
+                self.actual_action = []
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
         else:
             if isinstance(overview['model'][-1], AbstractStateModel):

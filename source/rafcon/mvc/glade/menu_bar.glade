@@ -231,8 +231,8 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="ungroup_states">
-                <property name="label" translatable="yes">Ungroup States</property>
+              <object class="GtkImageMenuItem" id="ungroup_state">
+                <property name="label" translatable="yes">Ungroup State</property>
                 <property name="visible">True</property>
                 <property name="image">image10</property>
                 <property name="use_stock">False</property>
