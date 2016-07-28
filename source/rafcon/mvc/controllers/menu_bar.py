@@ -491,7 +491,7 @@ class MenuBarController(ExtendedController):
                              "These changes will get lost:"
             for sm_id, sm in state_machine_manager.state_machines.iteritems():
                 if sm.marked_dirty:
-                    message_string = "* %s\n#%s: %s " % (message_string, str(sm_id), sm.root_state.name)
+                    message_string = "%s\n#%s: %s " % (message_string, str(sm_id), sm.root_state.name)
             RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"], on_message_dialog_response_signal,
                                type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             return True
