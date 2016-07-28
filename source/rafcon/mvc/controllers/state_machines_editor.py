@@ -24,6 +24,7 @@ from rafcon.mvc.models.state_machine import StateMachineModel, StateMachine
 
 from rafcon.mvc.config import global_gui_config
 
+from rafcon.mvc.utils.dialog import RAFCONButtonDialog, ButtonDialog
 from rafcon.mvc.utils import constants
 from rafcon.mvc.utils import helpers
 from rafcon.utils import log
@@ -278,20 +279,16 @@ class StateMachinesEditorController(ExtendedController):
 
         def push_sm_running_dialog():
             def on_message_dialog_sm_running(widget, response_id):
-                if response_id == 42:
+                if response_id == ButtonDialog.OPTION_1.value:
+                    logger.debug("State machine execution is being stopped")
                     state_machine_execution_engine.stop()
-                    logger.debug("State machine is shut down now!")
                     self.remove_state_machine(state_machine_m)
-                elif response_id == 43:
-                    logger.debug("State machine will stay running!")
+                elif response_id == ButtonDialog.OPTION_2.value:
+                    logger.debug("State machine execution will keep running")
                 widget.destroy()
-            from rafcon.mvc.utils.dialog import RAFCONDialog
-            dialog = RAFCONDialog(type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
             message_string = "The state machine is still running. Are you sure you want to close?"
-            dialog.set_markup(message_string)
-            dialog.add_button("Close anyway", 42)
-            dialog.add_button("Cancel", 43)
-            dialog.finalize(on_message_dialog_sm_running)
+            RAFCONButtonDialog(message_string, ["Stop and close", "Cancel"], on_message_dialog_sm_running,
+                               type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
 
         if force:
             self.remove_state_machine(state_machine_m)
@@ -299,7 +296,8 @@ class StateMachinesEditorController(ExtendedController):
 
         elif state_machine_m.state_machine.marked_dirty:
             def on_message_dialog_response_signal(widget, response_id, state_machine_m):
-                if response_id == 42:
+                widget.destroy()
+                if response_id == ButtonDialog.OPTION_1.value:
                     if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
                         push_sm_running_dialog()
                     else:
@@ -307,18 +305,13 @@ class StateMachinesEditorController(ExtendedController):
                         self.remove_state_machine(state_machine_m)
                 else:
                     logger.debug("Closing of state machine model canceled")
-                widget.destroy()
 
-            from rafcon.mvc.utils.dialog import RAFCONDialog
             sm_id = get_state_machine_id(state_machine_m)
             root_state_name = state_machine_m.root_state.state.name
-            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             message_string = "There are unsaved changed in the state machine '{0}' with id {1}. Do you want to close " \
                              "the state machine anyway?".format(root_state_name, sm_id)
-            dialog.set_markup(message_string)
-            dialog.add_button("Close without saving", 42)
-            dialog.add_button("Cancel", 43)
-            dialog.finalize(on_message_dialog_response_signal, state_machine_m)
+            RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"], on_message_dialog_response_signal,
+                               [state_machine_m], type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
 
         # sm running
         elif state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
