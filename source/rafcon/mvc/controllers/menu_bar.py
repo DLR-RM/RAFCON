@@ -8,11 +8,10 @@
 
 """
 
-import os
-import sys
 from functools import partial
 
 import gtk
+import glib
 
 from rafcon.statemachine import interface
 from rafcon.statemachine.enums import StateMachineExecutionStatus
@@ -528,17 +527,11 @@ class MenuBarController(ExtendedController):
             def on_message_dialog_response_signal(widget, response_id):
                 if response_id == 42:
                     self.state_machine_execution_engine.stop()
-                    logger.debug("State machine is shut down now!")
-                    widget.destroy()
-                    self.prepare_destruction()
-                    self.on_destroy(None)
                 elif response_id == 43:
                     logger.debug("State machine will stay running!")
-                    widget.destroy()
-                    self.main_window_view.hide()
-                    # state machine cannot be shutdown in a controlled manner as after self.destroy()
-                    # the signal handler does not trigger any more
-                    # self.destroy(None)
+                widget.destroy()
+                self.prepare_destruction()
+                self.on_destroy(None)
 
             dialog = RAFCONDialog(type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
             message_string = "The state machine is still running. Do you want to stop the state machine before closing?"
@@ -550,33 +543,21 @@ class MenuBarController(ExtendedController):
         return False
 
     def on_destroy(self, widget, data=None):
+        from rafcon.statemachine.start import reactor_required
 
-        # stop state machine
-        try:
-            if self.state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
-                self.state_machine_execution_engine.stop()
-                active_sm_id = self.state_machine_execution_engine.state_machine_manager.active_state_machine_id
-                self.state_machine_execution_engine.state_machine_manager.state_machines[active_sm_id].root_state.join()
-        except Exception as e:
-            import traceback
-            logger.exception("Could not stop state machine!")
+        logger.debug("The GUI is being closed now")
+        self.main_window_view.hide()
 
-        if "twisted" in sys.modules.keys():
-            # from monitoring.monitoring_manager import global_monitoring_manager
-            logger.info("Shutting down twisted from gtk and thus gtk itself")
+        if reactor_required():  # shutdown reactor
             from twisted.internet import reactor
-            logger.info("Shutting down monitoring manager")
-            # global_monitoring_manager.shutdown()
-            logger.info("Shutting down twisted")
-            # the plugin may be installed but no reactor is running
             if reactor.running:
                 reactor.callFromThread(reactor.stop)
+            else:
+                glib.idle_add(gtk.main_quit)
+        else:  # shutdown gtk
+            glib.idle_add(gtk.main_quit)
 
-        # shutdown gtk
-        logger.debug("Closing main window!")
-        self.main_window_view.hide()
-        import glib
-        glib.idle_add(gtk.main_quit)
+        # Run the GTK loop until no more events are being generated and thus the GUI is fully destroyed
         while gtk.events_pending():
             gtk.main_iteration(False)
 
