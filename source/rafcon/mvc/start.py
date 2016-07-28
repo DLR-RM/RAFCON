@@ -249,6 +249,6 @@ if __name__ == '__main__':
     logger.info("Exiting ...")
 
     # this is a ugly process shutdown method but works if gtk or twisted process are still blocking
-    import os
-    os._exit(0)
+    # import os
+    # os._exit(0)
 
