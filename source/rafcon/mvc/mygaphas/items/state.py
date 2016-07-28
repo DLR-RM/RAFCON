@@ -9,6 +9,7 @@ from gaphas.matrix import Matrix
 
 from rafcon.statemachine.enums import StateExecutionState
 
+from rafcon.mvc.mygaphas.canvas import ItemProjection
 from rafcon.mvc.mygaphas.constraint import KeepRectangleWithinConstraint, PortRectConstraint
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedVariablePortView
@@ -133,12 +134,10 @@ class StateView(Element):
     def add_keep_rect_within_constraint(canvas, parent, child):
         solver = canvas.solver
 
-        child_nw_abs = canvas.project(child, child.handles()[NW].pos)
-        child_se_abs = canvas.project(child, child.handles()[SE].pos)
-        parent_nw_abs = canvas.project(parent, parent.handles()[NW].pos)
-        parent_se_abs = canvas.project(parent, parent.handles()[SE].pos)
-        constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs,
-                                                   child_nw_abs, child_se_abs, child, lambda: parent.border_width)
+        child_nw = ItemProjection(child.handles()[NW].pos, child, parent)
+        child_se = ItemProjection(child.handles()[SE].pos, child, parent)
+        constraint = KeepRectangleWithinConstraint(parent.handles()[NW].pos, parent.handles()[SE].pos,
+                                                   child_nw, child_se, child, lambda: parent.border_width)
         solver.add_constraint(constraint)
         parent.keep_rect_constraints[child] = constraint
 

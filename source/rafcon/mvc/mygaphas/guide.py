@@ -1,7 +1,7 @@
 from gaphas.aspect import InMotion
 from gaphas.guide import GuidedItemInMotion
 
-from rafcon.mvc.mygaphas.items.state import StateView
+from rafcon.mvc.mygaphas.items.state import StateView, NameView
 
 
 @InMotion.when_type(StateView)
@@ -21,6 +21,23 @@ class GuidedStateInMotion(GuidedItemInMotion):
         super(GuidedStateInMotion, self).start_move(pos)
         self.item.moving = True
 
+    def move(self, pos):
+        super(GuidedStateInMotion, self).move(pos)
+        parent_item = self.item.parent
+        if parent_item:
+            constraint = parent_item.keep_rect_constraints[self.item]
+            self.view.canvas.solver.request_resolve_constraint(constraint)
+
     def stop_move(self):
         super(GuidedStateInMotion, self).stop_move()
         self.item.moving = False
+
+
+@InMotion.when_type(NameView)
+class GuidedStateInMotion(GuidedItemInMotion):
+    def move(self, pos):
+        super(GuidedStateInMotion, self).move(pos)
+        parent_item = self.item.parent
+        if parent_item:
+            constraint = parent_item.keep_rect_constraints[self.item]
+            self.view.canvas.solver.request_resolve_constraint(constraint)

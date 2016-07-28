@@ -41,35 +41,44 @@ class KeepRectangleWithinConstraint(Constraint):
         self.margin_method = margin_method
 
     def solve_for(self, var=None):
-        """
-        Ensure that the children is within its parent
+        """Ensure that the children is within its parent
         """
         margin = self.margin_method()
-        child_width = self.child_se[0].value - self.child_nw[0].value
-        child_height = self.child_se[1].value - self.child_nw[1].value
-        parent_width = self.parent_se[0].value - self.parent_nw[0].value
-        parent_height = self.parent_se[1].value - self.parent_nw[1].value
-        if child_width > parent_width - 2 * margin:
-            child_width = parent_width - 2 * margin
-        if child_height > parent_height - 2 * margin:
-            child_height = parent_height - 2 * margin
+
+        def parent_width():
+            return self.parent_se[0].value - self.parent_nw[0].value
+
+        def parent_height():
+            return self.parent_se[1].value - self.parent_nw[1].value
+
+        def child_width():
+            child_width = self.child_se[0].value - self.child_nw[0].value
+            if child_width > parent_width() - 2 * margin:
+                child_width = parent_width() - 2 * margin
+            return child_width
+
+        def child_height():
+            child_height = self.child_se[1].value - self.child_nw[1].value
+            if child_height > parent_height() - 2 * margin:
+                child_height = parent_height() - 2 * margin
+            return child_height
 
         # Left edge (west)
         if self.parent_nw[0].value > self.child_nw[0].value - margin:
             _update(self.child_nw[0], self.parent_nw[0].value + margin)
-            _update(self.child_se[0], self.child_nw[0].value + child_width)
+            _update(self.child_se[0], self.child_nw[0].value + child_width())
         # Right edge (east)
         if self.parent_se[0].value < self.child_se[0].value + margin:
             _update(self.child_se[0], self.parent_se[0].value - margin)
-            _update(self.child_nw[0], self.child_se[0].value - child_width)
+            _update(self.child_nw[0], self.child_se[0].value - child_width())
         # Upper edge (north)
         if self.parent_nw[1].value > self.child_nw[1].value - margin:
             _update(self.child_nw[1], self.parent_nw[1].value + margin)
-            _update(self.child_se[1], self.child_nw[1].value + child_height)
+            _update(self.child_se[1], self.child_nw[1].value + child_height())
         # Lower edge (south)
         if self.parent_se[1].value < self.child_se[1].value + margin:
             _update(self.child_se[1], self.parent_se[1].value - margin)
-            _update(self.child_nw[1], self.child_se[1].value - child_height)
+            _update(self.child_nw[1], self.child_se[1].value - child_height())
 
 
 class KeepPointWithinConstraint(Constraint):
