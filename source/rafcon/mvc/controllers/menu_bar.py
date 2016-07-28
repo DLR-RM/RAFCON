@@ -321,6 +321,19 @@ class MenuBarController(ExtendedController):
     def on_substitute_selected_state_activate(self, widget=None, data=None, path=None):
         selected_states = self.model.get_selected_state_machine_model().selection.get_states()
         logger.info("Substitute state with state machine form library-tree, as template or library state. \n" + str(selected_states))
+        from rafcon.mvc.controllers.single_widget_window import SingleWidgetWindowController
+        from rafcon.mvc.views.library_tree import LibraryTreeView
+        class LibraryChoiceView(LibraryTreeView):
+
+            def __init__(self):
+                super(LibraryChoiceView, self).__init__()
+
+                self['libraries_alignment'] = gtk.Alignment()
+                self.show()
+                self['libraries_alignment'].add(self)
+        gtk.Window()
+
+        # SingleWidgetWindowController
 
     def on_save_selected_state_as_activate(self, widget=None, data=None, path=None):
         selected_states = self.model.get_selected_state_machine_model().selection.get_states()

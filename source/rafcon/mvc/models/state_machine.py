@@ -117,6 +117,8 @@ class StateMachineModel(ModelMT):
         """
         if hasattr(self, "history") and self.history:
             self.history.prepare_destruction()
+        if hasattr(self, "auto_backup") and self.auto_backup:
+            self.auto_backup.prepare_destruction()
         try:
             self.unregister_observer(self)
             self.root_state.register_observer(self)
