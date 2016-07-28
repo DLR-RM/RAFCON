@@ -296,6 +296,8 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     global_monitoring_manager.reinitialize(network_manager_model.connected_ip_port)
     while not global_monitoring_manager:
         time.sleep(0.01)
+    while not global_monitoring_manager.endpoint:
+        time.sleep(0.01)
     while not global_monitoring_manager.endpoint.registered_to_server:
         time.sleep(0.01)
     # here is a function needed which ensures that the client is disconnected and reconnected again
