@@ -13,6 +13,7 @@ from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton as sm_singletons
+from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 
 import rafcon.mvc.singleton as mvc_singletons
@@ -230,11 +231,6 @@ if __name__ == '__main__':
 
         logger.info("Main window was closed")
 
-        # If there is a running state-machine, wait for it to be finished before exiting
-        sm = sm_singletons.state_machine_manager.get_active_state_machine()
-        if sm:
-            sm.root_state.join()
-
     finally:
         plugins.run_hook("post_destruction")
 
@@ -245,6 +241,11 @@ if __name__ == '__main__':
                 os.remove(constants.RAFCON_INSTANCE_LOCK_FILE.name)
             else:
                 logger.warning("External remove of lock file detected!")
+
+    if sm_singletons.state_machine_execution_engine.status.execution_mode == StateMachineExecutionStatus.STARTED:
+        logger.info("Waiting for the state machine execution to finish")
+        sm_singletons.state_machine_execution_engine.join()
+        logger.info("State machine execution has finished")
 
     logger.info("Exiting ...")
 
