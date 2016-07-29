@@ -773,7 +773,6 @@ class GraphicalEditorController(ExtendedController):
         assert isinstance(state_m, AbstractStateModel)
         state_meta_gaphas = state_m.meta['gui']['editor_gaphas']
         state_meta_opengl = state_m.meta['gui']['editor_opengl']
-        state_temp = state_m.temp['gui']['editor']
 
         # Use default values if no size information is stored
         if isinstance(state_meta_opengl['size'], tuple) and not isinstance(state_meta_gaphas['size'], tuple):

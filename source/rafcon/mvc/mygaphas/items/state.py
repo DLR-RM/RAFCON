@@ -42,9 +42,6 @@ class StateView(Element):
         self._state_m = ref(state_m)
         self.hierarchy_level = hierarchy_level
 
-        self.min_width = 0.0001
-        self.min_height = 0.0001
-
         self._income = None
         self._outcomes = []
         self._inputs = []
@@ -88,7 +85,11 @@ class StateView(Element):
 
         canvas = self.canvas
         parent = canvas.get_parent(self)
-        canvas.add(self._name_view, self)
+
+        self.update_minimum_size()
+
+        canvas.add(self.name_view, self)
+        self.name_view.update_minimum_size()
 
         self.add_keep_rect_within_constraint(canvas, self, self._name_view)
 
@@ -98,6 +99,26 @@ class StateView(Element):
 
         # Registers local constraints
         super(StateView, self).setup_canvas()
+
+    def update_minimum_size(self):
+        if not self.parent:
+            self.min_width = 1
+            self.min_height = 1
+        else:
+            min_side_length = max(self.parent.width, self.parent.height) / \
+                              constants.MAXIMUM_CHILD_TO_PARENT_STATE_SIZE_RATIO
+            if min_side_length != self.min_width:
+                self.min_width = min_side_length
+            if min_side_length != self.min_height:
+                self.min_height = min_side_length
+
+    def update_minimum_size_of_children(self):
+        if self.canvas:
+            for constraint in self.constraints:
+                self.canvas.solver.request_resolve_constraint(constraint)
+            for item in self.canvas.get_all_children(self):
+                if isinstance(item, (StateView, NameView)):
+                    item.update_minimum_size()
 
     def get_all_ports(self):
         port_list = [self.income]
@@ -267,6 +288,7 @@ class StateView(Element):
         self.position = state_meta['rel_pos']
         self.width = state_meta['size'][0]
         self.height = state_meta['size'][1]
+        self.update_minimum_size_of_children()
 
         def update_port_position(port_v, meta_data):
             if isinstance(meta_data['rel_pos'], tuple):
@@ -383,7 +405,6 @@ class StateView(Element):
             max_width = self.width - 2 * self.border_width
             max_height = self.height - 2 * self.border_width
             self._draw_symbol(context, constants.SIGN_ARROW, False, (max_width, max_height))
-
 
     def _draw_symbol(self, context, symbol, is_library_state, max_size):
         c = context.cairo
@@ -673,6 +694,8 @@ class StateView(Element):
             if item is not self:
                 item.position = rel_pos
                 item_meta['rel_pos'] = rel_pos
+            if isinstance(item, StateView):
+                item.update_minimum_size_of_children()
 
         def resize_state_v(state_v, old_state_size, new_state_size, use_meta_data):
             width_factor = float(new_state_size[0]) / old_state_size[0]
@@ -729,12 +752,22 @@ class NameView(Element):
         self._name = None
         self.name = name
 
-        self.min_width = 0.0001
-        self.min_height = 0.0001
+        self.min_width = 1
+        self.min_height = 1
 
         self.moving = False
 
         self._image_cache = ImageCache(multiplicator=1.5)
+
+    def update_minimum_size(self):
+        print "name parent size", self.parent.width, self.parent.height
+        min_side_length = max(self.parent.width, self.parent.height) / constants.MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO
+        print "name min", min_side_length
+        if min_side_length != self.min_width:
+            self.min_width = min_side_length
+        if min_side_length != self.min_height:
+            self.min_height = min_side_length
+        print "name min readout", self.min_width, self.min_height
 
     @property
     def name(self):
