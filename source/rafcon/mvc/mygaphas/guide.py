@@ -34,9 +34,9 @@ class GuidedStateInMotion(GuidedItemInMotion):
 
 
 @InMotion.when_type(NameView)
-class GuidedStateInMotion(GuidedItemInMotion):
+class GuidedNameInMotion(GuidedItemInMotion):
     def move(self, pos):
-        super(GuidedStateInMotion, self).move(pos)
+        super(GuidedNameInMotion, self).move(pos)
         parent_item = self.item.parent
         if parent_item:
             constraint = parent_item.keep_rect_constraints[self.item]
