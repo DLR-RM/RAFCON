@@ -180,9 +180,23 @@ class AutoBackupModel(ModelMT):
 
     def destroy(self):
         logger.info('destroy auto backup ' + str(self.state_machine_model.state_machine.state_machine_id))
+        self.cancel_timed_thread()
+        self.clean_lock_file(True)
+
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        Unregister itself as observer from the state machine and the root state
+        """
+        try:
+            self.relieve_model(self.state_machine_model)
+        except KeyError:  # Might happen if the observer was already unregistered
+            pass
+        self.cancel_timed_thread()
+
+    def cancel_timed_thread(self):
         if self.tmp_storage_timed_thread is not None:
             self.tmp_storage_timed_thread.cancel()
-        self.clean_lock_file(True)
 
     def check_lock_file(self):
         if self.__destroyed:

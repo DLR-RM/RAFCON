@@ -113,10 +113,12 @@ class StateMachineModel(ModelMT):
     def prepare_destruction(self):
         """Prepares the model for destruction
 
-        Unregisters itself as observer from the state machine and the root state
+        Unregister itself as observer from the state machine and the root state
         """
-        if hasattr(self, "history") and self.history:
+        if getattr(self, "history", None):
             self.history.prepare_destruction()
+        if getattr(self, "auto_backup", None):
+            self.auto_backup.prepare_destruction()
         try:
             self.unregister_observer(self)
             self.root_state.register_observer(self)
