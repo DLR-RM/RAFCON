@@ -760,14 +760,11 @@ class NameView(Element):
         self._image_cache = ImageCache(multiplicator=1.5)
 
     def update_minimum_size(self):
-        print "name parent size", self.parent.width, self.parent.height
         min_side_length = max(self.parent.width, self.parent.height) / constants.MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO
-        print "name min", min_side_length
         if min_side_length != self.min_width:
             self.min_width = min_side_length
         if min_side_length != self.min_height:
             self.min_height = min_side_length
-        print "name min readout", self.min_width, self.min_height
 
     @property
     def name(self):
