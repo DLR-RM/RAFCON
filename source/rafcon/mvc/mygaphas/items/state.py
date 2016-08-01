@@ -207,7 +207,12 @@ class StateView(Element):
 
     @property
     def border_width(self):
-        return min(self._get_width(), self._get_height()) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
+        h = self._handles
+        nw_pos = h[NW].pos
+        se_pos = h[SE].pos
+        width = float(se_pos.x) - float(nw_pos.x)
+        height = float(se_pos.y) - float(nw_pos.y)
+        return min(width, height) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
 
     @property
     def parent(self):
@@ -408,6 +413,8 @@ class StateView(Element):
 
     def _draw_symbol(self, context, symbol, is_library_state, max_size):
         c = context.cairo
+        width = self.width
+        height = self.height
 
         c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
@@ -422,8 +429,8 @@ class StateView(Element):
                                symbol))
 
         if symbol in self.__symbol_size_cache and \
-                self.__symbol_size_cache[symbol]['width'] == self.width and \
-                self.__symbol_size_cache[symbol]['height'] == self.height:
+                self.__symbol_size_cache[symbol]['width'] == width and \
+                self.__symbol_size_cache[symbol]['height'] == height:
             font_size = self.__symbol_size_cache[symbol]['size']
             set_font_description()
 
@@ -431,15 +438,15 @@ class StateView(Element):
             font_size = 30
             set_font_description()
 
-            pango_size = (self.width * SCALE, self.height * SCALE)
+            pango_size = (width * SCALE, height * SCALE)
             while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
                 font_size *= 0.9
                 set_font_description()
 
-            self.__symbol_size_cache[symbol] = {'width': self.width, 'height': self.height, 'size': font_size}
+            self.__symbol_size_cache[symbol] = {'width': width, 'height': height, 'size': font_size}
 
-        c.move_to(self.width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
-                  self.height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
+        c.move_to(width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
+                  height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
 
         alpha = 1.
         if is_library_state and self.transparent:
