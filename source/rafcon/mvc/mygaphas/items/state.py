@@ -345,7 +345,7 @@ class StateView(Element):
             # print "draw state"
             c = self._image_cache.get_context_for_image(current_zoom)
             multiplicator = self._image_cache.multiplicator
-            default_line_width = self.border_width / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR * multiplicator
+            default_line_width = self.border_width / constants.BORDER_WIDTH_OUTLINE_WIDTH_FACTOR * multiplicator
 
             c.rectangle(nw.x, nw.y, self.width, self.height)
 

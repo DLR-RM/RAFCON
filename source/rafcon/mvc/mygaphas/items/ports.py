@@ -355,7 +355,7 @@ class PortView(object):
         c = context
 
         width, height = self.port_size
-        c.set_line_width(self.port_side_size / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR *
+        c.set_line_width(self.port_side_size / constants.BORDER_WIDTH_OUTLINE_WIDTH_FACTOR *
                          self._port_image_cache.multiplicator)
 
         # Save/restore context, as we move and rotate the connector to the desired pose

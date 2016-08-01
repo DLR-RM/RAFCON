@@ -10,6 +10,7 @@ from rafcon.mvc.mygaphas.canvas import ItemProjection
 from rafcon.mvc.mygaphas.constraint import KeepPointWithinConstraint, KeepPortDistanceConstraint
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView,\
                                             InputPortView, OutputPortView, LogicPortView, PortView
+from rafcon.mvc.utils import constants
 from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_text_layout
 from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
@@ -74,10 +75,6 @@ class PerpLine(Line):
                                                                     port, lambda: self._head_length,
                                                                     self.is_out_port(port))
             self.canvas.solver.add_constraint(self._from_port_constraint)
-        if self.to_port:
-            self.line_width = min(self.to_port.port_side_size, port.port_side_size) * .2
-        else:
-            self.line_width = port.port_side_size * .2
 
     @to_port.setter
     def to_port(self, port):
@@ -88,8 +85,6 @@ class PerpLine(Line):
             self._to_port_constraint = KeepPortDistanceConstraint(self.to_handle().pos, self._to_waypoint.pos, port,
                                                                   lambda: self._head_length, self.is_in_port(port))
             self.canvas.solver.add_constraint(self._to_port_constraint)
-        if self.from_port:
-            self.line_width = min(self.from_port.port_side_size, port.port_side_size) * .2
 
     def end_handles_perp(self):
         end_handles = [self.from_handle(), self.to_handle()]
@@ -162,7 +157,7 @@ class PerpLine(Line):
             cr.rotate(angle)
             draw(context, length)
             cr.restore()
-
+        self.line_width = self._calc_line_width()
         head_length = self._head_length
         cr = context.cairo
         cr.set_line_width(self.line_width)
@@ -240,6 +235,13 @@ class PerpLine(Line):
             c.show_layout(layout)
 
             self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, angle, zoom=current_zoom)
+
+    def _calc_line_width(self):
+        if self.to_port:
+            parental_border_width = max(self.to_port.port_side_size, self.from_port.port_side_size)
+        else:
+            parental_border_width = self.from_port.port_side_size
+        return parental_border_width / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR
 
     @property
     def _head_length(self):
