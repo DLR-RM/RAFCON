@@ -75,7 +75,7 @@ def check_for_crashed_rafcon_instances():
     for folder in os.listdir(MY_RAFCON_TEMP_PATH):
         if not folder == str(os.getpid()) and folder not in process_id_list:
             rafcon_instance_path_to_check = os.path.join(MY_RAFCON_TEMP_PATH, folder)
-            if 'lock' in os.listdir(rafcon_instance_path_to_check):
+            if os.path.isdir(rafcon_instance_path_to_check) and 'lock' in os.listdir(rafcon_instance_path_to_check):
                 logger.info("There is tmp-data of a crashed/killed or badly closed state-machines of a RAFCON instance "
                             "in path: {}".format(rafcon_instance_path_to_check))
                 restorable_sm.append((None, folder, None, None))
