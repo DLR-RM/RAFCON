@@ -45,6 +45,10 @@ class ConnectionView(PerpLine):
             self._to_port.remove_connected_handle(self._to_handle)
             self.to_port.tmp_disconnect()
 
+    def prepare_destruction(self):
+        super(ConnectionView, self).prepare_destruction()
+        self.remove_connection_from_ports()
+
 
 class ConnectionPlaceholderView(ConnectionView):
     def __init__(self, hierarchy_level, transition_placeholder):

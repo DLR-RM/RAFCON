@@ -130,6 +130,11 @@ class PerpLine(Line):
     def to_handle(self):
         return self._to_handle
 
+    def prepare_destruction(self):
+        self.canvas.solver.remove_constraint(self._from_port_constraint)
+        self.canvas.solver.remove_constraint(self._to_port_constraint)
+        self.remove_all_waypoints()
+
     def draw_head(self, context, length):
         cr = context.cairo
         cr.move_to(0, 0)
