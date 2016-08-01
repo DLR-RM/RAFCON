@@ -148,11 +148,11 @@ class KeepRelativePositionConstraint(Constraint):
 
 
 class KeepPortDistanceConstraint(Constraint):
-    def __init__(self, anchor, point, port, port_side_size, incoming):
+    def __init__(self, anchor, point, port, distance_func, incoming):
         super(KeepPortDistanceConstraint, self).__init__(anchor[0], anchor[1], point[0], point[1])
         assert isinstance(port, PortView)
 
-        self.distance = port_side_size
+        self.distance_func = distance_func
 
         self.incoming = incoming
         self.point = point
@@ -160,7 +160,7 @@ class KeepPortDistanceConstraint(Constraint):
         self.port = port
 
     def solve_for(self, var):
-        distance = self.distance
+        distance = self.distance_func()
         if self.port.side is SnappedSide.TOP:
             _update(self.point[0], self.anchor[0])
             _update(self.point[1],

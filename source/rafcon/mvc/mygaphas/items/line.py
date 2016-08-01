@@ -10,17 +10,16 @@ from rafcon.mvc.mygaphas.canvas import ItemProjection
 from rafcon.mvc.mygaphas.constraint import KeepPointWithinConstraint, KeepPortDistanceConstraint
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView,\
                                             InputPortView, OutputPortView, LogicPortView, PortView
-from rafcon.mvc.mygaphas.utils.enums import SnappedSide
 from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_text_layout
 from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
 
 
 class PerpLine(Line):
     def __init__(self, hierarchy_level):
+        from rafcon.mvc.mygaphas.segment import Segment
         super(PerpLine, self).__init__()
         self._from_handle = self.handles()[0]
         self._to_handle = self.handles()[1]
-        from rafcon.mvc.mygaphas.segment import Segment
         self._segment = Segment(self, view=self.canvas)
 
         self.hierarchy_level = hierarchy_level
@@ -35,9 +34,6 @@ class PerpLine(Line):
 
         self._arrow_color = None
         self._line_color = None
-        self._head_length = 0.
-        self._to_head_length = 0.
-        self._head_draw_offset = 0.
 
         self._label_image_cache = ImageCache()
         self._last_label_size = 0, 0
@@ -72,11 +68,11 @@ class PerpLine(Line):
     def from_port(self, port):
         assert isinstance(port, PortView)
         self._from_port = port
-        self._head_length = port.port_side_size
         if not self._from_waypoint:
             self._from_waypoint = self.add_perp_waypoint()
             self._from_port_constraint = KeepPortDistanceConstraint(self.from_handle().pos, self._from_waypoint.pos,
-                                                                    port, self._head_length, self.is_out_port(port))
+                                                                    port, lambda: self._head_length,
+                                                                    self.is_out_port(port))
             self.canvas.solver.add_constraint(self._from_port_constraint)
         if self.to_port:
             self.line_width = min(self.to_port.port_side_size, port.port_side_size) * .2
@@ -87,11 +83,10 @@ class PerpLine(Line):
     def to_port(self, port):
         assert isinstance(port, PortView)
         self._to_port = port
-        self._to_head_length = port.port_side_size
         if not self._to_waypoint:
             self._to_waypoint = self.add_perp_waypoint(begin=False)
-            self._to_port_constraint = KeepPortDistanceConstraint(self.to_handle().pos, self._to_waypoint.pos,
-                                                                  port, self._to_head_length, self.is_in_port(port))
+            self._to_port_constraint = KeepPortDistanceConstraint(self.to_handle().pos, self._to_waypoint.pos, port,
+                                                                  lambda: self._head_length, self.is_in_port(port))
             self.canvas.solver.add_constraint(self._to_port_constraint)
         if self.from_port:
             self.line_width = min(self.from_port.port_side_size, port.port_side_size) * .2
@@ -135,21 +130,20 @@ class PerpLine(Line):
     def to_handle(self):
         return self._to_handle
 
-    def draw_head(self, context):
+    def draw_head(self, context, length):
         cr = context.cairo
-        cr.set_source_rgba(*self._arrow_color)
         cr.move_to(0, 0)
-        cr.line_to(self._head_length, 0)
+        cr.line_to(length, 0)
+        cr.set_source_rgba(*self._arrow_color)
         cr.stroke()
-        cr.move_to(self._head_length, 0)
 
-    def draw_tail(self, context):
+    def draw_tail(self, context, length):
         cr = context.cairo
         cr.set_source_rgba(*self._line_color)
-        cr.line_to(self._to_head_length, 0)
+        cr.line_to(length, 0)
         cr.stroke()
         cr.set_source_rgba(*self._arrow_color)
-        cr.move_to(self._to_head_length, 0)
+        cr.move_to(length, 0)
         cr.line_to(self._head_draw_offset, 0)
         cr.stroke()
 
@@ -157,25 +151,20 @@ class PerpLine(Line):
         if self.parent and self.parent.moving:
             return
 
-        def draw_line_end(pos, angle, draw):
-            cr = context.cairo
+        def draw_line_end(pos, angle, length, draw):
             cr.save()
             cr.translate(*pos)
             cr.rotate(angle)
-            draw(context)
+            draw(context, length)
             cr.restore()
 
+        head_length = self._head_length
         cr = context.cairo
         cr.set_line_width(self.line_width)
-        draw_line_end(self._handles[0].pos, self._head_angle, self.draw_head)
+        draw_line_end(self._handles[0].pos, self._head_angle, head_length, self.draw_head)
         for h in self._handles[1:-1]:
             cr.line_to(*h.pos)
-        if self.to_port is None:
-            self._head_draw_offset = 0.
-        else:
-            self._head_draw_offset = self._to_head_length / 2.
-        draw_line_end(self._handles[-1].pos, self._tail_angle, self.draw_tail)
-        cr.stroke()
+        draw_line_end(self._handles[-1].pos, self._tail_angle, head_length, self.draw_tail)
 
         if self.name and (isinstance(self.from_port, LogicPortView) or
                           global_gui_config.get_config_value("SHOW_NAMES_ON_DATA_FLOWS", default=True)):
@@ -247,6 +236,14 @@ class PerpLine(Line):
 
             self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, angle, zoom=current_zoom)
 
+    @property
+    def _head_length(self):
+        return self._from_port.port_side_size
+
+    @property
+    def _head_draw_offset(self):
+        return 0. if self.to_port is None else self._head_length / 2.
+
     def _update_ports(self):
         assert len(self._handles) >= 2, 'Not enough segments'
         self._ports = []
@@ -293,32 +290,6 @@ class PerpLine(Line):
     @staticmethod
     def is_out_port(port):
         return isinstance(port, (OutcomeView, OutputPortView))
-
-    def _get_tail_pos(self):
-        if self.to_port is None:
-            return self._handles[-1].pos
-
-        tail_pos = None
-
-        to_port_left_side = (
-        self._handles[-1].pos.x.value - self.to_port.port_side_size / 2., self._handles[-1].pos.y.value)
-        to_port_right_side = (
-        self._handles[-1].pos.x.value + self.to_port.port_side_size / 2., self._handles[-1].pos.y.value)
-        to_port_top_side = (
-        self._handles[-1].pos.x.value, self._handles[-1].pos.y.value - self.to_port.port_side_size / 2.)
-        to_port_bottom_side = (
-        self._handles[-1].pos.x.value, self._handles[-1].pos.y.value + self.to_port.port_side_size / 2.)
-
-        if self.to_port.side is SnappedSide.RIGHT:
-            tail_pos = to_port_left_side if self.is_out_port(self.to_port) else to_port_right_side
-        elif self.to_port.side is SnappedSide.TOP:
-            tail_pos = to_port_bottom_side if self.is_out_port(self.to_port) else to_port_top_side
-        elif self.to_port.side is SnappedSide.LEFT:
-            tail_pos = to_port_right_side if self.is_out_port(self.to_port) else to_port_left_side
-        elif self.to_port.side is SnappedSide.BOTTOM:
-            tail_pos = to_port_top_side if self.is_out_port(self.to_port) else to_port_bottom_side
-
-        return tail_pos
 
     def _keep_handle_in_parent_state(self, handle):
         canvas = self.canvas
