@@ -12,7 +12,8 @@ def test_start_script_open():
     script = dirname(realpath(rafcon.__file__)) + "/statemachine/start.py"
     start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
     cmd = sys.executable + " %s -o %s" % (script, start_path)
-    subprocess.call(cmd, shell=True)
+    cmd_res = subprocess.call(cmd, shell=True)
+    assert cmd_res == 0
     tmp_file = open("/tmp/rafcon_unit_tests/test_start_script.txt", "r")
     res = tmp_file.read()
     tmp_file.close()
@@ -25,7 +26,8 @@ def test_start_script_state():
     start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
     state_path = "UTUOSC/AHWBOG"
     cmd = sys.executable + " %s -o %s -s %s" % (script, start_path, state_path)
-    subprocess.call(cmd, shell=True)
+    cmd_res = subprocess.call(cmd, shell=True)
+    assert cmd_res == 0
     tmp_file = open("/tmp/rafcon_unit_tests/test_start_script.txt", "r")
     res = tmp_file.read()
     tmp_file.close()
@@ -39,7 +41,8 @@ def test_start_script_valid_config():
     start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
     config = rafcon.__path__[0] + "/../test/common/configs_for_start_script_test/valid_config"
     cmd = sys.executable + " %s -o %s -c %s" % (script, start_path, config)
-    subprocess.call(cmd, shell=True)
+    cmd_res = subprocess.call(cmd, shell=True)
+    assert cmd_res == 0
     tmp = open("/tmp/rafcon_unit_tests/test_start_script.txt", "r")
     res = tmp.read()
     tmp.close()
