@@ -8,23 +8,19 @@ import testing_utils
 # /tmp/rafcon/unittests/test_start_script.txt??? /tmp/rafcon_unit_test/test_start_script.txt
 
 
-def print_lock_for_Popen(p):
-    out, err = p.communicate()
-    for elem in out.split('\n'):
-        print '\t' + elem
+def get_rafcon_env():
+    rafcon_env = os.environ.copy()
+    rafcon_base_path = os.path.dirname(testing_utils.RAFCON_PATH)
+    rafcon_env["PYTHONPATH"] = rafcon_base_path + ":" + rafcon_env["PYTHONPATH"]
+    return rafcon_env
 
 
 def test_start_script_open():
     script = dirname(realpath(rafcon.__file__)) + "/statemachine/start.py"
     start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
     cmd = sys.executable + " %s -o %s" % (script, start_path)
-    cmd_res = subprocess.call(cmd, shell=True)
+    cmd_res = subprocess.call(cmd, shell=True, env=get_rafcon_env())
     assert cmd_res == 0
-    # cmd = [sys.executable, script, '-o', start_path]
-    # p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    # p.wait()
-    # assert p.returncode == 0
-    # print_lock_for_Popen(p)
     tmp_file = open("/tmp/rafcon_unit_tests/test_start_script.txt", "r")
     res = tmp_file.read()
     tmp_file.close()
@@ -36,14 +32,10 @@ def test_start_script_state():
     script = dirname(realpath(rafcon.__file__)) + "/statemachine/start.py"
     start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
     state_path = "UTUOSC/AHWBOG"
+    print start_path
     cmd = sys.executable + " %s -o %s -s %s" % (script, start_path, state_path)
-    cmd_res = subprocess.call(cmd, shell=True)
+    cmd_res = subprocess.call(cmd, shell=True, env=get_rafcon_env())
     assert cmd_res == 0
-    # cmd = [sys.executable, script, '-o', start_path, '-s', state_path]
-    # p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    # p.wait()
-    # assert p.returncode == 0
-    # print_lock_for_Popen(p)
     tmp_file = open("/tmp/rafcon_unit_tests/test_start_script.txt", "r")
     res = tmp_file.read()
     tmp_file.close()
@@ -57,14 +49,8 @@ def test_start_script_valid_config():
     start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
     config = rafcon.__path__[0] + "/../test/common/configs_for_start_script_test/valid_config"
     cmd = sys.executable + " %s -o %s -c %s" % (script, start_path, config)
-    cmd_res = subprocess.call(cmd, shell=True)
+    cmd_res = subprocess.call(cmd, shell=True, env=get_rafcon_env())
     assert cmd_res == 0
-    # cmd = [sys.executable, script, '-o', start_path, '-c', config]
-    # p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    # p.wait()
-    # print dir(p)
-    # assert p.returncode == 0
-    # print_lock_for_Popen(p)
     tmp = open("/tmp/rafcon_unit_tests/test_start_script.txt", "r")
     res = tmp.read()
     tmp.close()
