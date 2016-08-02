@@ -162,10 +162,6 @@ class PortView(object):
             return self._tmp_incoming_connected
         return True
 
-    def is_connected_to_scoped_variable(self):
-        # TODO: Check if this method is required and if so, fix it
-        return False
-
     def get_port_area(self, view):
         """Calculates the drawing area affected by the (hovered) port
         """
@@ -233,9 +229,6 @@ class PortView(object):
             self._draw_hover_effect(context.cairo, self.direction, fill_color, transparent)
 
     def draw_name(self, context, transparency, value):
-        if self.is_connected_to_scoped_variable():
-            return
-
         c = context.cairo
         side_length = self.port_side_size
         label_position = self.side if not self.label_print_inside else self.side.opposite()
