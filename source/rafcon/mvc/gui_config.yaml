@@ -34,6 +34,8 @@ AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL: 20
 AUTO_RECOVERY_CHECK: False
 AUTO_RECOVERY_LOCK_ENABLED: False
 
+CHECK_PYTHON_FILES_WITH_PYLINT: False
+
 SHORTCUTS:
     abort: Escape
     add: <Control>A             # In graphical editor: add execution state
