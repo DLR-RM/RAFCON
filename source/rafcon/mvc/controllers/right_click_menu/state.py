@@ -91,6 +91,13 @@ class StateMachineRightClickMenu:
         menu_item.set_always_show_image(True)
         menu.append(menu_item)
 
+        # menu_item = gtk.ImageMenuItem(constants.BUTTON_UNGR)
+        menu_item = gtk.ImageMenuItem(gtk.STOCK_CDROM)
+        menu_item.set_label("Substitute state")
+        menu_item.connect("activate", self.on_substitute_state_activate)
+        menu_item.set_always_show_image(True)
+        menu.append(menu_item)
+
         return menu
 
     def on_copy_activate(self, widget, data=None):
@@ -126,6 +133,10 @@ class StateMachineRightClickMenu:
     def on_save_state_as_state_machine_activate(self, widget, data=None):
         logger.info("do save state as state machine")
         self.shortcut_manager.trigger_action('save_state_as', None, None)
+
+    def on_substitute_state_activate(self, widget, data=None):
+        logger.info("do save state as state machine")
+        self.shortcut_manager.trigger_action('substitute_state', None, None)
 
     def mouse_click(self, widget, event=None):
 
