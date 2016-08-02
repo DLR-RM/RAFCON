@@ -2,7 +2,6 @@ import logging
 import gtk
 import threading
 import time
-import os
 import signal
 
 # general tool elements
@@ -18,7 +17,6 @@ from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurre
 from rafcon.statemachine.storage import storage
 
 # mvc elements
-from gtkmvc.observer import Observer
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
@@ -32,9 +30,9 @@ from rafcon.statemachine.config import global_config
 import testing_utils
 from testing_utils import test_multithrading_lock, call_gui_callback, get_unique_temp_path
 from test_z_gui_state_type_change import store_state_elements, check_state_elements, \
-    check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
-    check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
-    get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
+     check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
+     check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
+     get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
 from test_z_gui_states_editor_widget import check_state_editor_models
 import pytest
 
@@ -1139,6 +1137,7 @@ def test_data_flow_property_modifications_history(caplog):
 
 
 def test_type_modifications_without_gui(caplog):
+    import rafcon.statemachine.start
     with_gui = False
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     signal.signal(signal.SIGINT, rafcon.statemachine.start.signal_handler)
