@@ -716,11 +716,10 @@ class GraphicalEditorController(ExtendedController):
         children = self.canvas.get_children(parent_state_v)
         for child in list(children):
             if transitions and isinstance(child, TransitionView) and child.model not in available_connections:
-                child.remove_all_waypoints()
-                child.remove_connection_from_ports()
+                child.prepare_destruction()
                 self.canvas.remove(child)
             elif not transitions and isinstance(child, DataFlowView) and child.model not in available_connections:
-                child.remove_connection_from_ports()
+                child.prepare_destruction()
                 self.canvas.remove(child)
 
     def remove_data_flow_view_from_parent_view(self, parent_state_m):
@@ -773,7 +772,6 @@ class GraphicalEditorController(ExtendedController):
         assert isinstance(state_m, AbstractStateModel)
         state_meta_gaphas = state_m.meta['gui']['editor_gaphas']
         state_meta_opengl = state_m.meta['gui']['editor_opengl']
-        state_temp = state_m.temp['gui']['editor']
 
         # Use default values if no size information is stored
         if isinstance(state_meta_opengl['size'], tuple) and not isinstance(state_meta_gaphas['size'], tuple):

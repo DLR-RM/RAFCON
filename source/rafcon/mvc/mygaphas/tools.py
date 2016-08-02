@@ -464,6 +464,8 @@ class HandleMoveTool(HandleTool):
                 if event.state & CONTROL_MASK:
                     self._child_resize = True
                     item.resize_all_children(old_size)
+                else:
+                    item.update_minimum_size_of_children()
             elif isinstance(item, StateView):
                 # Move handles only with ctrl modifier clicked
                 if event.state & gtk.gdk.CONTROL_MASK:

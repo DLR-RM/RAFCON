@@ -7,13 +7,15 @@ import gtk
 import threading
 from yaml_configuration.config import config_path
 
-from rafcon.statemachine.start import parse_state_machine_path, start_profiler, stop_profiler, setup_environment, \
-    reactor_required, setup_configuration, post_setup_plugins, register_signal_handlers, SIGNALS_TO_NAMES_DICT
+from rafcon.statemachine.start import parse_state_machine_path, setup_environment, reactor_required, \
+    setup_configuration, post_setup_plugins, register_signal_handlers, SIGNALS_TO_NAMES_DICT
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton as sm_singletons
+from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
+from rafcon.statemachine.config import global_config
 
 import rafcon.mvc.singleton as mvc_singletons
 from rafcon.mvc.controllers.main_window import MainWindowController
@@ -23,6 +25,7 @@ from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.mvc.utils import constants
 
 import rafcon.utils.filesystem as filesystem
+from rafcon.utils import profiler
 from rafcon.utils import plugins
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
@@ -215,7 +218,8 @@ if __name__ == '__main__':
 
     log_ready_output()
 
-    profiler = start_profiler()
+    if global_config.get_config_value("PROFILER_RUN", False):
+        profiler.start("global")
 
     if user_input.start_state_machine_flag:
         start_state_machine(state_machine, user_input.start_state_path, user_input.quit_flag)
@@ -230,25 +234,28 @@ if __name__ == '__main__':
 
         logger.info("Main window was closed")
 
-        # If there is a running state-machine, wait for it to be finished before exiting
-        sm = sm_singletons.state_machine_manager.get_active_state_machine()
-        if sm:
-            sm.root_state.join()
-
     finally:
         plugins.run_hook("post_destruction")
 
-        if profiler:
-            stop_profiler(profiler)
+        if global_config.get_config_value("PROFILER_RUN", False):
+            result_path = global_config.get_config_value("PROFILER_RESULT_PATH")
+            view = global_config.get_config_value("PROFILER_VIEWER")
+            profiler.stop("global", result_path, view)
+
         if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
             if os.path.exists(constants.RAFCON_INSTANCE_LOCK_FILE.name):
                 os.remove(constants.RAFCON_INSTANCE_LOCK_FILE.name)
             else:
                 logger.warning("External remove of lock file detected!")
 
+    if sm_singletons.state_machine_execution_engine.status.execution_mode == StateMachineExecutionStatus.STARTED:
+        logger.info("Waiting for the state machine execution to finish")
+        sm_singletons.state_machine_execution_engine.join()
+        logger.info("State machine execution has finished")
+
     logger.info("Exiting ...")
 
     # this is a ugly process shutdown method but works if gtk or twisted process are still blocking
-    import os
-    os._exit(0)
+    # import os
+    # os._exit(0)
 

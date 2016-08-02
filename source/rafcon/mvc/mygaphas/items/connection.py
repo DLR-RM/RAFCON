@@ -45,11 +45,14 @@ class ConnectionView(PerpLine):
             self._to_port.remove_connected_handle(self._to_handle)
             self.to_port.tmp_disconnect()
 
+    def prepare_destruction(self):
+        super(ConnectionView, self).prepare_destruction()
+        self.remove_connection_from_ports()
+
 
 class ConnectionPlaceholderView(ConnectionView):
     def __init__(self, hierarchy_level, transition_placeholder):
         super(ConnectionPlaceholderView, self).__init__(hierarchy_level)
-        self.line_width = .5 / hierarchy_level
 
         self.transition_placeholder = transition_placeholder
 
@@ -66,7 +69,6 @@ class TransitionView(ConnectionView):
         super(TransitionView, self).__init__(hierarchy_level)
         self._transition_m = None
         self.model = transition_m
-        self.line_width = .5 / hierarchy_level
 
     @property
     def model(self):
@@ -102,7 +104,6 @@ class DataFlowView(ConnectionView):
         assert isinstance(data_flow_m, DataFlowModel)
         self._data_flow_m = None
         self.model = data_flow_m
-        self.line_width = .5 / hierarchy_level
 
         self._show = global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
 
@@ -169,10 +170,6 @@ class ScopedVariableDataFlowView(DataFlowView):
             self._from_port_constraint = KeepPortDistanceConstraint(self.from_handle().pos, self._from_waypoint.pos,
                                                                     port, self._head_length, self.is_out_port(port))
             self.canvas.solver.add_constraint(self._from_port_constraint)
-        if self.to_port:
-            self.line_width = min(self.to_port.port_side_size, port.port_side_size) * .2
-        else:
-            self.line_width = port.port_side_size * .2
 
     @to_port.setter
     def to_port(self, port):
@@ -184,8 +181,6 @@ class ScopedVariableDataFlowView(DataFlowView):
             self._to_port_constraint = KeepPortDistanceConstraint(self.to_handle().pos, self._to_waypoint.pos,
                                                                   port, 2 * self._to_head_length, self.is_in_port(port))
             self.canvas.solver.add_constraint(self._to_port_constraint)
-        if self.from_port:
-            self.line_width = min(self.from_port.port_side_size, port.port_side_size) * .2
 
     @property
     def name(self):
@@ -367,10 +362,6 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
                 self._from_port_constraint = KeepPortDistanceConstraint(self.from_handle().pos, self._from_waypoint.pos,
                                                                         port, self._head_length, self.is_out_port(port))
                 self.canvas.solver.add_constraint(self._from_port_constraint)
-            if self.to_port:
-                self.line_width = min(self.to_port.port_side_size, port.port_side_size) * .2
-            else:
-                self.line_width = port.port_side_size * .2
 
             if len(self.handles()) == 4:
                 self._update_label_selection_waypoint(True)
@@ -458,8 +449,6 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
                                                                       port, 2 * self._to_head_length,
                                                                       self.is_in_port(port))
                 self.canvas.solver.add_constraint(self._to_port_constraint)
-            if self.from_port:
-                self.line_width = min(self.from_port.port_side_size, port.port_side_size) * .2
 
             if len(self.handles()) == 4:
                 self._update_label_selection_waypoint(True)

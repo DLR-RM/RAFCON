@@ -68,10 +68,11 @@ class ImageCache(object):
         """
         if not zoom:
             zoom = self.__zoom
+        zoom_multiplicator = zoom * self.multiplicator
         context.save()
-        context.scale(1. / (zoom * self.multiplicator), 1. / (zoom * self.multiplicator))
+        context.scale(1. / zoom_multiplicator, 1. / zoom_multiplicator)
 
-        image_position = round(position[0] * zoom * self.multiplicator), round(position[1] * zoom * self.multiplicator)
+        image_position = round(position[0] * zoom_multiplicator), round(position[1] * zoom_multiplicator)
         context.translate(*image_position)
         context.rotate(rotation)
         context.set_source_surface(self.__image, 0, 0)
