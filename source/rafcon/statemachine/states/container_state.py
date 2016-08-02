@@ -529,7 +529,12 @@ class ContainerState(State):
         """
         assert isinstance(state, State)
         # logger.info("add state {}".format(state))
-        # TODO: add validity checks for states and then remove this check
+
+        # handle the case that the child state id is the same as the container state id
+        while state.state_id == self.state_id:
+            state.change_state_id()
+
+        # TODO: add validity checks for states and then remove this check => to discuss
         if state.state_id in self._states.iterkeys():
             raise AttributeError("State id %s already exists in the container state", state.state_id)
         else:
