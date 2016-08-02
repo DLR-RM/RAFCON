@@ -29,5 +29,7 @@ state_machine_manager = StateMachineManager()
 # This variable holds the execution engine singleton
 state_machine_execution_engine = StateMachineExecutionEngine(state_machine_manager)
 
+# signal that cause shut down
+shut_down_signal = None
 
 argument_parser = argparse.ArgumentParser(description='Start RAFCON', fromfile_prefix_chars='@')

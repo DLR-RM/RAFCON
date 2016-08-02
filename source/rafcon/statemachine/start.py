@@ -169,6 +169,7 @@ SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n)  for n in dir(signal) if n.
 def signal_handler(signal, frame):
     from rafcon.statemachine.enums import StateMachineExecutionStatus
     state_machine_execution_engine = sm_singletons.state_machine_execution_engine
+    sm_singletons.shut_down_signal = signal
 
     try:
         # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
@@ -180,7 +181,7 @@ def signal_handler(signal, frame):
             state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
     except Exception as e:
         import traceback
-        print "Could not stop statemachine: {0} {1}".format(e.message, traceback.format_exc())
+        print "Could not stop state machine: {0} {1}".format(e.message, traceback.format_exc())
 
     # shutdown twisted correctly
     if reactor_required():
