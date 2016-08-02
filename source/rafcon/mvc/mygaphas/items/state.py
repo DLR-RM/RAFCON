@@ -216,7 +216,9 @@ class StateView(Element):
 
     @property
     def parent(self):
-        return self.canvas.get_parent(self)
+        if self.canvas:
+            return self.canvas.get_parent(self)
+        return None
 
     @property
     def corner_handles(self):

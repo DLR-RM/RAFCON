@@ -246,8 +246,10 @@ class PerpLine(Line):
             self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, angle, zoom=current_zoom)
 
     def _calc_line_width(self):
-        parental_border_width = self.get_parent_state_v().border_width
-        return parental_border_width / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR
+        parent_state_v = self.get_parent_state_v()
+        if not parent_state_v:
+            return 0
+        return parent_state_v.border_width / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR
 
     def _head_length(self, port):
         if not port:
