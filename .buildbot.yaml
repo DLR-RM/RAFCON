@@ -1,9 +1,9 @@
 arch:
   - 'sled11-x86_64-gcc4.x'
-arch_warn_on_failure:
-  - 'sled11-x86-gcc4.x'
-arch_ignore_failure:
   - 'osl42-x86_64'
+# arch_warn_on_failure:
+arch_ignore_failure:
+  - 'sled11-x86-gcc4.x'
 
 test:
   - python setup.py -v test
