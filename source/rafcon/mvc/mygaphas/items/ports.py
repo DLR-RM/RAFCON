@@ -163,10 +163,7 @@ class PortView(object):
         return True
 
     def is_connected_to_scoped_variable(self):
-        from rafcon.mvc.mygaphas.items.connection import ScopedVariableDataFlowView
-        for conn in self._connected_connections:
-            if isinstance(conn, ScopedVariableDataFlowView):
-                return True
+        # TODO: Check if this method is required and if so, fix it
         return False
 
     def get_port_area(self, view):

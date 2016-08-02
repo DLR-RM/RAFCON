@@ -14,7 +14,7 @@ from gaphas.aspect import HandleFinder, ItemConnectionSink, Connector, InMotion
 
 from rafcon.mvc.mygaphas.aspect import HandleInMotion, StateHandleFinder
 from rafcon.mvc.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, \
-    DataFlowView, FromScopedVariableDataFlowView, ToScopedVariableDataFlowView
+    DataFlowView
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedVariablePortView
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
@@ -647,20 +647,6 @@ class HandleMoveTool(HandleTool):
                         (isinstance(connection, ConnectionPlaceholderView) and connection.transition_placeholder)):
                     if self.set_matching_port(state.get_logic_ports(), item.port, handle, connection):
                         return
-                elif isinstance(connection, FromScopedVariableDataFlowView):
-                    if handle is connection.from_handle():
-                        if self.set_matching_port(state.scoped_variables, item.port, handle, connection):
-                            return
-                    elif handle is connection.to_handle():
-                        if self.set_matching_port(state.inputs, item.port, handle, connection):
-                            return
-                elif isinstance(connection, ToScopedVariableDataFlowView):
-                    if handle is connection.to_handle():
-                        if self.set_matching_port(state.scoped_variables, item.port, handle, connection):
-                            return
-                    elif handle is connection.from_handle():
-                        if self.set_matching_port(state.outputs, item.port, handle, connection):
-                            return
                 elif (isinstance(connection, DataFlowView) or
                           (isinstance(connection,
                                       ConnectionPlaceholderView) and not connection.transition_placeholder)):
