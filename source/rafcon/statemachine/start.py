@@ -26,9 +26,7 @@ import rafcon.utils.filesystem as filesystem
 
 from rafcon.statemachine.config import global_config
 import rafcon.statemachine.singleton as sm_singletons
-from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.statemachine.enums import StateExecutionState
 
 from rafcon.utils import profiler
@@ -123,9 +121,10 @@ def start_state_machine(state_machine_path, start_state_path=None):
     :param str start_state_path: The state path to the desired first state
     :return StateMachine: The loaded state machine
     """
+    state_machine_execution_engine = sm_singletons.state_machine_execution_engine
     state_machine = state_machine_execution_engine.execute_state_machine_from_path(path=state_machine_path,
-                                                                                start_state_path=start_state_path,
-                                                                                wait_for_execution_finished=False)
+                                                                                   start_state_path=start_state_path,
+                                                                                   wait_for_execution_finished=False)
 
     if reactor_required():
         sm_thread = threading.Thread(target=stop_reactor_on_state_machine_finish, args=[state_machine, ])
@@ -169,7 +168,7 @@ SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n)  for n in dir(signal) if n.
 
 def signal_handler(signal, frame):
     from rafcon.statemachine.enums import StateMachineExecutionStatus
-    from rafcon.statemachine.singleton import state_machine_execution_engine
+    state_machine_execution_engine = sm_singletons.state_machine_execution_engine
 
     try:
         # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
