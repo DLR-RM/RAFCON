@@ -246,13 +246,20 @@ class ContainerState(State):
         """Handles the situation, when no start state exists during execution
 
         The method waits, until a transition is created. It then checks again for an existing start state and waits
-        again, if this is not the case.
+        again, if this is not the case. It returns the None state if the the state machine was stopped.
         """
         start_state = self.get_start_state(set_final_outcome=True)
-        if start_state is None:
+        while not start_state:
+            # depending on the execution mode pause execution
+            execution_signal = state_machine_execution_engine.handle_execution_mode(self)
+            if execution_signal is StateMachineExecutionStatus.STOPPED:
+                # this will be caught at the end of the run method
+                return None
+
             self._transitions_cv.acquire()
             self._transitions_cv.wait(3.0)
             self._transitions_cv.release()
+            start_state = self.get_start_state(set_final_outcome=True)
         return start_state
 
     # ---------------------------------------------------------------------------------------------
@@ -629,6 +636,7 @@ class ContainerState(State):
 
         """
 
+        # overwrite the start state in the case that a specific start state is specific e.g. by start_from_state
         if self.get_path() in state_machine_execution_engine.start_state_paths:
             for state_id, state in self.states.iteritems():
                 if state.get_path() in state_machine_execution_engine.start_state_paths:
@@ -642,6 +650,7 @@ class ContainerState(State):
         if self.start_state_id == self.state_id:
             if set_final_outcome:
                 for transition_id in self.transitions:
+                    # the transition of which the from state is None is the transition that directly connects the income
                     if self.transitions[transition_id].from_state is None:
                         to_outcome_id = self.transitions[transition_id].to_outcome
                         self.final_outcome = self.outcomes[to_outcome_id]
