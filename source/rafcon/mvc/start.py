@@ -13,6 +13,7 @@ from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton as sm_singletons
+from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.statemachine.config import global_config
@@ -76,7 +77,7 @@ def start_stop_state_machine(state_machine, start_state_path, quit_flag):
     while gtk.events_pending():
         gtk.main_iteration(False)
 
-    StateMachineExecutionEngine.execute_state_machine_from_path(state_machine=state_machine,
+    state_machine_execution_engine.execute_state_machine_from_path(state_machine=state_machine,
                                                                 start_state_path=start_state_path,
                                                                 wait_for_execution_finished=True)
     if reactor_required():

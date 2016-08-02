@@ -37,6 +37,7 @@ def reload_config(config=True, gui_config=True):
     if config:
         rafcon.statemachine.config.global_config.load()
     if gui_config:
+        import rafcon.mvc.config
         rafcon.mvc.config.global_gui_config.load()
 
 

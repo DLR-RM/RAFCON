@@ -341,8 +341,7 @@ class StateMachineExecutionEngine(Observable):
                     parent_path = state.parent.get_path()
                     self.run_to_states.append(parent_path)
 
-    @staticmethod
-    def execute_state_machine_from_path(state_machine=None, path=None, start_state_path=None, wait_for_execution_finished=True):
+    def execute_state_machine_from_path(self, state_machine=None, path=None, start_state_path=None, wait_for_execution_finished=True):
         """
         A helper function to start an arbitrary state machine at a given path.
         :param path: The path where the state machine resides
@@ -364,7 +363,7 @@ class StateMachineExecutionEngine(Observable):
 
         if wait_for_execution_finished:
             sm.root_state.join()
-            rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+            self.stop()
         return sm
 
     @Observable.observed

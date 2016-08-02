@@ -26,6 +26,7 @@ import rafcon.utils.filesystem as filesystem
 
 from rafcon.statemachine.config import global_config
 import rafcon.statemachine.singleton as sm_singletons
+from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.statemachine.enums import StateExecutionState
@@ -122,7 +123,7 @@ def start_state_machine(state_machine_path, start_state_path=None):
     :param str start_state_path: The state path to the desired first state
     :return StateMachine: The loaded state machine
     """
-    state_machine = StateMachineExecutionEngine.execute_state_machine_from_path(path=state_machine_path,
+    state_machine = state_machine_execution_engine.execute_state_machine_from_path(path=state_machine_path,
                                                                                 start_state_path=start_state_path,
                                                                                 wait_for_execution_finished=False)
 
