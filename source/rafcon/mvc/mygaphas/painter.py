@@ -38,7 +38,7 @@ class CornerHandlePainter(HandlePainter):
             opacity = 1
 
         side_length = self._get_handle_side_length(item)
-        line_width = side_length / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR * 2
+        line_width = side_length / constants.BORDER_WIDTH_OUTLINE_WIDTH_FACTOR * 2
         cairo.set_line_width(line_width)
 
         for index, handle in enumerate(item.handles()):

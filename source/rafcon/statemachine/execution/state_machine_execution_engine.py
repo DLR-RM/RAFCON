@@ -121,9 +121,9 @@ class StateMachineExecutionEngine(Observable):
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
 
-    def join(self):
+    def join(self, timeout=None):
         if self.__wait_for_finishing_thread:
-            self.__wait_for_finishing_thread.join()
+            self.__wait_for_finishing_thread.join(timeout)
         else:
             logger.warn("Cannot join as state machine was not started yet.")
 
@@ -341,8 +341,7 @@ class StateMachineExecutionEngine(Observable):
                     parent_path = state.parent.get_path()
                     self.run_to_states.append(parent_path)
 
-    @staticmethod
-    def execute_state_machine_from_path(state_machine=None, path=None, start_state_path=None, wait_for_execution_finished=True):
+    def execute_state_machine_from_path(self, state_machine=None, path=None, start_state_path=None, wait_for_execution_finished=True):
         """
         A helper function to start an arbitrary state machine at a given path.
         :param path: The path where the state machine resides
@@ -363,8 +362,8 @@ class StateMachineExecutionEngine(Observable):
         sm.root_state.concurrency_queue = concurrency_queue
 
         if wait_for_execution_finished:
-            sm.root_state.join()
-            rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+            self.join()
+            self.stop()
         return sm
 
     @Observable.observed

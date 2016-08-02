@@ -159,6 +159,9 @@ def test_acknowledged_messages():
     server.join(30)
     client.join(30)
 
+    # Uninstall reactor to allow further test with custom reactors
+    del sys.modules["twisted.internet.reactor"]
+
     assert not server.is_alive(), "Server is still alive"
     assert not client.is_alive(), "Client is still alive"
     assert data == "Success"

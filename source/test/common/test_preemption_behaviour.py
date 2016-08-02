@@ -2,13 +2,13 @@ import threading
 import time
 
 # core elements
-from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 # import to make reload_config() working
 import rafcon.mvc.singleton
 from rafcon.statemachine.singleton import global_variable_manager
+from rafcon.statemachine.singleton import state_machine_execution_engine
 
 # singleton elements
 import rafcon.statemachine.singleton
@@ -25,7 +25,7 @@ def test_preemption_behaviour_in_preemption_state(caplog):
     testing_utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
 
-    sm = StateMachineExecutionEngine.execute_state_machine_from_path(
+    sm = state_machine_execution_engine.execute_state_machine_from_path(
         path=testing_utils.get_test_sm_path("unit_test_state_machines/preemption_behaviour_test_sm"))
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
     from rafcon.statemachine.singleton import global_variable_manager

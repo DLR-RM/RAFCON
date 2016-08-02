@@ -16,6 +16,7 @@ from pylint import epylint as lint
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.editor import EditorController
+from rafcon.mvc.config import global_gui_config
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
@@ -72,7 +73,6 @@ class SourceEditorController(EditorController):
             self.view.set_text("")
             return
 
-        logger.debug("Parsing execute script...")
         # Ugly workaround to give user at least some feedback about the parser
         # Without the loop, this function would block the GTK main loop and the log message would appear after the
         # function has finished
@@ -80,12 +80,16 @@ class SourceEditorController(EditorController):
         while gtk.events_pending():
             gtk.main_iteration_do()
 
-        ###############
         # get script
         tbuffer = self.view.get_buffer()
         current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
 
-        ###############
+        if not global_gui_config.get_config_value('CHECK_PYTHON_FILES_WITH_PYLINT', True):
+            self.set_script_text(current_text)
+            return
+
+        logger.debug("Parsing execute script...")
+
         # do syntax-check on script
         text_file = open(self.tmp_file, "w")
         text_file.write(current_text)

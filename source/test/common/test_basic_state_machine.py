@@ -4,6 +4,8 @@ from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.state import InputDataPort
 from testing_utils import assert_logger_warnings_and_errors
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 def test_create_state(caplog):
@@ -85,8 +87,11 @@ def test_create_container_state(caplog):
         container.add_state(ExecutionState("test_execution_state", state_id=state1.state_id))
         assert len(container.states) == 1
 
-    state2 = ExecutionState("2nd State")
-    container.add_state(state2)
+    state2 = ExecutionState("2nd State", state_id=container.state_id)
+    logger.debug("Old state id: {0}".format(str(state2.state_id)))
+    new_state_id = container.add_state(state2)
+    logger.debug("New state id: {0}".format(str(new_state_id)))
+
     assert len(container.states) == 2
 
     input_state1 = state1.add_input_data_port("input", "float")

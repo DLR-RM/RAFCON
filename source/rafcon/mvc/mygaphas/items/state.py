@@ -9,6 +9,7 @@ from gaphas.matrix import Matrix
 
 from rafcon.statemachine.enums import StateExecutionState
 
+from rafcon.mvc.mygaphas.canvas import ItemProjection
 from rafcon.mvc.mygaphas.constraint import KeepRectangleWithinConstraint, PortRectConstraint
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedVariablePortView
@@ -40,9 +41,6 @@ class StateView(Element):
 
         self._state_m = ref(state_m)
         self.hierarchy_level = hierarchy_level
-
-        self.min_width = 0.0001
-        self.min_height = 0.0001
 
         self._income = None
         self._outcomes = []
@@ -87,7 +85,11 @@ class StateView(Element):
 
         canvas = self.canvas
         parent = canvas.get_parent(self)
-        canvas.add(self._name_view, self)
+
+        self.update_minimum_size()
+
+        canvas.add(self.name_view, self)
+        self.name_view.update_minimum_size()
 
         self.add_keep_rect_within_constraint(canvas, self, self._name_view)
 
@@ -97,6 +99,26 @@ class StateView(Element):
 
         # Registers local constraints
         super(StateView, self).setup_canvas()
+
+    def update_minimum_size(self):
+        if not self.parent:
+            self.min_width = 1
+            self.min_height = 1
+        else:
+            min_side_length = max(self.parent.width, self.parent.height) / \
+                              constants.MAXIMUM_CHILD_TO_PARENT_STATE_SIZE_RATIO
+            if min_side_length != self.min_width:
+                self.min_width = min_side_length
+            if min_side_length != self.min_height:
+                self.min_height = min_side_length
+
+    def update_minimum_size_of_children(self):
+        if self.canvas:
+            for constraint in self.constraints:
+                self.canvas.solver.request_resolve_constraint(constraint)
+            for item in self.canvas.get_all_children(self):
+                if isinstance(item, (StateView, NameView)):
+                    item.update_minimum_size()
 
     def get_all_ports(self):
         port_list = [self.income]
@@ -133,12 +155,10 @@ class StateView(Element):
     def add_keep_rect_within_constraint(canvas, parent, child):
         solver = canvas.solver
 
-        child_nw_abs = canvas.project(child, child.handles()[NW].pos)
-        child_se_abs = canvas.project(child, child.handles()[SE].pos)
-        parent_nw_abs = canvas.project(parent, parent.handles()[NW].pos)
-        parent_se_abs = canvas.project(parent, parent.handles()[SE].pos)
-        constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs,
-                                                   child_nw_abs, child_se_abs, child, lambda: parent.border_width)
+        child_nw = ItemProjection(child.handles()[NW].pos, child, parent)
+        child_se = ItemProjection(child.handles()[SE].pos, child, parent)
+        constraint = KeepRectangleWithinConstraint(parent.handles()[NW].pos, parent.handles()[SE].pos,
+                                                   child_nw, child_se, child, lambda: parent.border_width)
         solver.add_constraint(constraint)
         parent.keep_rect_constraints[child] = constraint
 
@@ -187,11 +207,18 @@ class StateView(Element):
 
     @property
     def border_width(self):
-        return min(self._get_width(), self._get_height()) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
+        h = self._handles
+        nw_pos = h[NW].pos
+        se_pos = h[SE].pos
+        width = float(se_pos.x) - float(nw_pos.x)
+        height = float(se_pos.y) - float(nw_pos.y)
+        return min(width, height) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
 
     @property
     def parent(self):
-        return self.canvas.get_parent(self)
+        if self.canvas:
+            return self.canvas.get_parent(self)
+        return None
 
     @property
     def corner_handles(self):
@@ -268,6 +295,7 @@ class StateView(Element):
         self.position = state_meta['rel_pos']
         self.width = state_meta['size'][0]
         self.height = state_meta['size'][1]
+        self.update_minimum_size_of_children()
 
         def update_port_position(port_v, meta_data):
             if isinstance(meta_data['rel_pos'], tuple):
@@ -324,7 +352,7 @@ class StateView(Element):
             # print "draw state"
             c = self._image_cache.get_context_for_image(current_zoom)
             multiplicator = self._image_cache.multiplicator
-            default_line_width = self.border_width / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR * multiplicator
+            default_line_width = self.border_width / constants.BORDER_WIDTH_OUTLINE_WIDTH_FACTOR * multiplicator
 
             c.rectangle(nw.x, nw.y, self.width, self.height)
 
@@ -385,9 +413,10 @@ class StateView(Element):
             max_height = self.height - 2 * self.border_width
             self._draw_symbol(context, constants.SIGN_ARROW, False, (max_width, max_height))
 
-
     def _draw_symbol(self, context, symbol, is_library_state, max_size):
         c = context.cairo
+        width = self.width
+        height = self.height
 
         c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
@@ -402,8 +431,8 @@ class StateView(Element):
                                symbol))
 
         if symbol in self.__symbol_size_cache and \
-                self.__symbol_size_cache[symbol]['width'] == self.width and \
-                self.__symbol_size_cache[symbol]['height'] == self.height:
+                self.__symbol_size_cache[symbol]['width'] == width and \
+                self.__symbol_size_cache[symbol]['height'] == height:
             font_size = self.__symbol_size_cache[symbol]['size']
             set_font_description()
 
@@ -411,15 +440,15 @@ class StateView(Element):
             font_size = 30
             set_font_description()
 
-            pango_size = (self.width * SCALE, self.height * SCALE)
+            pango_size = (width * SCALE, height * SCALE)
             while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
                 font_size *= 0.9
                 set_font_description()
 
-            self.__symbol_size_cache[symbol] = {'width': self.width, 'height': self.height, 'size': font_size}
+            self.__symbol_size_cache[symbol] = {'width': width, 'height': height, 'size': font_size}
 
-        c.move_to(self.width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
-                  self.height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
+        c.move_to(width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
+                  height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
 
         alpha = 1.
         if is_library_state and self.transparent:
@@ -670,9 +699,12 @@ class StateView(Element):
         def set_item_properties(item, item_meta, size, rel_pos):
             item.width = size[0]
             item.height = size[1]
-            item.position = rel_pos
             item_meta['size'] = size
-            item_meta['re_pos'] = rel_pos
+            if item is not self:
+                item.position = rel_pos
+                item_meta['rel_pos'] = rel_pos
+            if isinstance(item, StateView):
+                item.update_minimum_size_of_children()
 
         def resize_state_v(state_v, old_state_size, new_state_size, use_meta_data):
             width_factor = float(new_state_size[0]) / old_state_size[0]
@@ -729,12 +761,19 @@ class NameView(Element):
         self._name = None
         self.name = name
 
-        self.min_width = 0.0001
-        self.min_height = 0.0001
+        self.min_width = 1
+        self.min_height = 1
 
         self.moving = False
 
         self._image_cache = ImageCache(multiplicator=1.5)
+
+    def update_minimum_size(self):
+        min_side_length = max(self.parent.width, self.parent.height) / constants.MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO
+        if min_side_length != self.min_width:
+            self.min_width = min_side_length
+        if min_side_length != self.min_height:
+            self.min_height = min_side_length
 
     @property
     def name(self):
