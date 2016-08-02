@@ -362,7 +362,7 @@ class StateMachineExecutionEngine(Observable):
         sm.root_state.concurrency_queue = concurrency_queue
 
         if wait_for_execution_finished:
-            sm.root_state.join()
+            self.join()
             self.stop()
         return sm
 
