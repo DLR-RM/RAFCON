@@ -164,22 +164,22 @@ class ScopedVariableDataFlowView(DataFlowView):
     def from_port(self, port):
         assert isinstance(port, PortView)
         self._from_port = port
-        self._head_length = port.port_side_size
         if not self._from_waypoint:
             self._from_waypoint = self.add_perp_waypoint()
             self._from_port_constraint = KeepPortDistanceConstraint(self.from_handle().pos, self._from_waypoint.pos,
-                                                                    port, self._head_length, self.is_out_port(port))
+                                                                    port, lambda: self._head_length(self.from_port),
+                                                                    self.is_out_port(port))
             self.canvas.solver.add_constraint(self._from_port_constraint)
 
     @to_port.setter
     def to_port(self, port):
         assert isinstance(port, PortView)
         self._to_port = port
-        self._to_head_length = port.port_side_size
         if not self._to_waypoint:
             self._to_waypoint = self.add_perp_waypoint(begin=False)
-            self._to_port_constraint = KeepPortDistanceConstraint(self.to_handle().pos, self._to_waypoint.pos,
-                                                                  port, 2 * self._to_head_length, self.is_in_port(port))
+            self._to_port_constraint = KeepPortDistanceConstraint(self.to_handle().pos, self._to_waypoint.pos, port,
+                                                                  lambda: self._head_length(self.to_port),
+                                                                  self.is_in_port(port))
             self.canvas.solver.add_constraint(self._to_port_constraint)
 
     @property
@@ -212,10 +212,10 @@ class ScopedVariableDataFlowView(DataFlowView):
 
         if from_scoped:
             handle_pos = self.to_handle().pos
-            port_side_size = self._to_head_length
+            port_side_size = self.to_port.port_side_size
         else:
             handle_pos = self.from_handle().pos
-            port_side_size = self._head_length
+            port_side_size = self.from_port.port_side_size
 
         c.set_source_color(gui_config.gtk_colors['DATA_PORT'])
         c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
@@ -348,24 +348,23 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
     @property
     def desired_name_height(self):
         if self.to_port:
-            return self._to_head_length * 2.5
+            return self._head_length * 2.5
         else:
-            return self._to_head_length * 1.5
+            return self._head_length * 1.5
 
     @from_port.setter
     def from_port(self, port):
         if isinstance(port, ScopedVariablePortView):
             self._from_port = port
-            self._head_length = port.port_side_size
             if not self._from_waypoint:
                 self._from_waypoint = self.add_perp_waypoint()
                 self._from_port_constraint = KeepPortDistanceConstraint(self.from_handle().pos, self._from_waypoint.pos,
-                                                                        port, self._head_length, self.is_out_port(port))
+                                                                        port, self._head_length(self.from_port),
+                                                                        self.is_out_port(port))
                 self.canvas.solver.add_constraint(self._from_port_constraint)
 
             if len(self.handles()) == 4:
                 self._update_label_selection_waypoint(True)
-                # self.add_waypoint((self.to_handle().x + 2 * self._head_length + self._name_width, self.to_handle().y))
 
     def _to_port_changed_side(self, event):
         func_name = event[0].__name__
@@ -383,17 +382,17 @@ class FromScopedVariableDataFlowView(ScopedVariableDataFlowView):
             pos_x = 0.
             pos_y = 0.
             if self.to_port.side is SnappedSide.LEFT:
-                pos_x = self.to_handle().x - 2 * self._to_head_length - self._name_width
+                pos_x = self.to_handle().x - 2 * self._head_length - self._name_width
                 pos_y = self.to_handle().y
             elif self.to_port.side is SnappedSide.RIGHT:
-                pos_x = self.to_handle().x + 2 * self._to_head_length + self._name_width
+                pos_x = self.to_handle().x + 2 * self._head_length + self._name_width
                 pos_y = self.to_handle().y
             elif self.to_port.side is SnappedSide.TOP:
                 pos_x = self.to_handle().x
-                pos_y = self.to_handle().y - 2 * self._to_head_length - self._name_width
+                pos_y = self.to_handle().y - 2 * self._head_length - self._name_width
             elif self.to_port.side is SnappedSide.BOTTOM:
                 pos_x = self.to_handle().x
-                pos_y = self.to_handle().y + 2 * self._to_head_length + self._name_width
+                pos_y = self.to_handle().y + 2 * self._head_length + self._name_width
             self.add_waypoint((pos_x, pos_y))
 
     def add_waypoint(self, pos):
@@ -442,11 +441,10 @@ class ToScopedVariableDataFlowView(ScopedVariableDataFlowView):
     def to_port(self, port):
         if isinstance(port, ScopedVariablePortView):
             self._to_port = port
-            self._to_head_length = port.port_side_size
             if not self._to_waypoint:
                 self._to_waypoint = self.add_perp_waypoint(begin=False)
                 self._to_port_constraint = KeepPortDistanceConstraint(self.to_handle().pos, self._to_waypoint.pos,
-                                                                      port, 2 * self._to_head_length,
+                                                                      port, lambda: self._head_length,
                                                                       self.is_in_port(port))
                 self.canvas.solver.add_constraint(self._to_port_constraint)
 

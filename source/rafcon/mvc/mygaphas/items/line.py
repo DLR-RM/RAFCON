@@ -8,7 +8,7 @@ from rafcon.mvc.config import global_gui_config
 
 from rafcon.mvc.mygaphas.canvas import ItemProjection
 from rafcon.mvc.mygaphas.constraint import KeepPointWithinConstraint, KeepPortDistanceConstraint
-from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView,\
+from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, ScopedVariablePortView, \
                                             InputPortView, OutputPortView, LogicPortView, PortView
 from rafcon.mvc.utils import constants
 from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_text_layout
@@ -72,7 +72,7 @@ class PerpLine(Line):
         if not self._from_waypoint:
             self._from_waypoint = self.add_perp_waypoint()
             self._from_port_constraint = KeepPortDistanceConstraint(self.from_handle().pos, self._from_waypoint.pos,
-                                                                    port, lambda: self._head_length,
+                                                                    port, lambda: self._head_length(self.from_port),
                                                                     self.is_out_port(port))
             self.canvas.solver.add_constraint(self._from_port_constraint)
 
@@ -83,7 +83,8 @@ class PerpLine(Line):
         if not self._to_waypoint:
             self._to_waypoint = self.add_perp_waypoint(begin=False)
             self._to_port_constraint = KeepPortDistanceConstraint(self.to_handle().pos, self._to_waypoint.pos, port,
-                                                                  lambda: self._head_length, self.is_in_port(port))
+                                                                  lambda: self._head_length(self.to_port),
+                                                                  self.is_in_port(port))
             self.canvas.solver.add_constraint(self._to_port_constraint)
 
     def end_handles_perp(self):
@@ -130,41 +131,49 @@ class PerpLine(Line):
         self.canvas.solver.remove_constraint(self._to_port_constraint)
         self.remove_all_waypoints()
 
-    def draw_head(self, context, length):
+    def get_parent_state_v(self):
+        if isinstance(self.from_port, (IncomeView, InputPortView, ScopedVariablePortView)):
+            return self.from_port.parent
+        return self.from_port.parent.parent
+
+    def draw_head(self, context, port):
+        length = self._head_length(port)
+        offset = self._head_offset(port)
         cr = context.cairo
-        cr.move_to(0, 0)
         cr.line_to(length, 0)
+        cr.stroke()
+        cr.move_to(length, 0)
+        cr.line_to(offset, 0)
         cr.set_source_rgba(*self._arrow_color)
         cr.stroke()
 
-    def draw_tail(self, context, length):
+    def draw_tail(self, context, port):
+        length = self._head_length(port)
+        offset = self._head_offset(port)
         cr = context.cairo
-        cr.set_source_rgba(*self._line_color)
+        cr.move_to(offset, 0)
         cr.line_to(length, 0)
-        cr.stroke()
         cr.set_source_rgba(*self._arrow_color)
-        cr.move_to(length, 0)
-        cr.line_to(self._head_draw_offset, 0)
         cr.stroke()
 
     def draw(self, context):
         if self.parent and self.parent.moving:
             return
 
-        def draw_line_end(pos, angle, length, draw):
+        def draw_line_end(pos, angle, port, draw):
             cr.save()
             cr.translate(*pos)
             cr.rotate(angle)
-            draw(context, length)
+            draw(context, port)
             cr.restore()
         self.line_width = self._calc_line_width()
-        head_length = self._head_length
         cr = context.cairo
         cr.set_line_width(self.line_width)
-        draw_line_end(self._handles[0].pos, self._head_angle, head_length, self.draw_head)
+        draw_line_end(self._handles[0].pos, self._head_angle, self.from_port, self.draw_tail)
         for h in self._handles[1:-1]:
             cr.line_to(*h.pos)
-        draw_line_end(self._handles[-1].pos, self._tail_angle, head_length, self.draw_tail)
+        cr.set_source_rgba(*self._line_color)
+        draw_line_end(self._handles[-1].pos, self._tail_angle, self.to_port, self.draw_head)
 
         if self.name and (isinstance(self.from_port, LogicPortView) or
                           global_gui_config.get_config_value("SHOW_NAMES_ON_DATA_FLOWS", default=True)):
@@ -237,19 +246,21 @@ class PerpLine(Line):
             self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, angle, zoom=current_zoom)
 
     def _calc_line_width(self):
-        if self.to_port:
-            parental_border_width = max(self.to_port.port_side_size, self.from_port.port_side_size)
-        else:
-            parental_border_width = self.from_port.port_side_size
+        parental_border_width = self.get_parent_state_v().border_width
         return parental_border_width / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR
 
-    @property
-    def _head_length(self):
-        return self._from_port.port_side_size
+    def _head_length(self, port):
+        if not port:
+            return 0.
+        parent_state_v = self.get_parent_state_v()
+        if parent_state_v == port.parent:
+            return port.port_side_size
+        return port.port_side_size * 2
 
-    @property
-    def _head_draw_offset(self):
-        return 0. if self.to_port is None else self._head_length / 2.
+    def _head_offset(self, port):
+        if not port:
+            return 0.
+        return port.parent.border_width / 2
 
     def _update_ports(self):
         assert len(self._handles) >= 2, 'Not enough segments'
