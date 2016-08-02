@@ -6,11 +6,13 @@ import gtk
 from gtkmvc import ModelMT
 
 from rafcon.statemachine.storage import storage
+import rafcon.statemachine.singleton as sm_singleton
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.utils.dialog import RAFCONDialog
 import rafcon.mvc.singleton as mvc_singleton
+
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
@@ -181,7 +183,8 @@ class AutoBackupModel(ModelMT):
     def destroy(self):
         logger.info('destroy auto backup ' + str(self.state_machine_model.state_machine.state_machine_id))
         self.cancel_timed_thread()
-        self.clean_lock_file(True)
+        if not sm_singleton.shut_down_signal:
+            self.clean_lock_file(True)
 
     def prepare_destruction(self):
         """Prepares the model for destruction
@@ -199,18 +202,6 @@ class AutoBackupModel(ModelMT):
             self.tmp_storage_timed_thread.cancel()
             self.tmp_storage_timed_thread.join()
             self.tmp_storage_timed_thread = None
-
-    def prepare_destruction(self):
-        """Prepares the model for destruction
-
-        Unregisters itself as observer from the state machine and the root state
-        """
-        self.destroy()
-        try:
-            self.relieve_model(self.state_machine_model)
-        except KeyError:  # Might happen if the observer was already unregistered
-            pass
-
 
     def check_lock_file(self):
         if self.__destroyed:
