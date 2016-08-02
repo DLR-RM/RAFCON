@@ -197,6 +197,8 @@ class AutoBackupModel(ModelMT):
     def cancel_timed_thread(self):
         if self.tmp_storage_timed_thread is not None:
             self.tmp_storage_timed_thread.cancel()
+            self.tmp_storage_timed_thread.join()
+            self.tmp_storage_timed_thread = None
 
     def check_lock_file(self):
         if self.__destroyed:
