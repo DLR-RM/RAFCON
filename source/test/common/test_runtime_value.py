@@ -1,11 +1,9 @@
 # test environment elements
 import testing_utils
-from testing_utils import TEST_SM_PATH
 import pytest
 import rafcon
 
 # core elements
-from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.library_state import LibraryState
@@ -43,6 +41,5 @@ def teardown_module(module=None):
 
 
 if __name__ == '__main__':
-    setup_module()
-    test_runtime_values(None)
-    # pytest.main([__file__])
+    # test_runtime_values(None)
+    pytest.main([__file__])

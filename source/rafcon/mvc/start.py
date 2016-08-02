@@ -15,7 +15,6 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton as sm_singletons
 from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.enums import StateMachineExecutionStatus
-from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.statemachine.config import global_config
 
 import rafcon.mvc.singleton as mvc_singletons
