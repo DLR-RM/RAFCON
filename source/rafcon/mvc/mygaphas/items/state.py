@@ -18,6 +18,7 @@ from rafcon.mvc.mygaphas.utils.enums import SnappedSide
 from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_col_rgba
 from rafcon.mvc.mygaphas.utils import gap_draw_helper
 from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
+from rafcon.mvc.mygaphas.utils.cache.value_cache import ValueCache
 
 from rafcon.mvc.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
 from rafcon.mvc.config import global_gui_config as gui_config
@@ -767,6 +768,7 @@ class NameView(Element):
         self.moving = False
 
         self._image_cache = ImageCache(multiplicator=1.5)
+        self._value_cache = ValueCache()
 
     def update_minimum_size(self):
         min_side_length = max(self.parent.width, self.parent.height) / constants.MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO
@@ -844,19 +846,25 @@ class NameView(Element):
             layout.set_width(int(self.width) * SCALE)
             layout.set_text(self.name)
 
-            def set_font_description():
+            def set_font_description(font_size):
                 font = FontDescription(font_name + " " + str(font_size))
                 layout.set_font_description(font)
 
             font_name = constants.INTERFACE_FONT
 
-            font_size = self.height * 0.8
+            font_size_parameters = {"text": self.name, "width": self.width, "height": self.height}
+            font_size = self._value_cache.get_value("font_size", font_size_parameters)
 
-            set_font_description()
-            pango_size = (self.width * SCALE, self.height * SCALE)
-            while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
-                font_size *= 0.9
-                set_font_description()
+            if font_size:
+                set_font_description(font_size)
+            else:
+                font_size = self.height * 0.8
+                set_font_description(font_size)
+                pango_size = (self.width * SCALE, self.height * SCALE)
+                while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
+                    font_size *= 0.9
+                    set_font_description(font_size)
+                self._value_cache.store_value("font_size", font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
             c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], self.parent.transparent))
