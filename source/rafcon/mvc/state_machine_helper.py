@@ -1,3 +1,5 @@
+import copy
+
 from rafcon.utils import log
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 
@@ -399,6 +401,57 @@ def get_state_machine_model_for_state(state):
     state_machine_id = state.get_sm_for_state().state_machine_id
     state_machine_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[state_machine_id]
     return state_machine_m
+
+
+def substitute_state(state, as_template=False):
+
+    assert isinstance(state, State)
+
+    smm_m = rafcon.mvc.singleton.state_machine_manager_model
+
+    if not smm_m.selected_state_machine_id:
+        logger.error("Please select a container state within a state machine first")
+        return False
+
+    current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
+    if len(current_selection.get_states()) > 1:
+        logger.error("Please select exactly one state for the substitution")
+        return False
+
+    if len(current_selection.get_states()) == 0:
+        logger.error("Please select a state for the substitution")
+        return False
+
+    current_state_m = current_selection.get_states()[0]
+    current_state = current_state_m.state
+    parent_state_m = current_state_m.parent
+    parent_state = current_state.parent
+
+    if not as_template:
+        parent_state.substitute_state(current_state.state_id, state)
+        return True
+    # If inserted as template, we have to extract the state_copy and load the meta data manually
+    else:
+        template = state.state_copy
+        orig_state_id = template.state_id
+        template.change_state_id()
+        parent_state.substitute_state(current_state.state_id, template)
+
+        # reset the parent of all ports (logical + data ports)
+        # as in the setter function the parent is reset it can be used here
+        template.input_data_ports = template.input_data_ports
+        template.output_data_ports = template.output_data_ports
+        template.outcomes = template.outcomes
+
+        # load meta data
+        from os.path import join
+        lib_os_path, _, _ = library_manager.get_os_path_to_library(state.library_path, state.library_name)
+        root_state_path = join(lib_os_path, orig_state_id)
+        template_m = parent_state_m.states[template.state_id]
+        template_m.load_meta_data(root_state_path)
+        # Causes the template to be resized
+        template_m.temp['gui']['editor']['template'] = True
+        return True
 
 
 def insert_state(state, as_template=False):

@@ -314,27 +314,9 @@ class MenuBarController(ExtendedController):
     def on_substitute_selected_state_activate(self, widget=None, data=None, path=None):
         selected_states = self.model.get_selected_state_machine_model().selection.get_states()
         logger.info("Substitute state with state machine form library-tree, as template or library state. \n" + str(selected_states))
-        from rafcon.mvc.controllers.utils.single_widget_window import SingleWidgetWindowController
-        from rafcon.mvc.views.utils.single_widget_window import SingleWidgetWindowView
-        from rafcon.mvc.views.library_tree import LibraryTreeView
-        from rafcon.mvc.controllers.library_tree import LibraryTreeController
-        single_view = SingleWidgetWindowView(LibraryTreeView)
-        LibraryTreeController(single_view.widget_view)
-        single_view.top = 'library_tree_view'
-        single_view['library_tree_view'] = single_view.widget_view['library_tree_view']
-        SingleWidgetWindowController(self.model, single_view, LibraryTreeController)
-
-        # class LibraryChoiceView(LibraryTreeView):
-        #
-        #     def __init__(self):
-        #         super(LibraryChoiceView, self).__init__()
-        #
-        #         self['libraries_alignment'] = gtk.Alignment()
-        #         self.show()
-        #         self['libraries_alignment'].add(self)
-        gtk.Window()
-
-        # SingleWidgetWindowController
+        from state_substitute import StateSubstituteChooseLibraryWindow
+        StateSubstituteChooseLibraryWindow(self.model, parent=self.get_root_window())
+        logger.info("state substitute finish ctrl and view generation")
 
     def on_save_selected_state_as_activate(self, widget=None, data=None, path=None):
         selected_states = self.model.get_selected_state_machine_model().selection.get_states()
@@ -357,7 +339,6 @@ class MenuBarController(ExtendedController):
                 # TODO DIALOG TO REQUEST SUBSTITUTION has to be insert here
 
                 def on_message_dialog_response_signal(widget, response_id):
-                    widget.destroy()
                     if response_id == ButtonDialog.OPTION_1.value:
                         logger.debug("Library refresh is triggered.")
                         self.on_refresh_libraries_activate(None)
@@ -368,6 +349,8 @@ class MenuBarController(ExtendedController):
                         pass
                     else:
                         logger.warning("Response id: {} is not considered".format(response_id))
+                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, ButtonDialog.OPTION_3.value]:
+                        widget.destroy()
 
                 message_string = "You stored your state machine in a path that is included into the library paths.\n\n"\
                                  "Do you want to refresh the libraries or refresh libraries and state machines?"
@@ -390,7 +373,7 @@ class MenuBarController(ExtendedController):
                     pass
                 else:
                     logger.warning("Response id: {} is not considered".format(response_id))
-                if response_id in [42, 43]:
+                if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value]:
                     widget.destroy()
 
             message_string = "Should the newly created state machine be opened?"

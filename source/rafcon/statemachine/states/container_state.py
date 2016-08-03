@@ -20,6 +20,7 @@ from rafcon.statemachine.state_elements.data_flow import DataFlow
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.state_elements.transition import Transition
 from rafcon.statemachine.states.state import State
+from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.validity_check.validity_checker import ValidityChecker
 from rafcon.utils.type_helpers import type_inherits_of_type
@@ -602,6 +603,87 @@ class ContainerState(State):
             self.states[state_id].destruct()
         # final delete the state it self
         del self.states[state_id]
+
+    def related_linkage(self, state_id):
+
+        related_transitions = {'external': {'ingoing': [], 'outgoing': []},
+                               'internal': {'enclosed': [], 'ingoing': [], 'outgoing': []}}
+        related_data_flows = {'external': {'ingoing': [], 'outgoing': []},
+                              'internal': {'enclosed': [], 'ingoing': [], 'outgoing': []}}
+        # ingoing logical linkage to rebuild
+        related_transitions['external']['ingoing'] = [t for t in self.transitions.itervalues() if t.to_state == state_id]
+        # outgoing logical linkage to rebuild
+        related_transitions['external']['outgoing'] = [t for t in self.transitions.itervalues() if t.from_state == state_id]
+        # ingoing data linkage to rebuild
+        related_data_flows['external']['ingoing'] = [df for df in self.data_flows.itervalues() if df.to_state == state_id]
+        # outgoing outgoing linkage to rebuild
+        related_data_flows['external']['outgoing'] = [df for df in self.data_flows.itervalues() if df.from_state == state_id]
+
+        return related_transitions, related_data_flows
+
+    def substitute_state(self, state_id, state):
+
+        if state_id not in self.states:
+            raise ValueError("The state_id {0} to be substitute has to be in the states list of "
+                             "respective parent state {1}.".format(state_id, self.get_path()))
+
+        [related_transitions, related_data_flows] = self.related_linkage(state_id)
+
+        old_outcome_names = {oc_id: oc.name for oc_id, oc in self.states[state_id].outcomes.iteritems()}
+        old_input_data_ports = copy(self.states[state_id].input_data_ports)
+        old_output_data_ports = copy(self.states[state_id].output_data_ports)
+        old_state_was_library = False
+        if isinstance(self.states[state_id], LibraryState):
+            old_input_data_port_runtime_values = self.states[state_id].input_data_port_runtime_values
+            old_output_data_port_runtime_values = self.states[state_id].output_data_port_runtime_values
+            old_use_runtime_value_input_data_ports = self.states[state_id].use_runtime_value_input_data_ports
+            old_use_runtime_value_output_data_ports = self.states[state_id].use_runtime_value_output_data_ports
+            old_state_was_library = True
+
+        self.remove_state(state_id)
+        old_state_id = state_id
+        state_id = self.add_state(state)
+
+        act_outcome_ids_by_name = {oc.name: oc_id for oc_id, oc in state.outcomes.iteritems()}
+        act_input_data_port_by_name = {ip.name: ip for ip in state.input_data_ports.itervalues()}
+        act_output_data_port_by_name = {op.name: op for op in state.output_data_ports.itervalues()}
+
+        for t in related_transitions['external']['ingoing']:
+            self.add_transition(t.from_state, t.from_outcome, state_id, t.to_outcome)
+        logger.info("old_outcomes -> {}".format(old_outcome_names))
+        logger.info("act_outcomes -> {}".format(act_outcome_ids_by_name))
+
+        for t in related_transitions['external']['outgoing']:
+            logger.info("check outcome {1} -> {0}".format(t, t.from_outcome))
+            from_outcome = act_outcome_ids_by_name.get(old_outcome_names[t.from_outcome], None)
+            if from_outcome is not None:
+                self.add_transition(state_id, from_outcome, t.to_state, t.to_outcome)
+
+        for old_ip in old_input_data_ports.itervalues():
+            ip = act_input_data_port_by_name.get(old_input_data_ports[old_ip.data_port_id].name, None)
+            if ip is not None and ip.data_type == old_input_data_ports[old_ip.data_port_id].data_type:
+                if isinstance(state, LibraryState) and old_state_was_library:
+                    state.input_data_port_runtime_values[ip.data_port_id] = old_input_data_port_runtime_values[old_ip.data_port_id]
+                    state.use_runtime_value_input_data_ports[ip.data_port_id] = old_use_runtime_value_input_data_ports[old_ip.data_port_id]
+                elif not isinstance(state, LibraryState):
+                    ip.default_value = old_input_data_ports[old_ip.data_port_id].default_value
+        for df in related_data_flows['external']['ingoing']:
+            ip = act_input_data_port_by_name.get(old_input_data_ports[df.to_key].name, None)
+            if ip is not None and ip.data_type == old_input_data_ports[df.to_key].data_type:
+                self.add_data_flow(df.from_state, df.from_key, state_id, ip.data_port_id)
+
+        for old_op in old_output_data_ports.itervalues():
+            op = act_output_data_port_by_name.get(old_output_data_ports[old_op.data_port_id], None).name
+            if op is not None and op.data_type == old_output_data_ports[old_op.data_port_id].data_type:
+                if isinstance(state, LibraryState) and old_state_was_library:
+                    state.output_data_port_runtime_values[op.data_port_id] = old_output_data_port_runtime_values[old_op.data_port_id]
+                    state.use_runtime_value_output_data_ports[op.data_port_id] = old_use_runtime_value_output_data_ports[old_op.data_port_id]
+                elif not isinstance(state, LibraryState):
+                    op.default_value = old_output_data_ports[old_op.data_port_id].default_value
+        for df in related_data_flows['external']['outgoing']:
+            op = act_output_data_port_by_name.get(old_output_data_ports[df.from_key].name, None)
+            if op is not None and op.data_type == old_output_data_ports[df.from_key].data_type:
+                self.add_data_flow(state_id, op.data_port_id, df.to_state, df.to_key)
 
     @Observable.observed
     def change_state_type(self, state, new_state_class):

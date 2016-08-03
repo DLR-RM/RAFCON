@@ -72,6 +72,11 @@ class LibraryTreeController(ExtendedController):
         open_run_menu_item.connect("activate", self.open_run_button_clicked)
         open_run_menu_item.set_always_show_image(True)
 
+        open_run_menu_item = gtk.ImageMenuItem(gtk.STOCK_CDROM)
+        open_run_menu_item.set_label("Substitute selected state")
+        open_run_menu_item.connect("activate", self.substitute_with_this_library)
+        open_run_menu_item.set_always_show_image(True)
+
         menu.append(add_link_menu_item)
         menu.append(add_template_menu_item)
         menu.append(gtk.SeparatorMenuItem())
@@ -214,6 +219,14 @@ class LibraryTreeController(ExtendedController):
 
         smm_m.state_machine_manager.add_state_machine(state_machine)
         return state_machine
+
+    def substitute_as_library_clicked(self, widget):
+        logger.info("perform substitution as library" + str(self.model))
+        state_machine_helper.substitute_state(self._get_selected_library_state(), as_template=False)
+
+    def substitute_as_template_clicked(self, widget):
+        logger.info("perform substitution as template" + str(self.model))
+        state_machine_helper.substitute_state(self._get_selected_library_state(), as_template=True)
 
     def _get_selected_library_state(self):
         """Returns the LibraryState which was selected in the LibraryTree
