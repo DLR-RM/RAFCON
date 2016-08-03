@@ -123,6 +123,9 @@ class PortView(object):
             self._incoming_handles.append(handle)
             self._add_connection(connection_view)
 
+    def has_label(self):
+        return False
+
     def _add_connection(self, connection_view):
         if connection_view not in self._connected_connections:
             self._connected_connections.append(connection_view)
@@ -162,10 +165,6 @@ class PortView(object):
             return self._tmp_incoming_connected
         return True
 
-    def is_connected_to_scoped_variable(self):
-        # TODO: Check if this method is required and if so, fix it
-        return False
-
     def get_port_area(self, view):
         """Calculates the drawing area affected by the (hovered) port
         """
@@ -186,7 +185,7 @@ class PortView(object):
     def draw(self, context, state):
         raise NotImplementedError
 
-    def draw_port(self, context, fill_color, transparent, draw_label=True, value=None):
+    def draw_port(self, context, fill_color, transparent, value=None):
         c = context.cairo
         view = self._parent.canvas.get_first_view()
         side_length = self.port_side_size
@@ -225,7 +224,7 @@ class PortView(object):
             # Copy image surface to current cairo context
             self._port_image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
-        if self.name and draw_label:  # not self.has_outgoing_connection() and draw_label:
+        if self.name and self.has_label():
             self.draw_name(context, transparent, value)
 
         if self.handle is view.hovered_handle or context.draw_all:
@@ -233,9 +232,6 @@ class PortView(object):
             self._draw_hover_effect(context.cairo, self.direction, fill_color, transparent)
 
     def draw_name(self, context, transparency, value):
-        if self.is_connected_to_scoped_variable():
-            return
-
         c = context.cairo
         side_length = self.port_side_size
         label_position = self.side if not self.label_print_inside else self.side.opposite()
@@ -566,6 +562,13 @@ class OutcomeView(LogicPortView):
     def name(self):
         return self.model.outcome.name
 
+    def has_label(self):
+        if self.has_outgoing_connection():
+            return False
+        if not global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False) and self.outcome_id in [-1, -2]:
+            return False
+        return True
+
     def draw(self, context, state, highlight=False):
         if highlight:
             fill_color = gui_config.gtk_colors['STATE_ACTIVE_BORDER']
@@ -576,13 +579,7 @@ class OutcomeView(LogicPortView):
         else:
             fill_color = gui_config.gtk_colors['LABEL']
 
-        draw_label = True
-        if self.has_outgoing_connection():
-            draw_label = False
-        if not global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False) and self.outcome_id in [-1, -2]:
-            draw_label = False
-
-        self.draw_port(context, fill_color, state.transparent, draw_label=draw_label)
+        self.draw_port(context, fill_color, state.transparent)
 
 
 class ScopedVariablePortView(PortView):
@@ -790,9 +787,11 @@ class DataPortView(PortView):
     def name(self):
         return self.model.data_port.name
 
+    def has_label(self):
+        return self.parent.selected or self.parent.show_data_port_label
+
     def draw(self, context, state):
-        draw_label = state.selected or state.show_data_port_label or context.draw_all
-        self.draw_port(context, gui_config.gtk_colors['DATA_PORT'], state.transparent, draw_label, self._value)
+        self.draw_port(context, gui_config.gtk_colors['DATA_PORT'], state.transparent, self._value)
 
 
 class InputPortView(DataPortView):

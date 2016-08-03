@@ -132,6 +132,8 @@ class PerpLine(Line):
         self.remove_all_waypoints()
 
     def get_parent_state_v(self):
+        if not self.from_port:
+            return None
         if isinstance(self.from_port, (IncomeView, InputPortView, ScopedVariablePortView)):
             return self.from_port.parent
         return self.from_port.parent.parent
@@ -256,6 +258,8 @@ class PerpLine(Line):
             return 0.
         parent_state_v = self.get_parent_state_v()
         if parent_state_v == port.parent:
+            return port.port_side_size
+        if port.has_label():
             return port.port_side_size
         return port.port_side_size * 2
 

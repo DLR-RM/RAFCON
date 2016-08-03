@@ -670,7 +670,7 @@ class GraphicalEditorController(ExtendedController):
         new_transition_hierarchy_level = parent_state_v.hierarchy_level
         new_transition_v = TransitionView(transition_m, new_transition_hierarchy_level)
 
-        self.canvas.add(new_transition_v, parent_state_v)
+        self.canvas.add(new_transition_v, parent_state_v, index=0)
 
         self.add_transition(transition_m, new_transition_v, parent_state_m, parent_state_v)
 
@@ -680,7 +680,7 @@ class GraphicalEditorController(ExtendedController):
         new_data_flow_hierarchy_level = parent_state_v.hierarchy_level
         new_data_flow_v = DataFlowView(data_flow_m, new_data_flow_hierarchy_level)
 
-        self.canvas.add(new_data_flow_v, parent_state_v)
+        self.canvas.add(new_data_flow_v, parent_state_v, index=0)
         self.add_data_flow(data_flow_m, new_data_flow_v, parent_state_m)
 
     def _remove_connection_view(self, parent_state_m, transitions=True):
@@ -832,7 +832,7 @@ class GraphicalEditorController(ExtendedController):
         assert isinstance(parent_state_v, StateView)
         for transition_m in parent_state_m.transitions:
             transition_v = TransitionView(transition_m, hierarchy_level)
-            self.canvas.add(transition_v, parent_state_v)
+            self.canvas.add(transition_v, parent_state_v, index=0)
 
             self.add_transition(transition_m, transition_v, parent_state_m, parent_state_v)
 
@@ -903,7 +903,7 @@ class GraphicalEditorController(ExtendedController):
         for data_flow_m in parent_state_m.data_flows:
             data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
 
-            self.canvas.add(data_flow_v, parent_state_v)
+            self.canvas.add(data_flow_v, parent_state_v, index=0)
             self.add_data_flow(data_flow_m, data_flow_v, parent_state_m)
 
     def add_data_flow(self, data_flow_m, data_flow_v, parent_state_m):
