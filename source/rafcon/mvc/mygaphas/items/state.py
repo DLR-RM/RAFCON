@@ -327,10 +327,14 @@ class StateView(Element):
     def draw(self, context):
         if self.moving and self.parent and self.parent.moving:
             return
+
+        view = self.canvas.get_first_view()
+        view_width, view_height = view.get_matrix_i2v(self).transform_distance(self.width, self.height)
+        if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY and self.parent:
+            return
+
         c = context.cairo
-
         nw = self._handles[NW].pos
-
         parameters = {
             'execution_state':  self.model.state.state_execution_status,
             'selected': self.selected,
@@ -811,8 +815,12 @@ class NameView(Element):
         if self.moving:
             return
 
-        c = context.cairo
+        view = self.canvas.get_first_view()
+        view_width, view_height = view.get_matrix_i2v(self).transform_distance(self.width, self.height)
+        if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY:
+            return
 
+        c = context.cairo
         parameters = {
             'name': self.name,
             'selected': context.selected
@@ -821,7 +829,7 @@ class NameView(Element):
         upper_left_corner = (0, 0)
         current_zoom = self.canvas.get_first_view().get_zoom_factor()
         from_cache, image, zoom = self._image_cache.get_cached_image(self.width, self.height,
-                                                                          current_zoom, parameters)
+                                                                     current_zoom, parameters)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
             # print "from cache"

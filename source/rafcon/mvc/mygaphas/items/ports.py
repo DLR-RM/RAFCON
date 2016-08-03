@@ -191,6 +191,10 @@ class PortView(object):
         side_length = self.port_side_size
         position = self.pos
 
+        view_length, _ = view.get_matrix_i2v(self.parent).transform_distance(side_length, 0)
+        if view_length < constants.MINIMUM_SIZE_FOR_DISPLAY:
+            return
+
         parameters = {
             'direction': self.direction,
             'side_length': side_length,
