@@ -259,6 +259,8 @@ class PerpLine(Line):
         parent_state_v = self.get_parent_state_v()
         if parent_state_v == port.parent:
             return port.port_side_size
+        if port.has_label():
+            return port.port_side_size
         return port.port_side_size * 2
 
     def _head_offset(self, port):
