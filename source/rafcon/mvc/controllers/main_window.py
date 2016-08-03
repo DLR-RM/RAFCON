@@ -424,6 +424,7 @@ class MainWindowController(ExtendedController):
         self.view['undock_left_bar_button'].hide()
         self.on_left_bar_hide_clicked(None)
         self.view['left_bar_return_button'].hide()
+        self.view['left_bar_replacement'].show()
 
     def on_left_bar_dock_clicked(self, widget, event=None):
         """Triggered when the re-dock button of the left-bar window is clicked.
@@ -436,6 +437,7 @@ class MainWindowController(ExtendedController):
         self.view['left_bar_pane'].reparent(self.view['left_sidebar_viewport'])
         self.get_controller('left_window_controller').hide_window()
         self.view['undock_left_bar_button'].show()
+        self.view['left_bar_replacement'].hide()
         return True
 
     def on_right_bar_undock_clicked(self, widget, event=None):
@@ -453,6 +455,7 @@ class MainWindowController(ExtendedController):
         self.view['undock_right_bar_button'].hide()
         self.on_right_bar_hide_clicked(None)
         self.view['right_bar_return_button'].hide()
+        self.view['right_bar_replacement'].show()
 
     def on_right_bar_dock_clicked(self, widget, event=None):
         """Triggered when the re-dock button of the right-bar window is clicked.
@@ -466,6 +469,7 @@ class MainWindowController(ExtendedController):
         self.get_controller('right_window_controller').hide_window()
         self.docked['right_bar'] = True
         self.view['undock_right_bar_button'].show()
+        self.view['right_bar_replacement'].hide()
 
     def on_console_bar_undock_clicked(self, widget, event=None):
         """Triggered when the un-dock button of the console is clicked.
