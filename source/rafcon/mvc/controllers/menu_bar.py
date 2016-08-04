@@ -24,6 +24,7 @@ import rafcon.statemachine.singleton as core_singletons
 from rafcon.mvc.models.state import StateModel
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
+from rafcon.mvc import state_machine_helper
 from rafcon.mvc import gui_helper
 from rafcon.mvc import singleton as mvc_singleton
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
@@ -317,7 +318,7 @@ class MenuBarController(ExtendedController):
     def on_substitute_selected_state_activate(self, widget=None, data=None, path=None):
         selected_states = self.model.get_selected_state_machine_model().selection.get_states()
         if selected_states and len(selected_states) == 1:
-            StateSubstituteChooseLibraryDialog(self.model, parent=self.get_root_window())
+            StateSubstituteChooseLibraryDialog(mvc_singleton.library_manager_model, parent=self.get_root_window())
             return True
         else:
             logger.warning("Substitute state needs exact one state to be selected.")
@@ -336,12 +337,17 @@ class MenuBarController(ExtendedController):
             if path:
                 save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
                 sm_m.store_meta_data()
+            else:
+                return False
             # check if state machine is in library path
-            if any([root_path == path[:len(root_path)] for root_path in library_manager._library_paths.values()]):
+            if library_manager.is_os_path_in_library_paths(path):
                 # TODO use a check box dialog with three check boxes and an confirmation and cancel button
-                # TODO DIALOG TO REQUEST SUBSTITUTION has to be insert here
 
+                # Library refresh dialog
                 def on_message_dialog_response_signal(widget, response_id):
+                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, ButtonDialog.OPTION_3.value]:
+                        widget.destroy()
+
                     if response_id == ButtonDialog.OPTION_1.value:
                         logger.debug("Library refresh is triggered.")
                         self.on_refresh_libraries_activate(None)
@@ -352,8 +358,6 @@ class MenuBarController(ExtendedController):
                         pass
                     else:
                         logger.warning("Response id: {} is not considered".format(response_id))
-                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, ButtonDialog.OPTION_3.value]:
-                        widget.destroy()
 
                 message_string = "You stored your state machine in a path that is included into the library paths.\n\n"\
                                  "Do you want to refresh the libraries or refresh libraries and state machines?"
@@ -361,10 +365,33 @@ class MenuBarController(ExtendedController):
                                    on_message_dialog_response_signal,
                                    type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
 
+                # Offer state substitution dialog
+                def on_message_dialog_response_signal(widget, response_id):
+                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value]:
+                        widget.destroy()
 
-            # logger.info("DIALOG TO REQUEST opening of new state machine has to be insert here.")
+                    if response_id == ButtonDialog.OPTION_1.value:
+                        logger.debug("Substitute saved state with Library.")
+                        self.on_refresh_libraries_activate(None)
+                        [library_path, library_name] = library_manager.get_library_path_and_name_for_os_path(path)
+                        state = library_manager.get_library_instance(library_path, library_name)
+                        state_machine_helper.substitute_state(state, as_template=False)
+                    elif response_id == ButtonDialog.OPTION_2.value:
+                        pass
+                    else:
+                        logger.warning("Response id: {} is not considered".format(response_id))
 
+                message_string = "You stored your state machine in a path that is included into the library paths.\n\n"\
+                                 "Do you want to substitute the state you saved by this library?"
+                RAFCONButtonDialog(message_string, ["Substitute", "Do nothing"],
+                                   on_message_dialog_response_signal,
+                                   type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+
+            # Offer to open saved state machine dialog
             def on_message_dialog_response_signal(widget, response_id):
+                if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value]:
+                    widget.destroy()
+
                 if response_id == ButtonDialog.OPTION_1.value:
                     logger.debug("Open state machine.")
                     try:
@@ -376,8 +403,6 @@ class MenuBarController(ExtendedController):
                     pass
                 else:
                     logger.warning("Response id: {} is not considered".format(response_id))
-                if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value]:
-                    widget.destroy()
 
             message_string = "Should the newly created state machine be opened?"
             RAFCONButtonDialog(message_string, ["Open", "Do not open"], on_message_dialog_response_signal,
