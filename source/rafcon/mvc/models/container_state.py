@@ -275,6 +275,42 @@ class ContainerStateModel(StateModel):
         info.method_name = 'handled_change_state_type'
         self.model_changed(model, prop_name, info)
 
+    @ModelMT.observe("state", after=True, before=True)
+    def substitute_state(self, model, prop_name, info):
+        if info.method_name != 'substitute_state':
+            return
+        if 'before' in info:
+            tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'state': None}
+            state_id = info['kwargs'].get('state_id', None)
+            if state_id is None:
+                if 'state' not in info['kwargs']:
+                    state_id = info['args'][1]
+                else:
+                    state_id = info['args'][0]
+            related_transitions, related_data_flows = self.state.related_linkage(state_id)
+            print "substituted state_id: ", state_id
+            tmp_meta_data['state'] = self.states[state_id].meta
+            for t in related_transitions['external']['ingoing'] + related_transitions['external']['outgoing']:
+                tmp_meta_data['transitions'][t.transition_id] = self.get_transition_m(t.transition_id).meta
+            for df in related_data_flows['external']['ingoing'] + related_data_flows['external']['outgoing']:
+                tmp_meta_data['data_flows'][df.data_flow_id] = self.get_data_flow_m(df.data_flow_id).meta
+            self.change_state_type.__func__.tmp_meta_data_storage = tmp_meta_data
+        else:
+            if isinstance(info.result, Exception):
+                logger.exception("Container state type change failed {0}".format(info.result))
+            else:
+                state_id = info.result
+                tmp_meta_data = self.change_state_type.__func__.tmp_meta_data_storage
+                self.states[state_id].meta = tmp_meta_data['state']
+                for t_id, t_meta in tmp_meta_data['transitions'].iteritems():
+                    self.get_transition_m(t_id).meta = t_meta
+                for df_id, df_meta in tmp_meta_data['data_flows'].iteritems():
+                    self.get_data_flow_m(df_id).meta = df_meta
+                # TODO may refactor the signal to avoid this miss-use
+                self.state_type_changed_signal.emit(StateTypeChangeSignalMsg(self))
+
+            del self.change_state_type.__func__.tmp_meta_data_storage
+
     def get_scoped_variable_m(self, data_port_id):
         """Returns the scoped variable model for the given data port id
 

@@ -650,7 +650,7 @@ class ContainerState(State):
         act_output_data_port_by_name = {op.name: op for op in state.output_data_ports.itervalues()}
 
         for t in related_transitions['external']['ingoing']:
-            self.add_transition(t.from_state, t.from_outcome, state_id, t.to_outcome)
+            self.add_transition(t.from_state, t.from_outcome, state_id, t.to_outcome, t.transition_id)
         logger.info("old_outcomes -> {}".format(old_outcome_names))
         logger.info("act_outcomes -> {}".format(act_outcome_ids_by_name))
 
@@ -658,7 +658,7 @@ class ContainerState(State):
             logger.info("check outcome {1} -> {0}".format(t, t.from_outcome))
             from_outcome = act_outcome_ids_by_name.get(old_outcome_names[t.from_outcome], None)
             if from_outcome is not None:
-                self.add_transition(state_id, from_outcome, t.to_state, t.to_outcome)
+                self.add_transition(state_id, from_outcome, t.to_state, t.to_outcome, t.transition_id)
 
         for old_ip in old_input_data_ports.itervalues():
             ip = act_input_data_port_by_name.get(old_input_data_ports[old_ip.data_port_id].name, None)
@@ -671,7 +671,7 @@ class ContainerState(State):
         for df in related_data_flows['external']['ingoing']:
             ip = act_input_data_port_by_name.get(old_input_data_ports[df.to_key].name, None)
             if ip is not None and ip.data_type == old_input_data_ports[df.to_key].data_type:
-                self.add_data_flow(df.from_state, df.from_key, state_id, ip.data_port_id)
+                self.add_data_flow(df.from_state, df.from_key, state_id, ip.data_port_id, df.data_flow_id)
 
         for old_op in old_output_data_ports.itervalues():
             op = act_output_data_port_by_name.get(old_output_data_ports[old_op.data_port_id], None).name
@@ -684,7 +684,9 @@ class ContainerState(State):
         for df in related_data_flows['external']['outgoing']:
             op = act_output_data_port_by_name.get(old_output_data_ports[df.from_key].name, None)
             if op is not None and op.data_type == old_output_data_ports[df.from_key].data_type:
-                self.add_data_flow(state_id, op.data_port_id, df.to_state, df.to_key)
+                self.add_data_flow(state_id, op.data_port_id, df.to_state, df.to_key, df.data_flow_id)
+
+        return state_id
 
     @Observable.observed
     def change_state_type(self, state, new_state_class):
