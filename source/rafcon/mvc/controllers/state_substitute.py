@@ -72,7 +72,7 @@ class StateSubstituteChooseLibraryDialog(RAFCONDialog):
         self.run()
 
     def destroy(self):
-        self.widget.destroy()
+        self.widget_view.destroy()
         self.widget_ctrl.destroy()
         super(StateSubstituteChooseLibraryDialog, self).destroy()
 

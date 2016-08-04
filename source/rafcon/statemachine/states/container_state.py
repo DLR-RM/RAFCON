@@ -621,6 +621,7 @@ class ContainerState(State):
 
         return related_transitions, related_data_flows
 
+    @Observable.observed
     def substitute_state(self, state_id, state):
 
         if state_id not in self.states:
