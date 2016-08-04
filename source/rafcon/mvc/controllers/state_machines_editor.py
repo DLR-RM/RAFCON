@@ -21,8 +21,8 @@ from rafcon.mvc.controllers.graphical_editor import GraphicalEditorController
 from rafcon.mvc.views.graphical_editor import GraphicalEditorView
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.state_machine import StateMachineModel, StateMachine
-
 from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.gui_helper import draw_for_all_gtk_states
 
 from rafcon.mvc.utils.dialog import RAFCONButtonDialog, ButtonDialog
 from rafcon.mvc.utils import constants
@@ -110,6 +110,7 @@ class StateMachinesEditorController(ExtendedController):
 
         assert isinstance(sm_manager_model, StateMachineManagerModel)
 
+        self.state_machine_manager_model = sm_manager_model
         self.tabs = {}
         self.last_opened_state_machines = collections.deque(maxlen=10)
 
@@ -145,7 +146,7 @@ class StateMachinesEditorController(ExtendedController):
                 return
 
     def on_close_shortcut(self, *args):
-        """Close active state machine (triggered by shortcut)"""
+        """Close selected state machine (triggered by shortcut)"""
         state_machine_m = self.model.get_selected_state_machine_model()
         if state_machine_m is None:
             return
@@ -161,8 +162,6 @@ class StateMachinesEditorController(ExtendedController):
         for tab_info in self.tabs.itervalues():
             if tab_info['page'] is page:
                 new_sm_id = get_state_machine_id(tab_info['state_machine_m'])
-                # set active state machine id
-                rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = new_sm_id
                 if self.model.selected_state_machine_id != new_sm_id:
                     self.model.selected_state_machine_id = new_sm_id
                 if self.last_opened_state_machines[len(self.last_opened_state_machines) - 1] != new_sm_id:
@@ -173,6 +172,14 @@ class StateMachinesEditorController(ExtendedController):
         page = self.tabs[state_machine_id]['page']
         page_id = self.view.notebook.page_num(page)
         return page_id
+
+    def get_page_for_state_machine_id(self, state_machine_id):
+        return self.tabs[state_machine_id]['page']
+
+    def get_state_machine_id_for_page(self, page):
+        for tab_info in self.tabs.itervalues():
+            if tab_info['page'] is page:
+                return get_state_machine_id(tab_info['state_machine_m'])
 
     def add_graphical_state_machine_editor(self, state_machine_m):
         """Add to for new state machine
@@ -328,7 +335,7 @@ class StateMachinesEditorController(ExtendedController):
 
         copy_of_last_opened_state_machines = copy.deepcopy(self.last_opened_state_machines)
 
-        # the following statement will switch the active notebook tab automatically and the history of the
+        # the following statement will switch the selected notebook tab automatically and the history of the
         # last opened state machines will be destroyed
         # Close tab and remove info
         page_id = self.get_page_id(sm_id)
@@ -354,7 +361,6 @@ class StateMachinesEditorController(ExtendedController):
                 else:
                     sm_id = self.model.state_machine_manager.state_machines[sm_keys[0]].state_machine_id
 
-            # set active state machine id
             self.model.selected_state_machine_id = sm_id
         else:
             self.model.selected_state_machine_id = None
@@ -366,3 +372,27 @@ class StateMachinesEditorController(ExtendedController):
             state_machine_m_list.append(tab['state_machine_m'])
         for state_machine_m in state_machine_m_list:
             self.on_close_clicked(None, state_machine_m, None, force=True)
+
+    def highlight_execution_of_currently_active_sm(self, active):
+        """
+        High light active state machine. Please consider the difference between active and selected state machine.
+        :param active: a flag if the state machine has to be shown as running
+        :return:
+        """
+
+        notebook = self.view['notebook']
+        active_state_machine_id = self.state_machine_manager_model.state_machine_manager.active_state_machine_id
+        page = self.get_page_for_state_machine_id(active_state_machine_id)
+
+        if page is None:
+            # logger.warning("No state machine open {0}".format(page_num))
+            return
+        label = notebook.get_tab_label(page).get_children()[0]
+        if active:
+            draw_for_all_gtk_states(label,
+                                    "modify_fg",
+                                    gtk.gdk.color_parse(global_gui_config.colors['STATE_MACHINE_ACTIVE']))
+        else:
+            draw_for_all_gtk_states(label,
+                                    "modify_fg",
+                                    gtk.gdk.color_parse(global_gui_config.colors['STATE_MACHINE_NOT_ACTIVE']))

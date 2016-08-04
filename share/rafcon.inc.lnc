@@ -27,10 +27,9 @@ pipe_include rmpm_do env --env-format ln rafcon
 process RAFCON
 use_template: rafcon_environment
 node: localhost 
-change_directory: %(RAFCON_SRC_PATH)/rafcon/mvc/
 
 pass_environment: HOME, USER, ARCH, DISPLAY
-command: /opt/python/python2.7/bin/python %(RAFCON_ROOT_PATH)/lib/python2.7/rafcon/mvc/start.py %(RAFCON_NEW_STATE_MACHINE) -o %(RAFCON_OPEN_STATE_MACHINES) -c %(RAFCON_CONFIG_PATH) -g %(RAFCON_GUI_CONFIG_PATH)
+command: python2.7 %(RAFCON_ROOT_PATH)/lib/python2.7/rafcon/mvc/start.py %(RAFCON_NEW_STATE_MACHINE) -o %(RAFCON_OPEN_STATE_MACHINES) -c %(RAFCON_CONFIG_PATH) -g %(RAFCON_GUI_CONFIG_PATH)
 # warning_regex: WARNING
 flags: no_error_on_stop
 ready_regex: Ready

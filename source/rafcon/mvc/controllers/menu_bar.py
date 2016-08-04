@@ -60,6 +60,8 @@ class MenuBarController(ExtendedController):
         self.handler_ids = {}
         self.registered_shortcut_callbacks = {}
         self.registered_view = False
+        # this is not a model but the state machine execution engine of the core (or the overwritten execution engine
+        # of the monitoring plugin
         self.state_machine_execution_engine = sm_execution_engine
 
     def register_view(self, view):
