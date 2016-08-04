@@ -71,6 +71,11 @@ class StateSubstituteChooseLibraryDialog(RAFCONDialog):
         self.grab_focus()
         self.run()
 
+    def destroy(self):
+        self.widget.destroy()
+        self.widget_ctrl.destroy()
+        super(StateSubstituteChooseLibraryDialog, self).destroy()
+
     def check_for_library_path(self, widget, response_id):
 
         if response_id == ButtonDialog.OPTION_1.value:
@@ -84,4 +89,4 @@ class StateSubstituteChooseLibraryDialog(RAFCONDialog):
         else:
             logger.warning("Response id: {} is not considered".format(response_id))
         if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, ButtonDialog.OPTION_3.value]:
-            widget.destroy()
+            self.destroy()
