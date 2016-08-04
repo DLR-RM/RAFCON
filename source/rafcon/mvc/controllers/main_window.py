@@ -71,8 +71,8 @@ class MainWindowController(ExtendedController):
         self.shortcut_manager = ShortcutManager(view['main_window'])
 
         # library tree
-        library_manager_model = LibraryManagerModel(rafcon.statemachine.singleton.library_manager)
-        library_controller = LibraryTreeController(library_manager_model, view.library_tree,
+        self.library_manager_model = mvc_singleton.library_manager_model
+        library_controller = LibraryTreeController(self.library_manager_model, view.library_tree,
                                                    state_machine_manager_model)
         self.add_controller('library_controller', library_controller)
         # view['main_window'].add_events(
