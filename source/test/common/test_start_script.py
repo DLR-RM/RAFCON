@@ -11,18 +11,11 @@ if os.path.exists(FILE_MODIFIED_BY_STATE_MACHINE):
     os.remove(FILE_MODIFIED_BY_STATE_MACHINE)
 
 
-def get_rafcon_env():
-    rafcon_env = os.environ.copy()
-    rafcon_base_path = os.path.dirname(testing_utils.RAFCON_PATH)
-    rafcon_env["PYTHONPATH"] = rafcon_base_path + ":" + rafcon_env["PYTHONPATH"]
-    return rafcon_env
-
-
 def test_start_script_open():
     script = dirname(realpath(rafcon.__file__)) + "/statemachine/start.py"
     start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
     cmd = sys.executable + " %s -o %s" % (script, start_path)
-    cmd_res = subprocess.call(cmd, shell=True, env=get_rafcon_env())
+    cmd_res = subprocess.call(cmd, shell=True)
     assert cmd_res == 0
     tmp_file = open(FILE_MODIFIED_BY_STATE_MACHINE, "r")
     res = tmp_file.read()
@@ -37,7 +30,7 @@ def test_start_script_state():
     state_path = "UTUOSC/AHWBOG"
     print start_path
     cmd = sys.executable + " %s -o %s -s %s" % (script, start_path, state_path)
-    cmd_res = subprocess.call(cmd, shell=True, env=get_rafcon_env())
+    cmd_res = subprocess.call(cmd, shell=True)
     assert cmd_res == 0
     tmp_file = open(FILE_MODIFIED_BY_STATE_MACHINE, "r")
     res = tmp_file.read()
@@ -52,7 +45,7 @@ def test_start_script_valid_config():
     start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
     config = rafcon.__path__[0] + "/../test/common/configs_for_start_script_test/valid_config"
     cmd = sys.executable + " %s -o %s -c %s" % (script, start_path, config)
-    cmd_res = subprocess.call(cmd, shell=True, env=get_rafcon_env())
+    cmd_res = subprocess.call(cmd, shell=True)
     assert cmd_res == 0
     tmp = open(FILE_MODIFIED_BY_STATE_MACHINE, "r")
     res = tmp.read()
