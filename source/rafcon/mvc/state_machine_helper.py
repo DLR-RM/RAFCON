@@ -1,10 +1,3 @@
-import copy
-
-from rafcon.utils import log
-from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
-
-logger = log.get_logger(__name__)
-
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.library_state import LibraryState
@@ -12,14 +5,18 @@ from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.enums import StateType
+from rafcon.statemachine.enums import StateType, UNIQUE_DECIDER_STATE_ID
 from rafcon.mvc.models import StateModel, AbstractStateModel, ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel
 from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
+
 from rafcon.statemachine.singleton import library_manager
 import rafcon.mvc.singleton
+
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 def delete_model(model, raise_exceptions=False):
