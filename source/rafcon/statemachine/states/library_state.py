@@ -14,7 +14,6 @@ from gtkmvc import Observable
 from rafcon.statemachine.enums import StateExecutionState
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.singleton import library_manager
 from rafcon.utils import type_helpers
 from rafcon.utils import log
 
@@ -59,6 +58,7 @@ class LibraryState(State):
         self.library_name = library_name
         self.version = version
 
+        from rafcon.statemachine.singleton import library_manager
         lib_os_path, new_library_path, new_library_name = \
             library_manager.get_os_path_to_library(library_path, library_name, allow_user_interaction)
 
@@ -75,6 +75,9 @@ class LibraryState(State):
         self.state_copy.parent = self
         if not str(lib_version) == version and not str(lib_version) == "None":
             raise AttributeError("Library does not have the correct version!")
+
+        if name is None:
+            self.name = state_machine.root_state.name
 
         # copy all ports and outcomes of self.state_copy to let the library state appear like the container state
         # this will also set the parent of all outcomes and data ports to self

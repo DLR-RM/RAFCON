@@ -16,7 +16,6 @@ import gtk
 import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.singleton import library_manager
 
 import rafcon.mvc.state_machine_helper as state_machine_helper
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
@@ -163,7 +162,7 @@ class LibraryTreeController(ExtendedController):
         self.store_expansion_state()
         self.library_tree_store.clear()
         self.library_row_iter_dict_by_library_path.clear()
-        for library_key, library_item in library_manager.libraries.iteritems():
+        for library_key, library_item in self.model.library_manager.libraries.iteritems():
             self.insert_rec(None, library_key, library_item, "")
         self.redo_expansion_state()
         logger.info("Libraries have been updated")
