@@ -28,6 +28,7 @@ from rafcon.mvc import gui_helper
 from rafcon.mvc import singleton as mvc_singleton
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.views.utils.about_dialog import MyAboutDialog
+from rafcon.mvc.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
@@ -315,15 +316,15 @@ class MenuBarController(ExtendedController):
 
     def on_substitute_selected_state_activate(self, widget=None, data=None, path=None):
         selected_states = self.model.get_selected_state_machine_model().selection.get_states()
-        logger.info("Substitute state with state machine form library-tree, as template or library state. \n" + str(selected_states))
-        from state_substitute import StateSubstituteChooseLibraryWindow
-        StateSubstituteChooseLibraryWindow(self.model, parent=self.get_root_window())
-        logger.info("state substitute finish ctrl and view generation")
+        if selected_states and len(selected_states) == 1:
+            StateSubstituteChooseLibraryDialog(self.model, parent=self.get_root_window())
+            return True
+        else:
+            logger.warning("Substitute state needs exact one state to be selected.")
+            return False
 
     def on_save_selected_state_as_activate(self, widget=None, data=None, path=None):
         selected_states = self.model.get_selected_state_machine_model().selection.get_states()
-        logger.info("Save state as state machine. \n" + str(selected_states))
-        logger.info("library_paths: " + str(library_manager._library_paths))
         if selected_states and len(selected_states) == 1:
             import copy
             state_m = copy.copy(selected_states[0])
@@ -381,9 +382,10 @@ class MenuBarController(ExtendedController):
             message_string = "Should the newly created state machine be opened?"
             RAFCONButtonDialog(message_string, ["Open", "Do not open"], on_message_dialog_response_signal,
                                type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
-
+            return True
         else:
             logger.warning("Multiple states can not be saved as state machine directly. Group them before.")
+            return False
 
     def on_menu_properties_activate(self, widget, data=None):
         # TODO: implement

@@ -1060,8 +1060,8 @@ class CoreObjectIdentifier:
                 if isinstance(core_obj_or_cls.parent, State):
                     self._path = core_obj_or_cls.parent.get_path()
                     if core_obj_or_cls.parent.get_sm_for_state() is None:
-                        logger.warning('state has no state machine -> {0}'.format(core_obj_or_cls.parent.name))
-                        logger.info('state has no state machine -> {0}'.format(core_obj_or_cls.parent.get_path()))
+                        logger.warning('state has no state machine -> {0}'.format(core_obj_or_cls.parent.name, core_obj_or_cls.parent.get_path()))
+                        logger.info('state has no state machine -> {0}'.format())
                     else:
                         self._sm_id = core_obj_or_cls.parent.get_sm_for_state().state_machine_id
                 else:

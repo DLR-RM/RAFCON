@@ -1,29 +1,19 @@
 import gtk
-from gtkmvc import View
+
+from rafcon.mvc.views.library_tree import LibraryTreeView
+from rafcon.mvc.controllers.library_tree import LibraryTreeController
+from rafcon.mvc.utils.dialog import RAFCONDialog, ButtonDialog
 
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
-from rafcon.mvc.controllers.utils.single_widget_window import SingleWidgetWindowController
-from rafcon.mvc.views.utils.single_widget_window import SingleWidgetWindowView
-from rafcon.mvc.views.library_tree import LibraryTreeView
-from rafcon.mvc.controllers.library_tree import LibraryTreeController
-# single_view = SingleWidgetWindowView(LibraryTreeView)
-# LibraryTreeController(self.model, single_view.widget_view)
-# single_view.top = 'library_tree_view'
-# single_view['library_tree_view'] = single_view.widget_view['library_tree_view']
-# SingleWidgetWindowController(self.model, single_view, LibraryTreeController)
-# logger.info("state substitute finish ctrl and view generation")
 
 
-import gtk
+class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
 
-from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.shortcut_manager import ShortcutManager
-from rafcon.mvc.utils.dialog import RAFCONDialog, ButtonDialog
-
-
-class StateSubstituteChooseLibraryDialogController(LibraryTreeController):
+    def __init__(self, model=None, view=None, state_machine_manager_model=None, dialog_widget=None):
+        super(StateSubstituteChooseLibraryDialogTreeController, self).__init__(model, view, state_machine_manager_model)
+        self.dialog_widget = dialog_widget
 
     def generate_right_click_menu(self, *args, **kwargs):
         pass
@@ -41,54 +31,53 @@ class StateSubstituteChooseLibraryDialogController(LibraryTreeController):
                         self.view.expand_to_path(state_row_path)
                 return False
             self.substitute_as_library_clicked(None)
+            if self.dialog_widget:
+                self.dialog_widget.destroy()
             return True
-        if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 2:
+        if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 3:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][1], dict):  # double click on folder, not library
                 return False
             self.substitute_as_template_clicked(None)
+            if self.dialog_widget:
+                self.dialog_widget.destroy()
             return True
 
 
-class StateSubstituteChooseLibraryWindow(RAFCONDialog):
+class StateSubstituteChooseLibraryDialog(RAFCONDialog):
 
     def __init__(self, model, width=500, height=500, pos=None, parent=None):
         self.model = model
-        title = 'Library choose dialog'
-        button_texts=['As Library', 'As Template', 'Cancel']
-        type=gtk.MESSAGE_INFO
-        callback_args = ()
-
-        markup_text = "Choose a Library to substitute the state with."
-        super(StateSubstituteChooseLibraryWindow, self).__init__(type, gtk.BUTTONS_NONE, gtk.DIALOG_MODAL, parent)
-        self.set_markup(markup_text)
-        for button_text, option in zip(button_texts, ButtonDialog):
-            self.add_button(button_text, option.value)
-        self.finalize(self.check_for_library_path, *callback_args)
-
-        self.set_title(title)
+        button_texts = ['As library', 'As template', 'Cancel']
+        self.set_title('Library choose dialog')
         self.resize(width=width, height=height)
         if pos is not None:
             self.set_position(pos)
+
+        markup_text = "Choose a Library to substitute the state with."
+        super(StateSubstituteChooseLibraryDialog, self).__init__(gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, gtk.DIALOG_MODAL, parent)
+        self.set_markup(markup_text)
+        for button_text, option in zip(button_texts, ButtonDialog):
+            self.add_button(button_text, option.value)
+        self.finalize(self.check_for_library_path)
+
         self.widget_view = LibraryTreeView()
-        self.widget_ctrl = StateSubstituteChooseLibraryDialogController(self.model, self.widget_view)
-        label = gtk.Label("Dialogs are groovy")
+        self.widget_ctrl = StateSubstituteChooseLibraryDialogTreeController(self.model, self.widget_view,
+                                                                            dialog_widget=self)
 
         self.vbox.pack_start(self.widget_view, True, True, 0)
-        self.vbox.pack_start(label, True, True, 0)
         self.widget_view.show()
-        label.show()
 
         self.grab_focus()
         self.run()
 
     def check_for_library_path(self, widget, response_id):
-        logger.info("response_id: {}".format(response_id))
+
         if response_id == ButtonDialog.OPTION_1.value:
-            logger.debug("Library refresh is triggered.")
+            logger.debug("Library substitute state as library triggered.")
             self.widget_ctrl.substitute_as_library_clicked(None)
         elif response_id == ButtonDialog.OPTION_2.value:
-            logger.debug("Refresh all is triggered.")
+            logger.debug("Library substitute state as template triggered.")
             self.widget_ctrl.substitute_as_template_clicked(None)
         elif response_id == ButtonDialog.OPTION_3.value:
             pass

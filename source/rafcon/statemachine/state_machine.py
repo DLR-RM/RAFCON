@@ -162,8 +162,9 @@ class StateMachine(Observable, JSONObject):
         path_item_list = path.split('/')
         prev_state_id = path_item_list.pop(0)
         if not prev_state_id == self.root_state.state_id:
-            print path, self.root_state.state_id
-        assert prev_state_id == self.root_state.state_id
+            logger.warning("First element in path ({0}) for method get_state_by_path has to be the root state "
+                           "state_id ({1}).".format(path, self.root_state.state_id))
+            return None
         state = self.root_state
         for state_id in path_item_list:
             if isinstance(state, LibraryState):

@@ -72,16 +72,24 @@ class LibraryTreeController(ExtendedController):
         open_run_menu_item.connect("activate", self.open_run_button_clicked)
         open_run_menu_item.set_always_show_image(True)
 
-        open_run_menu_item = gtk.ImageMenuItem(gtk.STOCK_CDROM)
-        open_run_menu_item.set_label("Substitute selected state")
-        open_run_menu_item.connect("activate", self.substitute_with_this_library)
-        open_run_menu_item.set_always_show_image(True)
-
         menu.append(add_link_menu_item)
         menu.append(add_template_menu_item)
         menu.append(gtk.SeparatorMenuItem())
         menu.append(open_menu_item)
         menu.append(open_run_menu_item)
+
+        menu_item = gtk.ImageMenuItem(gtk.STOCK_REFRESH)
+        menu_item.set_label("Substitute as library")
+        menu_item.connect("activate", self.substitute_as_library_clicked)
+        menu_item.set_always_show_image(True)
+        menu.append(menu_item)
+
+        menu_item = gtk.ImageMenuItem(gtk.STOCK_REFRESH)
+        menu_item.set_label("Substitute as template")
+        menu_item.connect("activate", self.substitute_as_template_clicked)
+        menu_item.set_always_show_image(True)
+        menu.append(menu_item)
+
         return menu
 
     def mouse_click(self, widget, event=None):
@@ -221,11 +229,9 @@ class LibraryTreeController(ExtendedController):
         return state_machine
 
     def substitute_as_library_clicked(self, widget):
-        logger.info("perform substitution as library" + str(self.model))
         state_machine_helper.substitute_state(self._get_selected_library_state(), as_template=False)
 
     def substitute_as_template_clicked(self, widget):
-        logger.info("perform substitution as template" + str(self.model))
         state_machine_helper.substitute_state(self._get_selected_library_state(), as_template=True)
 
     def _get_selected_library_state(self):
