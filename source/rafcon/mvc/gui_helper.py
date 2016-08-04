@@ -158,3 +158,19 @@ def set_window_size_and_position(window, window_key):
     else:
         window.set_position(gtk.WIN_POS_MOUSE)
     window.show()
+
+
+def draw_for_all_gtk_states(object, function_name, color):
+    """
+    Call given draw function for an object with a given color
+    :param object:  the object to call the draw function on
+    :param function_name: the draw function to call
+    :param color: the color to use for drawing
+    :return:
+    """
+    getattr(object, function_name)(gtk.STATE_ACTIVE, color)
+    getattr(object, function_name)(gtk.STATE_INSENSITIVE, color)
+    getattr(object, function_name)(gtk.STATE_NORMAL, color)
+    getattr(object, function_name)(gtk.STATE_PRELIGHT, color)
+    getattr(object, function_name)(gtk.STATE_SELECTED, color)
+

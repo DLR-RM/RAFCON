@@ -67,31 +67,32 @@ class StateMachineExecutionEngine(Observable):
         logger.debug("Pause execution ...")
         self.set_execution_mode(StateMachineExecutionStatus.PAUSED)
 
-
     @Observable.observed
     def start(self, state_machine_id=None, start_state_path=None):
         """
-        Start a specific state machine. If no state machine is provided the currently active state machine is started.
+        If no state machine is running start a specific state machine.
+        If no state machine is provided the currently active state machine is started.
+        If there is already a state machine running, just resume it without taking the passed state_machine_id argument
+        into account.
         :param state_machine_id: The id if the state machine to be started
         :param start_state_path: The path of the state in the state machine, from which the execution will start
         :return:
         """
 
-        if self.state_machine_manager.get_active_state_machine() is not None:
-            self.state_machine_manager.get_active_state_machine().root_state.recursively_resume_states()
-
         if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
             logger.debug("Resume execution engine ...")
             self.run_to_states = []
+            if self.state_machine_manager.get_active_state_machine() is not None:
+                self.state_machine_manager.get_active_state_machine().root_state.recursively_resume_states()
             self.set_execution_mode(StateMachineExecutionStatus.STARTED)
         else:
             # do not start another state machine before the old one did not finish its execution
             while self.state_machine_running:
                 time.sleep(1.0)
             logger.debug("Start execution engine ...")
-            self.set_execution_mode(StateMachineExecutionStatus.STARTED)
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
+            self.set_execution_mode(StateMachineExecutionStatus.STARTED)
 
             self.start_state_paths = []
 
@@ -147,13 +148,15 @@ class StateMachineExecutionEngine(Observable):
 
     def _run_active_state_machine(self):
         """Store running state machine and observe its status"""
-        self.__running_state_machine = self.state_machine_manager.state_machines[
-            self.state_machine_manager.active_state_machine_id]
+        self.__running_state_machine = self.state_machine_manager.get_active_state_machine()
+        if self.__running_state_machine:
+            self.__running_state_machine.start()
 
-        self.__running_state_machine.start()
-
-        self.__wait_for_finishing_thread = threading.Thread(target=self._wait_for_finishing)
-        self.__wait_for_finishing_thread.start()
+            self.__wait_for_finishing_thread = threading.Thread(target=self._wait_for_finishing)
+            self.__wait_for_finishing_thread.start()
+        else:
+            logger.warn("Currently no active state machine! Please create a new state machine.")
+            self.set_execution_mode(StateMachineExecutionStatus.STOPPED)
 
     def _wait_for_finishing(self):
         """Observe running state machine and stop engine if execution has finished"""

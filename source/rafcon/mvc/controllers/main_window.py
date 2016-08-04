@@ -37,6 +37,7 @@ from rafcon.mvc import gui_helper
 from rafcon.utils import plugins
 from rafcon.utils import log
 
+
 logger = log.get_logger(__name__)
 
 
@@ -297,55 +298,35 @@ class MainWindowController(ExtendedController):
         #     logger.info("after {0} position: {1} == {2}".format(pane_id_, self.view[pane_id_].get_position(),
         #                                                         prev_pos[pane_id_]))
 
-    def highlight_execution_of_current_sm(self, active):
-        if self.get_controller('state_machines_editor_ctrl') is None or \
-                self.get_controller('state_machines_editor_ctrl').view is None:
-            logger.debug("No state machines editor view")
-            return
-        notebook = self.get_controller('state_machines_editor_ctrl').view['notebook']
-        page_num = self.get_controller('state_machines_editor_ctrl').view['notebook'].get_current_page()
-        page = self.get_controller('state_machines_editor_ctrl').view['notebook'].get_nth_page(page_num)
-        if page is None:
-            logger.warning("No state machine open {0}".format(page_num))
-            return
-        label = notebook.get_tab_label(page).get_children()[0]
-        if active:
-            label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_ACTIVE']))
-            label.modify_fg(gtk.STATE_INSENSITIVE, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_ACTIVE']))
-        else:
-            label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_NOT_ACTIVE']))
-            label.modify_fg(gtk.STATE_INSENSITIVE, gtk.gdk.color_parse(gui_config.colors['STATE_MACHINE_NOT_ACTIVE']))
-
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
-        """ Highlight buttons according actual execution status."""
+        """ Highlight buttons according actual execution status. Furthermore it triggers the label redraw of the active
+        state machine.
+        """
         label_string = str(rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
         label_string = label_string.replace("STATE_MACHINE_EXECUTION_STATUS.", "")
         self.view['execution_status_label'].set_text(label_string)
 
         if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STARTED:
-            self.highlight_execution_of_current_sm(True)
+            self.get_controller('state_machines_editor_ctrl').highlight_execution_of_currently_active_sm(True)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_start_shortcut')
         elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.PAUSED:
-            self.highlight_execution_of_current_sm(True)
+            self.get_controller('state_machines_editor_ctrl').highlight_execution_of_currently_active_sm(True)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_pause_shortcut')
         elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED:
-            self.highlight_execution_of_current_sm(False)
+            self.get_controller('state_machines_editor_ctrl').highlight_execution_of_currently_active_sm(False)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_stop_shortcut')
         else:  # all step modes
-            self.highlight_execution_of_current_sm(True)
+            self.get_controller('state_machines_editor_ctrl').highlight_execution_of_currently_active_sm(True)
             self.view['step_buttons'].show()
             self._set_single_button_active('button_step_mode_shortcut')
 
     def _set_single_button_active(self, active_button_name):
-
         # do not let the buttons trigger the action another time => block the respective signal handlers
-
         button_names = ['button_start_shortcut', 'button_pause_shortcut', 'button_step_mode_shortcut']
-
         for button_name in button_names:
             if active_button_name == button_name:
                 if not self.view[button_name].get_active():

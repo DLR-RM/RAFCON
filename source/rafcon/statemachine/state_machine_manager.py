@@ -118,6 +118,7 @@ class StateMachineManager(Observable):
         else:
             return None
 
+
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc
     #########################################################################
@@ -143,4 +144,3 @@ class StateMachineManager(Observable):
             if state_machine_id not in self.state_machines.keys():
                 raise AttributeError("State machine not in list of all state machines")
         self._active_state_machine_id = state_machine_id
-        active_state_machine = self.get_active_state_machine()
