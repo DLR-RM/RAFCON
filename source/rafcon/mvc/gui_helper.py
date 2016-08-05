@@ -40,6 +40,28 @@ def create_label_with_text_and_spacing(text, font=constants.INTERFACE_FONT, font
     return label
 
 
+def create_label_widget_with_icon(icon, text):
+    hbox = gtk.HBox()
+
+    icon_label = gtk.Label()
+    icon_label.set_markup('<span font_desc="{0} {1}">&#x{2};</span>'.format(constants.ICON_FONT,
+                                                                            constants.FONT_SIZE_NORMAL,
+                                                                            icon))
+    icon_label.show()
+    hbox.pack_start(icon_label, False, True, 2)
+
+    text_label = gtk.Label()
+    text_label.set_markup('<span font_desc="{0} {1}" letter_spacing="{2}">{3}</span>'.format(constants.INTERFACE_FONT,
+                                                                                             constants.FONT_SIZE_NORMAL,
+                                                                                             constants.LETTER_SPACING_075PT,
+                                                                                             text))
+    text_label.show()
+    hbox.pack_start(text_label, True, True, 2)
+
+    hbox.show()
+    return hbox
+
+
 def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
     """Create a button label with a chosen icon.
 
@@ -173,4 +195,3 @@ def draw_for_all_gtk_states(object, function_name, color):
     getattr(object, function_name)(gtk.STATE_NORMAL, color)
     getattr(object, function_name)(gtk.STATE_PRELIGHT, color)
     getattr(object, function_name)(gtk.STATE_SELECTED, color)
-
