@@ -145,7 +145,7 @@ class StateMachineRightClickMenu:
             return self.activate_menu(event, menu)
 
     def activate_menu(self, event, menu):
-        logger.info("activate_menu by " + self.__class__.__name__)
+        # logger.info("activate_menu by " + self.__class__.__name__)
         menu.popup(None, None, None, event.button, event.time)
         return True
 

@@ -651,11 +651,8 @@ class ContainerState(State):
 
         for t in related_transitions['external']['ingoing']:
             self.add_transition(t.from_state, t.from_outcome, state_id, t.to_outcome, t.transition_id)
-        logger.info("old_outcomes -> {}".format(old_outcome_names))
-        logger.info("act_outcomes -> {}".format(act_outcome_ids_by_name))
 
         for t in related_transitions['external']['outgoing']:
-            logger.info("check outcome {1} -> {0}".format(t, t.from_outcome))
             from_outcome = act_outcome_ids_by_name.get(old_outcome_names[t.from_outcome], None)
             if from_outcome is not None:
                 self.add_transition(state_id, from_outcome, t.to_state, t.to_outcome, t.transition_id)

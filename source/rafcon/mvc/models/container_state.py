@@ -297,7 +297,7 @@ class ContainerStateModel(StateModel):
             self.change_state_type.__func__.tmp_meta_data_storage = tmp_meta_data
         else:
             if isinstance(info.result, Exception):
-                logger.exception("Container state type change failed {0}".format(info.result))
+                logger.exception("State substitution failed {0}".format(info.result))
             else:
                 state_id = info.result
                 tmp_meta_data = self.change_state_type.__func__.tmp_meta_data_storage
