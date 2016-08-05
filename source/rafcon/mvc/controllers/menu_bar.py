@@ -347,7 +347,8 @@ class MenuBarController(ExtendedController):
 
                 # Library refresh dialog
                 def on_message_dialog_response_signal(widget, response_id):
-                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, ButtonDialog.OPTION_3.value]:
+                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value,
+                                       ButtonDialog.OPTION_3.value, -4]:
                         widget.destroy()
 
                     if response_id == ButtonDialog.OPTION_1.value:
@@ -356,7 +357,7 @@ class MenuBarController(ExtendedController):
                     elif response_id == ButtonDialog.OPTION_2.value:
                         logger.debug("Refresh all is triggered.")
                         self.on_refresh_all_activate(None)
-                    elif response_id == ButtonDialog.OPTION_3.value:
+                    elif response_id in [ButtonDialog.OPTION_3.value, -4]:
                         pass
                     else:
                         logger.warning("Response id: {} is not considered".format(response_id))
@@ -369,7 +370,7 @@ class MenuBarController(ExtendedController):
 
                 # Offer state substitution dialog
                 def on_message_dialog_response_signal(widget, response_id):
-                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value]:
+                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, -4]:
                         widget.destroy()
 
                     if response_id == ButtonDialog.OPTION_1.value:
@@ -378,7 +379,7 @@ class MenuBarController(ExtendedController):
                         [library_path, library_name] = library_manager.get_library_path_and_name_for_os_path(path)
                         state = library_manager.get_library_instance(library_path, library_name)
                         state_machine_helper.substitute_state(state, as_template=False)
-                    elif response_id == ButtonDialog.OPTION_2.value:
+                    elif response_id in [ButtonDialog.OPTION_2.value, -4]:
                         pass
                     else:
                         logger.warning("Response id: {} is not considered".format(response_id))
@@ -391,7 +392,7 @@ class MenuBarController(ExtendedController):
 
             # Offer to open saved state machine dialog
             def on_message_dialog_response_signal(widget, response_id):
-                if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value]:
+                if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, -4]:
                     widget.destroy()
 
                 if response_id == ButtonDialog.OPTION_1.value:
@@ -401,7 +402,7 @@ class MenuBarController(ExtendedController):
                         state_machine_manager.add_state_machine(state_machine)
                     except (ValueError, IOError) as e:
                         logger.error('Error while trying to open state machine: {0}'.format(e))
-                elif response_id == ButtonDialog.OPTION_2.value:
+                elif response_id in [ButtonDialog.OPTION_2.value, -4]:
                     pass
                 else:
                     logger.warning("Response id: {} is not considered".format(response_id))

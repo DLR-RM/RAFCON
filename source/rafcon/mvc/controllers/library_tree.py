@@ -143,7 +143,10 @@ class LibraryTreeController(ExtendedController):
         for library_key, library_item in self.model.library_manager.libraries.iteritems():
             self.insert_rec(None, library_key, library_item, "")
         self.redo_expansion_state()
-        logger.info("Libraries have been updated")
+        if self.__expansion_state:
+            logger.info("Libraries have been updated")
+        else:
+            logger.info("Library tree have been initiated")
 
     def insert_rec(self, parent, library_key, library_item, library_path):
         tree_item = self.library_tree_store.insert_before(parent, None, (library_key, library_item, library_path))

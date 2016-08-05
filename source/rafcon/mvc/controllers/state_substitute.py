@@ -77,6 +77,9 @@ class StateSubstituteChooseLibraryDialog(RAFCONDialog):
         super(StateSubstituteChooseLibraryDialog, self).destroy()
 
     def check_for_library_path(self, widget, response_id):
+        if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value,
+                           ButtonDialog.OPTION_3.value, -4]:
+            self.destroy()
 
         if response_id == ButtonDialog.OPTION_1.value:
             logger.debug("Library substitute state as library triggered.")
@@ -84,9 +87,8 @@ class StateSubstituteChooseLibraryDialog(RAFCONDialog):
         elif response_id == ButtonDialog.OPTION_2.value:
             logger.debug("Library substitute state as template triggered.")
             self.widget_ctrl.substitute_as_template_clicked(None)
-        elif response_id == ButtonDialog.OPTION_3.value:
+        elif response_id in [ButtonDialog.OPTION_3.value, -4]:
             pass
         else:
             logger.warning("Response id: {} is not considered".format(response_id))
-        if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, ButtonDialog.OPTION_3.value]:
-            self.destroy()
+
