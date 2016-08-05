@@ -721,12 +721,13 @@ class MenuBarController(ExtendedController):
 
     def on_start_from_selected_state_activate(self, widget, data=None):
         logger.debug("Run from selected state ...")
-        sel = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
-        state_list = sel.get_states()
-        if len(state_list) is not 1:
+        selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        selected_state_models = selection.get_states()
+        if len(selected_state_models) is not 1:
             logger.error("Exactly one state must be selected!")
         else:
-            self.state_machine_execution_engine.start(self.model.selected_state_machine_id, state_list[0].state.get_path())
+            self.state_machine_execution_engine.start(self.model.selected_state_machine_id,
+                                                      selected_state_models[0].state.get_path())
 
     def on_pause_activate(self, widget, data=None):
         self.state_machine_execution_engine.pause()
@@ -752,12 +753,12 @@ class MenuBarController(ExtendedController):
     def on_run_to_selected_state_activate(self, widget, data=None):
         logger.debug("Run to selected state ...")
 
-        sel = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
-        state_list = sel.get_states()
-        if len(state_list) is not 1:
+        selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        selected_state_models = selection.get_states()
+        if len(selected_state_models) is not 1:
             logger.error("Exactly one state must be selected!")
         else:
-            self.state_machine_execution_engine.run_to_selected_state(state_list[0].state.get_path(),
+            self.state_machine_execution_engine.run_to_selected_state(selected_state_models[0].state.get_path(),
                                                                       self.model.selected_state_machine_id)
 
     ######################################################

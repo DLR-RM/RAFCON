@@ -20,7 +20,7 @@ from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortVi
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 from rafcon.mvc.mygaphas.utils import gap_helper
 
-from rafcon.mvc.controllers.right_click_menu.state import StateRightClickMenuGapahs
+from rafcon.mvc.controllers.right_click_menu.state import StateRightClickMenuGaphas
 from rafcon.mvc.utils import constants
 from rafcon.utils import log
 
@@ -767,7 +767,7 @@ class RightClickTool(ItemTool):
 
     def __init__(self, view=None, buttons=(3,)):
         super(RightClickTool, self).__init__(view, buttons)
-        self.sm_right_click_menu = StateRightClickMenuGapahs()
+        self.sm_right_click_menu = StateRightClickMenuGaphas()
 
     def on_button_press(self, event):
         self.sm_right_click_menu.mouse_click(None, event)

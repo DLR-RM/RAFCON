@@ -14,6 +14,7 @@ from rafcon.mvc.utils import constants
 from rafcon.mvc.gui_helper import create_image_menu_item
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+import rafcon.mvc.singleton as mvc_singleton
 
 from rafcon.utils import log
 
@@ -99,21 +100,6 @@ class StateMachineRightClickMenu:
         return True
 
 
-class StateRightClickMenuGapahs(StateMachineRightClickMenu):
-
-    def on_copy_activate(self, widget, data=None):
-        # logger.info("trigger gaphas copy")
-        self.shortcut_manager.trigger_action("copy", None, None)
-
-    def on_paste_activate(self, widget, data=None):
-        # logger.info("trigger gaphas paste")
-        self.shortcut_manager.trigger_action("paste", None, None)
-
-    def on_cut_activate(self, widget, data=None):
-        # logger.info("trigger gaphas cut")
-        self.shortcut_manager.trigger_action("cut", None, None)
-
-
 class StateMachineRightClickMenuController(ExtendedController, StateMachineRightClickMenu):
 
     def __init__(self, model=None, view=None):
@@ -130,7 +116,7 @@ class StateMachineTreeRightClickMenuController(StateMachineRightClickMenuControl
         view.connect('button_press_event', self.mouse_click)
 
     def activate_menu(self, event, menu):
-        logger.info("activate_menu by " + self.__class__.__name__)
+        # logger.info("activate_menu by " + self.__class__.__name__)
         pthinfo = self.view.get_path_at_pos(int(event.x), int(event.y))
 
         if pthinfo is not None:
@@ -151,8 +137,12 @@ class StateRightClickMenuControllerOpenGLEditor(StateMachineRightClickMenuContro
 
     def activate_menu(self, event, menu):
         # logger.info("activate_menu by " + self.__class__.__name__)
-        menu.popup(None, None, None, event.button, event.time)
-        return True
+        selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        if selection.get_num_states() > 0 or selection.get_num_scoped_variables() > 0:
+            menu.popup(None, None, None, event.button, event.time)
+            return True
+        else:
+            return False
 
     def on_copy_activate(self, widget, data=None):
         # logger.info("trigger opengl copy")
@@ -164,4 +154,28 @@ class StateRightClickMenuControllerOpenGLEditor(StateMachineRightClickMenuContro
 
     def on_cut_activate(self, widget, data=None):
         # logger.info("trigger opengl cut")
+        self.shortcut_manager.trigger_action("cut", None, None)
+
+
+class StateRightClickMenuGaphas(StateMachineRightClickMenu):
+
+    def activate_menu(self, event, menu):
+        # logger.info("activate_menu by " + self.__class__.__name__)
+        selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        if selection.get_num_states() > 0 or selection.get_num_scoped_variables() > 0:
+            menu.popup(None, None, None, event.button, event.time)
+            return True
+        else:
+            return False
+
+    def on_copy_activate(self, widget, data=None):
+        # logger.info("trigger gaphas copy")
+        self.shortcut_manager.trigger_action("copy", None, None)
+
+    def on_paste_activate(self, widget, data=None):
+        # logger.info("trigger gaphas paste")
+        self.shortcut_manager.trigger_action("paste", None, None)
+
+    def on_cut_activate(self, widget, data=None):
+        # logger.info("trigger gaphas cut")
         self.shortcut_manager.trigger_action("cut", None, None)

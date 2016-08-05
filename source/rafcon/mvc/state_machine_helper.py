@@ -411,15 +411,16 @@ def substitute_state(state, as_template=False):
         return False
 
     current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
-    if len(current_selection.get_states()) > 1:
+    selected_state_models = current_selection.get_states()
+    if len(selected_state_models) > 1:
         logger.error("Please select exactly one state for the substitution")
         return False
 
-    if len(current_selection.get_states()) == 0:
+    if len(selected_state_models) == 0:
         logger.error("Please select a state for the substitution")
         return False
 
-    current_state_m = current_selection.get_states()[0]
+    current_state_m = selected_state_models[0]
     current_state = current_state_m.state
     parent_state_m = current_state_m.parent
     parent_state = current_state.parent
@@ -468,16 +469,16 @@ def insert_state(state, as_template=False):
         logger.error("Please select a container state within a state machine first")
         return False
 
-    current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
-    if len(current_selection.get_states()) > 1:
+    selected_state_models = smm_m.state_machines[smm_m.selected_state_machine_id].selection.get_states()
+    if len(selected_state_models) > 1:
         logger.error("Please select exactly one state for the insertion")
         return False
 
-    if len(current_selection.get_states()) == 0:
+    if len(selected_state_models) == 0:
         logger.error("Please select a state for the insertion")
         return False
 
-    current_state_m = current_selection.get_states()[0]
+    current_state_m = selected_state_models[0]
     current_state = current_state_m.state
     if not isinstance(current_state, ContainerState):
         logger.error("States can only be inserted in container states")
