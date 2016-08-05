@@ -17,6 +17,8 @@ import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
 
+from rafcon.mvc.utils import constants
+from rafcon.mvc.gui_helper import create_image_menu_item
 import rafcon.mvc.state_machine_helper as state_machine_helper
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 
@@ -51,43 +53,19 @@ class LibraryTreeController(ExtendedController):
 
     def generate_right_click_menu(self):
         menu = gtk.Menu()
-        add_link_menu_item = gtk.ImageMenuItem(gtk.STOCK_ADD)
-        add_link_menu_item.set_label("Add as library (link)")
-        add_link_menu_item.connect("activate", partial(self.insert_button_clicked, as_template=False))
-        add_link_menu_item.set_always_show_image(True)
 
-        add_template_menu_item = gtk.ImageMenuItem(gtk.STOCK_COPY)
-        add_template_menu_item.set_label("Add as template (copy)")
-        add_template_menu_item.connect("activate", partial(self.insert_button_clicked, as_template=True))
-        add_template_menu_item.set_always_show_image(True)
-
-        open_menu_item = gtk.ImageMenuItem(gtk.STOCK_OPEN)
-        open_menu_item.set_label("Open")
-        open_menu_item.connect("activate", self.open_button_clicked)
-        open_menu_item.set_always_show_image(True)
-
-        open_run_menu_item = gtk.ImageMenuItem(gtk.STOCK_MEDIA_PLAY)
-        open_run_menu_item.set_label("Open and run")
-        open_run_menu_item.connect("activate", self.open_run_button_clicked)
-        open_run_menu_item.set_always_show_image(True)
-
-        menu.append(add_link_menu_item)
-        menu.append(add_template_menu_item)
+        menu.append(create_image_menu_item("Add as library (link)", constants.BUTTON_ADD,
+                                           partial(self.insert_button_clicked, as_template=False)))
+        menu.append(create_image_menu_item("Add as template (copy)", constants.BUTTON_COPY,
+                                           partial(self.insert_button_clicked, as_template=True)))
         menu.append(gtk.SeparatorMenuItem())
-        menu.append(open_menu_item)
-        menu.append(open_run_menu_item)
-
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_REFRESH)
-        menu_item.set_label("Substitute as library")
-        menu_item.connect("activate", self.substitute_as_library_clicked)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_REFRESH)
-        menu_item.set_label("Substitute as template")
-        menu_item.connect("activate", self.substitute_as_template_clicked)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
+        menu.append(create_image_menu_item("Open", constants.BUTTON_OPEN, self.open_button_clicked))
+        menu.append(create_image_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
+        menu.append(gtk.SeparatorMenuItem())
+        menu.append(create_image_menu_item("Substitute as library", constants.BUTTON_REFR,
+                                           self.substitute_as_library_clicked))
+        menu.append(create_image_menu_item("Substitute as template", constants.BUTTON_REFR,
+                                           self.substitute_as_template_clicked))
 
         return menu
 

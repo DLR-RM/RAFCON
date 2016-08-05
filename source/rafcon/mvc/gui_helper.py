@@ -62,6 +62,16 @@ def create_label_widget_with_icon(icon, text):
     return hbox
 
 
+def create_image_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=()):
+        menu_item = gtk.ImageMenuItem()
+        menu_item.set_image(create_label_widget_with_icon(icon_code, ""))
+        menu_item.set_label(label_text)
+        if callback is not None:
+            menu_item.connect("activate", callback, *callback_args)
+        menu_item.set_always_show_image(True)
+        return menu_item
+
+
 def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
     """Create a button label with a chosen icon.
 

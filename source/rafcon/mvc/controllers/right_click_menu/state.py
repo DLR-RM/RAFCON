@@ -11,7 +11,7 @@
 import gtk
 
 from rafcon.mvc.utils import constants
-from rafcon.mvc.gui_helper import set_label_markup
+from rafcon.mvc.gui_helper import create_image_menu_item
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 
@@ -21,6 +21,7 @@ logger = log.get_logger(__name__)
 
 
 class StateMachineRightClickMenu:
+
     def __init__(self, state_machine_manager_model=None):
         if state_machine_manager_model is None:
             from rafcon.mvc.singleton import state_machine_manager_model
@@ -32,71 +33,19 @@ class StateMachineRightClickMenu:
     def generate_right_click_menu(self):
         menu = gtk.Menu()
 
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_COPY)
-        # label = gtk.Label("Copy selection")
-        # set_label_markup(label, '&#x' + constants.BUTTON_COPY + ';',
-        #                  font=constants.ICON_FONT, font_size=constants.FONT_SIZE_BIG)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_COPY)
-        menu_item.set_label("Copy selection")
-        menu_item.connect("activate", self.on_copy_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_PASTE)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_PASTE)
-        menu_item.set_label("Paste Selection")
-        menu_item.connect("activate", self.on_paste_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_CUT)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_CUT)
-        menu_item.set_label("Cut selection")
-        menu_item.connect("activate", self.on_cut_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_GROUP)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_LEAVE_FULLSCREEN)
-        menu_item.set_label("Group states")
-        menu_item.connect("activate", self.on_group_states_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_UNGR)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_FULLSCREEN)
-        menu_item.set_label("Ungroup state")
-        menu_item.connect("activate", self.on_ungroup_state_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_GROUP)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_GO_DOWN)
-        menu_item.set_label("Run from here")
-        menu_item.connect("activate", self.on_run_from_selected_state_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_UNGR)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_GO_UP)
-        menu_item.set_label("Stop here")
-        menu_item.connect("activate", self.on_run_to_selected_state_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_UNGR)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_GO_FORWARD)
-        menu_item.set_label("Save state as state machine")
-        menu_item.connect("activate", self.on_save_state_as_state_machine_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_UNGR)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_REFRESH)
-        menu_item.set_label("Substitute state")
-        menu_item.connect("activate", self.on_substitute_state_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
+        menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate))
+        menu.append(create_image_menu_item("Paste selection", constants.BUTTON_PASTE, self.on_paste_activate))
+        menu.append(create_image_menu_item("Cut selection", constants.BUTTON_CUT, self.on_cut_activate))
+        menu.append(create_image_menu_item("Group states", constants.BUTTON_GROUP, self.on_group_states_activate))
+        menu.append(create_image_menu_item("Ungroup states", constants.BUTTON_UNGR, self.on_ungroup_state_activate))
+        menu.append(create_image_menu_item("Run from here", constants.BUTTON_START_FROM_SELECTED_STATE,
+                                           self.on_run_from_selected_state_activate))
+        menu.append(create_image_menu_item("Stop here", constants.BUTTON_RUN_TO_SELECTED_STATE,
+                                           self.on_run_to_selected_state_activate))
+        menu.append(create_image_menu_item("Save state as state machine", constants.BUTTON_SAVE,
+                                           self.on_save_state_as_state_machine_activate))
+        menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
+                                           self.on_substitute_state_activate))
 
         return menu
 
