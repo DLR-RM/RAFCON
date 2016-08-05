@@ -48,15 +48,15 @@ class StateSubstituteChooseLibraryDialog(RAFCONDialog):
 
     def __init__(self, model, width=500, height=500, pos=None, parent=None):
         self.model = model
-        button_texts = ['As library', 'As template', 'Cancel']
+
+        super(StateSubstituteChooseLibraryDialog, self).__init__(gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, gtk.DIALOG_MODAL, parent)
         self.set_title('Library choose dialog')
         self.resize(width=width, height=height)
         if pos is not None:
             self.set_position(pos)
+        self.set_markup("Choose a Library to substitute the state with.")
 
-        markup_text = "Choose a Library to substitute the state with."
-        super(StateSubstituteChooseLibraryDialog, self).__init__(gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, gtk.DIALOG_MODAL, parent)
-        self.set_markup(markup_text)
+        button_texts = ['As library', 'As template', 'Cancel']
         for button_text, option in zip(button_texts, ButtonDialog):
             self.add_button(button_text, option.value)
         self.finalize(self.check_for_library_path)
