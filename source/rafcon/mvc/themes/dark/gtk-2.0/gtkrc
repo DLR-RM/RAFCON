@@ -79,6 +79,12 @@ style "basic_layout"
 
     GtkCheckMenuItem::indicator-size             = 20
 
+    GtkSeparatorMenuItem::horizontal-padding     = 5
+    GtkSeparatorMenuItem::vertical-padding       = 5
+    GtkSeparatorMenuItem::separator-width        = 1
+    GtkSeparatorMenuItem::separator-height       = 1
+    GtkSeparatorMenuItem::wide-separators        = 1
+
     GtkOptionMenu::indicator-size                = {20, 20}
     GtkOptionMenu::indicator-spacing             = {10, 10, 10, 10}
 
