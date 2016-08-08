@@ -303,9 +303,11 @@ class ContainerStateModel(StateModel):
                 tmp_meta_data = self.change_state_type.__func__.tmp_meta_data_storage
                 self.states[state_id].meta = tmp_meta_data['state']
                 for t_id, t_meta in tmp_meta_data['transitions'].iteritems():
-                    self.get_transition_m(t_id).meta = t_meta
+                    if self.get_transition_m(t_id) is not None:
+                        self.get_transition_m(t_id).meta = t_meta
                 for df_id, df_meta in tmp_meta_data['data_flows'].iteritems():
-                    self.get_data_flow_m(df_id).meta = df_meta
+                    if self.get_data_flow_m(df_id) is not None:
+                        self.get_data_flow_m(df_id).meta = df_meta
                 # TODO may refactor the signal to avoid this miss-use
                 self.state_type_changed_signal.emit(StateTypeChangeSignalMsg(self))
 
