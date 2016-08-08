@@ -43,11 +43,6 @@ def setup_module(module):
     library_paths["generic"] = rafcon.__path__[0] + "/../libraries/generic"
 
 
-def wait_for_gui():
-    while gtk.events_pending():
-        gtk.main_iteration(False)
-
-
 def create_models(*args, **kargs):
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
@@ -118,7 +113,7 @@ def select_and_paste_state(state_machine_model, source_state_model, target_state
     main_window_controller.view['main_window'].grab_focus()
     focus_graphical_editor_in_page(page)
     call_gui_callback(menu_bar_ctrl.on_paste_clipboard_activate, None, None)
-    wait_for_gui()
+    testing_utils.wait_for_gui()
     print target_state_model.state.states.keys()
     assert len(target_state_model.state.states) == old_child_state_count + 1
     return target_state_model, old_child_state_count
@@ -166,7 +161,7 @@ def trigger_gui_signals(*args):
     assert len(sm_manager_model.state_machines) == current_sm_length + 2
 
     sm_m = sm_manager_model.state_machines[first_sm_id + 2]
-    wait_for_gui()
+    testing_utils.wait_for_gui()
     # MAIN_WINDOW NEEDS TO BE FOCUSED (for global input focus) TO OPERATE PASTE IN GRAPHICAL VIEWER
     main_window_controller.view['main_window'].grab_focus()
     sm_manager_model.selected_state_machine_id = first_sm_id + 2
@@ -174,7 +169,7 @@ def trigger_gui_signals(*args):
     page_id = state_machines_ctrl.get_page_id(first_sm_id + 2)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
     focus_graphical_editor_in_page(page)
-    wait_for_gui()
+    testing_utils.wait_for_gui()
 
     #########################################################
     print "select & copy an execution state -> and paste it somewhere"
@@ -257,7 +252,7 @@ def test_gui(caplog):
                                                   editor_type='LogicDataGrouped')
 
     # Wait for GUI to initialize
-    wait_for_gui()
+    testing_utils.wait_for_gui()
 
     thread = threading.Thread(target=trigger_gui_signals, args=[testing_utils.sm_manager_model, main_window_controller])
     thread.start()

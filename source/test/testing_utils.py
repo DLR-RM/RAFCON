@@ -108,4 +108,10 @@ def start_rafcon():
     rafcon.statemachine.singleton.library_manager.initialize()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
 
+
+def wait_for_gui():
+    import gtk
+    while gtk.events_pending():
+        gtk.main_iteration(False)
+
 sm_manager_model = None
