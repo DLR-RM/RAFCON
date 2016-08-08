@@ -324,3 +324,18 @@ class PortRectConstraint(Constraint):
             _update(px, nw_x)
         elif self._port.side == SnappedSide.TOP:
             _update(py, nw_y)
+
+
+class BorderWidthConstraint(Constraint):
+    def __init__(self, north_west, south_east, border_width, factor):
+        super(BorderWidthConstraint, self).__init__(north_west[0], north_west[1], south_east[0], south_east[1])
+
+        self.nw = north_west
+        self.se = south_east
+        self.border_width = border_width
+        self.factor = factor
+
+    def solve_for(self, var=None):
+        width = float(self.se.x) - float(self.nw.x)
+        height = float(self.se.y) - float(self.nw.y)
+        _update(self.border_width, min(width, height) / self.factor)
