@@ -176,11 +176,11 @@ def add_new_state(state_machine_m, state_type):
     if state_type not in list(StateType):
         state_type = StateType.EXECUTION
 
-    selection = state_machine_m.selection.get_all()
-    if not selection:
-        logger.warn("Please select the desired parent state, before adding a new state")
+    selected_state_models = state_machine_m.selection.get_states()
+    if not selected_state_models or len(selected_state_models) != 1:
+        logger.warn("Please select exactly one desired parent state, before adding a new state")
         return
-    model = selection[0]
+    model = selected_state_models[0]
 
     if isinstance(model, StateModel):
         return add_state(model, state_type)
