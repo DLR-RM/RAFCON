@@ -57,6 +57,9 @@ class StateView(Element):
         self._moving = False
         self._transparent = False
 
+        self._view = None
+        self._parent = None
+
         self.__symbol_size_cache = {}
         self._image_cache = ImageCache()
 
@@ -81,11 +84,17 @@ class StateView(Element):
 
     @property
     def selected(self):
-        return self in self.canvas.get_first_view().selected_items
+        return self in self.view.selected_items
 
     @property
     def hovered(self):
-        return self is self.canvas.get_first_view().hovered_item
+        return self is self.view.hovered_item
+
+    @property
+    def view(self):
+        if not self._view:
+            self._view = self.canvas.get_first_view()
+        return self._view
 
     def setup_canvas(self):
         self._income = self.add_income()
@@ -220,9 +229,11 @@ class StateView(Element):
 
     @property
     def parent(self):
-        if self.canvas:
-            return self.canvas.get_parent(self)
-        return None
+        if not self._parent:
+            if not self.canvas:
+                return None
+            self._parent = self.canvas.get_parent(self)
+        return self._parent
 
     @property
     def corner_handles(self):
@@ -331,8 +342,10 @@ class StateView(Element):
         if self.moving and self.parent and self.parent.moving:
             return
 
-        view = self.canvas.get_first_view()
-        view_width, view_height = view.get_matrix_i2v(self).transform_distance(self.width, self.height)
+        width = self.width
+        height = self.height
+        border_width = self.border_width
+        view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
         if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY and self.parent:
             return
 
@@ -342,13 +355,13 @@ class StateView(Element):
             'execution_state':  self.model.state.state_execution_status,
             'selected': self.selected,
             'moving': self.moving,
-            'border_width': self.border_width,
+            'border_width': border_width,
             'transparent': self._transparent
         }
 
         upper_left_corner = (nw.x.value, nw.y.value)
-        current_zoom = self.canvas.get_first_view().get_zoom_factor()
-        from_cache, image, zoom = self._image_cache.get_cached_image(self.width, self.height, current_zoom, parameters)
+        current_zoom = self.view.get_zoom_factor()
+        from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters)
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
@@ -360,9 +373,9 @@ class StateView(Element):
             # print "draw state"
             c = self._image_cache.get_context_for_image(current_zoom)
             multiplicator = self._image_cache.multiplicator
-            default_line_width = self.border_width / constants.BORDER_WIDTH_OUTLINE_WIDTH_FACTOR * multiplicator
+            default_line_width = border_width / constants.BORDER_WIDTH_OUTLINE_WIDTH_FACTOR * multiplicator
 
-            c.rectangle(nw.x, nw.y, self.width, self.height)
+            c.rectangle(nw.x, nw.y, width, height)
 
             state_background_color = gui_config.gtk_colors['STATE_BACKGROUND']
             state_border_color = gui_config.gtk_colors['STATE_BORDER']
@@ -412,13 +425,13 @@ class StateView(Element):
             scoped_variable_v.draw(context, self)
 
         if isinstance(self.model, LibraryStateModel) and not self.moving:
-            max_width = self.width / 2.
-            max_height = self.height / 2.
+            max_width = width / 2.
+            max_height = height / 2.
             self._draw_symbol(context, constants.SIGN_LIB, True, (max_width, max_height))
 
         if self.moving:
-            max_width = self.width - 2 * self.border_width
-            max_height = self.height - 2 * self.border_width
+            max_width = width - 2 * border_width
+            max_height = height - 2 * border_width
             self._draw_symbol(context, constants.SIGN_ARROW, False, (max_width, max_height))
 
     def _draw_symbol(self, context, symbol, is_library_state, max_size):
@@ -774,6 +787,8 @@ class NameView(Element):
 
         self.moving = False
 
+        self._view = None
+
         self._image_cache = ImageCache(multiplicator=1.5)
         self._value_cache = ValueCache()
 
@@ -806,6 +821,12 @@ class NameView(Element):
     def position(self, pos):
         self.matrix = Matrix(x0=pos[0], y0=pos[1])
 
+    @property
+    def view(self):
+        if not self._view:
+            self._view = self.canvas.get_first_view()
+        return self._view
+
     def apply_meta_data(self):
         name_meta = self.parent.model.meta['gui']['editor_gaphas']['name']
         # logger.info("name rel_pos {}".format(name_meta['rel_pos']))
@@ -818,8 +839,9 @@ class NameView(Element):
         if self.moving:
             return
 
-        view = self.canvas.get_first_view()
-        view_width, view_height = view.get_matrix_i2v(self).transform_distance(self.width, self.height)
+        width = self.width
+        height = self.height
+        view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
         if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY:
             return
 
@@ -830,9 +852,8 @@ class NameView(Element):
         }
 
         upper_left_corner = (0, 0)
-        current_zoom = self.canvas.get_first_view().get_zoom_factor()
-        from_cache, image, zoom = self._image_cache.get_cached_image(self.width, self.height,
-                                                                     current_zoom, parameters)
+        current_zoom = self.view.get_zoom_factor()
+        from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
             # print "from cache"
@@ -844,7 +865,7 @@ class NameView(Element):
             c = self._image_cache.get_context_for_image(current_zoom)
 
             if context.selected:
-                c.rectangle(0, 0, self.width, self.height)
+                c.rectangle(0, 0, width, height)
                 c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], alpha=.1))
                 c.fill_preserve()
                 c.set_source_rgba(0, 0, 0, 0)
@@ -854,7 +875,7 @@ class NameView(Element):
 
             layout = c.create_layout()
             layout.set_wrap(WRAP_WORD)
-            layout.set_width(int(self.width) * SCALE)
+            layout.set_width(int(width) * SCALE)
             layout.set_text(self.name)
 
             def set_font_description(font_size):
@@ -863,15 +884,15 @@ class NameView(Element):
 
             font_name = constants.INTERFACE_FONT
 
-            font_size_parameters = {"text": self.name, "width": self.width, "height": self.height}
+            font_size_parameters = {"text": self.name, "width": width, "height": height}
             font_size = self._value_cache.get_value("font_size", font_size_parameters)
 
             if font_size:
                 set_font_description(font_size)
             else:
-                font_size = self.height * 0.8
+                font_size = height * 0.8
                 set_font_description(font_size)
-                pango_size = (self.width * SCALE, self.height * SCALE)
+                pango_size = (width * SCALE, height * SCALE)
                 while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
                     font_size *= 0.9
                     set_font_description(font_size)

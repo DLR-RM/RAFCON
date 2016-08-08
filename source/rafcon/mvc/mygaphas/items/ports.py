@@ -34,6 +34,7 @@ class PortView(object):
         self.direction = None
         self.side = side
         self._parent = parent
+        self._view = None
 
         self._draw_connection_to_port = False
 
@@ -105,6 +106,12 @@ class PortView(object):
     @property
     def port_size(self):
         return self.port_side_size / 1.5, self.port_side_size
+
+    @property
+    def view(self):
+        if not self._view:
+            self._view = self._parent.canvas.get_first_view()
+        return self._view
 
     def has_outgoing_connection(self):
         return len(self._outgoing_handles) > 0

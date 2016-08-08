@@ -36,6 +36,10 @@ class PerpLine(Line):
         self._arrow_color = None
         self._line_color = None
 
+        self._parent = None
+        self._parent_state_v = None
+        self._view = None
+
         self._label_image_cache = ImageCache()
         self._last_label_size = 0, 0
 
@@ -55,7 +59,9 @@ class PerpLine(Line):
 
     @property
     def parent(self):
-        return self.canvas.get_parent(self)
+        if not self._parent:
+            self._parent = self.canvas.get_parent(self)
+        return self._parent
 
     @property
     def from_port(self):
@@ -86,6 +92,12 @@ class PerpLine(Line):
                                                                   lambda: self._head_length(self.to_port),
                                                                   self.is_in_port(port))
             self.canvas.solver.add_constraint(self._to_port_constraint)
+
+    @property
+    def view(self):
+        if not self._view:
+            self._view = self.canvas.get_first_view()
+        return self._view
 
     def end_handles_perp(self):
         end_handles = [self.from_handle(), self.to_handle()]
@@ -134,9 +146,11 @@ class PerpLine(Line):
     def get_parent_state_v(self):
         if not self.from_port:
             return None
-        if isinstance(self.from_port, (IncomeView, InputPortView, ScopedVariablePortView)):
-            return self.from_port.parent
-        return self.from_port.parent.parent
+        if not self._parent_state_v:
+            if isinstance(self.from_port, (IncomeView, InputPortView, ScopedVariablePortView)):
+                return self.from_port.parent
+            self._parent_state_v = self.from_port.parent.parent
+        return self._parent_state_v
 
     def draw_head(self, context, port):
         length = self._head_length(port)
@@ -159,8 +173,7 @@ class PerpLine(Line):
         cr.stroke()
 
     def draw(self, context):
-        parent = self.parent
-        if parent and parent.moving:
+        if self.parent and self.parent.moving:
             return
 
         def draw_line_end(pos, angle, port, draw):
@@ -220,7 +233,7 @@ class PerpLine(Line):
         }
 
         upper_left_corner = cx, cy
-        current_zoom = self.canvas.get_first_view().get_zoom_factor()
+        current_zoom = self.view.get_zoom_factor()
         from_cache, image, zoom = self._label_image_cache.get_cached_image(self._last_label_size[0],
                                                                            self._last_label_size[1],
                                                                            current_zoom, parameters)
