@@ -382,11 +382,14 @@ class StateMachinesEditorController(ExtendedController):
 
         notebook = self.view['notebook']
         active_state_machine_id = self.state_machine_manager_model.state_machine_manager.active_state_machine_id
-        page = self.get_page_for_state_machine_id(active_state_machine_id)
-
-        if page is None:
-            # logger.warning("No state machine open {0}".format(page_num))
+        if active_state_machine_id is None:
             return
+        else:
+            page = self.get_page_for_state_machine_id(active_state_machine_id)
+            if page is None:
+                # logger.warning("No state machine open {0}".format(page_num))
+                return
+
         label = notebook.get_tab_label(page).get_children()[0]
         if active:
             draw_for_all_gtk_states(label,
