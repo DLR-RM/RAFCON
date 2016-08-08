@@ -42,7 +42,7 @@ def setup_module(module):
 
 
 @log.log_exceptions(None, gtk_quit=True)
-def trigger_gui_signals(*args):
+def trigger_copy_delete_bug_signals(*args):
     """The function triggers and test basic functions of the menu bar.
 
     At the moment those functions are tested:
@@ -106,7 +106,7 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-def test_gui(caplog):
+def test_copy_delete_bug(caplog):
     testing_utils.start_rafcon()
     testing_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
@@ -126,7 +126,7 @@ def test_gui(caplog):
     # Wait for GUI to initialize
     testing_utils.wait_for_gui()
 
-    thread = threading.Thread(target=trigger_gui_signals, args=[testing_utils.sm_manager_model, main_window_controller])
+    thread = threading.Thread(target=trigger_copy_delete_bug_signals, args=[testing_utils.sm_manager_model, main_window_controller])
     thread.start()
     gtk.main()
     logger.debug("after gtk main")
