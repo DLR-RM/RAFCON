@@ -6,11 +6,12 @@ import cairo
 from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
 from gaphas.matrix import Matrix
+from gaphas.solver import Variable
 
 from rafcon.statemachine.enums import StateExecutionState
 
 from rafcon.mvc.mygaphas.canvas import ItemProjection
-from rafcon.mvc.mygaphas.constraint import KeepRectangleWithinConstraint, PortRectConstraint
+from rafcon.mvc.mygaphas.constraint import KeepRectangleWithinConstraint, PortRectConstraint, BorderWidthConstraint
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedVariablePortView
 from rafcon.mvc.mygaphas.items.connection import TransitionView
@@ -72,6 +73,11 @@ class StateView(Element):
             name_meta['rel_pos'] = (0, 0)
         name_pos = name_meta['rel_pos']
         self.name_view.matrix.translate(*name_pos)
+
+        self._border_width = Variable(min(self.width, self.height) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
+        border_width_constraint = BorderWidthConstraint(self._handles[NW].pos, self._handles[SE].pos,
+                                                        self._border_width, constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
+        self._constraints.append(border_width_constraint)
 
     @property
     def selected(self):
@@ -150,6 +156,8 @@ class StateView(Element):
             if isinstance(child, NameView):
                 self.canvas.remove(child)
         self.remove_keep_rect_within_constraint_from_parent()
+        for constraint in self._constraints:
+            self.canvas.solver.remove_constraint(constraint)
         self.canvas.remove(self)
 
     @staticmethod
@@ -208,12 +216,7 @@ class StateView(Element):
 
     @property
     def border_width(self):
-        h = self._handles
-        nw_pos = h[NW].pos
-        se_pos = h[SE].pos
-        width = float(se_pos.x) - float(nw_pos.x)
-        height = float(se_pos.y) - float(nw_pos.y)
-        return min(width, height) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
+        return self._border_width.value
 
     @property
     def parent(self):
