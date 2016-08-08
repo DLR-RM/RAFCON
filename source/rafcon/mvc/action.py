@@ -554,8 +554,7 @@ class Action(ModelMT):
         It is a general functionality all Action*-Classes may need.
         :return: g_sm_editor -> the actual graphical viewer for further use
         """
-        import rafcon.mvc.controllers.graphical_editor as graphical_editor_opengl
-        import rafcon.mvc.controllers.graphical_editor_gaphas as graphical_editor_gaphas
+
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
         mw_ctrl = mvc_singleton.main_window_controller
         g_sm_editor = None
@@ -565,8 +564,12 @@ class Action(ModelMT):
                                                          with_print=False)
 
         # We are only interested in OpenGL editors, not Gaphas ones
-        if g_sm_editor and isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
-            g_sm_editor.suspend_drawing = True
+        try:
+            import rafcon.mvc.controllers.graphical_editor as graphical_editor_opengl
+            if g_sm_editor and isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
+                g_sm_editor.suspend_drawing = True
+        except ImportError as e:
+            logger.debug("OpenGL-Graphical-Editor can not be imported: {0}".format(e))
 
         return g_sm_editor
 
@@ -575,14 +578,22 @@ class Action(ModelMT):
         """ Enables and re-initiate graphical viewer's drawing process.
         :param g_sm_editor: graphical state machine editor
         """
-        import rafcon.mvc.controllers.graphical_editor as graphical_editor_opengl
-        import rafcon.mvc.controllers.graphical_editor_gaphas as graphical_editor_gaphas
-        if g_sm_editor and isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
-            g_sm_editor.suspend_drawing = False
-            # TODO integrate meta-data affects_children status
-            responsible_m.meta_signal.emit(MetaSignalMsg("undo_redo_action", "all", True))
-        if g_sm_editor and isinstance(g_sm_editor, graphical_editor_gaphas.GraphicalEditorController):
-            g_sm_editor.manual_notify_after(responsible_m)
+
+        try:
+            import rafcon.mvc.controllers.graphical_editor as graphical_editor_opengl
+            if g_sm_editor and isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
+                g_sm_editor.suspend_drawing = False
+                # TODO integrate meta-data affects_children status
+                responsible_m.meta_signal.emit(MetaSignalMsg("undo_redo_action", "all", True))
+        except ImportError as e:
+            logger.debug("OpenGL-Graphical-Editor can not be imported: {0}".format(e))
+
+        try:
+            import rafcon.mvc.controllers.graphical_editor_gaphas as graphical_editor_gaphas
+            if g_sm_editor and isinstance(g_sm_editor, graphical_editor_gaphas.GraphicalEditorController):
+                g_sm_editor.manual_notify_after(responsible_m)
+        except ImportError as e:
+            logger.debug("Gaphas-Graphical-Editor can not be imported: {0}".format(e))
 
     def redo(self):
         """ General Redo, that takes all elements in the parent path state stored of the before action state machine status.
