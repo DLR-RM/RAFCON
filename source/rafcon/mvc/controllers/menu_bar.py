@@ -100,7 +100,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('paste_clipboard', 'activate', self.on_paste_clipboard_activate)
         self.connect_button_to_function('delete', 'activate', self.on_delete_activate)
         self.connect_button_to_function('add_state', 'activate', self.on_add_state_activate)
-        self.connect_button_to_function('group_states', 'activate', self.on_add_state_activate)
+        self.connect_button_to_function('group_states', 'activate', self.on_group_state_activate)
         self.connect_button_to_function('ungroup_state', 'activate', self.on_ungroup_state_activate)
         self.connect_button_to_function('substitute_state', 'activate', self.on_substitute_selected_state_activate)
         self.connect_button_to_function('undo', 'activate', self.on_undo_activate)
