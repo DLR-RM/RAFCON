@@ -258,3 +258,40 @@ class LibraryManager(Observable):
         # the user for the correct path
         self._replaced_libraries[original_path_and_name] = (path, library_path, regularly_found)
         return path, library_path, library_name
+
+    def is_library_in_libraries(self, library_path, library_name):
+        library_path_elements = library_path.split('/')
+        sub_library = self.libraries
+        for path_element in library_path_elements:
+            if path_element in sub_library:
+                sub_library = sub_library[path_element]
+            else:
+                return False
+        if library_name in sub_library:
+            return True
+        else:
+            return False
+
+    def is_os_path_in_library_paths(self, os_path):
+        return any([root_path == os_path[:len(root_path)] for root_path in self._library_paths.values()])
+
+    def get_library_path_and_name_for_os_path(self, path):
+        library_path = None
+        library_name = None
+        if self.is_os_path_in_library_paths(path):
+            for key, root_path in self._library_paths.iteritems():
+                if len(root_path) <= len(path) and root_path == path[:len(root_path)]:
+                    library_root_path = root_path
+                    library_root_name = key
+                    path_elements_without_library_root = path[len(library_root_path)+1:].split('/')
+                    library_name = path_elements_without_library_root[-1]
+                    library_path = library_root_name + '/'.join(path_elements_without_library_root[:-1])
+                    break
+        return library_path, library_name
+
+    def get_library_instance(self, library_path, library_name):
+        if self.is_library_in_libraries(library_path, library_name):
+            from rafcon.statemachine.states.library_state import LibraryState
+            return LibraryState(library_path, library_name, "0.1")
+        else:
+            logger.warning("Library manager will not create a library instance which is not in the mounted libraries.")

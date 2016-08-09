@@ -87,6 +87,9 @@ class LibraryState(State):
         if not str(lib_version) == version and not str(lib_version) == "None":
             raise AttributeError("Library does not have the correct version!")
 
+        if name is None:
+            self.name = state_machine.root_state.name
+
         # copy all ports and outcomes of self.state_copy to let the library state appear like the container state
         # this will also set the parent of all outcomes and data ports to self
         self.outcomes = self.state_copy.outcomes
