@@ -19,6 +19,7 @@ from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
+import rafcon
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
@@ -131,6 +132,11 @@ class State(Observable, YAMLObject, JSONObject):
 
     @classmethod
     def from_dict(cls, dictionary):
+        """ An abstract method each state has to implement.
+
+        :param dictionary: the dictionary of parameters a state can be created from
+        :raises exceptions.NotImplementedError: in any case
+        """
         raise NotImplementedError()
 
     @staticmethod
@@ -186,7 +192,7 @@ class State(Observable, YAMLObject, JSONObject):
     def setup_run(self):
         """ Executes a generic set of actions that has to be called in the run methods of each derived state class.
 
-        :return:
+        :raises exceptions.TypeError: if the input or output data are not of type dict
         """
         self.state_execution_status = StateExecutionState.ACTIVE
         self.preempted = False
@@ -203,7 +209,7 @@ class State(Observable, YAMLObject, JSONObject):
     def run(self, *args, **kwargs):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
 
-        TODO: Should be filled with code, that should be executed for each state derivative
+        :raises exceptions.NotImplementedError: in any case
         """
         raise NotImplementedError("The State.run() function has to be implemented!")
 
@@ -290,13 +296,14 @@ class State(Observable, YAMLObject, JSONObject):
 
     @Observable.observed
     def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
-        """Add a new input data port to the state
+        """Add a new input data port to the state.
 
         :param name: the name of the new input data port
         :param data_type: the type of the new input data port
         :param default_value: the default value of the data port
         :param data_port_id: the data_port_id of the new data port
         :return: data_port_id of new input data port
+        :raises exceptions.ValueError: if name of the input port is not unique
         """
         if data_port_id is None:
             # All data port ids have to passed to the id generation as the data port id has to be unique inside a state
@@ -316,7 +323,8 @@ class State(Observable, YAMLObject, JSONObject):
         """Remove an input data port from the state
 
         :param data_port_id: the id or the output data port to remove
-
+        :param bool force: if the removal should be forced without checking contraints
+        :raises exceptions.AttributeError: if the specified input data port does not exist
         """
         if data_port_id in self._input_data_ports:
             self.remove_data_flows_with_data_port_id(data_port_id)
@@ -351,6 +359,7 @@ class State(Observable, YAMLObject, JSONObject):
         :param default_value: the default value of the data port
         :param data_port_id: the data_port_id of the new data port
         :return: data_port_id of new output data port
+        :raises exceptions.ValueError: if name of the output port is not unique
         """
         if data_port_id is None:
             # All data port ids have to passed to the id generation as the data port id has to be unique inside a state
@@ -370,7 +379,7 @@ class State(Observable, YAMLObject, JSONObject):
         """Remove an output data port from the state
 
         :param data_port_id: the id of the output data port to remove
-
+        :raises exceptions.AttributeError: if the specified input data port does not exist
         """
         if data_port_id in self._output_data_ports:
             self.remove_data_flows_with_data_port_id(data_port_id)
@@ -384,6 +393,7 @@ class State(Observable, YAMLObject, JSONObject):
         :param name: the name of the target data_port
         :param data_port_type: the data port type of the target data port
         :return: the data port specified by the name and the type
+        :raises exceptions.AttributeError: if the specified data port does not exist in the input or output data ports
         """
         if data_port_type is DataPortType.INPUT:
             for ip_id, output_port in self.input_data_ports.iteritems():
@@ -508,7 +518,8 @@ class State(Observable, YAMLObject, JSONObject):
         """Remove an outcome from the state
 
         :param outcome_id: the id of the outcome to remove
-
+        :raises exceptions.AttributeError: if the specified outcome does not exist or
+                                            equals the aborted or preempted outcome
         """
         if outcome_id not in self.outcomes:
             raise AttributeError("There is no outcome_id %s" % str(outcome_id))
@@ -649,6 +660,7 @@ class State(Observable, YAMLObject, JSONObject):
         """Check the input data types of the state
 
         :param input_data: the input_data dictionary to check
+        :raises exceptions.TypeError: if the data of one of the input data ports is not of the specified type
         """
         for input_data_port_key, data_port in self.input_data_ports.iteritems():
             if input_data_port_key in input_data:
@@ -662,6 +674,7 @@ class State(Observable, YAMLObject, JSONObject):
     def check_output_data_type(self):
         """Check the output data types of the state
 
+        :raises exceptions.TypeError: if the data of one of the output data ports is not of the specified type
         """
         for output_port_id, output_port in self.output_data_ports.iteritems():
             if hasattr(self.output_data, output_port.name) and self.output_data[output_port.name] is not None:
@@ -669,7 +682,7 @@ class State(Observable, YAMLObject, JSONObject):
                 if not str(type(self.output_data[output_port.name]).__name__) == output_port.data_type:
                     #check for classes
                     if not isinstance(self.output_data[output_port.name], getattr(sys.modules[__name__], output_port.data_type)):
-                        raise TypeError("Input of execute function must be of type %s" % str(output_port.data_type))
+                        raise TypeError("Output of execute function must be of type %s" % str(output_port.data_type))
 
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- misc functions ---------------------------------------
@@ -776,7 +789,7 @@ class State(Observable, YAMLObject, JSONObject):
         The method does check validity of the elements by calling the parent-setter and in case of failure cancel
         the operation and recover old _input_data_ports.
 
-        :return: Dictionary input_data_ports[data_port_id] of :class:`rafcon.statemachine.data_port.InputDataPort`
+        :return: Dictionary input_data_ports[data_port_id] of :class:`rafcon.statemachine.state_elements.data_port.InputDataPort`
         :rtype: dict
         """
         return self._input_data_ports
@@ -784,13 +797,13 @@ class State(Observable, YAMLObject, JSONObject):
     @input_data_ports.setter
     @Observable.observed
     def input_data_ports(self, input_data_ports):
-        """ Setter for _input_data_ports field
+        """Property for the _input_data_ports field
 
-        The method substitute State._input_data_ports with dictionary input_data_ports. The method checks if the
-        elements are of the right type and the keys consistent. The method does check validity of the elements
-        by calling the parent-setter and in case of failure cancel the operation and recover old _input_data_ports.
+        See Property.
 
-        :param dict input_data_ports: Dictionary of :class:`rafcon.statemachine.data_port.InputDataPort`
+        :param dict input_data_ports: Dictionary of :class:`rafcon.statemachine.state_elements.data_port.InputDataPort`
+        :raises exceptions.TypeError: if the input_data_ports parameter has the wrong type
+        :raises exceptions.AttributeError: if the key of the input dictionary and the id of the data port do not match
         """
         if not isinstance(input_data_ports, dict):
             raise TypeError("input_data_ports must be of type dict")
@@ -825,7 +838,7 @@ class State(Observable, YAMLObject, JSONObject):
         validity of the elements by calling the parent-setter and in case of failure cancel the operation and recover
         old _output_data_ports.
 
-        :return: Dictionary output_data_ports[data_port_id] of :class:`rafcon.statemachine.data_port.OutputDataPort`
+        :return: Dictionary output_data_ports[data_port_id] of :class:`rafcon.statemachine.state_elements.data_port.OutputDataPort`
         :rtype: dict
         """
         return self._output_data_ports
@@ -835,11 +848,11 @@ class State(Observable, YAMLObject, JSONObject):
     def output_data_ports(self, output_data_ports):
         """ Setter for _output_data_ports field
 
-        The method substitute State._output_data_ports with dictionary output_data_ports. The method checks if the
-        elements are of the right type and the keys consistent. The method does check validity of the elements by
-        calling the parent-setter and in case of failure cancel the operation and recover old output_data_ports.
+        See property
 
-        :param Dictionary output_data_ports[data_port_id] of :class:`rafcon.statemachine.data_port.OutputDataPort`
+        :param Dictionary output_data_ports[data_port_id] of :class:`rafcon.statemachine.state_elements.data_port.OutputDataPort`
+        :raises exceptions.TypeError: if the output_data_ports parameter has the wrong type
+        :raises exceptions.AttributeError: if the key of the output dictionary and the id of the data port do not match
         """
         if not isinstance(output_data_ports, dict):
             raise TypeError("output_data_ports must be of type dict")
@@ -869,11 +882,12 @@ class State(Observable, YAMLObject, JSONObject):
     def outcomes(self):
         """Property for the _outcomes field
 
-        The setter-method substitute State._outcomes with a handed dictionary. The method checks if the elements are
-        of the right type and the keys consistent (Outcome.outcome_id==key). The method does check validity of
-        the elements by calling the parent-setter and in case of failure cancel the operation and recover old outcomes.
+        The setter-method substitute State._outcomes with a handed dictionary.
+        The method checks if the elements are of the right type and the keys consistent (Outcome.outcome_id==key).
+        The method does check validity of the elements by calling the parent-setter and in case of failure cancel
+        the operation and recover old outcomes.
 
-        :return: Dictionary outcomes[outcome_id] of :class:`rafcon.statemachine.outcome.Outcome`
+        :return: Dictionary outcomes[outcome_id] of :class:`rafcon.statemachine.state_elements.outcome.Outcome`
         :rtype: dict
         """
         return self._outcomes
@@ -883,18 +897,18 @@ class State(Observable, YAMLObject, JSONObject):
     def outcomes(self, outcomes):
         """ Setter for _outcomes field
 
-        The method substitute State._outcomes with dictionary outcomes. The method checks if the elements are
-        of the right type  and the keys consistent. The method does check validity of the elements by calling the
-        parent-setter and in case of failure cancel the operation and recover old outcomes.
+        See property.
 
-        :param dict outcomes: Dictionary outcomes[outcome_id] of :class:`rafcon.statemachine.outcome.Outcome`
+        :param dict outcomes: Dictionary outcomes[outcome_id] of :class:`rafcon.statemachine.state_elements.outcome.Outcome`
+        :raises exceptions.TypeError: if outcomes parameter has the wrong type
+        :raises exceptions.AttributeError: if the key of the outcome dictionary and the id of the outcome do not match
         """
         if not isinstance(outcomes, dict):
             raise TypeError("outcomes must be of type dict")
         if [outcome_id for outcome_id, outcome in outcomes.iteritems() if not isinstance(outcome, Outcome)]:
             raise TypeError("element of outcomes must be of type Outcome")
         if [outcome_id for outcome_id, outcome in outcomes.iteritems() if not outcome_id == outcome.outcome_id]:
-            raise AttributeError("The key of the input dictionary and the id of the data port do not match")
+            raise AttributeError("The key of the outcomes dictionary and the id of the outcome do not match")
 
         old_outcomes = self.outcomes
         self._outcomes = outcomes

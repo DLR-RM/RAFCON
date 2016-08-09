@@ -88,9 +88,11 @@ class DataFlow(StateElement):
     @Observable.observed
     def modify_origin(self, from_state, from_key):
         """ Set from_state and from_outcome at ones to support fully valid transition modifications.
+
         :param str from_state: valid origin state
         :param int from_key: valid origin outcome
-        :return:
+        :raises exceptions.ValueError: if one the parameters if of wrong type
+        :raises exceptions.RuntimeError: if the data flow could not be changed
         """
         if not isinstance(from_state, basestring):
             raise ValueError("from_state must be of type str")
@@ -139,8 +141,11 @@ class DataFlow(StateElement):
     @Observable.observed
     def modify_target(self, to_state, to_key):
         """ Set to_state and to_key (Data Port) at ones to support fully valid transition modifications.
+
         :param str to_state: valid target state
         :param int to_key: valid target data port
+        :raises exceptions.ValueError: if one the parameters if of wrong type
+        :raises exceptions.RuntimeError: if the data flow could not be changed
         :return:
         """
         if not isinstance(to_state, basestring):

@@ -345,8 +345,8 @@ class StateMachineExecutionEngine(Observable):
                     self.run_to_states.append(parent_path)
 
     def execute_state_machine_from_path(self, state_machine=None, path=None, start_state_path=None, wait_for_execution_finished=True):
-        """
-        A helper function to start an arbitrary state machine at a given path.
+        """ A helper function to start an arbitrary state machine at a given path.
+
         :param path: The path where the state machine resides
         :param start_state_path: The path to the state from which the execution will start
         :return: a reference to the created state machine
@@ -371,11 +371,11 @@ class StateMachineExecutionEngine(Observable):
 
     @Observable.observed
     def set_execution_mode(self, execution_mode, notify=True):
-        """
-        An observed setter for the execution mode of the state machine status. This is necessary for the
+        """ An observed setter for the execution mode of the state machine status. This is necessary for the
         monitoring client to update the local state machine in the same way as the root state machine of the server.
+
         :param execution_mode: the new execution mode of the state machine
-        :return:
+        :raises exceptions.TypeError: if the execution mode is of the wrong type
         """
         if not isinstance(execution_mode, StateMachineExecutionStatus):
             raise TypeError("status must be of type StateMachineStatus")

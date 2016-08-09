@@ -83,6 +83,8 @@ class Script(Observable, yaml.YAMLObject):
 
     def _load_script(self):
         """Loads the script from the filesystem
+
+        :raises exceptions.IOError: if the script file could not be opened
         """
         script_text = filesystem.read_file(self.path, self.filename)
 
@@ -93,6 +95,8 @@ class Script(Observable, yaml.YAMLObject):
 
     def build_module(self):
         """Builds a temporary module from the script file
+
+        :raises exceptions.IOError: if the compilation of the script module failed
         """
         try:
             imp.acquire_lock()

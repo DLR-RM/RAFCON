@@ -41,6 +41,9 @@ class GlobalVariableManager(Observable):
 
         :param key: the key of the global variable to be set
         :param value: the new value of the global variable
+        :param per_reference: a flag to decide if the variable should be stored per reference or per value
+        :param access_key: if the variable was explicitly locked with the  rafcon.state lock_variable
+        :raises exceptions.RuntimeError: if a wrong access key is passed
         """
         self.__dictionary_lock.acquire()
         unlock = True
@@ -73,7 +76,11 @@ class GlobalVariableManager(Observable):
         """Fetches the value of a global variable
 
         :param key: the key of the global variable to be fetched
+        :param bool per_reference: a flag to decide if the variable should be stored per reference or per value
+        :param access_key: if the variable was explicitly locked with the  rafcon.state lock_variable
+        :param default: a value to be returned if the key does not exist
         :return: The value stored at in the global variable key
+        :raises exceptions.RuntimeError: if a wrong access key is passed or the variable cannot be accessd by reference
         """
         if self.variable_exist(key):
             unlock = True
@@ -122,6 +129,7 @@ class GlobalVariableManager(Observable):
         """Deletes a global variable
 
         :param key: the key of the global variable to be deleted
+        :raises exceptions.AttributeError:  if the global variable does not exist
         """
         self.__dictionary_lock.acquire()
         if key in self.__global_variable_dictionary:
@@ -153,6 +161,8 @@ class GlobalVariableManager(Observable):
 
         :param key: the key of the global variable to be unlocked
         :param access_key: the access key to be able to unlock the global variable
+        :raises exceptions.AttributeError: if the global variable does not exist
+        :raises exceptions.RuntimeError: if the wrong access key is passed
         """
         if self.__access_keys[key] == access_key:
             if key in self.__variable_locks:

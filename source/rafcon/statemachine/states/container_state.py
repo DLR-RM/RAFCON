@@ -163,6 +163,7 @@ class ContainerState(State):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
 
         Should be filled with code, that should be executed for each container_state derivative.
+        :raises exceptions.NotImplementedError: in every case
         """
         raise NotImplementedError("The ContainerState.run() function has to be implemented!")
 
@@ -203,11 +204,13 @@ class ContainerState(State):
         self.add_input_data_to_scoped_data(self.input_data)
 
     def handle_no_transition(self, state):
-        """
-        This function handles the case that there is no transition for a specific outcome of a substate. It waits on a
+        """ This function handles the case that there is no transition for a specific outcome of a substate. It waits on a
         condition variable to a new transition that will be connected by the programmer or GUI-user.
+
         :param state: The substate to find a transition for
         :return: The transition for the target state.
+        :raises exceptions.RuntimeError: if the execution engine is stopped
+                                        (this will be caught at the end of the run method)
         """
         transition = None
         while not transition:
@@ -526,7 +529,9 @@ class ContainerState(State):
         """Adds a state to the container state.
 
         :param state: the state that is going to be added
-
+        :param storage_load: True if the state was directly loaded from filesystem
+        :return: the state_id of the new state
+        :raises exceptions.AttributeError: if state.state_id already exist
         """
         assert isinstance(state, State)
         # logger.info("add state {}".format(state))
@@ -557,7 +562,7 @@ class ContainerState(State):
 
         :param state_id: the id of the state to remove
         :param recursive_deletion: a flag to indicate a recursive deletion of all substates
-
+        :raises exceptions.AttributeError: if state.state_id does not
         """
         if state_id not in self.states:
             raise AttributeError("State_id %s does not exist" % state_id)
@@ -687,6 +692,14 @@ class ContainerState(State):
 
     @Observable.observed
     def change_state_type(self, state, new_state_class):
+        """ Changes the type of the state to another type
+
+        :param state: the state to be changed
+        :param new_state_class: the new type of the state
+        :return: the new state having the new state type
+        :rtype: :py:class:`rafcon.statemachine.states.state.State`
+        :raises exceptions.ValueError: if the state does not exist in the container state
+        """
         from rafcon.mvc.state_machine_helper import create_new_state_from_state_with_type
 
         state_id = state.state_id
@@ -721,6 +734,9 @@ class ContainerState(State):
     def get_start_state(self, set_final_outcome=False):
         """Get the start state of the container state
 
+        :param set_final_outcome: if the final_outcome of the state should be set if the income directly connects to
+                                    an outcome
+        :return: the start state
         """
 
         # overwrite the start state in the case that a specific start state is specific e.g. by start_from_state
@@ -755,6 +771,7 @@ class ContainerState(State):
 
         :param transition_id: The transition-id to check
         :return: The new transition id
+        :raises exceptions.AttributeError: if transition.transition_id already exists
         """
         if transition_id is not None:
             if transition_id in self._transitions.iterkeys():
@@ -773,7 +790,8 @@ class ContainerState(State):
 
         :param from_state_id: The source state of the transition
         :param from_outcome: The outcome of the source state to connect the transition to
-        :return:
+        :raises exceptions.AttributeError: if the outcome of the state with the state_id==from_state_id
+                                            is already connected
         """
         for trans_key, transition in self.transitions.iteritems():
             if transition.from_state == from_state_id:
@@ -791,7 +809,8 @@ class ContainerState(State):
         :param to_state_id: The target state of the transition
         :param to_outcome: The target outcome of a container state
         :param transition_id: An optional transition id for the new transition
-        :return:
+        :raises exceptions.AttributeError: if the from or to state is incorrect
+        :return: the id of the new transition
         """
 
         # get correct states
@@ -857,6 +876,7 @@ class ContainerState(State):
         :param state: The state for which the transition is determined
         :param outcome: The outcome of the state, that is given in the first parameter
         :return: the transition specified by the the state and the outcome
+        :raises exceptions.TypeError: if the types of the passed parameters are incorrect
         """
         if not isinstance(state, State):
             raise TypeError("state must be of type State")
@@ -873,7 +893,7 @@ class ContainerState(State):
         """Removes a transition from the container state
 
         :param transition_id: the id of the transition to remove
-
+        :raises exceptions.AttributeError: if the transition_id is already used
         """
         if transition_id == -1 or transition_id == -2:
             raise AttributeError("The transition_id must not be -1 (Aborted) or -2 (Preempted)")
@@ -922,7 +942,7 @@ class ContainerState(State):
         """ Removes a data flow from the container state
 
         :param int data_flow_id: the id of the data_flow to remove
-
+        :raises exceptions.AttributeError: if the data_flow_id does not exist
         """
         if data_flow_id not in self.data_flows:
             raise AttributeError("The data_flow_id %s does not exist" % str(data_flow_id))
@@ -965,11 +985,12 @@ class ContainerState(State):
 
         :param name: the unique name of the scoped variable
         :return: the scoped variable specified by the name
+        :raises exceptions.AttributeError: if the name is not in the the scoped_variables dictionary
         """
         for scoped_variable_id, scoped_variable in self.scoped_variables.iteritems():
             if scoped_variable.name == name:
                 return scoped_variable_id
-        raise AttributeError("Name %s is not in scoped_variables", name)
+        raise AttributeError("Name %s is not in scoped_variables dictionary", name)
 
     @Observable.observed
     def add_scoped_variable(self, name, data_type=None, default_value=None, scoped_variable_id=None):
@@ -980,6 +1001,7 @@ class ContainerState(State):
         :param default_value: An optional default value of the scoped variable
         :param scoped_variable_id: An optional scoped variable id of the
         :return: the unique id of the added scoped variable
+        :raises exceptions.ValueError: if the scoped variable is not valid
         """
         if scoped_variable_id is None:
             # All data port ids have to passed to the id generation as the data port id has to be unique inside a state
@@ -1000,8 +1022,9 @@ class ContainerState(State):
         """Remove a scoped variable from the container state
 
         :param scoped_variable_id: the id of the scoped variable to remove
+        :raises exceptions.AttributeError: if the id of the scoped variable already exists
         """
-        if not scoped_variable_id in self._scoped_variables:
+        if scoped_variable_id not in self._scoped_variables:
             raise AttributeError("A scoped variable with id %s does not exist" % str(scoped_variable_id))
 
         # delete all data flows connected to scoped_variable
@@ -1109,7 +1132,6 @@ class ContainerState(State):
 
         :param dictionary: The dictionary that is added to the scoped data
         :param state: The state to which the input_data was passed (should be self in most cases)
-
         """
         for dict_key, value in dictionary.iteritems():
             for input_data_port_key, data_port in self.input_data_ports.iteritems():
@@ -1151,7 +1173,6 @@ class ContainerState(State):
 
         :param: the dictionary to update the scoped variables with
         :param: the state the output dictionary belongs to
-
         """
         for key, value in dictionary.iteritems():
             output_data_port_key = None
@@ -1183,7 +1204,6 @@ class ContainerState(State):
         data flows and transitions.
 
         :param state_id: The new state if of the state
-        :return:
         """
         old_state_id = self.state_id
         super(ContainerState, self).change_state_id(state_id)
@@ -1206,7 +1226,8 @@ class ContainerState(State):
         """Calculate the target state of a transition
 
         :param transition: The transition of which the target state is determined
-
+        :return: the to-state of the transition
+        :raises exceptions.TypeError: if the transition parameter is of wrong type
         """
         if not isinstance(transition, Transition):
             raise TypeError("transition must be of type Transition")
@@ -1219,7 +1240,6 @@ class ContainerState(State):
     def write_output_data(self):
         """ Write the scoped data to output of the state. Called before exiting the container state.
 
-        :return:
         """
         for output_name, value in self.output_data.iteritems():
             output_port_id = self.get_io_data_port_id_from_name_and_type(output_name, DataPortType.OUTPUT)
@@ -1610,6 +1630,10 @@ class ContainerState(State):
     def states(self):
         """Property for the _states field
 
+        The setter-method substitute ContainerState.states which is a dict. The method checks if the elements are
+        of the right type  or will cancel the operation and recover old outcomes. The method does check validity of
+        the elements by calling the parent-setter.
+
         """
         return self._states
 
@@ -1618,12 +1642,11 @@ class ContainerState(State):
     def states(self, states):
         """ Setter for _states field
 
-        The method substitute ContainerState.states which is a dict. The method checks if the elements are
-        of the right type  or will cancel the operation and recover old outcomes. The method does check validity of
-        the elements by calling the parent-setter.
+        See property
 
         :param states: Dictionary of States
-        :return:
+        :raises exceptions.TypeError: if the states parameter is of wrong type
+        :raises exceptions.AttributeError: if the keys of the dictionary and the state_ids in the dictionary do not match
         """
         if not isinstance(states, dict):
             raise TypeError("states must be of type dict")
@@ -1660,11 +1683,12 @@ class ContainerState(State):
     def transitions(self, transitions):
         """ Setter for _transitions field
 
-        The method substitute ContainerState._transitions with dictionary transitions. The method checks if the
-        elements are of the right type and the keys consistent. The method does check validity of the elements by
-        calling the parent-setter and in case of failure cancel the operation and recover old _transitions.
+        See property
 
         :param: transitions: Dictionary transitions[transition_id] of :class:`rafcon.statemachine.transition.Transition`
+        :raises exceptions.TypeError: if the transitions parameter has the wrong type
+        :raises exceptions.AttributeError: if the keys of the transitions dictionary and the transition_ids of the
+                                            transitions in the dictionary do not match
         """
         if not isinstance(transitions, dict):
             raise TypeError("transitions must be of type dict")
@@ -1701,11 +1725,12 @@ class ContainerState(State):
     def data_flows(self, data_flows):
         """ Setter for _data_flows field
 
-        The method substitute ContainerState._data_flows with dictionary data_flows. The method checks if the
-        elements are of the right type and the keys consistent. The method does check validity of the elements by
-        calling the parent-setter and in case of failure cancel the operation and recover old _data_flows.
+        See property
 
         :param dict data_flows: Dictionary data_flows[data_flow_id] of :class:`rafcon.statemachine.data_flow.DataFlow`
+        :raises exceptions.TypeError: if the data_flows parameter has the wrong type
+        :raises exceptions.AttributeError: if the keys of the data_flows dictionary and the data_flow_ids of the
+                                            data flows in the dictionary do not match
         """
         if not isinstance(data_flows, dict):
             raise TypeError("data_flows must be of type dict")
@@ -1725,9 +1750,12 @@ class ContainerState(State):
 
     @property
     def start_state_id(self):
-        """Returns the id of the state first executed within the container
+        """ The start state is the state to which the first transition goes to.
 
-        :return: The if of the start state
+        The setter-method creates a unique first transition to the state with the given id.
+        Existing first transitions are removed. If the given state id is None, the first transition is removed.
+
+        :return: The id of the start state
         """
         for transition_id in self.transitions:
             if self.transitions[transition_id].from_state is None:
@@ -1743,11 +1771,11 @@ class ContainerState(State):
     def start_state_id(self, start_state_id, to_outcome=None):
         """Set the start state of the container state
 
-        The start state is the state to which the first transition goes to. Therefore the method creates a unique
-        first transition to the state with the given id. Existing first transitions are removed. If the given state
-        id is None, the first transition is removed.
+        See property
 
         :param start_state_id: The state id of the state which should be executed first in the Container state
+        :raises exceptions.ValueError: if the start_state_id does not exist in
+                                    :py:attr:`rafcon.statemachine.states.container_state.ContainerState.states`
         """
         if start_state_id is not None and start_state_id not in self.states:
             raise ValueError("start_state_id does not exist")
@@ -1788,11 +1816,12 @@ class ContainerState(State):
     def scoped_variables(self, scoped_variables):
         """ Setter for _scoped_variables field
 
-        The method substitute ContainerState._scoped_variables with dictionary scoped_variables. The method checks
-        if the elements are of the right type and the keys consistent. The method does check validity of the elements by
-        calling the parent-setter and in case of failure cancel the operation and recover old _scoped_variables.
+        See property
 
         :param dict scoped_variables: Dictionary scoped_variables[data_port_id] of :class:`rafcon.statemachine.scope.ScopedVariable`
+        :raises exceptions.TypeError: if the scoped_variables parameter has the wrong type
+        :raises exceptions.AttributeError: if the keys of the scoped_variables dictionary and the ids
+                                            of the scoped variables in the dictionary do not match
         """
         if not isinstance(scoped_variables, dict):
             raise TypeError("scoped_variables must be of type dict")

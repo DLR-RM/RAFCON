@@ -22,6 +22,8 @@ class Transition(StateElement):
 
     It inherits from Observable to make a change of its fields observable.
 
+    Raises an exceptions.TypeError if the transtion_id is not of type int.
+
     :ivar transition_id: the id of the transition, must be unique for the parent state
     :ivar _from_state: the source state of the transition
     :ivar _from_outcome: the outcome of the source state
@@ -47,7 +49,7 @@ class Transition(StateElement):
             self._transition_id = generate_transition_id()
         else:
             if not isinstance(transition_id, int):
-                raise ValueError("transition_id must be of type int")
+                raise TypeError("transition_id must be of type int")
             self._transition_id = transition_id
 
         self.from_state = from_state
@@ -96,6 +98,8 @@ class Transition(StateElement):
         """ Set from_state and from_outcome at ones to support fully valid transition modifications.
         :param str from_state: valid origin state
         :param int from_outcome: valid origin outcome
+        :raises exceptions.ValueError: if one the parameters if of wrong type
+        :raises exceptions.RuntimeError: if the transition could not be changed
         :return:
         """
         if not (from_state is None and from_outcome is None):
@@ -120,6 +124,8 @@ class Transition(StateElement):
         """ Set from_state and from_outcome at ones to support fully valid transition modifications.
         :param str from_state: valid origin state
         :param int from_outcome: valid origin outcome
+        :raises exceptions.ValueError: if one the parameters if of wrong type
+        :raises exceptions.RuntimeError: if the transition could not be changed
         :return:
         """
         if not (to_state is None and (to_outcome is not int and to_outcome is not None)):

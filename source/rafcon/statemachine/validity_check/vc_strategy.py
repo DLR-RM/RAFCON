@@ -22,4 +22,9 @@ class VCStrategy:
         pass
 
     def check(self, container_state):
+        """ A interface functions that has to be implemented by a concrete validity checker strategy.
+
+        :param container_state:
+        :return:
+        """
         raise NotImplementedError("The check() function has to be implemented!")
