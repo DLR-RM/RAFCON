@@ -66,31 +66,29 @@ class ShortcutManager:
         :return: True is the parameters are valid and the callback is registered, False else
         :rtype: bool
         """
-        if action in self.__action_to_shortcuts:  # Is the action valid?
-            if hasattr(callback, '__call__'):  # Is the callback really a function?
-                if action not in self.__action_to_callbacks:
-                    self.__action_to_callbacks[action] = []
-                self.__action_to_callbacks[action].append(callback)
+        if hasattr(callback, '__call__'):  # Is the callback really a function?
+            if action not in self.__action_to_callbacks:
+                self.__action_to_callbacks[action] = []
+            self.__action_to_callbacks[action].append(callback)
 
-                controller = None
+            controller = None
+            try:
+                controller = callback.__self__
+            except AttributeError:
                 try:
-                    controller = callback.__self__
+                    # Needed when callback was wrapped using functools.partial
+                    controller = callback.func.__self__
                 except AttributeError:
-                    try:
-                        # Needed when callback was wrapped using functools.partial
-                        controller = callback.func.__self__
-                    except AttributeError:
-                        pass
+                    pass
 
-                if controller:
-                    if controller not in self.__controller_action_callbacks:
-                        self.__controller_action_callbacks[controller] = {}
-                    if action not in self.__controller_action_callbacks[controller]:
-                        self.__controller_action_callbacks[controller][action] = []
-                    self.__controller_action_callbacks[controller][action].append(callback)
+            if controller:
+                if controller not in self.__controller_action_callbacks:
+                    self.__controller_action_callbacks[controller] = {}
+                if action not in self.__controller_action_callbacks[controller]:
+                    self.__controller_action_callbacks[controller][action] = []
+                self.__controller_action_callbacks[controller][action].append(callback)
 
-                return True
-        return False
+            return True
 
     def remove_callback_for_action(self, action, callback):
         """ Remove a callback for a specific action

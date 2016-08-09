@@ -13,9 +13,9 @@ from gtkmvc import Observable
 
 from rafcon.statemachine.enums import StateExecutionState
 from rafcon.statemachine.states.state import State
-from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.singleton import library_manager
+from rafcon.utils import type_helpers
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -24,11 +24,22 @@ logger = log.get_logger(__name__)
 class LibraryState(State):
     """A class to represent a library state for the state machine
 
-    Only the variables are listed that are not already contained in the state base class
+    Only the variables are listed that are not already contained in the state base class.
+
+    The constructor uses an exceptions.AttributeError if the passed version of the library and the version found in
+    the library paths do not match.
 
     :ivar library_path: the path of the library relative to a certain library path (e.g. lwr/gripper/)
     :ivar library_name: the name of the library between all child states: (e.g. open, or close)
     :ivar version: the version of the needed library
+    :ivar name: the name of the library state
+    :ivar state_id: the id of the library state
+    :ivar dict input_data_port_runtime_values: a dict to store all the runtime values for the input data ports
+    :ivar dict use_runtime_value_input_data_ports: flags to indicate if the runtime or the default value should be used
+                                                    for a specific input data port
+    :ivar dict output_data_port_runtime_values: a dict to store all the runtime values for the output data ports
+    :ivar dict use_runtime_value_output_data_ports: flags to indicate if the runtime or the default value should be used
+                                                    for a specific output data port
     """
 
     yaml_tag = u'!LibraryState'
@@ -76,28 +87,40 @@ class LibraryState(State):
         if not str(lib_version) == version and not str(lib_version) == "None":
             raise AttributeError("Library does not have the correct version!")
 
+        if name is None:
+            self.name = state_machine.root_state.name
+
         # copy all ports and outcomes of self.state_copy to let the library state appear like the container state
         # this will also set the parent of all outcomes and data ports to self
         self.outcomes = self.state_copy.outcomes
         self.input_data_ports = self.state_copy.input_data_ports
         self.output_data_ports = self.state_copy.output_data_ports
 
-        # handle runtime values
-        # input runtime values
+        # handle input runtime values
         self.input_data_port_runtime_values = input_data_port_runtime_values
         self.use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
-        for key, idp in self.input_data_ports.iteritems():  # check if all input data ports have a runtime value
-            if key not in self.input_data_port_runtime_values.iterkeys():
-                self.input_data_port_runtime_values[key] = idp.default_value
-                self.use_runtime_value_input_data_ports[key] = True
+        for data_port_id, data_port in self.input_data_ports.iteritems():
+            # Ensure that all input data ports have a runtime value
+            if data_port_id not in self.input_data_port_runtime_values.iterkeys():
+                self.input_data_port_runtime_values[data_port_id] = data_port.default_value
+                self.use_runtime_value_input_data_ports[data_port_id] = True
+            # Ensure that str and unicode is correctly differentiated
+            elif isinstance(self.input_data_port_runtime_values[data_port_id], basestring):
+                self.input_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
+                    self.input_data_port_runtime_values[data_port_id], data_port.data_type)
 
-        # output runtime values
+        # handle output runtime values
         self.output_data_port_runtime_values = output_data_port_runtime_values
         self.use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
-        for key, idp in self.output_data_ports.iteritems():  # check if all output data ports have a runtime value
-            if key not in self.output_data_port_runtime_values.iterkeys():
-                self.output_data_port_runtime_values[key] = idp.default_value
-                self.use_runtime_value_output_data_ports[key] = True
+        for data_port_id, data_port in self.output_data_ports.iteritems():
+            # Ensure that all output data ports have a runtime value
+            if data_port_id not in self.output_data_port_runtime_values.iterkeys():
+                self.output_data_port_runtime_values[data_port_id] = data_port.default_value
+                self.use_runtime_value_output_data_ports[data_port_id] = True
+            # Ensure that str and unicode is correctly differentiated
+            elif isinstance(self.output_data_port_runtime_values[data_port_id], basestring):
+                self.output_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
+                    self.output_data_port_runtime_values[data_port_id], data_port.data_type)
 
         self.initialized = True
 
@@ -163,6 +186,7 @@ class LibraryState(State):
 
         For further documentation, look at the State class.
 
+        :raises exceptions.NotImplementedError: in any case
         """
         raise NotImplementedError("Add outcome is not implemented for library state {}".format(self))
 
@@ -172,6 +196,7 @@ class LibraryState(State):
 
         For further documentation, look at the State class.
 
+        :raises exceptions.NotImplementedError: in any case
         """
         if force:
             State.remove_outcome(self, outcome_id, force)
@@ -183,17 +208,19 @@ class LibraryState(State):
         output data port to the library state.
 
         For further documentation, look at the State class.
-
+        :raises exceptions.NotImplementedError: in any case
         """
         raise NotImplementedError("Add input data port is not implemented for library state {}".format(self))
 
     def remove_input_data_port(self, data_port_id, force=False):
         """
-        Overwrites the remove_input_data_prot method of the State class. Prevents user from removing a
+        Overwrites the remove_input_data_port method of the State class. Prevents user from removing a
         input data port from the library state.
 
         For further documentation, look at the State class.
 
+        :param bool force: True if the removal should be forced
+        :raises exceptions.NotImplementedError: in the removal is not forced
         """
         if force:
             State.remove_input_data_port(self, data_port_id, force)
@@ -205,7 +232,7 @@ class LibraryState(State):
         output data port to the library state.
 
         For further documentation, look at the State class.
-
+        :raises exceptions.NotImplementedError: in any case
         """
         raise NotImplementedError("Add a output data port is not implemented for library state {}".format(self))
 
@@ -214,7 +241,8 @@ class LibraryState(State):
         output data port from the library state.
 
         For further documentation, look at the State class.
-
+        :param bool force: True if the removal should be forced
+        :raises exceptions.NotImplementedError: in the removal is not forced
         """
         if force:
             State.remove_output_data_port(self, data_port_id, force)

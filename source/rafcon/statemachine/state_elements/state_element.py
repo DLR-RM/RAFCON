@@ -19,10 +19,12 @@ logger = log.get_logger(__name__)
 
 
 class StateElement(Observable, YAMLObject, JSONObject):
-    """A base class for all elements of a state (ports, connections)
+    """A abstract base class for all elements of a state (ports, connections)
 
     It inherits from Observable to make a change of its fields observable. It also inherits from YAMLObject,
     in order to store/load it as YAML file.
+
+    It raises an exceptions.NotImplementedError if the type of the class instance is type(self).
 
     :ivar rafcon.statemachine.states.state.State parent: Parent state of the state element
     """
@@ -114,6 +116,7 @@ class StateElement(Observable, YAMLObject, JSONObject):
 
         :param str property_name: The name of the property to be changed, e.g. '_data_flow_id'
         :param value: The new desired value for this property
+        :raises exceptions.ValueError: if a property could not be changed
         """
         assert isinstance(property_name, basestring)
         old_value = getattr(self, property_name)

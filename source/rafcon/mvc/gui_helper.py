@@ -40,6 +40,38 @@ def create_label_with_text_and_spacing(text, font=constants.INTERFACE_FONT, font
     return label
 
 
+def create_label_widget_with_icon(icon, text):
+    hbox = gtk.HBox()
+
+    icon_label = gtk.Label()
+    icon_label.set_markup('<span font_desc="{0} {1}">&#x{2};</span>'.format(constants.ICON_FONT,
+                                                                            constants.FONT_SIZE_NORMAL,
+                                                                            icon))
+    icon_label.show()
+    hbox.pack_start(icon_label, False, True, 2)
+
+    text_label = gtk.Label()
+    text_label.set_markup('<span font_desc="{0} {1}" letter_spacing="{2}">{3}</span>'.format(constants.INTERFACE_FONT,
+                                                                                             constants.FONT_SIZE_NORMAL,
+                                                                                             constants.LETTER_SPACING_075PT,
+                                                                                             text))
+    text_label.show()
+    hbox.pack_start(text_label, True, True, 2)
+
+    hbox.show()
+    return hbox
+
+
+def create_image_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=()):
+        menu_item = gtk.ImageMenuItem()
+        menu_item.set_image(create_label_widget_with_icon(icon_code, ""))
+        menu_item.set_label(label_text)
+        if callback is not None:
+            menu_item.connect("activate", callback, *callback_args)
+        menu_item.set_always_show_image(True)
+        return menu_item
+
+
 def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
     """Create a button label with a chosen icon.
 
@@ -158,3 +190,18 @@ def set_window_size_and_position(window, window_key):
     else:
         window.set_position(gtk.WIN_POS_MOUSE)
     window.show()
+
+
+def draw_for_all_gtk_states(object, function_name, color):
+    """
+    Call given draw function for an object with a given color
+    :param object:  the object to call the draw function on
+    :param function_name: the draw function to call
+    :param color: the color to use for drawing
+    :return:
+    """
+    getattr(object, function_name)(gtk.STATE_ACTIVE, color)
+    getattr(object, function_name)(gtk.STATE_INSENSITIVE, color)
+    getattr(object, function_name)(gtk.STATE_NORMAL, color)
+    getattr(object, function_name)(gtk.STATE_PRELIGHT, color)
+    getattr(object, function_name)(gtk.STATE_SELECTED, color)

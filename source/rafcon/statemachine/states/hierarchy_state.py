@@ -68,7 +68,7 @@ class HierarchyState(ContainerState):
         else:  # forward_execution
             self.execution_history.push_call_history_item(self, CallType.CONTAINER, self, self.input_data)
             self.child_state = self.get_start_state(set_final_outcome=True)
-            while self.child_state is None:
+            if self.child_state is None:
                 self.child_state = self.handle_no_start_state()
 
     def run(self):
@@ -78,8 +78,9 @@ class HierarchyState(ContainerState):
         based on the outcome of the child state.
         :return:
         """
-        self._initialize_hierarchy()
+
         try:
+            self._initialize_hierarchy()
             while self.child_state is not self:
                 self.handling_execution_mode = True
                 execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, self.child_state)

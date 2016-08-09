@@ -41,35 +41,57 @@ class KeepRectangleWithinConstraint(Constraint):
         self.margin_method = margin_method
 
     def solve_for(self, var=None):
-        """
-        Ensure that the children is within its parent
+        """Ensure that the children is within its parent
         """
         margin = self.margin_method()
-        child_width = self.child_se[0].value - self.child_nw[0].value
-        child_height = self.child_se[1].value - self.child_nw[1].value
-        parent_width = self.parent_se[0].value - self.parent_nw[0].value
-        parent_height = self.parent_se[1].value - self.parent_nw[1].value
-        if child_width > parent_width - 2 * margin:
-            child_width = parent_width - 2 * margin
-        if child_height > parent_height - 2 * margin:
-            child_height = parent_height - 2 * margin
 
+        def parent_width():
+            return self.parent_se[0].value - self.parent_nw[0].value
+
+        def parent_height():
+            return self.parent_se[1].value - self.parent_nw[1].value
+
+        def child_width():
+            child_width = self.child_se[0].value - self.child_nw[0].value
+            if child_width > parent_width() - 2 * margin:
+                child_width = parent_width() - 2 * margin
+            return max(self.child.min_width, child_width)
+
+        def child_height():
+            child_height = self.child_se[1].value - self.child_nw[1].value
+            if child_height > parent_height() - 2 * margin:
+                child_height = parent_height() - 2 * margin
+            return max(self.child.min_height, child_height)
+
+        updated = False
         # Left edge (west)
         if self.parent_nw[0].value > self.child_nw[0].value - margin:
+            width = child_width()
             _update(self.child_nw[0], self.parent_nw[0].value + margin)
-            _update(self.child_se[0], self.child_nw[0].value + child_width)
+            _update(self.child_se[0], self.child_nw[0].value + width)
+            updated = True
         # Right edge (east)
-        if self.parent_se[0].value < self.child_se[0].value + margin:
+        elif self.parent_se[0].value < self.child_se[0].value + margin:
+            width = child_width()
             _update(self.child_se[0], self.parent_se[0].value - margin)
-            _update(self.child_nw[0], self.child_se[0].value - child_width)
+            _update(self.child_nw[0], self.child_se[0].value - width)
+            updated = True
         # Upper edge (north)
         if self.parent_nw[1].value > self.child_nw[1].value - margin:
+            height = child_height()
             _update(self.child_nw[1], self.parent_nw[1].value + margin)
-            _update(self.child_se[1], self.child_nw[1].value + child_height)
+            _update(self.child_se[1], self.child_nw[1].value + height)
+            updated = True
         # Lower edge (south)
-        if self.parent_se[1].value < self.child_se[1].value + margin:
+        elif self.parent_se[1].value < self.child_se[1].value + margin:
+            height = child_height()
             _update(self.child_se[1], self.parent_se[1].value - margin)
-            _update(self.child_nw[1], self.child_se[1].value - child_height)
+            _update(self.child_nw[1], self.child_se[1].value - height)
+            updated = True
+
+        from rafcon.mvc.mygaphas.items.state import StateView
+        if updated and isinstance(self.child, StateView):
+            self.child.update_minimum_size_of_children()
 
 
 class KeepPointWithinConstraint(Constraint):
@@ -126,11 +148,11 @@ class KeepRelativePositionConstraint(Constraint):
 
 
 class KeepPortDistanceConstraint(Constraint):
-    def __init__(self, anchor, point, port, port_side_size, incoming):
+    def __init__(self, anchor, point, port, distance_func, incoming):
         super(KeepPortDistanceConstraint, self).__init__(anchor[0], anchor[1], point[0], point[1])
         assert isinstance(port, PortView)
 
-        self.distance = port_side_size
+        self.distance_func = distance_func
 
         self.incoming = incoming
         self.point = point
@@ -138,7 +160,7 @@ class KeepPortDistanceConstraint(Constraint):
         self.port = port
 
     def solve_for(self, var):
-        distance = self.distance
+        distance = self.distance_func()
         if self.port.side is SnappedSide.TOP:
             _update(self.point[0], self.anchor[0])
             _update(self.point[1],
@@ -302,3 +324,18 @@ class PortRectConstraint(Constraint):
             _update(px, nw_x)
         elif self._port.side == SnappedSide.TOP:
             _update(py, nw_y)
+
+
+class BorderWidthConstraint(Constraint):
+    def __init__(self, north_west, south_east, border_width, factor):
+        super(BorderWidthConstraint, self).__init__(north_west[0], north_west[1], south_east[0], south_east[1])
+
+        self.nw = north_west
+        self.se = south_east
+        self.border_width = border_width
+        self.factor = factor
+
+    def solve_for(self, var=None):
+        width = float(self.se.x) - float(self.nw.x)
+        height = float(self.se.y) - float(self.nw.y)
+        _update(self.border_width, min(width, height) / self.factor)

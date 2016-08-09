@@ -8,9 +8,10 @@
 
 """
 from rafcon.statemachine.singleton import state_machine_manager,\
-    global_variable_manager, state_machine_execution_engine
+    global_variable_manager, state_machine_execution_engine, library_manager
 from rafcon.statemachine import interface
 
+from rafcon.mvc.models.library_manager import LibraryManagerModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.global_variable_manager import GlobalVariableManagerModel
 from rafcon.mvc.models.state_machine_execution_engine import StateMachineExecutionEngineModel
@@ -106,6 +107,8 @@ interface.show_notice_func = show_notice
 
 # This variable holds the global state machine manager model as long as only one StateMachineMangerModel is allowed
 state_machine_manager_model = StateMachineManagerModel(state_machine_manager)
+
+library_manager_model = LibraryManagerModel(library_manager)
 
 state_machine_execution_model = StateMachineExecutionEngineModel(state_machine_execution_engine)
 

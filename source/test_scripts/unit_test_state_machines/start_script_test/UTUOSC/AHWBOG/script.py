@@ -1,9 +1,11 @@
+from test.testing_utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
+FILE_TO_MODIFY = RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE + "/test_start_script.txt"
+
 
 def execute(self, inputs, outputs, gvm):
-    self.logger.debug("enter state_2")
+    self.logger.debug("enter state_2 -> write into: " + FILE_TO_MODIFY)
     
-    test_file = open("/tmp/rafcon_unit_tests/test_start_script.txt", "a")
-    test_file.write("state, ")
-    test_file.close()
+    with open(FILE_TO_MODIFY, "a") as f:
+        f.write("state, ")
     
     return 0

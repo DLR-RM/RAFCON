@@ -16,6 +16,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.state_machine import StateMachine
 
 # mvc elements
+import rafcon.mvc
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.graphical_editor import GraphicalEditor as OpenGLEditor
 from rafcon.mvc.mygaphas.view import ExtendedGtkView as GaphasEditor
@@ -41,11 +42,6 @@ def setup_module(module):
     library_paths["ros"] = rafcon.__path__[0] + "/../test_scripts/ros_libraries"
     library_paths["turtle_libraries"] = rafcon.__path__[0] + "/../test_scripts/turtle_libraries"
     library_paths["generic"] = rafcon.__path__[0] + "/../libraries/generic"
-
-
-def wait_for_gui():
-    while gtk.events_pending():
-        gtk.main_iteration(False)
 
 
 def create_models(*args, **kargs):
@@ -118,7 +114,7 @@ def select_and_paste_state(state_machine_model, source_state_model, target_state
     main_window_controller.view['main_window'].grab_focus()
     focus_graphical_editor_in_page(page)
     call_gui_callback(menu_bar_ctrl.on_paste_clipboard_activate, None, None)
-    wait_for_gui()
+    testing_utils.wait_for_gui()
     print target_state_model.state.states.keys()
     assert len(target_state_model.state.states) == old_child_state_count + 1
     return target_state_model, old_child_state_count
@@ -166,7 +162,7 @@ def trigger_gui_signals(*args):
     assert len(sm_manager_model.state_machines) == current_sm_length + 2
 
     sm_m = sm_manager_model.state_machines[first_sm_id + 2]
-    wait_for_gui()
+    testing_utils.wait_for_gui()
     # MAIN_WINDOW NEEDS TO BE FOCUSED (for global input focus) TO OPERATE PASTE IN GRAPHICAL VIEWER
     main_window_controller.view['main_window'].grab_focus()
     sm_manager_model.selected_state_machine_id = first_sm_id + 2
@@ -174,7 +170,7 @@ def trigger_gui_signals(*args):
     page_id = state_machines_ctrl.get_page_id(first_sm_id + 2)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
     focus_graphical_editor_in_page(page)
-    wait_for_gui()
+    testing_utils.wait_for_gui()
 
     #########################################################
     print "select & copy an execution state -> and paste it somewhere"
@@ -228,6 +224,77 @@ def trigger_gui_signals(*args):
             state_new = state_m_parent.state.states[state_id]
     call_gui_callback(state_m_parent.state.ungroup_state, state_new.state_id)
 
+    ##########################################################
+    # substitute state with template
+    lib_state = rafcon.mvc.singleton.library_manager.get_library_instance('generic', 'wait')
+    old_keys = state_m_parent.state.states.keys()
+    transitions_before, data_flows_before = state_m_parent.state.related_linkage_state('RQXPAI')
+    call_gui_callback(state_m_parent.state.substitute_state, 'RQXPAI', lib_state.state_copy)
+    new_state_id = None
+    for state_id in state_m_parent.state.states.keys():
+        if state_id not in old_keys:
+            new_state_id = state_id
+    transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
+    # transition is not preserved because of unequal outcome naming
+    assert len(transitions_before['external']['ingoing']) == 1
+    assert len(transitions_after['external']['ingoing']) == 1
+    assert len(transitions_before['external']['outgoing']) == 1
+    assert len(transitions_after['external']['outgoing']) == 0
+    call_gui_callback(state_m_parent.state.add_transition, new_state_id, 0, 'MCOLIQ', None)
+
+    # modify the template with other data type and respective data flows to parent
+    state_m_parent.states[new_state_id].state.input_data_ports.items()[0][1].data_type = "int"
+    call_gui_callback(state_m_parent.state.add_input_data_port, 'in_time', "int")
+    call_gui_callback(state_m_parent.state.add_data_flow,
+                      state_m_parent.state.state_id,
+                      state_m_parent.state.input_data_ports.items()[0][1].data_port_id,
+                      new_state_id,
+                      state_m_parent.states[new_state_id].state.input_data_ports.items()[0][1].data_port_id)
+
+    old_keys = state_m_parent.state.states.keys()
+    transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
+    lib_state = rafcon.mvc.singleton.library_manager.get_library_instance('generic', 'wait')
+    call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state)
+    new_state_id = None
+    for state_id in state_m_parent.state.states.keys():
+        if state_id not in old_keys:
+            new_state_id = state_id
+    transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
+    # test if data flow is ignored
+    assert len(transitions_before['external']['ingoing']) == 1
+    assert len(transitions_after['external']['ingoing']) == 1
+    assert len(transitions_before['external']['outgoing']) == 1
+    assert len(transitions_after['external']['outgoing']) == 1
+    assert len(data_flows_before['external']['ingoing']) == 1
+    assert len(data_flows_after['external']['ingoing']) == 0
+
+    # data flow is preserved if right data type and name is used
+    state_m_parent.state.input_data_ports.items()[0][1].data_type = "float"
+    state_m_parent.state.states[new_state_id].input_data_ports.items()[0][1].default_value = 2.0
+    call_gui_callback(state_m_parent.state.add_data_flow,
+                      state_m_parent.state.state_id,
+                      state_m_parent.state.input_data_ports.items()[0][1].data_port_id,
+                      new_state_id,
+                      state_m_parent.states[new_state_id].state.input_data_ports.items()[0][1].data_port_id)
+
+    old_keys = state_m_parent.state.states.keys()
+    transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
+    lib_state = rafcon.mvc.singleton.library_manager.get_library_instance('generic', 'wait')
+    call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state.state_copy)
+    new_state_id = None
+    for state_id in state_m_parent.state.states.keys():
+        if state_id not in old_keys:
+            new_state_id = state_id
+    transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
+    # test if data flow is ignored
+    assert len(transitions_before['external']['ingoing']) == 1
+    assert len(transitions_after['external']['ingoing']) == 1
+    assert len(transitions_before['external']['outgoing']) == 1
+    assert len(transitions_after['external']['outgoing']) == 1
+    assert len(data_flows_before['external']['ingoing']) == 1
+    assert len(data_flows_after['external']['ingoing']) == 1
+    assert state_m_parent.state.states[new_state_id].input_data_ports.items()[0][1].default_value == 2.0
+
     call_gui_callback(menubar_ctrl.on_refresh_libraries_activate, None)
     call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
     assert len(sm_manager_model.state_machines) == 1
@@ -257,7 +324,7 @@ def test_gui(caplog):
                                                   editor_type='LogicDataGrouped')
 
     # Wait for GUI to initialize
-    wait_for_gui()
+    testing_utils.wait_for_gui()
 
     thread = threading.Thread(target=trigger_gui_signals, args=[testing_utils.sm_manager_model, main_window_controller])
     thread.start()

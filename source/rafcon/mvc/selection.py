@@ -1,6 +1,6 @@
 from gtkmvc import Observable
-from rafcon.mvc.models import AbstractStateModel, TransitionModel, DataFlowModel
-
+from rafcon.mvc.models import AbstractStateModel, TransitionModel, DataFlowModel, DataPortModel, ScopedVariableModel
+from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
 
 def reduce_to_parent_states(models):
     models_to_remove = []
@@ -67,6 +67,9 @@ class Selection(Observable):
     def __len__(self):
         return len(self.__selected)
 
+    def __contains__(self, item):
+        return item in self.__selected
+
     def __getitem__(self, key):
         return [s for s in self.__selected][key]
 
@@ -95,6 +98,24 @@ class Selection(Observable):
 
     def get_num_data_flows(self):
         return sum((1 for s in self.__selected if isinstance(s, DataFlowModel)))
+
+    def get_input_data_ports(self):
+        return [s for s in self.__selected if isinstance(s, DataPortModel) and isinstance(s.data_port, InputDataPort)]
+
+    def get_num_input_data_ports(self):
+        return sum((1 for s in self.__selected if isinstance(s, DataPortModel) and isinstance(s.data_port, InputDataPort)))
+
+    def get_output_data_ports(self):
+        return [s for s in self.__selected if isinstance(s, DataPortModel) and isinstance(s.data_port, OutputDataPort)]
+
+    def get_num_output_data_ports(self):
+        return sum((1 for s in self.__selected if isinstance(s, DataPortModel) and isinstance(s.data_port, OutputDataPort)))
+
+    def get_scoped_variables(self):
+        return [s for s in self.__selected if isinstance(s, ScopedVariableModel)]
+
+    def get_num_scoped_variables(self):
+        return sum((1 for s in self.__selected if isinstance(s, ScopedVariableModel)))
 
     @Observable.observed
     def clear(self):

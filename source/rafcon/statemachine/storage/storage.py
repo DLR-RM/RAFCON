@@ -144,13 +144,12 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
 
 
 def save_script_file_for_state_and_source_path(state, base_path, state_path, temporary_storage=False):
-    """Saves the script file for a state to the directory of the state
-
+    """Saves the script file for a state to the directory of the state.
     The script name will be set to the SCRIPT_FILE constant.
+
     :param state: The state of which the script file should be saved
     :param str base_path: The path to the state machone
     :param str state_path: The path of the state meta file
-    :return:
     """
     from rafcon.statemachine.states.execution_state import ExecutionState
     if isinstance(state, ExecutionState):
@@ -204,7 +203,7 @@ def load_state_machine_from_path(base_path):
 
     :param base_path: An optional base path for the state machine.
     :return: a tuple of the loaded container state, the version of the state and the creation time
-    :raises: ValueError, IOError
+    :raises ValueError: if the provided path does not contain a valid state machine
     """
     logger.debug("Loading state machine from path {0}...".format(base_path))
 
@@ -277,6 +276,8 @@ def load_state_recursively(parent, state_path=None):
 
     path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA)
 
+    logger.debug("Load state recursively: {0}".format(str(state_path)))
+
     # TODO: Should be removed with next minor release
     if not os.path.exists(path_core_data):
         path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA_OLD)
@@ -346,6 +347,12 @@ def load_state_recursively(parent, state_path=None):
 
 
 def load_data_file(filename):
+    """ Loads the content of a file.
+
+    :param filename: the path of the file to load
+    :return: the file content as a string
+    :raises exceptions.ValueError: if the file was not found
+    """
     if os.path.exists(filename):
         return storage_utils.load_dict_from_json(filename)
     raise ValueError("Data file not found: {0}".format(filename))

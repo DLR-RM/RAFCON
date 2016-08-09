@@ -1,6 +1,16 @@
 import gtk
+from enum import Enum
 
 from rafcon.mvc.utils import constants
+
+
+class ButtonDialog(Enum):
+    __order__ = "OPTION_1 OPTION_2 OPTION_3 OPTION_4 OPTION_5"
+    OPTION_1 = 1
+    OPTION_2 = 2
+    OPTION_3 = 3
+    OPTION_4 = 4
+    OPTION_5 = 5
 
 
 class RAFCONDialog(gtk.MessageDialog):
@@ -35,3 +45,14 @@ class RAFCONDialog(gtk.MessageDialog):
         align_action_area.show()
         hbox.show()
         self.show()
+
+
+class RAFCONButtonDialog(RAFCONDialog):
+    def __init__(self, markup_text, button_texts, callback, callback_args=(), type=gtk.MESSAGE_INFO, parent=None):
+        super(RAFCONButtonDialog, self).__init__(type, gtk.BUTTONS_NONE, gtk.DIALOG_MODAL, parent)
+        self.set_markup(markup_text)
+        for button_text, option in zip(button_texts, ButtonDialog):
+            self.add_button(button_text, option.value)
+        self.finalize(callback, *callback_args)
+        self.grab_focus()
+        self.run()

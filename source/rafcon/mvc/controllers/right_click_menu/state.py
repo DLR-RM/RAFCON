@@ -11,9 +11,10 @@
 import gtk
 
 from rafcon.mvc.utils import constants
-from rafcon.mvc.gui_helper import set_label_markup
+from rafcon.mvc.gui_helper import create_image_menu_item
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+import rafcon.mvc.singleton as mvc_singleton
 
 from rafcon.utils import log
 
@@ -21,6 +22,7 @@ logger = log.get_logger(__name__)
 
 
 class StateMachineRightClickMenu:
+
     def __init__(self, state_machine_manager_model=None):
         if state_machine_manager_model is None:
             from rafcon.mvc.singleton import state_machine_manager_model
@@ -32,57 +34,19 @@ class StateMachineRightClickMenu:
     def generate_right_click_menu(self):
         menu = gtk.Menu()
 
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_COPY)
-        # label = gtk.Label("Copy selection")
-        # set_label_markup(label, '&#x' + constants.BUTTON_COPY + ';',
-        #                  font=constants.ICON_FONT, font_size=constants.FONT_SIZE_BIG)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_COPY)
-        menu_item.set_label("Copy selection")
-        menu_item.connect("activate", self.on_copy_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_PASTE)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_PASTE)
-        menu_item.set_label("Paste Selection")
-        menu_item.connect("activate", self.on_paste_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_CUT)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_CUT)
-        menu_item.set_label("Cut selection")
-        menu_item.connect("activate", self.on_cut_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_GROUP)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_LEAVE_FULLSCREEN)
-        menu_item.set_label("Group states")
-        menu_item.connect("activate", self.on_group_states_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_UNGR)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_FULLSCREEN)
-        menu_item.set_label("Ungroup state")
-        menu_item.connect("activate", self.on_ungroup_state_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_GROUP)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_GO_DOWN)
-        menu_item.set_label("Run from here")
-        menu_item.connect("activate", self.on_run_from_selected_state_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
-
-        # menu_item = gtk.ImageMenuItem(constants.BUTTON_UNGR)
-        menu_item = gtk.ImageMenuItem(gtk.STOCK_GO_UP)
-        menu_item.set_label("Stop here")
-        menu_item.connect("activate", self.on_run_to_selected_state_activate)
-        menu_item.set_always_show_image(True)
-        menu.append(menu_item)
+        menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate))
+        menu.append(create_image_menu_item("Paste selection", constants.BUTTON_PASTE, self.on_paste_activate))
+        menu.append(create_image_menu_item("Cut selection", constants.BUTTON_CUT, self.on_cut_activate))
+        menu.append(create_image_menu_item("Group states", constants.BUTTON_GROUP, self.on_group_states_activate))
+        menu.append(create_image_menu_item("Ungroup states", constants.BUTTON_UNGR, self.on_ungroup_state_activate))
+        menu.append(create_image_menu_item("Run from here", constants.BUTTON_START_FROM_SELECTED_STATE,
+                                           self.on_run_from_selected_state_activate))
+        menu.append(create_image_menu_item("Stop here", constants.BUTTON_RUN_TO_SELECTED_STATE,
+                                           self.on_run_to_selected_state_activate))
+        menu.append(create_image_menu_item("Save state as state machine", constants.BUTTON_SAVE,
+                                           self.on_save_state_as_state_machine_activate))
+        menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
+                                           self.on_substitute_state_activate))
 
         return menu
 
@@ -116,6 +80,12 @@ class StateMachineRightClickMenu:
     def on_run_to_selected_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('run_to_selected', None, None)
 
+    def on_save_state_as_state_machine_activate(self, widget, data=None):
+        self.shortcut_manager.trigger_action('save_state_as', None, None)
+
+    def on_substitute_state_activate(self, widget, data=None):
+        self.shortcut_manager.trigger_action('substitute_state', None, None)
+
     def mouse_click(self, widget, event=None):
 
         # Single right click
@@ -125,24 +95,9 @@ class StateMachineRightClickMenu:
             return self.activate_menu(event, menu)
 
     def activate_menu(self, event, menu):
-        logger.info("activate_menu by " + self.__class__.__name__)
+        # logger.info("activate_menu by " + self.__class__.__name__)
         menu.popup(None, None, None, event.button, event.time)
         return True
-
-
-class StateRightClickMenuGapahs(StateMachineRightClickMenu):
-
-    def on_copy_activate(self, widget, data=None):
-        # logger.info("trigger gaphas copy")
-        self.shortcut_manager.trigger_action("copy", None, None)
-
-    def on_paste_activate(self, widget, data=None):
-        # logger.info("trigger gaphas paste")
-        self.shortcut_manager.trigger_action("paste", None, None)
-
-    def on_cut_activate(self, widget, data=None):
-        # logger.info("trigger gaphas cut")
-        self.shortcut_manager.trigger_action("cut", None, None)
 
 
 class StateMachineRightClickMenuController(ExtendedController, StateMachineRightClickMenu):
@@ -161,7 +116,7 @@ class StateMachineTreeRightClickMenuController(StateMachineRightClickMenuControl
         view.connect('button_press_event', self.mouse_click)
 
     def activate_menu(self, event, menu):
-        logger.info("activate_menu by " + self.__class__.__name__)
+        # logger.info("activate_menu by " + self.__class__.__name__)
         pthinfo = self.view.get_path_at_pos(int(event.x), int(event.y))
 
         if pthinfo is not None:
@@ -182,8 +137,12 @@ class StateRightClickMenuControllerOpenGLEditor(StateMachineRightClickMenuContro
 
     def activate_menu(self, event, menu):
         # logger.info("activate_menu by " + self.__class__.__name__)
-        menu.popup(None, None, None, event.button, event.time)
-        return True
+        selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        if selection.get_num_states() > 0 or selection.get_num_scoped_variables() > 0:
+            menu.popup(None, None, None, event.button, event.time)
+            return True
+        else:
+            return False
 
     def on_copy_activate(self, widget, data=None):
         # logger.info("trigger opengl copy")
@@ -195,4 +154,28 @@ class StateRightClickMenuControllerOpenGLEditor(StateMachineRightClickMenuContro
 
     def on_cut_activate(self, widget, data=None):
         # logger.info("trigger opengl cut")
+        self.shortcut_manager.trigger_action("cut", None, None)
+
+
+class StateRightClickMenuGaphas(StateMachineRightClickMenu):
+
+    def activate_menu(self, event, menu):
+        # logger.info("activate_menu by " + self.__class__.__name__)
+        selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        if selection.get_num_states() > 0 or selection.get_num_scoped_variables() > 0:
+            menu.popup(None, None, None, event.button, event.time)
+            return True
+        else:
+            return False
+
+    def on_copy_activate(self, widget, data=None):
+        # logger.info("trigger gaphas copy")
+        self.shortcut_manager.trigger_action("copy", None, None)
+
+    def on_paste_activate(self, widget, data=None):
+        # logger.info("trigger gaphas paste")
+        self.shortcut_manager.trigger_action("paste", None, None)
+
+    def on_cut_activate(self, widget, data=None):
+        # logger.info("trigger gaphas cut")
         self.shortcut_manager.trigger_action("cut", None, None)

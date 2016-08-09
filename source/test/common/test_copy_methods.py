@@ -456,7 +456,6 @@ def test_complex(with_gui, caplog):
     #         shutil.rmtree(path)
 
 
-
 if __name__ == '__main__':
     # import cProfile
     # import re

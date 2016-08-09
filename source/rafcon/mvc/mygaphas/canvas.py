@@ -19,8 +19,12 @@ class MyCanvas(Canvas):
         """
         from rafcon.mvc.mygaphas.items.state import StateView
         from rafcon.mvc.mygaphas.items.connection import DataFlowView, TransitionView
+        from rafcon.mvc.mygaphas.items.ports import OutcomeView
+        from rafcon.mvc.mygaphas.items.ports import ScopedVariablePortView, DataPortView
+
         for item in self.get_all_items():
-            if isinstance(item, (StateView, TransitionView, DataFlowView)) and item.model is model:
+            if isinstance(item, (StateView, TransitionView, DataFlowView, OutcomeView, DataPortView,
+                                 ScopedVariablePortView)) and item.model is model:
                 return item
         return None
 

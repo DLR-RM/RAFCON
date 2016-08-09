@@ -293,11 +293,7 @@ def update_meta_data_for_port(graphical_editor_view, item, handle):
         if not handle or handle is port.handle:
             if isinstance(port, IncomeView):
                 port_m = item.model
-            elif isinstance(port, OutcomeView):
-                port_m = port.outcome_m
-            elif isinstance(port, (InputPortView, OutputPortView)):
-                port_m = port.port_m
-            elif isinstance(port, ScopedVariablePortView):
+            elif isinstance(port, (OutcomeView, InputPortView, OutputPortView, ScopedVariablePortView)):
                 port_m = port.model
             else:
                 continue
@@ -336,7 +332,6 @@ def update_meta_data_for_name_view(graphical_editor_view, name_v, publish=True):
     meta_gaphas['rel_pos'] = rel_pos
 
     if publish:
-        print "emit", meta_gaphas
         graphical_editor_view.emit('meta_data_changed', state_v.model, "name_size", False)
 
 

@@ -45,3 +45,14 @@ class SingleWidgetWindowController(ExtendedController):
         # self.adapt(self.__state_property_adapter("name", "input_name"))
 
     pass  # class end
+
+# Example
+# from rafcon.mvc.controllers.utils.single_widget_window import SingleWidgetWindowController
+# from rafcon.mvc.views.utils.single_widget_window import SingleWidgetWindowView
+# from rafcon.mvc.views.library_tree import LibraryTreeView
+# from rafcon.mvc.controllers.library_tree import LibraryTreeController
+# single_view = SingleWidgetWindowView(LibraryTreeView)
+# LibraryTreeController(self.model, single_view.widget_view)
+# single_view.top = 'library_tree_view'
+# single_view['library_tree_view'] = single_view.widget_view['library_tree_view']
+# SingleWidgetWindowController(self.model, single_view, LibraryTreeController)

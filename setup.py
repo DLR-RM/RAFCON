@@ -1,8 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 from os import path
+import os
 import sys
 
 
@@ -40,7 +41,10 @@ class PyTest(TestCommand):
         # import here, cause outside the eggs aren't loaded
         import pytest
         test_path = path.join(path.dirname(path.abspath(__file__)), 'source', 'test')
+        rafcon_path = path.join(path.dirname(path.abspath(__file__)), 'source')
         sys.path.insert(0, test_path)
+        sys.path.insert(0, rafcon_path)
+        os.environ["PYTHONPATH"] =  rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
         error_number = pytest.main(self.pytest_args + ['source/test/all'])
         sys.exit(error_number)
 

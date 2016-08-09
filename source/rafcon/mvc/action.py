@@ -554,8 +554,7 @@ class Action(ModelMT):
         It is a general functionality all Action*-Classes may need.
         :return: g_sm_editor -> the actual graphical viewer for further use
         """
-        import rafcon.mvc.controllers.graphical_editor as graphical_editor_opengl
-        import rafcon.mvc.controllers.graphical_editor_gaphas as graphical_editor_gaphas
+
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
         mw_ctrl = mvc_singleton.main_window_controller
         g_sm_editor = None
@@ -565,8 +564,12 @@ class Action(ModelMT):
                                                          with_print=False)
 
         # We are only interested in OpenGL editors, not Gaphas ones
-        if g_sm_editor and isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
-            g_sm_editor.suspend_drawing = True
+        try:
+            import rafcon.mvc.controllers.graphical_editor as graphical_editor_opengl
+            if g_sm_editor and isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
+                g_sm_editor.suspend_drawing = True
+        except ImportError as e:
+            logger.debug("OpenGL-Graphical-Editor can not be imported: {0}".format(e))
 
         return g_sm_editor
 
@@ -575,14 +578,22 @@ class Action(ModelMT):
         """ Enables and re-initiate graphical viewer's drawing process.
         :param g_sm_editor: graphical state machine editor
         """
-        import rafcon.mvc.controllers.graphical_editor as graphical_editor_opengl
-        import rafcon.mvc.controllers.graphical_editor_gaphas as graphical_editor_gaphas
-        if g_sm_editor and isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
-            g_sm_editor.suspend_drawing = False
-            # TODO integrate meta-data affects_children status
-            responsible_m.meta_signal.emit(MetaSignalMsg("undo_redo_action", "all", True))
-        if g_sm_editor and isinstance(g_sm_editor, graphical_editor_gaphas.GraphicalEditorController):
-            g_sm_editor.manual_notify_after(responsible_m)
+
+        try:
+            import rafcon.mvc.controllers.graphical_editor as graphical_editor_opengl
+            if g_sm_editor and isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
+                g_sm_editor.suspend_drawing = False
+                # TODO integrate meta-data affects_children status
+                responsible_m.meta_signal.emit(MetaSignalMsg("undo_redo_action", "all", True))
+        except ImportError as e:
+            logger.debug("OpenGL-Graphical-Editor can not be imported: {0}".format(e))
+
+        try:
+            import rafcon.mvc.controllers.graphical_editor_gaphas as graphical_editor_gaphas
+            if g_sm_editor and isinstance(g_sm_editor, graphical_editor_gaphas.GraphicalEditorController):
+                g_sm_editor.manual_notify_after(responsible_m)
+        except ImportError as e:
+            logger.debug("Gaphas-Graphical-Editor can not be imported: {0}".format(e))
 
     def redo(self):
         """ General Redo, that takes all elements in the parent path state stored of the before action state machine status.
@@ -1059,7 +1070,10 @@ class CoreObjectIdentifier:
             else:
                 if isinstance(core_obj_or_cls.parent, State):
                     self._path = core_obj_or_cls.parent.get_path()
-                    self._sm_id = core_obj_or_cls.parent.get_sm_for_state().state_machine_id
+                    if core_obj_or_cls.parent.get_sm_for_state() is None:
+                        logger.warning('state has no state machine -> {0} {1}'.format(core_obj_or_cls.parent.name, core_obj_or_cls.parent.get_path()))
+                    else:
+                        self._sm_id = core_obj_or_cls.parent.get_sm_for_state().state_machine_id
                 else:
                     logger.warning("identifier of core object {0} without parent is mostly useless".format(self._type))
 
@@ -1495,7 +1509,7 @@ class StateAction(Action):
                              'set_use_input_runtime_value', 'set_use_output_runtime_value',
                              'input_data_port_runtime_values', 'output_data_port_runtime_values',
                              'use_runtime_value_input_data_ports', 'use_runtime_value_output_data_ports',
-                             'group_states', 'ungroup_state']
+                             'group_states', 'ungroup_state', 'substitute_state']
     possible_args = ['name', 'description', 'script_text', 'start_state_id',  # ContainerState
                      'library_name', 'library_path', 'version', 'state_copy',  # LibraryState
                      'input_data_port_runtime_values', 'output_data_port_runtime_values',
@@ -1563,7 +1577,7 @@ class StateAction(Action):
         if self.action_type in ['parent', 'outcomes', 'input_data_ports', 'output_data_ports']:
             Action.undo(self)
         elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type',
-                                  'group_states', 'ungroup_state']:
+                                  'group_states', 'ungroup_state', 'substitute_state']:
             Action.undo(self)
         elif self.action_type in ['add_input_data_port', 'remove_input_data_port',  # LibraryState
                                   'add_output_data_port', 'remove_output_data_port']:
@@ -1578,7 +1592,7 @@ class StateAction(Action):
         if self.action_type in ['outcomes', 'input_data_ports', 'output_data_ports']:
             Action.redo(self)
         elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type',
-                                  'group_states', 'ungroup_state']:
+                                  'group_states', 'ungroup_state', 'substitute_state']:
             Action.redo(self)
         elif self.action_type in ['add_input_data_port', 'remove_input_data_port',  # LibraryState
                                   'add_output_data_port', 'remove_output_data_port']:

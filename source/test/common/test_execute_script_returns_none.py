@@ -1,9 +1,8 @@
 import pytest
 import signal
 
+import rafcon.statemachine.start
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.execution_state import ExecutionState
 import rafcon.mvc.singleton
 import testing_utils
 
@@ -13,7 +12,7 @@ def test_execute_script_returns_none(caplog):
 
     testing_utils.test_multithrading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
+    signal.signal(signal.SIGINT, rafcon.statemachine.start.signal_handler)
 
     rafcon.statemachine.singleton.library_manager.initialize()
 

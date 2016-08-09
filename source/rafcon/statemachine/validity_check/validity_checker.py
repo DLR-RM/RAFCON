@@ -10,11 +10,10 @@
 
 from gtkmvc import Observable
 
+from rafcon.statemachine.validity_check import vc_strategy, vc_implementations
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
-import vc_strategy
-import vc_implementations
 
 
 class ValidityChecker(Observable):
@@ -24,6 +23,7 @@ class ValidityChecker(Observable):
 
     :ivar _strategy: defines the strategy of the validity checker
     :ivar _strategy_instance: instance of the validity checker incarnating a specific strategy
+    :raises exceptions.TypeError: if the passed strategy is not of the correct type
 
     """
 
@@ -43,17 +43,17 @@ class ValidityChecker(Observable):
         else:
             self._strategy_instance = vc_implementations.AggressiveVC()
 
-    def check(self, c_state):
+    def check(self, container_state):
         """The interface function to trigger the check of a container state
 
-        :param c_state: the container class to  be checked
-        :return: True if the check was successfull
+        :param container_state: the container state to  be checked
+        :return: True if the check was successful
+        :raises exceptions.TypeError: if the check is tried to be performed on a non container state
 
         """
-        # TODO: deferred import: can this be somehow solved otherwise???
         import rafcon.statemachine.states.container_state as smcs
 
-        if not isinstance(c_state, smcs.ContainerState):
+        if not isinstance(container_state, smcs.ContainerState):
             raise TypeError("Check() can only be applied onto ContainerStates")
-        logger.debug("Check the validity of the container state with id %s " % str(c_state.state_id()))
-        return self._strategy_instance.check(c_state)
+        logger.debug("Check the validity of the container state with id %s " % str(container_state.state_id()))
+        return self._strategy_instance.check(container_state)

@@ -212,14 +212,15 @@ class BarrierConcurrencyState(ConcurrencyState):
 
         return True, message
 
-    @Observable.observed
     def add_state(self, state, storage_load=False):
-        """ Overwrite the parent class add_state method by adding the automatic transition generation for the decider_state.
+        """Overwrite the parent class add_state method
+
+         Add automatic transition generation for the decider_state.
 
         :param state: The state to be added
         :return:
         """
-        state_id = ContainerState.add_state(self, state)
+        state_id = super(BarrierConcurrencyState, self).add_state(state)
         if not storage_load and state.state_id is not UNIQUE_DECIDER_STATE_ID:
             # the transitions must only be created for the initial add_state call and not during each load procedure
             for o_id, o in state.outcomes.iteritems():
@@ -233,7 +234,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         """ Overwrite the setter of the container state base class as special handling for the decider state is needed.
 
         :param states: the dictionary of new states
-        :return:
+        :raises exceptions.TypeError: if the states parameter is not of type dict
         """
         # First safely remove all existing states (recursively!), as they will be replaced
         state_ids = self.states.keys()
@@ -253,13 +254,12 @@ class BarrierConcurrencyState(ConcurrencyState):
             for state in states.itervalues():
                 self.add_state(state)
 
-    @Observable.observed
     def remove_state(self, state_id, recursive_deletion=True, force=False):
         """ Overwrite the parent class remove state method by checking if the user tries to delete the decider state
 
         :param state_id: the id of the state to remove
         :param recursive_deletion: a flag to indicate a recursive deletion of all substates
-        :return:
+        :raises exceptions.AttributeError: if the state_id parameter is the decider state
         """
         if state_id == UNIQUE_DECIDER_STATE_ID and force is False:
             raise AttributeError("You are not allowed to delete the decider state.")

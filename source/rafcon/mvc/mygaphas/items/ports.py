@@ -29,9 +29,12 @@ class PortView(object):
     def __init__(self, in_port, name=None, parent=None, side=SnappedSide.RIGHT):
         self.handle = Handle(connectable=True)
         self.port = RectanglePointPort(self.handle.pos, self)
+        self._is_in_port = in_port
         self._side = None
+        self.direction = None
         self.side = side
         self._parent = parent
+        self._view = None
 
         self._draw_connection_to_port = False
 
@@ -46,7 +49,6 @@ class PortView(object):
 
         self._name = name
 
-        self._is_in_port = in_port
 
         self.label_print_inside = True
 
@@ -62,15 +64,24 @@ class PortView(object):
     @side.setter
     @observed
     def side(self, side):
-        assert isinstance(side, SnappedSide)
         self._side = side
+        self.direction = None
+        if self.side is SnappedSide.LEFT:
+            self.direction = Direction.RIGHT if self._is_in_port else Direction.LEFT
+        elif self.side is SnappedSide.TOP:
+            self.direction = Direction.DOWN if self._is_in_port else Direction.UP
+        elif self.side is SnappedSide.RIGHT:
+            self.direction = Direction.LEFT if self._is_in_port else Direction.RIGHT
+        elif self.side is SnappedSide.BOTTOM:
+            self.direction = Direction.UP if self._is_in_port else Direction.DOWN
 
     @property
     def port_side_size(self):
-        if not self.parent:
+        parent = self.parent
+        if not parent:
             logger.warn("PortView without parent: {}".format(self))
             return 1
-        return self.parent.border_width
+        return parent.border_width
 
     @property
     def name(self):
@@ -96,6 +107,12 @@ class PortView(object):
     def port_size(self):
         return self.port_side_size / 1.5, self.port_side_size
 
+    @property
+    def view(self):
+        if not self._view:
+            self._view = self._parent.canvas.get_first_view()
+        return self._view
+
     def has_outgoing_connection(self):
         return len(self._outgoing_handles) > 0
 
@@ -112,6 +129,9 @@ class PortView(object):
         elif not moving and handle is connection_view.to_handle() and handle not in self._incoming_handles:
             self._incoming_handles.append(handle)
             self._add_connection(connection_view)
+
+    def has_label(self):
+        return False
 
     def _add_connection(self, connection_view):
         if connection_view not in self._connected_connections:
@@ -152,13 +172,6 @@ class PortView(object):
             return self._tmp_incoming_connected
         return True
 
-    def is_connected_to_scoped_variable(self):
-        from rafcon.mvc.mygaphas.items.connection import ScopedVariableDataFlowView
-        for conn in self._connected_connections:
-            if isinstance(conn, ScopedVariableDataFlowView):
-                return True
-        return False
-
     def get_port_area(self, view):
         """Calculates the drawing area affected by the (hovered) port
         """
@@ -179,23 +192,18 @@ class PortView(object):
     def draw(self, context, state):
         raise NotImplementedError
 
-    def draw_port(self, context, fill_color, transparent, draw_label=True, value=None):
+    def draw_port(self, context, fill_color, transparent, value=None):
         c = context.cairo
         view = self._parent.canvas.get_first_view()
         side_length = self.port_side_size
+        position = self.pos
 
-        direction = None
-        if self.side is SnappedSide.LEFT:
-            direction = Direction.RIGHT if self._is_in_port else Direction.LEFT
-        elif self.side is SnappedSide.TOP:
-            direction = Direction.DOWN if self._is_in_port else Direction.UP
-        elif self.side is SnappedSide.RIGHT:
-            direction = Direction.LEFT if self._is_in_port else Direction.RIGHT
-        elif self.side is SnappedSide.BOTTOM:
-            direction = Direction.UP if self._is_in_port else Direction.DOWN
+        view_length, _ = view.get_matrix_i2v(self.parent).transform_distance(side_length, 0)
+        if view_length < constants.MINIMUM_SIZE_FOR_DISPLAY:
+            return
 
         parameters = {
-            'direction': direction,
+            'direction': self.direction,
             'side_length': side_length,
             'fill_color': fill_color,
             'transparency': transparent,
@@ -203,7 +211,7 @@ class PortView(object):
             'outgoing': self.connected_outgoing,
         }
 
-        upper_left_corner = (self.pos.x.value - side_length / 2., self.pos.y.value - side_length / 2.)
+        upper_left_corner = (position.x.value - side_length / 2., position.y.value - side_length / 2.)
         current_zoom = view.get_zoom_factor()
         from_cache, image, zoom = self._port_image_cache.get_cached_image(side_length, side_length,
                                                                           current_zoom, parameters)
@@ -220,28 +228,26 @@ class PortView(object):
 
             c.move_to(0, 0)
             if isinstance(self._parent.model.state, ContainerState):
-                self._draw_container_state_port(c, direction, fill_color, transparent)
+                self._draw_container_state_port(c, self.direction, fill_color, transparent)
             else:
-                self._draw_simple_state_port(c, direction, fill_color, transparent)
+                self._draw_simple_state_port(c, self.direction, fill_color, transparent)
 
             # Copy image surface to current cairo context
             self._port_image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
-        if self.name and draw_label:  # not self.has_outgoing_connection() and draw_label:
+        if self.name and self.has_label():
             self.draw_name(context, transparent, value)
 
         if self.handle is view.hovered_handle or context.draw_all:
             context.cairo.move_to(*self.pos)
-            self._draw_hover_effect(context.cairo, direction, fill_color, transparent)
+            self._draw_hover_effect(context.cairo, self.direction, fill_color, transparent)
 
     def draw_name(self, context, transparency, value):
-        if self.is_connected_to_scoped_variable():
-            return
-
         c = context.cairo
         side_length = self.port_side_size
         label_position = self.side if not self.label_print_inside else self.side.opposite()
         fill_color = gap_draw_helper.get_col_rgba(self.fill_color, transparency)
+        position = self.pos
 
         show_additional_value = False
         if global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True) and value is not None:
@@ -259,8 +265,8 @@ class PortView(object):
         if show_additional_value:
             parameters['value'] = value
 
-        upper_left_corner = (self.pos[0] + self._last_label_relative_pos[0],
-                             self.pos[1] + self._last_label_relative_pos[1])
+        upper_left_corner = (position[0] + self._last_label_relative_pos[0],
+                             position[1] + self._last_label_relative_pos[1])
         current_zoom = self._parent.canvas.get_first_view().get_zoom_factor()
         from_cache, image, zoom = self._label_image_cache.get_cached_image(self._last_label_size[0],
                                                                            self._last_label_size[1],
@@ -275,14 +281,14 @@ class PortView(object):
             # print "draw port name"
 
             # First we have to do a "dry run", in order to determine the size of the new label
-            c.move_to(self.pos.x.value, self.pos.y.value)
+            c.move_to(position.x.value, position.y.value)
             extents = gap_draw_helper.draw_port_label(c, self.name, fill_color, self.text_color, transparency,
                                                       False, label_position, side_length, self._draw_connection_to_port,
                                                       show_additional_value, value, only_extent_calculations=True)
             from rafcon.mvc.mygaphas.utils.gap_helper import extend_extents
             extents = extend_extents(extents, factor=1.02)
             label_pos = extents[0], extents[1]
-            relative_pos = label_pos[0] - self.pos[0], label_pos[1] - self.pos[1]
+            relative_pos = label_pos[0] - position[0], label_pos[1] - position[1]
             label_size = extents[2] - extents[0], extents[3] - extents[1]
             self._last_label_relative_pos = relative_pos
             self._last_label_size = label_size
@@ -297,7 +303,7 @@ class PortView(object):
                                             show_additional_value, value)
 
             # Copy image surface to current cairo context
-            upper_left_corner = (self.pos[0] + relative_pos[0], self.pos[1] + relative_pos[1])
+            upper_left_corner = (position[0] + relative_pos[0], position[1] + relative_pos[1])
             self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
             # draw_all means, the bounding box of the state is calculated
@@ -355,7 +361,7 @@ class PortView(object):
         c = context
 
         width, height = self.port_size
-        c.set_line_width(self.port_side_size / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR *
+        c.set_line_width(self.port_side_size / constants.BORDER_WIDTH_OUTLINE_WIDTH_FACTOR *
                          self._port_image_cache.multiplicator)
 
         # Save/restore context, as we move and rotate the connector to the desired pose
@@ -556,16 +562,23 @@ class OutcomeView(LogicPortView):
         self.sort = outcome_m.outcome.outcome_id
 
     @property
-    def outcome_m(self):
+    def model(self):
         return self._outcome_m()
 
     @property
     def outcome_id(self):
-        return self.outcome_m.outcome.outcome_id
+        return self.model.outcome.outcome_id
 
     @property
     def name(self):
-        return self.outcome_m.outcome.name
+        return self.model.outcome.name
+
+    def has_label(self):
+        if self.has_outgoing_connection():
+            return False
+        if not global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False) and self.outcome_id in [-1, -2]:
+            return False
+        return True
 
     def draw(self, context, state, highlight=False):
         if highlight:
@@ -577,13 +590,7 @@ class OutcomeView(LogicPortView):
         else:
             fill_color = gui_config.gtk_colors['LABEL']
 
-        draw_label = True
-        if self.has_outgoing_connection():
-            draw_label = False
-        if not global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False) and self.outcome_id in [-1, -2]:
-            draw_label = False
-
-        self.draw_port(context, fill_color, state.transparent, draw_label=draw_label)
+        self.draw_port(context, fill_color, state.transparent)
 
 
 class ScopedVariablePortView(PortView):
@@ -780,20 +787,22 @@ class DataPortView(PortView):
         self.fill_color = gui_config.gtk_colors['DATA_PORT']
 
     @property
-    def port_m(self):
+    def model(self):
         return self._port_m()
 
     @property
     def port_id(self):
-        return self.port_m.data_port.data_port_id
+        return self.model.data_port.data_port_id
 
     @property
     def name(self):
-        return self.port_m.data_port.name
+        return self.model.data_port.name
+
+    def has_label(self):
+        return self.parent.selected or self.parent.show_data_port_label
 
     def draw(self, context, state):
-        draw_label = state.selected or state.show_data_port_label or context.draw_all
-        self.draw_port(context, gui_config.gtk_colors['DATA_PORT'], state.transparent, draw_label, self._value)
+        self.draw_port(context, gui_config.gtk_colors['DATA_PORT'], state.transparent, self._value)
 
 
 class InputPortView(DataPortView):

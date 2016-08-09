@@ -276,15 +276,13 @@ class StateMachineTreeController(ExtendedController):
 
     def on_cursor_changed(self, widget):
         (model, row) = self.view.get_selection().get_selected()
-        logger.debug("The view jumps to the selected state and the zoom should be adjusted as well")
         if row is not None:
             state_model = model[row][3]
-            self._selected_sm_model.selection.clear()
 
             state_row_path = self.tree_store.get_path(self.state_row_iter_dict_by_state_path[model[row][4]])
             self.view.expand_to_path(state_row_path)
 
-            self._selected_sm_model.selection.add(state_model)
+            self._selected_sm_model.selection.set(state_model)
 
     def mouse_click(self, widget, event=None):
         # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}"

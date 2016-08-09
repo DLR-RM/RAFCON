@@ -27,9 +27,9 @@ import rafcon.utils.filesystem as filesystem
 from rafcon.statemachine.config import global_config
 import rafcon.statemachine.singleton as sm_singletons
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.statemachine.enums import StateExecutionState
 
+from rafcon.utils import profiler
 from rafcon.utils import plugins
 from rafcon.utils import log
 logger = log.get_logger("start core")
@@ -121,9 +121,10 @@ def start_state_machine(state_machine_path, start_state_path=None):
     :param str start_state_path: The state path to the desired first state
     :return StateMachine: The loaded state machine
     """
-    state_machine = StateMachineExecutionEngine.execute_state_machine_from_path(path=state_machine_path,
-                                                                                start_state_path=start_state_path,
-                                                                                wait_for_execution_finished=False)
+    state_machine_execution_engine = sm_singletons.state_machine_execution_engine
+    state_machine = state_machine_execution_engine.execute_state_machine_from_path(path=state_machine_path,
+                                                                                   start_state_path=start_state_path,
+                                                                                   wait_for_execution_finished=False)
 
     if reactor_required():
         sm_thread = threading.Thread(target=stop_reactor_on_state_machine_finish, args=[state_machine, ])
@@ -134,8 +135,8 @@ def start_state_machine(state_machine_path, start_state_path=None):
 def stop_reactor_on_state_machine_finish(state_machine):
 
     # wait for the state machine to start
-    # in the case of the monitoring execution engine there are no execution histories yet
-    if len(state_machine.execution_history_container.execution_histories) > 0:
+    from rafcon.statemachine.states.execution_state import ExecutionState
+    if not isinstance(state_machine.root_state, ExecutionState):
         while len(state_machine.execution_history_container.execution_histories[0].history_items) < 1:
             time.sleep(0.1)
     else:
@@ -151,7 +152,9 @@ def stop_reactor_on_state_machine_finish(state_machine):
 
     if reactor_required():
         from twisted.internet import reactor
-        reactor.callFromThread(reactor.stop)
+        if reactor.running:
+            plugins.run_hook("pre_destruction")
+            reactor.callFromThread(reactor.stop)
 
 
 def reactor_required():
@@ -160,39 +163,45 @@ def reactor_required():
     return False
 
 
-def start_profiler():
-    profiler_run = global_config.get_config_value("PROFILER_RUN", False)
-    if profiler_run:
-        try:
-            import profiling.tracing
-            profiler = profiling.tracing.TracingProfiler()
-            logger.debug("The profiler has been started")
-            profiler.start()
-        except ImportError:
-            profiler = None
-            logger.error("Cannot run profiler due to missing Python package 'profiling'")
-        return profiler
+SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n)  for n in dir(signal) if n.startswith('SIG') and '_' not in n)
 
 
-def stop_profiler(profiler):
-    profiler.stop()
+def signal_handler(signal, frame):
+    from rafcon.statemachine.enums import StateMachineExecutionStatus
+    state_machine_execution_engine = sm_singletons.state_machine_execution_engine
+    sm_singletons.shut_down_signal = signal
 
-    if global_config.get_config_value("PROFILER_VIEWER", True):
-        profiler.run_viewer()
+    try:
+        # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
+        print "Signal '{}' received.\n" \
+              "Execution engine will be stopped and program will be shutdown!".format(SIGNALS_TO_NAMES_DICT.get(
+            signal, "[unknown]"))
+        if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+            state_machine_execution_engine.stop()
+            state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
+    except Exception as e:
+        import traceback
+        print "Could not stop state machine: {0} {1}".format(e.message, traceback.format_exc())
 
-    result_path = global_config.get_config_value("PROFILER_RESULT_PATH")
-    if os.path.isdir(os.path.dirname(result_path)):
-        import pickle
-        result = profiler.result()
-        with open(result_path, 'wb') as f:
-            pickle.dump((profiler.__class__, result), f, pickle.HIGHEST_PROTOCOL)
-        logger.info("The profiler result has been dumped. Run the following command for inspection:")
-        logger.info("$ profiling view {}".format(result_path))
+    # shutdown twisted correctly
+    if reactor_required():
+        from twisted.internet import reactor
+        if reactor.running:
+            plugins.run_hook("pre_destruction")
+            reactor.callFromThread(reactor.stop)
+
+    plugins.run_hook("post_destruction")
+
+
+def register_signal_handlers(callback):
+    signal.signal(signal.SIGINT, callback)
+    signal.signal(signal.SIGHUP, callback)
+    signal.signal(signal.SIGQUIT, callback)
+    signal.signal(signal.SIGTERM, callback)
 
 
 if __name__ == '__main__':
-
-    signal.signal(signal.SIGINT, sm_singletons.signal_handler)
+    register_signal_handlers(signal_handler)
 
     logger.info("initialize RAFCON ... ")
 
@@ -211,7 +220,9 @@ if __name__ == '__main__':
 
     post_setup_plugins(user_input)
 
-    profiler = start_profiler()
+    if global_config.get_config_value("PROFILER_RUN", False):
+        profiler.start("global")
+
     try:
 
         sm = start_state_machine(user_input.state_machine_path, user_input.start_state_path)
@@ -223,6 +234,10 @@ if __name__ == '__main__':
 
         rafcon.statemachine.singleton.state_machine_execution_engine.join()
         logger.info("State machine execution finished!")
+
+        plugins.run_hook("post_destruction")
     finally:
-        if profiler:
-            stop_profiler(profiler)
+        if global_config.get_config_value("PROFILER_RUN", False):
+            result_path = global_config.get_config_value("PROFILER_RESULT_PATH")
+            view = global_config.get_config_value("PROFILER_VIEWER")
+            profiler.stop("global", result_path, view)

@@ -6,11 +6,13 @@ import gtk
 from gtkmvc import ModelMT
 
 from rafcon.statemachine.storage import storage
+import rafcon.statemachine.singleton as sm_singleton
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.utils.dialog import RAFCONDialog
 import rafcon.mvc.singleton as mvc_singleton
+
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
@@ -75,7 +77,7 @@ def check_for_crashed_rafcon_instances():
     for folder in os.listdir(MY_RAFCON_TEMP_PATH):
         if not folder == str(os.getpid()) and folder not in process_id_list:
             rafcon_instance_path_to_check = os.path.join(MY_RAFCON_TEMP_PATH, folder)
-            if 'lock' in os.listdir(rafcon_instance_path_to_check):
+            if os.path.isdir(rafcon_instance_path_to_check) and 'lock' in os.listdir(rafcon_instance_path_to_check):
                 logger.info("There is tmp-data of a crashed/killed or badly closed state-machines of a RAFCON instance "
                             "in path: {}".format(rafcon_instance_path_to_check))
                 restorable_sm.append((None, folder, None, None))
@@ -180,9 +182,26 @@ class AutoBackupModel(ModelMT):
 
     def destroy(self):
         logger.info('destroy auto backup ' + str(self.state_machine_model.state_machine.state_machine_id))
+        self.cancel_timed_thread()
+        if not sm_singleton.shut_down_signal:
+            self.clean_lock_file(True)
+
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        Unregister itself as observer from the state machine and the root state
+        """
+        try:
+            self.relieve_model(self.state_machine_model)
+        except KeyError:  # Might happen if the observer was already unregistered
+            pass
+        self.cancel_timed_thread()
+
+    def cancel_timed_thread(self):
         if self.tmp_storage_timed_thread is not None:
             self.tmp_storage_timed_thread.cancel()
-        self.clean_lock_file(True)
+            self.tmp_storage_timed_thread.join()
+            self.tmp_storage_timed_thread = None
 
     def check_lock_file(self):
         if self.__destroyed:

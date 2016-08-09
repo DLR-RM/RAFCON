@@ -1,22 +1,24 @@
 import signal
 import tempfile
-from os import mkdir, environ
-from os.path import join, dirname, realpath
+from os import mkdir, environ, path
+from os.path import join, dirname, realpath, exists
 from threading import Lock, Condition
 
 import rafcon
 from rafcon.utils import log, constants
 from rafcon.statemachine.config import global_config
-from rafcon.mvc.config import global_gui_config
 
 
 test_multithrading_lock = Lock()
 
 RAFCON_TEMP_PATH_TEST_BASE = join(constants.RAFCON_TEMP_PATH_BASE, 'unit_tests')
-try:
+if not exists(RAFCON_TEMP_PATH_TEST_BASE):
     mkdir(RAFCON_TEMP_PATH_TEST_BASE)
-except OSError:  # Raised when directory is already existing, thus can be ignored
-    pass
+
+# temporary path that can be used if multiple instance of RAFCON should use one reference-path in a test
+RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE = join(constants.RAFCON_TEMP_PATH_BASE, '..', 'unit_tests')
+if not exists(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE):
+    mkdir(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE)
 
 RAFCON_PATH = realpath(rafcon.__path__[0])
 TEST_SM_PATH = join(dirname(RAFCON_PATH), 'test_scripts')
@@ -35,6 +37,7 @@ def reload_config(config=True, gui_config=True):
     if config:
         rafcon.statemachine.config.global_config.load()
     if gui_config:
+        import rafcon.mvc.config
         rafcon.mvc.config.global_gui_config.load()
 
 
@@ -94,12 +97,21 @@ def call_gui_callback(callback, *args):
 
 
 def start_rafcon():
+    # import mvc modules only if necessary
+    from rafcon.mvc.config import global_gui_config
+    from rafcon.mvc.start import signal_handler
     test_multithrading_lock.acquire()
-    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
     global_config.load()
     global_gui_config.load()
     environ['RAFCON_LIB_PATH'] = join(dirname(RAFCON_PATH), 'libraries')
     rafcon.statemachine.singleton.library_manager.initialize()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+
+
+def wait_for_gui():
+    import gtk
+    while gtk.events_pending():
+        gtk.main_iteration(False)
 
 sm_manager_model = None

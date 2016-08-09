@@ -121,7 +121,6 @@
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
-                                        <property name="fill">True</property>
                                         <property name="pack_type">end</property>
                                         <property name="position">1</property>
                                       </packing>
@@ -377,41 +376,10 @@
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkScrolledWindow" id="network_scrolledwindow">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="hscrollbar_policy">automatic</property>
-                                    <property name="vscrollbar_policy">automatic</property>
-                                    <child>
-                                      <object class="GtkViewport" id="network_viewport">
-                                        <property name="visible">True</property>
-                                        <child>
-                                          <object class="GtkAlignment" id="network_alignment">
-                                            <property name="visible">True</property>
-                                            <property name="xalign">0</property>
-                                            <property name="yalign">0</property>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                          </object>
-                                        </child>
-                                      </object>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="position">2</property>
-                                  </packing>
+                                  <placeholder/>
                                 </child>
                                 <child type="tab">
-                                  <object class="GtkLabel" id="network_tab">
-                                    <property name="visible">True</property>
-                                    <property name="label" translatable="yes">network</property>
-                                    <property name="angle">90</property>
-                                  </object>
-                                  <packing>
-                                    <property name="position">2</property>
-                                    <property name="tab_fill">False</property>
-                                  </packing>
+                                  <placeholder/>
                                 </child>
                               </object>
                               <packing>
@@ -454,6 +422,17 @@
                       <packing>
                         <property name="expand">False</property>
                         <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="left_bar_replacement">
+                        <property name="width_request">10</property>
+                        <property name="can_focus">False</property>
+                        <property name="sensitive">False</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">2</property>
                       </packing>
                     </child>
                     <child>
@@ -963,7 +942,7 @@
                         </child>
                       </object>
                       <packing>
-                        <property name="position">2</property>
+                        <property name="position">3</property>
                       </packing>
                     </child>
                     <child>
@@ -974,7 +953,18 @@
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="position">3</property>
+                        <property name="position">4</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="right_bar_replacement">
+                        <property name="width_request">10</property>
+                        <property name="can_focus">False</property>
+                        <property name="sensitive">False</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">5</property>
                       </packing>
                     </child>
                   </object>

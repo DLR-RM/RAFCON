@@ -23,6 +23,8 @@ class Outcome(StateElement):
     As the name of an outcome can be changes without modifying the transitions the primary key of an outcome is its
     id and not its name.
 
+    The constructor raises an exceptions.TypeError if the outcome_id is not of type int.
+
     :ivar int outcome_id: the id of the outcome, must be unique on one hierarchy level
     :ivar str name: the human readable name of the outcome
     :ivar rafcon.statemachine.states.state.State parent: reference to the parent state

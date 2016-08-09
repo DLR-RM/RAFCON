@@ -18,7 +18,7 @@ def test_custom_entry_point(caplog):
     testing_utils.test_multithrading_lock.acquire()
 
     start_state_id = "RWUZOP/ZDWBKU/HADSLI"
-    sm = StateMachineExecutionEngine.execute_state_machine_from_path(
+    sm = rafcon.statemachine.singleton.state_machine_execution_engine.execute_state_machine_from_path(
         path=testing_utils.get_test_sm_path("unit_test_state_machines/test_custom_entry_point"),
         start_state_path=start_state_id)
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
@@ -29,4 +29,5 @@ def test_custom_entry_point(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    test_custom_entry_point(None)
+    # pytest.main([__file__])
