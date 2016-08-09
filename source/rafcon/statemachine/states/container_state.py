@@ -1411,35 +1411,36 @@ class ContainerState(State):
         # Check whether to and from port are existing
         from_data_port = self.get_data_port(from_state_id, from_data_port_id)
         if not from_data_port:
-            return False, "Data flow origin not existing"
+            return False, "Data flow origin not existing -> {0}".format(data_flow)
         to_data_port = self.get_data_port(to_state_id, to_data_port_id)
         if not to_data_port:
-            return False, "Data flow target not existing"
+            return False, "Data flow target not existing -> {0}".format(data_flow)
 
         # Data_ports without parents are not allowed to be connected twice
         if not to_data_port.parent:
-            return False, "to_data_port does not have a parent"
+            return False, "to_data_port does not have a parent -> {0}".format(data_flow)
         if not from_data_port.parent:
-            return False, "from_data_port does not have a parent"
+            return False, "from_data_port does not have a parent -> {0}".format(data_flow)
 
         # Check, whether the origin of the data flow is valid
         if from_state_id == self.state_id:  # data_flow originates in container state
             if from_data_port_id not in self.input_data_ports and from_data_port_id not in self.scoped_variables:
                 return False, "Data flow origin port must be an input port or scoped variable, when the data flow " \
-                              "starts in the parent state"
+                              "starts in the parent state -> {0}".format(data_flow)
         else:  # data flow originates in child state
             if from_data_port_id not in from_data_port.parent.output_data_ports:
                 return False, "Data flow origin port must be an output port, when the data flow " \
-                              "starts in the child state"
+                              "starts in the child state -> {0}".format(data_flow)
 
         # Check, whether the target of a data flow is valid
         if to_state_id == self.state_id:  # data_flow ends in container state
             if to_data_port_id not in self.output_data_ports and to_data_port_id not in self.scoped_variables:
                 return False, "Data flow target port must be an output port or scoped variable, when the data flow " \
-                              "goes to the parent state"
+                              "goes to the parent state -> {0}".format(data_flow)
         else:  # data_flow ends in child state
             if to_data_port_id not in to_data_port.parent.input_data_ports:
-                return False, "Data flow target port must be an input port, when the data flow goes to a child state"
+                return False, "Data flow target port must be an input port, when the data flow goes to a child state" \
+                              " -> {0}".format(data_flow)
 
         # Check, whether the target port is already connected
         for existing_data_flow in self.data_flows.itervalues():
@@ -1447,7 +1448,7 @@ class ContainerState(State):
             from_data_port_existing = self.get_data_port(existing_data_flow.from_state, existing_data_flow.from_key)
             if to_data_port is to_data_port_existing and data_flow is not existing_data_flow:
                 if from_data_port is from_data_port_existing:
-                    return False, "Exactly the same data flow is already existing"
+                    return False, "Exactly the same data flow is already existing -> {0}".format(data_flow)
 
         return True, "valid"
 
