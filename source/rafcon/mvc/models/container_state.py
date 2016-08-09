@@ -287,7 +287,7 @@ class ContainerStateModel(StateModel):
                     state_id = info['args'][1]
                 else:
                     state_id = info['args'][0]
-            related_transitions, related_data_flows = self.state.related_linkage(state_id)
+            related_transitions, related_data_flows = self.state.related_linkage_state(state_id)
             print "substituted state_id: ", state_id
             tmp_meta_data['state'] = self.states[state_id].meta
             for t in related_transitions['external']['ingoing'] + related_transitions['external']['outgoing']:
