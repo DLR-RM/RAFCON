@@ -228,13 +228,13 @@ def trigger_gui_signals(*args):
     # substitute state with template
     lib_state = rafcon.mvc.singleton.library_manager.get_library_instance('generic', 'wait')
     old_keys = state_m_parent.state.states.keys()
-    transitions_before, data_flows_before = state_m_parent.state.related_linkage('RQXPAI')
+    transitions_before, data_flows_before = state_m_parent.state.related_linkage_state('RQXPAI')
     call_gui_callback(state_m_parent.state.substitute_state, 'RQXPAI', lib_state.state_copy)
     new_state_id = None
     for state_id in state_m_parent.state.states.keys():
         if state_id not in old_keys:
             new_state_id = state_id
-    transitions_after, data_flows_after = state_m_parent.state.related_linkage(new_state_id)
+    transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
     # transition is not preserved because of unequal outcome naming
     assert len(transitions_before['external']['ingoing']) == 1
     assert len(transitions_after['external']['ingoing']) == 1
@@ -252,14 +252,14 @@ def trigger_gui_signals(*args):
                       state_m_parent.states[new_state_id].state.input_data_ports.items()[0][1].data_port_id)
 
     old_keys = state_m_parent.state.states.keys()
-    transitions_before, data_flows_before = state_m_parent.state.related_linkage(new_state_id)
+    transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
     lib_state = rafcon.mvc.singleton.library_manager.get_library_instance('generic', 'wait')
     call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state)
     new_state_id = None
     for state_id in state_m_parent.state.states.keys():
         if state_id not in old_keys:
             new_state_id = state_id
-    transitions_after, data_flows_after = state_m_parent.state.related_linkage(new_state_id)
+    transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
     # test if data flow is ignored
     assert len(transitions_before['external']['ingoing']) == 1
     assert len(transitions_after['external']['ingoing']) == 1
@@ -278,14 +278,14 @@ def trigger_gui_signals(*args):
                       state_m_parent.states[new_state_id].state.input_data_ports.items()[0][1].data_port_id)
 
     old_keys = state_m_parent.state.states.keys()
-    transitions_before, data_flows_before = state_m_parent.state.related_linkage(new_state_id)
+    transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
     lib_state = rafcon.mvc.singleton.library_manager.get_library_instance('generic', 'wait')
     call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state.state_copy)
     new_state_id = None
     for state_id in state_m_parent.state.states.keys():
         if state_id not in old_keys:
             new_state_id = state_id
-    transitions_after, data_flows_after = state_m_parent.state.related_linkage(new_state_id)
+    transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
     # test if data flow is ignored
     assert len(transitions_before['external']['ingoing']) == 1
     assert len(transitions_after['external']['ingoing']) == 1
