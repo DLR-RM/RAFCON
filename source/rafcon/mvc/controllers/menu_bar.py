@@ -258,7 +258,7 @@ class MenuBarController(ExtendedController):
         try:
             state_machine = storage.load_state_machine_from_path(load_path)
             state_machine_manager.add_state_machine(state_machine)
-        except (ValueError, IOError) as e:
+        except (AttributeError, ValueError, IOError) as e:
             logger.error('Error while trying to open state machine: {0}'.format(e))
 
     def on_save_activate(self, widget, data=None, save_as=False):
