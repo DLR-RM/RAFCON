@@ -528,3 +528,44 @@ def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', c
         t_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='append_to_last_change'))
     else:
         t_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='viapoint_position'))
+
+
+def scale_meta_data_according_state(meta_data):
+    """ The full meta data of state elements is scaled (reduced) according the area used indicated by the state
+    meta data.
+
+    :param meta_data: dict that hold lists of meta data with state attribute consistent keys
+    :return:
+    """
+    # scale opengl meta data
+    rel_pos = meta_data['state']['gui']['editor_opengl']['rel_pos']
+    for s_m in meta_data['states'].itervalues():
+        s_m.meta['gui']['editor_opengl']['rel_pos'] = (s_m.meta['gui']['editor_opengl']['rel_pos'][0] + rel_pos[0],
+                                                       s_m.meta['gui']['editor_opengl']['rel_pos'][1] + rel_pos[1])
+    for sv_m in meta_data['scoped_variables'].itervalues():
+        sv_m.meta['gui']['editor_opengl']['inner_rel_pos'] = (sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][0] + rel_pos[0],
+                                                              sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][1] + rel_pos[1])
+    for t_m in meta_data['transitions'].itervalues():
+        if t_m.meta['gui']['editor_opengl']['waypoints']:
+            for i, pos in enumerate(t_m.meta['gui']['editor_opengl']['waypoints']):
+                t_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] + rel_pos[0], pos[1] + rel_pos[1])
+    for df_m in meta_data['data_flows'].itervalues():
+        if df_m.meta['gui']['editor_opengl']['waypoints']:
+            for i, pos in enumerate(df_m.meta['gui']['editor_opengl']['waypoints']):
+                df_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] + rel_pos[0], pos[1] + rel_pos[1])
+
+    from rafcon.mvc.config import global_gui_config
+    if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
+        return True
+    else:
+        return False
+
+
+def scale_meta_data_according_states(meta_data):
+    """ The full meta data of state elements is scaled (enlarged) according the area used indicated by the states
+    meta data.
+
+    :param meta_data: dict that hold lists of meta data with state attribute consistent keys
+    :return:
+    """
+    return

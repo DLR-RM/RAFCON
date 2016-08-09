@@ -280,6 +280,7 @@ class ContainerState(State):
         :return:
         """
         # TODO remain all related linkage by adding outcomes and input output port to new hierarchy state
+        # TODO remember changed state or state element ids and provide them for the model functionalities
 
         assert all([state_id in [state_id for state in self.states] for state_id in state_ids])
         if scoped_variables is None:
@@ -332,7 +333,7 @@ class ContainerState(State):
         from rafcon.statemachine.states.hierarchy_state import HierarchyState
         s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
                            scoped_variables=scoped_variables_to_group, state_id=self.state_id)
-        self.add_state(s)
+        state_id = self.add_state(s)
 
         if ingoing_transitions:
             t = ingoing_transitions[0]
@@ -382,7 +383,7 @@ class ContainerState(State):
             name = outcomes_outgoing_transitions[(t.to_state, t.to_outcome)]
             s.add_transition(t.from_state, t.from_outcome, s.state_id, new_outcome_ids[name])
 
-        return
+        return state_id
 
     @Observable.observed
     def ungroup_state(self, state_id):
@@ -431,7 +432,7 @@ class ContainerState(State):
             new_state_id = self.add_state(state)
             state_id_dict[state.state_id] = new_state_id
         for sv in child_scoped_variables:
-            new_sv_id = self.add_scoped_variable(name=sv.name, data_type=sv.data_type, default_value=sv.default_value)
+            new_sv_id = self.add_scoped_variable(sv.name, sv.data_type, sv.default_value, sv.data_port_id)
             sv_id_dict[sv.data_port_id] = new_sv_id
 
         # re-create transitions
