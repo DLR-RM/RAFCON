@@ -148,29 +148,28 @@ class GraphicalEditorController(ExtendedController):
 
         Adds a new state only if the graphical editor is in focus.
         """
-        if not self.view.editor.is_focus():
-            return
-        state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-        return state_machine_helper.add_new_state(self.model, state_type)
+        if self.view and self.view.editor.is_focus():
+            state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
+            return state_machine_helper.add_new_state(self.model, state_type)
 
     def _copy_selection(self, *args):
         """Copies the current selection to the clipboard.
         """
-        if self.view.editor.is_focus():
+        if self.view and self.view.editor.is_focus():
             logger.debug("copy selection")
             global_clipboard.copy(self.model.selection)
 
     def _cut_selection(self, *args):
         """Cuts the current selection and copys it to the clipboard.
         """
-        if self.view.editor.is_focus():
+        if self.view and self.view.editor.is_focus():
             logger.debug("cut selection")
             global_clipboard.cut(self.model.selection)
 
     def _paste_clipboard(self, *args):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
-        if self.view.editor.is_focus():
+        if self.view and self.view.editor.is_focus():
             logger.debug("Paste")
 
             # Always update canvas and handle all events in the gtk queue before performing any changes
