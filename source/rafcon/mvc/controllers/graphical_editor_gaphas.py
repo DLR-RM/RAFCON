@@ -347,7 +347,10 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'remove_state':
                 if self._change_state_type:
                     return
-                state_v = self.canvas.get_view_for_id(StateView, arguments[1])
+                parent_state = arguments[0]
+                state_id = arguments[1]
+                parent_v = self.canvas.get_view_for_core_element(parent_state)
+                state_v = self.canvas.get_view_for_id(StateView, state_id, parent_v)
                 if state_v:
                     parent_v = self.canvas.get_parent(state_v)
                     state_v.remove()
