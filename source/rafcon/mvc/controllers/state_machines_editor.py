@@ -10,7 +10,6 @@
 
 import copy
 import collections
-
 import gtk
 
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
