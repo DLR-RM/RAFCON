@@ -85,17 +85,18 @@ def trigger_copy_delete_bug_signals(*args):
 
     graphical_editor_ctrl = state_machines_ctrl.get_controller(first_sm_id)
 
-    assert isinstance(graphical_editor_ctrl, graphical_editor_gaphas.GraphicalEditorController)
-
-    assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
+    if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR'):
+        assert isinstance(graphical_editor_ctrl, graphical_editor_gaphas.GraphicalEditorController)
+        assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
 
     new_estate_m = root_state_m.states.items()[0][1]
     if new_estate_m.state.get_path() == new_hstate_m.state.get_path():
         new_estate_m = root_state_m.states.items()[1][1]
 
     call_gui_callback(sm_m.selection.set, new_estate_m)
-    call_gui_callback(root_state_m.state.remove_state, new_estate_m.state.state_id)
-    assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
+    call_gui_callback(menubar_ctrl.on_delete_activate, None)
+    if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR'):
+        assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
 
     call_gui_callback(menubar_ctrl.on_refresh_libraries_activate, None)
     call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
