@@ -72,12 +72,11 @@ def create_tab_header(title, close_callback, *additional_parameters):
 
 
 def set_tab_label_texts(label, state_machine_m, unsaved_changes=False):
-    from xml.sax.saxutils import escape
     state_machine_id = state_machine_m.state_machine.state_machine_id
     root_state_name = state_machine_m.root_state.state.name
     root_state_name_trimmed = helpers.limit_string(root_state_name, ROOT_STATE_NAME_MAX_CHARS)
     state_machine_path = state_machine_m.state_machine.file_system_path or "[not yet saved]"
-    label_text = "{0}&#8201;&#8226;&#8201;{1}".format(state_machine_id, escape(root_state_name_trimmed))
+    label_text = "{0}&#8201;&#8226;&#8201;{1}".format(state_machine_id, root_state_name_trimmed)
     tooltip_text = root_state_name + "\n\nPath: " + state_machine_path
     if unsaved_changes:
         label_text += '&#8201;*'
