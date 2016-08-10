@@ -889,11 +889,11 @@ class StateDataFlowsEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("add", self.add_data_flow)
 
     def add_data_flow(self, *_):
-        if self.view.data_flows_listView.tree_view.is_focus():
+        if self.view and self.view.data_flows_listView.tree_view.is_focus():
             return self.df_list_ctrl.on_add(None)
 
     def remove_data_flow(self, *_):
-        if self.view.data_flows_listView.tree_view.is_focus():
+        if self.view and self.view.data_flows_listView.tree_view.is_focus():
             return self.df_list_ctrl.on_remove(None)
 
     def toggled_button(self, button, name=None):

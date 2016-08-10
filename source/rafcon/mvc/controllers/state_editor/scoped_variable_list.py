@@ -93,11 +93,11 @@ class ScopedVariableListController(ExtendedController):
             shortcut_manager.add_callback_for_action("add", self.add_port)
 
     def add_port(self, *_):
-        if self.view[self.view.top].is_focus() and not isinstance(self.model.state, LibraryState):
+        if self.view and self.view[self.view.top].is_focus() and not isinstance(self.model.state, LibraryState):
             return self.on_new_scoped_variable_button_clicked(None)
 
     def remove_port(self, *_):
-        if self.view[self.view.top].is_focus() and not isinstance(self.model.state, LibraryState):
+        if self.view and self.view[self.view.top].is_focus() and not isinstance(self.model.state, LibraryState):
             return self.on_delete_scoped_variable_button_clicked(None)
 
     def editing_started(self, renderer, editable, path):
