@@ -326,8 +326,8 @@ class ContainerStateModel(StateModel):
             tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
             state_ids = info['kwargs'].get('state_ids', None)
             scoped_variables = info['kwargs'].get('scoped_variables', [])
-            print "info['kwargs']: ", info['kwargs']
-            print "info['args']: ", info['args']
+            # print "info['kwargs']: ", info['kwargs']
+            # print "info['args']: ", info['args']
             if state_ids is None:
                 if 'scoped_variables' not in info['kwargs'] and len(info['args']) > 2:
                     scoped_variables = info['args'][2]
