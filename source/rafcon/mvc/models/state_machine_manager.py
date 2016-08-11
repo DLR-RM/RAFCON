@@ -90,6 +90,7 @@ class StateMachineManagerModel(ModelMT, Observable):
 
             if sm_id_to_delete is not None:
                 logger.debug("Delete state machine model for state machine with id %s", sm_id_to_delete)
+                sm_m.selection.clear()
                 sm_m = self.state_machines[sm_id_to_delete]
                 sm_m.prepare_destruction()
                 del self.state_machines[sm_id_to_delete]
