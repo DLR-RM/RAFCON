@@ -846,7 +846,7 @@ class ContainerState(State):
                 self.add_data_flow(df.from_state, df.from_key, state_id, ip.data_port_id, df.data_flow_id)
 
         for old_op in old_output_data_ports.itervalues():
-            op = act_output_data_port_by_name.get(old_output_data_ports[old_op.data_port_id], None).name
+            op = act_output_data_port_by_name.get(old_output_data_ports[old_op.data_port_id].name, None)
             if op is not None and op.data_type == old_output_data_ports[old_op.data_port_id].data_type:
                 if isinstance(state, LibraryState) and old_state_was_library:
                     state.output_data_port_runtime_values[op.data_port_id] = old_output_data_port_runtime_values[old_op.data_port_id]
