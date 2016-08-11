@@ -539,26 +539,33 @@ def scale_meta_data_according_state(meta_data):
     """
     # scale opengl meta data
     rel_pos = meta_data['state']['gui']['editor_opengl']['rel_pos']
+    g_rel_pos = meta_data['state']['gui']['editor_gaphas']['rel_pos']
     for s_m in meta_data['states'].itervalues():
         s_m.meta['gui']['editor_opengl']['rel_pos'] = (s_m.meta['gui']['editor_opengl']['rel_pos'][0] + rel_pos[0],
                                                        s_m.meta['gui']['editor_opengl']['rel_pos'][1] + rel_pos[1])
+        s_m.meta['gui']['editor_gaphas']['rel_pos'] = (s_m.meta['gui']['editor_gaphas']['rel_pos'][0] + g_rel_pos[0],
+                                                       s_m.meta['gui']['editor_gaphas']['rel_pos'][1] + g_rel_pos[1])
     for sv_m in meta_data['scoped_variables'].itervalues():
         sv_m.meta['gui']['editor_opengl']['inner_rel_pos'] = (sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][0] + rel_pos[0],
                                                               sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][1] + rel_pos[1])
+        # sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'] = (sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'][0] + g_rel_pos[0],
+        #                                                       sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'][1] + g_rel_pos[1])
     for t_m in meta_data['transitions'].itervalues():
         if t_m.meta['gui']['editor_opengl']['waypoints']:
             for i, pos in enumerate(t_m.meta['gui']['editor_opengl']['waypoints']):
                 t_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] + rel_pos[0], pos[1] + rel_pos[1])
+        if t_m.meta['gui']['editor_gaphas']['waypoints']:
+            for i, pos in enumerate(t_m.meta['gui']['editor_gaphas']['waypoints']):
+                t_m.meta['gui']['editor_gaphas']['waypoints'][i] = (pos[0] + g_rel_pos[0], pos[1] + g_rel_pos[1])
     for df_m in meta_data['data_flows'].itervalues():
         if df_m.meta['gui']['editor_opengl']['waypoints']:
             for i, pos in enumerate(df_m.meta['gui']['editor_opengl']['waypoints']):
                 df_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] + rel_pos[0], pos[1] + rel_pos[1])
+        if df_m.meta['gui']['editor_gaphas']['waypoints']:
+            for i, pos in enumerate(df_m.meta['gui']['editor_gaphas']['waypoints']):
+                df_m.meta['gui']['editor_gaphas']['waypoints'][i] = (pos[0] + g_rel_pos[0], pos[1] + g_rel_pos[1])
 
-    from rafcon.mvc.config import global_gui_config
-    if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
-        return True
-    else:
-        return False
+    return True
 
 
 def scale_meta_data_according_states(meta_data):
@@ -568,4 +575,54 @@ def scale_meta_data_according_states(meta_data):
     :param meta_data: dict that hold lists of meta data with state attribute consistent keys
     :return:
     """
-    return
+    # upper left corner OpenGL
+    min_x = 1000.0
+    min_y = 1000.0
+    max_x = 0.0
+    max_y = 0.0
+    for s_m in meta_data['states'].itervalues():
+        # print s_m.meta, s_m.state.state_id
+        min_x = min(0.9*s_m.meta['gui']['editor_opengl']['rel_pos'][0], min_x)
+        min_y = min(-0.9*s_m.meta['gui']['editor_opengl']['rel_pos'][1], min_y)
+        max_x = max(s_m.meta['gui']['editor_opengl']['rel_pos'][0] + 1.1*s_m.meta['gui']['editor_opengl']['size'][0], max_x)
+        max_y = max(-s_m.meta['gui']['editor_opengl']['rel_pos'][1] + 1.1*s_m.meta['gui']['editor_opengl']['size'][1], max_y)
+        # print min_x, -min_y, max_x, -max_y
+    for sv_m in meta_data['scoped_variables'].itervalues():
+        # print sv_m.meta
+        min_x = min(0.9*sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][0], min_x)
+        min_y = min(-0.9*sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][1], min_y)
+        max_x = max(1.2*sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][0], max_x)
+        max_y = max(-1.1*sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][1], max_y)
+    # print "+"*50 + "\n" + str(meta_data['state'])
+    meta_data['state']['gui']['editor_opengl']['rel_pos'] = (min_x, -min_y)
+    meta_data['state']['gui']['editor_gaphas']['rel_pos'] = (min_x, min_y)
+    meta_data['state']['gui']['editor_opengl']['size'] = (abs(max_x - min_x), abs(max_y - min_y))
+    # print meta_data['state']
+    for s_m in meta_data['states'].itervalues():
+        s_m.meta['gui']['editor_opengl']['rel_pos'] = (s_m.meta['gui']['editor_opengl']['rel_pos'][0] - min_x,
+                                                       s_m.meta['gui']['editor_opengl']['rel_pos'][1] + min_y)
+        s_m.meta['gui']['editor_gaphas']['rel_pos'] = (s_m.meta['gui']['editor_gaphas']['rel_pos'][0] - min_x,
+                                                       s_m.meta['gui']['editor_gaphas']['rel_pos'][1] - min_y)
+    for sv_m in meta_data['scoped_variables'].itervalues():
+        sv_m.meta['gui']['editor_opengl']['inner_rel_pos'] = (sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][0] - min_x,
+                                                              sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][1] + min_y)
+        # sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'] = (sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'][0] - min_x,
+        #                                                       sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'][1] - min_y)
+    for t_m in meta_data['transitions'].itervalues():
+        # print t_m.meta
+        if t_m.meta['gui']['editor_opengl']['waypoints']:
+            for i, pos in enumerate(t_m.meta['gui']['editor_opengl']['waypoints']):
+                t_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] - min_x, pos[1] + min_y)
+        if t_m.meta['gui']['editor_gaphas']['waypoints']:
+            for i, pos in enumerate(t_m.meta['gui']['editor_gaphas']['waypoints']):
+                t_m.meta['gui']['editor_gaphas']['waypoints'][i] = (pos[0] - min_x, pos[1] - min_y)
+    for df_m in meta_data['data_flows'].itervalues():
+        # print df_m.meta
+        if df_m.meta['gui']['editor_opengl']['waypoints']:
+            for i, pos in enumerate(df_m.meta['gui']['editor_opengl']['waypoints']):
+                df_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] - min_x, pos[1] + min_y)
+        if df_m.meta['gui']['editor_gaphas']['waypoints']:
+            for i, pos in enumerate(df_m.meta['gui']['editor_gaphas']['waypoints']):
+                df_m.meta['gui']['editor_gaphas']['waypoints'][i] = (pos[0] - min_x, pos[1] - min_y)
+
+    return True
