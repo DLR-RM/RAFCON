@@ -16,6 +16,7 @@ import glib
 from rafcon.statemachine import interface
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.statemachine.state_machine import StateMachine
+from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.singleton import state_machine_manager, library_manager
@@ -23,6 +24,7 @@ from rafcon.statemachine.singleton import state_machine_manager, library_manager
 import rafcon.statemachine.singleton as core_singletons
 from rafcon.mvc.models.state import StateModel
 from rafcon.mvc.models.container_state import ContainerStateModel
+from rafcon.mvc.models.library_state import LibraryStateModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.mvc import state_machine_helper
 from rafcon.mvc import gui_helper
@@ -161,6 +163,9 @@ class MenuBarController(ExtendedController):
                                                                        "on_save_selected_state_as_activate"))
         self.add_callback_to_shortcut_manager('substitute_state', partial(self.call_action_callback,
                                                                           "on_substitute_selected_state_activate"))
+        self.add_callback_to_shortcut_manager('substitute_library_with_template',
+                                              partial(self.call_action_callback,
+                                                      "on_substitute_library_with_template_activate"))
         self.add_callback_to_shortcut_manager('open', partial(self.call_action_callback, "on_open_activate"))
         self.add_callback_to_shortcut_manager('new', partial(self.call_action_callback, "on_new_activate"))
         self.add_callback_to_shortcut_manager('quit', partial(self.call_action_callback, "on_quit_activate"))
@@ -324,6 +329,18 @@ class MenuBarController(ExtendedController):
             return True
         else:
             logger.warning("Substitute state needs exact one state to be selected.")
+            return False
+
+    def on_substitute_library_with_template_activate(self, widget=None, data=None):
+        selected_states = self.model.get_selected_state_machine_model().selection.get_states()
+        if selected_states and len(selected_states) == 1 and isinstance(selected_states[0], LibraryStateModel):
+            lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_states[0].state))
+            state_machine_helper.substitute_state(lib_state, as_template=True)
+            # TODO find out why the following generates a problem (e.g. lose of outcomes)
+            # state_machine_helper.substitute_state(selected_states[0].state, as_template=True)
+            return True
+        else:
+            logger.warning("Substitute library state with template needs exact one library state to be selected.")
             return False
 
     def on_save_selected_state_as_activate(self, widget=None, data=None, path=None):

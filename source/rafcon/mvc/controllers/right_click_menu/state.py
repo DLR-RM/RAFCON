@@ -20,6 +20,9 @@ from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
+# TODO module needs refactoring, right naming, to separate into capsuled modules and re-arrangement
+# TODO  -> to be more useful for more right click extention
+
 
 class StateMachineRightClickMenu:
 
@@ -31,7 +34,7 @@ class StateMachineRightClickMenu:
         shortcut_manager = main_window_controller.shortcut_manager
         self.shortcut_manager = shortcut_manager
 
-    def generate_right_click_menu(self):
+    def generate_right_click_menu_state(self):
         menu = gtk.Menu()
 
         menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate))
@@ -47,6 +50,22 @@ class StateMachineRightClickMenu:
                                            self.on_save_state_as_state_machine_activate))
         menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
                                            self.on_substitute_state_activate))
+
+        return menu
+
+    def generate_right_click_menu_library(self):
+        menu = gtk.Menu()
+
+        menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate))
+        menu.append(create_image_menu_item("Cut selection", constants.BUTTON_CUT, self.on_cut_activate))
+        menu.append(create_image_menu_item("Run from here", constants.BUTTON_START_FROM_SELECTED_STATE,
+                                           self.on_run_from_selected_state_activate))
+        menu.append(create_image_menu_item("Stop here", constants.BUTTON_RUN_TO_SELECTED_STATE,
+                                           self.on_run_to_selected_state_activate))
+        menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
+                                           self.on_substitute_state_activate))
+        menu.append(create_image_menu_item("Substitute library with template", constants.BUTTON_REFR,
+                                           self.on_substitute_library_with_template_activate))
 
         return menu
 
@@ -86,11 +105,19 @@ class StateMachineRightClickMenu:
     def on_substitute_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('substitute_state', None, None)
 
-    def mouse_click(self, widget, event=None):
+    def on_substitute_library_with_template_activate(self, widget, data=None):
+        self.shortcut_manager.trigger_action('substitute_library_with_template', None, None)
 
+    def mouse_click(self, widget, event=None):
+        from rafcon.mvc.models.library_state import LibraryStateModel
         # Single right click
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
-            menu = self.generate_right_click_menu()
+            selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+            if len(selection.get_all()) == 1 and len(selection.get_states()) == 1 and \
+                    isinstance(selection.get_states()[0], LibraryStateModel):
+                menu = self.generate_right_click_menu_library()
+            else:
+                menu = self.generate_right_click_menu_state()
             menu.show_all()
             return self.activate_menu(event, menu)
 
