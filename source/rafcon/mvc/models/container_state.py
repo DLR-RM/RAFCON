@@ -271,7 +271,7 @@ class ContainerStateModel(StateModel):
                 state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
 
                 state_machine_m.selection.add(new_state_m)
-                self.meta_signal.emit(MetaSignalMsg("state_type_change", "all", True))
+                # self.meta_signal.emit(MetaSignalMsg("state_type_change", "all", True))
 
     @ModelMT.observe("state", after=True, before=True)
     def substitute_state(self, model, prop_name, info):
@@ -312,7 +312,7 @@ class ContainerStateModel(StateModel):
                         logger.info("data flow model to set meta data could not be found"
                                     " -> {0}".format(df_id))
                 # TODO may refactor the signal to avoid this miss-use
-                self.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True))
+                # self.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True))
 
             del self.substitute_state.__func__.tmp_meta_data_storage
 
@@ -382,7 +382,7 @@ class ContainerStateModel(StateModel):
                     else:
                         logger.info("data flow model to set meta data could not be found -> {0}".format(df_m.data_flow))
                 # TODO may refactor the signal to avoid this miss-use
-                self.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
+                # self.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
 
             del self.group_state.__func__.tmp_meta_data_storage
 
@@ -445,7 +445,7 @@ class ContainerStateModel(StateModel):
                     else:
                         logger.info("data flow model to set meta data could not be found -> {0}".format(df_m.data_flow))
                 # TODO may refactor the signal to avoid this miss-use
-                self.meta_signal.emit(MetaSignalMsg("group_state", "all", True))
+                # self.meta_signal.emit(MetaSignalMsg("group_state", "all", True))
 
             del self.ungroup_state.__func__.tmp_meta_data_storage
 
