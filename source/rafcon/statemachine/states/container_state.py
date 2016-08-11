@@ -805,6 +805,8 @@ class ContainerState(State):
 
         [related_transitions, related_data_flows] = self.related_linkage_state(state_id)
 
+        readjust_parent_of_ports = True if state.state_id != state.outcomes.items()[0][1].parent.state_id else False
+
         old_outcome_names = {oc_id: oc.name for oc_id, oc in self.states[state_id].outcomes.iteritems()}
         old_input_data_ports = copy(self.states[state_id].input_data_ports)
         old_output_data_ports = copy(self.states[state_id].output_data_ports)
@@ -858,6 +860,12 @@ class ContainerState(State):
             if op is not None and op.data_type == old_output_data_ports[df.from_key].data_type:
                 self.add_data_flow(state_id, op.data_port_id, df.to_state, df.to_key, df.data_flow_id)
 
+        if readjust_parent_of_ports:
+            state = self.states[state_id]
+            state.input_data_ports = state.input_data_ports
+            state.output_data_ports = state.output_data_ports
+            state.outcomes = state.outcomes
+        logger.info("substitute finished")
         return state_id
 
     @Observable.observed

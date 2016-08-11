@@ -435,12 +435,6 @@ def substitute_state(state, as_template=False):
         template.change_state_id()
         parent_state.substitute_state(current_state.state_id, template)
 
-        # reset the parent of all ports (logical + data ports)
-        # as in the setter function the parent is reset it can be used here
-        template.input_data_ports = template.input_data_ports
-        template.output_data_ports = template.output_data_ports
-        template.outcomes = template.outcomes
-
         # load meta data
         from os.path import join
         lib_os_path, _, _ = library_manager.get_os_path_to_library(state.library_path, state.library_name)
