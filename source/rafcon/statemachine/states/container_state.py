@@ -348,21 +348,21 @@ class ContainerState(State):
                 # print prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key])
                 if len(port_dfs[prior_locate_key]) > 1:
                     for df in port_dfs[prior_locate_key]:
-                        print "remove: ", df.data_flow_id, prior_locate_key, minor_port_key
+                        # print "remove: ", df.data_flow_id, prior_locate_key, minor_port_key
                         reduce_dfs(going_data_linkage_for_port[minor_port_key], df.data_flow_id)
             for port_key in going_data_linkage_for_port[minor_port_key].keys():
                 port_dfs = going_data_linkage_for_port[minor_port_key][port_key]
                 # print minor_port_key, ": check: ", port_key, " length: ", len(port_dfs[minor_locate_key])
                 if len(port_dfs[minor_locate_key]) > 1:
                     for df in port_dfs[minor_locate_key]:
-                        print "remove: ", df.data_flow_id, minor_locate_key, prior_port_key
+                        # print "remove: ", df.data_flow_id, minor_locate_key, prior_port_key
                         reduce_dfs(going_data_linkage_for_port[prior_port_key], df.data_flow_id)
             for port_key in going_data_linkage_for_port[prior_port_key].keys():
                 port_dfs = going_data_linkage_for_port[prior_port_key][port_key]
                 # print prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key])
                 if len(port_dfs[prior_locate_key]) == 1:
                     for df in port_dfs[prior_locate_key]:
-                        print "remove: ", df.data_flow_id, prior_locate_key, minor_port_key
+                        # print "remove: ", df.data_flow_id, prior_locate_key, minor_port_key
                         reduce_dfs(going_data_linkage_for_port[minor_port_key], df.data_flow_id)
 
         def create_data_port_args(going_data_linkage_for_port):
@@ -1098,7 +1098,6 @@ class ContainerState(State):
         :param to_data_port_id: The input_key of the target state
         :param data_flow_id: an optional id for the data flow
         """
-        print from_state_id, from_data_port_id, to_state_id, to_data_port_id, data_flow_id
         if data_flow_id is None:
             data_flow_id = generate_data_flow_id()
             while data_flow_id in self._data_flows.iterkeys():
