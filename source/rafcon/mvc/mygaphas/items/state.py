@@ -40,6 +40,10 @@ class StateView(Element):
     def __init__(self, state_m, size, hierarchy_level):
         super(StateView, self).__init__(size[0], size[1])
         assert isinstance(state_m, AbstractStateModel)
+        # Reapply size, as Gaphas sets default minimum size to 1, which is too large for highly nested states
+        self.min_width = self.min_height = 0
+        self.width = size[0]
+        self.height = size[1]
 
         self._state_m = ref(state_m)
         self.hierarchy_level = hierarchy_level
@@ -778,12 +782,13 @@ class NameView(Element):
 
     def __init__(self, name, size):
         super(NameView, self).__init__(size[0], size[1])
+        # Reapply size, as Gaphas sets default minimum size to 1, which is too large for highly nested states
+        self.min_width = self.min_height = 0
+        self.width = size[0]
+        self.height = size[1]
 
         self._name = None
         self.name = name
-
-        self.min_width = 1
-        self.min_height = 1
 
         self.moving = False
 
