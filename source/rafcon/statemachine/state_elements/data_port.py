@@ -162,11 +162,10 @@ class DataPort(StateElement):
 
     @Observable.observed
     def change_data_type(self, data_type, default_value=None):
-        """Changes the data type and the default value
-
-        This method changes both the data type and default value. If one of the parameters does not fit,
+        """This method changes both the data type and default value. If one of the parameters does not fit,
         an exception is thrown and no property is changed. Using this method ensures a consistent data type
         and default value and only notifies once.
+
         :param data_type: The new data type
         :param default_value: The new default value
         :return:
@@ -189,13 +188,13 @@ class DataPort(StateElement):
                 self._default_value = None
 
     def check_default_value(self, default_value, data_type=None):
-        """Checks the default value
-
-        Check whether the passed default value suits to the passed data type. If no data type is passed, the data type
+        """Check whether the passed default value suits to the passed data type. If no data type is passed, the data type
         of the data port is used. If the default value does not fit, an exception is thrown. If the default value is of
         type string, it is tried to convert that value to the data type.
+
         :param default_value: The default value to check
         :param data_type: The data type to use
+        :raises exceptions.AttributeError: if check fails
         :return: The converted default value
         """
         if data_type is None:

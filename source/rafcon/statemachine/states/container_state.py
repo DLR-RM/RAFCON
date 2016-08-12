@@ -20,6 +20,7 @@ from rafcon.statemachine.state_elements.data_flow import DataFlow
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.state_elements.transition import Transition
 from rafcon.statemachine.states.state import State
+from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.validity_check.validity_checker import ValidityChecker
 from rafcon.utils.type_helpers import type_inherits_of_type
@@ -162,6 +163,7 @@ class ContainerState(State):
         """Implementation of the abstract run() method of the :class:`threading.Thread`
 
         Should be filled with code, that should be executed for each container_state derivative.
+        :raises exceptions.NotImplementedError: in every case
         """
         raise NotImplementedError("The ContainerState.run() function has to be implemented!")
 
@@ -202,11 +204,13 @@ class ContainerState(State):
         self.add_input_data_to_scoped_data(self.input_data)
 
     def handle_no_transition(self, state):
-        """
-        This function handles the case that there is no transition for a specific outcome of a substate. It waits on a
+        """ This function handles the case that there is no transition for a specific outcome of a substate. It waits on a
         condition variable to a new transition that will be connected by the programmer or GUI-user.
+
         :param state: The substate to find a transition for
         :return: The transition for the target state.
+        :raises exceptions.RuntimeError: if the execution engine is stopped
+                                        (this will be caught at the end of the run method)
         """
         transition = None
         while not transition:
@@ -246,13 +250,20 @@ class ContainerState(State):
         """Handles the situation, when no start state exists during execution
 
         The method waits, until a transition is created. It then checks again for an existing start state and waits
-        again, if this is not the case.
+        again, if this is not the case. It returns the None state if the the state machine was stopped.
         """
         start_state = self.get_start_state(set_final_outcome=True)
-        if start_state is None:
+        while not start_state:
+            # depending on the execution mode pause execution
+            execution_signal = state_machine_execution_engine.handle_execution_mode(self)
+            if execution_signal is StateMachineExecutionStatus.STOPPED:
+                # this will be caught at the end of the run method
+                return None
+
             self._transitions_cv.acquire()
             self._transitions_cv.wait(3.0)
             self._transitions_cv.release()
+            start_state = self.get_start_state(set_final_outcome=True)
         return start_state
 
     # ---------------------------------------------------------------------------------------------
@@ -269,46 +280,154 @@ class ContainerState(State):
         :return:
         """
         # TODO remain all related linkage by adding outcomes and input output port to new hierarchy state
+        # TODO remember changed state or state element ids and provide them for the model functionalities
 
         assert all([state_id in [state_id for state in self.states] for state_id in state_ids])
         if scoped_variables is None:
             scoped_variables = []
         assert all([p_id in self.scoped_variables.keys() for p_id in scoped_variables])
 
-        # find all related transitions
-        related_transitions = {'internal': [], 'ingoing': [], 'outgoing': []}
-        for t in self.transitions.itervalues():
-            # check if internal of new hierarchy state
-            if t.from_state in state_ids and t.to_state in state_ids:
-                related_transitions['internal'].append(t)
-            elif t.to_state in state_ids:
-                related_transitions['ingoing'].append(t)
-            elif t.from_state in state_ids:
-                related_transitions['outgoing'].append(t)
+        def create_name(name_str, used_names):
+            number_str = ""
+            number_of_str = 0
+            while name_str + number_str in used_names:
+                number_str = "_{}".format(number_of_str)
+                number_of_str += 1
+            return name_str + number_str
 
-        # find all related data flows
-        related_data_flows = {'internal': [], 'ingoing': [], 'outgoing': []}
-        for df in self.data_flows.itervalues():
-            # check if internal of new hierarchy state
-            if df.from_state in state_ids and df.to_state in state_ids or \
-                    df.from_state in state_ids and self.state_id == df.to_state and df.to_key in scoped_variables or \
-                    self.state_id == df.from_state and df.from_key in scoped_variables and df.to_state in state_ids:
-                related_data_flows['internal'].append(df)
-            elif df.to_state in state_ids or \
-                    self.state_id == df.to_state and df.to_key in scoped_variables:
-                related_data_flows['ingoing'].append(df)
-            elif df.from_state in state_ids or \
-                    self.state_id == df.from_state and df.from_key in scoped_variables:
-                related_data_flows['outgoing'].append(df)
+        [related_transitions, related_data_flows] = self.related_linkage_states_and_scoped_variables(state_ids,
+                                                                                                     scoped_variables)
 
         # all states
         states_to_group = {state_id: self.states[state_id] for state_id in state_ids}
         # all internal scoped variables
         scoped_variables_to_group = {dp_id: self.scoped_variables[dp_id] for dp_id in scoped_variables}
         # all internal transitions
-        transitions_internal = {t.transition_id: t for t in related_transitions['internal']}
+        transitions_internal = {t.transition_id: t for t in related_transitions['enclosed']}
         # all internal data flows
-        data_flows_internal = {df.data_flow_id: df for df in related_data_flows['internal']}
+        data_flows_internal = {df.data_flow_id: df for df in related_data_flows['enclosed']}
+
+        def assign_ingoing_outgoing(df, going_data_linkage_for_port, ingoing=True):
+            internal = 'internal' if ingoing else 'external'
+            external = 'external' if ingoing else 'internal'
+            if (df.to_state, df.to_key) in going_data_linkage_for_port['to']:
+                going_data_linkage_for_port['to'][(df.to_state, df.to_key)][external].append(df)
+            else:
+                going_data_linkage_for_port['to'][(df.to_state, df.to_key)] = {external: [df], internal: [df]}
+            if (df.from_state, df.from_key) in going_data_linkage_for_port['from']:
+                going_data_linkage_for_port['from'][(df.from_state, df.from_key)][internal].append(df)
+            else:
+                going_data_linkage_for_port['from'][(df.from_state, df.from_key)] = {external: [df], internal: [df]}
+
+        def print_df_from_and_to(going_data_linkage_for_port):
+            print 'FROM: \n'
+            for port, port_dfs in going_data_linkage_for_port['from'].iteritems():
+                print "\tport: ", port, '' if 'args' not in port_dfs else port_dfs['args']
+                print "\t\texternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['external']])
+                print "\t\tinternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['internal']])
+            print 'TO: \n'
+            for port, port_dfs in going_data_linkage_for_port['to'].iteritems():
+                print "\tport: ", port, '' if 'args' not in port_dfs else port_dfs['args']
+                print "\t\texternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['external']])
+                print "\t\tinternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['internal']])
+
+        def reduce_dfs(port_data_linkages, df_id):
+            for port_key in port_data_linkages.keys():
+                port_df = port_data_linkages[port_key]
+                port_df['internal'] = filter(lambda df: df.data_flow_id != df_id, port_df['internal'])
+                port_df['external'] = filter(lambda df: df.data_flow_id != df_id, port_df['external'])
+                if not port_df['internal'] and not port_df['external']:
+                    del port_data_linkages[port_key]
+
+        def do_prior_in_out_going(going_data_linkage_for_port, prior_port_key, prior_locate_key):
+            # logger.info("PRIOR IN OUT {0}, {1}".format(prior_port_key, prior_locate_key))
+            minor_port_key = 'from' if prior_port_key == 'to' else 'to'
+            minor_locate_key = 'external' if prior_locate_key == 'internal' else 'internal'
+            for port_key in going_data_linkage_for_port[prior_port_key].keys():
+                port_dfs = going_data_linkage_for_port[prior_port_key][port_key]
+                # print prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key])
+                if len(port_dfs[prior_locate_key]) > 1:
+                    for df in port_dfs[prior_locate_key]:
+                        # print "remove: ", df.data_flow_id, prior_locate_key, minor_port_key
+                        reduce_dfs(going_data_linkage_for_port[minor_port_key], df.data_flow_id)
+            for port_key in going_data_linkage_for_port[minor_port_key].keys():
+                port_dfs = going_data_linkage_for_port[minor_port_key][port_key]
+                # print minor_port_key, ": check: ", port_key, " length: ", len(port_dfs[minor_locate_key])
+                if len(port_dfs[minor_locate_key]) > 1:
+                    for df in port_dfs[minor_locate_key]:
+                        # print "remove: ", df.data_flow_id, minor_locate_key, prior_port_key
+                        reduce_dfs(going_data_linkage_for_port[prior_port_key], df.data_flow_id)
+            for port_key in going_data_linkage_for_port[prior_port_key].keys():
+                port_dfs = going_data_linkage_for_port[prior_port_key][port_key]
+                # print prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key])
+                if len(port_dfs[prior_locate_key]) == 1:
+                    for df in port_dfs[prior_locate_key]:
+                        # print "remove: ", df.data_flow_id, prior_locate_key, minor_port_key
+                        reduce_dfs(going_data_linkage_for_port[minor_port_key], df.data_flow_id)
+
+        def create_data_port_args(going_data_linkage_for_port):
+            names = []
+            for goal, data_port_linkage in going_data_linkage_for_port['to'].iteritems():
+                state = self.states[goal[0]] if goal[0] != self.state_id else self
+                port = state.get_data_port_by_id(goal[1])
+                data_port_linkage['args'] = port.state_element_to_dict(port)
+                data_port_linkage['args']['name'] = create_name(data_port_linkage['args']['name'], names)
+                names.append(data_port_linkage['args']['name'])
+            for goal, data_port_linkage in going_data_linkage_for_port['from'].iteritems():
+                state = self.states[goal[0]] if goal[0] != self.state_id else self
+                port = state.get_data_port_by_id(goal[1])
+                data_port_linkage['args'] = port.state_element_to_dict(port)
+                data_port_linkage['args']['name'] = create_name(data_port_linkage['args']['name'], names)
+                names.append(data_port_linkage['args']['name'])
+
+        ################## IDENTIFY/PRE-PROCESS INGOING DATA FLOWS ###################
+        # ingoing data linkage to rebuild -> overview of all with duplicates
+        ingoing_data_linkage_for_port = {'from': {}, 'to': {}}
+        for df in related_data_flows['ingoing']:
+            assign_ingoing_outgoing(df, ingoing_data_linkage_for_port)
+
+        # logger.info("GROUP DATA INGOING BEFORE")
+        # print_df_from_and_to(ingoing_data_linkage_for_port)
+
+        # prior to-linkage-merge for ingoing over from-linkage-merge -> less internal ingoing data flows
+        do_prior_in_out_going(ingoing_data_linkage_for_port, prior_port_key='to', prior_locate_key='external')
+
+        # logger.info("GROUPED INGOING DATA AFTER")
+        # print_df_from_and_to(ingoing_data_linkage_for_port)
+
+        # get name and args for ports
+        create_data_port_args(ingoing_data_linkage_for_port)
+        # logger.info("GROUPED INGOING DATA PORTS")
+        # print_df_from_and_to(ingoing_data_linkage_for_port)
+
+        ################## IDENTIFY/PRE-PROCESS OUTGOING DATA FLOWS ###################
+        # outgoing data linkage to rebuild -> overview of all with duplicates
+        outgoing_data_linkage_for_port = {'from': {}, 'to': {}}
+        for df in related_data_flows['outgoing']:
+            assign_ingoing_outgoing(df, outgoing_data_linkage_for_port, ingoing=False)
+
+        # logger.info("GROUP DATA OUTGOING BEFORE")
+        # print_df_from_and_to(outgoing_data_linkage_for_port)
+
+        # prior from-linkage-merge for outgoing over to-linkage-merge -> less outgoing data flows
+        do_prior_in_out_going(outgoing_data_linkage_for_port, prior_port_key='from', prior_locate_key='external')
+
+        # logger.info("GROUPED OUTGOING DATA AFTER")
+        # print_df_from_and_to(outgoing_data_linkage_for_port)
+
+        # get name and args for ports
+        create_data_port_args(outgoing_data_linkage_for_port)
+        # logger.info("GROUPED OUTGOING DATA PORTS")
+        # print_df_from_and_to(outgoing_data_linkage_for_port)
+
+        ############################# CREATE NEW STATE #############################
+        [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
+        [self.remove_scoped_variable(sv_id) for sv_id in scoped_variables]
+        # TODO if the version is final create the ingoing and outgoing internal linkage before and hand it while state creation
+        from rafcon.statemachine.states.hierarchy_state import HierarchyState
+        s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
+                           scoped_variables=scoped_variables_to_group, state_id=self.state_id)
+        state_id = self.add_state(s)
 
         def find_logical_destinations_of_transitions(transitions):
             destinations = {}
@@ -319,6 +438,7 @@ class ContainerState(State):
                     destinations[(t.to_state, t.to_outcome)] = [t]
             return destinations
 
+        ################## IDENTIFY TRANSITIONS #####################
         # transition from ingoing transition
         ingoing_logical_destinations = find_logical_destinations_of_transitions(related_transitions['ingoing'])
         if len(ingoing_logical_destinations) > 1:
@@ -332,25 +452,14 @@ class ContainerState(State):
         transitions_outgoing = {t.transition_id: t for t in related_transitions['outgoing']}
         outgoing_logical_destinations = find_logical_destinations_of_transitions(related_transitions['outgoing'])
 
-        # input data ports from ingoing data flows
-        # internal data flows from ingoing data flows
-        # external data flows from ingoing data flows
-        # output data ports from outgoing data flows
-        # internal data flows from outgoing data flows
-        # external data flows from outgoing data flows
-
-        [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
-        [self.remove_scoped_variable(sv_id) for sv_id in scoped_variables]
-        from rafcon.statemachine.states.hierarchy_state import HierarchyState
-        s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
-                           scoped_variables=scoped_variables_to_group)
-        self.add_state(s)
-
+        ################## DO INGOING TRANSITIONS ###################
         if ingoing_transitions:
             t = ingoing_transitions[0]
             s.add_transition(None, None, t.to_state, t.to_outcome)
             for t in ingoing_transitions:
                 self.add_transition(t.from_state, t.from_outcome, s.state_id, None)
+
+        ################## DO OUTGOING OUTCOMES ###################
         # outcomes from outgoing transitions
         outcomes_outgoing_transitions = {}
         new_outcome_ids = {}
@@ -364,13 +473,7 @@ class ContainerState(State):
                 # logger.info("old outcome {}".format((t.to_state, t.to_outcome)))
                 name = outcomes_outgoing_transitions[goal]
             else:
-                number_str = ""
-                number_of_str = 0
-                # logger.info("new outcome {}".format((t.to_state, t.to_outcome)))
-                while name + number_str in new_outcome_ids.keys():
-                    number_str = "_{}".format(number_of_str)
-                    number_of_str += 1
-                    name += number_str
+                name = create_name(name, new_outcome_ids.keys())
                 outcomes_outgoing_transitions[goal] = name
             # print outcomes_outgoing_transitions, "\n", new_outcome_ids
             if name not in new_outcome_ids:
@@ -382,6 +485,8 @@ class ContainerState(State):
                     # logger.info("new outcome_id {0}\n{1}".format(new_outcome_ids[name], new_outcome_ids))
             # else:
             #     logger.info("name {0} in {1} -> {2}".format(name, new_outcome_ids, outcomes_outgoing_transitions))
+
+        ################## DO OUTGOING TRANSITIONS ###################
         # external outgoing transitions
         for goal, name in outcomes_outgoing_transitions.iteritems():
             try:
@@ -394,7 +499,53 @@ class ContainerState(State):
             name = outcomes_outgoing_transitions[(t.to_state, t.to_outcome)]
             s.add_transition(t.from_state, t.from_outcome, s.state_id, new_outcome_ids[name])
 
-        return
+        new_state_ids={self.state_id: s.state_id}
+        ############## REBUILD INGOING DATA LINKAGE ################
+        full_linkage = copy(ingoing_data_linkage_for_port['from'])
+        full_linkage.update(ingoing_data_linkage_for_port['to'])
+        for port, data_port_linkage in full_linkage.iteritems():
+            # input data ports from ingoing data flows
+            args = data_port_linkage['args']
+            args['data_port_id'] = None
+            args['data_port_id'] = s.add_input_data_port(**args)
+            # internal data flows from ingoing data flows
+            # print "ingoing internal data flows"
+            for df in data_port_linkage['internal']:
+                # print df
+                s.add_data_flow(from_state_id=s.state_id, from_data_port_id=args['data_port_id'],
+                                to_state_id=new_state_ids.get(df.to_state, df.to_state),
+                                to_data_port_id=df.to_key, data_flow_id=df.data_flow_id)
+            # external data flows from ingoing data flows
+            # print "ingoing external data flows"
+            for df in data_port_linkage['external']:
+                # print df
+                self.add_data_flow(from_state_id=df.from_state,
+                                   from_data_port_id=df.from_key, to_state_id=s.state_id,
+                                   to_data_port_id=args['data_port_id'], data_flow_id=df.data_flow_id)
+
+        ############## REBUILD OUTGOING DATA LINKAGE ################
+        full_linkage = copy(outgoing_data_linkage_for_port['from'])
+        full_linkage.update(outgoing_data_linkage_for_port['to'])
+        for port, data_port_linkage in full_linkage.iteritems():
+            # output data ports from outgoing data flows
+            args = data_port_linkage['args']
+            args['data_port_id'] = None
+            args['data_port_id'] = s.add_output_data_port(**args)
+            # internal data flows from outgoing data flows
+            # print "outgoing internal data flows"
+            for df in data_port_linkage['internal']:
+                # print df
+                s.add_data_flow(from_state_id=new_state_ids.get(df.from_state, df.from_state),
+                                from_data_port_id=df.from_key, to_state_id=s.state_id,
+                                to_data_port_id=args['data_port_id'], data_flow_id=df.data_flow_id)
+            # external data flows from outgoing data flows
+            # print "outgoing external data flows"
+            for df in data_port_linkage['external']:
+                # print df
+                self.add_data_flow(from_state_id=s.state_id, from_data_port_id=args['data_port_id'],
+                                   to_state_id=df.to_state, to_data_port_id=df.to_key, data_flow_id=df.data_flow_id)
+
+        return state_id
 
     @Observable.observed
     def ungroup_state(self, state_id):
@@ -407,47 +558,13 @@ class ContainerState(State):
         :return:
         """
         state = self.states[state_id]
-        related_transitions = {'internal': [], 'ingoing': [], 'outgoing': []}
-        for t_id, t in state.transitions.iteritems():
-            # check if internal of new hierarchy state
-            if t.from_state in state.states and t.to_state in state.states:
-                related_transitions['internal'].append(t)
-            elif t.to_state in state.states:
-                related_transitions['ingoing'].append(t)
-            elif t.from_state in state.states:
-                related_transitions['outgoing'].append(t)
-            else:
-                print "no relation"
-                # raise AttributeError("All transition have to be ingoing, outgoing or internal.")
+        [related_transitions, related_data_flows] = self.related_linkage_state(state_id)
 
-        related_data_flows = {'internal': [], 'ingoing': [], 'outgoing': []}
-        for df_id, df in state.data_flows.iteritems():
-            # check if internal of hierarchy state
-            if df.from_state in state.states and df.to_state in state.states or \
-                    df.from_state in state.states and self.state_id == df.to_state and df.to_key in state.scoped_variables or \
-                    self.state_id == df.from_state and df.from_key in state.scoped_variables and df.to_state in state.states:
-                related_data_flows['internal'].append(df)
-            elif df.to_state in state.states or \
-                    state.state_id == df.to_state and df.to_key in state.scoped_variables or \
-                    df.to_state == df.from_state and df.from_key in state.input_data_ports:
-                related_data_flows['ingoing'].append(df)
-            elif df.from_state in self.states[state_id].states or \
-                    state.state_id == df.from_state and df.from_key in state.scoped_variables or \
-                    df.to_state == df.from_state and df.to_key in state.output_data_ports:
-                related_data_flows['outgoing'].append(df)
-            else:
-                print "no relation"
-                # raise AttributeError("All data flow have to be ingoing, outgoing or internal.")
-
-        # print "ingoing df: \n" + '\n'.join([str(df) for df in related_data_flows['ingoing']])
-
-        # ingoing logical linkage to rebuild
-        external_ingoing_logical_transitions = [t for t in self.transitions.values() if t.to_state == state_id]
-        # outgoing logical linkage to rebuild
-        external_outgoing_logical_transitions = [t for t in self.transitions.values() if t.from_state == state_id]
+        # ingoing logical linkage to rebuild -> related_transitions['external']['ingoing']
+        # outgoing logical linkage to rebuild -> related_transitions['external']['outgoing']
         # ingoing data linkage to rebuild
         ingoing_data_linkage_for_port = {}
-        for df in related_data_flows['ingoing']:
+        for df in related_data_flows['internal']['ingoing']:
             if (df.from_state, df.from_key) in ingoing_data_linkage_for_port:
                 ingoing_data_linkage_for_port[(df.from_state, df.from_key)]['internal'].append(df)
             else:
@@ -458,7 +575,7 @@ class ContainerState(State):
                         ingoing_data_linkage_for_port[(df.from_state, df.from_key)]['external'].append(ext_df)
         # outgoing data linkage to rebuild
         outgoing_data_linkage_for_port = {}
-        for df in related_data_flows['outgoing']:
+        for df in related_data_flows['internal']['outgoing']:
             if (df.to_state, df.to_key) in outgoing_data_linkage_for_port:
                 outgoing_data_linkage_for_port[(df.to_state, df.to_key)]['internal'].append(df)
             else:
@@ -477,24 +594,24 @@ class ContainerState(State):
             new_state_id = self.add_state(state)
             state_id_dict[state.state_id] = new_state_id
         for sv in child_scoped_variables:
-            new_sv_id = self.add_scoped_variable(name=sv.name, data_type=sv.data_type, default_value=sv.default_value)
+            new_sv_id = self.add_scoped_variable(sv.name, sv.data_type, sv.default_value, sv.data_port_id)
             sv_id_dict[sv.data_port_id] = new_sv_id
 
         # re-create transitions
-        for t in related_transitions['internal']:
+        for t in related_transitions['internal']['enclosed']:
             self.add_transition(state_id_dict[t.from_state], t.from_outcome, state_id_dict[t.to_state], t.to_outcome)
-        assert len(related_transitions['ingoing']) <= 1
-        if related_transitions['ingoing']:
-            ingoing_t = related_transitions['ingoing'][0]
-            for t in external_ingoing_logical_transitions:
+        assert len(related_transitions['internal']['ingoing']) <= 1
+        if related_transitions['internal']['ingoing']:
+            ingoing_t = related_transitions['internal']['ingoing'][0]
+            for t in related_transitions['external']['ingoing']:
                 self.add_transition(t.from_state, t.from_outcome, state_id_dict[ingoing_t.to_state], ingoing_t.to_outcome)
-        for ext_t in external_outgoing_logical_transitions:
-            for t in related_transitions['outgoing']:
+        for ext_t in related_transitions['external']['outgoing']:
+            for t in related_transitions['internal']['outgoing']:
                 if (t.to_state, t.to_outcome) == (ext_t.from_state, ext_t.from_outcome):
                     self.add_transition(state_id_dict[t.from_state], t.from_outcome, ext_t.to_state, ext_t.to_outcome)
 
         # re-create data flow linkage
-        for df in related_data_flows['internal']:
+        for df in related_data_flows['internal']['enclosed']:
             self.add_data_flow(state_id_dict[df.from_state], df.from_key, state_id_dict[df.to_state], df.to_key)
         for data_port_linkage in ingoing_data_linkage_for_port.itervalues():
             for ext_df in data_port_linkage['external']:
@@ -518,11 +635,18 @@ class ContainerState(State):
         """Adds a state to the container state.
 
         :param state: the state that is going to be added
-
+        :param storage_load: True if the state was directly loaded from filesystem
+        :return: the state_id of the new state
+        :raises exceptions.AttributeError: if state.state_id already exist
         """
         assert isinstance(state, State)
         # logger.info("add state {}".format(state))
-        # TODO: add validity checks for states and then remove this check
+
+        # handle the case that the child state id is the same as the container state id
+        while state.state_id == self.state_id:
+            state.change_state_id()
+
+        # TODO: add validity checks for states and then remove this check => to discuss
         if state.state_id in self._states.iterkeys():
             raise AttributeError("State id %s already exists in the container state", state.state_id)
         else:
@@ -544,7 +668,7 @@ class ContainerState(State):
 
         :param state_id: the id of the state to remove
         :param recursive_deletion: a flag to indicate a recursive deletion of all substates
-
+        :raises exceptions.AttributeError: if state.state_id does not
         """
         if state_id not in self.states:
             raise AttributeError("State_id %s does not exist" % state_id)
@@ -591,8 +715,169 @@ class ContainerState(State):
         # final delete the state it self
         del self.states[state_id]
 
+    def related_linkage_state(self, state_id):
+
+        related_transitions = {'external': {'ingoing': [], 'outgoing': []},
+                               'internal': {'enclosed': [], 'ingoing': [], 'outgoing': []}}
+        related_data_flows = {'external': {'ingoing': [], 'outgoing': []},
+                              'internal': {'enclosed': [], 'ingoing': [], 'outgoing': []}}
+        # ingoing logical linkage to rebuild
+        related_transitions['external']['ingoing'] = [t for t in self.transitions.itervalues() if t.to_state == state_id]
+        # outgoing logical linkage to rebuild
+        related_transitions['external']['outgoing'] = [t for t in self.transitions.itervalues() if t.from_state == state_id]
+        # ingoing data linkage to rebuild
+        related_data_flows['external']['ingoing'] = [df for df in self.data_flows.itervalues() if df.to_state == state_id]
+        # outgoing outgoing linkage to rebuild
+        related_data_flows['external']['outgoing'] = [df for df in self.data_flows.itervalues() if df.from_state == state_id]
+
+        state = self.states[state_id]
+        if not isinstance(state, ContainerState):
+            return related_transitions, related_data_flows
+
+        for t_id, t in state.transitions.iteritems():
+            # check if internal of new hierarchy state
+            if t.from_state in state.states and t.to_state in state.states:
+                related_transitions['internal']['enclosed'].append(t)
+            elif t.to_state in state.states:
+                related_transitions['internal']['ingoing'].append(t)
+            elif t.from_state in state.states:
+                related_transitions['internal']['outgoing'].append(t)
+            else:
+                print "no relation"
+                # raise AttributeError("All transition have to be ingoing, outgoing or internal.")
+
+        for df_id, df in state.data_flows.iteritems():
+            # check if internal of hierarchy state
+            if df.from_state in state.states and df.to_state in state.states or \
+                    df.from_state in state.states and self.state_id == df.to_state and df.to_key in state.scoped_variables or \
+                    self.state_id == df.from_state and df.from_key in state.scoped_variables and df.to_state in state.states:
+                related_data_flows['internal']['enclosed'].append(df)
+            elif df.to_state in state.states or \
+                    state.state_id == df.to_state and df.to_key in state.scoped_variables or \
+                    df.to_state == df.from_state and df.from_key in state.input_data_ports:
+                related_data_flows['internal']['ingoing'].append(df)
+            elif df.from_state in self.states[state_id].states or \
+                    state.state_id == df.from_state and df.from_key in state.scoped_variables or \
+                    df.to_state == df.from_state and df.to_key in state.output_data_ports:
+                related_data_flows['internal']['outgoing'].append(df)
+            else:
+                print "no relation"
+                # raise AttributeError("All data flow have to be ingoing, outgoing or internal.")
+
+        return related_transitions, related_data_flows
+
+    def related_linkage_states_and_scoped_variables(self, state_ids, scoped_variables):
+
+        # find all related transitions
+        related_transitions = {'enclosed': [], 'ingoing': [], 'outgoing': []}
+        for t in self.transitions.itervalues():
+            # check if internal of new hierarchy state
+            if t.from_state in state_ids and t.to_state in state_ids:
+                related_transitions['enclosed'].append(t)
+            elif t.to_state in state_ids:
+                related_transitions['ingoing'].append(t)
+            elif t.from_state in state_ids:
+                related_transitions['outgoing'].append(t)
+
+        # find all related data flows
+        related_data_flows = {'enclosed': [], 'ingoing': [], 'outgoing': []}
+        for df in self.data_flows.itervalues():
+            # check if internal of new hierarchy state
+            if df.from_state in state_ids and df.to_state in state_ids or \
+                    df.from_state in state_ids and self.state_id == df.to_state and df.to_key in scoped_variables or \
+                    self.state_id == df.from_state and df.from_key in scoped_variables and df.to_state in state_ids:
+                related_data_flows['enclosed'].append(df)
+            elif df.to_state in state_ids or \
+                    self.state_id == df.to_state and df.to_key in scoped_variables:
+                related_data_flows['ingoing'].append(df)
+            elif df.from_state in state_ids or \
+                    self.state_id == df.from_state and df.from_key in scoped_variables:
+                related_data_flows['outgoing'].append(df)
+
+        return related_transitions, related_data_flows
+
+    @Observable.observed
+    def substitute_state(self, state_id, state):
+
+        if state_id not in self.states:
+            raise ValueError("The state_id {0} to be substitute has to be in the states list of "
+                             "respective parent state {1}.".format(state_id, self.get_path()))
+
+        [related_transitions, related_data_flows] = self.related_linkage_state(state_id)
+
+        readjust_parent_of_ports = True if state.state_id != state.outcomes.items()[0][1].parent.state_id else False
+
+        old_outcome_names = {oc_id: oc.name for oc_id, oc in self.states[state_id].outcomes.iteritems()}
+        old_input_data_ports = copy(self.states[state_id].input_data_ports)
+        old_output_data_ports = copy(self.states[state_id].output_data_ports)
+        old_state_was_library = False
+        if isinstance(self.states[state_id], LibraryState):
+            old_input_data_port_runtime_values = self.states[state_id].input_data_port_runtime_values
+            old_output_data_port_runtime_values = self.states[state_id].output_data_port_runtime_values
+            old_use_runtime_value_input_data_ports = self.states[state_id].use_runtime_value_input_data_ports
+            old_use_runtime_value_output_data_ports = self.states[state_id].use_runtime_value_output_data_ports
+            old_state_was_library = True
+
+        self.remove_state(state_id)
+        old_state_id = state_id
+        state_id = self.add_state(state)
+
+        act_outcome_ids_by_name = {oc.name: oc_id for oc_id, oc in state.outcomes.iteritems()}
+        act_input_data_port_by_name = {ip.name: ip for ip in state.input_data_ports.itervalues()}
+        act_output_data_port_by_name = {op.name: op for op in state.output_data_ports.itervalues()}
+
+        for t in related_transitions['external']['ingoing']:
+            self.add_transition(t.from_state, t.from_outcome, state_id, t.to_outcome, t.transition_id)
+
+        for t in related_transitions['external']['outgoing']:
+            from_outcome = act_outcome_ids_by_name.get(old_outcome_names[t.from_outcome], None)
+            if from_outcome is not None:
+                self.add_transition(state_id, from_outcome, t.to_state, t.to_outcome, t.transition_id)
+
+        for old_ip in old_input_data_ports.itervalues():
+            ip = act_input_data_port_by_name.get(old_input_data_ports[old_ip.data_port_id].name, None)
+            if ip is not None and ip.data_type == old_input_data_ports[old_ip.data_port_id].data_type:
+                if isinstance(state, LibraryState) and old_state_was_library:
+                    state.input_data_port_runtime_values[ip.data_port_id] = old_input_data_port_runtime_values[old_ip.data_port_id]
+                    state.use_runtime_value_input_data_ports[ip.data_port_id] = old_use_runtime_value_input_data_ports[old_ip.data_port_id]
+                elif not isinstance(state, LibraryState):
+                    ip.default_value = old_input_data_ports[old_ip.data_port_id].default_value
+        for df in related_data_flows['external']['ingoing']:
+            ip = act_input_data_port_by_name.get(old_input_data_ports[df.to_key].name, None)
+            if ip is not None and ip.data_type == old_input_data_ports[df.to_key].data_type:
+                self.add_data_flow(df.from_state, df.from_key, state_id, ip.data_port_id, df.data_flow_id)
+
+        for old_op in old_output_data_ports.itervalues():
+            op = act_output_data_port_by_name.get(old_output_data_ports[old_op.data_port_id].name, None)
+            if op is not None and op.data_type == old_output_data_ports[old_op.data_port_id].data_type:
+                if isinstance(state, LibraryState) and old_state_was_library:
+                    state.output_data_port_runtime_values[op.data_port_id] = old_output_data_port_runtime_values[old_op.data_port_id]
+                    state.use_runtime_value_output_data_ports[op.data_port_id] = old_use_runtime_value_output_data_ports[old_op.data_port_id]
+                elif not isinstance(state, LibraryState):
+                    op.default_value = old_output_data_ports[old_op.data_port_id].default_value
+        for df in related_data_flows['external']['outgoing']:
+            op = act_output_data_port_by_name.get(old_output_data_ports[df.from_key].name, None)
+            if op is not None and op.data_type == old_output_data_ports[df.from_key].data_type:
+                self.add_data_flow(state_id, op.data_port_id, df.to_state, df.to_key, df.data_flow_id)
+
+        if readjust_parent_of_ports:
+            state = self.states[state_id]
+            state.input_data_ports = state.input_data_ports
+            state.output_data_ports = state.output_data_ports
+            state.outcomes = state.outcomes
+        logger.info("substitute finished")
+        return state_id
+
     @Observable.observed
     def change_state_type(self, state, new_state_class):
+        """ Changes the type of the state to another type
+
+        :param state: the state to be changed
+        :param new_state_class: the new type of the state
+        :return: the new state having the new state type
+        :rtype: :py:class:`rafcon.statemachine.states.state.State`
+        :raises exceptions.ValueError: if the state does not exist in the container state
+        """
         from rafcon.mvc.state_machine_helper import create_new_state_from_state_with_type
 
         state_id = state.state_id
@@ -627,8 +912,12 @@ class ContainerState(State):
     def get_start_state(self, set_final_outcome=False):
         """Get the start state of the container state
 
+        :param set_final_outcome: if the final_outcome of the state should be set if the income directly connects to
+                                    an outcome
+        :return: the start state
         """
 
+        # overwrite the start state in the case that a specific start state is specific e.g. by start_from_state
         if self.get_path() in state_machine_execution_engine.start_state_paths:
             for state_id, state in self.states.iteritems():
                 if state.get_path() in state_machine_execution_engine.start_state_paths:
@@ -642,6 +931,7 @@ class ContainerState(State):
         if self.start_state_id == self.state_id:
             if set_final_outcome:
                 for transition_id in self.transitions:
+                    # the transition of which the from state is None is the transition that directly connects the income
                     if self.transitions[transition_id].from_state is None:
                         to_outcome_id = self.transitions[transition_id].to_outcome
                         self.final_outcome = self.outcomes[to_outcome_id]
@@ -659,6 +949,7 @@ class ContainerState(State):
 
         :param transition_id: The transition-id to check
         :return: The new transition id
+        :raises exceptions.AttributeError: if transition.transition_id already exists
         """
         if transition_id is not None:
             if transition_id in self._transitions.iterkeys():
@@ -677,7 +968,8 @@ class ContainerState(State):
 
         :param from_state_id: The source state of the transition
         :param from_outcome: The outcome of the source state to connect the transition to
-        :return:
+        :raises exceptions.AttributeError: if the outcome of the state with the state_id==from_state_id
+                                            is already connected
         """
         for trans_key, transition in self.transitions.iteritems():
             if transition.from_state == from_state_id:
@@ -695,7 +987,8 @@ class ContainerState(State):
         :param to_state_id: The target state of the transition
         :param to_outcome: The target outcome of a container state
         :param transition_id: An optional transition id for the new transition
-        :return:
+        :raises exceptions.AttributeError: if the from or to state is incorrect
+        :return: the id of the new transition
         """
 
         # get correct states
@@ -761,6 +1054,7 @@ class ContainerState(State):
         :param state: The state for which the transition is determined
         :param outcome: The outcome of the state, that is given in the first parameter
         :return: the transition specified by the the state and the outcome
+        :raises exceptions.TypeError: if the types of the passed parameters are incorrect
         """
         if not isinstance(state, State):
             raise TypeError("state must be of type State")
@@ -777,7 +1071,7 @@ class ContainerState(State):
         """Removes a transition from the container state
 
         :param transition_id: the id of the transition to remove
-
+        :raises exceptions.AttributeError: if the transition_id is already used
         """
         if transition_id == -1 or transition_id == -2:
             raise AttributeError("The transition_id must not be -1 (Aborted) or -2 (Preempted)")
@@ -826,7 +1120,7 @@ class ContainerState(State):
         """ Removes a data flow from the container state
 
         :param int data_flow_id: the id of the data_flow to remove
-
+        :raises exceptions.AttributeError: if the data_flow_id does not exist
         """
         if data_flow_id not in self.data_flows:
             raise AttributeError("The data_flow_id %s does not exist" % str(data_flow_id))
@@ -869,11 +1163,12 @@ class ContainerState(State):
 
         :param name: the unique name of the scoped variable
         :return: the scoped variable specified by the name
+        :raises exceptions.AttributeError: if the name is not in the the scoped_variables dictionary
         """
         for scoped_variable_id, scoped_variable in self.scoped_variables.iteritems():
             if scoped_variable.name == name:
                 return scoped_variable_id
-        raise AttributeError("Name %s is not in scoped_variables", name)
+        raise AttributeError("Name %s is not in scoped_variables dictionary", name)
 
     @Observable.observed
     def add_scoped_variable(self, name, data_type=None, default_value=None, scoped_variable_id=None):
@@ -884,6 +1179,7 @@ class ContainerState(State):
         :param default_value: An optional default value of the scoped variable
         :param scoped_variable_id: An optional scoped variable id of the
         :return: the unique id of the added scoped variable
+        :raises exceptions.ValueError: if the scoped variable is not valid
         """
         if scoped_variable_id is None:
             # All data port ids have to passed to the id generation as the data port id has to be unique inside a state
@@ -904,8 +1200,9 @@ class ContainerState(State):
         """Remove a scoped variable from the container state
 
         :param scoped_variable_id: the id of the scoped variable to remove
+        :raises exceptions.AttributeError: if the id of the scoped variable already exists
         """
-        if not scoped_variable_id in self._scoped_variables:
+        if scoped_variable_id not in self._scoped_variables:
             raise AttributeError("A scoped variable with id %s does not exist" % str(scoped_variable_id))
 
         # delete all data flows connected to scoped_variable
@@ -1013,7 +1310,6 @@ class ContainerState(State):
 
         :param dictionary: The dictionary that is added to the scoped data
         :param state: The state to which the input_data was passed (should be self in most cases)
-
         """
         for dict_key, value in dictionary.iteritems():
             for input_data_port_key, data_port in self.input_data_ports.iteritems():
@@ -1055,7 +1351,6 @@ class ContainerState(State):
 
         :param: the dictionary to update the scoped variables with
         :param: the state the output dictionary belongs to
-
         """
         for key, value in dictionary.iteritems():
             output_data_port_key = None
@@ -1087,7 +1382,6 @@ class ContainerState(State):
         data flows and transitions.
 
         :param state_id: The new state if of the state
-        :return:
         """
         old_state_id = self.state_id
         super(ContainerState, self).change_state_id(state_id)
@@ -1110,7 +1404,8 @@ class ContainerState(State):
         """Calculate the target state of a transition
 
         :param transition: The transition of which the target state is determined
-
+        :return: the to-state of the transition
+        :raises exceptions.TypeError: if the transition parameter is of wrong type
         """
         if not isinstance(transition, Transition):
             raise TypeError("transition must be of type Transition")
@@ -1123,7 +1418,6 @@ class ContainerState(State):
     def write_output_data(self):
         """ Write the scoped data to output of the state. Called before exiting the container state.
 
-        :return:
         """
         for output_name, value in self.output_data.iteritems():
             output_port_id = self.get_io_data_port_id_from_name_and_type(output_name, DataPortType.OUTPUT)
@@ -1288,35 +1582,36 @@ class ContainerState(State):
         # Check whether to and from port are existing
         from_data_port = self.get_data_port(from_state_id, from_data_port_id)
         if not from_data_port:
-            return False, "Data flow origin not existing"
+            return False, "Data flow origin not existing -> {0}".format(data_flow)
         to_data_port = self.get_data_port(to_state_id, to_data_port_id)
         if not to_data_port:
-            return False, "Data flow target not existing"
+            return False, "Data flow target not existing -> {0}".format(data_flow)
 
         # Data_ports without parents are not allowed to be connected twice
         if not to_data_port.parent:
-            return False, "to_data_port does not have a parent"
+            return False, "to_data_port does not have a parent -> {0}".format(data_flow)
         if not from_data_port.parent:
-            return False, "from_data_port does not have a parent"
+            return False, "from_data_port does not have a parent -> {0}".format(data_flow)
 
         # Check, whether the origin of the data flow is valid
         if from_state_id == self.state_id:  # data_flow originates in container state
             if from_data_port_id not in self.input_data_ports and from_data_port_id not in self.scoped_variables:
                 return False, "Data flow origin port must be an input port or scoped variable, when the data flow " \
-                              "starts in the parent state"
+                              "starts in the parent state -> {0}".format(data_flow)
         else:  # data flow originates in child state
             if from_data_port_id not in from_data_port.parent.output_data_ports:
                 return False, "Data flow origin port must be an output port, when the data flow " \
-                              "starts in the child state"
+                              "starts in the child state -> {0}".format(data_flow)
 
         # Check, whether the target of a data flow is valid
         if to_state_id == self.state_id:  # data_flow ends in container state
             if to_data_port_id not in self.output_data_ports and to_data_port_id not in self.scoped_variables:
                 return False, "Data flow target port must be an output port or scoped variable, when the data flow " \
-                              "goes to the parent state"
+                              "goes to the parent state -> {0}".format(data_flow)
         else:  # data_flow ends in child state
             if to_data_port_id not in to_data_port.parent.input_data_ports:
-                return False, "Data flow target port must be an input port, when the data flow goes to a child state"
+                return False, "Data flow target port must be an input port, when the data flow goes to a child state" \
+                              " -> {0}".format(data_flow)
 
         # Check, whether the target port is already connected
         for existing_data_flow in self.data_flows.itervalues():
@@ -1324,7 +1619,7 @@ class ContainerState(State):
             from_data_port_existing = self.get_data_port(existing_data_flow.from_state, existing_data_flow.from_key)
             if to_data_port is to_data_port_existing and data_flow is not existing_data_flow:
                 if from_data_port is from_data_port_existing:
-                    return False, "Exactly the same data flow is already existing"
+                    return False, "Exactly the same data flow is already existing -> {0}".format(data_flow)
 
         return True, "valid"
 
@@ -1514,6 +1809,10 @@ class ContainerState(State):
     def states(self):
         """Property for the _states field
 
+        The setter-method substitute ContainerState.states which is a dict. The method checks if the elements are
+        of the right type  or will cancel the operation and recover old outcomes. The method does check validity of
+        the elements by calling the parent-setter.
+
         """
         return self._states
 
@@ -1522,12 +1821,11 @@ class ContainerState(State):
     def states(self, states):
         """ Setter for _states field
 
-        The method substitute ContainerState.states which is a dict. The method checks if the elements are
-        of the right type  or will cancel the operation and recover old outcomes. The method does check validity of
-        the elements by calling the parent-setter.
+        See property
 
         :param states: Dictionary of States
-        :return:
+        :raises exceptions.TypeError: if the states parameter is of wrong type
+        :raises exceptions.AttributeError: if the keys of the dictionary and the state_ids in the dictionary do not match
         """
         if not isinstance(states, dict):
             raise TypeError("states must be of type dict")
@@ -1564,11 +1862,12 @@ class ContainerState(State):
     def transitions(self, transitions):
         """ Setter for _transitions field
 
-        The method substitute ContainerState._transitions with dictionary transitions. The method checks if the
-        elements are of the right type and the keys consistent. The method does check validity of the elements by
-        calling the parent-setter and in case of failure cancel the operation and recover old _transitions.
+        See property
 
         :param: transitions: Dictionary transitions[transition_id] of :class:`rafcon.statemachine.transition.Transition`
+        :raises exceptions.TypeError: if the transitions parameter has the wrong type
+        :raises exceptions.AttributeError: if the keys of the transitions dictionary and the transition_ids of the
+                                            transitions in the dictionary do not match
         """
         if not isinstance(transitions, dict):
             raise TypeError("transitions must be of type dict")
@@ -1605,11 +1904,12 @@ class ContainerState(State):
     def data_flows(self, data_flows):
         """ Setter for _data_flows field
 
-        The method substitute ContainerState._data_flows with dictionary data_flows. The method checks if the
-        elements are of the right type and the keys consistent. The method does check validity of the elements by
-        calling the parent-setter and in case of failure cancel the operation and recover old _data_flows.
+        See property
 
         :param dict data_flows: Dictionary data_flows[data_flow_id] of :class:`rafcon.statemachine.data_flow.DataFlow`
+        :raises exceptions.TypeError: if the data_flows parameter has the wrong type
+        :raises exceptions.AttributeError: if the keys of the data_flows dictionary and the data_flow_ids of the
+                                            data flows in the dictionary do not match
         """
         if not isinstance(data_flows, dict):
             raise TypeError("data_flows must be of type dict")
@@ -1629,9 +1929,12 @@ class ContainerState(State):
 
     @property
     def start_state_id(self):
-        """Returns the id of the state first executed within the container
+        """ The start state is the state to which the first transition goes to.
 
-        :return: The if of the start state
+        The setter-method creates a unique first transition to the state with the given id.
+        Existing first transitions are removed. If the given state id is None, the first transition is removed.
+
+        :return: The id of the start state
         """
         for transition_id in self.transitions:
             if self.transitions[transition_id].from_state is None:
@@ -1647,11 +1950,11 @@ class ContainerState(State):
     def start_state_id(self, start_state_id, to_outcome=None):
         """Set the start state of the container state
 
-        The start state is the state to which the first transition goes to. Therefore the method creates a unique
-        first transition to the state with the given id. Existing first transitions are removed. If the given state
-        id is None, the first transition is removed.
+        See property
 
         :param start_state_id: The state id of the state which should be executed first in the Container state
+        :raises exceptions.ValueError: if the start_state_id does not exist in
+                                    :py:attr:`rafcon.statemachine.states.container_state.ContainerState.states`
         """
         if start_state_id is not None and start_state_id not in self.states:
             raise ValueError("start_state_id does not exist")
@@ -1692,11 +1995,12 @@ class ContainerState(State):
     def scoped_variables(self, scoped_variables):
         """ Setter for _scoped_variables field
 
-        The method substitute ContainerState._scoped_variables with dictionary scoped_variables. The method checks
-        if the elements are of the right type and the keys consistent. The method does check validity of the elements by
-        calling the parent-setter and in case of failure cancel the operation and recover old _scoped_variables.
+        See property
 
         :param dict scoped_variables: Dictionary scoped_variables[data_port_id] of :class:`rafcon.statemachine.scope.ScopedVariable`
+        :raises exceptions.TypeError: if the scoped_variables parameter has the wrong type
+        :raises exceptions.AttributeError: if the keys of the scoped_variables dictionary and the ids
+                                            of the scoped variables in the dictionary do not match
         """
         if not isinstance(scoped_variables, dict):
             raise TypeError("scoped_variables must be of type dict")

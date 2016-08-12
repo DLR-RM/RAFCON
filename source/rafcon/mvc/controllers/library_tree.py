@@ -16,8 +16,9 @@ import gtk
 import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.singleton import library_manager
 
+from rafcon.mvc.utils import constants
+from rafcon.mvc.gui_helper import create_image_menu_item
 import rafcon.mvc.state_machine_helper as state_machine_helper
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 
@@ -52,31 +53,20 @@ class LibraryTreeController(ExtendedController):
 
     def generate_right_click_menu(self):
         menu = gtk.Menu()
-        add_link_menu_item = gtk.ImageMenuItem(gtk.STOCK_ADD)
-        add_link_menu_item.set_label("Add as library (link)")
-        add_link_menu_item.connect("activate", partial(self.insert_button_clicked, as_template=False))
-        add_link_menu_item.set_always_show_image(True)
 
-        add_template_menu_item = gtk.ImageMenuItem(gtk.STOCK_COPY)
-        add_template_menu_item.set_label("Add as template (copy)")
-        add_template_menu_item.connect("activate", partial(self.insert_button_clicked, as_template=True))
-        add_template_menu_item.set_always_show_image(True)
-
-        open_menu_item = gtk.ImageMenuItem(gtk.STOCK_OPEN)
-        open_menu_item.set_label("Open")
-        open_menu_item.connect("activate", self.open_button_clicked)
-        open_menu_item.set_always_show_image(True)
-
-        open_run_menu_item = gtk.ImageMenuItem(gtk.STOCK_MEDIA_PLAY)
-        open_run_menu_item.set_label("Open and run")
-        open_run_menu_item.connect("activate", self.open_run_button_clicked)
-        open_run_menu_item.set_always_show_image(True)
-
-        menu.append(add_link_menu_item)
-        menu.append(add_template_menu_item)
+        menu.append(create_image_menu_item("Add as library (link)", constants.BUTTON_ADD,
+                                           partial(self.insert_button_clicked, as_template=False)))
+        menu.append(create_image_menu_item("Add as template (copy)", constants.BUTTON_COPY,
+                                           partial(self.insert_button_clicked, as_template=True)))
         menu.append(gtk.SeparatorMenuItem())
-        menu.append(open_menu_item)
-        menu.append(open_run_menu_item)
+        menu.append(create_image_menu_item("Open", constants.BUTTON_OPEN, self.open_button_clicked))
+        menu.append(create_image_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
+        menu.append(gtk.SeparatorMenuItem())
+        menu.append(create_image_menu_item("Substitute as library", constants.BUTTON_REFR,
+                                           self.substitute_as_library_clicked))
+        menu.append(create_image_menu_item("Substitute as template", constants.BUTTON_REFR,
+                                           self.substitute_as_template_clicked))
+
         return menu
 
     def mouse_click(self, widget, event=None):
@@ -150,10 +140,13 @@ class LibraryTreeController(ExtendedController):
         self.store_expansion_state()
         self.library_tree_store.clear()
         self.library_row_iter_dict_by_library_path.clear()
-        for library_key, library_item in library_manager.libraries.iteritems():
+        for library_key, library_item in self.model.library_manager.libraries.iteritems():
             self.insert_rec(None, library_key, library_item, "")
         self.redo_expansion_state()
-        logger.info("Libraries have been updated")
+        if self.__expansion_state:
+            logger.info("Libraries have been updated")
+        else:
+            logger.info("Library tree have been initiated")
 
     def insert_rec(self, parent, library_key, library_item, library_path):
         tree_item = self.library_tree_store.insert_before(parent, None, (library_key, library_item, library_path))
@@ -214,6 +207,12 @@ class LibraryTreeController(ExtendedController):
 
         smm_m.state_machine_manager.add_state_machine(state_machine)
         return state_machine
+
+    def substitute_as_library_clicked(self, widget):
+        state_machine_helper.substitute_state(self._get_selected_library_state(), as_template=False)
+
+    def substitute_as_template_clicked(self, widget):
+        state_machine_helper.substitute_state(self._get_selected_library_state(), as_template=True)
 
     def _get_selected_library_state(self):
         """Returns the LibraryState which was selected in the LibraryTree

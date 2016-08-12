@@ -44,7 +44,7 @@ def test_multi_events(caplog):
                                                 args=[global_variable_manager, state_machine_execution_engine])
     execution_trigger_thread.start()
 
-    sm = StateMachineExecutionEngine.execute_state_machine_from_path(
+    sm = state_machine_execution_engine.execute_state_machine_from_path(
         path=testing_utils.get_test_sm_path("unit_test_state_machines/multi_events_test"))
 
     execution_trigger_thread.join()

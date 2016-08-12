@@ -35,7 +35,7 @@ class ConcurrencyState(ContainerState):
 
         :param args: list of optional arguments
         :param kwargs: optional keyword arguments
-        :return:
+        :raises exceptions.AttributeError: if this method was not implemented by the subclass
         """
         raise NotImplementedError("The ContainerState.run() function has to be implemented!")
 

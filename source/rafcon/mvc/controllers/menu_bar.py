@@ -8,15 +8,15 @@
 
 """
 
-import os
-import sys
 from functools import partial
 
 import gtk
+import glib
 
 from rafcon.statemachine import interface
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.statemachine.state_machine import StateMachine
+from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.singleton import state_machine_manager, library_manager
@@ -24,15 +24,18 @@ from rafcon.statemachine.singleton import state_machine_manager, library_manager
 import rafcon.statemachine.singleton as core_singletons
 from rafcon.mvc.models.state import StateModel
 from rafcon.mvc.models.container_state import ContainerStateModel
+from rafcon.mvc.models.library_state import LibraryStateModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
+from rafcon.mvc import state_machine_helper
 from rafcon.mvc import gui_helper
 from rafcon.mvc import singleton as mvc_singleton
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.views.utils.about_dialog import MyAboutDialog
+from rafcon.mvc.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
-from rafcon.mvc.utils.dialog import RAFCONDialog
+from rafcon.mvc.utils.dialog import RAFCONButtonDialog, ButtonDialog
 from rafcon.utils import plugins
 from rafcon.utils import log
 
@@ -61,6 +64,8 @@ class MenuBarController(ExtendedController):
         self.handler_ids = {}
         self.registered_shortcut_callbacks = {}
         self.registered_view = False
+        # this is not a model but the state machine execution engine of the core (or the overwritten execution engine
+        # of the monitoring plugin
         self.state_machine_execution_engine = sm_execution_engine
 
     def register_view(self, view):
@@ -86,6 +91,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('open', 'activate', self.on_open_activate)
         self.connect_button_to_function('save', 'activate', self.on_save_activate)
         self.connect_button_to_function('save_as', 'activate', self.on_save_as_activate)
+        self.connect_button_to_function('save_state_as', 'activate', self.on_save_as_activate)
         self.connect_button_to_function('menu_properties', 'activate', self.on_menu_properties_activate)
         self.connect_button_to_function('refresh_all', 'activate', self.on_refresh_all_activate)
         self.connect_button_to_function('refresh_libraries', 'activate', self.on_refresh_libraries_activate)
@@ -96,8 +102,9 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('paste_clipboard', 'activate', self.on_paste_clipboard_activate)
         self.connect_button_to_function('delete', 'activate', self.on_delete_activate)
         self.connect_button_to_function('add_state', 'activate', self.on_add_state_activate)
-        self.connect_button_to_function('group_states', 'activate', self.on_add_state_activate)
+        self.connect_button_to_function('group_states', 'activate', self.on_group_states_activate)
         self.connect_button_to_function('ungroup_state', 'activate', self.on_ungroup_state_activate)
+        self.connect_button_to_function('substitute_state', 'activate', self.on_substitute_selected_state_activate)
         self.connect_button_to_function('undo', 'activate', self.on_undo_activate)
         self.connect_button_to_function('redo', 'activate', self.on_redo_activate)
         self.connect_button_to_function('grid', 'activate', self.on_grid_toggled)
@@ -154,6 +161,11 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('save_as', partial(self.call_action_callback, "on_save_as_activate"))
         self.add_callback_to_shortcut_manager('save_state_as', partial(self.call_action_callback,
                                                                        "on_save_selected_state_as_activate"))
+        self.add_callback_to_shortcut_manager('substitute_state', partial(self.call_action_callback,
+                                                                          "on_substitute_selected_state_activate"))
+        self.add_callback_to_shortcut_manager('substitute_library_with_template',
+                                              partial(self.call_action_callback,
+                                                      "on_substitute_library_with_template_activate"))
         self.add_callback_to_shortcut_manager('open', partial(self.call_action_callback, "on_open_activate"))
         self.add_callback_to_shortcut_manager('new', partial(self.call_action_callback, "on_new_activate"))
         self.add_callback_to_shortcut_manager('quit', partial(self.call_action_callback, "on_quit_activate"))
@@ -251,10 +263,20 @@ class MenuBarController(ExtendedController):
         try:
             state_machine = storage.load_state_machine_from_path(load_path)
             state_machine_manager.add_state_machine(state_machine)
-        except (ValueError, IOError) as e:
+        except (AttributeError, ValueError, IOError) as e:
             logger.error('Error while trying to open state machine: {0}'.format(e))
 
     def on_save_activate(self, widget, data=None, save_as=False):
+        def on_message_dialog_response_signal(widget, response_id, source_editor_ctrl):
+            state = source_editor_ctrl.model.state
+            if response_id == ButtonDialog.OPTION_1.value:
+                logger.debug("Applying source code changes of state '{}'".format(state.name))
+                source_editor_ctrl.apply_clicked(None)
+
+            elif response_id == ButtonDialog.OPTION_2.value:
+                logger.debug("Ignoring source code changes of state '{}'".format(state.name))
+            widget.destroy()
+
         state_machine_m = self.model.get_selected_state_machine_model()
         if state_machine_m is None:
             return
@@ -262,33 +284,17 @@ class MenuBarController(ExtendedController):
         all_tabs = self.states_editor_ctrl.tabs.values()
         all_tabs.extend(self.states_editor_ctrl.closed_tabs.values())
         dirty_source_editor_ctrls = [tab_dict['controller'].get_controller('source_ctrl') for tab_dict in all_tabs if
-                                     tab_dict['source_code_view_is_dirty'] is True
-                                     and tab_dict[
-                                     'state_m'].state.get_sm_for_state().state_machine_id ==
+                                     tab_dict['source_code_view_is_dirty'] is True and
+                                     tab_dict['state_m'].state.get_sm_for_state().state_machine_id ==
                                      state_machine_m.state_machine.state_machine_id]
 
         for dirty_source_editor_ctrl in dirty_source_editor_ctrls:
-            def on_message_dialog_response_signal(widget, response_id):
-                if response_id == 42:
-                    widget.destroy()
-                    dirty_source_editor_ctrl.apply_clicked(None)
-                    logger.debug("Source script in editing stored before saving")
-
-                elif response_id == 43:
-                    logger.debug("Source script in editing is ignored while saving")
-                    widget.destroy()
-
-            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
-            message_string = "Are you sure you want to store the state machine without storing source Code in " \
-                             "editing?\n\n" \
-                             "The changes of state: %s name: %s have to be stored or ignored while saving. " % \
-                             (dirty_source_editor_ctrl.model.state.get_path(), dirty_source_editor_ctrl.model.state.name)
-            dialog.set_markup(message_string)
-            dialog.add_button("Store", 42)
-            dialog.add_button("Ignore", 43)
-            dialog.grab_focus()
-            dialog.finalize(on_message_dialog_response_signal)
-            dialog.run()
+            state = dirty_source_editor_ctrl.model.state
+            message_string = "The source code of the state '{}' (path: {}) has net been applied yet and would " \
+                             "therefore not be stored.\n\nDo you want to apply the changes now?".format(state.name,
+                                                                                                     state.get_path())
+            RAFCONButtonDialog(message_string, ["Apply", "Ignore changes"], on_message_dialog_response_signal,
+                               [dirty_source_editor_ctrl], type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
 
         save_path = state_machine_m.state_machine.file_system_path
         if save_path is None:
@@ -316,10 +322,29 @@ class MenuBarController(ExtendedController):
         self.model.get_selected_state_machine_model().state_machine.file_system_path = path
         return self.on_save_activate(widget, data, save_as=True)
 
+    def on_substitute_selected_state_activate(self, widget=None, data=None, path=None):
+        selected_states = self.model.get_selected_state_machine_model().selection.get_states()
+        if selected_states and len(selected_states) == 1:
+            StateSubstituteChooseLibraryDialog(mvc_singleton.library_manager_model, parent=self.get_root_window())
+            return True
+        else:
+            logger.warning("Substitute state needs exact one state to be selected.")
+            return False
+
+    def on_substitute_library_with_template_activate(self, widget=None, data=None):
+        selected_states = self.model.get_selected_state_machine_model().selection.get_states()
+        if selected_states and len(selected_states) == 1 and isinstance(selected_states[0], LibraryStateModel):
+            lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_states[0].state))
+            state_machine_helper.substitute_state(lib_state, as_template=True)
+            # TODO find out why the following generates a problem (e.g. lose of outcomes)
+            # state_machine_helper.substitute_state(selected_states[0].state, as_template=True)
+            return True
+        else:
+            logger.warning("Substitute library state with template needs exact one library state to be selected.")
+            return False
+
     def on_save_selected_state_as_activate(self, widget=None, data=None, path=None):
         selected_states = self.model.get_selected_state_machine_model().selection.get_states()
-        logger.info("Save state as state machine. \n" + str(selected_states))
-        logger.info("library_paths: " + str(library_manager._library_paths))
         if selected_states and len(selected_states) == 1:
             import copy
             state_m = copy.copy(selected_states[0])
@@ -331,13 +356,81 @@ class MenuBarController(ExtendedController):
             if path:
                 save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
                 sm_m.store_meta_data()
+            else:
+                return False
             # check if state machine is in library path
-            if any([root_path == path[:len(root_path)] for root_path in library_manager._library_paths.values()]):
-                logger.info("DIALOG TO REQUEST SUBSTITUTION has to be insert here.")
-                logger.info("DIALOG TO REQUEST REFRESH OF LIBRARY-TREE has to be insert here.")
-            logger.info("DIALOG TO REQUEST opening of new state machine has to be insert here.")
+            if library_manager.is_os_path_in_library_paths(path):
+                # TODO use a check box dialog with three check boxes and an confirmation and cancel button
+
+                # Library refresh dialog
+                def on_message_dialog_response_signal(widget, response_id):
+                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value,
+                                       ButtonDialog.OPTION_3.value, -4]:
+                        widget.destroy()
+
+                    if response_id == ButtonDialog.OPTION_1.value:
+                        logger.debug("Library refresh is triggered.")
+                        self.on_refresh_libraries_activate(None)
+                    elif response_id == ButtonDialog.OPTION_2.value:
+                        logger.debug("Refresh all is triggered.")
+                        self.on_refresh_all_activate(None)
+                    elif response_id in [ButtonDialog.OPTION_3.value, -4]:
+                        pass
+                    else:
+                        logger.warning("Response id: {} is not considered".format(response_id))
+
+                message_string = "You stored your state machine in a path that is included into the library paths.\n\n"\
+                                 "Do you want to refresh the libraries or refresh libraries and state machines?"
+                RAFCONButtonDialog(message_string, ["Refresh libraries", "Refresh everything", "Do nothing"],
+                                   on_message_dialog_response_signal,
+                                   type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+
+                # Offer state substitution dialog
+                def on_message_dialog_response_signal(widget, response_id):
+                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, -4]:
+                        widget.destroy()
+
+                    if response_id == ButtonDialog.OPTION_1.value:
+                        logger.debug("Substitute saved state with Library.")
+                        self.on_refresh_libraries_activate(None)
+                        [library_path, library_name] = library_manager.get_library_path_and_name_for_os_path(path)
+                        state = library_manager.get_library_instance(library_path, library_name)
+                        state_machine_helper.substitute_state(state, as_template=False)
+                    elif response_id in [ButtonDialog.OPTION_2.value, -4]:
+                        pass
+                    else:
+                        logger.warning("Response id: {} is not considered".format(response_id))
+
+                message_string = "You stored your state machine in a path that is included into the library paths.\n\n"\
+                                 "Do you want to substitute the state you saved by this library?"
+                RAFCONButtonDialog(message_string, ["Substitute", "Do nothing"],
+                                   on_message_dialog_response_signal,
+                                   type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+
+            # Offer to open saved state machine dialog
+            def on_message_dialog_response_signal(widget, response_id):
+                if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, -4]:
+                    widget.destroy()
+
+                if response_id == ButtonDialog.OPTION_1.value:
+                    logger.debug("Open state machine.")
+                    try:
+                        state_machine = storage.load_state_machine_from_path(path)
+                        state_machine_manager.add_state_machine(state_machine)
+                    except (ValueError, IOError) as e:
+                        logger.error('Error while trying to open state machine: {0}'.format(e))
+                elif response_id in [ButtonDialog.OPTION_2.value, -4]:
+                    pass
+                else:
+                    logger.warning("Response id: {} is not considered".format(response_id))
+
+            message_string = "Should the newly created state machine be opened?"
+            RAFCONButtonDialog(message_string, ["Open", "Do not open"], on_message_dialog_response_signal,
+                               type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+            return True
         else:
             logger.warning("Multiple states can not be saved as state machine directly. Group them before.")
+            return False
 
     def on_menu_properties_activate(self, widget, data=None):
         # TODO: implement
@@ -368,28 +461,24 @@ class MenuBarController(ExtendedController):
             if state_machine_manager.has_dirty_state_machine() or dirty_source_editor:
 
                 def on_message_dialog_response_signal(widget, response_id):
-                    if response_id == 42:
+                    if response_id == ButtonDialog.OPTION_1.value:
                         self.refresh_libs_and_state_machines()
                     else:
                         logger.debug("Refresh canceled")
                     widget.destroy()
 
-                dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
                 message_string = "Are you sure you want to reload the libraries and all state machines?\n\n" \
                                  "The following elements have been modified and not saved. " \
                                  "These changes will get lost:"
                 for sm_id, sm in state_machine_manager.state_machines.iteritems():
                     if sm.marked_dirty:
-                        message_string = "%s\nstate machine: #%s: %s " % (
+                        message_string = "%s\n* State machine #%s and name '%s'" % (
                             message_string, str(sm_id), sm.root_state.name)
                 for ctrl in dirty_source_editor:
-                    message_string = "%s\nstate source: %s: %s of sm_id: #%s" % (
-                        message_string, ctrl.model.state.get_path(), ctrl.model.state.name,
-                        str(ctrl.model.state.get_sm_for_state().state_machine_id))
-                dialog.set_markup(message_string)
-                dialog.add_button("Reload anyway", 42)
-                dialog.add_button("Cancel", 43)
-                dialog.finalize(on_message_dialog_response_signal)
+                    message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
+                        message_string, ctrl.model.state.name, ctrl.model.state.get_path())
+                RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"], on_message_dialog_response_signal,
+                                   type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             else:
                 self.refresh_libs_and_state_machines()
 
@@ -444,7 +533,7 @@ class MenuBarController(ExtendedController):
         if state_machine_manager.has_dirty_state_machine():
 
             def on_message_dialog_response_signal(widget, response_id):
-                if response_id == 42:
+                if response_id == ButtonDialog.OPTION_1.value:
                     widget.destroy()
                     if self.state_machine_execution_engine.status.execution_mode \
                             is not StateMachineExecutionStatus.STOPPED:
@@ -452,21 +541,18 @@ class MenuBarController(ExtendedController):
                     else:
                         self.prepare_destruction()
                         self.on_destroy(None)
-                elif response_id == 43:
+                elif response_id == ButtonDialog.OPTION_2.value:
                     logger.debug("Close main window canceled")
                     widget.destroy()
 
-            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             message_string = "Are you sure you want to exit RAFCON?\n\n" \
                              "The following state machines have been modified and not saved. " \
                              "These changes will get lost:"
             for sm_id, sm in state_machine_manager.state_machines.iteritems():
                 if sm.marked_dirty:
                     message_string = "%s\n#%s: %s " % (message_string, str(sm_id), sm.root_state.name)
-            dialog.set_markup(message_string)
-            dialog.add_button("Close without saving", 42)
-            dialog.add_button("Cancel", 43)
-            dialog.finalize(on_message_dialog_response_signal)
+            RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"], on_message_dialog_response_signal,
+                               type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             return True
         return False
 
@@ -474,57 +560,36 @@ class MenuBarController(ExtendedController):
         if self.state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
 
             def on_message_dialog_response_signal(widget, response_id):
-                if response_id == 42:
+                if response_id == ButtonDialog.OPTION_1.value:
                     self.state_machine_execution_engine.stop()
-                    logger.debug("State machine is shut down now!")
-                    widget.destroy()
-                    self.prepare_destruction()
-                    self.on_destroy(None)
-                elif response_id == 43:
+                elif response_id == ButtonDialog.OPTION_2.value:
                     logger.debug("State machine will stay running!")
-                    widget.destroy()
-                    self.main_window_view.hide()
-                    # state machine cannot be shutdown in a controlled manner as after self.destroy()
-                    # the signal handler does not trigger any more
-                    # self.destroy(None)
+                widget.destroy()
+                self.prepare_destruction()
+                self.on_destroy(None)
 
-            dialog = RAFCONDialog(type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
-            message_string = "The state machine is still running. Do you want to stop the state machine before closing?"
-            dialog.set_markup(message_string)
-            dialog.add_button("Stop state machine", 42)
-            dialog.add_button("Keep running", 43)
-            dialog.finalize(on_message_dialog_response_signal)
+            message_string = "The state machine is still running. Do you want to stop the execution before closing?"
+            RAFCONButtonDialog(message_string, ["Stop execution", "Keep running"], on_message_dialog_response_signal,
+                               type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
             return True
         return False
 
     def on_destroy(self, widget, data=None):
+        from rafcon.statemachine.start import reactor_required
 
-        # stop state machine
-        try:
-            if self.state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
-                self.state_machine_execution_engine.stop()
-                active_sm_id = self.state_machine_execution_engine.state_machine_manager.active_state_machine_id
-                self.state_machine_execution_engine.state_machine_manager.state_machines[active_sm_id].root_state.join()
-        except Exception as e:
-            import traceback
-            logger.exception("Could not stop state machine!")
+        logger.debug("The GUI is being closed now")
+        self.main_window_view.hide()
 
-        if "twisted" in sys.modules.keys():
-            # from monitoring.monitoring_manager import global_monitoring_manager
-            logger.info("Shutting down twisted from gtk and thus gtk itself")
+        if reactor_required():  # shutdown reactor
             from twisted.internet import reactor
-            logger.info("Shutting down monitoring manager")
-            # global_monitoring_manager.shutdown()
-            logger.info("Shutting down twisted")
-            # the plugin may be installed but no reactor is running
             if reactor.running:
                 reactor.callFromThread(reactor.stop)
+            else:
+                glib.idle_add(gtk.main_quit)
+        else:  # shutdown gtk
+            glib.idle_add(gtk.main_quit)
 
-        # shutdown gtk
-        logger.debug("Closing main window!")
-        self.main_window_view.hide()
-        import glib
-        glib.idle_add(gtk.main_quit)
+        # Run the GTK loop until no more events are being generated and thus the GUI is fully destroyed
         while gtk.events_pending():
             gtk.main_iteration(False)
 
@@ -676,12 +741,13 @@ class MenuBarController(ExtendedController):
 
     def on_start_from_selected_state_activate(self, widget, data=None):
         logger.debug("Run from selected state ...")
-        sel = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
-        state_list = sel.get_states()
-        if len(state_list) is not 1:
+        selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        selected_state_models = selection.get_states()
+        if len(selected_state_models) is not 1:
             logger.error("Exactly one state must be selected!")
         else:
-            self.state_machine_execution_engine.start(self.model.selected_state_machine_id, state_list[0].state.get_path())
+            self.state_machine_execution_engine.start(self.model.selected_state_machine_id,
+                                                      selected_state_models[0].state.get_path())
 
     def on_pause_activate(self, widget, data=None):
         self.state_machine_execution_engine.pause()
@@ -707,12 +773,12 @@ class MenuBarController(ExtendedController):
     def on_run_to_selected_state_activate(self, widget, data=None):
         logger.debug("Run to selected state ...")
 
-        sel = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
-        state_list = sel.get_states()
-        if len(state_list) is not 1:
+        selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        selected_state_models = selection.get_states()
+        if len(selected_state_models) is not 1:
             logger.error("Exactly one state must be selected!")
         else:
-            self.state_machine_execution_engine.run_to_selected_state(state_list[0].state.get_path(),
+            self.state_machine_execution_engine.run_to_selected_state(selected_state_models[0].state.get_path(),
                                                                       self.model.selected_state_machine_id)
 
     ######################################################

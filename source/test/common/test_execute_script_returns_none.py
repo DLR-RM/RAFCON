@@ -1,9 +1,8 @@
 import pytest
 import signal
 
+import rafcon.statemachine.start
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.execution_state import ExecutionState
 import rafcon.mvc.singleton
 import testing_utils
 

@@ -161,7 +161,10 @@ class StateMachine(Observable, JSONObject):
         from rafcon.statemachine.states.execution_state import ExecutionState
         path_item_list = path.split('/')
         prev_state_id = path_item_list.pop(0)
-        assert prev_state_id == self.root_state.state_id
+        if not prev_state_id == self.root_state.state_id:
+            logger.warning("First element in path ({0}) for method get_state_by_path has to be the root state "
+                           "state_id ({1}).".format(path, self.root_state.state_id))
+            return None
         state = self.root_state
         for state_id in path_item_list:
             if isinstance(state, LibraryState):

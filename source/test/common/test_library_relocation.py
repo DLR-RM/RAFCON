@@ -6,7 +6,7 @@ import testing_utils
 import signal
 
 import rafcon
-from rafcon.statemachine import interface
+from rafcon.statemachine import interface, start
 
 from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
 from rafcon.statemachine.states.library_state import LibraryState
@@ -38,7 +38,7 @@ def open_folder(query):
 
 def test_library_relocation(caplog):
 
-    signal.signal(signal.SIGINT, rafcon.statemachine.start.signal_handler)
+    signal.signal(signal.SIGINT, start.signal_handler)
     testing_utils.test_multithrading_lock.acquire()
 
     testing_utils.remove_all_libraries()

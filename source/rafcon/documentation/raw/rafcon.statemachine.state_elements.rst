@@ -20,8 +20,8 @@ scope
 -----
 .. automodule:: rafcon.statemachine.state_elements.scope
 
-transition module
------------------
+transition
+----------
 .. automodule:: rafcon.statemachine.state_elements.transition
 
 state_element

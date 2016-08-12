@@ -148,29 +148,28 @@ class GraphicalEditorController(ExtendedController):
 
         Adds a new state only if the graphical editor is in focus.
         """
-        if not self.view.editor.is_focus():
-            return
-        state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-        return state_machine_helper.add_new_state(self.model, state_type)
+        if self.view and self.view.editor.is_focus():
+            state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
+            return state_machine_helper.add_new_state(self.model, state_type)
 
     def _copy_selection(self, *args):
         """Copies the current selection to the clipboard.
         """
-        if self.view.editor.is_focus():
+        if self.view and self.view.editor.is_focus():
             logger.debug("copy selection")
             global_clipboard.copy(self.model.selection)
 
     def _cut_selection(self, *args):
         """Cuts the current selection and copys it to the clipboard.
         """
-        if self.view.editor.is_focus():
+        if self.view and self.view.editor.is_focus():
             logger.debug("cut selection")
             global_clipboard.cut(self.model.selection)
 
     def _paste_clipboard(self, *args):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
-        if self.view.editor.is_focus():
+        if self.view and self.view.editor.is_focus():
             logger.debug("Paste")
 
             # Always update canvas and handle all events in the gtk queue before performing any changes
@@ -347,7 +346,10 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'remove_state':
                 if self._change_state_type:
                     return
-                state_v = self.canvas.get_view_for_id(StateView, arguments[1])
+                parent_state = arguments[0]
+                state_id = arguments[1]
+                parent_v = self.canvas.get_view_for_core_element(parent_state)
+                state_v = self.canvas.get_view_for_id(StateView, state_id, parent_v)
                 if state_v:
                     parent_v = self.canvas.get_parent(state_v)
                     state_v.remove()
@@ -670,39 +672,17 @@ class GraphicalEditorController(ExtendedController):
         new_transition_hierarchy_level = parent_state_v.hierarchy_level
         new_transition_v = TransitionView(transition_m, new_transition_hierarchy_level)
 
-        self.canvas.add(new_transition_v, parent_state_v)
+        self.canvas.add(new_transition_v, parent_state_v, index=0)
 
         self.add_transition(transition_m, new_transition_v, parent_state_m, parent_state_v)
 
     def add_data_flow_view_for_model(self, data_flow_m, parent_state_m):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
 
-        from_state_id = data_flow_m.data_flow.from_state
-        from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
-            from_state_id]
-
-        to_state_id = data_flow_m.data_flow.to_state
-        to_state_m = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
-            to_state_id]
-
         new_data_flow_hierarchy_level = parent_state_v.hierarchy_level
-        from_key = data_flow_m.data_flow.from_key
-        to_key = data_flow_m.data_flow.to_key
-
-        from_port_m = from_state_m.get_data_port_m(from_key)
-        to_port_m = to_state_m.get_data_port_m(to_key)
-
-        # if isinstance(from_port_m, ScopedVariableModel):
-        #     new_data_flow_v = FromScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
-        #                                                      from_port_m.scoped_variable)
-        # elif isinstance(to_port_m, ScopedVariableModel):
-        #     new_data_flow_v = ToScopedVariableDataFlowView(data_flow_m, new_data_flow_hierarchy_level,
-        #                                                    to_port_m.scoped_variable)
-        # else:
         new_data_flow_v = DataFlowView(data_flow_m, new_data_flow_hierarchy_level)
 
-        self.canvas.add(new_data_flow_v, parent_state_v)
-
+        self.canvas.add(new_data_flow_v, parent_state_v, index=0)
         self.add_data_flow(data_flow_m, new_data_flow_v, parent_state_m)
 
     def _remove_connection_view(self, parent_state_m, transitions=True):
@@ -716,11 +696,10 @@ class GraphicalEditorController(ExtendedController):
         children = self.canvas.get_children(parent_state_v)
         for child in list(children):
             if transitions and isinstance(child, TransitionView) and child.model not in available_connections:
-                child.remove_all_waypoints()
-                child.remove_connection_from_ports()
+                child.prepare_destruction()
                 self.canvas.remove(child)
             elif not transitions and isinstance(child, DataFlowView) and child.model not in available_connections:
-                child.remove_connection_from_ports()
+                child.prepare_destruction()
                 self.canvas.remove(child)
 
     def remove_data_flow_view_from_parent_view(self, parent_state_m):
@@ -773,7 +752,6 @@ class GraphicalEditorController(ExtendedController):
         assert isinstance(state_m, AbstractStateModel)
         state_meta_gaphas = state_m.meta['gui']['editor_gaphas']
         state_meta_opengl = state_m.meta['gui']['editor_opengl']
-        state_temp = state_m.temp['gui']['editor']
 
         # Use default values if no size information is stored
         if isinstance(state_meta_opengl['size'], tuple) and not isinstance(state_meta_gaphas['size'], tuple):
@@ -856,7 +834,7 @@ class GraphicalEditorController(ExtendedController):
         assert isinstance(parent_state_v, StateView)
         for transition_m in parent_state_m.transitions:
             transition_v = TransitionView(transition_m, hierarchy_level)
-            self.canvas.add(transition_v, parent_state_v)
+            self.canvas.add(transition_v, parent_state_v, index=0)
 
             self.add_transition(transition_m, transition_v, parent_state_m, parent_state_v)
 
@@ -925,30 +903,9 @@ class GraphicalEditorController(ExtendedController):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
         assert isinstance(parent_state_v, StateView)
         for data_flow_m in parent_state_m.data_flows:
-            from_state_id = data_flow_m.data_flow.from_state
-            from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
-                from_state_id]
-
-            to_state_id = data_flow_m.data_flow.to_state
-            to_state_m = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
-                to_state_id]
-
-            from_key = data_flow_m.data_flow.from_key
-            to_key = data_flow_m.data_flow.to_key
-
-            from_port_m = from_state_m.get_data_port_m(from_key)
-            to_port_m = to_state_m.get_data_port_m(to_key)
-
-            # if isinstance(from_port_m, ScopedVariableModel):
-            #     scoped_variable = from_port_m.scoped_variable
-            #     data_flow_v = FromScopedVariableDataFlowView(data_flow_m, hierarchy_level, scoped_variable)
-            # elif isinstance(to_port_m, ScopedVariableModel):
-            #     scoped_variable = to_port_m.scoped_variable
-            #     data_flow_v = ToScopedVariableDataFlowView(data_flow_m, hierarchy_level, scoped_variable)
-            # else:
             data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
-            self.canvas.add(data_flow_v, parent_state_v)
 
+            self.canvas.add(data_flow_v, parent_state_v, index=0)
             self.add_data_flow(data_flow_m, data_flow_v, parent_state_m)
 
     def add_data_flow(self, data_flow_m, data_flow_v, parent_state_m):

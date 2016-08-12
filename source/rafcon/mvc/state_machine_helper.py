@@ -1,8 +1,3 @@
-from rafcon.utils import log
-from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
-
-logger = log.get_logger(__name__)
-
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.library_state import LibraryState
@@ -10,14 +5,18 @@ from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.enums import StateType
+from rafcon.statemachine.enums import StateType, UNIQUE_DECIDER_STATE_ID
 from rafcon.mvc.models import StateModel, AbstractStateModel, ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel
 from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
+
 from rafcon.statemachine.singleton import library_manager
 import rafcon.mvc.singleton
+
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 def delete_model(model, raise_exceptions=False):
@@ -177,11 +176,11 @@ def add_new_state(state_machine_m, state_type):
     if state_type not in list(StateType):
         state_type = StateType.EXECUTION
 
-    selection = state_machine_m.selection.get_all()
-    if not selection:
-        logger.warn("Please select the desired parent state, before adding a new state")
+    selected_state_models = state_machine_m.selection.get_states()
+    if not selected_state_models or len(selected_state_models) != 1:
+        logger.warn("Please select exactly one desired parent state, before adding a new state")
         return
-    model = selection[0]
+    model = selected_state_models[0]
 
     if isinstance(model, StateModel):
         return add_state(model, state_type)
@@ -401,6 +400,52 @@ def get_state_machine_model_for_state(state):
     return state_machine_m
 
 
+def substitute_state(state, as_template=False):
+
+    assert isinstance(state, State)
+
+    smm_m = rafcon.mvc.singleton.state_machine_manager_model
+
+    if not smm_m.selected_state_machine_id:
+        logger.error("Please select a container state within a state machine first")
+        return False
+
+    current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
+    selected_state_models = current_selection.get_states()
+    if len(selected_state_models) > 1:
+        logger.error("Please select exactly one state for the substitution")
+        return False
+
+    if len(selected_state_models) == 0:
+        logger.error("Please select a state for the substitution")
+        return False
+
+    current_state_m = selected_state_models[0]
+    current_state = current_state_m.state
+    parent_state_m = current_state_m.parent
+    parent_state = current_state.parent
+
+    if not as_template:
+        parent_state.substitute_state(current_state.state_id, state)
+        return True
+    # If inserted as template, we have to extract the state_copy and load the meta data manually
+    else:
+        template = state.state_copy
+        orig_state_id = template.state_id
+        template.change_state_id()
+        parent_state.substitute_state(current_state.state_id, template)
+
+        # load meta data
+        from os.path import join
+        lib_os_path, _, _ = library_manager.get_os_path_to_library(state.library_path, state.library_name)
+        root_state_path = join(lib_os_path, orig_state_id)
+        template_m = parent_state_m.states[template.state_id]
+        template_m.load_meta_data(root_state_path)
+        # Causes the template to be resized
+        template_m.temp['gui']['editor']['template'] = True
+        return True
+
+
 def insert_state(state, as_template=False):
     """Adds a State to the selected state
 
@@ -418,16 +463,16 @@ def insert_state(state, as_template=False):
         logger.error("Please select a container state within a state machine first")
         return False
 
-    current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
-    if len(current_selection.get_states()) > 1:
+    selected_state_models = smm_m.state_machines[smm_m.selected_state_machine_id].selection.get_states()
+    if len(selected_state_models) > 1:
         logger.error("Please select exactly one state for the insertion")
         return False
 
-    if len(current_selection.get_states()) == 0:
+    if len(selected_state_models) == 0:
         logger.error("Please select a state for the insertion")
         return False
 
-    current_state_m = current_selection.get_states()[0]
+    current_state_m = selected_state_models[0]
     current_state = current_state_m.state
     if not isinstance(current_state, ContainerState):
         logger.error("States can only be inserted in container states")
@@ -477,3 +522,101 @@ def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', c
         t_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='append_to_last_change'))
     else:
         t_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='viapoint_position'))
+
+
+def scale_meta_data_according_state(meta_data):
+    """ The full meta data of state elements is scaled (reduced) according the area used indicated by the state
+    meta data.
+
+    :param meta_data: dict that hold lists of meta data with state attribute consistent keys
+    :return:
+    """
+    # scale opengl meta data
+    rel_pos = meta_data['state']['gui']['editor_opengl']['rel_pos']
+    g_rel_pos = meta_data['state']['gui']['editor_gaphas']['rel_pos']
+    for s_m in meta_data['states'].itervalues():
+        s_m.meta['gui']['editor_opengl']['rel_pos'] = (s_m.meta['gui']['editor_opengl']['rel_pos'][0] + rel_pos[0],
+                                                       s_m.meta['gui']['editor_opengl']['rel_pos'][1] + rel_pos[1])
+        s_m.meta['gui']['editor_gaphas']['rel_pos'] = (s_m.meta['gui']['editor_gaphas']['rel_pos'][0] + g_rel_pos[0],
+                                                       s_m.meta['gui']['editor_gaphas']['rel_pos'][1] + g_rel_pos[1])
+    for sv_m in meta_data['scoped_variables'].itervalues():
+        sv_m.meta['gui']['editor_opengl']['inner_rel_pos'] = (sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][0] + rel_pos[0],
+                                                              sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][1] + rel_pos[1])
+        # sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'] = (sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'][0] + g_rel_pos[0],
+        #                                                       sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'][1] + g_rel_pos[1])
+    for t_m in meta_data['transitions'].itervalues():
+        if t_m.meta['gui']['editor_opengl']['waypoints']:
+            for i, pos in enumerate(t_m.meta['gui']['editor_opengl']['waypoints']):
+                t_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] + rel_pos[0], pos[1] + rel_pos[1])
+        if t_m.meta['gui']['editor_gaphas']['waypoints']:
+            for i, pos in enumerate(t_m.meta['gui']['editor_gaphas']['waypoints']):
+                t_m.meta['gui']['editor_gaphas']['waypoints'][i] = (pos[0] + g_rel_pos[0], pos[1] + g_rel_pos[1])
+    for df_m in meta_data['data_flows'].itervalues():
+        if df_m.meta['gui']['editor_opengl']['waypoints']:
+            for i, pos in enumerate(df_m.meta['gui']['editor_opengl']['waypoints']):
+                df_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] + rel_pos[0], pos[1] + rel_pos[1])
+        if df_m.meta['gui']['editor_gaphas']['waypoints']:
+            for i, pos in enumerate(df_m.meta['gui']['editor_gaphas']['waypoints']):
+                df_m.meta['gui']['editor_gaphas']['waypoints'][i] = (pos[0] + g_rel_pos[0], pos[1] + g_rel_pos[1])
+
+    return True
+
+
+def scale_meta_data_according_states(meta_data):
+    """ The full meta data of state elements is scaled (enlarged) according the area used indicated by the states
+    meta data.
+
+    :param meta_data: dict that hold lists of meta data with state attribute consistent keys
+    :return:
+    """
+    # upper left corner OpenGL
+    min_x = 1000.0
+    min_y = 1000.0
+    max_x = 0.0
+    max_y = 0.0
+    for s_m in meta_data['states'].itervalues():
+        # print s_m.meta, s_m.state.state_id
+        min_x = min(0.9*s_m.meta['gui']['editor_opengl']['rel_pos'][0], min_x)
+        min_y = min(-0.9*s_m.meta['gui']['editor_opengl']['rel_pos'][1], min_y)
+        max_x = max(s_m.meta['gui']['editor_opengl']['rel_pos'][0] + 1.1*s_m.meta['gui']['editor_opengl']['size'][0], max_x)
+        max_y = max(-s_m.meta['gui']['editor_opengl']['rel_pos'][1] + 1.1*s_m.meta['gui']['editor_opengl']['size'][1], max_y)
+        # print min_x, -min_y, max_x, -max_y
+    for sv_m in meta_data['scoped_variables'].itervalues():
+        # print sv_m.meta
+        min_x = min(0.9*sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][0], min_x)
+        min_y = min(-0.9*sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][1], min_y)
+        max_x = max(1.2*sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][0], max_x)
+        max_y = max(-1.1*sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][1], max_y)
+    # print "+"*50 + "\n" + str(meta_data['state'])
+    meta_data['state']['gui']['editor_opengl']['rel_pos'] = (min_x, -min_y)
+    meta_data['state']['gui']['editor_gaphas']['rel_pos'] = (min_x, min_y)
+    meta_data['state']['gui']['editor_opengl']['size'] = (abs(max_x - min_x), abs(max_y - min_y))
+    # print meta_data['state']
+    for s_m in meta_data['states'].itervalues():
+        s_m.meta['gui']['editor_opengl']['rel_pos'] = (s_m.meta['gui']['editor_opengl']['rel_pos'][0] - min_x,
+                                                       s_m.meta['gui']['editor_opengl']['rel_pos'][1] + min_y)
+        s_m.meta['gui']['editor_gaphas']['rel_pos'] = (s_m.meta['gui']['editor_gaphas']['rel_pos'][0] - min_x,
+                                                       s_m.meta['gui']['editor_gaphas']['rel_pos'][1] - min_y)
+    for sv_m in meta_data['scoped_variables'].itervalues():
+        sv_m.meta['gui']['editor_opengl']['inner_rel_pos'] = (sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][0] - min_x,
+                                                              sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][1] + min_y)
+        # sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'] = (sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'][0] - min_x,
+        #                                                       sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'][1] - min_y)
+    for t_m in meta_data['transitions'].itervalues():
+        # print t_m.meta
+        if t_m.meta['gui']['editor_opengl']['waypoints']:
+            for i, pos in enumerate(t_m.meta['gui']['editor_opengl']['waypoints']):
+                t_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] - min_x, pos[1] + min_y)
+        if t_m.meta['gui']['editor_gaphas']['waypoints']:
+            for i, pos in enumerate(t_m.meta['gui']['editor_gaphas']['waypoints']):
+                t_m.meta['gui']['editor_gaphas']['waypoints'][i] = (pos[0] - min_x, pos[1] - min_y)
+    for df_m in meta_data['data_flows'].itervalues():
+        # print df_m.meta
+        if df_m.meta['gui']['editor_opengl']['waypoints']:
+            for i, pos in enumerate(df_m.meta['gui']['editor_opengl']['waypoints']):
+                df_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] - min_x, pos[1] + min_y)
+        if df_m.meta['gui']['editor_gaphas']['waypoints']:
+            for i, pos in enumerate(df_m.meta['gui']['editor_gaphas']['waypoints']):
+                df_m.meta['gui']['editor_gaphas']['waypoints'][i] = (pos[0] - min_x, pos[1] - min_y)
+
+    return True

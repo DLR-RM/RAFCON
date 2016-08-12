@@ -79,6 +79,7 @@ class StateMachineManager(Observable):
             then set as active state machine.
 
         :param state_machine: State Machine Object
+        :raises exceptions.AttributeError: if the passed state machine was already added of is of a wrong type
         """
         if not isinstance(state_machine, StateMachine):
             raise AttributeError("state_machine must be of type StateMachine")
@@ -118,6 +119,7 @@ class StateMachineManager(Observable):
         else:
             return None
 
+
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc
     #########################################################################
@@ -143,4 +145,3 @@ class StateMachineManager(Observable):
             if state_machine_id not in self.state_machines.keys():
                 raise AttributeError("State machine not in list of all state machines")
         self._active_state_machine_id = state_machine_id
-        active_state_machine = self.get_active_state_machine()

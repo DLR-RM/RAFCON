@@ -104,13 +104,12 @@ class StateMachineTreeController(ExtendedController):
 
         Adds a new state only if the the state machine tree is in focus.
         """
-        if not self.view['state_machine_tree_view'].is_focus():
-            return
-        state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-        return state_machine_helper.add_new_state(self._selected_sm_model, state_type)
+        if self.view and self.view['state_machine_tree_view'].is_focus():
+            state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
+            return state_machine_helper.add_new_state(self._selected_sm_model, state_type)
 
     def _delete_selection(self, *args):
-        if self.view['state_machine_tree_view'].is_focus():
+        if self.view and self.view['state_machine_tree_view'].is_focus():
             return state_machine_helper.delete_selected_elements(self._selected_sm_model)
 
     @ExtendedController.observe("state", after=True)  # root_state
@@ -262,15 +261,15 @@ class StateMachineTreeController(ExtendedController):
             # check if there are left over rows of old states (switch from HS or CS to S and so on)
             if not type(state_model) is ContainerStateModel or \
                     not self.tree_store.get_value(child_iter, 1) in state_model.states:
-                self.remove_tree_childs(child_iter)
+                self.remove_tree_children(child_iter)
                 del self.state_row_iter_dict_by_state_path[self.tree_store.get_value(child_iter, 4)]
                 self.tree_store.remove(child_iter)
 
-    def remove_tree_childs(self, child_tree_iter):
+    def remove_tree_children(self, child_tree_iter):
         for n in reversed(range(self.tree_store.iter_n_children(child_tree_iter))):
             child_iter = self.tree_store.iter_nth_child(child_tree_iter, n)
             if self.tree_store.iter_n_children(child_iter):
-                self.remove_tree_childs(child_iter)
+                self.remove_tree_children(child_iter)
             del self.state_row_iter_dict_by_state_path[self.tree_store.get_value(child_iter, 4)]
             # self.tree_store.remove(child_iter)
 
@@ -330,5 +329,5 @@ class StateMachineTreeController(ExtendedController):
                     self.view.expand_to_path(selected_path)
                     self.view.get_selection().select_iter(selected_iter)
 
-            except (TypeError, KeyError):
-                logger.error("Could not update selection")
+            except (TypeError, KeyError) as e:
+                logger.error("Could not update selection {}".format(e))

@@ -6,10 +6,12 @@ import cairo
 from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
 from gaphas.matrix import Matrix
+from gaphas.solver import Variable
 
 from rafcon.statemachine.enums import StateExecutionState
 
-from rafcon.mvc.mygaphas.constraint import KeepRectangleWithinConstraint, PortRectConstraint
+from rafcon.mvc.mygaphas.canvas import ItemProjection
+from rafcon.mvc.mygaphas.constraint import KeepRectangleWithinConstraint, PortRectConstraint, BorderWidthConstraint
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedVariablePortView
 from rafcon.mvc.mygaphas.items.connection import TransitionView
@@ -17,6 +19,7 @@ from rafcon.mvc.mygaphas.utils.enums import SnappedSide
 from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_col_rgba
 from rafcon.mvc.mygaphas.utils import gap_draw_helper
 from rafcon.mvc.mygaphas.utils.cache.image_cache import ImageCache
+from rafcon.mvc.mygaphas.utils.cache.value_cache import ValueCache
 
 from rafcon.mvc.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
 from rafcon.mvc.config import global_gui_config as gui_config
@@ -37,12 +40,13 @@ class StateView(Element):
     def __init__(self, state_m, size, hierarchy_level):
         super(StateView, self).__init__(size[0], size[1])
         assert isinstance(state_m, AbstractStateModel)
+        # Reapply size, as Gaphas sets default minimum size to 1, which is too large for highly nested states
+        self.min_width = self.min_height = 0
+        self.width = size[0]
+        self.height = size[1]
 
         self._state_m = ref(state_m)
         self.hierarchy_level = hierarchy_level
-
-        self.min_width = 0.0001
-        self.min_height = 0.0001
 
         self._income = None
         self._outcomes = []
@@ -56,6 +60,9 @@ class StateView(Element):
 
         self._moving = False
         self._transparent = False
+
+        self._view = None
+        self._parent = None
 
         self.__symbol_size_cache = {}
         self._image_cache = ImageCache()
@@ -74,20 +81,35 @@ class StateView(Element):
         name_pos = name_meta['rel_pos']
         self.name_view.matrix.translate(*name_pos)
 
+        self._border_width = Variable(min(self.width, self.height) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
+        border_width_constraint = BorderWidthConstraint(self._handles[NW].pos, self._handles[SE].pos,
+                                                        self._border_width, constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
+        self._constraints.append(border_width_constraint)
+
     @property
     def selected(self):
-        return self in self.canvas.get_first_view().selected_items
+        return self in self.view.selected_items
 
     @property
     def hovered(self):
-        return self is self.canvas.get_first_view().hovered_item
+        return self is self.view.hovered_item
+
+    @property
+    def view(self):
+        if not self._view:
+            self._view = self.canvas.get_first_view()
+        return self._view
 
     def setup_canvas(self):
         self._income = self.add_income()
 
         canvas = self.canvas
         parent = canvas.get_parent(self)
-        canvas.add(self._name_view, self)
+
+        self.update_minimum_size()
+
+        canvas.add(self.name_view, self)
+        self.name_view.update_minimum_size()
 
         self.add_keep_rect_within_constraint(canvas, self, self._name_view)
 
@@ -97,6 +119,26 @@ class StateView(Element):
 
         # Registers local constraints
         super(StateView, self).setup_canvas()
+
+    def update_minimum_size(self):
+        if not self.parent:
+            self.min_width = 1
+            self.min_height = 1
+        else:
+            min_side_length = max(self.parent.width, self.parent.height) / \
+                              constants.MAXIMUM_CHILD_TO_PARENT_STATE_SIZE_RATIO
+            if min_side_length != self.min_width:
+                self.min_width = min_side_length
+            if min_side_length != self.min_height:
+                self.min_height = min_side_length
+
+    def update_minimum_size_of_children(self):
+        if self.canvas:
+            for constraint in self.constraints:
+                self.canvas.solver.request_resolve_constraint(constraint)
+            for item in self.canvas.get_all_children(self):
+                if isinstance(item, (StateView, NameView)):
+                    item.update_minimum_size()
 
     def get_all_ports(self):
         port_list = [self.income]
@@ -127,18 +169,18 @@ class StateView(Element):
             if isinstance(child, NameView):
                 self.canvas.remove(child)
         self.remove_keep_rect_within_constraint_from_parent()
+        for constraint in self._constraints:
+            self.canvas.solver.remove_constraint(constraint)
         self.canvas.remove(self)
 
     @staticmethod
     def add_keep_rect_within_constraint(canvas, parent, child):
         solver = canvas.solver
 
-        child_nw_abs = canvas.project(child, child.handles()[NW].pos)
-        child_se_abs = canvas.project(child, child.handles()[SE].pos)
-        parent_nw_abs = canvas.project(parent, parent.handles()[NW].pos)
-        parent_se_abs = canvas.project(parent, parent.handles()[SE].pos)
-        constraint = KeepRectangleWithinConstraint(parent_nw_abs, parent_se_abs,
-                                                   child_nw_abs, child_se_abs, child, lambda: parent.border_width)
+        child_nw = ItemProjection(child.handles()[NW].pos, child, parent)
+        child_se = ItemProjection(child.handles()[SE].pos, child, parent)
+        constraint = KeepRectangleWithinConstraint(parent.handles()[NW].pos, parent.handles()[SE].pos,
+                                                   child_nw, child_se, child, lambda: parent.border_width)
         solver.add_constraint(constraint)
         parent.keep_rect_constraints[child] = constraint
 
@@ -187,11 +229,15 @@ class StateView(Element):
 
     @property
     def border_width(self):
-        return min(self._get_width(), self._get_height()) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
+        return self._border_width.value
 
     @property
     def parent(self):
-        return self.canvas.get_parent(self)
+        if not self._parent:
+            if not self.canvas:
+                return None
+            self._parent = self.canvas.get_parent(self)
+        return self._parent
 
     @property
     def corner_handles(self):
@@ -268,6 +314,7 @@ class StateView(Element):
         self.position = state_meta['rel_pos']
         self.width = state_meta['size'][0]
         self.height = state_meta['size'][1]
+        self.update_minimum_size_of_children()
 
         def update_port_position(port_v, meta_data):
             if isinstance(meta_data['rel_pos'], tuple):
@@ -298,21 +345,27 @@ class StateView(Element):
     def draw(self, context):
         if self.moving and self.parent and self.parent.moving:
             return
+
+        width = self.width
+        height = self.height
+        border_width = self.border_width
+        view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
+        if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY and self.parent:
+            return
+
         c = context.cairo
-
         nw = self._handles[NW].pos
-
         parameters = {
             'execution_state':  self.model.state.state_execution_status,
             'selected': self.selected,
             'moving': self.moving,
-            'border_width': self.border_width,
+            'border_width': border_width,
             'transparent': self._transparent
         }
 
         upper_left_corner = (nw.x.value, nw.y.value)
-        current_zoom = self.canvas.get_first_view().get_zoom_factor()
-        from_cache, image, zoom = self._image_cache.get_cached_image(self.width, self.height, current_zoom, parameters)
+        current_zoom = self.view.get_zoom_factor()
+        from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters)
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
@@ -324,9 +377,9 @@ class StateView(Element):
             # print "draw state"
             c = self._image_cache.get_context_for_image(current_zoom)
             multiplicator = self._image_cache.multiplicator
-            default_line_width = self.border_width / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR * multiplicator
+            default_line_width = border_width / constants.BORDER_WIDTH_OUTLINE_WIDTH_FACTOR * multiplicator
 
-            c.rectangle(nw.x, nw.y, self.width, self.height)
+            c.rectangle(nw.x, nw.y, width, height)
 
             state_background_color = gui_config.gtk_colors['STATE_BACKGROUND']
             state_border_color = gui_config.gtk_colors['STATE_BORDER']
@@ -376,18 +429,19 @@ class StateView(Element):
             scoped_variable_v.draw(context, self)
 
         if isinstance(self.model, LibraryStateModel) and not self.moving:
-            max_width = self.width / 2.
-            max_height = self.height / 2.
+            max_width = width / 2.
+            max_height = height / 2.
             self._draw_symbol(context, constants.SIGN_LIB, True, (max_width, max_height))
 
         if self.moving:
-            max_width = self.width - 2 * self.border_width
-            max_height = self.height - 2 * self.border_width
+            max_width = width - 2 * border_width
+            max_height = height - 2 * border_width
             self._draw_symbol(context, constants.SIGN_ARROW, False, (max_width, max_height))
-
 
     def _draw_symbol(self, context, symbol, is_library_state, max_size):
         c = context.cairo
+        width = self.width
+        height = self.height
 
         c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
 
@@ -402,8 +456,8 @@ class StateView(Element):
                                symbol))
 
         if symbol in self.__symbol_size_cache and \
-                self.__symbol_size_cache[symbol]['width'] == self.width and \
-                self.__symbol_size_cache[symbol]['height'] == self.height:
+                self.__symbol_size_cache[symbol]['width'] == width and \
+                self.__symbol_size_cache[symbol]['height'] == height:
             font_size = self.__symbol_size_cache[symbol]['size']
             set_font_description()
 
@@ -411,15 +465,15 @@ class StateView(Element):
             font_size = 30
             set_font_description()
 
-            pango_size = (self.width * SCALE, self.height * SCALE)
+            pango_size = (width * SCALE, height * SCALE)
             while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
                 font_size *= 0.9
                 set_font_description()
 
-            self.__symbol_size_cache[symbol] = {'width': self.width, 'height': self.height, 'size': font_size}
+            self.__symbol_size_cache[symbol] = {'width': width, 'height': height, 'size': font_size}
 
-        c.move_to(self.width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
-                  self.height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
+        c.move_to(width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
+                  height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
 
         alpha = 1.
         if is_library_state and self.transparent:
@@ -674,6 +728,8 @@ class StateView(Element):
             if item is not self:
                 item.position = rel_pos
                 item_meta['rel_pos'] = rel_pos
+            if isinstance(item, StateView):
+                item.update_minimum_size_of_children()
 
         def resize_state_v(state_v, old_state_size, new_state_size, use_meta_data):
             width_factor = float(new_state_size[0]) / old_state_size[0]
@@ -726,16 +782,27 @@ class NameView(Element):
 
     def __init__(self, name, size):
         super(NameView, self).__init__(size[0], size[1])
+        # Reapply size, as Gaphas sets default minimum size to 1, which is too large for highly nested states
+        self.min_width = self.min_height = 0
+        self.width = size[0]
+        self.height = size[1]
 
         self._name = None
         self.name = name
 
-        self.min_width = 0.0001
-        self.min_height = 0.0001
-
         self.moving = False
 
+        self._view = None
+
         self._image_cache = ImageCache(multiplicator=1.5)
+        self._value_cache = ValueCache()
+
+    def update_minimum_size(self):
+        min_side_length = max(self.parent.width, self.parent.height) / constants.MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO
+        if min_side_length != self.min_width:
+            self.min_width = min_side_length
+        if min_side_length != self.min_height:
+            self.min_height = min_side_length
 
     @property
     def name(self):
@@ -759,6 +826,12 @@ class NameView(Element):
     def position(self, pos):
         self.matrix = Matrix(x0=pos[0], y0=pos[1])
 
+    @property
+    def view(self):
+        if not self._view:
+            self._view = self.canvas.get_first_view()
+        return self._view
+
     def apply_meta_data(self):
         name_meta = self.parent.model.meta['gui']['editor_gaphas']['name']
         # logger.info("name rel_pos {}".format(name_meta['rel_pos']))
@@ -771,17 +844,21 @@ class NameView(Element):
         if self.moving:
             return
 
-        c = context.cairo
+        width = self.width
+        height = self.height
+        view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
+        if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY:
+            return
 
+        c = context.cairo
         parameters = {
             'name': self.name,
             'selected': context.selected
         }
 
         upper_left_corner = (0, 0)
-        current_zoom = self.canvas.get_first_view().get_zoom_factor()
-        from_cache, image, zoom = self._image_cache.get_cached_image(self.width, self.height,
-                                                                          current_zoom, parameters)
+        current_zoom = self.view.get_zoom_factor()
+        from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
             # print "from cache"
@@ -793,7 +870,7 @@ class NameView(Element):
             c = self._image_cache.get_context_for_image(current_zoom)
 
             if context.selected:
-                c.rectangle(0, 0, self.width, self.height)
+                c.rectangle(0, 0, width, height)
                 c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], alpha=.1))
                 c.fill_preserve()
                 c.set_source_rgba(0, 0, 0, 0)
@@ -803,22 +880,28 @@ class NameView(Element):
 
             layout = c.create_layout()
             layout.set_wrap(WRAP_WORD)
-            layout.set_width(int(self.width) * SCALE)
+            layout.set_width(int(width) * SCALE)
             layout.set_text(self.name)
 
-            def set_font_description():
+            def set_font_description(font_size):
                 font = FontDescription(font_name + " " + str(font_size))
                 layout.set_font_description(font)
 
             font_name = constants.INTERFACE_FONT
 
-            font_size = self.height * 0.8
+            font_size_parameters = {"text": self.name, "width": width, "height": height}
+            font_size = self._value_cache.get_value("font_size", font_size_parameters)
 
-            set_font_description()
-            pango_size = (self.width * SCALE, self.height * SCALE)
-            while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
-                font_size *= 0.9
-                set_font_description()
+            if font_size:
+                set_font_description(font_size)
+            else:
+                font_size = height * 0.8
+                set_font_description(font_size)
+                pango_size = (width * SCALE, height * SCALE)
+                while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
+                    font_size *= 0.9
+                    set_font_description(font_size)
+                self._value_cache.store_value("font_size", font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
             c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], self.parent.transparent))

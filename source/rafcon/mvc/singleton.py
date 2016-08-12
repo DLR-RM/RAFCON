@@ -8,9 +8,10 @@
 
 """
 from rafcon.statemachine.singleton import state_machine_manager,\
-    global_variable_manager, state_machine_execution_engine
+    global_variable_manager, state_machine_execution_engine, library_manager
 from rafcon.statemachine import interface
 
+from rafcon.mvc.models.library_manager import LibraryManagerModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.global_variable_manager import GlobalVariableManagerModel
 from rafcon.mvc.models.state_machine_execution_engine import StateMachineExecutionEngineModel
@@ -92,10 +93,11 @@ interface.create_folder_func = create_folder
 def show_notice(query):
     import gtk
     from rafcon.mvc.gui_helper import set_button_children_size_request
+    from xml.sax.saxutils import escape
     dialog = gtk.MessageDialog(flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
-    dialog.set_markup(query)
+    dialog.set_markup(escape(query))
     set_button_children_size_request(dialog)
     dialog.run()
     dialog.destroy()
@@ -106,6 +108,8 @@ interface.show_notice_func = show_notice
 
 # This variable holds the global state machine manager model as long as only one StateMachineMangerModel is allowed
 state_machine_manager_model = StateMachineManagerModel(state_machine_manager)
+
+library_manager_model = LibraryManagerModel(library_manager)
 
 state_machine_execution_model = StateMachineExecutionEngineModel(state_machine_execution_engine)
 

@@ -234,7 +234,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         """ Overwrite the setter of the container state base class as special handling for the decider state is needed.
 
         :param states: the dictionary of new states
-        :return:
+        :raises exceptions.TypeError: if the states parameter is not of type dict
         """
         # First safely remove all existing states (recursively!), as they will be replaced
         state_ids = self.states.keys()
@@ -259,7 +259,7 @@ class BarrierConcurrencyState(ConcurrencyState):
 
         :param state_id: the id of the state to remove
         :param recursive_deletion: a flag to indicate a recursive deletion of all substates
-        :return:
+        :raises exceptions.AttributeError: if the state_id parameter is the decider state
         """
         if state_id == UNIQUE_DECIDER_STATE_ID and force is False:
             raise AttributeError("You are not allowed to delete the decider state.")

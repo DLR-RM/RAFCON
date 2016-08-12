@@ -146,14 +146,14 @@ class DataPortListController(ExtendedController):
     def add_port(self, *_):
         """Callback method for add action
         """
-        if self.view[self.view.top].is_focus() and not isinstance(self.model.state, LibraryState):
+        if self.view and self.view[self.view.top].is_focus() and not isinstance(self.model.state, LibraryState):
             self.on_new_port_button_clicked(None)
             return True
 
     def remove_port(self, *_):
         """Callback method for remove action
         """
-        if self.view[self.view.top].is_focus() and not isinstance(self.model.state, LibraryState):
+        if self.view and self.view[self.view.top].is_focus() and not isinstance(self.model.state, LibraryState):
             self.on_delete_port_button_clicked(None)
             return True
 
