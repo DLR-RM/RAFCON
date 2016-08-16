@@ -30,13 +30,14 @@ class GlobalVariableManager(Observable):
     def __init__(self):
         Observable.__init__(self)
         self.__global_variable_dictionary = {}
+        self.__global_variable_type_dictionary = {}
         self.__variable_locks = {}
         self.__dictionary_lock = Lock()
         self.__access_keys = {}
         self.__variable_references = {}
 
     @Observable.observed
-    def set_variable(self, key, value, per_reference=False, access_key=None):
+    def set_variable(self, key, value, data_type='',  per_reference=False, access_key=None):
         """Sets a global variable
 
         :param key: the key of the global variable to be set
@@ -61,9 +62,11 @@ class GlobalVariableManager(Observable):
         # --- variable locked
         if per_reference:
             self.__global_variable_dictionary[key] = value
+            self.__global_variable_type_dictionary[key] = data_type
             self.__variable_references[key] = True
         else:
             self.__global_variable_dictionary[key] = copy.deepcopy(value)
+            self.__global_variable_type_dictionary[key] = data_type
             self.__variable_references[key] = False
         # --- release variable
 
@@ -236,3 +239,8 @@ class GlobalVariableManager(Observable):
         if not self.variable_exist(key):
             return ''
         return str(self.__global_variable_dictionary[key])
+
+    def get_data_type(self, key):
+        if not self.variable_exist(key):
+            return ''
+        return str(self.__global_variable_type_dictionary[key])
