@@ -228,7 +228,7 @@ class GlobalVariableManagerController(ExtendedController):
                     elif type_helpers.convert_string_to_type(old_type) == int and type_helpers.convert_string_to_type(text) == float:
                         new_value = float(old_value)
                     else:
-                        new_value = None
+                        new_value = 0
                 self.model.global_variable_manager.set_variable(old_key, new_value, text)
         except ValueError as e:
             logger.error("Error while changing data type: {0}".format(e))

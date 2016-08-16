@@ -13,6 +13,7 @@ from threading import Lock
 from rafcon.statemachine.id_generator import *
 
 from rafcon.utils import log
+from rafcon.utils import type_helpers
 logger = log.get_logger(__name__)
 import copy
 
@@ -46,6 +47,8 @@ class GlobalVariableManager(Observable):
         :param access_key: if the variable was explicitly locked with the  rafcon.state lock_variable
         :raises exceptions.RuntimeError: if a wrong access key is passed
         """
+        if data_type is not '':
+            self.check_value_and_type(value, data_type)
         self.__dictionary_lock.acquire()
         unlock = True
         if self.variable_exist(key):
@@ -244,3 +247,12 @@ class GlobalVariableManager(Observable):
         if not self.variable_exist(key):
             return ''
         return str(self.__global_variable_type_dictionary[key])
+
+    @staticmethod
+    def check_value_and_type(value, data_type):
+        if value is not None:
+            value = type_helpers.convert_string_value_to_type_value(value, type_helpers.convert_string_to_type(data_type))
+            if value is None:
+                raise AttributeError("Could not convert default value '{0}' to data type '{1}'".format(
+                    value, data_type))
+        return value
