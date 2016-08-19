@@ -148,5 +148,6 @@ class ShortcutManager:
                 self.accel_group.disconnect_key(keyval, modifier_mask)
 
     def update_shortcuts(self):
+        logger.info("Updating Shortcuts")
         self.__action_to_shortcuts = global_gui_config.get_config_value('SHORTCUTS', {})
         self.register_shortcuts()

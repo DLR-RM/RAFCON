@@ -234,6 +234,7 @@ class SettingsWindowController(ExtendedController):
         :param args:
         :return:
         """
+        logger.info("Saving configuration settings")
         global_config.save_configuration()
         global_gui_config.save_configuration()
         message = gtk.MessageDialog(parent=self.view["properties_window"], flags=gtk.DIALOG_MODAL,
@@ -242,6 +243,7 @@ class SettingsWindowController(ExtendedController):
                            " a restart! \n")
         message.run()
         message.destroy()
+        logger.info("Updating Libraries")
         self.library_manager.refresh_libraries()
         self.shortcut_manager.remove_shortcuts()
         self.shortcut_manager.update_shortcuts()

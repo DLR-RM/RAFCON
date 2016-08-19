@@ -110,7 +110,6 @@ class SettingsModel(ModelMT):
                 index = actual_list.index(key_pair)
                 actual_list.remove(key_pair)
                 actual_list.insert(index, (key, value))
-                print actual_list
                 if list_nr == 1:
                     global_gui_config.set_config_value(key, value)
                 elif list_nr == 2:
