@@ -21,10 +21,10 @@ class ShortcutManager:
 
         self.__action_to_callbacks = {}
         self.__action_to_shortcuts = global_gui_config.get_config_value('SHORTCUTS', {})
-        self.__register_shortcuts()
+        self.register_shortcuts()
         self.__controller_action_callbacks = {}
 
-    def __register_shortcuts(self):
+    def register_shortcuts(self):
         for action in self.__action_to_shortcuts:
             # Make sure, all shortcuts are in a list
             shortcuts = self.__action_to_shortcuts[action]
@@ -139,3 +139,14 @@ class ShortcutManager:
                 except Exception as e:
                     logger.exception('Exception while calling callback methods for action "{0}": {1}'.format(action, e))
         return res
+
+    def remove_shortcuts(self):
+        for action in self.__action_to_shortcuts:
+            shortcuts = self.__action_to_shortcuts[action]
+            for shortcut in shortcuts:
+                keyval, modifier_mask = gtk.accelerator_parse(shortcut)
+                self.accel_group.disconnect_key(keyval, modifier_mask)
+
+    def update_shortcuts(self):
+        self.__action_to_shortcuts = global_gui_config.get_config_value('SHORTCUTS', {})
+        self.register_shortcuts()

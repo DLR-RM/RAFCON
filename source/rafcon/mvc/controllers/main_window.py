@@ -37,6 +37,9 @@ from rafcon.mvc import gui_helper
 from rafcon.utils import plugins
 from rafcon.utils import log
 
+from rafcon.mvc.controllers.settings_window import SettingsWindowController
+from rafcon.mvc.models.settings_model import SettingsModel
+
 
 logger = log.get_logger(__name__)
 
@@ -119,6 +122,13 @@ class MainWindowController(ExtendedController):
         execution_history_ctrl = ExecutionHistoryTreeController(state_machine_manager_model, view.execution_history,
                                                                 state_machine_manager)
         self.add_controller('execution_history_ctrl', execution_history_ctrl)
+
+        ######################################################
+        # settings
+        ######################################################
+        settings_model = SettingsModel()
+        settings_window_ctrl = SettingsWindowController(settings_model, view.settings_window_view, self.shortcut_manager)
+        self.add_controller('settings_window_ctrl', settings_window_ctrl)
 
         ######################################################
         # menu bar

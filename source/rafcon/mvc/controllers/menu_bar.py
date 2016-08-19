@@ -60,6 +60,7 @@ class MenuBarController(ExtendedController):
         self.shortcut_manager = shortcut_manager
         self.logging_view = view.logging_view
         self.main_window_view = view
+        self.settings_window_view = view.settings_window_view
         self._destroyed = False
         self.handler_ids = {}
         self.registered_shortcut_callbacks = {}
@@ -433,8 +434,7 @@ class MenuBarController(ExtendedController):
             return False
 
     def on_menu_properties_activate(self, widget, data=None):
-        # TODO: implement
-        pass
+        self.settings_window_view.show()
 
     def on_refresh_libraries_activate(self, widget, data=None):
         """
