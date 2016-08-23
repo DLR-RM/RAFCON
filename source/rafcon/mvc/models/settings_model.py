@@ -8,6 +8,7 @@
 """
 from gtkmvc import ModelMT
 from rafcon.utils import log
+import yaml
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
@@ -25,41 +26,20 @@ class SettingsModel(ModelMT):
     config_shortcut_list = []
     __observables__ = ["config_list", "config_gui_list", "config_library_list", "config_shortcut_list", ]
 
-    def __init__(self, config_list=[], config_gui_list=[], config_library_list=[], config_shortcut_list=[], meta=None):
+    def __init__(self, config_list=None, config_gui_list=None, config_library_list=None, config_shortcut_list=None, meta=None):
         ModelMT.__init__(self)
-        self.config_list = config_list
-        self.config_gui_list = config_gui_list
-        self.config_library_list = config_library_list
-        self.config_shortcut_list = config_shortcut_list
+        self.config_list = config_list if config_list else []
+        self.config_gui_list = config_gui_list if config_gui_list else []
+        self.config_library_list = config_library_list if config_library_list else []
+        self.config_shortcut_list = config_shortcut_list if config_shortcut_list else []
         self.register_observer(self)
         self.config_dict = {'PROFILER_RESULT_PATH',
                             'PROFILER_RUN',
                             'PROFILER_VIEWER',
                             'ENABLE_NETWORK_MONITORING'}
 
-        self.gui_dict = {'AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL',
-                         'AUTO_BACKUP_ENABLED',
-                         'AUTO_BACKUP_FORCED_STORAGE_INTERVAL',
-                         'AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL',
-                         'ENABLE_CACHING',
-                         'GAPHAS_EDITOR',
-                         'HISTORY_ENABLED',
-                         'KEEP_ONLY_STICKY_STATES_OPEN',
-                         'LOGGING_SHOW_DEBUG',
-                         'LOGGING_SHOW_ERROR',
-                         'LOGGING_SHOW_INFO',
-                         'LOGGING_SHOW_WARNING',
-                         'MAX_VISIBLE_LIBRARY_HIERARCHY',
-                         'MINIMUM_SIZE_FOR_CONTENT',
-                         'PORT_SNAP_DISTANCE',
-                         'ROTATE_NAMES_ON_CONNECTIONS',
-                         'SHOW_NAMES_ON_DATA_FLOWS',
-                         'SOURCE_EDITOR_STYLE',
-                         'USE_ICONS_AS_TAB_LABELS',
-                         'WAYPOINT_SNAP_ANGLE',
-                         'WAYPOINT_SNAP_MAX_DIFF_ANGLE',
-                         'WAYPOINT_SNAP_MAX_DIFF_PIXEL'
-                         }
+        default_gui_config_dict = yaml.load(global_gui_config.default_config)
+        self.gui_dict = {k for k in default_gui_config_dict.keys() if k not in ["SHORTCUTS", "TYPE"]}
 
     def get_settings(self):
         """
@@ -67,25 +47,25 @@ class SettingsModel(ModelMT):
         :return:
         """
         del self.config_list[:]
-        for key in self.config_dict:
+        for key in sorted(self.config_dict):
             if global_config.get_config_value(key) is not None:
                 self.config_list.append((key, global_config.get_config_value(key)))
 
         del self.config_library_list[:]
         library_dict = global_config.get_config_value('LIBRARY_PATHS')
         if library_dict is not None:
-            for key in library_dict:
+            for key in sorted(library_dict.keys()):
                 self.config_library_list.append((key, library_dict[key]))
 
         del self.config_gui_list[:]
-        for key in self.gui_dict:
+        for key in sorted(self.gui_dict):
             if global_gui_config.get_config_value(key) is not None:
                 self.config_gui_list.append((key, global_gui_config.get_config_value(key)))
 
         del self.config_shortcut_list[:]
         shortcut_dict = global_gui_config.get_config_value('SHORTCUTS')
         if shortcut_dict is not None:
-            for key in shortcut_dict:
+            for key in sorted(shortcut_dict.keys()):
                 self.config_shortcut_list.append((key, shortcut_dict[key]))
 
     def set_config_view_value(self, key, value, list_nr):
