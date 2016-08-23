@@ -15,6 +15,7 @@ from rafcon.mvc.models.library_manager import LibraryManagerModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.global_variable_manager import GlobalVariableManagerModel
 from rafcon.mvc.models.state_machine_execution_engine import StateMachineExecutionEngineModel
+from rafcon.mvc.models.settings_model import SettingsModel
 from rafcon.mvc.runtime_config import global_runtime_config
 
 
@@ -116,3 +117,5 @@ state_machine_execution_model = StateMachineExecutionEngineModel(state_machine_e
 global_variable_manager_model = GlobalVariableManagerModel(global_variable_manager)
 
 main_window_controller = None
+
+settings_model = SettingsModel()

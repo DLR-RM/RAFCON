@@ -33,13 +33,10 @@ class SettingsModel(ModelMT):
         self.config_library_list = config_library_list if config_library_list else []
         self.config_shortcut_list = config_shortcut_list if config_shortcut_list else []
         self.register_observer(self)
-        self.config_dict = {'PROFILER_RESULT_PATH',
-                            'PROFILER_RUN',
-                            'PROFILER_VIEWER',
-                            'ENABLE_NETWORK_MONITORING'}
-
+        default_config_dict = yaml.load(global_config.default_config)
+        self.config_dict = {k for k in default_config_dict.keys() if k not in ["LIBRARY_PATHS", "TYPE"]}
         default_gui_config_dict = yaml.load(global_gui_config.default_config)
-        self.gui_dict = {k for k in default_gui_config_dict.keys() if k not in ["SHORTCUTS", "TYPE"]}
+        self.gui_config_dict = {k for k in default_gui_config_dict.keys() if k not in ["SHORTCUTS", "TYPE"]}
 
     def get_settings(self):
         """
@@ -58,7 +55,7 @@ class SettingsModel(ModelMT):
                 self.config_library_list.append((key, library_dict[key]))
 
         del self.config_gui_list[:]
-        for key in sorted(self.gui_dict):
+        for key in sorted(self.gui_config_dict):
             if global_gui_config.get_config_value(key) is not None:
                 self.config_gui_list.append((key, global_gui_config.get_config_value(key)))
 
@@ -99,5 +96,3 @@ class SettingsModel(ModelMT):
                     global_config.set_config_value(key, value)
                 else:
                     global_config.set_config_value("LIBRARY_PATHS", dict(actual_list))
-
-global_settings_model = SettingsModel()
