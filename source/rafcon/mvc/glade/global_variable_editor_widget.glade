@@ -37,7 +37,7 @@
                 <child>
                   <object class="GtkCellRendererText" id="type_text"/>
                   <attributes>
-                    <attribute name="text">2</attribute>
+                    <attribute name="text">3</attribute>
                   </attributes>
                 </child>
               </object>
@@ -61,7 +61,7 @@
                 <child>
                   <object class="GtkCellRendererText" id="locked_text"/>
                   <attributes>
-                    <attribute name="text">3</attribute>
+                    <attribute name="text">2</attribute>
                   </attributes>
                 </child>
               </object>

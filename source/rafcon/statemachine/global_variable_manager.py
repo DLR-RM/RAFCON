@@ -7,7 +7,7 @@
 
 """
 
-
+import copy
 from gtkmvc import Observable
 from threading import Lock
 from rafcon.statemachine.id_generator import *
@@ -15,7 +15,6 @@ from rafcon.statemachine.id_generator import *
 from rafcon.utils import log
 from rafcon.utils import type_helpers
 logger = log.get_logger(__name__)
-import copy
 
 
 class GlobalVariableManager(Observable):
@@ -38,7 +37,7 @@ class GlobalVariableManager(Observable):
         self.__variable_references = {}
 
     @Observable.observed
-    def set_variable(self, key, value, data_type='',  per_reference=False, access_key=None):
+    def set_variable(self, key, value, per_reference=False, access_key=None, data_type=None):
         """Sets a global variable
 
         :param key: the key of the global variable to be set
@@ -47,8 +46,9 @@ class GlobalVariableManager(Observable):
         :param access_key: if the variable was explicitly locked with the  rafcon.state lock_variable
         :raises exceptions.RuntimeError: if a wrong access key is passed
         """
-        if data_type is not '':
-            self.check_value_and_type(value, data_type)
+        # if key in self.__global_variable_dictionary:
+        #     if self.__global_variable_dictionary[key] != value and data_type is not None:
+        self.check_value_and_type(value, data_type)
         self.__dictionary_lock.acquire()
         unlock = True
         if self.variable_exist(key):
@@ -205,6 +205,13 @@ class GlobalVariableManager(Observable):
 
     variable_exists = variable_exist
 
+    def data_type_exist(self, key):
+        """Checks if a global variable exist
+
+        :param key: the name of the global variable
+        """
+        return key in self.__global_variable_type_dictionary
+
     def is_locked(self, key):
         """Returns the status of the lock of a global variable
 
@@ -240,19 +247,19 @@ class GlobalVariableManager(Observable):
 
     def get_representation(self, key):
         if not self.variable_exist(key):
-            return ''
-        return str(self.__global_variable_dictionary[key])
+            return None
+        return self.__global_variable_dictionary[key]
 
     def get_data_type(self, key):
-        if not self.variable_exist(key):
-            return ''
-        return str(self.__global_variable_type_dictionary[key])
+        if not self.data_type_exist(key):
+            return None
+        return self.__global_variable_type_dictionary[key]
 
     @staticmethod
     def check_value_and_type(value, data_type):
-        if value is not None:
+        if value is not None and data_type is not None:
             value = type_helpers.convert_string_value_to_type_value(value, type_helpers.convert_string_to_type(data_type))
             if value is None:
-                raise AttributeError("Could not convert default value '{0}' to data type '{1}'".format(
+                raise TypeError("Could not convert default value '{0}' to data type '{1}'".format(
                     value, data_type))
         return value

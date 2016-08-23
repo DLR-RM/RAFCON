@@ -131,7 +131,7 @@ class GlobalVariableManagerController(ExtendedController):
         if self.view and (isinstance(args[0], gtk.Button) or self.view['global_variable_tree_view'].is_focus()):
             new_global_variable = "new_global_%s" % self.global_variable_counter
             self.global_variable_counter += 1
-            self.model.global_variable_manager.set_variable(new_global_variable, "0", "int")
+            self.model.global_variable_manager.set_variable(new_global_variable, "None")
             for row_num, iter_elem in enumerate(self.global_variables_list_store):
                 if iter_elem[0] == new_global_variable:
                     self.view['global_variable_tree_view'].set_cursor(row_num)
@@ -165,14 +165,14 @@ class GlobalVariableManagerController(ExtendedController):
         """
         # logger.info("changing name")
         old_key = self.global_variables_list_store[int(path)][0]
-        if old_key == text or not old_key in self.list_store_iterators:
+        if old_key == text or old_key not in self.list_store_iterators:
             return
         old_value = self.global_variables_list_store[int(path)][1]
-        old_type = self.global_variables_list_store[int(path)][2]
+        old_type = self.global_variables_list_store[int(path)][3]
         self._locked = True
         try:
             self.model.global_variable_manager.delete_variable(old_key)
-            self.model.global_variable_manager.set_variable(text, old_value, old_type)
+            self.model.global_variable_manager.set_variable(text, old_value, data_type=old_type)
             old_key = text
         except (AttributeError, RuntimeError) as e:
             logger.warning(str(e))
@@ -188,18 +188,17 @@ class GlobalVariableManagerController(ExtendedController):
         :param path: The path identifying the edited variable
         :param text: New variable value
         """
-        # logger.info("changing value")
         if self.global_variables_list_store[int(path)][1] == text:
             return
         old_key = self.global_variables_list_store[int(path)][0]
-        old_type = self.global_variables_list_store[int(path)][2]
+        old_type = self.global_variables_list_store[int(path)][3]
         try:
-            if old_type: #  is not None:
-                text = self.check_value(text, old_type)
             if not self.model.global_variable_manager.is_locked(old_key):
-                self.model.global_variable_manager.set_variable(old_key, text, old_type)
+                self.model.global_variable_manager.set_variable(old_key, str(text),
+                                                                data_type=old_type)
         except (TypeError, AttributeError) as e:
             logger.error("Error while changing default value: {0}".format(e))
+        self.update_global_variables_list_store()
 
     @staticmethod
     def check_value(value, old_type):
@@ -212,29 +211,43 @@ class GlobalVariableManagerController(ExtendedController):
     def on_data_type_changed(self, widget, path, text):
         """Try to set the port type the the newly entered one
         """
-        if self.global_variables_list_store[int(path)][2] == text:
+        if self.global_variables_list_store[int(path)][3] == text:
             return
         old_key = self.global_variables_list_store[int(path)][0]
         old_value = self.global_variables_list_store[int(path)][1]
-        old_type = self.global_variables_list_store[int(path)][2]
+        old_type = self.global_variables_list_store[int(path)][3]
         try:
-            self.check_data_type(text)
+            self.check_if_valid_data_type(text)
             if not self.model.global_variable_manager.is_locked(old_key):
-                if type(old_value) is text:  # type_helpers.type_inherits_of_type(type(old_value), text):
-                    new_value = old_value
-                else:
-                    if type_helpers.convert_string_to_type(old_type) == float and type_helpers.convert_string_to_type(text) == int:
-                        new_value = int(float(old_value))
-                    elif type_helpers.convert_string_to_type(old_type) == int and type_helpers.convert_string_to_type(text) == float:
-                        new_value = float(old_value)
-                    else:
+                if True:  # old_type == 'None' or type_helpers.convert_string_to_type(old_type) == str:
+                    if type_helpers.convert_string_to_type(text) == float:
+                        new_value = 0.0
+                    elif type_helpers.convert_string_to_type(text) == int:
                         new_value = 0
-                self.model.global_variable_manager.set_variable(old_key, new_value, text)
+                    elif type_helpers.convert_string_to_type(text) == list:
+                        new_value = [0, 0]
+                    elif type_helpers.convert_string_to_type(text) == dict:
+                        new_value = {0: 0}
+                    elif type_helpers.convert_string_to_type(text) == tuple:
+                        new_value = (0, 0)
+                    elif type_helpers.convert_string_to_type(text) == bool:
+                        new_value = False
+                    else:
+                        new_value = None
+                # elif type_helpers.convert_string_to_type(old_type) == float and type_helpers.convert_string_to_type(text) == int:
+                #     new_value = int(float(old_value))
+                # elif type_helpers.convert_string_to_type(old_type) == int and type_helpers.convert_string_to_type(text) == float:
+                #     new_value = float(old_value)
+                # elif type_helpers.convert_string_to_type(text) == list:
+                #     new_value = [0, 0]
+                # else:
+                #     new_value = None
+                self.model.global_variable_manager.set_variable(old_key, str(new_value), data_type=text)
         except ValueError as e:
             logger.error("Error while changing data type: {0}".format(e))
 
     @staticmethod
-    def check_data_type(data_type):
+    def check_if_valid_data_type(data_type):
         try:
             new_data_type = type_helpers.convert_string_to_type(data_type)
         except ValueError as e:
@@ -257,21 +270,20 @@ class GlobalVariableManagerController(ExtendedController):
 
         if info['method_name'] in ['set_locked_variable'] or self._locked or \
                 info['result'] is Exception:
-            # logger.info("skip")
             return
 
         if info['method_name'] in ['lock_variable', 'unlock_variable']:
             key = info.kwargs.get('key', info.args[1]) if len(info.args) > 1 else info.kwargs['key']
             if key in self.list_store_iterators:
                 gv_row_path = self.global_variables_list_store.get_path(self.list_store_iterators[key])
-                self.global_variables_list_store[gv_row_path][3] = self.model.global_variable_manager.is_locked(key)
+                self.global_variables_list_store[gv_row_path][2] = self.model.global_variable_manager.is_locked(key)
         elif info['method_name'] in ['set_variable', 'delete_variable']:
             if info['method_name'] == 'set_variable':
                 key = info.kwargs.get('key', info.args[1]) if len(info.args) > 1 else info.kwargs['key']
                 if key in self.list_store_iterators:
                     gv_row_path = self.global_variables_list_store.get_path(self.list_store_iterators[key])
                     self.global_variables_list_store[gv_row_path][1] = self.model.global_variable_manager.get_representation(key)
-                    self.global_variables_list_store[gv_row_path][2] = self.model.global_variable_manager.get_data_type(key)
+                    self.global_variables_list_store[gv_row_path][3] = str(self.model.global_variable_manager.get_data_type(key))
                     return
             self.update_global_variables_list_store()
         else:
@@ -289,7 +301,8 @@ class GlobalVariableManagerController(ExtendedController):
         keys.sort()
         for key in keys:
             iter = self.global_variables_list_store.append([key,
-                                                            self.model.global_variable_manager.get_representation(key),
-                                                            self.model.global_variable_manager.get_data_type(key),
-                                                            self.model.global_variable_manager.is_locked(key)])
+                                                              self.model.global_variable_manager.get_representation(key),
+                                                              self.model.global_variable_manager.is_locked(key),
+                                                              str(self.model.global_variable_manager.get_data_type(key))])
+
             self.list_store_iterators[key] = iter
