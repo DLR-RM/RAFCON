@@ -14,7 +14,6 @@ from rafcon.mvc.views.settings_window import SettingsWindowView
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
-from rafcon.statemachine.library_manager import LibraryManager
 
 logger = log.get_logger(__name__)
 
@@ -24,7 +23,7 @@ class SettingsWindowController(ExtendedController):
     Controller handling the configuration settings GUI
     """
 
-    def __init__(self, model, view, shortcut_manager):
+    def __init__(self, model, view, shortcut_manager, library_manager):
         assert isinstance(view, SettingsWindowView)
         ExtendedController.__init__(self, model, view)
         self.config_list_store = ListStore(str, str)
@@ -32,7 +31,7 @@ class SettingsWindowController(ExtendedController):
         self.gui_list_store = ListStore(str, str)
         self.shortcut_list_store = ListStore(str, str)
         self._actual_entry = None
-        self.library_manager = LibraryManager()
+        self.library_manager = library_manager
         self.shortcut_manager = shortcut_manager
 
     def register_view(self, view):
