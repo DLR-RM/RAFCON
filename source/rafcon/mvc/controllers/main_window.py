@@ -16,7 +16,6 @@ from rafcon.mvc.controllers.state_machine_tree import StateMachineTreeController
 from rafcon.mvc.controllers.modification_history import ModificationHistoryTreeController
 from rafcon.mvc.controllers.library_tree import LibraryTreeController
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-from rafcon.mvc.models.library_manager import LibraryManagerModel
 from rafcon.mvc.shortcut_manager import ShortcutManager
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.states_editor import StatesEditorController
@@ -38,7 +37,6 @@ from rafcon.utils import plugins
 from rafcon.utils import log
 
 from rafcon.mvc.controllers.settings_window import SettingsWindowController
-from rafcon.mvc.models.settings_model import SettingsModel
 
 
 logger = log.get_logger(__name__)
@@ -127,7 +125,8 @@ class MainWindowController(ExtendedController):
         # settings
         ######################################################
         settings_window_ctrl = SettingsWindowController(mvc_singleton.settings_model, view.settings_window_view,
-                                                        self.shortcut_manager)
+                                                        self.shortcut_manager,
+                                                        rafcon.statemachine.singleton.library_manager)
         self.add_controller('settings_window_ctrl', settings_window_ctrl)
 
         ######################################################
