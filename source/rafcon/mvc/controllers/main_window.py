@@ -58,6 +58,10 @@ class MainWindowController(ExtendedController):
         self.state_machine_manager_model = state_machine_manager_model
         self.editor_type = editor_type
         self.shortcut_manager = None
+        self.focus_handler_id_left = None
+        self.state_handler_id_left = None
+        self.focus_handler_id_right = None
+        self.state_handler_id_right = None
         self.handler_ids = {}
 
         # state machine manager
@@ -125,8 +129,7 @@ class MainWindowController(ExtendedController):
         # settings
         ######################################################
         settings_window_ctrl = SettingsWindowController(mvc_singleton.settings_model, view.settings_window_view,
-                                                        self.shortcut_manager,
-                                                        rafcon.statemachine.singleton.library_manager)
+                                                        mvc_singleton.main_window_controller)
         self.add_controller('settings_window_ctrl', settings_window_ctrl)
 
         ######################################################
@@ -415,6 +418,23 @@ class MainWindowController(ExtendedController):
         self.on_left_bar_hide_clicked(None)
         self.view['left_bar_return_button'].hide()
         self.view['left_bar_replacement'].show()
+        self.state_handler_id_left = self.view['main_window'].connect('window-state-event', self.undock_window_callback,
+                                                                      self.view.left_bar_window.get_top_widget())
+        self.focus_handler_id_left = self.view['main_window'].connect('focus_in_event',
+                                                                      self.bring_undock_window_to_top_callback,
+                                                                      self.view.left_bar_window.get_top_widget())
+
+    def bring_undock_window_to_top_callback(self, widget, event, undocked_window):
+        undocked_window.present()
+
+    def undock_window_callback(self, widget, event, undocked_window):
+        if event.changed_mask == gtk.gdk.WINDOW_STATE_ICONIFIED:
+            if event.new_window_state == gtk.gdk.WINDOW_STATE_ICONIFIED:
+                undocked_window.iconify()
+            else:
+                undocked_window.present()
+        else:
+            undocked_window.present()
 
     def on_left_bar_dock_clicked(self, widget, event=None):
         """Triggered when the re-dock button of the left-bar window is clicked.
@@ -422,6 +442,8 @@ class MainWindowController(ExtendedController):
         The size & position of the open window are saved to the runtime_config file, and the left-bar is re-docked back
         to the main-window, and the left-bar window is hidden. The un-dock button of the bar is made visible again.
         """
+        self.view['main_window'].handler_disconnect(self.state_handler_id_left)
+        self.view['main_window'].handler_disconnect(self.focus_handler_id_left)
         global_runtime_config.store_widget_properties(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
         self.on_left_bar_return_clicked(None)
         self.view['left_bar_pane'].reparent(self.view['left_sidebar_viewport'])
@@ -446,6 +468,11 @@ class MainWindowController(ExtendedController):
         self.on_right_bar_hide_clicked(None)
         self.view['right_bar_return_button'].hide()
         self.view['right_bar_replacement'].show()
+        self.state_handler_id_right = self.view['main_window'].connect('window-state-event', self.undock_window_callback,
+                                                                       self.view.right_bar_window.get_top_widget())
+        self.focus_handler_id_right = self.view['main_window'].connect('focus_in_event',
+                                                                       self.bring_undock_window_to_top_callback,
+                                                                       self.view.right_bar_window.get_top_widget())
 
     def on_right_bar_dock_clicked(self, widget, event=None):
         """Triggered when the re-dock button of the right-bar window is clicked.
@@ -453,6 +480,8 @@ class MainWindowController(ExtendedController):
         The size & position of the open window is saved to the runtime_config file, and the right-bar is re-docked back
         to the main-window, and the right-bar window is hidden. The un-dock button of the bar is made visible again.
         """
+        self.view['main_window'].disconnect(self.state_handler_id_right)
+        self.view['main_window'].disconnect(self.focus_handler_id_right)
         global_runtime_config.store_widget_properties(self.view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
         self.on_right_bar_return_clicked(None)
         self.view['right_bar'].reparent(self.view['right_bar_container'])

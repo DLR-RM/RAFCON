@@ -435,6 +435,7 @@ class MenuBarController(ExtendedController):
 
     def on_menu_properties_activate(self, widget, data=None):
         self.settings_window_view.show()
+        self.settings_window_view.get_top_widget().present()
 
     def on_refresh_libraries_activate(self, widget, data=None):
         """
@@ -528,6 +529,10 @@ class MenuBarController(ExtendedController):
 
         self.prepare_destruction()
         return False
+
+    def refresh_shortcuts_activate(self):
+        self.shortcut_manager.remove_shortcuts()
+        self.shortcut_manager.update_shortcuts()
 
     def check_sm_modified(self):
         if state_machine_manager.has_dirty_state_machine():

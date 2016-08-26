@@ -111,3 +111,4 @@ class TopToolBarUndockedWindowController(TopToolBarController):
     def __init__(self, state_machine_manager_model, view, top_level_window):
         super(TopToolBarUndockedWindowController, self).__init__(state_machine_manager_model, view, top_level_window)
         view['close_button'].hide()
+        view['minimize_button'].hide()

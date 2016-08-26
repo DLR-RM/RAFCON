@@ -23,7 +23,7 @@ class SettingsWindowController(ExtendedController):
     Controller handling the configuration settings GUI
     """
 
-    def __init__(self, model, view, shortcut_manager, library_manager):
+    def __init__(self, model, view, main_window_controller):
         assert isinstance(view, SettingsWindowView)
         ExtendedController.__init__(self, model, view)
         self.config_list_store = ListStore(str, str)
@@ -31,8 +31,7 @@ class SettingsWindowController(ExtendedController):
         self.gui_list_store = ListStore(str, str)
         self.shortcut_list_store = ListStore(str, str)
         self._actual_entry = None
-        self.library_manager = library_manager
-        self.shortcut_manager = shortcut_manager
+        self.main_window_controller = main_window_controller
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -101,8 +100,8 @@ class SettingsWindowController(ExtendedController):
         :return:
         """
         self.view["properties_window"].hide()
-        global_config.load('config.yaml', global_config.path)
-        global_gui_config.load('gui_config.yaml', global_gui_config.path)
+        # global_config.load('config.yaml', global_config.path)
+        # global_gui_config.load('gui_config.yaml', global_gui_config.path)
         self.set_properties()
 
     @ExtendedController.observe('config_list', after=True)
@@ -233,17 +232,20 @@ class SettingsWindowController(ExtendedController):
         :param args:
         :return:
         """
-        logger.info("Saving configuration settings")
-        global_config.save_configuration()
-        global_gui_config.save_configuration()
-        message = gtk.MessageDialog(parent=self.view["properties_window"], flags=gtk.DIALOG_MODAL,
-                                    type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
-        message.set_markup("Please be aware that various changes in Core and GUI Config settings require"
-                           " a restart! \n")
-        message.run()
-        message.destroy()
-        logger.info("Updating Libraries")
-        self.library_manager.refresh_libraries()
-        self.shortcut_manager.remove_shortcuts()
-        self.shortcut_manager.update_shortcuts()
+        self.model.save_and_apply_config(self.main_window_controller)
+        self.popup_message()
+
+    def popup_message(self):
+        changes_str = ''
+        if self.model.change_by_restart:
+            message = gtk.MessageDialog(parent=self.view["properties_window"], flags=gtk.DIALOG_MODAL,
+                                        type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
+            message_string = "You must restart RAFCON to apply following changes: \n"
+            if self.model.change_by_restart:
+                for key in self.model.change_by_restart:
+                    changes_str = ("%s\n%s" % (changes_str, key))
+            message.set_markup("%s %s" % (message_string, changes_str))
+            message.run()
+            message.destroy()
+
 
