@@ -486,12 +486,14 @@ class MenuBarController(ExtendedController):
     def refresh_libs_and_state_machines(self):
         """Deletes all libraries and state machines and reloads them freshly from the file system."""
         library_manager.refresh_libraries()
+        self.refresh_state_machines()
 
+    def refresh_state_machines(self):
         # delete dirty flags for state machines
         state_machine_manager.reset_dirty_flags()
 
         # create a dictionary from state machine id to state machine path
-        state_machine_id_to_path = {}
+        state_machine_path_by_sm_id = {}
         sm_keys = []
         for sm_id, sm in state_machine_manager.state_machines.iteritems():
             # the sm.base_path is only None if the state machine has never been loaded or saved before
@@ -503,14 +505,14 @@ class MenuBarController(ExtendedController):
                 for i in range(len(path_items) - 2):
                     new_path = "%s/%s" % (new_path, path_items[i + 1])
                 # print new_path
-                state_machine_id_to_path[sm_id] = new_path
+                state_machine_path_by_sm_id[sm_id] = new_path
                 sm_keys.append(sm_id)
 
         self.states_editor_ctrl.close_all_pages()
         self.state_machines_editor_ctrl.close_all_pages()
 
         # reload state machines from file system
-        state_machine_manager.refresh_state_machines(sm_keys, state_machine_id_to_path)
+        state_machine_manager.open_state_machines(sm_keys, state_machine_path_by_sm_id)
 
     def on_quit_activate(self, widget, data=None):
         avoid_shutdown = self.on_delete_event(self, widget, None)
