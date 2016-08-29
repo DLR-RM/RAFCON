@@ -430,10 +430,7 @@ class MainWindowController(ExtendedController):
 
     def undock_window_callback(self, widget, event, undocked_window):
         if event.changed_mask == gtk.gdk.WINDOW_STATE_ICONIFIED:
-            if event.new_window_state == gtk.gdk.WINDOW_STATE_ICONIFIED:
-                undocked_window.iconify()
-            else:
-                undocked_window.present()
+            undocked_window.iconify()
         else:
             undocked_window.present()
 
