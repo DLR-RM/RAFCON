@@ -278,6 +278,10 @@ class StatesEditorController(ExtendedController):
         self.add_state_editor(new_state_m)
         selection.add(new_state_m)
 
+    def reload_style(self):
+        self.close_all_pages(delete=True)
+        self.add_state_editor(self.current_state_machine_m.root_state)
+
     def script_text_changed(self, source, state_m):
         state_identifier = self.get_state_identifier(state_m)
         if state_identifier in self.tabs:

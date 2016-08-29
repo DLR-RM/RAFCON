@@ -10,10 +10,12 @@ from gtk import ListStore
 import gtk
 
 from rafcon.utils import log
+from rafcon.mvc.singleton import main_window_controller
 from rafcon.mvc.views.settings_window import SettingsWindowView
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
+
 
 logger = log.get_logger(__name__)
 
@@ -23,7 +25,7 @@ class SettingsWindowController(ExtendedController):
     Controller handling the configuration settings GUI
     """
 
-    def __init__(self, model, view, main_window_controller):
+    def __init__(self, model, view):
         assert isinstance(view, SettingsWindowView)
         ExtendedController.__init__(self, model, view)
         self.config_list_store = ListStore(str, str)
@@ -31,7 +33,6 @@ class SettingsWindowController(ExtendedController):
         self.gui_list_store = ListStore(str, str)
         self.shortcut_list_store = ListStore(str, str)
         self._actual_entry = None
-        self.main_window_controller = main_window_controller
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -232,7 +233,7 @@ class SettingsWindowController(ExtendedController):
         :param args:
         :return:
         """
-        self.model.save_and_apply_config(self.main_window_controller)
+        self.model.save_and_apply_config()
         self.popup_message()
 
     def popup_message(self):

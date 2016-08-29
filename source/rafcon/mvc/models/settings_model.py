@@ -51,6 +51,7 @@ class SettingsModel(ModelMT):
                              'AUTO_RECOVERY_CHECK': [False, True, False],
                              'AUTO_RECOVERY_LOCK_ENABLED': [False, True, False],
                              'USE_ICONS_AS_TAB_LABELS': [False, False, True]
+                             #'SOURCE_EDITOR_STYLE': [False, True, False]
                              }
 
         self.checkval = [False, False, False]
@@ -108,7 +109,8 @@ class SettingsModel(ModelMT):
                 if key in self.checkup_dict:
                     self.checkup_dict[key][0] = True
 
-    def save_and_apply_config(self, main_window_controller):
+    def save_and_apply_config(self):
+        from rafcon.mvc.singleton import main_window_controller
         for key in self.changed_keys:
             if key not in self.checkup_dict:
                 if key in self.config_dict:
@@ -128,8 +130,19 @@ class SettingsModel(ModelMT):
                     main_window_controller.get_controller('menu_bar_controller').on_refresh_libraries_activate(widget=None, data=None)
                 else:
                     # print "set gui config without restart/refresh"
+                    if key == "SOURCE_EDITOR_STYLE":
+                        main_window_controller.get_controller('states_editor_ctrl').reload_style()
                     global_gui_config.set_config_value(key, self.changed_keys[key])
-                    # update libs
+                    if "LOGGING_SHOW_" in key:
+                        if "INFO" in key:
+                            main_window_controller.view['button_show_info'].set_active(self.changed_keys[key])
+                        elif "DEBUG" in key:
+                            main_window_controller.view['button_show_debug'].set_active(self.changed_keys[key])
+                        elif "WARNING" in key:
+                            main_window_controller.view['button_show_warning'].set_active(self.changed_keys[key])
+                        else:
+                            main_window_controller.view['button_show_error'].set_active(self.changed_keys[key])
+                        main_window_controller.view.logging_view.update_filtered_buffer()
             # gui setting:
             else:
                 for k in self.checkup_dict:

@@ -73,7 +73,7 @@
               <object class="GtkLabel" id="general_config">
                 <property name="width_request">0</property>
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">General Config</property>
+                <property name="label" translatable="yes">Core Config</property>
               </object>
               <packing>
                 <property name="tab_fill">False</property>
