@@ -62,6 +62,8 @@ class MainWindowController(ExtendedController):
         self.state_handler_id_left = None
         self.focus_handler_id_right = None
         self.state_handler_id_right = None
+        self.focus_handler_id_console = None
+        self.state_handler_id_console = None
         self.handler_ids = {}
 
         # state machine manager
@@ -504,6 +506,11 @@ class MainWindowController(ExtendedController):
         self.view['undock_console_button'].hide()
         self.on_console_hide_clicked(None)
         self.view['console_return_button'].hide()
+        self.state_handler_id_console = self.view['main_window'].connect('window-state-event', self.undock_window_callback,
+                                                                       self.view.console_bar_window.get_top_widget())
+        self.focus_handler_id_console = self.view['main_window'].connect('focus_in_event',
+                                                                       self.bring_undock_window_to_top_callback,
+                                                                       self.view.console_bar_window.get_top_widget())
 
     def on_console_bar_dock_clicked(self, widget, event=None):
         """Triggered when the re-dock button of the console window is clicked.
@@ -511,6 +518,8 @@ class MainWindowController(ExtendedController):
         The size & position of the open window is saved to the runtime_config file, and the console is re-docked back
         to the main-window, and the console window is hidden. The un-dock button of the bar is made visible again.
         """
+        self.view['main_window'].disconnect(self.state_handler_id_console)
+        self.view['main_window'].disconnect(self.focus_handler_id_console)
         global_runtime_config.store_widget_properties(self.view.console_bar_window.get_top_widget(), 'CONSOLE_BAR_WINDOW')
         self.on_console_return_clicked(None)
         self.view['console'].reparent(self.view['console_container'])
