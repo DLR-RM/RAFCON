@@ -432,7 +432,7 @@ class MainWindowController(ExtendedController):
         if event.changed_mask == gtk.gdk.WINDOW_STATE_ICONIFIED:
             undocked_window.iconify()
         else:
-            undocked_window.present()
+            undocked_window.deiconify()
 
     def on_left_bar_dock_clicked(self, widget, event=None):
         """Triggered when the re-dock button of the left-bar window is clicked.
