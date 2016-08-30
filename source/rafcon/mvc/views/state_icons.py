@@ -7,7 +7,7 @@ class StateIconView(View, gtk.IconView):
     top = 'state_icon_view'
     states = ["HS", "ES", "PS", "BS"]
     tooltips = {"HS": "Hierarchy State", "ES": "Execution State",
-                "PS": "Preemptive Concurrency State", "BS": "Concurrency State"}
+                "PS": "Preemptive Concurrency State", "BS": "Barrier Concurrency State"}
 
     def __init__(self):
         View.__init__(self)
