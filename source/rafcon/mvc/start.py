@@ -27,6 +27,9 @@ from rafcon.utils import profiler
 from rafcon.utils import plugins
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
+from rafcon.utils.i18n import _
+from rafcon.utils.i18n import setup_l10n
+
 from rafcon.utils import log
 logger = log.get_logger("start")
 
@@ -187,6 +190,8 @@ def signal_handler(signal, frame):
 
 if __name__ == '__main__':
     register_signal_handlers(signal_handler)
+
+    setup_l10n()
 
     setup_gtkmvc_logger()
     pre_setup_plugins()
