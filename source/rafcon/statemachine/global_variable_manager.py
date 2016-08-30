@@ -257,9 +257,12 @@ class GlobalVariableManager(Observable):
 
     @staticmethod
     def check_value_and_type(value, data_type):
+        """
+        Checks if a given value is of a specific type
+        :param value: the value to check
+        :param data_type: the type to be checked upon
+        :return:
+        """
         if value is not None and data_type is not None:
-            value = type_helpers.convert_string_value_to_type_value(value, type_helpers.convert_string_to_type(data_type))
-            if value is None:
-                raise TypeError("Could not convert default value '{0}' to data type '{1}'".format(
-                    value, data_type))
-        return value
+            if type(value) is not data_type:
+                raise TypeError("Value '{0}' is not of data type '{1}'".format(value, data_type))

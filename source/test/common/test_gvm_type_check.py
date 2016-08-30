@@ -21,21 +21,26 @@ def test_type_check(caplog):
     c = gvm.get_variable("c")
     assert c == 12.0
 
-    gvm.set_variable("d", 'True', data_type=bool)
+    gvm.set_variable("d", True, data_type=bool)
     d = gvm.get_variable("d")
     assert d
 
     e_list = [1, 2, 3]
-    gvm.set_variable("e", str(e_list), data_type=list)
+    gvm.set_variable("e", e_list, data_type=list)
     e = gvm.get_variable("e")
-    assert e == str(e_list)
+    assert e == e_list
+
+    f_dict = {'a': 1, 'b': 2}
+    gvm.set_variable("f", f_dict, data_type=dict)
+    f = gvm.get_variable("f")
+    assert f == f_dict
 
     # invalid
-    with raises(AttributeError):
-        gvm.set_variable("f", "test", data_type=int)
+    with raises(TypeError):
+        gvm.set_variable("g", "test", data_type=int)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
-    with raises(AttributeError):
+    with raises(TypeError):
         gvm.set_variable("g", "test", data_type=float)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
@@ -45,7 +50,7 @@ def test_type_check(caplog):
     assert a == 3
 
     # invalid overwriting
-    with raises(AttributeError):
+    with raises(TypeError):
         gvm.set_variable("a", "string", data_type=int)
     a = gvm.get_variable("a")
     assert a == 3
@@ -62,4 +67,4 @@ def test_type_check(caplog):
 
 if __name__ == '__main__':
     pytest.main([__file__])
-    # test_type_check()
+    # test_type_check(None)
