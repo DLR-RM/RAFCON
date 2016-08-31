@@ -56,6 +56,27 @@ class SettingsModel(ModelMT):
 
         self.checkval = [False, False, False]
 
+    def detect_changes(self):
+        """
+        detects all changes when loading a new config file and updates the view
+        :return:
+        """
+        from rafcon.mvc.singleton import main_window_controller
+
+        for key, value in self.config_list:
+            if value != global_config.get_config_value(key):
+                self.set_config_view_value(key, global_config.get_config_value(key))
+
+        for key, value in self.config_gui_list:
+            if value != global_gui_config.get_config_value(key):
+                self.set_config_view_value(key, global_gui_config.get_config_value(key))
+
+        if dict(self.config_shortcut_list) != global_gui_config.get_config_value('SHORTCUTS'):
+            main_window_controller.get_controller('menu_bar_controller').refresh_shortcuts_activate()
+
+        if dict(self.config_library_list) != global_config.get_config_value("LIBRARY_PATHS"):
+            main_window_controller.get_controller('menu_bar_controller').on_refresh_libraries_activate(widget=None, data=None)
+
     def get_settings(self):
         """
         A function to get all values of settings listed in the dicts
@@ -83,19 +104,18 @@ class SettingsModel(ModelMT):
             for key in sorted(shortcut_dict.keys()):
                 self.config_shortcut_list.append((key, shortcut_dict[key]))
 
-    def set_config_view_value(self, key, value, list_nr):
+    def set_config_view_value(self, key, value):
         """
-        A method to set all config values into the config.yaml
+        A method to show all config values from current the config.yaml
         :param key: setting which changed
         :param value: new value for a config which shall be updated
-        :param list_nr: number to select the correct list, which needs to be updated
         :return
         """
-        if list_nr == 0:
+        if key in self.config_dict:
             actual_list = self.config_list
-        elif list_nr == 1:
+        elif key in self.gui_config_dict:
             actual_list = self.config_gui_list
-        elif list_nr == 2:
+        elif key in dict(self.config_shortcut_list):
             actual_list = self.config_shortcut_list
             value = [value[2:-2]]
         else:
@@ -110,6 +130,10 @@ class SettingsModel(ModelMT):
                     self.checkup_dict[key][0] = True
 
     def save_and_apply_config(self):
+        """
+        Saving and applying changed settings
+        :return:
+        """
         from rafcon.mvc.singleton import main_window_controller
         for key in self.changed_keys:
             if key not in self.checkup_dict:

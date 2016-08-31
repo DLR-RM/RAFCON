@@ -9,8 +9,8 @@
 from gtk import ListStore
 import gtk
 
+import yaml_configuration.config
 from rafcon.utils import log
-from rafcon.mvc.singleton import main_window_controller
 from rafcon.mvc.views.settings_window import SettingsWindowView
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.config import global_gui_config
@@ -33,6 +33,8 @@ class SettingsWindowController(ExtendedController):
         self.gui_list_store = ListStore(str, str)
         self.shortcut_list_store = ListStore(str, str)
         self._actual_entry = None
+        self.gui_checkbox = gtk.CheckButton("GUI Config")
+        self.core_checkbox = gtk.CheckButton("Core Config")
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -66,10 +68,116 @@ class SettingsWindowController(ExtendedController):
         self.view['gui_tree_view'].set_model(self.gui_list_store)
         self.view['shortcut_tree_view'].set_model(self.shortcut_list_store)
 
+        self.view['import_button'].connect("clicked", self.on_import_config)
+        self.view['export_button'].connect('clicked', self.on_export_config)
+
         self.view['properties_window'].connect('delete_event', self.delete_event, self.view['properties_window'])
 
         self.view['cancel_button'].connect('clicked', self.on_delete)
         self.set_properties()
+
+    def on_import_config(self, *args):
+        """
+        function to import config files.
+        imported files will be automatically applied
+        :param args:
+        :return:
+        """
+        def handle_import(dialog_text, path_name):
+            chooser = gtk.FileChooserDialog(dialog_text, None,
+                                            gtk.FILE_CHOOSER_ACTION_SAVE,
+                                            (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                             gtk.STOCK_OPEN, gtk.RESPONSE_ACCEPT))
+            chooser.set_current_folder(path_name)
+            response = chooser.run()
+            if response == gtk.RESPONSE_ACCEPT:
+                file_path = chooser.get_current_folder()
+                file_name = chooser.get_filename()
+                check_dict = yaml_configuration.config.load_dict_from_yaml(file_name)
+                if check_dict["TYPE"] == "SM_CONFIG":
+                    global_config.config_file_path = file_name
+                    global_config.load(file_name)
+                    logger.info("Imported Core Config from {0}" .format(file_name))
+                elif check_dict["TYPE"] == "GUI_CONFIG":
+                    global_gui_config.config_file_path = file_path
+                    global_gui_config.load(file_name)
+                    logger.info("Imported GUI Config from {0}" .format(file_name))
+                else:
+                    logger.error("{0} is not a valid Config file" .format(file_name))
+            elif response == gtk.RESPONSE_CANCEL:
+                pass
+            chooser.destroy()
+
+        pathname = global_config.path
+        handle_import("Import Config Config from", pathname)
+
+        self.model.detect_changes()
+        self.set_properties()
+        self.model.save_and_apply_config()
+
+    def on_export_config(self, *args):
+        """
+        function to export config files
+        :param args:
+        :return:
+        """
+        self.config_chooser_dialog("Choose Config to export", "\nPlease select the Configs to export:\n")
+
+        def handle_export(dialog_text, path_name, config_file):
+            chooser = gtk.FileChooserDialog(dialog_text, None,
+                                            gtk.FILE_CHOOSER_ACTION_SAVE,
+                                            (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                             gtk.STOCK_SAVE_AS, gtk.RESPONSE_ACCEPT))
+            chooser.set_current_folder(path_name)
+            response = chooser.run()
+            if response == gtk.RESPONSE_ACCEPT:
+                name = chooser.get_filename()
+                if ".yaml" not in name:
+                    logger.error("Config not exported! Invalid Config name!")
+                else:
+                    new_config_file = open(name, mode='w+')
+                    if config_file == global_config:
+                        global_config.config_file_path = name
+                        global_config.save_configuration()
+                    else:
+                        global_gui_config.config_file_path = name
+                        global_gui_config.save_configuration()
+                    new_config_file.close()
+                    logger.info("Exported Config to {0}" .format(name))
+            elif response == gtk.RESPONSE_CANCEL:
+                print("Cancel clicked")
+            chooser.destroy()
+
+        if self.core_checkbox.get_active():
+            pathname = global_config.path
+            handle_export("Saving Core Config as...", pathname, global_config)
+
+        if self.gui_checkbox.get_active():
+            pathname = global_gui_config.path
+            handle_export("Saving GUI Config as...", pathname, global_gui_config)
+
+    def config_chooser_dialog(self, title_text, label_text):
+        """
+        Dialog so select which config shall be exported
+        :param title_text:
+        :param label_text:
+        :return:
+        """
+        dialog = gtk.Dialog(title_text, self.view["settings_window"],
+                            flags=0, buttons=
+                            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        label = gtk.Label(label_text)
+        dialog.vbox.pack_start(label)
+        label.show()
+        self.gui_checkbox = gtk.CheckButton("GUI Config")
+        dialog.vbox.pack_start(self.gui_checkbox)
+        self.gui_checkbox.show()
+        self.core_checkbox = gtk.CheckButton("Core Config")
+        self.core_checkbox.show()
+        dialog.vbox.pack_start(self.core_checkbox)
+        dialog.run()
+        dialog.destroy()
 
     def set_properties(self):
         """
@@ -195,15 +303,7 @@ class SettingsWindowController(ExtendedController):
         if actual_list_store[int(path)][1] == text:
             return
         key = actual_list_store[int(path)][0]
-        if actual_list_store == self.config_list_store:
-            list_nr = 0
-        elif actual_list_store == self.gui_list_store:
-            list_nr = 1
-        elif actual_list_store == self.shortcut_list_store:
-            list_nr = 2
-        else:
-            list_nr = 3
-        if list_nr == 0 or list_nr == 3:
+        if actual_list_store == self.config_list_store or actual_list_store == self.library_list_store:
             data_type = type(global_config.get_config_value(key))
         else:
             data_type = type(global_gui_config.get_config_value(key))
@@ -220,7 +320,7 @@ class SettingsWindowController(ExtendedController):
                 value = data_type(text)
             else:
                 value = text
-            self.model.set_config_view_value(key, value, list_nr)
+            self.model.set_config_view_value(key, value)
         except RuntimeError as e:
             logger.exception(e)
 
