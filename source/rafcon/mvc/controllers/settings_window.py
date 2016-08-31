@@ -75,6 +75,11 @@ class SettingsWindowController(ExtendedController):
 
         self.view['cancel_button'].connect('clicked', self.on_delete)
         self.set_properties()
+        self.set_label_paths()
+
+    def set_label_paths(self):
+        self.view['core_label'].set_text("Core Config Path: " + str(global_config.config_file_path))
+        self.view['gui_label'].set_text("GUI Config Path: " + str(global_gui_config.config_file_path))
 
     def on_import_config(self, *args):
         """
@@ -114,6 +119,7 @@ class SettingsWindowController(ExtendedController):
         self.model.detect_changes()
         self.set_properties()
         self.model.save_and_apply_config()
+        self.set_label_paths()
 
     def on_export_config(self, *args):
         """
@@ -121,7 +127,9 @@ class SettingsWindowController(ExtendedController):
         :param args:
         :return:
         """
-        self.config_chooser_dialog("Choose Config to export", "\nPlease select the Configs to export:\n")
+        response = self.config_chooser_dialog("Choose Config to export", "\nPlease select the Configs to export:\n")
+        if response == gtk.RESPONSE_REJECT:
+            return
 
         def handle_export(dialog_text, path_name, config_file):
             chooser = gtk.FileChooserDialog(dialog_text, None,
@@ -170,6 +178,7 @@ class SettingsWindowController(ExtendedController):
                             (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                              gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
         label = gtk.Label(label_text)
+        label.set_padding(xpad=10, ypad=5)
         dialog.vbox.pack_start(label)
         label.show()
         self.gui_checkbox = gtk.CheckButton("GUI Config")
@@ -178,8 +187,9 @@ class SettingsWindowController(ExtendedController):
         self.core_checkbox = gtk.CheckButton("Core Config")
         self.core_checkbox.show()
         dialog.vbox.pack_start(self.core_checkbox)
-        dialog.run()
+        response = dialog.run()
         dialog.destroy()
+        return response
 
     def set_properties(self):
         """

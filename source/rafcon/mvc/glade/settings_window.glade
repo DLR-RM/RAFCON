@@ -284,12 +284,48 @@
           </packing>
         </child>
         <child>
+          <object class="GtkVBox" id="vbox2">
+            <property name="visible">True</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkLabel" id="core_label">
+                <property name="visible">True</property>
+                <property name="xalign">0</property>
+                <property name="xpad">10</property>
+                <property name="ypad">3</property>
+                <property name="label" translatable="yes">Core Config Path: </property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="gui_label">
+                <property name="visible">True</property>
+                <property name="xalign">0</property>
+                <property name="xpad">10</property>
+                <property name="ypad">3</property>
+                <property name="label" translatable="yes">GUI Config Path: </property>
+                <property name="single_line_mode">True</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkHBox" id="hbox1">
             <property name="visible">True</property>
             <property name="border_width">4</property>
             <child>
               <object class="GtkButton" id="export_button">
                 <property name="label" translatable="yes">Export</property>
+                <property name="width_request">90</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -303,6 +339,7 @@
             <child>
               <object class="GtkButton" id="import_button">
                 <property name="label" translatable="yes">Import</property>
+                <property name="width_request">90</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -352,6 +389,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
+            <property name="pack_type">end</property>
             <property name="position">1</property>
           </packing>
         </child>
