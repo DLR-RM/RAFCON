@@ -105,7 +105,7 @@ class SettingsWindowController(ExtendedController):
                 else:
                     logger.error("{0} is not a valid Config file" .format(file_name))
             elif response == gtk.RESPONSE_CANCEL:
-                pass
+                logger.warning("Import Config canceled!")
             chooser.destroy()
 
         pathname = global_config.path
@@ -132,9 +132,11 @@ class SettingsWindowController(ExtendedController):
             response = chooser.run()
             if response == gtk.RESPONSE_ACCEPT:
                 name = chooser.get_filename()
-                if ".yaml" not in name:
-                    logger.error("Config not exported! Invalid Config name!")
+                if not name:
+                    logger.error("Config could not be exported! Invalid Config name!")
                 else:
+                    if ".yaml" not in name:
+                        name += ".yaml"
                     new_config_file = open(name, mode='w+')
                     if config_file == global_config:
                         global_config.config_file_path = name
@@ -145,7 +147,7 @@ class SettingsWindowController(ExtendedController):
                     new_config_file.close()
                     logger.info("Exported Config to {0}" .format(name))
             elif response == gtk.RESPONSE_CANCEL:
-                print("Cancel clicked")
+                logger.warning("Export Config canceled!")
             chooser.destroy()
 
         if self.core_checkbox.get_active():
@@ -209,8 +211,6 @@ class SettingsWindowController(ExtendedController):
         :return:
         """
         self.view["properties_window"].hide()
-        # global_config.load('config.yaml', global_config.path)
-        # global_gui_config.load('gui_config.yaml', global_gui_config.path)
         self.set_properties()
 
     @ExtendedController.observe('config_list', after=True)
