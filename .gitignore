@@ -28,3 +28,6 @@ _static/
 .cache/
 
 *.swp
+
+*.pot
+/locale/
