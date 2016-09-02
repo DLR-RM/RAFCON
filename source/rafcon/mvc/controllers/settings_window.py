@@ -28,9 +28,10 @@ class SettingsWindowController(ExtendedController):
     def __init__(self, model, view):
         assert isinstance(view, SettingsWindowView)
         ExtendedController.__init__(self, model, view)
-        self.config_list_store = ListStore(str, str)
+        # (setting. text, text_visible, toggle_activatable, togge_visible, text_editable, toggle_value)
+        self.config_list_store = ListStore(str, str, bool, bool, bool, bool, bool)
         self.library_list_store = ListStore(str, str)
-        self.gui_list_store = ListStore(str, str)
+        self.gui_list_store = ListStore(str, str, bool, bool, bool, bool, bool)
         self.shortcut_list_store = ListStore(str, str)
         self._actual_entry = None
         self.gui_checkbox = gtk.CheckButton("GUI Config")
@@ -38,6 +39,9 @@ class SettingsWindowController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
+        self.view['value_toggle'].connect('toggled', self.on_checkbox_toggled, self.config_list_store)
+        self.view['gui_value_toggle'].connect('toggled', self.on_checkbox_toggled, self.gui_list_store)
+
         self.view['value_text'].set_property('editable', True)
         self.view['value_text'].connect('edited', self.on_value_changed, self.config_list_store)
         self.view['value_text'].connect('editing-started', self.editing_started, self.view['value_text'],
@@ -77,7 +81,18 @@ class SettingsWindowController(ExtendedController):
         self.set_properties()
         self.set_label_paths()
 
+    def on_checkbox_toggled(self, renderer, path, actual_list_store):
+        key = actual_list_store[int(path)][0]
+        value = bool(actual_list_store[int(path)][6])
+        value ^= True
+        self.model.set_config_view_value(key, value)
+        self.model.ignore_changes(key, value)
+
     def set_label_paths(self):
+        """
+        updating config path labels
+        :return:
+        """
         self.view['core_label'].set_text("Core Config Path: " + str(global_config.config_file_path))
         self.view['gui_label'].set_text("GUI Config Path: " + str(global_gui_config.config_file_path))
 
@@ -116,10 +131,10 @@ class SettingsWindowController(ExtendedController):
         pathname = global_config.path
         handle_import("Import Config Config from", pathname)
 
-        self.model.detect_changes()
-        self.set_properties()
-        self.model.save_and_apply_config()
-        self.set_label_paths()
+        self.model.detect_changes()  # to avoid refreshing everything even it is not necessary
+        self.set_properties()       # updating the list views
+        self.on_save_and_apply_configurations()  # applying setting -> refreshing necessary widgets
+        self.set_label_paths()              # setting path labels
 
     def on_export_config(self, *args):
         """
@@ -235,7 +250,11 @@ class SettingsWindowController(ExtendedController):
         self.config_list_store.clear()
         for key in self.model.config_list:
             setting, value = key
-            self.config_list_store.append((setting, value))
+            # (setting, text, text_visible, toggle_activatable, togge_visible, text_editable, toggle_state)
+            if type(value) == bool:
+                self.config_list_store.append((setting, value, False, True, True, False, value))
+            else:
+                self.config_list_store.append((setting, value, True, False, False, True, value))
 
     @ExtendedController.observe('config_library_list', after=True)
     def update_library_settings(self, model, prop_name, info):
@@ -263,7 +282,11 @@ class SettingsWindowController(ExtendedController):
         self.gui_list_store.clear()
         for key in self.model.config_gui_list:
             setting, value = key
-            self.gui_list_store.append((setting, value))
+            # (setting, text, text_visible, toggle_activatable, togge_visible, text_editable, toggle_state)
+            if type(value) == bool:
+                self.gui_list_store.append((setting, value, False, True, True, False, value))
+            else:
+                self.gui_list_store.append((setting, value, True, False, False, True, value))
 
     @ExtendedController.observe('config_shortcut_list', after=True)
     def update_shortcut_settings(self, model, prop_name, info):

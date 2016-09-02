@@ -139,6 +139,7 @@ class SettingsModel(ModelMT):
             if key not in self.checkup_dict:
                 if key in self.config_dict:
                     # print "set core config, restart needed"
+                    # if self.changed_keys[key] != global_config.get_config_value(key):
                     global_config.set_config_value(key, self.changed_keys[key])
                     self.checkval[2] |= True
                     if key not in self.change_by_restart:
@@ -154,17 +155,17 @@ class SettingsModel(ModelMT):
                     main_window_controller.get_controller('menu_bar_controller').on_refresh_libraries_activate(widget=None, data=None)
                 else:
                     # print "set gui config without restart/refresh"
+                    global_gui_config.set_config_value(key, self.changed_keys[key])
                     if key == "SOURCE_EDITOR_STYLE":
                         main_window_controller.get_controller('states_editor_ctrl').reload_style()
-                    global_gui_config.set_config_value(key, self.changed_keys[key])
                     if "LOGGING_SHOW_" in key:
                         if "INFO" in key:
                             main_window_controller.view['button_show_info'].set_active(self.changed_keys[key])
-                        elif "DEBUG" in key:
+                        if "DEBUG" in key:
                             main_window_controller.view['button_show_debug'].set_active(self.changed_keys[key])
-                        elif "WARNING" in key:
+                        if "WARNING" in key:
                             main_window_controller.view['button_show_warning'].set_active(self.changed_keys[key])
-                        else:
+                        if "ERROR" in key:
                             main_window_controller.view['button_show_error'].set_active(self.changed_keys[key])
                         main_window_controller.view.logging_view.update_filtered_buffer()
             # gui setting:
@@ -186,6 +187,20 @@ class SettingsModel(ModelMT):
         global_config.save_configuration()
         global_gui_config.save_configuration()
         self.changed_keys = {}
+
+    def ignore_changes(self, key, value):
+        """
+        Called when every time a checkbox is toggled, avoids the refresh of a widget if value is old value
+        :param key: setting
+        :param value: value
+        :return:
+        """
+        if key in self.config_dict:
+            if value == global_config.get_config_value(key):
+                self.changed_keys.pop(key)
+        elif key in self.gui_config_dict:
+            if value == global_gui_config.get_config_value(key):
+                self.changed_keys.pop(key)
 
 
 

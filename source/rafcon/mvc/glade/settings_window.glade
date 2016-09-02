@@ -54,8 +54,18 @@
                                 <property name="title">Value</property>
                                 <property name="expand">True</property>
                                 <child>
+                                  <object class="GtkCellRendererToggle" id="value_toggle"/>
+                                  <attributes>
+                                    <attribute name="visible">4</attribute>
+                                    <attribute name="activatable">3</attribute>
+                                    <attribute name="active">6</attribute>
+                                  </attributes>
+                                </child>
+                                <child>
                                   <object class="GtkCellRendererText" id="value_text"/>
                                   <attributes>
+                                    <attribute name="visible">2</attribute>
+                                    <attribute name="editable">5</attribute>
                                     <attribute name="text">1</attribute>
                                   </attributes>
                                 </child>
@@ -182,8 +192,18 @@
                                 <property name="title">Value</property>
                                 <property name="expand">True</property>
                                 <child>
+                                  <object class="GtkCellRendererToggle" id="gui_value_toggle"/>
+                                  <attributes>
+                                    <attribute name="visible">4</attribute>
+                                    <attribute name="activatable">3</attribute>
+                                    <attribute name="active">6</attribute>
+                                  </attributes>
+                                </child>
+                                <child>
                                   <object class="GtkCellRendererText" id="value_text1"/>
                                   <attributes>
+                                    <attribute name="visible">2</attribute>
+                                    <attribute name="editable">5</attribute>
                                     <attribute name="text">1</attribute>
                                   </attributes>
                                 </child>
