@@ -68,6 +68,10 @@ class MenuBarController(ExtendedController):
         # this is not a model but the state machine execution engine of the core (or the overwritten execution engine
         # of the monitoring plugin
         self.state_machine_execution_engine = sm_execution_engine
+        self.full_screen_flag = False
+        self.full_screen_window = gtk.Window()
+        self.sm_notebook = self.main_window_view.state_machines_editor['notebook']
+        self.full_screen_window.add_accel_group(self.shortcut_manager.accel_group)
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -115,6 +119,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('show_data_flow_values', 'toggled', self.on_show_data_flow_values_toggled)
         self.connect_button_to_function('show_aborted_preempted', 'toggled', self.on_show_aborted_preempted_toggled)
         self.connect_button_to_function('expert_view', 'activate', self.on_expert_view_activate)
+        self.connect_button_to_function('full_screen_mode', 'activate', self.on_full_screen_activate)
 
         self.connect_button_to_function('start', 'activate', self.on_start_activate)
         self.connect_button_to_function('start_from_selected_state', 'activate', self.on_start_from_selected_state_activate)
@@ -128,6 +133,31 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('backward_step', 'activate', self.on_backward_step_activate)
         self.connect_button_to_function('about', 'activate', self.on_about_activate)
         self.registered_view = True
+
+    def on_full_screen_activate(self, *args):
+        """
+        function to display the currently selected statemachine in full screen mode
+        :param args:
+        :return:
+        """
+        if not self.full_screen_flag:
+            self.view["full_screen_mode"].set_active(True)
+            self.main_window_view["hbox2"].hide()
+            self.sm_notebook.set_show_tabs(False)
+            self.main_window_view['graphical_editor_vbox'].reparent(self.full_screen_window)
+            self.main_window_view.get_top_widget().iconify()
+            self.full_screen_window.show()
+            self.full_screen_window.set_decorated(False)
+            self.full_screen_window.fullscreen()
+            self.full_screen_flag = True
+        elif self.full_screen_flag:
+            self.view["full_screen_mode"].set_active(False)
+            self.main_window_view.get_top_widget().deiconify()
+            self.main_window_view['graphical_editor_vbox'].reparent(self.main_window_view['eventbox4'])
+            self.sm_notebook.set_show_tabs(True)
+            self.main_window_view["hbox2"].show()
+            self.full_screen_window.hide()
+            self.full_screen_flag = False
 
     def connect_button_to_function(self, view_index, button_state, function):
         """
@@ -192,6 +222,8 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('show_data_values', self.show_show_data_flow_values_toggled_shortcut)
         self.add_callback_to_shortcut_manager('data_flow_mode', self.data_flow_mode_toggled_shortcut)
         self.add_callback_to_shortcut_manager('show_aborted_preempted', self.show_aborted_preempted)
+
+        self.add_callback_to_shortcut_manager('fullscreen', self.on_full_screen_activate)
 
     def call_action_callback(self, callback_name, *args):
         """Wrapper for action callbacks

@@ -279,6 +279,13 @@
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
+            <child>
+              <object class="GtkCheckMenuItem" id="full_screen_mode">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Full Screen Mode</property>
+                <property name="use_underline">True</property>
+              </object>
+            </child>
           </object>
         </child>
       </object>
