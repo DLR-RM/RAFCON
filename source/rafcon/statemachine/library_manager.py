@@ -95,6 +95,8 @@ class LibraryManager(Observable):
         # If the path is relative, assume it is relative to the config file directory
         if path.startswith('.'):
             path = os.path.join(config.global_config.path, path)
+        elif path.startswith('..'):
+            path = os.path.join(config.global_config.path, "./" + path)
         # Clean path, e.g. replace /./ with /
         path = os.path.abspath(path)
         # Eliminate symbolic links

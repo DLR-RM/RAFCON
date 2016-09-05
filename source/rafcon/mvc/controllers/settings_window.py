@@ -8,6 +8,7 @@
 """
 from gtk import ListStore
 import gtk
+import os
 
 import yaml_configuration.config
 from rafcon.utils import log
@@ -111,16 +112,18 @@ class SettingsWindowController(ExtendedController):
             chooser.set_current_folder(path_name)
             response = chooser.run()
             if response == gtk.RESPONSE_ACCEPT:
-                file_path = chooser.get_current_folder()
-                file_name = chooser.get_filename()
-                check_dict = yaml_configuration.config.load_dict_from_yaml(file_name)
+                # watch out: chooser.get_filename() returns the whole file path inclusively the file name
+                file_path, file_name = os.path.split(chooser.get_filename())
+                check_dict = yaml_configuration.config.load_dict_from_yaml(chooser.get_filename())
                 if check_dict["TYPE"] == "SM_CONFIG":
-                    global_config.config_file_path = file_name
-                    global_config.load(file_name)
+                    global_config.config_file_path = chooser.get_filename()
+                    global_config.path = file_path
+                    global_config.load(file_name, file_path)
                     logger.info("Imported Core Config from {0}" .format(file_name))
                 elif check_dict["TYPE"] == "GUI_CONFIG":
-                    global_gui_config.config_file_path = file_path
-                    global_gui_config.load(file_name)
+                    global_gui_config.config_file_path = chooser.get_filename()
+                    global_gui_config.path = file_path
+                    global_gui_config.load(file_name, file_path)
                     logger.info("Imported GUI Config from {0}" .format(file_name))
                 else:
                     logger.error("{0} is not a valid Config file" .format(file_name))
