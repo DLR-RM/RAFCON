@@ -70,8 +70,12 @@ class MenuBarController(ExtendedController):
         self.state_machine_execution_engine = sm_execution_engine
         self.full_screen_flag = False
         self.full_screen_window = gtk.Window()
+        self.main_position = None
         self.sm_notebook = self.main_window_view.state_machines_editor['notebook']
         self.full_screen_window.add_accel_group(self.shortcut_manager.accel_group)
+        self.main_window_view.right_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
+        self.main_window_view.left_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
+        self.main_window_view.console_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.full_screen_event_handler = self.full_screen_window.connect('key_press_event', self.on_key_press_event)
 
     def register_view(self, view):
@@ -145,8 +149,10 @@ class MenuBarController(ExtendedController):
             self.view["full_screen_mode"].set_active(True)
             self.sm_notebook.set_show_tabs(False)
             self.sm_notebook.reparent(self.full_screen_window)
-            self.main_window_view.get_top_widget().hide()
+            self.full_screen_window.set_transient_for(self.main_window_view.get_top_widget())
+            self.full_screen_window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
             self.full_screen_window.show()
+            self.main_window_view.get_top_widget().hide()
             self.full_screen_window.set_decorated(False)
             self.full_screen_window.fullscreen()
             self.full_screen_flag = True
