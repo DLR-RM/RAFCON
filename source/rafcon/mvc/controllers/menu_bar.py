@@ -72,6 +72,7 @@ class MenuBarController(ExtendedController):
         self.full_screen_window = gtk.Window()
         self.sm_notebook = self.main_window_view.state_machines_editor['notebook']
         self.full_screen_window.add_accel_group(self.shortcut_manager.accel_group)
+        self.full_screen_event_handler = self.full_screen_window.connect('key_press_event', self.on_key_press_event)
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -145,7 +146,6 @@ class MenuBarController(ExtendedController):
             self.sm_notebook.set_show_tabs(False)
             self.sm_notebook.reparent(self.full_screen_window)
             self.main_window_view.get_top_widget().hide()
-            self.full_screen_window.connect('key_press_event', self.on_key_press_event)
             self.full_screen_window.show()
             self.full_screen_window.set_decorated(False)
             self.full_screen_window.fullscreen()
@@ -153,7 +153,7 @@ class MenuBarController(ExtendedController):
 
     def on_key_press_event(self, widget, event):
         keyname = gtk.gdk.keyval_name(event.keyval)
-        if keyname == "Escape":
+        if keyname == "Escape" and self.full_screen_window.get_window().get_state() == gtk.gdk.WINDOW_STATE_FULLSCREEN:
             self.on_full_screen_deactivate()
 
     def on_full_screen_deactivate(self):
