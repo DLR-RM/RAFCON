@@ -429,7 +429,7 @@ class MainWindowController(ExtendedController):
         undocked_window.present()
 
     def undock_window_callback(self, widget, event, undocked_window):
-        if event.new_window_state & gtk.gdk.WINDOW_STATE_ICONIFIED:
+        if event.new_window_state & gtk.gdk.WINDOW_STATE_WITHDRAWN or event.new_window_state & gtk.gdk.WINDOW_STATE_ICONIFIED:
             undocked_window.hide()
         else:
             undocked_window.present()

@@ -142,22 +142,27 @@ class MenuBarController(ExtendedController):
         """
         if not self.full_screen_flag:
             self.view["full_screen_mode"].set_active(True)
-            self.main_window_view["hbox2"].hide()
             self.sm_notebook.set_show_tabs(False)
-            self.main_window_view['graphical_editor_vbox'].reparent(self.full_screen_window)
-            self.main_window_view.get_top_widget().iconify()
+            self.sm_notebook.reparent(self.full_screen_window)
+            self.main_window_view.get_top_widget().hide()
+            self.full_screen_window.connect('key_press_event', self.on_key_press_event)
             self.full_screen_window.show()
             self.full_screen_window.set_decorated(False)
             self.full_screen_window.fullscreen()
             self.full_screen_flag = True
-        elif self.full_screen_flag:
-            self.view["full_screen_mode"].set_active(False)
-            self.main_window_view.get_top_widget().deiconify()
-            self.main_window_view['graphical_editor_vbox'].reparent(self.main_window_view['eventbox4'])
-            self.sm_notebook.set_show_tabs(True)
-            self.main_window_view["hbox2"].show()
-            self.full_screen_window.hide()
-            self.full_screen_flag = False
+
+    def on_key_press_event(self, widget, event):
+        keyname = gtk.gdk.keyval_name(event.keyval)
+        if keyname == "Escape":
+            self.on_full_screen_deactivate()
+
+    def on_full_screen_deactivate(self):
+        self.view["full_screen_mode"].set_active(False)
+        self.main_window_view.get_top_widget().show()
+        self.sm_notebook.reparent(self.main_window_view['graphical_editor_vbox'])
+        self.sm_notebook.set_show_tabs(True)
+        self.full_screen_window.hide()
+        self.full_screen_flag = False
 
     def connect_button_to_function(self, view_index, button_state, function):
         """
