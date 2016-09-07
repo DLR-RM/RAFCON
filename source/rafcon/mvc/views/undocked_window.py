@@ -19,7 +19,7 @@ class UndockedWindowView(View):
         self['top_menu_hbox'].reorder_child(self.top_tool_bar.get_top_widget(), 1)
 
         self.get_top_widget().set_decorated(False)
-        # self.get_top_widget().set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+        self.get_top_widget().set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         # self.get_top_widget().set_property('accept-focus', False)
 
     def initialize_title(self, window_title):
