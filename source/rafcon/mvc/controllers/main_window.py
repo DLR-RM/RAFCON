@@ -430,7 +430,8 @@ class MainWindowController(ExtendedController):
         self.view.get_top_widget().grab_focus()
 
     def bring_undock_window_to_top_callback(self, widget, event, undocked_window, key):
-            gui_helper.set_window_size_and_position(undocked_window, key)
+        global_runtime_config.store_widget_properties(undocked_window, key)
+        gui_helper.set_window_size_and_position(undocked_window, key)
 
     def undock_window_callback(self, widget, event, undocked_window, key):
         if event.new_window_state & gtk.gdk.WINDOW_STATE_WITHDRAWN or event.new_window_state & gtk.gdk.WINDOW_STATE_ICONIFIED:
