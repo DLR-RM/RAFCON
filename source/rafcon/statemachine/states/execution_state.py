@@ -59,6 +59,10 @@ class ExecutionState(State):
 
     __deepcopy__ = __copy__
 
+    def update_hash(self, obj_hash):
+        State.update_hash(self, obj_hash)
+        obj_hash.update(self.script.script)
+
     @classmethod
     def from_dict(cls, dictionary):
         name = dictionary['name']

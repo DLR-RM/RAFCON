@@ -77,6 +77,11 @@ class ContainerState(State):
     # ----------------------------------- generic methods -----------------------------------------
     # ---------------------------------------------------------------------------------------------
 
+    def update_hash(self, obj_hash):
+        State.update_hash(self, obj_hash)
+        for child in self.states.itervalues():
+            child.update_hash(obj_hash)
+
     @staticmethod
     def state_to_dict(state):
         dict_representation = {

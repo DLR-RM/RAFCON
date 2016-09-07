@@ -14,11 +14,13 @@ from yaml import YAMLObject
 from jsonconversion.jsonobject import JSONObject
 from weakref import ref
 
+from rafcon.statemachine.states.hashable import Hashable
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
-class StateElement(Observable, YAMLObject, JSONObject):
+class StateElement(Observable, YAMLObject, JSONObject, Hashable):
     """A abstract base class for all elements of a state (ports, connections)
 
     It inherits from Observable to make a change of its fields observable. It also inherits from YAMLObject,
@@ -90,6 +92,9 @@ class StateElement(Observable, YAMLObject, JSONObject):
 
     def to_dict(self):
         return self.state_element_to_dict(self)
+
+    def update_hash(self, obj_hash):
+        return Hashable.update_hash_from_dict(obj_hash, self.to_dict())
 
     @classmethod
     def from_dict(cls, dictionary):
