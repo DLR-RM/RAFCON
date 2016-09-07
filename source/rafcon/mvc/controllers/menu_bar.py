@@ -69,7 +69,7 @@ class MenuBarController(ExtendedController):
         # of the monitoring plugin
         self.state_machine_execution_engine = sm_execution_engine
         self.full_screen_flag = False
-        self.full_screen_window = gtk.Window()
+        self.full_screen_window = gtk.Window(type=gtk.WINDOW_TOPLEVEL)
         self.main_position = None
         self.sm_notebook = self.main_window_view.state_machines_editor['notebook']
         self.full_screen_window.add_accel_group(self.shortcut_manager.accel_group)
@@ -146,16 +146,17 @@ class MenuBarController(ExtendedController):
         :return:
         """
         if not self.full_screen_flag:
+            self.full_screen_flag = True
             self.view["full_screen_mode"].set_active(True)
             self.sm_notebook.set_show_tabs(False)
             self.sm_notebook.reparent(self.full_screen_window)
-            self.full_screen_window.set_transient_for(self.main_window_view.get_top_widget())
-            self.full_screen_window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
+            position = self.main_window_view.get_top_widget().get_position()
+            self.full_screen_window.move(position[0], position[1])
             self.full_screen_window.show()
-            self.main_window_view.get_top_widget().hide()
+            global_runtime_config.store_widget_properties(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
             self.full_screen_window.set_decorated(False)
             self.full_screen_window.fullscreen()
-            self.full_screen_flag = True
+            self.main_window_view.get_top_widget().iconify()
 
     def on_key_press_event(self, widget, event):
         keyname = gtk.gdk.keyval_name(event.keyval)
@@ -164,7 +165,8 @@ class MenuBarController(ExtendedController):
 
     def on_full_screen_deactivate(self):
         self.view["full_screen_mode"].set_active(False)
-        self.main_window_view.get_top_widget().show()
+        # gui_helper.set_window_size_and_position(self.main_window_view.get_top_widget(), "MAIN_WINDOW")
+        self.main_window_view.get_top_widget().present()
         self.sm_notebook.reparent(self.main_window_view['graphical_editor_vbox'])
         self.sm_notebook.set_show_tabs(True)
         self.full_screen_window.hide()

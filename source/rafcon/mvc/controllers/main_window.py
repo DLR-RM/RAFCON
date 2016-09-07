@@ -420,19 +420,24 @@ class MainWindowController(ExtendedController):
         self.view['left_bar_return_button'].hide()
         self.view['left_bar_replacement'].show()
         self.state_handler_id_left = self.view['main_window'].connect('window-state-event', self.undock_window_callback,
-                                                                      self.view.left_bar_window.get_top_widget())
+                                                                      self.view.left_bar_window.get_top_widget(),
+                                                                      'LEFT_BAR_WINDOW')
         self.focus_handler_id_left = self.view['main_window'].connect('focus_in_event',
                                                                       self.bring_undock_window_to_top_callback,
-                                                                      self.view.left_bar_window.get_top_widget())
+                                                                      self.view.left_bar_window.get_top_widget(),
+                                                                      'LEFT_BAR_WINDOW')
+        self.view.left_bar_window.get_top_widget().set_transient_for(self.view.get_top_widget())
+        self.view.get_top_widget().grab_focus()
 
-    def bring_undock_window_to_top_callback(self, widget, event, undocked_window):
-        undocked_window.present()
+    def bring_undock_window_to_top_callback(self, widget, event, undocked_window, key):
+            gui_helper.set_window_size_and_position(undocked_window, key)
 
-    def undock_window_callback(self, widget, event, undocked_window):
+    def undock_window_callback(self, widget, event, undocked_window, key):
         if event.new_window_state & gtk.gdk.WINDOW_STATE_WITHDRAWN or event.new_window_state & gtk.gdk.WINDOW_STATE_ICONIFIED:
-            undocked_window.hide()
+            global_runtime_config.store_widget_properties(undocked_window, key)
+            undocked_window.iconify()
         else:
-            undocked_window.present()
+            undocked_window.deiconify()
 
     def on_left_bar_dock_clicked(self, widget, event=None):
         """Triggered when the re-dock button of the left-bar window is clicked.
@@ -467,10 +472,13 @@ class MainWindowController(ExtendedController):
         self.view['right_bar_return_button'].hide()
         self.view['right_bar_replacement'].show()
         self.state_handler_id_right = self.view['main_window'].connect('window-state-event', self.undock_window_callback,
-                                                                       self.view.right_bar_window.get_top_widget())
+                                                                       self.view.right_bar_window.get_top_widget(),
+                                                                       'RIGHT_BAR_WINDOW')
         self.focus_handler_id_right = self.view['main_window'].connect('focus_in_event',
                                                                        self.bring_undock_window_to_top_callback,
-                                                                       self.view.right_bar_window.get_top_widget())
+                                                                       self.view.right_bar_window.get_top_widget(),
+                                                                       'RIGHT_BAR_WINDOW')
+        self.view.right_bar_window.get_top_widget().set_transient_for(self.view.get_top_widget())
 
     def on_right_bar_dock_clicked(self, widget, event=None):
         """Triggered when the re-dock button of the right-bar window is clicked.
@@ -503,11 +511,17 @@ class MainWindowController(ExtendedController):
         self.view['undock_console_button'].hide()
         self.on_console_hide_clicked(None)
         self.view['console_return_button'].hide()
-        self.state_handler_id_console = self.view['main_window'].connect('window-state-event', self.undock_window_callback,
-                                                                       self.view.console_bar_window.get_top_widget())
+        self.state_handler_id_console = self.view['main_window'].connect('window-state-event',
+                                                                         self.undock_window_callback,
+                                                                         self.view.console_bar_window.get_top_widget(),
+                                                                         'CONSOLE_BAR_WINDOW')
+
         self.focus_handler_id_console = self.view['main_window'].connect('focus_in_event',
-                                                                       self.bring_undock_window_to_top_callback,
-                                                                       self.view.console_bar_window.get_top_widget())
+                                                                         self.bring_undock_window_to_top_callback,
+                                                                         self.view.console_bar_window.get_top_widget(),
+                                                                         'CONSOLE_BAR_WINDOW')
+
+        self.view.console_bar_window.get_top_widget().set_transient_for(self.view.get_top_widget())
 
     def on_console_bar_dock_clicked(self, widget, event=None):
         """Triggered when the re-dock button of the console window is clicked.
