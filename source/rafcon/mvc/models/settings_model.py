@@ -39,6 +39,7 @@ class SettingsModel(ModelMT):
         self.gui_config_dict = {k for k in default_gui_config_dict.keys() if k not in ["SHORTCUTS", "TYPE"]}
         self.changed_keys = {}
         self.change_by_restart = []
+        self.changed_libs = []
         self.register_observer(self)
         # {key:(changed, refresh_sm, restart)
         self.checkup_dict = {'GAPHAS_EDITOR': [False, True, False],
@@ -149,8 +150,7 @@ class SettingsModel(ModelMT):
                     global_gui_config.set_config_value("SHORTCUTS", dict(self.config_shortcut_list))
                     main_window_controller.get_controller('menu_bar_controller').refresh_shortcuts_activate()
                     # update sc
-                elif key in dict(self.config_library_list):
-                    # print "set library"
+                elif key in dict(self.config_library_list) or key in self.changed_libs:
                     global_config.set_config_value("LIBRARY_PATHS", dict(self.config_library_list))
                     main_window_controller.get_controller('menu_bar_controller').on_refresh_libraries_activate(widget=None, data=None)
                 else:
@@ -187,6 +187,7 @@ class SettingsModel(ModelMT):
         global_config.save_configuration()
         global_gui_config.save_configuration()
         self.changed_keys = {}
+        del self.changed_libs[:]
 
     def ignore_changes(self, key, value):
         """
@@ -201,6 +202,26 @@ class SettingsModel(ModelMT):
         elif key in self.gui_config_dict:
             if value == global_gui_config.get_config_value(key):
                 self.changed_keys.pop(key)
+
+    def delete_library(self, key):
+        for lib in self.config_library_list:
+            if key == lib[0]:
+                self.config_library_list.remove(lib)
+                self.changed_keys[lib[0]] = None
+                self.changed_libs.append(key)
+
+    def add_library(self, key, value):
+        self.config_library_list.append((key, value))
+        self.set_config_view_value(key, value)
+
+    def set_library_key(self, key, old_key, value):
+        for key_tmp in self.config_library_list:
+            if key_tmp[0] == old_key:
+                self.config_library_list.remove(key_tmp)
+                self.config_library_list.append((key, value))
+                self.set_config_view_value(key, value)
+
+
 
 
 

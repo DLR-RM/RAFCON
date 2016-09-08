@@ -35,11 +35,14 @@ class SettingsWindowController(ExtendedController):
         self.gui_list_store = ListStore(str, str, bool, bool, bool, bool, bool)
         self.shortcut_list_store = ListStore(str, str)
         self._actual_entry = None
+        self.lib_counter = 0
         self.gui_checkbox = gtk.CheckButton("GUI Config")
         self.core_checkbox = gtk.CheckButton("Core Config")
 
     def register_view(self, view):
         """Called when the View was registered"""
+        self.view['add_btn'].connect('clicked', self.on_add_library)
+        self.view["remove_btn"].connect('clicked', self.on_remove_library)
         self.view['value_toggle'].connect('toggled', self.on_checkbox_toggled, self.config_list_store)
         self.view['gui_value_toggle'].connect('toggled', self.on_checkbox_toggled, self.gui_list_store)
 
@@ -61,6 +64,12 @@ class SettingsWindowController(ExtendedController):
                                          self.shortcut_list_store, self.view["shortcut_tree_view"])
         self.view['value_text2'].connect('editing-canceled', self.editing_canceled)
 
+        self.view['config_text3'].set_property('editable', True)
+        self.view['config_text3'].connect('edited', self.on_name_changed)
+        self.view['config_text3'].connect('editing-started', self.editing_started, self.view['config_text3'],
+                                          self.library_list_store, self.view["library_tree_view"])
+        self.view['config_text3'].connect('editing-canceled', self.editing_canceled)
+
         self.view['value_text3'].set_property('editable', True)
         self.view['value_text3'].connect('edited', self.on_value_changed, self.library_list_store)
         self.view['value_text3'].connect('editing-started', self.editing_started, self.view['value_text3'],
@@ -81,6 +90,26 @@ class SettingsWindowController(ExtendedController):
         self.view['cancel_button'].connect('clicked', self.on_delete)
         self.set_properties()
         self.set_label_paths()
+
+    def on_add_library(self, *args):
+        if self.view and (isinstance(args[0], gtk.Button) or self.view['library_tree_view'].is_focus()):
+            lib_name = "<LIB_NAME_%s>" % self.lib_counter
+            self.model.add_library(lib_name, "<LIB_PATH>")
+            self.lib_counter += 1
+            for row_num, iter_elem in enumerate(self.library_list_store):
+                if iter_elem[0] == lib_name:
+                    self.view['library_tree_view'].set_cursor(row_num)
+            return True
+
+    def on_remove_library(self, *args):
+        if self.view and (isinstance(args[0], gtk.Button) or self.view['library_tree_view'].is_focus()):
+            path = self.view["library_tree_view"].get_cursor()[0]
+            if path is not None:
+                key = self.library_list_store[int(path[0])][0]
+                self.model.delete_library(key)
+                if len(self.library_list_store) > 0:
+                    self.view['library_tree_view'].set_cursor(min(path[0], len(self.library_list_store) - 1))
+            return True
 
     def on_checkbox_toggled(self, renderer, path, actual_list_store):
         key = actual_list_store[int(path)][0]
@@ -309,7 +338,9 @@ class SettingsWindowController(ExtendedController):
         """
         Callback method to connect entry-widget focus-out-event to the respective change-method.
         """
-        if actual_renderer is renderer:
+        if self.view['config_text3'] is renderer:
+            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_name))
+        elif actual_renderer is renderer:
             self._actual_entry = (editable, editable.connect('focus-out-event', self.change_value, actual_list_store, actual_tree_view))
         else:
             logger.error("Not registered Renderer was used")
@@ -331,6 +362,30 @@ class SettingsWindowController(ExtendedController):
         self.on_value_changed(entry, actual_tree_view.get_cursor()[0][0], text=entry.get_text(),
                               actual_list_store=actual_list_store)
 
+    def change_name(self, entry, event):
+        if self.view['library_tree_view'].get_cursor()[0] is None or \
+                not self.view['library_tree_view'].get_cursor()[0][0]:
+            return
+        self.on_name_changed(entry, self.view['library_tree_view'].get_cursor()[0][0], text=entry.get_text())
+
+    def on_name_changed(self, widget, path, text):
+        """Triggered when a global variable's name is edited
+
+        Updates the global variable's name only if different and already in list store.
+
+        :param path: The path identifying the edited variable
+        :param text: New variable name
+        """
+        # logger.info("changing name")
+        old_key = self.library_list_store[int(path)][0]
+        if old_key == text:
+            return
+        old_value = self.library_list_store[int(path)][1]
+        try:
+            self.model.set_library_key(text, old_key, old_value)
+        except RuntimeError as e:
+            logger.exception(e)
+
     def on_value_changed(self, widget, path, text, actual_list_store):
         """Triggered when a config value is edited.
         :param path: The path identifying the edited variable
@@ -341,6 +396,8 @@ class SettingsWindowController(ExtendedController):
         key = actual_list_store[int(path)][0]
         if actual_list_store == self.config_list_store or actual_list_store == self.library_list_store:
             data_type = type(global_config.get_config_value(key))
+        elif actual_list_store == self.library_list_store:
+            pass
         else:
             data_type = type(global_gui_config.get_config_value(key))
         try:

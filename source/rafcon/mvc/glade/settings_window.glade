@@ -103,36 +103,88 @@
                       <object class="GtkAlignment" id="alignment4">
                         <property name="visible">True</property>
                         <child>
-                          <object class="GtkTreeView" id="library_tree_view">
+                          <object class="GtkHBox" id="hbox2">
                             <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="model">liststore1</property>
-                            <property name="headers_clickable">False</property>
-                            <property name="enable_grid_lines">vertical</property>
+                            <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkTreeViewColumn" id="lib_col">
-                                <property name="spacing">1</property>
-                                <property name="title">Library</property>
-                                <property name="expand">True</property>
+                              <object class="GtkTreeView" id="library_tree_view">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="model">liststore1</property>
+                                <property name="headers_clickable">False</property>
+                                <property name="enable_grid_lines">vertical</property>
                                 <child>
-                                  <object class="GtkCellRendererText" id="config_text3"/>
-                                  <attributes>
-                                    <attribute name="text">0</attribute>
-                                  </attributes>
+                                  <object class="GtkTreeViewColumn" id="lib_col">
+                                    <property name="spacing">1</property>
+                                    <property name="title">Library</property>
+                                    <property name="expand">True</property>
+                                    <child>
+                                      <object class="GtkCellRendererText" id="config_text3"/>
+                                      <attributes>
+                                        <attribute name="text">0</attribute>
+                                      </attributes>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn" id="lib_path_col">
+                                    <property name="title">Path</property>
+                                    <property name="expand">True</property>
+                                    <child>
+                                      <object class="GtkCellRendererText" id="value_text3"/>
+                                      <attributes>
+                                        <attribute name="text">1</attribute>
+                                      </attributes>
+                                    </child>
+                                  </object>
                                 </child>
                               </object>
+                              <packing>
+                                <property name="position">0</property>
+                              </packing>
                             </child>
                             <child>
-                              <object class="GtkTreeViewColumn" id="lib_path_col">
-                                <property name="title">Path</property>
-                                <property name="expand">True</property>
+                              <object class="GtkHBox" id="hbox3">
+                                <property name="width_request">0</property>
+                                <property name="visible">True</property>
                                 <child>
-                                  <object class="GtkCellRendererText" id="value_text3"/>
-                                  <attributes>
-                                    <attribute name="text">1</attribute>
-                                  </attributes>
+                                  <object class="GtkButton" id="remove_btn">
+                                    <property name="label">gtk-remove</property>
+                                    <property name="width_request">90</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">True</property>
+                                    <property name="use_stock">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="padding">5</property>
+                                    <property name="pack_type">end</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="add_btn">
+                                    <property name="label">gtk-add</property>
+                                    <property name="width_request">90</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">True</property>
+                                    <property name="use_stock">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="padding">5</property>
+                                    <property name="pack_type">end</property>
+                                    <property name="position">0</property>
+                                  </packing>
                                 </child>
                               </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="padding">5</property>
+                                <property name="position">1</property>
+                              </packing>
                             </child>
                           </object>
                         </child>
