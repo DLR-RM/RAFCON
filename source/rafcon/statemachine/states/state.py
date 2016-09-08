@@ -15,18 +15,18 @@ import threading
 from __builtin__ import staticmethod
 from weakref import ref
 
-from gtkmvc import Observable
-from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
+from gtkmvc import Observable
+from jsonconversion.jsonobject import JSONObject
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
 from rafcon.statemachine.state_elements.outcome import Outcome
-from rafcon.statemachine.states.hashable import Hashable
 from rafcon.utils import log
 from rafcon.utils import multi_event
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
+from rafcon.utils.hashable import Hashable
 
 logger = log.get_logger(__name__)
 PATH_SEPARATOR = '/'

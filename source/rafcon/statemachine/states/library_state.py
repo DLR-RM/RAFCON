@@ -10,14 +10,13 @@
 from copy import copy
 
 from gtkmvc import Observable
-
 from rafcon.statemachine.enums import StateExecutionState
-from rafcon.statemachine.states.hashable import Hashable
+from rafcon.statemachine.singleton import library_manager
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.singleton import library_manager
-from rafcon.utils import type_helpers
 from rafcon.utils import log
+from rafcon.utils import type_helpers
+from rafcon.utils.hashable import Hashable
 
 logger = log.get_logger(__name__)
 

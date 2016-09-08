@@ -8,14 +8,14 @@
 
 """
 
-
-from gtkmvc import Observable
-from yaml import YAMLObject
-from jsonconversion.jsonobject import JSONObject
 from weakref import ref
 
-from rafcon.statemachine.states.hashable import Hashable
+from yaml import YAMLObject
+
+from gtkmvc import Observable
+from jsonconversion.jsonobject import JSONObject
 from rafcon.utils import log
+from rafcon.utils.hashable import Hashable
 
 logger = log.get_logger(__name__)
 
