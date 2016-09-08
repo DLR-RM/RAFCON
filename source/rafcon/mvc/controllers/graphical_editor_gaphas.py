@@ -177,18 +177,23 @@ class GraphicalEditorController(ExtendedController):
             while gtk.events_pending():
                 gtk.main_iteration(False)
 
-            current_selection = self.model.selection
-            if len(current_selection) != 1 or len(current_selection.get_states()) < 1:
-                logger.error("Please select a single state for pasting the clipboard")
+            selection = self.model.selection
+            selected_states = selection.get_states()
+            if len(selection) != 1 or len(selected_states) < 1:
+                logger.error("Please select a single container state for pasting the clipboard")
                 return
-            if not isinstance(current_selection.get_states()[0], ContainerStateModel):
+            if not isinstance(selected_states[0], ContainerStateModel):
                 # the default behaviour of the copy paste is that the state is copied into the parent state
-                parent_of_old_state = current_selection.get_states()[0].parent
-                current_selection.clear()
-                current_selection.add(parent_of_old_state)
+                parent_of_old_state = selected_states[0].parent
+                if isinstance(parent_of_old_state, AbstractStateModel):
+                    selection.clear()
+                    selection.add(parent_of_old_state)
+                else:
+                    logger.error("Only container state can have child states")
+                    return
 
             # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
-            target_state_m = current_selection.get_states()[0]
+            target_state_m = selection.get_states()[0]
             state_copy_m, state_orig_m = global_clipboard.paste(target_state_m)
 
             if state_copy_m is None:  # An error occurred while pasting
