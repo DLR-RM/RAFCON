@@ -78,7 +78,7 @@ class ContainerState(State):
     # ---------------------------------------------------------------------------------------------
 
     def update_hash(self, obj_hash):
-        State.update_hash(self, obj_hash)
+        super(ContainerState, self).update_hash(obj_hash)
         for child in self.states.itervalues():
             child.update_hash(obj_hash)
 
