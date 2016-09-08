@@ -300,9 +300,7 @@ class LibraryState(State):
                    output_data_port_runtime_values, use_runtime_value_output_data_ports)
 
     def update_hash(self, obj_hash):
-        obj_hash.update(self.library_name)
-        obj_hash.update(self.library_path)
-        obj_hash.update(self.version)
+        super(LibraryState, self).update_hash(obj_hash)
         self.state_copy.update_hash(obj_hash)
 
     @staticmethod
