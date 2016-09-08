@@ -27,7 +27,7 @@ from rafcon.utils import profiler
 from rafcon.utils import plugins
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
-from rafcon.utils.i18n import _, setup_l10n
+from rafcon.utils.i18n import _, setup_l10n, setup_l10n_gtk
 
 from rafcon.utils import log
 
@@ -192,6 +192,7 @@ if __name__ == '__main__':
     register_signal_handlers(signal_handler)
 
     setup_l10n()
+    setup_l10n_gtk()
 
     setup_gtkmvc_logger()
     pre_setup_plugins()
