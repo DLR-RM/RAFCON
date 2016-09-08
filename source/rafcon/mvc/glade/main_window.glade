@@ -20,7 +20,7 @@
             <child>
               <object class="GtkLabel" id="menu_bar_placeholder">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">menu_bar_placeholder</property>
+                <property name="label">menu_bar_placeholder</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -30,7 +30,7 @@
             <child>
               <object class="GtkLabel" id="top_tool_bar_placeholder">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">top_tool_bar_placeholder</property>
+                <property name="label">top_tool_bar_placeholder</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -47,7 +47,7 @@
         <child>
           <object class="GtkLabel" id="tool_bar_placeholder">
             <property name="visible">True</property>
-            <property name="label" translatable="yes">Placeholder for the tool bar</property>
+            <property name="label">Placeholder for the tool bar</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -100,7 +100,7 @@
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
                                         <property name="xpad">50</property>
-                                        <property name="label" translatable="yes">upper_notebook_title</property>
+                                        <property name="label">upper_notebook_title</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -171,7 +171,7 @@
                                 <child type="tab">
                                   <object class="GtkLabel" id="library_tree_tab">
                                     <property name="visible">True</property>
-                                    <property name="label" translatable="yes">libraries</property>
+                                    <property name="label">libraries</property>
                                     <property name="angle">90</property>
                                   </object>
                                   <packing>
@@ -207,7 +207,7 @@
                                 <child type="tab">
                                   <object class="GtkLabel" id="state_machine_tree_tab">
                                     <property name="visible">True</property>
-                                    <property name="label" translatable="yes">state_tree</property>
+                                    <property name="label">state_tree</property>
                                     <property name="angle">90</property>
                                   </object>
                                   <packing>
@@ -244,7 +244,7 @@
                                 <child type="tab">
                                   <object class="GtkLabel" id="global_variables_tab">
                                     <property name="visible">True</property>
-                                    <property name="label" translatable="yes">global_variables</property>
+                                    <property name="label">global_variables</property>
                                     <property name="angle">90</property>
                                   </object>
                                   <packing>
@@ -279,7 +279,7 @@
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
                                         <property name="xpad">50</property>
-                                        <property name="label" translatable="yes">lower_notebook_title</property>
+                                        <property name="label">lower_notebook_title</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -331,7 +331,7 @@
                                 <child type="tab">
                                   <object class="GtkLabel" id="history_tab">
                                     <property name="visible">True</property>
-                                    <property name="label" translatable="yes">history</property>
+                                    <property name="label">history</property>
                                     <property name="angle">90</property>
                                   </object>
                                   <packing>
@@ -367,7 +367,7 @@
                                 <child type="tab">
                                   <object class="GtkLabel" id="execution_history_tab">
                                     <property name="visible">True</property>
-                                    <property name="label" translatable="yes">execution_history</property>
+                                    <property name="label">execution_history</property>
                                     <property name="angle">90</property>
                                   </object>
                                   <packing>
