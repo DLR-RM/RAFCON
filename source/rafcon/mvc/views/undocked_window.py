@@ -3,6 +3,7 @@ from gtkmvc import View
 from rafcon.mvc.views.top_tool_bar import TopToolBarView
 from rafcon.mvc.utils import constants
 
+
 class UndockedWindowView(View):
     """
 

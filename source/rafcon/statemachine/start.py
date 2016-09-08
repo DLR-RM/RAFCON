@@ -13,7 +13,7 @@
 
 import os
 import argparse
-from os.path import realpath, dirname, join, exists
+from os.path import realpath, dirname, join, exists, isdir
 import signal
 import time
 from Queue import Empty
@@ -108,7 +108,14 @@ def setup_configuration(config_path):
 
     :param config_path: Path to the core config file
     """
-    global_config.load(path=config_path)
+    if config_path is not None:
+        if isdir(config_path):
+            config_file = None
+        else:
+            config_path, config_file = os.path.split(config_path)
+        global_config.load(config_file=config_file, path=config_path)
+    else:
+        global_config.load(path=config_path)
 
     # Initialize libraries
     sm_singletons.library_manager.initialize()
