@@ -36,10 +36,8 @@ class RuntimeConfig(DefaultConfig):
         """
         if isinstance(widget, gtk.Window):
             size = widget.get_size()
-            logger.debug('{0} size: {1}'.format(title, size))
             self.set_config_value('{0}_SIZE'.format(title), size)
         position = widget.get_position()
-        logger.debug('{0} position: {1}'.format(title, position))
         self.set_config_value('{0}_POS'.format(title), position)
 
     def save_configuration(self):
