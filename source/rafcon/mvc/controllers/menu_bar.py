@@ -500,6 +500,15 @@ class MenuBarController(ExtendedController):
         if force:
             self.refresh_libs_and_state_machines()
         else:
+
+            # check if a state machine is still running
+            if self.state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+                if self.stopped_state_machine_to_proceed():
+                    pass  # state machine was stopped, proceeding reloading library
+                else:
+                    return
+
+            # check if the a dirty flag is still set
             all_tabs = self.states_editor_ctrl.tabs.values()
             all_tabs.extend(self.states_editor_ctrl.closed_tabs.values())
             dirty_source_editor = [tab_dict['controller'] for tab_dict in all_tabs if
@@ -527,6 +536,30 @@ class MenuBarController(ExtendedController):
                                    type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             else:
                 self.refresh_libs_and_state_machines()
+
+    def stopped_state_machine_to_proceed(self):
+
+            def on_message_dialog_response_signal(widget, response_id):
+                if response_id == ButtonDialog.OPTION_1.value:
+                    self.state_machine_execution_engine.stop()
+                    widget.state_machine_stopped = True
+                elif response_id == ButtonDialog.OPTION_2.value:
+                    logger.debug("State machine will stay running and no refresh will be performed!")
+                    widget.state_machine_stopped = False
+                widget.destroy()
+
+            message_string = "A state machine is still running. The state machines can only be refeshed" \
+                             "if no state machine is running any more."
+            dialog = RAFCONButtonDialog(message_string, ["Stop execution and refresh libraries",
+                                                "Keep running and do not refresh libraries"],
+                                        on_message_dialog_response_signal,
+                                        type=gtk.MESSAGE_QUESTION,
+                                        parent=self.get_root_window())
+
+            state_machine_stopped = False
+            if hasattr(dialog, "state_machine_stopped"):
+                state_machine_stopped = dialog.state_machine_stopped
+            return state_machine_stopped
 
     def refresh_libs_and_state_machines(self):
         """Deletes all libraries and state machines and reloads them freshly from the file system."""
