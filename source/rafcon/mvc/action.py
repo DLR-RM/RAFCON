@@ -229,6 +229,39 @@ def meta_dump_or_deepcopy(meta):
     return copy.deepcopy(meta)
 
 
+def compare_state_element_meta_pairs(meta_dict_1, meta_dict_2, difference=None, path=None):
+    # logger.info("compare")
+    if difference is None:
+        difference = []
+    if path is None:
+        path = []
+    # check if meta data keys are the same
+    if not set(meta_dict_1.keys()) == set(meta_dict_2.keys()):
+        logger.warning("Sets state wrong")
+        # check if data yaml strings of the dicts are the same
+    if not str(meta_dict_1['state']) == str(meta_dict_2['state']):
+        path_=copy.deepcopy(path)
+        difference.append(path_)
+        # logger.info(str(path_) + "Wrong meta-data {0} \n{1} \n{2}".format('state', str(meta_dict_1['state']), str(meta_dict_2['state'])))
+    for pieces in ['states', 'data_flows', 'transitions', 'input_data_ports', 'output_data_ports', 'scoped_variables']:
+        if not set(meta_dict_1[pieces]) == set(meta_dict_2[pieces]):
+            path_ = copy.deepcopy(path)
+            path_.append(pieces)
+            difference.append(path_)
+            # logger.warning(str(path_) + "Sets {0} wrong".format(pieces))
+        for elem in meta_dict_1[pieces].keys():
+            if pieces == 'states':
+                compare_state_element_meta_pairs(meta_dict_1[pieces][elem], meta_dict_2[pieces][elem], difference,
+                                                 path=copy.deepcopy(path).append(elem))
+            elif not str(meta_dict_1[pieces][elem]) == str(meta_dict_2[pieces][elem]):
+                path_ = copy.deepcopy(path)
+                path_.extend([pieces, elem])
+                difference.append(path_)
+                # logger.info(str(path_) + "Wrong meta-data {0}: {1} \n{2} \n{3}".format(pieces, elem, str(meta_dict_1[pieces][elem]), str(meta_dict_2[pieces][elem])))
+
+    return difference
+
+
 def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=False, level=None):
     meta_dict = {'state': copy.deepcopy(state_model.meta), 'is_start': False, 'data_flows': {}, 'transitions': {},
                  'outcomes': {}, 'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}, 'states': {},

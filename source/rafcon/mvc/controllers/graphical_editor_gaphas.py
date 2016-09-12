@@ -739,8 +739,16 @@ class GraphicalEditorController(ExtendedController):
 
     def setup_canvas(self):
 
+        # take a temp copy of the meta data -> check later if those was changed
+        import rafcon.mvc.action as action
+        meta_dict_before = action.get_state_element_meta(state_model=self.model.root_state)
         self.setup_state(self.root_state_m, rel_pos=(10, 10))
-        self._meta_data_changed(None, self.root_state_m, 'append_to_last_change', True)
+        meta_dict_after = action.get_state_element_meta(state_model=self.model.root_state)
+        diff = action.compare_state_element_meta_pairs(meta_dict_before, meta_dict_after)
+        if diff:
+            self._meta_data_changed(None, self.root_state_m, 'append_initial_change', True)
+            logger.info("By initiation of gaphas editor meta-dicts were changed, most likely because state machine "
+                        "never before was open by gaphas. The differing meta dicts are: {0}".format(diff))
 
     def setup_state(self, state_m, parent=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
 
