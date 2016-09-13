@@ -104,6 +104,11 @@ class ContainerStateModel(StateModel):
             state.prepare_destruction()
         self.states.clear()
 
+    def update_hash(self, obj_hash):
+        super(ContainerStateModel, self).update_hash(obj_hash)
+        for state_element in self.states.values() + self.transitions[:] + self.data_flows[:] + self.scoped_variables[:]:
+            state_element.update_hash(obj_hash)
+
     @ModelMT.observe("state", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         """This method notifies the model lists and the parent state about changes

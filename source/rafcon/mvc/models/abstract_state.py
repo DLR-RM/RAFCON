@@ -9,6 +9,7 @@ from rafcon.statemachine.states.state import State
 from rafcon.statemachine.storage import storage
 from rafcon.utils import log
 from rafcon.utils import storage_utils
+from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
 
 from gtkmvc import ModelMT, Signal
@@ -48,7 +49,7 @@ def get_state_model_class_for_state(state):
         return None
 
 
-class AbstractStateModel(ModelMT):
+class AbstractStateModel(ModelMT, Hashable):
     """This is an abstract class serving as base class for state models
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state).
@@ -142,6 +143,11 @@ class AbstractStateModel(ModelMT):
         del self.input_data_ports[:]
         del self.output_data_ports[:]
         del self.outcomes[:]
+
+    def update_hash(self, obj_hash):
+        for state_element in self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]:
+            state_element.update_hash(obj_hash)
+        Hashable.update_hash_from_dict(obj_hash, self.meta)
 
     @property
     def parent(self):

@@ -13,6 +13,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.storage import storage
 
 from rafcon.mvc.config import global_gui_config
+from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import storage_utils
 from rafcon.utils import log
@@ -20,13 +21,14 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateMachineModel(ModelMT):
+class StateMachineModel(ModelMT, Hashable):
     """This model class manages a :class:`rafcon.statemachine.state_machine.StateMachine`
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state machine).
 
     :param StateMachine state_machine: The state machine to be controlled and modified
     """
+
     state_machine = None
     selection = None
     root_state = None
@@ -125,6 +127,10 @@ class StateMachineModel(ModelMT):
         except KeyError:  # Might happen if the observer was already unregistered
             pass
         self.root_state.prepare_destruction()
+
+    def update_hash(self, obj_hash):
+        self.root_state.update_hash(obj_hash)
+        Hashable.update_hash_from_dict(obj_hash, self.meta)
 
     @ModelMT.observe("state_machine", after=True)
     def marked_dirty_flag_changed(self, model, prop_name, info):
