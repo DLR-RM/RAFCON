@@ -27,6 +27,10 @@ class Hashable(object):
     def mutable_hash(self, obj_hash=hashlib.sha256()):
         """Creates a hash with the (im)mutable data fields of the object
 
+        Example:
+            >>> my_hash_obj = Hashable().mutable_hash()
+            >>> print('Hash: ' + my_hash_obj.hexdigest())
+
         :param obj_hash: The hash object (see Python hashlib)
         :return: The updated hash object
         """
