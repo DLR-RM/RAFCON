@@ -690,17 +690,10 @@ class MenuBarController(ExtendedController):
         global_runtime_config.store_widget_properties(self.main_window_view['central_v_pane'], 'CONSOLE_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['left_bar_pane'], 'LEFT_BAR_INNER_PANE')
 
-        if self.main_window_view.left_bar_window.get_top_widget().get_property('visible'):
-            global_runtime_config.store_widget_properties(
-                self.main_window_view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
-
-        if self.main_window_view.right_bar_window.get_top_widget().get_property('visible'):
-            global_runtime_config.store_widget_properties(
-                self.main_window_view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
-
-        if self.main_window_view.console_bar_window.get_top_widget().get_property('visible'):
-            global_runtime_config.store_widget_properties(
-                self.main_window_view.console_bar_window.get_top_widget(), 'CONSOLE_BAR_WINDOW')
+        for sidebar_name in ['LEFT_BAR_WINDOW', 'RIGHT_BAR_WINDOW', 'CONSOLE_BAR_WINDOW']:
+            sidebar_widget = getattr(self.main_window_view, sidebar_name.lower()).get_top_widget()
+            if sidebar_widget.get_property('visible'):
+                global_runtime_config.store_widget_properties(sidebar_widget, sidebar_name)
 
         global_runtime_config.save_configuration()
 
