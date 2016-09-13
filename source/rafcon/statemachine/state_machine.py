@@ -17,12 +17,13 @@ from rafcon.statemachine.id_generator import generate_state_machine_id
 from rafcon.statemachine.execution.execution_history import ExecutionHistoryContainer, ExecutionHistory
 from rafcon.statemachine.enums import StateExecutionState
 
+from rafcon.utils.hashable import Hashable
 from rafcon.utils.storage_utils import get_current_time_string
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateMachine(Observable, JSONObject):
+class StateMachine(Observable, JSONObject, Hashable):
     """A class for to organizing all main components of a state machine
 
     It inherits from Observable to make a change of its fields observable.
@@ -80,6 +81,9 @@ class StateMachine(Observable, JSONObject):
 
     def to_dict(self):
         return self.state_machine_to_dict(self)
+
+    def update_hash(self, obj_hash):
+        self.root_state.update_hash(obj_hash)
 
     def mutable_hash(self):
         return self.root_state.mutable_hash()
