@@ -85,9 +85,6 @@ class StateMachine(Observable, JSONObject, Hashable):
     def update_hash(self, obj_hash):
         self.root_state.update_hash(obj_hash)
 
-    def mutable_hash(self):
-        return self.root_state.mutable_hash()
-
     @staticmethod
     def state_machine_to_dict(state_machine):
         dict_representation = {
