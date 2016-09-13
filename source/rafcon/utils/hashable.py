@@ -28,8 +28,10 @@ class Hashable(object):
         """Creates a hash with the (im)mutable data fields of the object
 
         Example:
-            >>> my_hash_obj = Hashable().mutable_hash()
-            >>> print('Hash: ' + my_hash_obj.hexdigest())
+            >>> my_obj = type("MyDerivedClass", (Hashable,), { "update_hash": lambda self, h: h.update("RAFCON") })()
+            >>> my_obj_hash = my_obj.mutable_hash()
+            >>> print('Hash: ' + my_obj_hash.hexdigest())
+            Hash: c8b2e32dcb31c5282e4b9dbc6a9975b65bf59cd80a7cee66d195e320484df5c6
 
         :param obj_hash: The hash object (see Python hashlib)
         :return: The updated hash object
