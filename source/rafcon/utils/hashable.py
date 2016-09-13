@@ -24,7 +24,7 @@ class Hashable(object):
         """
         raise NotImplementedError()
 
-    def mutable_hash(self, obj_hash=hashlib.sha256()):
+    def mutable_hash(self, obj_hash=None):
         """Creates a hash with the (im)mutable data fields of the object
 
         Example:
@@ -36,5 +36,7 @@ class Hashable(object):
         :param obj_hash: The hash object (see Python hashlib)
         :return: The updated hash object
         """
+        if obj_hash is None:
+            obj_hash = hashlib.sha256()
         self.update_hash(obj_hash)
         return obj_hash
