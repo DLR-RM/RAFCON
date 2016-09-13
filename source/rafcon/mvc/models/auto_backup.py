@@ -298,7 +298,7 @@ class AutoBackupModel(ModelMT):
         self.__perform_storage = True
         self.timer_request_lock.release()
         sm = self.state_machine_model.state_machine
-        logger.info('Perform auto-backup of state-machine {} to tmp-folder'.format(sm.state_machine_id))
+        logger.debug('Performing auto backup of state machine {} to temp folder'.format(sm.state_machine_id))
         tmp_sm_system_path = self.tmp_storage_folder()
         storage.save_state_machine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=True,
                                            save_as=True, temporary_storage=True)
