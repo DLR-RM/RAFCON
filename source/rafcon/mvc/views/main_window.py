@@ -16,6 +16,7 @@ from rafcon.mvc.views.undocked_window import UndockedWindowView
 from rafcon.mvc.views.settings_window import SettingsWindowView
 
 from rafcon.mvc.utils import constants
+from rafcon.utils.i18n import _
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc import gui_helper
 
@@ -71,7 +72,7 @@ class MainWindowView(View):
         self.state_machine_history = ModificationHistoryView()
         self.state_machine_history.show()
         self['history_alignment'].add(self.state_machine_history.get_top_widget())
-                                                      
+
         ######################################################
         # State Machine Execution History
         ######################################################
@@ -97,7 +98,7 @@ class MainWindowView(View):
 
         self['graphical_editor_label_event_box'].remove(self['graphical_editor_label'])
         self['graphical_editor_label_event_box'].set_border_width(constants.GRID_SIZE)
-        graphical_editor_label = gui_helper.create_label_with_text_and_spacing('GRAPHICAL EDITOR',
+        graphical_editor_label = gui_helper.create_label_with_text_and_spacing(_('GRAPHICAL EDITOR'),
                                                                                font_size=constants.FONT_SIZE_BIG,
                                                                                letter_spacing=constants.
                                                                                LETTER_SPACING_1PT)
@@ -113,7 +114,7 @@ class MainWindowView(View):
 
         self['state_editor_label_hbox'].remove(self['state_editor_label'])
         self['state_editor_label_hbox'].set_border_width(constants.GRID_SIZE)
-        state_editor_label = gui_helper.create_label_with_text_and_spacing('STATE EDITOR',
+        state_editor_label = gui_helper.create_label_with_text_and_spacing(_('STATE EDITOR'),
                                                                            font_size=constants.FONT_SIZE_BIG,
                                                                            letter_spacing=constants.LETTER_SPACING_1PT)
         state_editor_label.set_alignment(0., 0.)

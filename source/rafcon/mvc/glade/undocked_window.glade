@@ -30,7 +30,7 @@
                     <child>
                       <object class="GtkLabel" id="top_tool_bar_placeholder">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">top_tool_bar_placeholder</property>
+                        <property name="label">top_tool_bar_placeholder</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>

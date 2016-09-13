@@ -26,3 +26,8 @@ _static/
 
 .idea/
 .cache/
+
+*.swp
+
+*.pot
+/locale/

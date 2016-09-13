@@ -1,0 +1,11 @@
+#!/bin/sh
+
+[ -d "./tmp" ]
+tmp_exists=$?
+
+find 'source/rafcon' -iname '*.glade' -exec intltool-extract --type=gettext/glade --local {} \;
+find 'source/rafcon' -iname '*.py' | xargs xgettext --language=Python --keyword=_ --keyword=N_ --output=messages.pot --default-domain=rafcon ./tmp/*.h
+
+if (( tmp_exists == 1 )); then
+  rm -r "./tmp"
+fi
