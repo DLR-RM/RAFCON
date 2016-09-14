@@ -21,7 +21,7 @@ from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 
 from rafcon.mvc import state_machine_helper
-from rafcon.mvc.gui_helper import has_single_focus
+from rafcon.mvc.gui_helper import react_to_event
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS as EXECUTION_TRIGGERED_METHODS
 from rafcon.utils import log
@@ -102,17 +102,17 @@ class StateMachineTreeController(ExtendedController):
         else:
             self.tree_store.clear()
 
-    def _add_new_state(self, *args, **kwargs):
+    def _add_new_state(self, *event, **kwargs):
         """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
 
         Adds a new state only if the the state machine tree is in focus.
         """
-        if self.view and has_single_focus(self.view['state_machine_tree_view']):
+        if react_to_event(self.view, self.view['state_machine_tree_view'], event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
             return state_machine_helper.add_new_state(self._selected_sm_model, state_type)
 
-    def _delete_selection(self, *args):
-        if self.view and has_single_focus(self.view['state_machine_tree_view']):
+    def _delete_selection(self, *event):
+        if react_to_event(self.view, self.view['state_machine_tree_view'], event):
             return state_machine_helper.delete_selected_elements(self._selected_sm_model)
 
     @ExtendedController.observe("state", after=True)  # root_state

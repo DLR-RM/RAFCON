@@ -18,7 +18,7 @@ from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 
-from rafcon.mvc.gui_helper import format_cell, has_single_focus
+from rafcon.mvc.gui_helper import format_cell, react_to_event
 
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS, RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
@@ -783,12 +783,12 @@ class StateTransitionsEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("delete", self.remove_transition)
         shortcut_manager.add_callback_for_action("add", self.add_transition)
 
-    def add_transition(self, *_):
-        if self.view and has_single_focus(self.view.transitions_listView.tree_view):
+    def add_transition(self, *event):
+        if react_to_event(self.view, self.view.transitions_listView.tree_view, event):
             return self.trans_list_ctrl.on_add(None)
 
-    def remove_transition(self, *_):
-        if self.view and has_single_focus(self.view.transitions_listView.tree_view):
+    def remove_transition(self, *event):
+        if react_to_event(self.view, self.view.transitions_listView.tree_view, event):
             return self.trans_list_ctrl.on_remove(None)
 
     def toggled_button(self, button, name=None):

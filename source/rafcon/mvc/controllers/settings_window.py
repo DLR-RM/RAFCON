@@ -17,7 +17,7 @@ from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
 
-from rafcon.mvc.gui_helper import has_single_focus
+from rafcon.mvc.gui_helper import react_to_event
 
 logger = log.get_logger(__name__)
 
@@ -92,8 +92,8 @@ class SettingsWindowController(ExtendedController):
         self.set_properties()
         self.set_label_paths()
 
-    def on_add_library(self, *args):
-        if self.view and (isinstance(args[0], gtk.Button) or has_single_focus(self.view['library_tree_view'])):
+    def on_add_library(self, *event):
+        if react_to_event(self.view, self.view['library_tree_view'], event):
             lib_name = "<LIB_NAME_%s>" % self.lib_counter
             self.model.add_library(lib_name, "<LIB_PATH>")
             self.lib_counter += 1
@@ -102,8 +102,8 @@ class SettingsWindowController(ExtendedController):
                     self.view['library_tree_view'].set_cursor(row_num)
             return True
 
-    def on_remove_library(self, *args):
-        if self.view and (isinstance(args[0], gtk.Button) or has_single_focus(self.view['library_tree_view'])):
+    def on_remove_library(self, *event):
+        if react_to_event(self.view, self.view['library_tree_view'], event):
             path = self.view["library_tree_view"].get_cursor()[0]
             if path is not None:
                 key = self.library_list_store[int(path[0])][0]

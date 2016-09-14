@@ -17,7 +17,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
 
-from rafcon.mvc.gui_helper import has_single_focus
+from rafcon.mvc.gui_helper import react_to_event
 from rafcon.mvc.utils.comparison import compare_variables
 from rafcon.utils import log
 
@@ -144,17 +144,17 @@ class DataPortListController(ExtendedController):
             shortcut_manager.add_callback_for_action("delete", self.remove_port)
             shortcut_manager.add_callback_for_action("add", self.add_port)
 
-    def add_port(self, *_):
+    def add_port(self, *event):
         """Callback method for add action
         """
-        if self.view and has_single_focus(self.view[self.view.top]) and not isinstance(self.model.state, LibraryState):
+        if react_to_event(self.view, self.view[self.view.top], event) and not isinstance(self.model.state, LibraryState):
             self.on_new_port_button_clicked(None)
             return True
 
-    def remove_port(self, *_):
+    def remove_port(self, *event):
         """Callback method for remove action
         """
-        if self.view and has_single_focus(self.view[self.view.top]) and not isinstance(self.model.state, LibraryState):
+        if react_to_event(self.view, self.view[self.view.top], event) and not isinstance(self.model.state, LibraryState):
             self.on_delete_port_button_clicked(None)
             return True
 

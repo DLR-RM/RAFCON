@@ -12,7 +12,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.editor import EditorController
 
-from rafcon.mvc.gui_helper import has_single_focus
+from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -50,9 +50,9 @@ class DescriptionEditorController(EditorController):
         super(DescriptionEditorController, self).register_actions(shortcut_manager)
         shortcut_manager.add_callback_for_action("abort", self._abort)
 
-    def _abort(self, *args):
-        if has_single_focus(self.view.textview):
-            logger.debug("Abort short-cut pressed {}".format(self.__class__.__name__))
+    def _abort(self, *event):
+        if react_to_event(self.view, self.view.textview, event):
+            logger.debug("Abort shortcut pressed {}".format(self.__class__.__name__))
             self.cancel_clicked(None)
             return True
         else:

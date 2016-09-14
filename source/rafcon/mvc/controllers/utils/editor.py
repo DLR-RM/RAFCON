@@ -11,7 +11,7 @@
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.mvc.gui_helper import has_single_focus
+from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -62,29 +62,29 @@ class EditorController(ExtendedController):
     def _cut(self, *args):
         pass
 
-    def _undo(self, *args):
+    def _undo(self, *event):
         if not self.view:
             return
         buffer = self.view.textview.get_buffer()
-        if has_single_focus(self.view.textview) and hasattr(buffer, 'can_undo') and buffer.can_undo():
+        if react_to_event(self.view, self.view.textview, event) and hasattr(buffer, 'can_undo') and buffer.can_undo():
             logger.debug('Run undo on {}'.format(self.__class__.__name__))
             return buffer.undo()
         else:
             return False
 
-    def _redo(self, *args):
+    def _redo(self, *event):
         if not self.view:
             return
         buffer = self.view.textview.get_buffer()
-        if has_single_focus(self.view.textview) and hasattr(buffer, 'can_redo') and buffer.can_redo():
+        if react_to_event(self.view, self.view.textview, event) and hasattr(buffer, 'can_redo') and buffer.can_redo():
             logger.debug('Run redo on {}'.format(self.__class__.__name__))
             return buffer.redo()
         else:
             return False
 
-    def _apply(self, *args):
+    def _apply(self, *event):
 
-        if self.view and has_single_focus(self.view.textview):
+        if react_to_event(self.view, self.view.textview, event):
             logger.debug("Apply short-cut pressed {}".format(self.__class__.__name__))
             tbuffer = self.view.get_buffer()
             current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())

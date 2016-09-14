@@ -208,6 +208,11 @@ def draw_for_all_gtk_states(object, function_name, color):
     getattr(object, function_name)(gtk.STATE_SELECTED, color)
 
 
-def has_single_focus(widget):
-    return widget and isinstance(widget, gtk.Widget) and widget.is_focus() and \
-           (widget.has_focus() or all(mvc_singleton.main_window_controller.docked.values()))
+def react_to_event(view, widget, event):
+    if not view:  # view needs to be initialized
+        return False
+    if not widget or not isinstance(widget, gtk.Widget) or not widget.is_focus():  # widget must be in focus
+        return False
+    if widget.has_focus() or (len(event) == 2 and not isinstance(event[1], gtk.gdk.ModifierType)):
+        return True
+    return False

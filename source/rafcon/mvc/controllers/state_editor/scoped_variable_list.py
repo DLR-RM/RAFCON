@@ -17,7 +17,7 @@ from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.models.container_state import ContainerStateModel
 
-from rafcon.mvc.gui_helper import has_single_focus
+from rafcon.mvc.gui_helper import react_to_event
 from rafcon.mvc.utils.comparison import compare_variables
 from rafcon.utils import log
 
@@ -94,12 +94,12 @@ class ScopedVariableListController(ExtendedController):
             shortcut_manager.add_callback_for_action("delete", self.remove_port)
             shortcut_manager.add_callback_for_action("add", self.add_port)
 
-    def add_port(self, *_):
-        if self.view and has_single_focus(self.view[self.view.top]) and not isinstance(self.model.state, LibraryState):
+    def add_port(self, *event):
+        if react_to_event(self.view, self.view[self.view.top], event) and not isinstance(self.model.state, LibraryState):
             return self.on_new_scoped_variable_button_clicked(None)
 
-    def remove_port(self, *_):
-        if self.view and has_single_focus(self.view[self.view.top]) and not isinstance(self.model.state, LibraryState):
+    def remove_port(self, *event):
+        if react_to_event(self.view, self.view[self.view.top], event) and not isinstance(self.model.state, LibraryState):
             return self.on_delete_scoped_variable_button_clicked(None)
 
     def editing_started(self, renderer, editable, path):

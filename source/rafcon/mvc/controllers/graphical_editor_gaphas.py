@@ -33,7 +33,7 @@ from rafcon.mvc.mygaphas.items.ports import OutcomeView, DataPortView, ScopedVar
 from rafcon.mvc.mygaphas.canvas import MyCanvas
 from rafcon.mvc.mygaphas import guide
 
-from rafcon.mvc.gui_helper import has_single_focus
+from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -144,34 +144,33 @@ class GraphicalEditorController(ExtendedController):
         self.handle_selected_states(self.model.selection.get_states())
         self.canvas.update_root_items()
 
-    def _add_new_state(self, *args, **kwargs):
+    def _add_new_state(self, *event, **kwargs):
         """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
 
         Adds a new state only if the graphical editor is in focus.
         """
-        print "has focus", self.view.editor.has_focus(), "is focus", self.view.editor.is_focus()
-        if self.view and has_single_focus(self.view.editor):
+        if react_to_event(self.view, self.view.editor, event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
             return state_machine_helper.add_new_state(self.model, state_type)
 
-    def _copy_selection(self, *args):
+    def _copy_selection(self, *event):
         """Copies the current selection to the clipboard.
         """
-        if self.view and has_single_focus(self.view.editor):
+        if react_to_event(self.view, self.view.editor, event):
             logger.debug("copy selection")
             global_clipboard.copy(self.model.selection)
 
-    def _cut_selection(self, *args):
+    def _cut_selection(self, *event):
         """Cuts the current selection and copys it to the clipboard.
         """
-        if self.view and has_single_focus(self.view.editor):
+        if react_to_event(self.view, self.view.editor, event):
             logger.debug("cut selection")
             global_clipboard.cut(self.model.selection)
 
-    def _paste_clipboard(self, *args):
+    def _paste_clipboard(self, *event):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
-        if self.view and has_single_focus(self.view.editor):
+        if react_to_event(self.view, self.view.editor, event):
             logger.debug("Paste")
 
             # Always update canvas and handle all events in the gtk queue before performing any changes

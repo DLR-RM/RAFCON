@@ -15,7 +15,7 @@ import gtk
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 
-from rafcon.mvc.gui_helper import has_single_focus
+from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
 from rafcon.utils import type_helpers
 
@@ -124,12 +124,12 @@ class GlobalVariableManagerController(ExtendedController):
             return
         self.on_data_type_changed(entry, self.view['global_variable_tree_view'].get_cursor()[0][0], text=entry.get_text())
 
-    def on_new_global_variable_button_clicked(self, *args):
+    def on_new_global_variable_button_clicked(self, *event):
         """Triggered when the New button in the Global Variables tab is clicked
 
         Creates a new global variable with default values and selects its row.
         """
-        if self.view and (isinstance(args[0], gtk.Button) or has_single_focus(self.view['global_variable_tree_view'])):
+        if react_to_event(self.view, self.view['global_variable_tree_view'], event):
             new_global_variable = "new_global_%s" % self.global_variable_counter
             self.global_variable_counter += 1
             self.model.global_variable_manager.set_variable(new_global_variable, "None")
@@ -139,12 +139,12 @@ class GlobalVariableManagerController(ExtendedController):
                     break
             return True
 
-    def on_delete_global_variable_button_clicked(self, *args):
+    def on_delete_global_variable_button_clicked(self, *event):
         """Triggered when the Delete button in the Global Variables tab is clicked
 
         Deletes the selected global variable and re-selects next variable's row.
         """
-        if self.view and (isinstance(args[0], gtk.Button) or has_single_focus(self.view['global_variable_tree_view'])):
+        if react_to_event(self.view, self.view['global_variable_tree_view'], event):
             path = self.view["global_variable_tree_view"].get_cursor()[0]
             if path is not None:
                 key = self.global_variables_list_store[int(path[0])][0]

@@ -21,7 +21,7 @@ from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortVi
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 from rafcon.mvc.mygaphas.utils import gap_helper
 
-from rafcon.mvc.gui_helper import has_single_focus
+from rafcon.mvc.gui_helper import react_to_event
 from rafcon.mvc.utils import constants
 from rafcon.utils import log
 
@@ -50,7 +50,7 @@ class RemoveItemTool(Tool):
                 return True
             # Delete selected state(s) from state machine
             if isinstance(self.view.focused_item, StateView):
-                if has_single_focus(self.view):
+                if react_to_event(self.view, self.view, event):
                     self._graphical_editor_view.emit('remove_state_from_state_machine')
                     return True
 
