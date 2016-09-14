@@ -154,6 +154,12 @@ class LibraryManager(Observable):
 
         self._libraries = libraries
 
+    @property
+    def library_paths(self):
+        """Getter for library paths
+        """
+        return self._library_paths
+
     def get_os_path_to_library(self, library_path, library_name, allow_user_interaction=True):
         """Find path of library
 

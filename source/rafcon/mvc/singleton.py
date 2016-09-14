@@ -39,6 +39,12 @@ def open_folder(query):
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_current_folder(last_path)
+
+    library_paths = library_manager.library_paths
+    library_keys = sorted(library_paths)
+    for library_key in library_keys:
+        dialog.add_shortcut_folder(library_paths[library_key])
+
     response = dialog.run()
 
     if response != gtk.RESPONSE_OK:
