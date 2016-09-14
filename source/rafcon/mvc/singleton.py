@@ -59,9 +59,11 @@ interface.open_folder_func = open_folder
 
 def create_folder(query):
     import gtk
-    from os.path import expanduser
+    from os.path import expanduser, dirname
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
-    if not last_path:
+    if last_path:
+        last_path = dirname(last_path)
+    else:
         last_path = expanduser('~')
 
     dialog = gtk.FileChooserDialog(query,
