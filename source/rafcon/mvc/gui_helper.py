@@ -1,6 +1,7 @@
 import gtk
 from gtk import Container, Button
 
+from rafcon.mvc import singleton as mvc_singleton
 from rafcon.mvc.utils import constants
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
@@ -205,3 +206,8 @@ def draw_for_all_gtk_states(object, function_name, color):
     getattr(object, function_name)(gtk.STATE_NORMAL, color)
     getattr(object, function_name)(gtk.STATE_PRELIGHT, color)
     getattr(object, function_name)(gtk.STATE_SELECTED, color)
+
+
+def has_single_focus(widget):
+    return widget and isinstance(widget, gtk.Widget) and widget.is_focus() and \
+           (widget.has_focus() or all(mvc_singleton.main_window_controller.docked.values()))

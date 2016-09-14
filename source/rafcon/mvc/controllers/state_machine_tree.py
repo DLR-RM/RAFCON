@@ -14,14 +14,17 @@ import gtk
 import gobject
 
 from rafcon.statemachine.enums import StateType
+
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-from rafcon.mvc.utils.notification_overview import NotificationOverview
-from rafcon.utils import log
-from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS as EXECUTION_TRIGGERED_METHODS
+
 from rafcon.mvc import state_machine_helper
-from rafcon.mvc.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
+from rafcon.mvc.gui_helper import has_single_focus
+from rafcon.mvc.utils.notification_overview import NotificationOverview
+from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS as EXECUTION_TRIGGERED_METHODS
+from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
@@ -104,12 +107,12 @@ class StateMachineTreeController(ExtendedController):
 
         Adds a new state only if the the state machine tree is in focus.
         """
-        if self.view and self.view['state_machine_tree_view'].is_focus():
+        if self.view and has_single_focus(self.view['state_machine_tree_view']):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
             return state_machine_helper.add_new_state(self._selected_sm_model, state_type)
 
     def _delete_selection(self, *args):
-        if self.view and self.view['state_machine_tree_view'].is_focus():
+        if self.view and has_single_focus(self.view['state_machine_tree_view']):
             return state_machine_helper.delete_selected_elements(self._selected_sm_model)
 
     @ExtendedController.observe("state", after=True)  # root_state

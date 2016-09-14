@@ -33,6 +33,7 @@ from rafcon.mvc.mygaphas.items.ports import OutcomeView, DataPortView, ScopedVar
 from rafcon.mvc.mygaphas.canvas import MyCanvas
 from rafcon.mvc.mygaphas import guide
 
+from rafcon.mvc.gui_helper import has_single_focus
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -148,28 +149,29 @@ class GraphicalEditorController(ExtendedController):
 
         Adds a new state only if the graphical editor is in focus.
         """
-        if self.view and self.view.editor.is_focus():
+        print "has focus", self.view.editor.has_focus(), "is focus", self.view.editor.is_focus()
+        if self.view and has_single_focus(self.view.editor):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
             return state_machine_helper.add_new_state(self.model, state_type)
 
     def _copy_selection(self, *args):
         """Copies the current selection to the clipboard.
         """
-        if self.view and self.view.editor.is_focus():
+        if self.view and has_single_focus(self.view.editor):
             logger.debug("copy selection")
             global_clipboard.copy(self.model.selection)
 
     def _cut_selection(self, *args):
         """Cuts the current selection and copys it to the clipboard.
         """
-        if self.view and self.view.editor.is_focus():
+        if self.view and has_single_focus(self.view.editor):
             logger.debug("cut selection")
             global_clipboard.cut(self.model.selection)
 
     def _paste_clipboard(self, *args):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
-        if self.view and self.view.editor.is_focus():
+        if self.view and has_single_focus(self.view.editor):
             logger.debug("Paste")
 
             # Always update canvas and handle all events in the gtk queue before performing any changes

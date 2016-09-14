@@ -20,6 +20,7 @@ from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 
+from rafcon.mvc.gui_helper import has_single_focus
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS, RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log, type_helpers
 
@@ -889,11 +890,11 @@ class StateDataFlowsEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("add", self.add_data_flow)
 
     def add_data_flow(self, *_):
-        if self.view and self.view.data_flows_listView.tree_view.is_focus():
+        if self.view and has_single_focus(self.view.data_flows_listView.tree_view):
             return self.df_list_ctrl.on_add(None)
 
     def remove_data_flow(self, *_):
-        if self.view and self.view.data_flows_listView.tree_view.is_focus():
+        if self.view and has_single_focus(self.view.data_flows_listView.tree_view):
             return self.df_list_ctrl.on_remove(None)
 
     def toggled_button(self, button, name=None):

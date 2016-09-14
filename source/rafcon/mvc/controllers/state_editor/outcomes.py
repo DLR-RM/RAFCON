@@ -18,6 +18,7 @@ from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.state_machine_helper import insert_self_transition_meta_data
 
+from rafcon.mvc.gui_helper import has_single_focus
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -426,9 +427,9 @@ class StateOutcomesEditorController(ExtendedController):
             shortcut_manager.add_callback_for_action("add", self.add_outcome)
 
     def add_outcome(self, *_):
-        if self.view and self.view.tree.is_focus() and not isinstance(self.model.state, LibraryState):
+        if self.view and has_single_focus(self.view.tree) and not isinstance(self.model.state, LibraryState):
             return self.oc_list_ctrl.on_add(None)
 
     def remove_outcome(self, *_):
-        if self.view and self.view.tree.is_focus() and not isinstance(self.model.state, LibraryState):
+        if self.view and has_single_focus(self.view.tree) and not isinstance(self.model.state, LibraryState):
             return self.oc_list_ctrl.on_remove(None)
