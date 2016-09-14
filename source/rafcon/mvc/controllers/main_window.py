@@ -9,6 +9,7 @@
 """
 
 import gtk
+from functools import partial
 
 from rafcon.mvc.controllers.global_variable_manager import GlobalVariableManagerController
 from rafcon.mvc.controllers.state_icons import StateIconController
@@ -58,12 +59,6 @@ class MainWindowController(ExtendedController):
         self.state_machine_manager_model = state_machine_manager_model
         self.editor_type = editor_type
         self.shortcut_manager = None
-        self.focus_handler_id_left = None
-        self.state_handler_id_left = None
-        self.focus_handler_id_right = None
-        self.state_handler_id_right = None
-        self.focus_handler_id_console = None
-        self.state_handler_id_console = None
         self.handler_ids = {}
 
         # state machine manager
@@ -156,14 +151,34 @@ class MainWindowController(ExtendedController):
         ######################################################
         # Undocked Windows Controllers
         ######################################################
-        left_undocked_window_controller = UndockedWindowController(state_machine_manager_model, view.left_bar_window)
+        left_undocked_window_controller = UndockedWindowController(state_machine_manager_model, view.left_bar_window,
+                                                                   partial(self.redock_sidebar, "LEFT_BAR_WINDOW",
+                                                                           "left_bar", "left_sidebar_viewport",
+                                                                           "undock_left_bar_button",
+                                                                           self.on_left_bar_return_clicked,
+                                                                           "left_bar_replacement",
+                                                                           "left_window_controller"))
         self.add_controller('left_window_controller', left_undocked_window_controller)
 
-        right_undocked_window_controller = UndockedWindowController(state_machine_manager_model, view.right_bar_window)
+        right_undocked_window_controller = UndockedWindowController(state_machine_manager_model, view.right_bar_window,
+                                                                    partial(self.redock_sidebar, "RIGHT_BAR_WINDOW",
+                                                                            "right_bar", "right_bar_container",
+                                                                            "undock_right_bar_button",
+                                                                            self.on_right_bar_return_clicked,
+                                                                            "right_bar_replacement",
+                                                                            "right_window_controller")
+                                                                    )
         self.add_controller('right_window_controller', right_undocked_window_controller)
 
         console_undocked_window_controller = UndockedWindowController(state_machine_manager_model,
-                                                                      view.console_bar_window)
+                                                                      view.console_bar_window,
+                                                                      partial(self.redock_sidebar, "CONSOLE_BAR_WINDOW",
+                                                                              "console", "console_container",
+                                                                              "undock_console_button",
+                                                                              self.on_console_return_clicked,
+                                                                              None,
+                                                                              "console_window_controller")
+                                                                      )
         self.add_controller('console_window_controller', console_undocked_window_controller)
 
         self.left_bar_child = view['top_level_h_pane'].get_child1()
@@ -215,9 +230,18 @@ class MainWindowController(ExtendedController):
         self.connect_button_to_function('console_return_button', "clicked", self.on_console_return_clicked)
 
         # Connect undock buttons' signals
-        self.connect_button_to_function('undock_left_bar_button', "clicked", self.on_left_bar_undock_clicked)
-        self.connect_button_to_function('undock_right_bar_button', "clicked", self.on_right_bar_undock_clicked)
-        self.connect_button_to_function('undock_console_button', "clicked", self.on_console_bar_undock_clicked)
+        self.connect_button_to_function('undock_left_bar_button', "clicked",
+                                        partial(self.undock_sidebar, "LEFT_BAR_WINDOW", "left_bar",
+                                                "undock_left_bar_button", "left_bar_return_button",
+                                                self.on_left_bar_hide_clicked, "left_bar_replacement"))
+        self.connect_button_to_function('undock_right_bar_button', "clicked",
+                                        partial(self.undock_sidebar, "RIGHT_BAR_WINDOW", "right_bar",
+                                                "undock_right_bar_button", "right_bar_return_button",
+                                                self.on_right_bar_hide_clicked, "right_bar_replacement"))
+        self.connect_button_to_function('undock_console_button', "clicked",
+                                        partial(self.undock_sidebar, "CONSOLE_BAR_WINDOW", "console",
+                                                "undock_console_button", "console_return_button",
+                                                self.on_console_hide_clicked, None))
 
         # Connect Shortcut buttons' signals to their corresponding methods
         self.connect_button_to_function('button_start_shortcut', "toggled", self.on_button_start_shortcut_toggled)
@@ -301,15 +325,7 @@ class MainWindowController(ExtendedController):
         default_pos = constants.DEFAULT_PANE_POS[config_id]
         position = global_runtime_config.get_config_value(config_id, default_pos)
         pane_id = constants.PANE_ID[config_id]
-        # prev_pos = {}
-        # for pane_id_ in ['top_level_h_pane', 'right_h_pane', 'central_v_pane', 'left_bar_pane']:
-        #     prev_pos[pane_id_] = self.view[pane_id_].get_position()
         self.view[pane_id].set_position(position)
-        # logger.info("try to set {0}, {1}, {2}, default: {3}, now on {4}"
-        #             "".format(pane_id, position, config_id, default_pos, self.view[pane_id].get_position()))
-        # for pane_id_ in ['top_level_h_pane', 'right_h_pane', 'central_v_pane', 'left_bar_pane']:
-        #     logger.info("after {0} position: {1} == {2}".format(pane_id_, self.view[pane_id_].get_position(),
-        #                                                         prev_pos[pane_id_]))
 
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
@@ -403,32 +419,6 @@ class MainWindowController(ExtendedController):
         self.view['central_v_pane'].remove(self.console_child)
         self.view['console_return_button'].show()
 
-    def on_left_bar_undock_clicked(self, widget, event=None):
-        """Triggered when the un-dock button of the left bar is clicked.
-
-        The left bar is un-docked into a separate new window, and the bar is hidden from the main-window by triggering
-        the method on_left_bar_hide_clicked(). triggering this method shows the 'left_bar_return_button' in the
-        main-window, which doesn't serve any purpose when the bar is un-docked. This button is therefore deliberately
-        hidden. The un-dock button, which is also part of the bar is hidden, because the re-dock button is included in
-        the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons visible in the new
-        window. The new window's size and position are loaded from runtime_config, if they exist.
-        """
-        gui_helper.set_window_size_and_position(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
-        self.view['left_bar_pane'].reparent(self.view.left_bar_window['central_eventbox'])
-        self.view['undock_left_bar_button'].hide()
-        self.on_left_bar_hide_clicked(None)
-        self.view['left_bar_return_button'].hide()
-        self.view['left_bar_replacement'].show()
-        self.state_handler_id_left = self.view['main_window'].connect('window-state-event', self.undock_window_callback,
-                                                                      self.view.left_bar_window.get_top_widget(),
-                                                                      'LEFT_BAR_WINDOW')
-        self.focus_handler_id_left = self.view['main_window'].connect('focus_in_event',
-                                                                      self.bring_undock_window_to_top_callback,
-                                                                      self.view.left_bar_window.get_top_widget(),
-                                                                      'LEFT_BAR_WINDOW')
-        self.view.left_bar_window.get_top_widget().set_transient_for(self.view.get_top_widget())
-        self.view.get_top_widget().grab_focus()
-
     def bring_undock_window_to_top_callback(self, widget, event, undocked_window, key):
         global_runtime_config.store_widget_properties(undocked_window, key)
         gui_helper.set_window_size_and_position(undocked_window, key)
@@ -440,103 +430,54 @@ class MainWindowController(ExtendedController):
         else:
             undocked_window.deiconify()
 
-    def on_left_bar_dock_clicked(self, widget, event=None):
-        """Triggered when the re-dock button of the left-bar window is clicked.
+    def undock_sidebar(self, window_name, widget_name, undock_button_name, return_button_name,
+                       hide_function, replacement_name, widget, event=None):
+        """Triggered when the undock button of the sidebar is clicked.
 
-        The size & position of the open window are saved to the runtime_config file, and the left-bar is re-docked back
-        to the main-window, and the left-bar window is hidden. The un-dock button of the bar is made visible again.
+        The sidebar is undocked and put into a separate new window. The sidebar is hidden in the main-window by
+        triggering the method on_*_hide_clicked(). Triggering this method shows the '*_return_button' in the
+        main-window, which doesn't serve any purpose when the bar is undocked. This button is therefore deliberately
+        hidden. The undock button, which is also part of the sidebar is hidden, because the re-dock button is
+        included in the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons
+        visible in the new window. The new window's size and position are loaded from runtime_config, if they exist.
         """
-        self.view['main_window'].handler_disconnect(self.state_handler_id_left)
-        self.view['main_window'].handler_disconnect(self.focus_handler_id_left)
-        global_runtime_config.store_widget_properties(self.view.left_bar_window.get_top_widget(), 'LEFT_BAR_WINDOW')
-        self.on_left_bar_return_clicked(None)
-        self.view['left_bar_pane'].reparent(self.view['left_sidebar_viewport'])
-        self.get_controller('left_window_controller').hide_window()
-        self.view['undock_left_bar_button'].show()
-        self.view['left_bar_replacement'].hide()
+        self.docked[widget_name] = False
+        window_view = getattr(self.view, window_name.lower())
+        window = window_view.get_top_widget()
+        gui_helper.set_window_size_and_position(window, window_name.upper())
+        self.view[widget_name].reparent(window_view['central_eventbox'])
+        self.view[undock_button_name].hide()
+        hide_function(None)
+        self.view[return_button_name].hide()
+        if replacement_name:
+            self.view[replacement_name].show()
+        state_handler = self.view['main_window'].connect('window-state-event', self.undock_window_callback,
+                                                          window, window_name.upper())
+        focus_handler = self.view['main_window'].connect('focus_in_event', self.bring_undock_window_to_top_callback,
+                                                         window, window_name.upper())
+        self.handler_ids[window_name.lower()] = {"state": state_handler, "focus": focus_handler}
+        window.set_transient_for(self.view.get_top_widget())
+        self.view.get_top_widget().grab_focus()
+
+    def redock_sidebar(self, window_name, widget_name, sidebar_name, undock_button_name, return_function,
+                       replacement_name, controller_name, widget, event=None):
+        """Triggered when the redock button of the sidebar window is clicked.
+
+        The size & position of the open window are saved to the runtime_config file, the sidebar is redocked back
+        to the main-window, and the left-bar window is hidden. The undock button of the bar is made visible again.
+        """
+        self.docked[widget_name] = True
+        self.view['main_window'].disconnect(self.handler_ids[window_name.lower()]["state"])
+        self.view['main_window'].disconnect(self.handler_ids[window_name.lower()]["focus"])
+        window = getattr(self.view, window_name.lower()).get_top_widget()
+        global_runtime_config.store_widget_properties(window, window_name.upper())
+        return_function(None)
+        self.view[widget_name].reparent(self.view[sidebar_name])
+        self.get_controller(controller_name).hide_window()
+        self.view[undock_button_name].show()
+        if replacement_name:
+            self.view[replacement_name].hide()
         return True
-
-    def on_right_bar_undock_clicked(self, widget, event=None):
-        """Triggered when the un-dock button of the right bar is clicked.
-
-        The right bar is un-docked into a separate new window, and the bar is hidden from the main-window by triggering
-        the method on_right_bar_hide_clicked(). triggering this method shows the 'right_bar_return_button' in the
-        main-window, which doesn't serve any purpose when the bar is un-docked. This button is therefore deliberately
-        hidden. The un-dock button, which is also part of the bar, is hidden, because the re-dock button is included in
-        the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons visible in the new
-        window. The new window's size and position are loaded from runtime_config, if they exist.
-        """
-        gui_helper.set_window_size_and_position(self.view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
-        self.view['right_bar'].reparent(self.view.right_bar_window['central_eventbox'])
-        self.view['undock_right_bar_button'].hide()
-        self.on_right_bar_hide_clicked(None)
-        self.view['right_bar_return_button'].hide()
-        self.view['right_bar_replacement'].show()
-        self.state_handler_id_right = self.view['main_window'].connect('window-state-event', self.undock_window_callback,
-                                                                       self.view.right_bar_window.get_top_widget(),
-                                                                       'RIGHT_BAR_WINDOW')
-        self.focus_handler_id_right = self.view['main_window'].connect('focus_in_event',
-                                                                       self.bring_undock_window_to_top_callback,
-                                                                       self.view.right_bar_window.get_top_widget(),
-                                                                       'RIGHT_BAR_WINDOW')
-        self.view.right_bar_window.get_top_widget().set_transient_for(self.view.get_top_widget())
-
-    def on_right_bar_dock_clicked(self, widget, event=None):
-        """Triggered when the re-dock button of the right-bar window is clicked.
-
-        The size & position of the open window is saved to the runtime_config file, and the right-bar is re-docked back
-        to the main-window, and the right-bar window is hidden. The un-dock button of the bar is made visible again.
-        """
-        self.view['main_window'].disconnect(self.state_handler_id_right)
-        self.view['main_window'].disconnect(self.focus_handler_id_right)
-        global_runtime_config.store_widget_properties(self.view.right_bar_window.get_top_widget(), 'RIGHT_BAR_WINDOW')
-        self.on_right_bar_return_clicked(None)
-        self.view['right_bar'].reparent(self.view['right_bar_container'])
-        self.get_controller('right_window_controller').hide_window()
-        self.docked['right_bar'] = True
-        self.view['undock_right_bar_button'].show()
-        self.view['right_bar_replacement'].hide()
-
-    def on_console_bar_undock_clicked(self, widget, event=None):
-        """Triggered when the un-dock button of the console is clicked.
-
-        The console is un-docked into a separate new window, and the console is hidden from the main-window by
-        triggering the method on_console_hide_clicked(). triggering this method shows the 'console_return_button' in the
-        main-window, which doesn't serve any purpose when the bar is un-docked. This button is therefore deliberately
-        hidden. The un-dock button, which is also part of the console, is hidden, because the re-dock button is included
-        in the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons visible in the
-        new window. The new window's size and position are loaded from runtime_config, if they exist.
-        """
-        gui_helper.set_window_size_and_position(self.view.console_bar_window.get_top_widget(), 'CONSOLE_BAR_WINDOW')
-        self.view['console'].reparent(self.view.console_bar_window['central_eventbox'])
-        self.view['undock_console_button'].hide()
-        self.on_console_hide_clicked(None)
-        self.view['console_return_button'].hide()
-        self.state_handler_id_console = self.view['main_window'].connect('window-state-event',
-                                                                         self.undock_window_callback,
-                                                                         self.view.console_bar_window.get_top_widget(),
-                                                                         'CONSOLE_BAR_WINDOW')
-
-        self.focus_handler_id_console = self.view['main_window'].connect('focus_in_event',
-                                                                         self.bring_undock_window_to_top_callback,
-                                                                         self.view.console_bar_window.get_top_widget(),
-                                                                         'CONSOLE_BAR_WINDOW')
-
-        self.view.console_bar_window.get_top_widget().set_transient_for(self.view.get_top_widget())
-
-    def on_console_bar_dock_clicked(self, widget, event=None):
-        """Triggered when the re-dock button of the console window is clicked.
-
-        The size & position of the open window is saved to the runtime_config file, and the console is re-docked back
-        to the main-window, and the console window is hidden. The un-dock button of the bar is made visible again.
-        """
-        self.view['main_window'].disconnect(self.state_handler_id_console)
-        self.view['main_window'].disconnect(self.focus_handler_id_console)
-        global_runtime_config.store_widget_properties(self.view.console_bar_window.get_top_widget(), 'CONSOLE_BAR_WINDOW')
-        self.on_console_return_clicked(None)
-        self.view['console'].reparent(self.view['console_container'])
-        self.get_controller('console_window_controller').hide_window()
-        self.view['undock_console_button'].show()
 
     # Shortcut buttons
     def on_button_start_shortcut_toggled(self, widget, event=None):

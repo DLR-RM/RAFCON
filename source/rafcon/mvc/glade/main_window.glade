@@ -79,7 +79,7 @@
                   <object class="GtkViewport" id="left_sidebar_viewport">
                     <property name="visible">True</property>
                     <child>
-                      <object class="GtkVPaned" id="left_bar_pane">
+                      <object class="GtkVPaned" id="left_bar">
                         <property name="width_request">38</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>

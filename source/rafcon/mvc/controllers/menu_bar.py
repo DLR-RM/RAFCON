@@ -688,7 +688,7 @@ class MenuBarController(ExtendedController):
         global_runtime_config.store_widget_properties(self.main_window_view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['right_h_pane'], 'RIGHT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['central_v_pane'], 'CONSOLE_DOCKED')
-        global_runtime_config.store_widget_properties(self.main_window_view['left_bar_pane'], 'LEFT_BAR_INNER_PANE')
+        global_runtime_config.store_widget_properties(self.main_window_view['left_bar'], 'LEFT_BAR_INNER_PANE')
 
         for sidebar_name in ['LEFT_BAR_WINDOW', 'RIGHT_BAR_WINDOW', 'CONSOLE_BAR_WINDOW']:
             sidebar_widget = getattr(self.main_window_view, sidebar_name.lower()).get_top_widget()

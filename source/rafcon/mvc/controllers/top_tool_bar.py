@@ -61,22 +61,6 @@ class TopToolBarController(ExtendedController):
     def on_close_button_clicked(self, widget, data=None):
         self.menu_bar_controller.on_quit_activate(None)
 
-    def on_redock_button_clicked(self, widget, data=None):
-        """Triggered when the re-dock button in any window is clicked.
-
-        Calls the corresponding re-docking function of the open window. The mapping to the corresponding function is
-        based on the window's title.
-        The un-docked left-bar window always contains a forward slash '/'.
-        The un-docked right-bar window has the title 'STATE EDITOR', which never changes.
-        The un-docked console window has the title 'CONSOLE', which never changes.
-        """
-        if '/' in self.top_level_window.get_title():
-            self.main_window_controller.on_left_bar_dock_clicked(None)
-        elif self.top_level_window.get_title() == 'STATE EDITOR':
-            self.main_window_controller.on_right_bar_dock_clicked(None)
-        elif self.top_level_window.get_title() == 'CONSOLE':
-            self.main_window_controller.on_console_bar_dock_clicked(None)
-
     def motion_detected(self, widget, event=None):
         if event.is_hint:
             x, y, state = event.window.get_pointer()
@@ -101,6 +85,12 @@ class TopToolBarMainWindowController(TopToolBarController):
         super(TopToolBarMainWindowController, self).__init__(state_machine_manager_model, view, top_level_window)
         view['redock_button'].hide()
 
+    def register_view(self, view):
+        """Called when the View was registered"""
+        view['minimize_button'].connect('clicked', self.on_minimize_button_clicked)
+        view['maximize_button'].connect('clicked', self.on_maximize_button_clicked)
+        view['close_button'].connect('clicked', self.on_close_button_clicked)
+
 
 class TopToolBarUndockedWindowController(TopToolBarController):
     """Controller handling the top tool bar in the un-docked windows.
@@ -108,7 +98,23 @@ class TopToolBarUndockedWindowController(TopToolBarController):
     In this controller, the close button in the top tool bar is hidden.
     """
 
-    def __init__(self, state_machine_manager_model, view, top_level_window):
+    def __init__(self, state_machine_manager_model, view, top_level_window, redock_method):
         super(TopToolBarUndockedWindowController, self).__init__(state_machine_manager_model, view, top_level_window)
+        self.redock_method = redock_method
+
         view['close_button'].hide()
         view['minimize_button'].hide()
+
+    def register_view(self, view):
+        """Called when the View was registered"""
+        view['maximize_button'].connect('clicked', self.on_maximize_button_clicked)
+        view['redock_button'].connect('clicked', self.on_redock_button_clicked)
+
+    def on_redock_button_clicked(self, widget, event=None):
+        """Triggered when the redock button in any window is clicked.
+
+        Calls the corresponding redocking function of the open window.
+        """
+        self.redock_method(widget, event)
+
+

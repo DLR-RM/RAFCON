@@ -55,7 +55,7 @@ WINDOW_SIZE = {'MAIN_WINDOW': (1800, 900), 'LEFT_BAR_WINDOW': (300, 800), 'RIGHT
 PANE_ID = {'LEFT_BAR_DOCKED_POS': 'top_level_h_pane',
            'RIGHT_BAR_DOCKED_POS': 'right_h_pane',
            'CONSOLE_DOCKED_POS': 'central_v_pane',
-           'LEFT_BAR_INNER_PANE_POS': 'left_bar_pane'}
+           'LEFT_BAR_INNER_PANE_POS': 'left_bar'}
 DEFAULT_PANE_POS = {'LEFT_BAR_DOCKED_POS': 300,
                     'RIGHT_BAR_DOCKED_POS': 1000,
                     'CONSOLE_DOCKED_POS': 600,
