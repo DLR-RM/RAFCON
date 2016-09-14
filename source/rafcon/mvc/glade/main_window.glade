@@ -479,17 +479,6 @@
                                       <placeholder/>
                                     </child>
                                     <child>
-                                      <object class="GtkButton" id="console_return_button">
-                                        <property name="height_request">15</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">True</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="position">2</property>
-                                      </packing>
-                                    </child>
-                                    <child>
                                       <object class="GtkHBox" id="hbox2">
                                         <property name="visible">True</property>
                                         <child>
@@ -768,8 +757,18 @@
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
-                                        <property name="pack_type">end</property>
                                         <property name="position">1</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton" id="console_return_button">
+                                        <property name="height_request">15</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="receives_default">True</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="position">2</property>
                                       </packing>
                                     </child>
                                   </object>
