@@ -2098,11 +2098,11 @@ class GraphicalEditorController(ExtendedController):
         model.meta_signal.emit(msg)
         # logger.debug("publish changes to history")
 
-    def _delete_selection(self, *args):
+    def _delete_selection(self, *event):
         if react_to_event(self.view, self.view.editor, event):
             return state_machine_helper.delete_selected_elements(self.model)
 
-    def _add_new_state(self, *args, **kwargs):
+    def _add_new_state(self, *event, **kwargs):
         """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
 
         Adds a new state only if the graphical editor is in focus.
