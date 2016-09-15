@@ -49,15 +49,6 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="save_state_as">
-                <property name="label">Save State As</property>
-                <property name="visible">True</property>
-                <property name="use_underline">True</property>
-                <property name="use_stock">True</property>
-                <property name="accel_group">accelgroup1</property>
-              </object>
-            </child>
-            <child>
               <object class="GtkImageMenuItem" id="menu_properties">
                 <property name="label">gtk-properties</property>
                 <property name="visible">True</property>
@@ -185,6 +176,15 @@
             <child>
               <object class="GtkImageMenuItem" id="substitute_state">
                 <property name="label">Substitute State</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="save_state_as">
+                <property name="label">Save State as State Machine</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
