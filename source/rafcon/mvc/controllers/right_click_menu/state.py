@@ -14,6 +14,7 @@ from rafcon.mvc.utils import constants
 from rafcon.mvc.gui_helper import create_image_menu_item
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.models import StateModel
 import rafcon.mvc.singleton as mvc_singleton
 
 from rafcon.utils import log
@@ -36,6 +37,14 @@ class StateMachineRightClickMenu:
 
     def generate_right_click_menu_state(self):
         menu = gtk.Menu()
+
+        state_m_list = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+        if len(state_m_list) == 1 and isinstance(state_m_list[0], StateModel) and \
+                not state_m_list[0].state.is_root_state:
+            if state_m_list[0].is_start:
+                menu.append(create_image_menu_item("Is start state", constants.BUTTON_CHECK, self.on_toggle_is_start_state))
+            else:
+                menu.append(create_image_menu_item("Is start state", constants.BUTTON_SQUARE, self.on_toggle_is_start_state))
 
         menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate))
         menu.append(create_image_menu_item("Paste selection", constants.BUTTON_PASTE, self.on_paste_activate))
@@ -68,6 +77,9 @@ class StateMachineRightClickMenu:
                                            self.on_substitute_library_with_template_activate))
 
         return menu
+
+    def on_toggle_is_start_state(self, widget, data=None):
+        self.shortcut_manager.trigger_action("entry", None, None)
 
     def on_copy_activate(self, widget, data=None):
         # logger.info("trigger default copy")

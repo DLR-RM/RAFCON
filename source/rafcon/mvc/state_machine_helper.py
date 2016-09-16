@@ -128,6 +128,25 @@ def delete_selected_elements(state_machine_m):
         return True
 
 
+def selected_state_toggle_is_start_state():
+    state_m_list = rafcon.mvc.singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+    if len(state_m_list) == 1 and isinstance(state_m_list[0], StateModel) and \
+            not state_m_list[0].state.is_root_state:
+        state_model = state_m_list[0]
+        try:
+            if not state_model.is_start:
+                state_model.parent.state.start_state_id = state_model.state.state_id
+                logger.debug("New start state '{0}'".format(state_model.state.name))
+            else:
+                state_model.parent.state.start_state_id = None
+                logger.debug("Start state unset, no start state defined")
+        except ValueError as e:
+            logger.warn("Could no change start state: {0}".format(e))
+        return True
+    else:
+        return False
+
+
 def add_state(container_state_m, state_type):
     """Add a state to a container state
 

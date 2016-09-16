@@ -21,6 +21,7 @@ from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurre
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc import state_machine_helper
 from rafcon.mvc.models.signals import MetaSignalMsg
 
 from rafcon.mvc.utils import constants
@@ -115,8 +116,8 @@ class StateOverviewController(ExtendedController, Model):
 
         # Prepare "is start state check button"
         has_no_start_state_state_types = [BarrierConcurrencyState, PreemptiveConcurrencyState]
-        if isinstance(self.model.state, DeciderState) or self.model.state.is_root_state or \
-                        type(self.model.parent.state) in has_no_start_state_state_types:  # \
+        if True:  # isinstance(self.model.state, DeciderState) or self.model.state.is_root_state or \
+                # type(self.model.parent.state) in has_no_start_state_state_types:  # \
             # for now the checkbutton is NOT HIDE as long as the checkbutton does not stay hidden all time
             view['is_start_state_checkbutton'].destroy()  # DeciderState is removed if parent change type
         else:
@@ -140,18 +141,7 @@ class StateOverviewController(ExtendedController, Model):
 
     def on_toggle_is_start_state(self, button):
         if not button.get_active() == self.model.is_start:
-            if not self.model.state.is_root_state:
-                try:
-                    if button.get_active():
-                        self.model.parent.state.start_state_id = self.model.state.state_id
-                        logger.debug("New start state '{0}'".format(self.model.state.name))
-                    else:
-                        self.model.parent.state.start_state_id = None
-                        logger.debug("Start state unset, no start state defined")
-                except ValueError as e:
-                    logger.warn("Could no change start state: {0}".format(e))
-                    # avoid to toggle button
-                    button.set_active(bool(self.model.is_start))
+            state_machine_helper.selected_state_toggle_is_start_state()
 
     def on_toggle_show_content(self, checkbox):
         self.model.meta['gui']['show_content'] = checkbox.get_active()

@@ -29,6 +29,7 @@ class MenuBarView(View):
         'cut_selection':        constants.BUTTON_CUT,
         'copy_selection':       constants.BUTTON_COPY,
         'paste_clipboard':      constants.BUTTON_PASTE,
+        'is_start_state':       constants.BUTTON_SQUARE,
         'add_state':            constants.BUTTON_ADD,
         'group_states':         constants.BUTTON_GROUP,
         'ungroup_state':        constants.BUTTON_UNGR,
@@ -65,13 +66,17 @@ class MenuBarView(View):
         self.win = top_window['main_window']
 
         for key in self.buttons.iterkeys():
-            self.set_image_for_menu_item(key)
+            self.set_image_for_menu_item(key, self.buttons[key])
 
-    def set_image_for_menu_item(self, menu_item_name):
+    def set_image_for_menu_item(self, menu_item_name, uni_code):
         menu_item = self[menu_item_name]
+        print "set menu" + menu_item_name + str(uni_code)
 
         label = gtk.Label()
-        set_label_markup(label, '&#x' + self.buttons[menu_item_name] + ';',
+        set_label_markup(label, '&#x' + uni_code + ';',
                          font=constants.ICON_FONT, font_size=constants.FONT_SIZE_BIG)
         menu_item.set_image(label)
         menu_item.set_always_show_image(True)
+
+    def set_menu_item_sensitive(self, menu_item_name, sensitive):
+        self[menu_item_name].set_sensitive(sensitive)

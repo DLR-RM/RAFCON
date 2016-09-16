@@ -35,6 +35,7 @@ from rafcon.mvc.controllers.state_substitute import StateSubstituteChooseLibrary
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
+from rafcon.mvc.utils import constants
 from rafcon.mvc.utils.dialog import RAFCONButtonDialog, ButtonDialog
 from rafcon.utils import plugins
 from rafcon.utils import log
@@ -110,6 +111,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('copy_selection', 'activate', self.on_copy_selection_activate)
         self.connect_button_to_function('paste_clipboard', 'activate', self.on_paste_clipboard_activate)
         self.connect_button_to_function('delete', 'activate', self.on_delete_activate)
+        self.connect_button_to_function('is_start_state', 'activate', self.on_toggle_is_start_state_active)
         self.connect_button_to_function('add_state', 'activate', self.on_add_state_activate)
         self.connect_button_to_function('group_states', 'activate', self.on_group_states_activate)
         self.connect_button_to_function('ungroup_state', 'activate', self.on_ungroup_state_activate)
@@ -137,6 +139,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('step_out', 'activate', self.on_step_out_activate)
         self.connect_button_to_function('backward_step', 'activate', self.on_backward_step_activate)
         self.connect_button_to_function('about', 'activate', self.on_about_activate)
+        self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
         self.registered_view = True
 
     def on_full_screen_activate(self, *args):
@@ -214,6 +217,7 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('new', partial(self.call_action_callback, "on_new_activate"))
         self.add_callback_to_shortcut_manager('quit', partial(self.call_action_callback, "on_quit_activate"))
 
+        self.add_callback_to_shortcut_manager('entry', partial(self.call_action_callback, "on_toggle_is_start_state_active"))
         self.add_callback_to_shortcut_manager('group', partial(self.call_action_callback, "on_group_states_activate"))
         self.add_callback_to_shortcut_manager('ungroup', partial(self.call_action_callback, "on_ungroup_state_activate"))
 
@@ -711,6 +715,9 @@ class MenuBarController(ExtendedController):
     # menu bar functionality - Edit
     ######################################################
 
+    def on_toggle_is_start_state_active(self, widget, data=None):
+        return state_machine_helper.selected_state_toggle_is_start_state()
+
     def on_copy_selection_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action("copy", None, None)
 
@@ -868,3 +875,19 @@ class MenuBarController(ExtendedController):
         response = about.run()
         if response == gtk.RESPONSE_DELETE_EVENT or response == gtk.RESPONSE_CANCEL:
             about.destroy()
+
+    def check_edit_menu_items_status(self, widget):
+
+        # check if start state is used,
+        state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
+        if len(state_m_list) == 1 and isinstance(state_m_list[0], StateModel) and \
+                not state_m_list[0].state.is_root_state:
+            # if is start state -> enabled-box
+            if state_m_list[0].is_start:
+                self.view.set_image_for_menu_item('is_start_state', constants.BUTTON_CHECK)
+            else:  # if is not start state -> empty-box
+                self.view.set_image_for_menu_item('is_start_state', constants.BUTTON_SQUARE)
+            self.view.set_menu_item_sensitive('is_start_state', True)
+        else:  # if root state or otherwise -> inactive
+            self.view.set_image_for_menu_item('is_start_state', constants.BUTTON_SQUARE)
+            self.view.set_menu_item_sensitive('is_start_state', False)

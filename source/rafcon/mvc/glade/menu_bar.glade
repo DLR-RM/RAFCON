@@ -147,6 +147,15 @@
               </object>
             </child>
             <child>
+              <object class="GtkImageMenuItem" id="is_start_state">
+                <property name="label">State is Start State</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
               <object class="GtkImageMenuItem" id="add_state">
                 <property name="label">Add State</property>
                 <property name="visible">True</property>
