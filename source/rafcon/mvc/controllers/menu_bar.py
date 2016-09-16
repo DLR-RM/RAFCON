@@ -18,6 +18,8 @@ from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
+from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.singleton import state_machine_manager, library_manager
 
@@ -880,8 +882,10 @@ class MenuBarController(ExtendedController):
 
         # check if start state is used,
         state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
+        has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
         if len(state_m_list) == 1 and isinstance(state_m_list[0], StateModel) and \
-                not state_m_list[0].state.is_root_state:
+                not state_m_list[0].state.is_root_state and \
+                not isinstance(state_m_list[0].parent.state, has_no_start_state_state_types):
             # if is start state -> enabled-box
             if state_m_list[0].is_start:
                 self.view.set_image_for_menu_item('is_start_state', constants.BUTTON_CHECK)

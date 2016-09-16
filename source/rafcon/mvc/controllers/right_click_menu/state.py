@@ -15,6 +15,8 @@ from rafcon.mvc.gui_helper import create_image_menu_item
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.models import StateModel
+from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 import rafcon.mvc.singleton as mvc_singleton
 
 from rafcon.utils import log
@@ -39,8 +41,10 @@ class StateMachineRightClickMenu:
         menu = gtk.Menu()
 
         state_m_list = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+        has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
         if len(state_m_list) == 1 and isinstance(state_m_list[0], StateModel) and \
-                not state_m_list[0].state.is_root_state:
+                not state_m_list[0].state.is_root_state and \
+                not isinstance(state_m_list[0].parent.state, has_no_start_state_state_types):
             if state_m_list[0].is_start:
                 menu.append(create_image_menu_item("Is start state", constants.BUTTON_CHECK, self.on_toggle_is_start_state))
             else:
