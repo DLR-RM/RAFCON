@@ -40,6 +40,7 @@
                     <property name="tab_hborder">0</property>
                     <property name="tab_vborder">0</property>
                     <property name="group_name">right_sidebar</property>
+                    <property name="group_id">2</property>
                     <child>
                       <object class="GtkViewport" id="source_viewport">
                         <property name="visible">True</property>
@@ -470,6 +471,7 @@
                     <property name="tab_hborder">0</property>
                     <property name="tab_vborder">0</property>
                     <property name="group_name">right_sidebar</property>
+                    <property name="group_id">2</property>
                     <child>
                       <object class="GtkViewport" id="linkage_overview_viewport">
                         <property name="visible">True</property>
