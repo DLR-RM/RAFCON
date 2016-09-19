@@ -129,6 +129,9 @@ def delete_selected_elements(state_machine_m):
 
 
 def selected_state_toggle_is_start_state():
+    if rafcon.mvc.singleton.state_machine_manager_model.get_selected_state_machine_model() is None:
+        logger.warning("No state machine has been selected.")
+        return False
     state_m_list = rafcon.mvc.singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
     if len(state_m_list) == 1 and isinstance(state_m_list[0], StateModel) and \
             not state_m_list[0].state.is_root_state:
@@ -144,6 +147,7 @@ def selected_state_toggle_is_start_state():
             logger.warn("Could no change start state: {0}".format(e))
         return True
     else:
+        logger.warning("To toggle the is start state flag you have to select exact on state.")
         return False
 
 

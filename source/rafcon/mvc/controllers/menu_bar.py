@@ -880,18 +880,24 @@ class MenuBarController(ExtendedController):
 
     def check_edit_menu_items_status(self, widget):
 
-        # check if start state is used,
-        state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
-        has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
-        if len(state_m_list) == 1 and isinstance(state_m_list[0], StateModel) and \
-                not state_m_list[0].state.is_root_state and \
-                not isinstance(state_m_list[0].parent.state, has_no_start_state_state_types):
-            # if is start state -> enabled-box
-            if state_m_list[0].is_start:
-                self.view.set_image_for_menu_item('is_start_state', constants.BUTTON_CHECK)
-            else:  # if is not start state -> empty-box
-                self.view.set_image_for_menu_item('is_start_state', constants.BUTTON_SQUARE)
-            self.view.set_menu_item_sensitive('is_start_state', True)
-        else:  # if root state or otherwise -> inactive
+        # check if "is start state" is used,
+        is_start_state_inactive = False
+        if self.model.get_selected_state_machine_model():
+            state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
+            has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
+            if len(state_m_list) == 1 and isinstance(state_m_list[0], StateModel) and \
+                    not state_m_list[0].state.is_root_state and \
+                    not isinstance(state_m_list[0].parent.state, has_no_start_state_state_types):
+                # if is start state -> enabled-box
+                if state_m_list[0].is_start:
+                    self.view.set_image_for_menu_item('is_start_state', constants.BUTTON_CHECK)
+                else:  # if is not start state -> empty-box
+                    self.view.set_image_for_menu_item('is_start_state', constants.BUTTON_SQUARE)
+                self.view.set_menu_item_sensitive('is_start_state', True)
+            else:
+                is_start_state_inactive = True
+        else:
+            is_start_state_inactive = True
+        if is_start_state_inactive:  # if root state or otherwise -> inactive
             self.view.set_image_for_menu_item('is_start_state', constants.BUTTON_SQUARE)
             self.view.set_menu_item_sensitive('is_start_state', False)

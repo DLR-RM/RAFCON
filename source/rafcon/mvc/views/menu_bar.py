@@ -70,7 +70,6 @@ class MenuBarView(View):
 
     def set_image_for_menu_item(self, menu_item_name, uni_code):
         menu_item = self[menu_item_name]
-        print "set menu" + menu_item_name + str(uni_code)
 
         label = gtk.Label()
         set_label_markup(label, '&#x' + uni_code + ';',
