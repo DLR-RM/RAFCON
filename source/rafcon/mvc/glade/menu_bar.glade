@@ -14,7 +14,7 @@
           <object class="GtkMenu" id="menuitem_file">
             <child>
               <object class="GtkImageMenuItem" id="new">
-                <property name="label">gtk-new</property>
+                <property name="label">_New</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -23,7 +23,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="open">
-                <property name="label">gtk-open</property>
+                <property name="label">_Open</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -32,7 +32,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="save">
-                <property name="label">gtk-save</property>
+                <property name="label">_Save</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -41,7 +41,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="save_as">
-                <property name="label">gtk-save-as</property>
+                <property name="label">Save-_As</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -64,7 +64,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="refresh_all">
-                <property name="label">Refresh All</property>
+                <property name="label">Refresh _All</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -73,7 +73,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="refresh_libraries">
-                <property name="label">Refresh Libraries</property>
+                <property name="label">Refresh _Libraries</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -87,7 +87,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="quit">
-                <property name="label">gtk-quit</property>
+                <property name="label">_Quit</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -106,8 +106,8 @@
         <child type="submenu">
           <object class="GtkMenu" id="menuitem_edit">
             <child>
-              <object class="GtkImageMenuItem" id="cut_selection">
-                <property name="label">gtk-cut</property>
+              <object class="GtkImageMenuItem" id="cut">
+                <property name="label">Cu_t</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -115,8 +115,8 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="copy_selection">
-                <property name="label">gtk-copy</property>
+              <object class="GtkImageMenuItem" id="copy">
+                <property name="label">_Copy</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -124,8 +124,8 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="paste_clipboard">
-                <property name="label">gtk-paste</property>
+              <object class="GtkImageMenuItem" id="paste">
+                <property name="label">_Paste</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -134,7 +134,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="delete">
-                <property name="label">gtk-delete</property>
+                <property name="label">_Delete</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -148,7 +148,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="is_start_state">
-                <property name="label">State is Start State</property>
+                <property name="label">State is Start Stat_e</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -156,8 +156,8 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="add_state">
-                <property name="label">Add State</property>
+              <object class="GtkImageMenuItem" id="add">
+                <property name="label">_Add State</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -165,8 +165,8 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="group_states">
-                <property name="label">Group States</property>
+              <object class="GtkImageMenuItem" id="group">
+                <property name="label">_Group States</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -174,8 +174,8 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="ungroup_state">
-                <property name="label">Ungroup State</property>
+              <object class="GtkImageMenuItem" id="ungroup">
+                <property name="label">_Ungroup State</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -184,7 +184,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="substitute_state">
-                <property name="label">Substitute State</property>
+                <property name="label">_Substitute State</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -193,7 +193,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="save_state_as">
-                <property name="label">Save State as State Machine</property>
+                <property name="label">Save State as State _Machine</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -207,7 +207,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="undo">
-                <property name="label">gtk-undo</property>
+                <property name="label">Un_do</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -216,7 +216,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="redo">
-                <property name="label">gtk-redo</property>
+                <property name="label">_Redo</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -241,36 +241,36 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="menu_view">
-        <property name="visible">True</property>
         <property name="label" translatable="yes">View</property>
+        <property name="visible">True</property>
         <property name="use_underline">True</property>
         <child type="submenu">
           <object class="GtkMenu" id="menuitem_view">
             <child>
               <object class="GtkCheckMenuItem" id="data_flow_mode">
-                <property name="visible">True</property>
                 <property name="label" translatable="yes">Data Flow Mode</property>
+                <property name="visible">True</property>
                 <property name="use_underline">True</property>
               </object>
             </child>
             <child>
-              <object class="GtkCheckMenuItem" id="show_all_data_flows">
-                <property name="visible">True</property>
+              <object class="GtkCheckMenuItem" id="show_data_flows">
                 <property name="label" translatable="yes">Show All Data Flows</property>
+                <property name="visible">True</property>
                 <property name="use_underline">True</property>
               </object>
             </child>
             <child>
-              <object class="GtkCheckMenuItem" id="show_data_flow_values">
-                <property name="visible">True</property>
+              <object class="GtkCheckMenuItem" id="show_data_values">
                 <property name="label" translatable="yes">Show Data Flow Values</property>
+                <property name="visible">True</property>
                 <property name="use_underline">True</property>
               </object>
             </child>
             <child>
               <object class="GtkCheckMenuItem" id="show_aborted_preempted">
-                <property name="visible">True</property>
                 <property name="label" translatable="yes">Show Aborted/Preempted</property>
+                <property name="visible">True</property>
                 <property name="use_underline">True</property>
               </object>
             </child>
@@ -281,7 +281,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="expert_view">
-                <property name="label">expert view</property>
+                <property name="label">Expert view</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
                 <property name="use_stock">True</property>
@@ -289,9 +289,9 @@
               </object>
             </child>
             <child>
-              <object class="GtkCheckMenuItem" id="full_screen_mode">
-                <property name="visible">True</property>
+              <object class="GtkCheckMenuItem" id="fullscreen">
                 <property name="label" translatable="yes">Full Screen Mode</property>
+                <property name="visible">True</property>
                 <property name="use_underline">True</property>
               </object>
             </child>
@@ -317,7 +317,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="start_from_selected_state">
+              <object class="GtkImageMenuItem" id="start_from_selected">
                 <property name="label">start from selected state</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
@@ -326,7 +326,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="run_to_selected_state">
+              <object class="GtkImageMenuItem" id="run_to_selected">
                 <property name="label">run to selected state</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>

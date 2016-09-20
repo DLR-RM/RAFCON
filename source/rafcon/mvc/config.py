@@ -2,6 +2,7 @@ import os
 import sys
 import re
 import gtk
+import yaml
 
 from yaml_configuration.config import DefaultConfig, ConfigError
 from rafcon.utils import filesystem
@@ -40,6 +41,16 @@ class GuiConfig(DefaultConfig):
         if config_file is None:
             config_file = CONFIG_FILE
         super(GuiConfig, self).load(config_file, path)
+
+        # fill up shortcuts
+        if not (config_file == CONFIG_FILE and path == os.path.dirname(__file__)):
+            default_gui_config = yaml.load(self.default_config) if self.default_config else {}
+            shortcuts_dict = self.get_config_value('SHORTCUTS')
+            for shortcut_name, shortcuts_list in default_gui_config.get('SHORTCUTS', {}).iteritems():
+                if shortcut_name not in shortcuts_dict:
+                    self.logger.info("Shortcut for '{0}' is {1}, now, and was taken from default config."
+                                     "".format(shortcut_name, shortcuts_list))
+                    shortcuts_dict[shortcut_name] = shortcuts_list if isinstance(shortcuts_list, list) else [shortcuts_list]
 
     def configure_gtk(self):
         import gtk

@@ -86,18 +86,18 @@ class MenuBarController(ExtendedController):
         data_flow_mode = global_runtime_config.get_config_value("DATA_FLOW_MODE", False)
         view["data_flow_mode"].set_active(data_flow_mode)
 
-        show_all_data_flows = global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
-        view["show_all_data_flows"].set_active(show_all_data_flows)
+        show_data_flows = global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
+        view["show_data_flows"].set_active(show_data_flows)
 
-        show_data_flow_values = global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
-        view["show_data_flow_values"].set_active(show_data_flow_values)
+        show_data_values = global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
+        view["show_data_values"].set_active(show_data_values)
 
         show_aborted_preempted = global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
         view["show_aborted_preempted"].set_active(show_aborted_preempted)
 
         if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
             view["data_flow_mode"].hide()
-            view["show_data_flow_values"].hide()
+            view["show_data_values"].hide()
 
         # use dedicated function to connect the buttons to be able to access the handler id later on
         self.connect_button_to_function('new', 'activate', self.on_new_activate)
@@ -109,14 +109,14 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('refresh_libraries', 'activate', self.on_refresh_libraries_activate)
         self.connect_button_to_function('quit', 'activate', self.on_quit_activate)
 
-        self.connect_button_to_function('cut_selection', 'activate', self.on_cut_selection_activate)
-        self.connect_button_to_function('copy_selection', 'activate', self.on_copy_selection_activate)
-        self.connect_button_to_function('paste_clipboard', 'activate', self.on_paste_clipboard_activate)
+        self.connect_button_to_function('cut', 'activate', self.on_cut_selection_activate)
+        self.connect_button_to_function('copy', 'activate', self.on_copy_selection_activate)
+        self.connect_button_to_function('paste', 'activate', self.on_paste_clipboard_activate)
         self.connect_button_to_function('delete', 'activate', self.on_delete_activate)
         self.connect_button_to_function('is_start_state', 'activate', self.on_toggle_is_start_state_active)
-        self.connect_button_to_function('add_state', 'activate', self.on_add_state_activate)
-        self.connect_button_to_function('group_states', 'activate', self.on_group_states_activate)
-        self.connect_button_to_function('ungroup_state', 'activate', self.on_ungroup_state_activate)
+        self.connect_button_to_function('add', 'activate', self.on_add_state_activate)
+        self.connect_button_to_function('group', 'activate', self.on_group_states_activate)
+        self.connect_button_to_function('ungroup', 'activate', self.on_ungroup_state_activate)
         self.connect_button_to_function('substitute_state', 'activate', self.on_substitute_selected_state_activate)
         self.connect_button_to_function('save_state_as', 'activate', self.on_save_selected_state_as_activate)
         self.connect_button_to_function('undo', 'activate', self.on_undo_activate)
@@ -124,15 +124,15 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('grid', 'activate', self.on_grid_toggled)
 
         self.connect_button_to_function('data_flow_mode', 'toggled', self.on_data_flow_mode_toggled)
-        self.connect_button_to_function('show_all_data_flows', 'toggled', self.on_show_all_data_flows_toggled)
-        self.connect_button_to_function('show_data_flow_values', 'toggled', self.on_show_data_flow_values_toggled)
+        self.connect_button_to_function('show_data_flows', 'toggled', self.on_show_data_flows_toggled)
+        self.connect_button_to_function('show_data_values', 'toggled', self.on_show_data_values_toggled)
         self.connect_button_to_function('show_aborted_preempted', 'toggled', self.on_show_aborted_preempted_toggled)
         self.connect_button_to_function('expert_view', 'activate', self.on_expert_view_activate)
-        self.connect_button_to_function('full_screen_mode', 'activate', self.on_full_screen_activate)
+        self.connect_button_to_function('fullscreen', 'activate', self.on_full_screen_activate)
 
         self.connect_button_to_function('start', 'activate', self.on_start_activate)
-        self.connect_button_to_function('start_from_selected_state', 'activate', self.on_start_from_selected_state_activate)
-        self.connect_button_to_function('run_to_selected_state', 'activate', self.on_run_to_selected_state_activate)
+        self.connect_button_to_function('start_from_selected', 'activate', self.on_start_from_selected_state_activate)
+        self.connect_button_to_function('run_to_selected', 'activate', self.on_run_to_selected_state_activate)
         self.connect_button_to_function('pause', 'activate', self.on_pause_activate)
         self.connect_button_to_function('stop', 'activate', self.on_stop_activate)
         self.connect_button_to_function('step_mode', 'activate', self.on_step_mode_activate)
@@ -152,7 +152,7 @@ class MenuBarController(ExtendedController):
         """
         if not self.full_screen_flag:
             self.full_screen_flag = True
-            self.view["full_screen_mode"].set_active(True)
+            self.view["fullscreen"].set_active(True)
             self.sm_notebook.set_show_tabs(False)
             self.sm_notebook.reparent(self.full_screen_window)
             position = self.main_window_view.get_top_widget().get_position()
@@ -169,7 +169,7 @@ class MenuBarController(ExtendedController):
             self.on_full_screen_deactivate()
 
     def on_full_screen_deactivate(self):
-        self.view["full_screen_mode"].set_active(False)
+        self.view["fullscreen"].set_active(False)
         # gui_helper.set_window_size_and_position(self.main_window_view.get_top_widget(), "MAIN_WINDOW")
         self.main_window_view.get_top_widget().present()
         self.sm_notebook.reparent(self.main_window_view['graphical_editor_vbox'])
@@ -219,15 +219,15 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('new', partial(self.call_action_callback, "on_new_activate"))
         self.add_callback_to_shortcut_manager('quit', partial(self.call_action_callback, "on_quit_activate"))
 
-        self.add_callback_to_shortcut_manager('entry', partial(self.call_action_callback, "on_toggle_is_start_state_active"))
+        self.add_callback_to_shortcut_manager('is_start_state', partial(self.call_action_callback, "on_toggle_is_start_state_active"))
         self.add_callback_to_shortcut_manager('group', partial(self.call_action_callback, "on_group_states_activate"))
         self.add_callback_to_shortcut_manager('ungroup', partial(self.call_action_callback, "on_ungroup_state_activate"))
 
         self.add_callback_to_shortcut_manager('start', partial(self.call_action_callback, "on_start_activate"))
         self.add_callback_to_shortcut_manager('start_from_selected', partial(self.call_action_callback,
-                                                                             "on_start_from_selected_state_activate"))
+                                                                                   "on_start_from_selected_state_activate"))
         self.add_callback_to_shortcut_manager('run_to_selected', partial(self.call_action_callback,
-                                                                         "on_run_to_selected_state_activate"))
+                                                                               "on_run_to_selected_state_activate"))
 
         self.add_callback_to_shortcut_manager('stop', partial(self.call_action_callback, "on_stop_activate"))
         self.add_callback_to_shortcut_manager('pause', partial(self.call_action_callback, "on_pause_activate"))
@@ -237,8 +237,8 @@ class MenuBarController(ExtendedController):
 
         self.add_callback_to_shortcut_manager('reload', partial(self.call_action_callback, "on_refresh_all_activate"))
 
-        self.add_callback_to_shortcut_manager('show_data_flows', self.show_all_data_flows_toggled_shortcut)
-        self.add_callback_to_shortcut_manager('show_data_values', self.show_show_data_flow_values_toggled_shortcut)
+        self.add_callback_to_shortcut_manager('show_data_flows', self.show_data_flows_toggled_shortcut)
+        self.add_callback_to_shortcut_manager('show_data_values', self.show_data_values_toggled_shortcut)
         self.add_callback_to_shortcut_manager('data_flow_mode', self.data_flow_mode_toggled_shortcut)
         self.add_callback_to_shortcut_manager('show_aborted_preempted', self.show_aborted_preempted)
 
@@ -619,6 +619,9 @@ class MenuBarController(ExtendedController):
     def refresh_shortcuts_activate(self):
         self.shortcut_manager.remove_shortcuts()
         self.shortcut_manager.update_shortcuts()
+        for item_name, shortcuts in global_gui_config.get_config_value('SHORTCUTS', {}).iteritems():
+            if shortcuts and item_name in self.view.buttons:
+                self.view.set_menu_item_accelerator(item_name, shortcuts[0])
 
     def check_sm_modified(self):
         if state_machine_manager.has_dirty_state_machine():
@@ -775,17 +778,17 @@ class MenuBarController(ExtendedController):
         else:
             self.view["data_flow_mode"].set_active(True)
 
-    def show_all_data_flows_toggled_shortcut(self, *args):
-        if self.view["show_all_data_flows"].get_active():
-            self.view["show_all_data_flows"].set_active(False)
+    def show_data_flows_toggled_shortcut(self, *args):
+        if self.view["show_data_flows"].get_active():
+            self.view["show_data_flows"].set_active(False)
         else:
-            self.view["show_all_data_flows"].set_active(True)
+            self.view["show_data_flows"].set_active(True)
 
-    def show_show_data_flow_values_toggled_shortcut(self, *args):
-        if self.view["show_data_flow_values"].get_active():
-            self.view["show_data_flow_values"].set_active(False)
+    def show_data_values_toggled_shortcut(self, *args):
+        if self.view["show_data_values"].get_active():
+            self.view["show_data_values"].set_active(False)
         else:
-            self.view["show_data_flow_values"].set_active(True)
+            self.view["show_data_values"].set_active(True)
 
     def show_aborted_preempted(self, *args):
         if self.view["show_aborted_preempted"].get_active():
@@ -799,13 +802,13 @@ class MenuBarController(ExtendedController):
         else:
             global_runtime_config.set_config_value("DATA_FLOW_MODE", False)
 
-    def on_show_all_data_flows_toggled(self, widget, data=None):
+    def on_show_data_flows_toggled(self, widget, data=None):
         if widget.get_active():
             global_runtime_config.set_config_value("SHOW_DATA_FLOWS", True)
         else:
             global_runtime_config.set_config_value("SHOW_DATA_FLOWS", False)
 
-    def on_show_data_flow_values_toggled(self, widget, data=None):
+    def on_show_data_values_toggled(self, widget, data=None):
         if widget.get_active():
             global_runtime_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
         else:
@@ -890,14 +893,14 @@ class MenuBarController(ExtendedController):
                     not isinstance(state_m_list[0].parent.state, has_no_start_state_state_types):
                 # if is start state -> enabled-box
                 if state_m_list[0].is_start:
-                    self.view.set_image_for_menu_item('is_start_state', constants.BUTTON_CHECK)
+                    self.view.set_menu_item_icon('is_start_state', constants.BUTTON_CHECK)
                 else:  # if is not start state -> empty-box
-                    self.view.set_image_for_menu_item('is_start_state', constants.BUTTON_SQUARE)
+                    self.view.set_menu_item_icon('is_start_state', constants.BUTTON_SQUARE)
                 self.view.set_menu_item_sensitive('is_start_state', True)
             else:
                 is_start_state_inactive = True
         else:
             is_start_state_inactive = True
         if is_start_state_inactive:  # if root state or otherwise -> inactive
-            self.view.set_image_for_menu_item('is_start_state', constants.BUTTON_SQUARE)
+            self.view.set_menu_item_icon('is_start_state', constants.BUTTON_SQUARE)
             self.view.set_menu_item_sensitive('is_start_state', False)

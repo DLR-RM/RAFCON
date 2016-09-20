@@ -63,19 +63,24 @@ def create_label_widget_with_icon(icon, text):
     return hbox
 
 
-def create_image_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=()):
+def create_image_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=(),
+                           accel_code=None, accel_group=None):
     menu_item = gtk.ImageMenuItem()
     menu_item.set_image(create_label_widget_with_icon(icon_code, ""))
     menu_item.set_label(label_text)
     if callback is not None:
         menu_item.connect("activate", callback, *callback_args)
     menu_item.set_always_show_image(True)
+    if accel_code is not None and accel_group is not None:
+        key, mod = gtk.accelerator_parse(accel_code)
+        menu_item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
     return menu_item
 
 
-def create_check_menu_item(label_text="", is_active=False, callback=None, callback_args=(), is_sensitive=True):
+def create_check_menu_item(label_text="", is_active=False, callback=None, callback_args=(), is_sensitive=True,
+                           accel_code=None, accel_group=None):
     icon_code = constants.BUTTON_CHECK if is_active else constants.BUTTON_SQUARE
-    menu_item = create_image_menu_item(label_text, icon_code, callback, callback_args)
+    menu_item = create_image_menu_item(label_text, icon_code, callback, callback_args, accel_code, accel_group)
     menu_item.set_sensitive(is_sensitive)
     return menu_item
 
