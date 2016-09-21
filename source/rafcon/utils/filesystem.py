@@ -24,15 +24,6 @@ def create_path(path):
         os.makedirs(path)
 
 
-def remove_path(path):
-    """Removes an absolute path in the file system
-
-    :param path: The path to be removed
-    """
-    import shutil
-    shutil.rmtree(path)
-
-
 def get_md5_file_hash(filename):
     """Calculates the MD5 hash of a file
 
