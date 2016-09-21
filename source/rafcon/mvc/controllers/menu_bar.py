@@ -173,6 +173,7 @@ class MenuBarController(ExtendedController):
         # gui_helper.set_window_size_and_position(self.main_window_view.get_top_widget(), "MAIN_WINDOW")
         self.main_window_view.get_top_widget().present()
         self.sm_notebook.reparent(self.main_window_view['graphical_editor_vbox'])
+        self.main_window_view['graphical_editor_vbox'].reorder_child(self.sm_notebook, 0)
         self.sm_notebook.set_show_tabs(True)
         self.full_screen_window.hide()
         self.full_screen_flag = False
