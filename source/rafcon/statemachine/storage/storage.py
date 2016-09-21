@@ -143,7 +143,7 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
     logger.debug("State machine with id {0} was saved at {1}".format(state_machine.state_machine_id, base_path))
 
 
-def save_script_file_for_state_and_source_path(state, base_path, state_path, temporary_storage=False):
+def save_script_file_for_state_and_source_path(state, state_path_full, temporary_storage=False):
     """Saves the script file for a state to the directory of the state.
     The script name will be set to the SCRIPT_FILE constant.
 
@@ -153,7 +153,6 @@ def save_script_file_for_state_and_source_path(state, base_path, state_path, tem
     """
     from rafcon.statemachine.states.execution_state import ExecutionState
     if isinstance(state, ExecutionState):
-        state_path_full = os.path.join(base_path, state_path)
         source_script_file = os.path.join(state.script.path, state.script.filename)
         destination_script_file = os.path.join(state_path_full, SCRIPT_FILE)
 
@@ -188,7 +187,7 @@ def save_state_recursively(state, base_path, parent_path, temporary_storage=Fals
     if not os.path.exists(state_path_full):
         os.makedirs(state_path_full)
     if isinstance(state, ExecutionState):
-        save_script_file_for_state_and_source_path(state, base_path, state_path, temporary_storage)
+        save_script_file_for_state_and_source_path(state, state_path_full, temporary_storage)
 
     storage_utils.write_dict_to_json(state, os.path.join(state_path_full, FILE_NAME_CORE_DATA))
 
