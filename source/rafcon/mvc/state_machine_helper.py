@@ -133,7 +133,7 @@ def selected_state_toggle_is_start_state():
         logger.warning("No state machine has been selected.")
         return False
     state_m_list = rafcon.mvc.singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
-    if len(state_m_list) == 1 and isinstance(state_m_list[0], StateModel) and \
+    if len(state_m_list) == 1 and isinstance(state_m_list[0], AbstractStateModel) and \
             not state_m_list[0].state.is_root_state:
         state_model = state_m_list[0]
         try:
