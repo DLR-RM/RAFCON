@@ -70,7 +70,6 @@ class MenuBarView(View):
         View.__init__(self)
 
         self.win = top_window['main_window']
-        top_window.get_top_widget().add_accel_group(self['accelgroup1'])
         self.insert_accelerators = {'new': gtk.accelerator_parse('<control>N'),
                                     'open': gtk.accelerator_parse('<control>O'),
                                     'save': gtk.accelerator_parse('<control>S'),
