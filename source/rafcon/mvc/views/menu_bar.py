@@ -71,8 +71,18 @@ class MenuBarView(View):
 
         self.win = top_window['main_window']
         top_window.get_top_widget().add_accel_group(self['accelgroup1'])
-
-        self.insert_accelerators = {}
+        self.insert_accelerators = {'new': gtk.accelerator_parse('<control>N'),
+                                    'open': gtk.accelerator_parse('<control>O'),
+                                    'save': gtk.accelerator_parse('<control>S'),
+                                    # 'save_as': gtk.accelerator_parse('<shift><control>S'),  # no default accelerator insert
+                                    'quit': gtk.accelerator_parse('<control>Q'),
+                                    'cut': gtk.accelerator_parse('<control>X'),
+                                    'copy': gtk.accelerator_parse('<control>C'),
+                                    'paste': gtk.accelerator_parse('<control>V'),
+                                    # 'delete': gtk.accelerator_parse('Delete'),  # no default accelerator insert
+                                    # 'undo': gtk.accelerator_parse('<control>Z'),  # no default accelerator insert
+                                    # 'redo': gtk.accelerator_parse('<control>Y'),  # no default accelerator insert
+                                    }
 
         for menu_item_name in self.buttons.iterkeys():
             # set icon
@@ -101,6 +111,7 @@ class MenuBarView(View):
         if menu_item_name in self.insert_accelerators:
             key, mod = self.insert_accelerators[menu_item_name]
             menu_item.remove_accelerator(self['accelgroup1'], key, mod)
+
         key, mod = gtk.accelerator_parse(accel_code)
         menu_item.add_accelerator("activate", self['accelgroup1'], key, mod, gtk.ACCEL_VISIBLE)
         self.insert_accelerators[menu_item_name] = (key, mod)
