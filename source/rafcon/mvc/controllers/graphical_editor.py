@@ -2160,6 +2160,7 @@ class GraphicalEditorController(ExtendedController):
         if react_to_event(self.view, self.view.editor, event):
             logger.debug("copy selection")
             global_clipboard.copy(self.model.selection)
+            return True
 
     def _cut_selection(self, *event):
         """Cuts the current selection and copys it to the clipboard.
@@ -2167,6 +2168,7 @@ class GraphicalEditorController(ExtendedController):
         if react_to_event(self.view, self.view.editor, event):
             logger.debug("cut selection")
             global_clipboard.cut(self.model.selection)
+            return True
 
     def _paste_clipboard(self, *event):
         """Paste the current clipboard into the current selection if the current selection is a container state.
@@ -2212,3 +2214,4 @@ class GraphicalEditorController(ExtendedController):
             self._resize_state(state_copy_m, new_corner_pos, keep_ratio=True, resize_content=True, publish_changes=True)
 
             self._redraw()
+            return True

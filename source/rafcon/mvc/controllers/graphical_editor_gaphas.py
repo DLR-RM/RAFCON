@@ -159,6 +159,7 @@ class GraphicalEditorController(ExtendedController):
         if react_to_event(self.view, self.view.editor, event):
             logger.debug("copy selection")
             global_clipboard.copy(self.model.selection)
+            return True
 
     def _cut_selection(self, *event):
         """Cuts the current selection and copys it to the clipboard.
@@ -166,6 +167,7 @@ class GraphicalEditorController(ExtendedController):
         if react_to_event(self.view, self.view.editor, event):
             logger.debug("cut selection")
             global_clipboard.cut(self.model.selection)
+            return True
 
     def _paste_clipboard(self, *event):
         """Paste the current clipboard into the current selection if the current selection is a container state.
@@ -223,6 +225,7 @@ class GraphicalEditorController(ExtendedController):
 
             new_state_v.resize_all_children(old_size, True)
             self._meta_data_changed(new_state_v, state_copy_m, 'all', True)
+            return True
 
     def _update_selection_from_gaphas(self, view, selected_items):
         selected_items = self.view.editor.selected_items
