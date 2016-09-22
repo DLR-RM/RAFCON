@@ -43,12 +43,13 @@ class StateOverviewController(ExtendedController, Model):
     :param rafcon.mvc.views.SourceEditorView view: The GTK view showing the data as a table
     """
 
-    def __init__(self, model, view):
+    def __init__(self, model, view, with_is_start_state_check_box=False):
         """Constructor
         """
         ExtendedController.__init__(self, model, view)
 
         self.state_types_dict = {}
+        self.with_is_start_state_check_box = with_is_start_state_check_box
 
     def register_view(self, view):
         """Called when the View was registered
@@ -116,10 +117,9 @@ class StateOverviewController(ExtendedController, Model):
 
         # Prepare "is start state check button"
         has_no_start_state_state_types = [BarrierConcurrencyState, PreemptiveConcurrencyState]
-        if True:  # isinstance(self.model.state, DeciderState) or self.model.state.is_root_state or \
-                # type(self.model.parent.state) in has_no_start_state_state_types:  # \
-            # for now the checkbutton is NOT HIDE as long as the checkbutton does not stay hidden all time
-            view['is_start_state_checkbutton'].destroy()  # DeciderState is removed if parent change type
+        if not self.with_is_start_state_check_box or isinstance(self.model.state, DeciderState) or \
+            self.model.state.is_root_state or type(self.model.parent.state) in has_no_start_state_state_types:
+            view['is_start_state_checkbutton'].destroy()
         else:
             view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
             view['is_start_state_checkbutton'].connect('toggled', self.on_toggle_is_start_state)
