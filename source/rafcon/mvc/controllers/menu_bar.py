@@ -191,7 +191,6 @@ class MenuBarController(ExtendedController):
         self.sm_notebook.reparent(self.main_window_view['graphical_editor_vbox'])
         self.main_window_view['graphical_editor_vbox'].reorder_child(self.sm_notebook, 0)
         self.sm_notebook.set_show_tabs(True)
-        self.main_window_view['graphical_editor_vbox'].reorder_child(self.sm_notebook, 0)
         self.full_screen_window.hide()
 
     def connect_button_to_function(self, view_index, button_state, function):
