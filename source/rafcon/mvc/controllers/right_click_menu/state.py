@@ -37,10 +37,11 @@ class StateMachineRightClickMenu:
         from rafcon.mvc.singleton import main_window_controller
         shortcut_manager = main_window_controller.shortcut_manager
         self.shortcut_manager = shortcut_manager
+        self.accel_group = gtk.AccelGroup()
 
     def generate_right_click_menu_state(self):
         menu = gtk.Menu()
-        accel_group = gtk.AccelGroup()
+        accel_group = self.accel_group
         shortcuts_dict = global_gui_config.get_config_value('SHORTCUTS')
 
         state_m_list = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
@@ -78,7 +79,7 @@ class StateMachineRightClickMenu:
 
     def generate_right_click_menu_library(self):
         menu = gtk.Menu()
-        accel_group = gtk.AccelGroup()
+        accel_group = self.accel_group
         shortcuts_dict = global_gui_config.get_config_value('SHORTCUTS')
 
         menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate,
