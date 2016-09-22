@@ -128,7 +128,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('show_data_values', 'toggled', self.on_show_data_values_toggled)
         self.connect_button_to_function('show_aborted_preempted', 'toggled', self.on_show_aborted_preempted_toggled)
         self.connect_button_to_function('expert_view', 'activate', self.on_expert_view_activate)
-        self.connect_button_to_function('fullscreen', 'activate', self.on_full_screen_activate)
+        self.connect_button_to_function('fullscreen', 'toggled', self.on_full_screen_mode_toggled)
 
         self.connect_button_to_function('start', 'activate', self.on_start_activate)
         self.connect_button_to_function('start_from_selected', 'activate', self.on_start_from_selected_state_activate)
@@ -144,39 +144,55 @@ class MenuBarController(ExtendedController):
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
         self.registered_view = True
 
+    def on_toggle_full_screen_mode(self, *args):
+        if self.view["fullscreen"].get_active():
+            self.view["fullscreen"].set_active(False)  # because toggle is not always working
+        else:
+            self.view["fullscreen"].toggle() # because set active is not always working
+
+    def on_full_screen_mode_toggled(self, *args):
+        if self.full_screen_flag == self.view["fullscreen"].active:
+            return False
+
+        if self.view["fullscreen"].active and not self.full_screen_flag:
+            self.full_screen_flag = True
+            self.on_full_screen_activate()
+        else:
+            self.full_screen_flag = False
+            self.on_full_screen_deactivate()
+        return True
+
+    def on_key_press_event(self, widget, event):
+        keyname = gtk.gdk.keyval_name(event.keyval)
+        if keyname == "Escape" and self.full_screen_window.get_window().get_state() == gtk.gdk.WINDOW_STATE_FULLSCREEN:
+            self.view["fullscreen"].set_active(False)
+            return True
+
     def on_full_screen_activate(self, *args):
         """
         function to display the currently selected statemachine in full screen mode
         :param args:
         :return:
         """
-        if not self.full_screen_flag:
-            self.full_screen_flag = True
-            self.view["fullscreen"].set_active(True)
-            self.sm_notebook.set_show_tabs(False)
-            self.sm_notebook.reparent(self.full_screen_window)
-            position = self.main_window_view.get_top_widget().get_position()
-            self.full_screen_window.show()
-            self.full_screen_window.move(position[0], position[1])
-            global_runtime_config.store_widget_properties(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
-            self.full_screen_window.set_decorated(False)
-            self.full_screen_window.fullscreen()
-            self.main_window_view.get_top_widget().iconify()
+        self.sm_notebook.set_show_tabs(False)
+        self.sm_notebook.reparent(self.full_screen_window)
+        position = self.main_window_view.get_top_widget().get_position()
+        self.full_screen_window.show()
+        self.full_screen_window.move(position[0], position[1])
+        global_runtime_config.store_widget_properties(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
+        self.full_screen_window.set_decorated(False)
+        self.full_screen_window.fullscreen()
+        self.main_window_view.get_top_widget().iconify()
 
-    def on_key_press_event(self, widget, event):
-        keyname = gtk.gdk.keyval_name(event.keyval)
-        if keyname == "Escape" and self.full_screen_window.get_window().get_state() == gtk.gdk.WINDOW_STATE_FULLSCREEN:
-            self.on_full_screen_deactivate()
 
     def on_full_screen_deactivate(self):
-        self.view["fullscreen"].set_active(False)
         # gui_helper.set_window_size_and_position(self.main_window_view.get_top_widget(), "MAIN_WINDOW")
         self.main_window_view.get_top_widget().present()
         self.sm_notebook.reparent(self.main_window_view['graphical_editor_vbox'])
         self.main_window_view['graphical_editor_vbox'].reorder_child(self.sm_notebook, 0)
         self.sm_notebook.set_show_tabs(True)
+        self.main_window_view['graphical_editor_vbox'].reorder_child(self.sm_notebook, 0)
         self.full_screen_window.hide()
-        self.full_screen_flag = False
 
     def connect_button_to_function(self, view_index, button_state, function):
         """
@@ -243,7 +259,7 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('data_flow_mode', self.data_flow_mode_toggled_shortcut)
         self.add_callback_to_shortcut_manager('show_aborted_preempted', self.show_aborted_preempted)
 
-        self.add_callback_to_shortcut_manager('fullscreen', self.on_full_screen_activate)
+        self.add_callback_to_shortcut_manager('fullscreen', self.on_toggle_full_screen_mode)
 
     def call_action_callback(self, callback_name, *args):
         """Wrapper for action callbacks
