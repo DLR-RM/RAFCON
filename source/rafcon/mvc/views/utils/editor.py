@@ -94,7 +94,14 @@ class EditorView(View):
         return self.textview.get_buffer()
 
     def set_text(self, text):
+        """ The method insert text into the text buffer of the text view and preserves the cursor location.
+
+        :param str text: which is insert into the text buffer.
+        :return:
+        """
+        line_number, line_offset = self.get_cursor_position()
         self.textview.get_buffer().set_text(text)
+        self.set_cursor_position(line_number, line_offset)
 
     def set_enabled(self, on):
         if on:
@@ -102,3 +109,11 @@ class EditorView(View):
         else:
             self.apply_tag('deactivated')
         self.textview.set_property('editable', on)
+
+    def get_cursor_position(self):
+        p_iter = self.textview.get_buffer().get_iter_at_offset(self.textview.get_buffer().props.cursor_position)
+        return p_iter.get_line(), p_iter.get_line_offset()
+
+    def set_cursor_position(self, line_number, line_offset):
+        new_p_iter = self.textview.get_buffer().get_iter_at_line_offset(line_number, line_offset)
+        return self.textview.get_buffer().place_cursor(new_p_iter)

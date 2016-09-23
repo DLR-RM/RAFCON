@@ -16,6 +16,7 @@ from pylint import epylint as lint
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.editor import EditorController
+from rafcon.mvc.singleton import state_machine_manager_model
 from rafcon.mvc.config import global_gui_config
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
@@ -46,8 +47,12 @@ class SourceEditorController(EditorController):
 
         view['apply_button'].connect('clicked', self.apply_clicked)
         view['cancel_button'].connect('clicked', self.cancel_clicked)
+        view['pylint_check_button'].set_active(global_gui_config.get_config_value('CHECK_PYTHON_FILES_WITH_PYLINT', False))
+        view['pylint_check_button'].set_tooltip_text("Change global default value in GUI config.")
+        view['apply_button'].set_tooltip_text(global_gui_config.get_config_value('SHORTCUTS')['apply'][0])
 
         if isinstance(self.model.state, LibraryState):
+            view['pylint_check_button'].set_sensitive(False)
             view.textview.set_sensitive(False)
             view['apply_button'].set_sensitive(False)
             view['cancel_button'].set_sensitive(False)
@@ -83,8 +88,7 @@ class SourceEditorController(EditorController):
         # get script
         tbuffer = self.view.get_buffer()
         current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
-
-        if not global_gui_config.get_config_value('CHECK_PYTHON_FILES_WITH_PYLINT', True):
+        if not self.view['pylint_check_button'].get_active():
             self.set_script_text(current_text)
             return
 
@@ -122,11 +126,27 @@ class SourceEditorController(EditorController):
             from rafcon.mvc.utils.dialog import RAFCONDialog
             dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             message_string = "Are you sure that you want to save this file?\n\nThe following errors were found:"
+
+            line = None
             for elem in pylint_stdout_data:
                 if "error" in elem:
                     if self.filter_out_not_compatible_modules(elem):
-                        error_string = self.format_error_string(str(elem))
+                        (error_string, line, error) = self.format_error_string(str(elem))
                         message_string += "\n\n" + error_string
+
+            # focus line of error
+            if line:
+                tbuffer = self.view.get_buffer()
+                start_iter = tbuffer.get_start_iter()
+                start_iter.set_line(int(line)-1)
+                tbuffer.place_cursor(start_iter)
+                message_string += "\n\nThe line was focused in the source editor."
+
+            # select state to show source editor
+            sm_m = state_machine_manager_model.get_sm_m_for_state_model(self.model)
+            if sm_m.selection.get_selected_state() is not self.model:
+                sm_m.selection.set(self.model)
+
             dialog.set_markup(message_string)
             dialog.add_button("Save with errors", 42)
             dialog.add_button("Do not save", 43)
@@ -152,4 +172,4 @@ class SourceEditorController(EditorController):
         line = error_parts[1]
         error_parts = error_parts[2].split(')')
         error = error_parts[1]
-        return "Line " + line + ": " + error
+        return "Line " + line + ": " + error, line, error
