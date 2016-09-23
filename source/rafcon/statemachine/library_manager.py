@@ -293,7 +293,7 @@ class LibraryManager(Observable):
                     library_root_name = key
                     path_elements_without_library_root = path[len(library_root_path)+1:].split('/')
                     library_name = path_elements_without_library_root[-1]
-                    library_path = library_root_name + '/'.join(path_elements_without_library_root[:-1])
+                    library_path = library_root_name + '/' + '/'.join(path_elements_without_library_root[:-1])
                     break
         return library_path, library_name
 
