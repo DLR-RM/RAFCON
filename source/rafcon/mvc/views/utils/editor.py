@@ -83,9 +83,8 @@ class EditorView(View):
         self['editor_frame'] = vbox
 
     def apply_tag(self, name):
-        self.textview.get_buffer().apply_tag_by_name(name,
-                                                     self.textview.get_buffer().get_start_iter(),
-                                                     self.textview.get_buffer().get_end_iter())
+        text_buffer = self.get_buffer()
+        text_buffer.apply_tag_by_name(name, text_buffer().get_start_iter(), text_buffer().get_end_iter())
 
     def code_changed(self, source):
         self.apply_tag('default')
@@ -100,7 +99,7 @@ class EditorView(View):
         :return:
         """
         line_number, line_offset = self.get_cursor_position()
-        self.textview.get_buffer().set_text(text)
+        self.get_buffer().set_text(text)
         self.set_cursor_position(line_number, line_offset)
 
     def set_enabled(self, on):
@@ -111,9 +110,21 @@ class EditorView(View):
         self.textview.set_property('editable', on)
 
     def get_cursor_position(self):
-        p_iter = self.textview.get_buffer().get_iter_at_offset(self.textview.get_buffer().props.cursor_position)
+        text_buffer = self.get_buffer()
+        p_iter = text_buffer.get_iter_at_offset(text_buffer.props.cursor_position)
         return p_iter.get_line(), p_iter.get_line_offset()
 
     def set_cursor_position(self, line_number, line_offset):
-        new_p_iter = self.textview.get_buffer().get_iter_at_line_offset(line_number, line_offset)
-        return self.textview.get_buffer().place_cursor(new_p_iter)
+        text_buffer = self.get_buffer()
+        new_p_iter = text_buffer.get_iter_at_line(line_number, 0)
+        if new_p_iter.get_chars_in_line() > line_offset:
+            logger.info("Line has enough chars {0}".format((line_number, line_offset)))
+            new_p_iter = text_buffer.get_iter_at_line_offset(line_number, line_offset)
+        else:
+            logger.warning("Line has not enough chars {0}\n{1}".format((line_number, line_offset)))
+        if new_p_iter.is_cursor_position():
+            logger.warning("line not found {0}".format((line_number, line_offset)))
+            return text_buffer.place_cursor(new_p_iter)
+        else:
+            return False
+
