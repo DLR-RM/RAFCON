@@ -84,7 +84,7 @@ class EditorView(View):
 
     def apply_tag(self, name):
         text_buffer = self.get_buffer()
-        text_buffer.apply_tag_by_name(name, text_buffer().get_start_iter(), text_buffer().get_end_iter())
+        text_buffer.apply_tag_by_name(name, text_buffer.get_start_iter(), text_buffer.get_end_iter())
 
     def code_changed(self, source):
         self.apply_tag('default')
@@ -116,15 +116,15 @@ class EditorView(View):
 
     def set_cursor_position(self, line_number, line_offset):
         text_buffer = self.get_buffer()
-        new_p_iter = text_buffer.get_iter_at_line(line_number, 0)
-        if new_p_iter.get_chars_in_line() > line_offset:
-            logger.info("Line has enough chars {0}".format((line_number, line_offset)))
+        new_p_iter = text_buffer.get_iter_at_line(line_number)
+        if new_p_iter.get_chars_in_line() > line_offset or line_offset == 0 and new_p_iter.get_chars_in_line() == 0:
             new_p_iter = text_buffer.get_iter_at_line_offset(line_number, line_offset)
         else:
-            logger.warning("Line has not enough chars {0}\n{1}".format((line_number, line_offset)))
+            logger.debug("Line has not enough chars {0} {1}".format((line_number, line_offset), new_p_iter.get_chars_in_line()))
         if new_p_iter.is_cursor_position():
-            logger.warning("line not found {0}".format((line_number, line_offset)))
             return text_buffer.place_cursor(new_p_iter)
         else:
+            if not (line_offset == 0 and new_p_iter.get_chars_in_line() == 0):
+                logger.debug("Line and offset is no cursor position line: {0} offset: {1} line length: {2}"
+                               "".format(line_number, line_offset, new_p_iter.get_chars_in_line()))
             return False
-

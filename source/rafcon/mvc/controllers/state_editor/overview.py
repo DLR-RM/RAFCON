@@ -118,7 +118,7 @@ class StateOverviewController(ExtendedController, Model):
         # Prepare "is start state check button"
         has_no_start_state_state_types = [BarrierConcurrencyState, PreemptiveConcurrencyState]
         if not self.with_is_start_state_check_box or isinstance(self.model.state, DeciderState) or \
-            self.model.state.is_root_state or type(self.model.parent.state) in has_no_start_state_state_types:
+                self.model.state.is_root_state or type(self.model.parent.state) in has_no_start_state_state_types:
             view['is_start_state_checkbutton'].destroy()
         else:
             view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
