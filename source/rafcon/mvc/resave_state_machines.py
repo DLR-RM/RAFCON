@@ -1,4 +1,4 @@
-#!/opt/python/python2.7/bin/python
+#!/usr/bin/python
 
 import logging
 import os
@@ -39,6 +39,10 @@ def setup_logger():
     logging.getLogger('gtkmvc').addHandler(stdout)
 
 
+setup_logger()
+logger = log.get_logger("Resave state machines script")
+
+
 def call_gui_callback(callback, *args):
     import glib
     import threading
@@ -74,10 +78,7 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-def convert(config_path, source_path, target_path):
-    setup_logger()
-    # from rafcon.utils import log
-    logger = log.get_logger("start")
+def convert(config_path, source_path, target_path=None):
     logger.info("RAFCON launcher")
 
     rafcon_root_path = dirname(realpath(rafcon.__file__))
@@ -103,8 +104,6 @@ def convert(config_path, source_path, target_path):
         setup_config["target_path"] = [source_path]
     else:
         setup_config["target_path"] = [target_path]
-
-    signal.signal(signal.SIGINT, rafcon.statemachine.start.signal_handler)
 
     global_config.load(path=setup_config['config_path'])
     global_gui_config.load(path=setup_config['gui_config_path'])
@@ -179,12 +178,20 @@ def convert_libraries_in_path(config_path, lib_path, target_path=None):
                     convert_libraries_in_path(config_path, os.path.join(lib_path, lib), os.path.join(target_path, lib))
         else:
             if os.path.isdir(os.path.join(lib_path, lib)) and '.' == lib[0]:
-                print "lib_root_path/lib_path .*-folder are ignored if within lib_path, e.g. -> {0} -> full path is {1}".format(lib, os.path.join(lib_path, lib))
+                logger.debug("lib_root_path/lib_path .*-folder are ignored if within lib_path, "
+                             "e.g. -> {0} -> full path is {1}".format(lib, os.path.join(lib_path, lib)))
 
 
 if __name__ == '__main__':
     import sys
-    folder_to_convert = sys.argv[2]
+    if not len(sys.argv) >= 3:
+        logger.error("Wrong number of arguments")
+        logger.error("Usage: resave_state_machine.py config_path library_folder_to_convert optional_target_folder")
+        exit(0)
     config_path = sys.argv[1]
-    print "folder to convert: " + folder_to_convert
-    convert_libraries_in_path(config_path, folder_to_convert)
+    folder_to_convert = sys.argv[2]
+    target_path = None
+    if len(sys.argv) >= 4:
+        target_path = sys.argv[3]
+    logger.error("folder to convert: " + folder_to_convert)
+    convert_libraries_in_path(config_path, folder_to_convert, target_path)

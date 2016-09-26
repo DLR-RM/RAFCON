@@ -127,7 +127,7 @@ class HistoryItem:
         self.next = None
 
     def __str__(self):
-        return "HistoryItem with reference state name %s (time: %s)\n" % (self.state_reference.name, self.timestamp)
+        return "HistoryItem with reference state name %s (time: %s)" % (self.state_reference.name, self.timestamp)
 
 
 class ScopedDataItem(HistoryItem):
