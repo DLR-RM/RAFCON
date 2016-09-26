@@ -30,4 +30,4 @@ source/rafcon/documentation => docs
 bin/ | !rafcon_start | !rafcon_start_gui | !*.pyc => bin # Symlinks are recreated in post_install step
 
 [post-install]
-cd ${RMPM_INSTALL_DIR}/bin && ln -s ../lib/python2.7/rafcon/statemachine/start.py rafcon_start && ln -s ../lib/python2.7/rafcon/mvc/start.py rafcon_start_gui && ln -s ../lib/python2.7/rafcon/mvc/resave_state?machines.py resave_state_machines.py
+cd ${RMPM_INSTALL_DIR}/bin && ln -s ../lib/python2.7/rafcon/statemachine/start.py rafcon_start && ln -s ../lib/python2.7/rafcon/mvc/start.py rafcon_start_gui && ln -s ../lib/python2.7/rafcon/mvc/resave_state_machines.py resave_state_machines.py
