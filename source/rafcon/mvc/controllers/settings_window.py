@@ -93,6 +93,7 @@ class SettingsWindowController(ExtendedController):
         self.set_label_paths()
 
     def on_add_library(self, *event):
+        self.view['library_tree_view'].grab_focus()
         if react_to_event(self.view, self.view['library_tree_view'], event):
             lib_name = "<LIB_NAME_%s>" % self.lib_counter
             self.model.add_library(lib_name, "<LIB_PATH>")
@@ -103,6 +104,7 @@ class SettingsWindowController(ExtendedController):
             return True
 
     def on_remove_library(self, *event):
+        self.view['library_tree_view'].grab_focus()
         if react_to_event(self.view, self.view['library_tree_view'], event):
             path = self.view["library_tree_view"].get_cursor()[0]
             if path is not None:
