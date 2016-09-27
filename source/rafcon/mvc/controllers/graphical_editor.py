@@ -17,7 +17,7 @@ from math import sin, cos, atan2
 
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
 from gtk.gdk import keyval_name
-from gtk.gdk import ACTION_COPY
+from gtk.gdk import ACTION_COPY, ModifierType
 from gtk import DEST_DEFAULT_ALL
 import gobject
 
@@ -1112,7 +1112,8 @@ class GraphicalEditorController(ExtendedController):
             new_pos = move_pos(cur_pos, port_m.parent.meta['gui']['editor_opengl']['size'])
             self._move_data_port(port_m, new_pos, redraw, publish_changes)
 
-        if react_to_event(self.view, self.view.editor, (key, modifier)):
+        event = (key, modifier)
+        if react_to_event(self.view, self.view.editor, event) or (len(event) == 2 and not isinstance(event[1], ModifierType)):
             if self.model.selection:
                 for model in self.model.selection:
                     if isinstance(model, AbstractStateModel):
