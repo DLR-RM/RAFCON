@@ -25,6 +25,8 @@ import rafcon.mvc.singleton as mvc_singletons
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
+from rafcon.statemachine.start import setup_environment
+
 
 def setup_logger():
     import sys
@@ -81,14 +83,7 @@ def trigger_gui_signals(*args):
 def convert(config_path, source_path, target_path=None):
     logger.info("RAFCON launcher")
 
-    rafcon_root_path = dirname(realpath(rafcon.__file__))
-    if not os.environ.get('RAFCON_PATH', None):
-        # set env variable RAFCON_PATH to the root directory of RAFCON
-        os.environ['RAFCON_PATH'] = rafcon_root_path
-
-    if not os.environ.get('RAFCON_LIB_PATH', None):
-        # set env variable RAFCON_LIB_PATH to the library directory of RAFCON (when not using RMPM)
-        os.environ['RAFCON_LIB_PATH'] = join(dirname(rafcon_root_path), 'libraries')
+    setup_environment()
 
     home_path = expanduser('~')
     if home_path:
