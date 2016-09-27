@@ -24,7 +24,8 @@ class SettingsModel(ModelMT):
     config_gui_list = []
     config_library_list = []
     config_shortcut_list = []
-    __observables__ = ["config_list", "config_gui_list", "config_library_list", "config_shortcut_list", ]
+    changed_keys = {}
+    __observables__ = ["config_list", "config_gui_list", "config_library_list", "config_shortcut_list", "changed_keys"]
 
     def __init__(self, config_list=None, config_gui_list=None, config_library_list=None,
                  config_shortcut_list=None, dialog_flag=None, meta=None):
@@ -104,6 +105,8 @@ class SettingsModel(ModelMT):
         if shortcut_dict is not None:
             for key in sorted(shortcut_dict.keys()):
                 self.config_shortcut_list.append((key, shortcut_dict[key]))
+
+        self.changed_keys.clear()
 
     def set_config_view_value(self, key, value):
         """

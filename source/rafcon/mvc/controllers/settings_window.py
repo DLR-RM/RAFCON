@@ -13,6 +13,7 @@ import os
 import yaml_configuration.config
 from rafcon.utils import log
 from rafcon.mvc.views.settings_window import SettingsWindowView
+from rafcon.mvc.models.settings_model import SettingsModel
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
@@ -29,6 +30,7 @@ class SettingsWindowController(ExtendedController):
 
     def __init__(self, model, view):
         assert isinstance(view, SettingsWindowView)
+        assert isinstance(model, SettingsModel)
         ExtendedController.__init__(self, model, view)
         # (setting. text, text_visible, toggle_activatable, togge_visible, text_editable, toggle_value)
         self.config_list_store = ListStore(str, str, bool, bool, bool, bool, bool)
@@ -88,9 +90,11 @@ class SettingsWindowController(ExtendedController):
 
         self.view['properties_window'].connect('delete_event', self.delete_event, self.view['properties_window'])
 
-        self.view['cancel_button'].connect('clicked', self.on_delete)
+        self.view['ok_button'].connect('clicked', self.on_ok_button_clicked)
+        self.view['cancel_button'].connect('clicked', self.on_cancel_button_clicked)
         self.set_properties()
         self.set_label_paths()
+        self.update_changed_keys_dict(None, None, None)
 
     def on_add_library(self, *event):
         self.view['library_tree_view'].grab_focus()
@@ -262,7 +266,12 @@ class SettingsWindowController(ExtendedController):
         self.set_properties()
         return gtk.TRUE
 
-    def on_delete(self, widget):
+    def on_ok_button_clicked(self, widget):
+        if self.model.changed_keys:
+            self.on_save_and_apply_configurations()
+        self.view["properties_window"].hide()
+
+    def on_cancel_button_clicked(self, widget):
         """
         Called when Cancel button is clicked, hides the window and loads the stored settings
         :param widget:
@@ -336,6 +345,13 @@ class SettingsWindowController(ExtendedController):
         for key in self.model.config_shortcut_list:
             setting, value = key
             self.shortcut_list_store.append((setting, value))
+
+    @ExtendedController.observe('changed_keys', after=True)
+    def update_changed_keys_dict(self, model, prop_name, info):
+        if self.model.changed_keys:
+            self.view['apply_button'].set_sensitive(True)
+        else:
+            self.view['apply_button'].set_sensitive(False)
 
     def editing_started(self, renderer, editable, path, actual_renderer, actual_list_store, actual_tree_view):
         """
