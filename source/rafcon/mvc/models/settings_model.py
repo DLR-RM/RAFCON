@@ -189,7 +189,7 @@ class SettingsModel(ModelMT):
         self.checkval = [False, False, False]
         global_config.save_configuration()
         global_gui_config.save_configuration()
-        self.changed_keys = {}
+        self.changed_keys.clear()
         del self.changed_libs[:]
 
     def ignore_changes(self, key, value):
