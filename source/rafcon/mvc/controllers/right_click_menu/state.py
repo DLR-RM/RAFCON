@@ -14,7 +14,7 @@ from rafcon.mvc.utils import constants
 from rafcon.mvc.gui_helper import create_image_menu_item, create_check_menu_item
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.models import StateModel
+from rafcon.mvc.models.abstract_state import AbstractStateModel
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 import rafcon.mvc.singleton as mvc_singleton
@@ -44,13 +44,7 @@ class StateMachineRightClickMenu:
         accel_group = self.accel_group
         shortcuts_dict = global_gui_config.get_config_value('SHORTCUTS')
 
-        state_m_list = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
-        has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
-        if len(state_m_list) == 1 and isinstance(state_m_list[0], StateModel) and \
-                not state_m_list[0].state.is_root_state and \
-                not isinstance(state_m_list[0].parent.state, has_no_start_state_state_types):
-            menu.append(create_check_menu_item("Is start state", state_m_list[0].is_start, self.on_toggle_is_start_state,
-                                               accel_code=shortcuts_dict['is_start_state'][0], accel_group=accel_group))
+        self.insert_is_start_state_in_menu(menu, shortcuts_dict, accel_group)
 
         menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate,
                                            accel_code=shortcuts_dict['copy'][0], accel_group=accel_group))
@@ -77,10 +71,22 @@ class StateMachineRightClickMenu:
 
         return menu
 
+    def insert_is_start_state_in_menu(self, menu, shortcuts_dict, accel_group):
+
+        state_m_list = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+        has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
+        if len(state_m_list) == 1 and isinstance(state_m_list[0], AbstractStateModel) and \
+                not state_m_list[0].state.is_root_state and \
+                not isinstance(state_m_list[0].parent.state, has_no_start_state_state_types):
+            menu.append(create_check_menu_item("Is start state", state_m_list[0].is_start, self.on_toggle_is_start_state,
+                                               accel_code=shortcuts_dict['is_start_state'][0], accel_group=accel_group))
+
     def generate_right_click_menu_library(self):
         menu = gtk.Menu()
         accel_group = self.accel_group
         shortcuts_dict = global_gui_config.get_config_value('SHORTCUTS')
+
+        self.insert_is_start_state_in_menu(menu, shortcuts_dict, accel_group)
 
         menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate,
                                            accel_code=shortcuts_dict['copy'][0], accel_group=accel_group))

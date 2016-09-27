@@ -24,6 +24,7 @@ from rafcon.statemachine.storage import storage
 from rafcon.statemachine.singleton import state_machine_manager, library_manager
 
 import rafcon.statemachine.singleton as core_singletons
+from rafcon.mvc.models.abstract_state import AbstractStateModel
 from rafcon.mvc.models.state import StateModel
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.models.library_state import LibraryStateModel
@@ -904,7 +905,7 @@ class MenuBarController(ExtendedController):
         if self.model.get_selected_state_machine_model():
             state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
             has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
-            if len(state_m_list) == 1 and isinstance(state_m_list[0], StateModel) and \
+            if len(state_m_list) == 1 and isinstance(state_m_list[0], AbstractStateModel) and \
                     not state_m_list[0].state.is_root_state and \
                     not isinstance(state_m_list[0].parent.state, has_no_start_state_state_types):
                 # if is start state -> enabled-box
