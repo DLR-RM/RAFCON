@@ -223,11 +223,3 @@ class SettingsModel(ModelMT):
                 self.config_library_list.remove(key_tmp)
                 self.config_library_list.append((key, value))
                 self.set_config_view_value(key, value)
-
-
-
-
-
-
-
-

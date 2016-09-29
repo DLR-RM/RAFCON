@@ -460,5 +460,3 @@ class SettingsWindowController(ExtendedController):
             message.set_markup("%s %s" % (message_string, changes_str))
             message.run()
             message.destroy()
-
-
