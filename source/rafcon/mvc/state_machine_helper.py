@@ -445,17 +445,20 @@ def substitute_state(state, as_template=False):
 
     current_state_m = selected_state_models[0]
     current_state = current_state_m.state
+    current_state_name = current_state.name
     parent_state_m = current_state_m.parent
     parent_state = current_state.parent
 
     if not as_template:
         parent_state.substitute_state(current_state.state_id, state)
+        state.name = current_state_name
         return True
     # If inserted as template, we have to extract the state_copy and load the meta data manually
     else:
         template = state.state_copy
         orig_state_id = template.state_id
         template.change_state_id()
+        template.name = current_state_name
         parent_state.substitute_state(current_state.state_id, template)
 
         # load meta data
