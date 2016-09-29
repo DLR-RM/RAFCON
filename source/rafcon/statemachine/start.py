@@ -94,12 +94,13 @@ def setup_argument_parser():
 
     parser = sm_singletons.argument_parser
     parser.add_argument('-o', '--open', type=parse_state_machine_path, dest='state_machine_path', metavar='path',
-                        help="specify a directory of a state-machine that shall be opened and started. The path must "
-                             "contain a statemachine.json file")
+                        nargs='+', help="specify directories of state-machines that shall be opened. The path must "
+                                        "contain a statemachine.json file")
     parser.add_argument('-c', '--config', type=config_path, metavar='path', dest='config_path', default=home_path,
                         nargs='?', const=home_path,
                         help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
+    parser.add_argument('--run', action='store_true', default=False, help="Run the first state machine on startup")
     parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path',
                         default=None, nargs='?', help="path of to the state that should be launched")
     return parser
@@ -123,22 +124,25 @@ def setup_configuration(config_path):
     sm_singletons.library_manager.initialize()
 
 
-def start_state_machine(state_machine_path, start_state_path=None):
+def open_state_machine(state_machine_path):
     """Executes the specified state machine
 
     :param str state_machine_path: The file path to the state machine
-    :param str start_state_path: The state path to the desired first state
     :return StateMachine: The loaded state machine
     """
-    state_machine_execution_engine = sm_singletons.state_machine_execution_engine
-    state_machine = state_machine_execution_engine.execute_state_machine_from_path(path=state_machine_path,
-                                                                                   start_state_path=start_state_path,
-                                                                                   wait_for_execution_finished=False)
+    sm = storage.load_state_machine_from_path(state_machine_path)
+    sm_singletons.state_machine_manager.add_state_machine(sm)
+
+    return sm
+
+
+def start_state_machine(sm, start_state_path=None):
+    sm_singletons.state_machine_manager.active_state_machine_id = sm.state_machine_id
+    sm_singletons.state_machine_execution_engine.start(start_state_path=start_state_path)
 
     if reactor_required():
-        sm_thread = threading.Thread(target=stop_reactor_on_state_machine_finish, args=[state_machine, ])
+        sm_thread = threading.Thread(target=stop_reactor_on_state_machine_finish, args=[sm, ])
         sm_thread.start()
-    return state_machine
 
 
 def stop_reactor_on_state_machine_finish(state_machine):
@@ -169,6 +173,9 @@ def reactor_required():
     if "twisted" in sys.modules.keys():
         return True
     return False
+
+
+SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n) for n in dir(signal) if n.startswith('SIG') and '_' not in n)
 
 
 def signal_handler(signal, frame):
@@ -230,7 +237,14 @@ if __name__ == '__main__':
 
     try:
 
-        sm = start_state_machine(user_input.state_machine_path, user_input.start_state_path)
+        first_sm = None
+        for sm_path in user_input.state_machine_path:
+            sm = open_state_machine(sm_path)
+            if first_sm is None:
+                first_sm = sm
+
+        if user_input.run:
+            start_state_machine(first_sm, user_input.start_state_path)
 
         if reactor_required():
             from twisted.internet import reactor
