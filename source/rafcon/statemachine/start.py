@@ -10,7 +10,6 @@
 
 """
 
-
 import os
 import argparse
 from os.path import realpath, dirname, join, exists, isdir
@@ -32,7 +31,10 @@ from rafcon.statemachine.enums import StateExecutionState
 from rafcon.utils import profiler
 from rafcon.utils import plugins
 from rafcon.utils import log
+
 logger = log.get_logger("start core")
+
+_user_abort = False
 
 
 def pre_setup_plugins():
@@ -140,7 +142,6 @@ def start_state_machine(state_machine_path, start_state_path=None):
 
 
 def stop_reactor_on_state_machine_finish(state_machine):
-
     # wait for the state machine to start
     from rafcon.statemachine.states.execution_state import ExecutionState
     if not isinstance(state_machine.root_state, ExecutionState):
@@ -170,25 +171,24 @@ def reactor_required():
     return False
 
 
-SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n)  for n in dir(signal) if n.startswith('SIG') and '_' not in n)
-
-
 def signal_handler(signal, frame):
+    global _user_abort
+
     from rafcon.statemachine.enums import StateMachineExecutionStatus
     state_machine_execution_engine = sm_singletons.state_machine_execution_engine
     sm_singletons.shut_down_signal = signal
 
+    logger.info("Shutting down ...")
+
     try:
-        # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
-        print "Signal '{}' received.\n" \
-              "Execution engine will be stopped and program will be shutdown!".format(SIGNALS_TO_NAMES_DICT.get(
-            signal, "[unknown]"))
         if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
             state_machine_execution_engine.stop()
             state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
     except Exception as e:
         import traceback
-        print "Could not stop state machine: {0} {1}".format(e.message, traceback.format_exc())
+        logger.error("Could not stop state machine: {0} {1}".format(e.message, traceback.format_exc()))
+
+    _user_abort = True
 
     # shutdown twisted correctly
     if reactor_required():
@@ -196,8 +196,6 @@ def signal_handler(signal, frame):
         if reactor.running:
             plugins.run_hook("pre_destruction")
             reactor.callFromThread(reactor.stop)
-
-    plugins.run_hook("post_destruction")
 
 
 def register_signal_handlers(callback):
@@ -236,12 +234,14 @@ if __name__ == '__main__':
 
         if reactor_required():
             from twisted.internet import reactor
+
             # Blocking call, return when state machine execution finishes
             reactor.run()
 
-        rafcon.statemachine.singleton.state_machine_execution_engine.join()
-        logger.info("State machine execution finished!")
+        while not _user_abort:
+            time.sleep(1)
 
+        logger.info("State machine execution finished!")
         plugins.run_hook("post_destruction")
     finally:
         if global_config.get_config_value("PROFILER_RUN", False):
