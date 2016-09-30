@@ -185,7 +185,6 @@ class MenuBarController(ExtendedController):
         self.full_screen_window.fullscreen()
         self.main_window_view.get_top_widget().iconify()
 
-
     def on_full_screen_deactivate(self):
         # gui_helper.set_window_size_and_position(self.main_window_view.get_top_widget(), "MAIN_WINDOW")
         self.main_window_view.get_top_widget().present()

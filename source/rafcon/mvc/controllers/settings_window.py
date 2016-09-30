@@ -92,7 +92,7 @@ class SettingsWindowController(ExtendedController):
 
         self.view['ok_button'].connect('clicked', self.on_ok_button_clicked)
         self.view['cancel_button'].connect('clicked', self.on_cancel_button_clicked)
-        self.set_properties()
+        self.load_stored_properties()
         self.set_label_paths()
         self.update_changed_keys_dict(None, None, None)
 
@@ -171,7 +171,7 @@ class SettingsWindowController(ExtendedController):
         handle_import("Import Config Config from", pathname)
 
         self.model.detect_changes()  # to avoid refreshing everything even it is not necessary
-        self.set_properties()       # updating the list views
+        self.load_stored_properties()       # updating the list views
         self.on_save_and_apply_configurations()  # applying setting -> refreshing necessary widgets
         self.set_label_paths()              # setting path labels
 
@@ -245,12 +245,12 @@ class SettingsWindowController(ExtendedController):
         dialog.destroy()
         return response
 
-    def set_properties(self):
+    def load_stored_properties(self):
         """
-        A function to get the actual settings stored in config.yaml and gui_config.yaml
+        A function to load the actual settings stored in config.yaml and gui_config.yaml
         :return:
         """
-        self.model.get_settings()
+        self.model.load_settings()
 
     def delete_event(self, widget, event, data):
         """
@@ -263,7 +263,7 @@ class SettingsWindowController(ExtendedController):
         data.hide()
         global_config.load('config.yaml', global_config.path)
         global_gui_config.load('gui_config.yaml', global_gui_config.path)
-        self.set_properties()
+        self.load_stored_properties()
         return gtk.TRUE
 
     def on_ok_button_clicked(self, widget):
@@ -280,7 +280,7 @@ class SettingsWindowController(ExtendedController):
         :return:
         """
         self.view["properties_window"].hide()
-        self.set_properties()
+        self.load_stored_properties()
 
     @ExtendedController.observe('config_list', after=True)
     def update_config_settings(self, model, prop_name, info):

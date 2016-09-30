@@ -79,9 +79,9 @@ class SettingsModel(ModelMT):
         if dict(self.config_library_list) != global_config.get_config_value("LIBRARY_PATHS"):
             main_window_controller.get_controller('menu_bar_controller').on_refresh_libraries_activate(widget=None, data=None)
 
-    def get_settings(self):
+    def load_settings(self):
         """
-        A function to get all values of settings listed in the dicts
+        A function to load all values of settings listed in the dicts
         :return:
         """
         del self.config_list[:]
