@@ -129,8 +129,8 @@ class ContainerStateModel(StateModel):
         :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
-        if info.method_name == 'change_state_type':  # Handled in method 'change_state_type'
-            return
+        # if info.method_name == 'change_state_type':  # Handled in method 'change_state_type'
+        #     return
 
         # If this model has been changed (and not one of its child states), then we have to update all child models
         # This must be done before notifying anybody else, because other may relay on the updated models
