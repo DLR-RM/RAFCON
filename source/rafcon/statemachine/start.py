@@ -188,9 +188,8 @@ def signal_handler(signal, frame):
         if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
             state_machine_execution_engine.stop()
             state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
-    except Exception as e:
-        import traceback
-        logger.error("Could not stop state machine: {0} {1}".format(e.message, traceback.format_exc()))
+    except Exception:
+        logger.exception("Could not stop state machine")
 
     _user_abort = True
 
