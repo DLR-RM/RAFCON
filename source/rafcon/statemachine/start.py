@@ -175,9 +175,6 @@ def reactor_required():
     return False
 
 
-SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n) for n in dir(signal) if n.startswith('SIG') and '_' not in n)
-
-
 def signal_handler(signal, frame):
     global _user_abort
 

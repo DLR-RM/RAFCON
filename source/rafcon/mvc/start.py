@@ -4,10 +4,13 @@ import os
 import logging
 import gtk
 import threading
+
+import signal
+
 from yaml_configuration.config import config_path
 
 from rafcon.statemachine.start import parse_state_machine_path, setup_environment, reactor_required, \
-    setup_configuration, post_setup_plugins, register_signal_handlers, SIGNALS_TO_NAMES_DICT
+    setup_configuration, post_setup_plugins, register_signal_handlers
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
@@ -157,6 +160,9 @@ def log_ready_output():
     logger.setLevel(logging.INFO)
     logger.info("Ready")
     logger.setLevel(level)
+
+
+SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n) for n in dir(signal) if n.startswith('SIG') and '_' not in n)
 
 
 def signal_handler(signal, frame):
