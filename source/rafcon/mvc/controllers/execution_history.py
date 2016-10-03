@@ -213,7 +213,6 @@ class ExecutionHistoryTreeController(ExtendedController):
             if len(execution_history.history_items) > 0:
                 execution_number += 1
                 history_item = execution_history.history_items[0]
-                print "insert"
                 tree_item = self.history_tree_store.insert_after(
                     None, None, (history_item.state_reference.name + " - Run " + str(execution_number),
                                  history_item))
