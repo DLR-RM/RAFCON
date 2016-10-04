@@ -100,7 +100,7 @@ def setup_argument_parser():
                         nargs='?', const=home_path,
                         help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
-    parser.add_argument('--run', action='store_true', default=False, help="Run the first state machine on startup")
+    parser.add_argument('--run', action='store_true', default=True, help="Run the first state machine on startup")
     parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path',
                         default=None, nargs='?', help="path of to the state that should be launched")
     return parser
@@ -145,8 +145,14 @@ def start_state_machine(sm, start_state_path=None):
         sm_thread.start()
 
 
-def stop_reactor_on_state_machine_finish(state_machine):
-    # wait for the state machine to start
+def wait_for_state_machine_finished(state_machine):
+    """ wait for a state machine to finish its execution
+
+    :param state_machine: the statemachine to synchronize with
+    :return:
+    """
+    global _user_abort
+
     from rafcon.statemachine.states.execution_state import ExecutionState
     if not isinstance(state_machine.root_state, ExecutionState):
         while len(state_machine.execution_history_container.execution_histories[0].history_items) < 1:
@@ -156,17 +162,26 @@ def stop_reactor_on_state_machine_finish(state_machine):
 
     while state_machine.root_state.state_execution_status is not StateExecutionState.INACTIVE:
         try:
-            state_machine.root_state.concurrency_queue.get(timeout=10)
+            state_machine.root_state.concurrency_queue.get(timeout=1)
+            # this check triggers if the state machine could not be stopped in the signal handler
+            if _user_abort:
+                return
         except Empty:
             pass
         # no logger output here to make it easier for the parser
         print "RAFCON live signal"
 
-    if reactor_required():
-        from twisted.internet import reactor
-        if reactor.running:
-            plugins.run_hook("pre_destruction")
-            reactor.callFromThread(reactor.stop)
+
+def stop_reactor_on_state_machine_finish(state_machine):
+    """ Wait for a state machine to be finished and stops the reactor
+
+    :param state_machine: the state machine to synchronize with
+    """
+    wait_for_state_machine_finished(state_machine)
+    from twisted.internet import reactor
+    if reactor.running:
+        plugins.run_hook("pre_destruction")
+        reactor.callFromThread(reactor.stop)
 
 
 def reactor_required():
@@ -248,8 +263,7 @@ if __name__ == '__main__':
             # Blocking call, return when state machine execution finishes
             reactor.run()
 
-        while not _user_abort:
-            time.sleep(1)
+        wait_for_state_machine_finished(first_sm)
 
         logger.info("State machine execution finished!")
         plugins.run_hook("post_destruction")
