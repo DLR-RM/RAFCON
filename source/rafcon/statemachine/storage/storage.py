@@ -226,7 +226,12 @@ def load_state_machine_from_path(base_path):
     else:
         stream = file(state_machine_file_path_old, 'r')
         tmp_dict = yaml.load(stream)
-        root_state_id = tmp_dict['root_state']
+        root_state_id = None
+        print tmp_dict
+        if "root_state" in tmp_dict:
+            root_state_id = tmp_dict['root_state']
+        else:
+            root_state_id = tmp_dict['root_state_id']
         version = tmp_dict['version']
         # Prevents storage as datetime object
         creation_time = str(tmp_dict['creation_time'])
