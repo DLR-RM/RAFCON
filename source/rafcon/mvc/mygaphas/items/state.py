@@ -125,7 +125,7 @@ class StateView(Element):
             self.min_width = 1
             self.min_height = 1
         else:
-            min_side_length = max(self.parent.width, self.parent.height) / \
+            min_side_length = min(self.parent.width, self.parent.height) / \
                               constants.MAXIMUM_CHILD_TO_PARENT_STATE_SIZE_RATIO
             if min_side_length != self.min_width:
                 self.min_width = min_side_length
@@ -798,7 +798,7 @@ class NameView(Element):
         self._value_cache = ValueCache()
 
     def update_minimum_size(self):
-        min_side_length = max(self.parent.width, self.parent.height) / constants.MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO
+        min_side_length = min(self.parent.width, self.parent.height) / constants.MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO
         if min_side_length != self.min_width:
             self.min_width = min_side_length
         if min_side_length != self.min_height:

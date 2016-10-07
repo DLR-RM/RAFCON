@@ -1,6 +1,7 @@
 import gtk
 from gtk import Container, Button
 
+from rafcon.mvc import singleton as mvc_singleton
 from rafcon.mvc.utils import constants
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
@@ -62,14 +63,26 @@ def create_label_widget_with_icon(icon, text):
     return hbox
 
 
-def create_image_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=()):
-        menu_item = gtk.ImageMenuItem()
-        menu_item.set_image(create_label_widget_with_icon(icon_code, ""))
-        menu_item.set_label(label_text)
-        if callback is not None:
-            menu_item.connect("activate", callback, *callback_args)
-        menu_item.set_always_show_image(True)
-        return menu_item
+def create_image_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=(),
+                           accel_code=None, accel_group=None):
+    menu_item = gtk.ImageMenuItem()
+    menu_item.set_image(create_label_widget_with_icon(icon_code, ""))
+    menu_item.set_label(label_text)
+    if callback is not None:
+        menu_item.connect("activate", callback, *callback_args)
+    menu_item.set_always_show_image(True)
+    if accel_code is not None and accel_group is not None:
+        key, mod = gtk.accelerator_parse(accel_code)
+        menu_item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
+    return menu_item
+
+
+def create_check_menu_item(label_text="", is_active=False, callback=None, callback_args=(), is_sensitive=True,
+                           accel_code=None, accel_group=None):
+    icon_code = constants.BUTTON_CHECK if is_active else constants.BUTTON_SQUARE
+    menu_item = create_image_menu_item(label_text, icon_code, callback, callback_args, accel_code, accel_group)
+    menu_item.set_sensitive(is_sensitive)
+    return menu_item
 
 
 def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
@@ -205,3 +218,13 @@ def draw_for_all_gtk_states(object, function_name, color):
     getattr(object, function_name)(gtk.STATE_NORMAL, color)
     getattr(object, function_name)(gtk.STATE_PRELIGHT, color)
     getattr(object, function_name)(gtk.STATE_SELECTED, color)
+
+
+def react_to_event(view, widget, event):
+    if not view:  # view needs to be initialized
+        return False
+    if not widget or not isinstance(widget, gtk.Widget) or not widget.is_focus():  # widget must be in focus:
+        return False
+    if widget.has_focus() or (len(event) == 2 and not isinstance(event[1], gtk.gdk.ModifierType)):
+        return True
+    return False

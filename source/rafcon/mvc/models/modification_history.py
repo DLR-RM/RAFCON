@@ -70,6 +70,8 @@ class ModificationsHistoryModel(ModelMT):
         self.with_debug_logs = False
         self.with_meta_data_actions = True
 
+        self.re_initiate_meta_data()
+
     def prepare_destruction(self):
         """Prepares the model for destruction
 
@@ -421,6 +423,10 @@ class ModificationsHistoryModel(ModelMT):
         #     return True
         return True
 
+    def re_initiate_meta_data(self):
+        self.actual_action = []
+        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+
     @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state_model changed
     # @ModelMT.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
     def meta_changed_notify_after(self, changed_model, prop_name, info):
@@ -438,22 +444,18 @@ class ModificationsHistoryModel(ModelMT):
                 pass
             else:
                 return
-        # TODO Refactor next two condition treatments
-        if self.busy or self.actual_action is None and overview['meta_signal'][-1]['change'] == 'append_to_last_change':
-            # print "BUSY", self.busy
-            if self.is_gaphas_editor() and not self.busy:
-                pass
-            else:
-                return
+
+        if self.busy:
+            return
         if overview['meta_signal'][-1]['origin'] == 'load_meta_data':
             return
 
-        if self.actual_action is None or overview['meta_signal'][-1]['change'] == 'append_to_last_change':
+        if self.actual_action is None or overview['meta_signal'][-1]['change'] == 'append_initial_change':
             # update last actions after_storage -> meta-data
-            if self.actual_action is not None:
-                self.actual_action.after_storage = self.actual_action.get_storage()
-            else:
-                self.actual_action = []
+            self.re_initiate_meta_data()
+        elif self.actual_action is None or overview['meta_signal'][-1]['change'] == 'append_to_last_change':
+            # update last actions after_storage -> meta-data
+            self.actual_action.after_storage = self.actual_action.get_storage()
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
         else:
             if isinstance(overview['model'][-1], AbstractStateModel):

@@ -44,5 +44,9 @@ def execute(self, inputs, outputs, gvm):
     outputs["x_pos"] = x
     outputs["y_pos"] = y
     outputs["phi"] = theta
+    
+    print self.preempted
+    if self.preempted:
+        return "preempted"
 
     return 0

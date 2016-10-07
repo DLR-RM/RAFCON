@@ -50,10 +50,10 @@ SHORTCUTS:
     down:
     - <Control>Down
     - <Control><Shift>Down
-    entry: <Control>E
     fit: <Control>space
     group: <Control>G
     info: <Control>I
+    is_start_state: <Control>E
     left:
     - <Control>Left
     - <Control><Shift>Left
@@ -84,9 +84,10 @@ SHORTCUTS:
     step_mode: F6
     stop: F8
     undo: <Control>Z
-    ungroup: 
-    - <Control>U
+    ungroup:
     - <Control><Shift>G
+    - <Control>U
     up:
     - <Control>Up
     - <Control><Shift>Up
+    fullscreen: F11

@@ -43,7 +43,7 @@ def test_start_script_valid_config():
     # valid config
     script = dirname(realpath(rafcon.__file__)) + "/statemachine/start.py"
     start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
-    config = rafcon.__path__[0] + "/../test/common/configs_for_start_script_test/valid_config"
+    config = rafcon.__path__[0] + "/../test/common/configs_for_start_script_test/valid_config/config.yaml"
     cmd = sys.executable + " %s -o %s -c %s" % (script, start_path, config)
     cmd_res = subprocess.call(cmd, shell=True)
     assert cmd_res == 0

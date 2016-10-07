@@ -4,12 +4,13 @@ from gtkmvc import ModelMT, Signal
 from rafcon.mvc.models.signals import Notification
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 
+from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateElementModel(ModelMT):
+class StateElementModel(ModelMT, Hashable):
     """This model class serves as base class for all models within a state model (ports, connections)
 
     Each state element model has a parent, meta and temp data. If observes itself and informs the parent about changes.
@@ -43,6 +44,9 @@ class StateElementModel(ModelMT):
 
         # this class is an observer of its own properties:
         self.register_observer(self)
+
+    def update_hash(self, obj_hash):
+        Hashable.update_hash_from_dict(obj_hash, self.meta)
 
     @property
     def parent(self):

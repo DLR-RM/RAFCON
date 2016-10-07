@@ -17,7 +17,7 @@ from math import sin, cos, atan2
 
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
 from gtk.gdk import keyval_name
-from gtk.gdk import ACTION_COPY
+from gtk.gdk import ACTION_COPY, ModifierType
 from gtk import DEST_DEFAULT_ALL
 import gobject
 
@@ -38,6 +38,7 @@ from rafcon.mvc.views.graphical_editor import Direction
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.right_click_menu.state import StateRightClickMenuControllerOpenGLEditor
 
+from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 from rafcon.utils import log
 
@@ -1111,7 +1112,8 @@ class GraphicalEditorController(ExtendedController):
             new_pos = move_pos(cur_pos, port_m.parent.meta['gui']['editor_opengl']['size'])
             self._move_data_port(port_m, new_pos, redraw, publish_changes)
 
-        if self.view.editor.is_focus():
+        event = (key, modifier)
+        if react_to_event(self.view, self.view.editor, event) or (len(event) == 2 and not isinstance(event[1], ModifierType)):
             if self.model.selection:
                 for model in self.model.selection:
                     if isinstance(model, AbstractStateModel):
@@ -2097,27 +2099,27 @@ class GraphicalEditorController(ExtendedController):
         model.meta_signal.emit(msg)
         # logger.debug("publish changes to history")
 
-    def _delete_selection(self, *args):
-        if self.view and self.view.editor.is_focus():
+    def _delete_selection(self, *event):
+        if react_to_event(self.view, self.view.editor, event):
             return state_machine_helper.delete_selected_elements(self.model)
 
-    def _add_new_state(self, *args, **kwargs):
+    def _add_new_state(self, *event, **kwargs):
         """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
 
         Adds a new state only if the graphical editor is in focus.
         """
-        if self.view and self.view.editor.is_focus():
+        if react_to_event(self.view, self.view.editor, event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
             return state_machine_helper.add_new_state(self.model, state_type)
 
-    def _toggle_data_flow_visibility(self, *args):
-        if self.view and self.view.editor.is_focus():
+    def _toggle_data_flow_visibility(self, *event):
+        if react_to_event(self.view, self.view.editor, event):
             global_runtime_config.set_config_value('SHOW_DATA_FLOWS',
                                                    not global_runtime_config.get_config_value("SHOW_DATA_FLOWS"))
             self._redraw()
 
-    def _abort(self, *args):
-        if self.view and self.view.editor.is_focus():
+    def _abort(self, *event):
+        if react_to_event(self.view, self.view.editor, event):
             if self.mouse_move_redraw:
                 if self.selected_outcome is not None:
                     self.selected_outcome = None
@@ -2153,39 +2155,45 @@ class GraphicalEditorController(ExtendedController):
                 self.last_button_pressed = None  # prevents further movements
                 self._redraw()
 
-    def _copy_selection(self, *args):
+    def _copy_selection(self, *event):
         """Copies the current selection to the clipboard.
         """
-        if self.view and self.view.editor.is_focus():
+        if react_to_event(self.view, self.view.editor, event):
             logger.debug("copy selection")
             global_clipboard.copy(self.model.selection)
+            return True
 
-    def _cut_selection(self, *args):
+    def _cut_selection(self, *event):
         """Cuts the current selection and copys it to the clipboard.
         """
-        if self.view and self.view.editor.is_focus():
+        if react_to_event(self.view, self.view.editor, event):
             logger.debug("cut selection")
             global_clipboard.cut(self.model.selection)
+            return True
 
-    def _paste_clipboard(self, *args):
+    def _paste_clipboard(self, *event):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
-        if self.view and self.view.editor.is_focus():
+        if react_to_event(self.view, self.view.editor, event):
             logger.debug("Paste")
 
-            current_selection = self.model.selection
-
-            if len(current_selection) != 1 or len(current_selection.get_states()) < 1:
-                logger.error("Please select a single state for pasting the clipboard")
+            selection = self.model.selection
+            selected_states = selection.get_states()
+            if len(selection) != 1 or len(selected_states) < 1:
+                logger.error("Please select a single container state for pasting the clipboard")
                 return
-            if not isinstance(current_selection.get_states()[0], ContainerStateModel):
+            if not isinstance(selected_states[0], ContainerStateModel):
                 # the default behaviour of the copy paste is that the state is copied into the parent state
-                parent_of_old_state = current_selection.get_states()[0].parent
-                current_selection.clear()
-                current_selection.add(parent_of_old_state)
+                parent_of_old_state = selected_states[0].parent
+                if isinstance(parent_of_old_state, AbstractStateModel):
+                    selection.clear()
+                    selection.add(parent_of_old_state)
+                else:
+                    logger.error("Only container state can have child states")
+                    return
 
             # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
-            target_state_m = current_selection.get_states()[0]
+            target_state_m = selection.get_states()[0]
             state_copy_m, state_orig_m = global_clipboard.paste(target_state_m)
 
             if state_copy_m is None:  # An error occurred while pasting
@@ -2207,3 +2215,4 @@ class GraphicalEditorController(ExtendedController):
             self._resize_state(state_copy_m, new_corner_pos, keep_ratio=True, resize_content=True, publish_changes=True)
 
             self._redraw()
+            return True

@@ -49,15 +49,6 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="save_state_as">
-                <property name="label">Save State As</property>
-                <property name="visible">True</property>
-                <property name="use_underline">True</property>
-                <property name="use_stock">True</property>
-                <property name="accel_group">accelgroup1</property>
-              </object>
-            </child>
-            <child>
               <object class="GtkImageMenuItem" id="menu_properties">
                 <property name="label">gtk-properties</property>
                 <property name="visible">True</property>
@@ -115,7 +106,7 @@
         <child type="submenu">
           <object class="GtkMenu" id="menuitem_edit">
             <child>
-              <object class="GtkImageMenuItem" id="cut_selection">
+              <object class="GtkImageMenuItem" id="cut">
                 <property name="label">gtk-cut</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
@@ -124,7 +115,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="copy_selection">
+              <object class="GtkImageMenuItem" id="copy">
                 <property name="label">gtk-copy</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
@@ -133,7 +124,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="paste_clipboard">
+              <object class="GtkImageMenuItem" id="paste">
                 <property name="label">gtk-paste</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
@@ -146,6 +137,7 @@
                 <property name="label">gtk-delete</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
@@ -155,34 +147,56 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="add_state">
-                <property name="label" translatable="yes">Add State</property>
+              <object class="GtkImageMenuItem" id="is_start_state">
+                <property name="label">State is Start State</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="group_states">
-                <property name="label" translatable="yes">Group States</property>
+              <object class="GtkImageMenuItem" id="add">
+                <property name="label">Add State</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="ungroup_state">
-                <property name="label" translatable="yes">Ungroup State</property>
+              <object class="GtkImageMenuItem" id="group">
+                <property name="label">Group States</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="ungroup">
+                <property name="label">Ungroup State</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
             <child>
               <object class="GtkImageMenuItem" id="substitute_state">
-                <property name="label" translatable="yes">Substitute State</property>
+                <property name="label">Substitute State</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="save_state_as">
+                <property name="label">Save State as State Machine</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
@@ -227,36 +241,36 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="menu_view">
-        <property name="visible">True</property>
         <property name="label" translatable="yes">View</property>
+        <property name="visible">True</property>
         <property name="use_underline">True</property>
         <child type="submenu">
           <object class="GtkMenu" id="menuitem_view">
             <child>
               <object class="GtkCheckMenuItem" id="data_flow_mode">
-                <property name="visible">True</property>
                 <property name="label" translatable="yes">Data Flow Mode</property>
+                <property name="visible">True</property>
                 <property name="use_underline">True</property>
               </object>
             </child>
             <child>
-              <object class="GtkCheckMenuItem" id="show_all_data_flows">
-                <property name="visible">True</property>
+              <object class="GtkCheckMenuItem" id="show_data_flows">
                 <property name="label" translatable="yes">Show All Data Flows</property>
+                <property name="visible">True</property>
                 <property name="use_underline">True</property>
               </object>
             </child>
             <child>
-              <object class="GtkCheckMenuItem" id="show_data_flow_values">
-                <property name="visible">True</property>
+              <object class="GtkCheckMenuItem" id="show_data_values">
                 <property name="label" translatable="yes">Show Data Flow Values</property>
+                <property name="visible">True</property>
                 <property name="use_underline">True</property>
               </object>
             </child>
             <child>
               <object class="GtkCheckMenuItem" id="show_aborted_preempted">
-                <property name="visible">True</property>
                 <property name="label" translatable="yes">Show Aborted/Preempted</property>
+                <property name="visible">True</property>
                 <property name="use_underline">True</property>
               </object>
             </child>
@@ -267,10 +281,18 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="expert_view">
-                <property name="label" translatable="yes">expert view</property>
+                <property name="label">Expert view</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkCheckMenuItem" id="fullscreen">
+                <property name="label" translatable="yes">Full Screen Mode</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
               </object>
             </child>
           </object>
@@ -287,41 +309,46 @@
             <property name="visible">True</property>
             <child>
               <object class="GtkImageMenuItem" id="start">
-                <property name="label" translatable="yes">start</property>
+                <property name="label">start</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="start_from_selected_state">
-                <property name="label" translatable="yes">start from selected state</property>
+              <object class="GtkImageMenuItem" id="start_from_selected">
+                <property name="label">start from selected state</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="run_to_selected_state">
-                <property name="label" translatable="yes">run to selected state</property>
+              <object class="GtkImageMenuItem" id="run_to_selected">
+                <property name="label">run to selected state</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
             <child>
               <object class="GtkImageMenuItem" id="pause">
-                <property name="label" translatable="yes">pause</property>
+                <property name="label">pause</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
             <child>
               <object class="GtkImageMenuItem" id="stop">
-                <property name="label" translatable="yes">stop</property>
+                <property name="label">stop</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
@@ -332,40 +359,46 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="step_mode">
-                <property name="label" translatable="yes">step mode</property>
+                <property name="label">step mode</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
             <child>
               <object class="GtkImageMenuItem" id="step_into">
-                <property name="label" translatable="yes">step into</property>
+                <property name="label">step into</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
             <child>
               <object class="GtkImageMenuItem" id="step_over">
-                <property name="label" translatable="yes">step over</property>
+                <property name="label">step over</property>
                 <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
             <child>
               <object class="GtkImageMenuItem" id="step_out">
-                <property name="label" translatable="yes">step out</property>
+                <property name="label">step out</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
             <child>
               <object class="GtkImageMenuItem" id="backward_step">
-                <property name="label" translatable="yes">backward step</property>
+                <property name="label">backward step</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>
@@ -382,9 +415,10 @@
           <object class="GtkMenu" id="menuitem_help">
             <child>
               <object class="GtkImageMenuItem" id="about">
-                <property name="label" translatable="yes">About</property>
+                <property name="label">About</property>
                 <property name="visible">True</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
                 <property name="accel_group">accelgroup1</property>
               </object>
             </child>

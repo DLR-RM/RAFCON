@@ -4,10 +4,13 @@ import os
 import logging
 import gtk
 import threading
+
+import signal
+
 from yaml_configuration.config import config_path
 
 from rafcon.statemachine.start import parse_state_machine_path, setup_environment, reactor_required, \
-    setup_configuration, post_setup_plugins, register_signal_handlers, SIGNALS_TO_NAMES_DICT
+    setup_configuration, post_setup_plugins, register_signal_handlers
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
@@ -27,7 +30,10 @@ from rafcon.utils import profiler
 from rafcon.utils import plugins
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
+from rafcon.utils.i18n import _, setup_l10n, setup_l10n_gtk
+
 from rafcon.utils import log
+
 logger = log.get_logger("start")
 
 
@@ -94,26 +100,27 @@ def setup_argument_parser():
     home_path = filesystem.get_home_path()
 
     parser = sm_singletons.argument_parser
-    parser.add_argument('-n', '--new', action='store_true', help="whether to create a new state-machine")
+    parser.add_argument('-n', '--new', action='store_true', help=_("whether to create a new state-machine"))
     parser.add_argument('-o', '--open', action='store', nargs='*', type=parse_state_machine_path,
-                        dest='state_machine_paths', metavar='path', help="specify directories of state-machines that "
-                        "shall be opened. Paths must contain a statemachine.yaml file")
+                        dest='state_machine_paths', metavar='path', help=_(
+            "specify directories of state-machines that shall be opened. Paths must contain a statemachine.yaml file"))
     parser.add_argument('-c', '--config', action='store', type=config_path, metavar='path', dest='config_path',
                         default=home_path, nargs='?', const=home_path,
-                        help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "
-                             "a config file and use the default configuration. Default: {0}".format(home_path))
+                        help=_(
+                            "path to the configuration file config.yaml. Use 'None' to prevent the generation of a config file and use the default configuration. Default: {0}").format(
+                            home_path))
     parser.add_argument('-g', '--gui_config', action='store', type=config_path, metavar='path', dest='gui_config_path',
-                        default=home_path, nargs='?', const=home_path,
-                        help="path to the configuration file gui_config.yaml. Use 'None' to prevent the generation of "
-                             "a config file and use the default configuration. Default: {0}".format(home_path))
+                        default=home_path, nargs='?', const=home_path, help=_(
+            "path to the configuration file gui_config.yaml. Use 'None' to prevent the generation of a config file and use the default configuration. Default: {0}").format(
+            home_path))
     parser.add_argument('-ss', '--start_state_machine', metavar='path', dest='start_state_machine_flag',
-                        default=False, nargs='?', help="a flag to specify if the state machine should be started "
-                                                       "after launching rafcon")
+                        default=False, nargs='?',
+                        help=_("a flag to specify if the state machine should be started after launching rafcon"))
     parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path',
-                        default=None, nargs='?', help="path of to the state that should be launched")
+                        default=None, nargs='?', help=_("path of to the state that should be launched"))
     parser.add_argument('-q', '--quit', metavar='path', dest='quit_flag',
-                        default=False, nargs='?', help="a flag to specify if the gui should quit after launching a "
-                                                       "state machine")
+                        default=False, nargs='?',
+                        help=_("a flag to specify if the gui should quit after launching a state machine"))
     return parser
 
 
@@ -138,7 +145,7 @@ def open_state_machines(paths):
             sm_singletons.state_machine_manager.add_state_machine(state_machine)
             return state_machine
         except Exception as e:
-            logger.exception("Could not load state machine '{}': {}".format(path, e))
+            logger.exception(_("Could not load state machine '{}': {}").format(path, e))
 
 
 def create_new_state_machine():
@@ -155,6 +162,9 @@ def log_ready_output():
     logger.setLevel(level)
 
 
+SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n) for n in dir(signal) if n.startswith('SIG') and '_' not in n)
+
+
 def signal_handler(signal, frame):
     from rafcon.statemachine.enums import StateMachineExecutionStatus
     state_machine_execution_engine = sm_singletons.state_machine_execution_engine
@@ -162,15 +172,14 @@ def signal_handler(signal, frame):
 
     try:
         # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
-        print "Signal '{}' received.\n" \
-              "Execution engine will be stopped and program will be shutdown!".format(SIGNALS_TO_NAMES_DICT.get(
-            signal, "[unknown]"))
+        print _("Signal '{}' received.\nExecution engine will be stopped and program will be shutdown!").format(
+            SIGNALS_TO_NAMES_DICT.get(signal, "[unknown]"))
         if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
             state_machine_execution_engine.stop()
             state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
     except Exception as e:
         import traceback
-        print "Could not stop state machine: {0} {1}".format(e.message, traceback.format_exc())
+        print _("Could not stop state machine: {0} {1}").format(e.message, traceback.format_exc())
 
     mvc_singletons.main_window_controller.get_controller('menu_bar_controller').prepare_destruction()
 
@@ -188,11 +197,14 @@ def signal_handler(signal, frame):
 if __name__ == '__main__':
     register_signal_handlers(signal_handler)
 
+    setup_l10n()
+    setup_l10n_gtk()
+
     setup_gtkmvc_logger()
     pre_setup_plugins()
 
     # from rafcon.utils import log
-    logger.info("RAFCON launcher")
+    logger.info(_("RAFCON launcher"))
 
     setup_mvc_environment()
 
@@ -228,11 +240,12 @@ if __name__ == '__main__':
         # check if twisted is imported
         if reactor_required():
             from twisted.internet import reactor
+
             reactor.run()
         else:
             gtk.main()
 
-        logger.info("Main window was closed")
+        logger.info(_("Main window was closed"))
 
     finally:
         plugins.run_hook("post_destruction")
@@ -246,16 +259,15 @@ if __name__ == '__main__':
             if os.path.exists(constants.RAFCON_INSTANCE_LOCK_FILE.name):
                 os.remove(constants.RAFCON_INSTANCE_LOCK_FILE.name)
             else:
-                logger.warning("External remove of lock file detected!")
+                logger.warning(_("External remove of lock file detected!"))
 
     if sm_singletons.state_machine_execution_engine.status.execution_mode == StateMachineExecutionStatus.STARTED:
-        logger.info("Waiting for the state machine execution to finish")
+        logger.info(_("Waiting for the state machine execution to finish"))
         sm_singletons.state_machine_execution_engine.join()
-        logger.info("State machine execution has finished")
+        logger.info(_("State machine execution has finished"))
 
-    logger.info("Exiting ...")
+    logger.info(_("Exiting ..."))
 
     # this is a ugly process shutdown method but works if gtk or twisted process are still blocking
     # import os
     # os._exit(0)
-

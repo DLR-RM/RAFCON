@@ -1,0 +1,477 @@
+# German translations for PACKAGE package
+# German translation for PACKAGE.
+# Copyright (C) 2016 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Automatically generated, 2016.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-09-08 09:52+0200\n"
+"PO-Revision-Date: 2016-09-01 09:51+0200\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: tmp/global_variable_editor_widget.glade.h:1
+#: tmp/state_dataport_editor.glade.h:2 tmp/state_editor_egg_widget.glade.h:1
+#: tmp/state_editor_ld_widget.glade.h:1
+#: tmp/state_editor_ld_widget_tab.glade.h:4 tmp/state_editor_widget.glade.h:2
+msgid "New"
+msgstr "Neu"
+
+#: tmp/global_variable_editor_widget.glade.h:2
+#: tmp/state_dataport_editor.glade.h:3 tmp/state_editor_egg_widget.glade.h:2
+#: tmp/state_editor_ld_widget.glade.h:2
+#: tmp/state_editor_ld_widget_tab.glade.h:5 tmp/state_editor_widget.glade.h:3
+msgid "Delete"
+msgstr "Löschen"
+
+#: tmp/linkage_overview.glade.h:1 tmp/state_editor_ld_widget.glade.h:6
+#: tmp/state_editor_ld_widget_tab.glade.h:9
+msgid "Data Linkage"
+msgstr "Datenverknüpfung"
+
+#: tmp/linkage_overview.glade.h:2
+msgid "Input ports"
+msgstr "Eingänge"
+
+#: tmp/linkage_overview.glade.h:3
+msgid "Output ports"
+msgstr "Ausgänge"
+
+#: tmp/linkage_overview.glade.h:4
+msgid "Scoped variables"
+msgstr "Variablen im Gültigkeitsbereich"
+
+#: tmp/linkage_overview.glade.h:5 tmp/state_editor_ld_widget.glade.h:7
+#: tmp/state_editor_ld_widget_tab.glade.h:2
+msgid "Logical Linkage"
+msgstr "Logische Verknüpfung"
+
+#: tmp/linkage_overview.glade.h:6 tmp/state_editor_egg_widget.glade.h:6
+#: tmp/state_editor_widget.glade.h:9
+msgid "Outcomes"
+msgstr "Ausgänge"
+
+#: tmp/main_window.glade.h:1 tmp/undocked_window.glade.h:1
+msgid "RAFCON"
+msgstr ""
+
+#: tmp/main_window.glade.h:2 source/rafcon/mvc/views/main_window.py:101
+msgid "GRAPHICAL EDITOR"
+msgstr "GRAPHISCHER EDITOR"
+
+#: tmp/main_window.glade.h:3
+msgid "s"
+msgstr ""
+
+#: tmp/main_window.glade.h:4
+msgid "p"
+msgstr ""
+
+#: tmp/main_window.glade.h:5
+msgid "b"
+msgstr ""
+
+#: tmp/main_window.glade.h:6
+msgid "STOPPED"
+msgstr "Angehalten"
+
+#: tmp/main_window.glade.h:7
+msgid " DEBUG CONSOLE"
+msgstr " FEHLERKONSOLE"
+
+#: tmp/main_window.glade.h:8
+msgid "DEBUG"
+msgstr "Debug"
+
+#: tmp/main_window.glade.h:9
+msgid "INFO"
+msgstr "Info"
+
+#: tmp/main_window.glade.h:10
+msgid "WARNING"
+msgstr "Warnung"
+
+#: tmp/main_window.glade.h:11
+msgid "ERROR"
+msgstr "Fehler"
+
+#: tmp/main_window.glade.h:12 source/rafcon/mvc/views/main_window.py:117
+msgid "STATE EDITOR"
+msgstr "Zustandseditor"
+
+#: tmp/menu_bar.glade.h:1
+msgid "File"
+msgstr "Datei"
+
+#: tmp/menu_bar.glade.h:2
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: tmp/menu_bar.glade.h:3
+msgid "Grid"
+msgstr "Netz"
+
+#: tmp/menu_bar.glade.h:4
+msgid "View"
+msgstr "Ansicht"
+
+#: tmp/menu_bar.glade.h:5
+msgid "Data Flow Mode"
+msgstr "Datenflussmodus"
+
+#: tmp/menu_bar.glade.h:6
+msgid "Show All Data Flows"
+msgstr "Alle Datenflüsse anzeigen"
+
+#: tmp/menu_bar.glade.h:7
+msgid "Show Data Flow Values"
+msgstr "Datenflusswerte anzeigen"
+
+#: tmp/menu_bar.glade.h:8
+msgid "Show Aborted/Preempted"
+msgstr "(Vorzeitig) abgebrochene Zustände anzeigen"
+
+#: tmp/menu_bar.glade.h:9
+msgid "Full Screen Mode"
+msgstr "Vollbildmodus"
+
+#: tmp/menu_bar.glade.h:10
+msgid "Execution"
+msgstr "Ausführung"
+
+#: tmp/menu_bar.glade.h:11
+msgid "Help"
+msgstr "Hilfe"
+
+#: tmp/network_connections_view.glade.h:1
+msgid "Register UDP"
+msgstr "UPD registrieren"
+
+#: tmp/network_connections_view.glade.h:2
+msgid "Connect TCP"
+msgstr "Mit TCP verbinden"
+
+#: tmp/network_connections_view.glade.h:3
+msgid "Registered:"
+msgstr "Registriert:"
+
+#: tmp/network_connections_view.glade.h:4
+msgid "Connected:"
+msgstr "Verbunden:"
+
+#: tmp/network_connections_view.glade.h:5
+msgid "NO"
+msgstr "NEIN"
+
+#: tmp/settings_window.glade.h:1
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: tmp/settings_window.glade.h:2
+msgid "Core Config"
+msgstr "Basiskonfiguration"
+
+#: tmp/settings_window.glade.h:3
+msgid "Libraries"
+msgstr "Bibliotheken"
+
+#: tmp/settings_window.glade.h:4
+msgid "GUI Config"
+msgstr "GUI Einstellungen"
+
+#: tmp/settings_window.glade.h:5
+msgid "Shortcuts"
+msgstr "Tastenkürzel"
+
+#: tmp/settings_window.glade.h:6
+msgid "Core Config Path: "
+msgstr "Pfad zur Basiskonfiguration: "
+
+#: tmp/settings_window.glade.h:7
+msgid "GUI Config Path: "
+msgstr "GUI Einstellungen"
+
+#: tmp/settings_window.glade.h:8
+msgid "Export"
+msgstr "Exportieren"
+
+#: tmp/settings_window.glade.h:9
+msgid "Import"
+msgstr "Importieren"
+
+#: tmp/settings_window.glade.h:10
+msgid "Apply"
+msgstr "Anwenden"
+
+#: tmp/settings_window.glade.h:11
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: tmp/state_data_flows_widget.glade.h:1
+msgid "Data Flows"
+msgstr "Datenflüsse"
+
+#: tmp/state_data_flows_widget.glade.h:2
+#: tmp/state_transitions_widget.glade.h:2
+msgid "Internal"
+msgstr "Intern"
+
+#: tmp/state_data_flows_widget.glade.h:3
+#: tmp/state_transitions_widget.glade.h:3
+msgid "External"
+msgstr "Extern"
+
+#: tmp/state_data_flows_widget.glade.h:4
+#: tmp/state_transitions_widget.glade.h:4
+msgid "Add"
+msgstr "Hinzufügen"
+
+#: tmp/state_data_flows_widget.glade.h:5
+#: tmp/state_transitions_widget.glade.h:5
+msgid "Remove"
+msgstr "Entfernen"
+
+#: tmp/state_dataport_editor.glade.h:1
+msgid "State Dataport Editor"
+msgstr "Datenverbindungen"
+
+#: tmp/state_dataport_editor.glade.h:4 tmp/state_editor_ld_widget.glade.h:3
+#: tmp/state_editor_ld_widget_tab.glade.h:6
+msgid "Input Ports"
+msgstr "Eingänge"
+
+#: tmp/state_dataport_editor.glade.h:5 tmp/state_editor_ld_widget.glade.h:4
+#: tmp/state_editor_ld_widget_tab.glade.h:7
+msgid "Output Ports"
+msgstr "Ausgänge"
+
+#: tmp/state_dataport_editor.glade.h:6 tmp/state_editor_ld_widget.glade.h:5
+#: tmp/state_editor_ld_widget_tab.glade.h:8
+msgid "Scoped Variables"
+msgstr "Variablen im Gültigkeitsbreich"
+
+#: tmp/state_editor_egg_widget.glade.h:3 tmp/state_editor_widget.glade.h:4
+msgid "Inputs"
+msgstr "Eingänge"
+
+#: tmp/state_editor_egg_widget.glade.h:4 tmp/state_editor_widget.glade.h:5
+msgid "Outputs"
+msgstr "Ausgänge"
+
+#: tmp/state_editor_egg_widget.glade.h:5 tmp/state_editor_widget.glade.h:6
+msgid "Scopes"
+msgstr "Gültigkeitsbereiche"
+
+#: tmp/state_editor_egg_widget.glade.h:7 tmp/state_editor_widget.glade.h:7
+msgid "Ports"
+msgstr "Anschlüsse"
+
+#: tmp/state_editor_egg_widget.glade.h:8 tmp/state_editor_widget.glade.h:1
+msgid "Script"
+msgstr "Skript"
+
+#: tmp/state_editor_egg_widget.glade.h:9 tmp/state_editor_widget.glade.h:8
+msgid "DataFlows"
+msgstr "Datenflüsse"
+
+#: tmp/state_editor_egg_widget.glade.h:10 tmp/state_editor_widget.glade.h:10
+#: tmp/state_transitions_widget.glade.h:1
+msgid "Transitions"
+msgstr "Transitionen"
+
+#: tmp/state_editor_egg_widget.glade.h:11
+msgid "Connections"
+msgstr "Verbindungen"
+
+#: tmp/state_editor_ld_widget_tab.glade.h:1
+msgid "Source"
+msgstr "Quellcode"
+
+#: tmp/state_editor_ld_widget_tab.glade.h:3
+msgid "Data Ports"
+msgstr "Datenanschlüsse"
+
+#: tmp/state_editor_ld_widget_tab.glade.h:10
+msgid "Linkage Overview"
+msgstr "Verknüpfungsübersicht"
+
+#: tmp/state_editor_ld_widget_tab.glade.h:11
+msgid "Description"
+msgstr "Beschreibung"
+
+#: tmp/state_overview_widget.glade.h:1
+msgid "Type"
+msgstr "Typ"
+
+#: tmp/state_overview_widget.glade.h:2
+msgid "ID"
+msgstr ""
+
+#: tmp/state_overview_widget.glade.h:3
+msgid "xyz"
+msgstr ""
+
+#: tmp/state_overview_widget.glade.h:4
+msgid "is start state"
+msgstr "Startzustand"
+
+#: tmp/state_overview_widget.glade.h:5
+msgid "Library Path/Name"
+msgstr "Pfad/Name der Bibliothek"
+
+#: tmp/state_overview_widget.glade.h:6
+msgid "Library content"
+msgstr "Bibliothek"
+
+#: tmp/state_overview_widget.glade.h:7
+msgid "show"
+msgstr "Anzeigen"
+
+#: tmp/state_overview_widget.glade.h:8
+msgid "State Name"
+msgstr "Name"
+
+#: tmp/tool_bar.glade.h:1
+msgid "New Statemachine"
+msgstr "Neuer Zustandsautomat"
+
+#: tmp/tool_bar.glade.h:2
+msgid "Open Statemachine"
+msgstr "Zustandsautomat öffnen"
+
+#: tmp/tool_bar.glade.h:3
+msgid "Save Statemachine"
+msgstr "Zustandsautomat speichern"
+
+#: tmp/tool_bar.glade.h:4 source/rafcon/mvc/views/tool_bar.py:18
+msgid "Refresh"
+msgstr "Aktualisieren"
+
+#: tmp/tool_bar.glade.h:5 source/rafcon/mvc/views/tool_bar.py:28
+msgid "Refresh Libraries"
+msgstr "Bibliotheken aktualisieren"
+
+#: tmp/top_tool_bar.glade.h:1
+msgid "m"
+msgstr ""
+
+#: tmp/top_tool_bar.glade.h:2
+msgid "r"
+msgstr ""
+
+#: tmp/top_tool_bar.glade.h:3
+msgid "c"
+msgstr ""
+
+#: source/rafcon/mvc/views/tool_bar.py:15
+msgid "New State Machine"
+msgstr "Neuer Zustandsautomat"
+
+#: source/rafcon/mvc/views/tool_bar.py:21
+msgid "Open State Machine"
+msgstr "Zustandsautomat öffnen"
+
+#: source/rafcon/mvc/views/tool_bar.py:24
+msgid "Save State Machine"
+msgstr "Zustandsautomat speichern"
+
+#: source/rafcon/mvc/start.py:100
+msgid "whether to create a new state-machine"
+msgstr "Legt fest, ob ein neuer Zustandsautomat erzeugt werden soll."
+
+#: source/rafcon/mvc/start.py:103
+msgid ""
+"specify directories of state-machines that shall be opened. Paths must "
+"contain a statemachine.yaml file"
+msgstr ""
+"Geben Sie Verzeichnisse mit Zustandsautomaten an, die geöffnet werden "
+"sollen. Alle Pfade müssen eine Datei mit dem Namen statemachine.yaml "
+"enthalten."
+
+#: source/rafcon/mvc/start.py:107
+#, python-brace-format
+msgid ""
+"path to the configuration file config.yaml. Use 'None' to prevent the "
+"generation of a config file and use the default configuration. Default: {0}"
+msgstr ""
+"Pfad zu Konfigurationdatei config.yaml. Tragen Sie 'None' ein, um keine "
+"Konfigurationsdatei zu erstellen und mit den Standardeinstellungen zu "
+"arbeiten. Standard: {0}"
+
+#: source/rafcon/mvc/start.py:111
+#, python-brace-format
+msgid ""
+"path to the configuration file gui_config.yaml. Use 'None' to prevent the "
+"generation of a config file and use the default configuration. Default: {0}"
+msgstr ""
+"Pfad zu Konfigurationdatei gui_config.yaml. Tragen Sie 'None' ein, um keine "
+"Konfigurationsdatei zu erstellen und mit den Standardeinstellungen zu "
+"arbeiten. Standard: {0}"
+
+#: source/rafcon/mvc/start.py:115
+msgid ""
+"a flag to specify if the state machine should be started after launching "
+"rafcon"
+msgstr ""
+"Dieser Wert legt fest, ob der Zustandsautomat mit RAFCON gestartet werden "
+"soll."
+
+#: source/rafcon/mvc/start.py:117
+msgid "path of to the state that should be launched"
+msgstr "Pfad zu dem Zustand der gestartet werden soll"
+
+#: source/rafcon/mvc/start.py:120
+msgid ""
+"a flag to specify if the gui should quit after launching a state machine"
+msgstr ""
+"Dieser Wert legt fest, ob die Benutzeroberfläche nach dem Start des "
+"Zustandsautomaten beendet wird."
+
+#: source/rafcon/mvc/start.py:145
+msgid "Could not load state machine '{}': {}"
+msgstr "Zustandsautomat '{}' konnte nicht geladen werden: {}"
+
+#: source/rafcon/mvc/start.py:169
+msgid ""
+"Signal '{}' received.\n"
+"Execution engine will be stopped and program will be shutdown!"
+msgstr ""
+"Signal '{}' erhalten.\n"
+"Zustandsautomat wird angehalten und das Programm beendet!"
+
+#: source/rafcon/mvc/start.py:176
+#, python-brace-format
+msgid "Could not stop state machine: {0} {1}"
+msgstr "Zustandsautomat konnte nicht angehalten werden: {0} {1}"
+
+#: source/rafcon/mvc/start.py:201
+msgid "RAFCON launcher"
+msgstr "RAFCON Starter"
+
+#: source/rafcon/mvc/start.py:242
+msgid "Main window was closed"
+msgstr "Hauptfenster geschlossen"
+
+#: source/rafcon/mvc/start.py:256
+msgid "External remove of lock file detected!"
+msgstr "Lock Datei wurde entfernt"
+
+#: source/rafcon/mvc/start.py:259
+msgid "Waiting for the state machine execution to finish"
+msgstr "Warte auf Zustandsautomaten"
+
+#: source/rafcon/mvc/start.py:261
+msgid "State machine execution has finished"
+msgstr "Zustandsautomat regulär beendet"
+
+#: source/rafcon/mvc/start.py:263
+msgid "Exiting ..."
+msgstr "Beende ..."

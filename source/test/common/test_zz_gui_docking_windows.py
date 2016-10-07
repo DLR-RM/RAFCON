@@ -34,10 +34,10 @@ def mirror_runtime_config_file():
         warnings += 1
 
 
-def get_stored_window_size(window_key):
-    size = global_runtime_config.get_config_value(window_key.upper() + '_BAR_WINDOW_SIZE')
+def get_stored_window_size(window_name):
+    size = global_runtime_config.get_config_value(window_name.upper() + '_SIZE')
     if not size:
-        size = constants.WINDOW_SIZE[window_key.upper() + '_BAR_WINDOW']
+        size = constants.WINDOW_SIZE[window_name.upper()]
     return size
 
 
@@ -65,35 +65,38 @@ def trigger_docking_signals(*args):
         print "finally"
         condition.release()
 
-    def test_bar(window, window_key):
+    def test_bar(window, window_name, window_key):
         window.connect('configure-event', ensure_completion)
-        call_gui_callback(getattr(main_window_controller, 'on_{}_bar_undock_clicked'.format(window_key)), None)
+        call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key)].emit, "clicked")
         wait_for_gui()
         wait_for_gui()
         assert window.get_property('visible') == True
-        should_size = get_stored_window_size(window_key)
+        should_size = get_stored_window_size(window_name)
         assert window.get_size() == should_size
         window.resize(600, 600)
         wait_for_gui()
         wait_for_gui()
-        call_gui_callback(getattr(main_window_controller, 'on_{}_bar_dock_clicked'.format(window_key)), None)
-        call_gui_callback(getattr(main_window_controller, 'on_{}_bar_undock_clicked'.format(window_key)), None)
+
+        undocked_window_view = getattr(main_window_controller.view, window_name.lower())
+        redock_button = getattr(undocked_window_view, "top_tool_bar")['redock_button']
+        call_gui_callback(redock_button.emit, "clicked")
+        main_window_controller.view["undock_{}_button".format(window_key)].emit("clicked")
         assert window.get_size() == (600, 600)
         wait_for_gui()
         window.move(100, 100)
         wait_for_gui()
         wait_for_gui()
-        call_gui_callback(getattr(main_window_controller, 'on_{}_bar_dock_clicked'.format(window_key)), None)
-        call_gui_callback(getattr(main_window_controller, 'on_{}_bar_undock_clicked'.format(window_key)), None)
-        # Does not work relieable...
+        call_gui_callback(redock_button.emit, "clicked")
+        main_window_controller.view["undock_{}_button".format(window_key)].emit("clicked")
+        # Does not work reliable...
         # assert window.get_position() == (100, 100)
 
     print "test left_bar_window"
-    test_bar(main_window_controller.view.left_bar_window.get_top_widget(), 'left')
+    test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR_WINDOW", 'left_bar')
     print "test right_bar_window"
-    test_bar(main_window_controller.view.right_bar_window.get_top_widget(), 'right')
+    test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR_WINDOW", 'right_bar')
     print "test console_bar_window"
-    test_bar(main_window_controller.view.console_bar_window.get_top_widget(), 'console')
+    test_bar(main_window_controller.view.console_bar_window.get_top_widget(), "CONSOLE_BAR_WINDOW", 'console')
 
     call_gui_callback(menu_bar_ctrl.on_quit_activate, None)
 
@@ -127,20 +130,22 @@ def trigger_pane_signals(*args):
         print "finally"
         condition.release()
 
-    def test_bar(window, window_key):
+    def test_bar(window, window_name, window_key):
         window.connect('configure-event', ensure_completion)
-        call_gui_callback(getattr(mw_ctrl, 'on_{}_bar_undock_clicked'.format(window_key)), None)
+        call_gui_callback(mw_ctrl.view["undock_{}_button".format(window_key)].emit, "clicked")
         wait_for_gui()
         wait_for_gui()
-        call_gui_callback(getattr(mw_ctrl, 'on_{}_bar_dock_clicked'.format(window_key)), None)
+        undocked_window_view = getattr(mw_ctrl.view, window_name.lower())
+        redock_button = getattr(undocked_window_view, "top_tool_bar")['redock_button']
+        call_gui_callback(redock_button.emit, "clicked")
         wait_for_gui()
 
     print "test left_bar_window"
-    test_bar(mw_ctrl.view.left_bar_window.get_top_widget(), 'left')
+    test_bar(mw_ctrl.view.left_bar_window.get_top_widget(), "LEFT_BAR_WINDOW", 'left_bar')
     print "test right_bar_window"
-    test_bar(mw_ctrl.view.right_bar_window.get_top_widget(), 'right')
+    test_bar(mw_ctrl.view.right_bar_window.get_top_widget(), "RIGHT_BAR_WINDOW", 'right_bar')
     print "test console_bar_window"
-    test_bar(mw_ctrl.view.console_bar_window.get_top_widget(), 'console')
+    test_bar(mw_ctrl.view.console_bar_window.get_top_widget(), "CONSOLE_BAR_WINDOW", 'console')
 
     print "check if pane positions are still like in runtime_config.yaml"
     for config_id, pane_id in constants.PANE_ID.iteritems():

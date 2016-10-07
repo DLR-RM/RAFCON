@@ -11,10 +11,14 @@
 import gtk
 
 from rafcon.mvc.utils import constants
-from rafcon.mvc.gui_helper import create_image_menu_item
+from rafcon.mvc.gui_helper import create_image_menu_item, create_check_menu_item
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.models.abstract_state import AbstractStateModel
+from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 import rafcon.mvc.singleton as mvc_singleton
+from rafcon.mvc.config import global_gui_config
 
 from rafcon.utils import log
 
@@ -33,41 +37,77 @@ class StateMachineRightClickMenu:
         from rafcon.mvc.singleton import main_window_controller
         shortcut_manager = main_window_controller.shortcut_manager
         self.shortcut_manager = shortcut_manager
+        self.accel_group = gtk.AccelGroup()
 
     def generate_right_click_menu_state(self):
         menu = gtk.Menu()
+        accel_group = self.accel_group
+        shortcuts_dict = global_gui_config.get_config_value('SHORTCUTS')
 
-        menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate))
-        menu.append(create_image_menu_item("Paste selection", constants.BUTTON_PASTE, self.on_paste_activate))
-        menu.append(create_image_menu_item("Cut selection", constants.BUTTON_CUT, self.on_cut_activate))
-        menu.append(create_image_menu_item("Group states", constants.BUTTON_GROUP, self.on_group_states_activate))
-        menu.append(create_image_menu_item("Ungroup states", constants.BUTTON_UNGR, self.on_ungroup_state_activate))
+        self.insert_is_start_state_in_menu(menu, shortcuts_dict, accel_group)
+
+        menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate,
+                                           accel_code=shortcuts_dict['copy'][0], accel_group=accel_group))
+        menu.append(create_image_menu_item("Paste selection", constants.BUTTON_PASTE, self.on_paste_activate,
+                                           accel_code=shortcuts_dict['paste'][0], accel_group=accel_group))
+        menu.append(create_image_menu_item("Cut selection", constants.BUTTON_CUT, self.on_cut_activate,
+                                           accel_code=shortcuts_dict['cut'][0], accel_group=accel_group))
+        menu.append(create_image_menu_item("Group states", constants.BUTTON_GROUP, self.on_group_states_activate,
+                                           accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
+        menu.append(create_image_menu_item("Ungroup states", constants.BUTTON_UNGR, self.on_ungroup_state_activate,
+                                           accel_code=shortcuts_dict['ungroup'][0], accel_group=accel_group))
         menu.append(create_image_menu_item("Run from here", constants.BUTTON_START_FROM_SELECTED_STATE,
-                                           self.on_run_from_selected_state_activate))
+                                           self.on_run_from_selected_state_activate,
+                                           accel_code=shortcuts_dict['start_from_selected'][0], accel_group=accel_group))
         menu.append(create_image_menu_item("Stop here", constants.BUTTON_RUN_TO_SELECTED_STATE,
-                                           self.on_run_to_selected_state_activate))
+                                           self.on_run_to_selected_state_activate,
+                                           accel_code=shortcuts_dict['run_to_selected'][0], accel_group=accel_group))
         menu.append(create_image_menu_item("Save state as state machine", constants.BUTTON_SAVE,
-                                           self.on_save_state_as_state_machine_activate))
+                                           self.on_save_state_as_state_machine_activate,
+                                           accel_code=shortcuts_dict['save_state_as'][0], accel_group=accel_group))
         menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
-                                           self.on_substitute_state_activate))
+                                           self.on_substitute_state_activate,
+                                           accel_code=shortcuts_dict['substitute_state'][0], accel_group=accel_group))
 
         return menu
 
+    def insert_is_start_state_in_menu(self, menu, shortcuts_dict, accel_group):
+
+        state_m_list = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+        has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
+        if len(state_m_list) == 1 and isinstance(state_m_list[0], AbstractStateModel) and \
+                not state_m_list[0].state.is_root_state and \
+                not isinstance(state_m_list[0].parent.state, has_no_start_state_state_types):
+            menu.append(create_check_menu_item("Is start state", state_m_list[0].is_start, self.on_toggle_is_start_state,
+                                               accel_code=shortcuts_dict['is_start_state'][0], accel_group=accel_group))
+
     def generate_right_click_menu_library(self):
         menu = gtk.Menu()
+        accel_group = self.accel_group
+        shortcuts_dict = global_gui_config.get_config_value('SHORTCUTS')
 
-        menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate))
-        menu.append(create_image_menu_item("Cut selection", constants.BUTTON_CUT, self.on_cut_activate))
+        self.insert_is_start_state_in_menu(menu, shortcuts_dict, accel_group)
+
+        menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate,
+                                           accel_code=shortcuts_dict['copy'][0], accel_group=accel_group))
+        menu.append(create_image_menu_item("Cut selection", constants.BUTTON_CUT, self.on_cut_activate,
+                                           accel_code=shortcuts_dict['cut'][0], accel_group=accel_group))
         menu.append(create_image_menu_item("Run from here", constants.BUTTON_START_FROM_SELECTED_STATE,
-                                           self.on_run_from_selected_state_activate))
+                                           self.on_run_from_selected_state_activate,
+                                           accel_code=shortcuts_dict['start_from_selected'][0], accel_group=accel_group))
         menu.append(create_image_menu_item("Stop here", constants.BUTTON_RUN_TO_SELECTED_STATE,
-                                           self.on_run_to_selected_state_activate))
+                                           self.on_run_to_selected_state_activate,
+                                           accel_code=shortcuts_dict['run_to_selected'][0], accel_group=accel_group))
         menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
-                                           self.on_substitute_state_activate))
+                                           self.on_substitute_state_activate,
+                                           accel_code=shortcuts_dict['substitute_state'][0], accel_group=accel_group))
         menu.append(create_image_menu_item("Substitute library with template", constants.BUTTON_REFR,
                                            self.on_substitute_library_with_template_activate))
 
         return menu
+
+    def on_toggle_is_start_state(self, widget, data=None):
+        self.shortcut_manager.trigger_action("is_start_state", None, None)
 
     def on_copy_activate(self, widget, data=None):
         # logger.info("trigger default copy")

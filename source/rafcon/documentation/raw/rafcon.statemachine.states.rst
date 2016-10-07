@@ -35,7 +35,3 @@ preemptive_concurrency
 state
 -----
 .. automodule:: rafcon.statemachine.states.state
-
-state_helper
-------------
-.. automodule:: rafcon.statemachine.states.state_helper

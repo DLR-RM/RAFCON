@@ -12,7 +12,7 @@ MANTIS_PROJECT      = DLR Flow-Control
 SUPPORTED_LANGUAGES = python
 DEPENDS = 
 DEPENDS.sled11*     = gtk_etc==0, gtk_etc_python==0, python-jsonconversion==0.1, python_yaml_configuration==0
-DEPENDS.osl*        = python-gtkmvc==1.99, python-gaphas==0.7, python-jsonconversion==0.1, python_yaml_configuration==0
+DEPENDS.osl*        = python-gtkmvc==1.99, python-gaphas==0.7, python-jsonconversion==0.1, python_yaml_configuration==0, sw.common.pango==1.40
 
 ARCHS               = sled11-x86-gcc4.x, sled11-x86_64-gcc4.x, osl42-x86_64
 PYTHON_PATHS        = ${PKGROOT}/lib/python2.7
@@ -30,4 +30,4 @@ source/rafcon/documentation => docs
 bin/ | !rafcon_start | !rafcon_start_gui | !*.pyc => bin # Symlinks are recreated in post_install step
 
 [post-install]
-cd ${RMPM_INSTALL_DIR}/bin && ln -s ../lib/python2.7/rafcon/statemachine/start.py rafcon_start && ln -s ../lib/python2.7/rafcon/mvc/start.py rafcon_start_gui
+cd ${RMPM_INSTALL_DIR}/bin && ln -s ../lib/python2.7/rafcon/statemachine/start.py rafcon_start && ln -s ../lib/python2.7/rafcon/mvc/start.py rafcon_start_gui && ln -s ../lib/python2.7/rafcon/mvc/resave_state_machines.py resave_state_machines

@@ -147,8 +147,13 @@ class StateMachineExecutionEngine(Observable):
             self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
 
     def _run_active_state_machine(self):
-        """Store running state machine and observe its status"""
+        """Store running state machine and observe its status
+        """
+
+        # Create new concurrency queue for root state to be able to synchronize with the execution
         self.__running_state_machine = self.state_machine_manager.get_active_state_machine()
+        self.__running_state_machine.root_state.concurrency_queue = Queue.Queue(maxsize=0)
+
         if self.__running_state_machine:
             self.__running_state_machine.start()
 
@@ -358,16 +363,13 @@ class StateMachineExecutionEngine(Observable):
         if not state_machine:
             state_machine = storage.load_state_machine_from_path(path)
             rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-        rafcon.statemachine.singleton.state_machine_execution_engine.start(start_state_path=start_state_path)
-        sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
 
-        concurrency_queue = Queue.Queue(maxsize=0)  # infinite Queue size
-        sm.root_state.concurrency_queue = concurrency_queue
+        rafcon.statemachine.singleton.state_machine_execution_engine.start(start_state_path=start_state_path)
 
         if wait_for_execution_finished:
             self.join()
             self.stop()
-        return sm
+        return rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
 
     @Observable.observed
     def set_execution_mode(self, execution_mode, notify=True):

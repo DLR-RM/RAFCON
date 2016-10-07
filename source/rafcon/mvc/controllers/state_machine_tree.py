@@ -14,14 +14,17 @@ import gtk
 import gobject
 
 from rafcon.statemachine.enums import StateType
+
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-from rafcon.mvc.utils.notification_overview import NotificationOverview
-from rafcon.utils import log
-from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS as EXECUTION_TRIGGERED_METHODS
+
 from rafcon.mvc import state_machine_helper
-from rafcon.mvc.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
+from rafcon.mvc.gui_helper import react_to_event
+from rafcon.mvc.utils.notification_overview import NotificationOverview
+from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS as EXECUTION_TRIGGERED_METHODS
+from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
@@ -99,27 +102,32 @@ class StateMachineTreeController(ExtendedController):
         else:
             self.tree_store.clear()
 
-    def _add_new_state(self, *args, **kwargs):
+    def _add_new_state(self, *event, **kwargs):
         """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
 
         Adds a new state only if the the state machine tree is in focus.
         """
-        if self.view and self.view['state_machine_tree_view'].is_focus():
+        if react_to_event(self.view, self.view['state_machine_tree_view'], event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
             return state_machine_helper.add_new_state(self._selected_sm_model, state_type)
 
-    def _delete_selection(self, *args):
-        if self.view and self.view['state_machine_tree_view'].is_focus():
+    def _delete_selection(self, *event):
+        if react_to_event(self.view, self.view['state_machine_tree_view'], event):
             return state_machine_helper.delete_selected_elements(self._selected_sm_model)
+
+    @staticmethod
+    def is_to_avoid_because_execution_status_update(prop_name, info):
+        # avoid updates or checks because of execution status updates
+        if prop_name == 'states' and 'kwargs' in info and 'method_name' in info['kwargs'] and \
+                info['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS or \
+                prop_name == 'state' and 'method_name' in info and info['method_name'] in EXECUTION_TRIGGERED_METHODS:
+            return
 
     @ExtendedController.observe("state", after=True)  # root_state
     @ExtendedController.observe("states", after=True)
     def states_update(self, model, prop_name, info):
 
-        # avoid updates or checks because of execution status updates
-        if prop_name == 'states' and 'kwargs' in info and 'method_name' in info['kwargs'] and \
-                info['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS or \
-                prop_name == 'state' and 'method_name' in info and info['method_name'] in EXECUTION_TRIGGERED_METHODS:
+        if self.is_to_avoid_because_execution_status_update(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
@@ -128,8 +136,27 @@ class StateMachineTreeController(ExtendedController):
                 overview['method_name'][-1] in ["name"]:  # , "add_state", "remove_state"]:
             self.update_tree_store_row(overview['model'][-1])
         elif overview['prop_name'][-1] == 'state' and \
-                overview['method_name'][-1] in ["add_state", "remove_state", "change_state_type"]:
+                overview['method_name'][-1] in ["add_state", "remove_state"]:
             self.update(model)
+
+    @ExtendedController.observe("state", before=True)  # root_state
+    @ExtendedController.observe("states", before=True)
+    def states_update_before(self, model, prop_name, info):
+
+        if self.is_to_avoid_because_execution_status_update(prop_name, info):
+            return
+
+        overview = NotificationOverview(info, False, self.__class__.__name__)
+
+        if overview['prop_name'][-1] == 'state' and \
+                overview['method_name'][-1] in ["change_state_type"]:
+            changed_model = self._selected_sm_model.get_state_model_by_path(overview['args'][-1][1].get_path())
+            self.observe_model(changed_model)
+
+    @ExtendedController.observe("state_type_changed_signal", signal=True)
+    def notification_state_type_changed(self, model, prop_name, info):
+        self.relieve_model(model)
+        self.update() if model.state.is_root_state else self.update(model.parent)
 
     @ExtendedController.observe("root_state", assign=True)
     def state_machine_notification(self, model, property, info):

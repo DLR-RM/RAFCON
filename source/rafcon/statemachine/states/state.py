@@ -15,11 +15,10 @@ import threading
 from __builtin__ import staticmethod
 from weakref import ref
 
-from gtkmvc import Observable
-from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
-import rafcon
+from gtkmvc import Observable
+from jsonconversion.jsonobject import JSONObject
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
@@ -27,12 +26,13 @@ from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.utils import log
 from rafcon.utils import multi_event
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
+from rafcon.utils.hashable import Hashable
 
 logger = log.get_logger(__name__)
 PATH_SEPARATOR = '/'
 
 
-class State(Observable, YAMLObject, JSONObject):
+class State(Observable, YAMLObject, JSONObject, Hashable):
 
     """A class for representing a state in the state machine
 
@@ -129,6 +129,9 @@ class State(Observable, YAMLObject, JSONObject):
 
     def to_dict(self):
         return self.state_to_dict(self)
+
+    def update_hash(self, obj_hash):
+        return Hashable.update_hash_from_dict(obj_hash, self.to_dict())
 
     @classmethod
     def from_dict(cls, dictionary):
@@ -523,7 +526,7 @@ class State(Observable, YAMLObject, JSONObject):
         """
         if outcome_id not in self.outcomes:
             raise AttributeError("There is no outcome_id %s" % str(outcome_id))
-        
+
         if not force:
             if outcome_id == -1 or outcome_id == -2:
                 raise AttributeError("You cannot remove the outcomes with id -1 or -2 as a state must always be able"

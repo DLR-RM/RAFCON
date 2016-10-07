@@ -15,6 +15,7 @@ from rafcon.mvc.models.library_manager import LibraryManagerModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.global_variable_manager import GlobalVariableManagerModel
 from rafcon.mvc.models.state_machine_execution_engine import StateMachineExecutionEngineModel
+from rafcon.mvc.models.settings_model import SettingsModel
 from rafcon.mvc.runtime_config import global_runtime_config
 
 
@@ -38,6 +39,13 @@ def open_folder(query):
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_current_folder(last_path)
+    dialog.set_show_hidden(False)
+
+    library_paths = library_manager.library_paths
+    library_keys = sorted(library_paths)
+    for library_key in library_keys:
+        dialog.add_shortcut_folder(library_paths[library_key])
+
     response = dialog.run()
 
     if response != gtk.RESPONSE_OK:
@@ -58,9 +66,11 @@ interface.open_folder_func = open_folder
 
 def create_folder(query):
     import gtk
-    from os.path import expanduser
+    from os.path import expanduser, dirname
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
-    if not last_path:
+    if last_path:
+        last_path = dirname(last_path)
+    else:
         last_path = expanduser('~')
 
     dialog = gtk.FileChooserDialog(query,
@@ -73,6 +83,13 @@ def create_folder(query):
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_current_folder(last_path)
+    dialog.set_show_hidden(False)
+
+    library_paths = library_manager.library_paths
+    library_keys = sorted(library_paths)
+    for library_key in library_keys:
+        dialog.add_shortcut_folder(library_paths[library_key])
+
     response = dialog.run()
 
     if response != gtk.RESPONSE_OK:
@@ -116,3 +133,5 @@ state_machine_execution_model = StateMachineExecutionEngineModel(state_machine_e
 global_variable_manager_model = GlobalVariableManagerModel(global_variable_manager)
 
 main_window_controller = None
+
+settings_model = SettingsModel()

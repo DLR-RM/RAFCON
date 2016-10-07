@@ -16,6 +16,7 @@ from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 
 from rafcon.mvc import singleton as mvc_singleton
 
+from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -162,7 +163,11 @@ class ModificationHistoryTreeController(ExtendedController):
         # TODO re-organize as request to controller which holds source-editor-view or any parent to it
         for key, tab in mvc_singleton.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
             if tab['controller'].get_controller('source_ctrl') is not None and \
-                    tab['controller'].get_controller('source_ctrl').view.textview.is_focus():
+                    react_to_event(self.view, tab['controller'].get_controller('source_ctrl').view.textview,
+                                   (key_value, modifier_mask)) or \
+                tab['controller'].get_controller('description_ctrl') is not None and \
+                    react_to_event(self.view, tab['controller'].get_controller('description_ctrl').view.textview,
+                                   (key_value, modifier_mask)):
                 return False
         if self._selected_sm_model is not None:
             self._selected_sm_model.history.undo()
@@ -179,7 +184,11 @@ class ModificationHistoryTreeController(ExtendedController):
         # TODO re-organize as request to controller which holds source-editor-view or any parent to it
         for key, tab in mvc_singleton.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
             if tab['controller'].get_controller('source_ctrl') is not None and \
-                    tab['controller'].get_controller('source_ctrl').view.textview.is_focus():
+                    react_to_event(self.view, tab['controller'].get_controller('source_ctrl').view.textview,
+                                   (key_value, modifier_mask)) or \
+                tab['controller'].get_controller('description_ctrl') is not None and \
+                    react_to_event(self.view, tab['controller'].get_controller('description_ctrl').view.textview,
+                                   (key_value, modifier_mask)):
                 return False
         if self._selected_sm_model is not None:
             self._selected_sm_model.history.redo()

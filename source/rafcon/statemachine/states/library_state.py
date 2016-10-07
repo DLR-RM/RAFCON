@@ -10,13 +10,13 @@
 from copy import copy
 
 from gtkmvc import Observable
-
 from rafcon.statemachine.enums import StateExecutionState
+from rafcon.statemachine.singleton import library_manager
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.singleton import library_manager
-from rafcon.utils import type_helpers
 from rafcon.utils import log
+from rafcon.utils import type_helpers
+from rafcon.utils.hashable import Hashable
 
 logger = log.get_logger(__name__)
 
@@ -298,6 +298,10 @@ class LibraryState(State):
         return cls(library_path, library_name, version, name, state_id, outcomes,
                    input_data_port_runtime_values, use_runtime_value_input_data_ports,
                    output_data_port_runtime_values, use_runtime_value_output_data_ports)
+
+    def update_hash(self, obj_hash):
+        super(LibraryState, self).update_hash(obj_hash)
+        self.state_copy.update_hash(obj_hash)
 
     @staticmethod
     def state_to_dict(state):

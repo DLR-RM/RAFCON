@@ -20,12 +20,13 @@ class UndockedWindowController(ExtendedController):
     :param rafcon.mvc.views.undocked_window.UndockedWindowView view: The GTK View showing the separate window
     """
 
-    def __init__(self, state_machine_manager_model, view):
+    def __init__(self, state_machine_manager_model, view, redock_method):
         ExtendedController.__init__(self, state_machine_manager_model, view)
 
         self.top_tool_bar_undocked_window_controller = TopToolBarUndockedWindowController(state_machine_manager_model,
                                                                                           view.top_tool_bar,
-                                                                                          view['undock_window'])
+                                                                                          view['undock_window'],
+                                                                                          redock_method)
 
         self.add_controller('top_tool_bar_undocked_window_controller', self.top_tool_bar_undocked_window_controller)
 

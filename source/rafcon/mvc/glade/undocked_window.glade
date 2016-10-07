@@ -6,6 +6,10 @@
     <property name="border_width">3</property>
     <property name="title" translatable="yes">RAFCON</property>
     <property name="window_position">center</property>
+    <property name="destroy_with_parent">True</property>
+    <property name="skip_taskbar_hint">True</property>
+    <property name="decorated">False</property>
+    <property name="deletable">False</property>
     <child>
       <object class="GtkEventBox" id="top_level_event_box">
         <property name="visible">True</property>
@@ -26,7 +30,7 @@
                     <child>
                       <object class="GtkLabel" id="top_tool_bar_placeholder">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">top_tool_bar_placeholder</property>
+                        <property name="label">top_tool_bar_placeholder</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>

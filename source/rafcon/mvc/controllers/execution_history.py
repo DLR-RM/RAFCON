@@ -42,9 +42,6 @@ class ExecutionHistoryTreeController(ExtendedController):
 
     def __init__(self, model=None, view=None, state_machine_manager=None):
 
-        # TODO: Remove quick fix for long execution histories
-        sys.setrecursionlimit(100000)
-
         assert isinstance(model, StateMachineManagerModel)
         assert isinstance(view, ExecutionHistoryView)
         assert isinstance(state_machine_manager, StateMachineManager)
@@ -219,52 +216,51 @@ class ExecutionHistoryTreeController(ExtendedController):
                 tree_item = self.history_tree_store.insert_after(
                     None, None, (history_item.state_reference.name + " - Run " + str(execution_number),
                                  history_item))
-                self.insert_recursively(tree_item, execution_history.history_items, 1)
+                self.insert_recursively(tree_item, execution_history.history_items)
 
-    def insert_recursively(self, parent, history_items, index):
+    def insert_recursively(self, parent, history_items):
         """
         Recursively insert a list of history items into a the tree store
         :param parent: the parent to add the next history item to
         :param history_items: all history items of a certain state machine execution
-        :param index: the index of the current history item
         :return:
         """
-        if index >= len(history_items):
-            return
-        history_item = history_items[index]
-        new_index = index + 1
-        if isinstance(history_item, ConcurrencyItem):
-            # self.history_tree_store.insert_before(parent, None, (history_item.state_reference.name + " - Call",
-            #                                                      history_item))
-            self.insert_concurrency(parent, history_item.execution_histories)
-            self.insert_recursively(parent, history_items, new_index)
-        else:
-            if isinstance(history_item, CallItem):
-                tree_item = self.history_tree_store.insert_before(
-                    parent, None, (history_item.state_reference.name + " - Call",
-                                   history_item))
-                if history_item.call_type is CallType.EXECUTE:
-                    # this is necessary that already the CallType.EXECUTE item opens a new hierarchy in the
-                    # tree view and not the CallType.CONTAINER item
-                    if len(history_items) > index + 1:
-                        next_history_item = history_items[index + 1]
-                        if next_history_item.call_type is CallType.CONTAINER:
-                            new_tree_item = self.history_tree_store.insert_before(
-                                tree_item, None, (next_history_item.state_reference.name + " - Call", next_history_item))
-                            self.insert_recursively(tree_item, history_items, new_index + 1)
-                        else:
-                            self.insert_recursively(parent, history_items, new_index)
+        index = 0
+        current_parent = parent
+        skip_next = False
+        for history_item in history_items:
+            if skip_next:
+                skip_next = False
+                index += 1
+                continue
 
-                else:
-                    self.insert_recursively(tree_item, history_items, new_index)
-            else:  # history_item is ReturnItem
-                tree_item = self.history_tree_store.insert_before(
-                    parent, None, (history_item.state_reference.name + " - Return",
-                                   history_item))
-                if history_item.call_type is CallType.EXECUTE:
-                    self.insert_recursively(parent, history_items, new_index)
-                else:
-                    self.insert_recursively(self.history_tree_store.iter_parent(parent), history_items, new_index)
+            if isinstance(history_item, ConcurrencyItem):
+                self.insert_concurrency(current_parent, history_item.execution_histories)
+                # self.insert_recursively(current_parent, history_items, new_index)
+            else:
+                if isinstance(history_item, CallItem):
+                    tree_item = self.history_tree_store.insert_before(
+                        current_parent, None, (history_item.state_reference.name + " - Call",
+                                       history_item))
+                    if history_item.call_type is CallType.EXECUTE:
+                        # this is necessary that already the CallType.EXECUTE item opens a new hierarchy in the
+                        # tree view and not the CallType.CONTAINER item
+                        if len(history_items) > index + 1:
+                            next_history_item = history_items[index + 1]
+                            if next_history_item.call_type is CallType.CONTAINER:
+                                new_tree_item = self.history_tree_store.insert_before(
+                                    tree_item, None, (next_history_item.state_reference.name + " - Call", next_history_item))
+                                current_parent = tree_item
+                                skip_next = True
+
+                else:  # history_item is ReturnItem
+                    tree_item = self.history_tree_store.insert_before(
+                        current_parent, None, (history_item.state_reference.name + " - Return",
+                                       history_item))
+                    if history_item.call_type is CallType.CONTAINER:
+                        current_parent = self.history_tree_store.iter_parent(current_parent)
+
+                index += 1
 
     def insert_concurrency(self, parent, children_execution_histories):
         """
@@ -276,30 +272,12 @@ class ExecutionHistoryTreeController(ExtendedController):
         assert isinstance(children_execution_histories, dict)
         for child_history_number, child_history in children_execution_histories.iteritems():
             if len(child_history.history_items) >= 1:
-                index = 0
-                new_index = index + 1
-                first_history_item = child_history.history_items[index]
+                first_history_item = child_history.history_items[0]
+                # this is just a dummy item to have an extra parent for each branch
+                # gives better overview in case that one of the child state is a simple execution state
                 tree_item = self.history_tree_store.insert_before(
                     parent, None, (first_history_item.state_reference.name + " - Concurrency Branch",
-                                   first_history_item))
+                                   None))
+                self.insert_recursively(tree_item, child_history.history_items)
 
-                # slim variant but does not look so nice in the tree
-                # self.insert_recursively(parent, child_history.history_items, 1)
-
-                # this is necessary that already the CallType.EXECUTE item opens a new hierarchy in the
-                # tree view and not the CallType.CONTAINER item
-                if first_history_item.call_type is CallType.EXECUTE:
-                    # this is necessary that already the CallType.EXECUTE item opens a new hierarchy in the
-                    # tree view and not the CallType.CONTAINER item
-                    if len(child_history.history_items) > index + 1:
-                        next_history_item = child_history.history_items[index + 1]
-                        if next_history_item.call_type is CallType.CONTAINER:
-                            new_tree_item = self.history_tree_store.insert_before(
-                                tree_item, None, (next_history_item.state_reference.name + " - Call", next_history_item))
-                            self.insert_recursively(tree_item, child_history.history_items, new_index + 1)
-                        else:
-                            self.insert_recursively(parent, child_history.history_items, new_index)
-
-                else:
-                    self.insert_recursively(tree_item, child_history.history_items, new_index)
 

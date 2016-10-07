@@ -95,6 +95,8 @@ class LibraryManager(Observable):
         # If the path is relative, assume it is relative to the config file directory
         if path.startswith('.'):
             path = os.path.join(config.global_config.path, path)
+        elif path.startswith('..'):
+            path = os.path.join(config.global_config.path, "./" + path)
         # Clean path, e.g. replace /./ with /
         path = os.path.abspath(path)
         # Eliminate symbolic links
@@ -151,6 +153,12 @@ class LibraryManager(Observable):
             raise TypeError("libraries must be of type dict")
 
         self._libraries = libraries
+
+    @property
+    def library_paths(self):
+        """Getter for library paths
+        """
+        return self._library_paths
 
     def get_os_path_to_library(self, library_path, library_name, allow_user_interaction=True):
         """Find path of library
@@ -285,7 +293,7 @@ class LibraryManager(Observable):
                     library_root_name = key
                     path_elements_without_library_root = path[len(library_root_path)+1:].split('/')
                     library_name = path_elements_without_library_root[-1]
-                    library_path = library_root_name + '/'.join(path_elements_without_library_root[:-1])
+                    library_path = library_root_name + '/' + '/'.join(path_elements_without_library_root[:-1])
                     break
         return library_path, library_name
 

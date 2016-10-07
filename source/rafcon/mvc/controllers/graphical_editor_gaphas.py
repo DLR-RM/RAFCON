@@ -33,6 +33,7 @@ from rafcon.mvc.mygaphas.items.ports import OutcomeView, DataPortView, ScopedVar
 from rafcon.mvc.mygaphas.canvas import MyCanvas
 from rafcon.mvc.mygaphas import guide
 
+from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -143,33 +144,35 @@ class GraphicalEditorController(ExtendedController):
         self.handle_selected_states(self.model.selection.get_states())
         self.canvas.update_root_items()
 
-    def _add_new_state(self, *args, **kwargs):
+    def _add_new_state(self, *event, **kwargs):
         """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
 
         Adds a new state only if the graphical editor is in focus.
         """
-        if self.view and self.view.editor.is_focus():
+        if react_to_event(self.view, self.view.editor, event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
             return state_machine_helper.add_new_state(self.model, state_type)
 
-    def _copy_selection(self, *args):
+    def _copy_selection(self, *event):
         """Copies the current selection to the clipboard.
         """
-        if self.view and self.view.editor.is_focus():
+        if react_to_event(self.view, self.view.editor, event):
             logger.debug("copy selection")
             global_clipboard.copy(self.model.selection)
+            return True
 
-    def _cut_selection(self, *args):
+    def _cut_selection(self, *event):
         """Cuts the current selection and copys it to the clipboard.
         """
-        if self.view and self.view.editor.is_focus():
+        if react_to_event(self.view, self.view.editor, event):
             logger.debug("cut selection")
             global_clipboard.cut(self.model.selection)
+            return True
 
-    def _paste_clipboard(self, *args):
+    def _paste_clipboard(self, *event):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
-        if self.view and self.view.editor.is_focus():
+        if react_to_event(self.view, self.view.editor, event):
             logger.debug("Paste")
 
             # Always update canvas and handle all events in the gtk queue before performing any changes
@@ -177,18 +180,23 @@ class GraphicalEditorController(ExtendedController):
             while gtk.events_pending():
                 gtk.main_iteration(False)
 
-            current_selection = self.model.selection
-            if len(current_selection) != 1 or len(current_selection.get_states()) < 1:
-                logger.error("Please select a single state for pasting the clipboard")
+            selection = self.model.selection
+            selected_states = selection.get_states()
+            if len(selection) != 1 or len(selected_states) < 1:
+                logger.error("Please select a single container state for pasting the clipboard")
                 return
-            if not isinstance(current_selection.get_states()[0], ContainerStateModel):
+            if not isinstance(selected_states[0], ContainerStateModel):
                 # the default behaviour of the copy paste is that the state is copied into the parent state
-                parent_of_old_state = current_selection.get_states()[0].parent
-                current_selection.clear()
-                current_selection.add(parent_of_old_state)
+                parent_of_old_state = selected_states[0].parent
+                if isinstance(parent_of_old_state, AbstractStateModel):
+                    selection.clear()
+                    selection.add(parent_of_old_state)
+                else:
+                    logger.error("Only container state can have child states")
+                    return
 
             # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
-            target_state_m = current_selection.get_states()[0]
+            target_state_m = selection.get_states()[0]
             state_copy_m, state_orig_m = global_clipboard.paste(target_state_m)
 
             if state_copy_m is None:  # An error occurred while pasting
@@ -217,6 +225,7 @@ class GraphicalEditorController(ExtendedController):
 
             new_state_v.resize_all_children(old_size, True)
             self._meta_data_changed(new_state_v, state_copy_m, 'all', True)
+            return True
 
     def _update_selection_from_gaphas(self, view, selected_items):
         selected_items = self.view.editor.selected_items
@@ -733,9 +742,13 @@ class GraphicalEditorController(ExtendedController):
         return state_machine_helper.delete_selected_elements(self.model)
 
     def setup_canvas(self):
-
+        hash_before = self.model.mutable_hash().digest()
         self.setup_state(self.root_state_m, rel_pos=(10, 10))
-        self._meta_data_changed(None, self.root_state_m, 'append_to_last_change', True)
+        hash_after = self.model.mutable_hash().digest()
+        if hash_before != hash_after:
+            self._meta_data_changed(None, self.root_state_m, 'append_initial_change', True)
+            logger.info("Opening the state machine caused some meta data to be generated, which will be stored if the"
+                        "state machine is saved.")
 
     def setup_state(self, state_m, parent=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
 

@@ -30,6 +30,7 @@ def setup_logger():
 
 def start_client(interacting_function, queue_dict):
 
+    import os
     import rafcon
     from yaml_configuration.config import config_path
     from rafcon.utils import log
@@ -47,6 +48,9 @@ def start_client(interacting_function, queue_dict):
     import rafcon.mvc.singleton as mvc_singletons
     from rafcon.mvc.config import global_gui_config
     from rafcon.mvc.runtime_config import global_runtime_config
+
+    from rafcon.statemachine.start import setup_environment
+    from rafcon.mvc.start import signal_handler
 
     from rafcon.utils import plugins
     # load all plugins specified in the RAFCON_PLUGIN_PATH
@@ -68,17 +72,8 @@ def start_client(interacting_function, queue_dict):
     logger = log.get_logger("start")
     logger.info("RAFCON launcher")
 
-    rafcon_root_path = dirname(realpath(rafcon.__file__))
-    import os
-    if not os.environ.get('RAFCON_PATH', None):
-        # set env variable RAFCON_PATH to the root directory of RAFCON
-        os.environ['RAFCON_PATH'] = rafcon_root_path
+    setup_environment()
 
-    if not os.environ.get('RAFCON_LIB_PATH', None):
-        # set env variable RAFCON_LIB_PATH to the library directory of RAFCON (when not using RMPM)
-        os.environ['RAFCON_LIB_PATH'] = join(dirname(rafcon_root_path), 'libraries')
-
-    from rafcon.mvc.start import signal_handler
     signal.signal(signal.SIGINT, signal_handler)
 
     global_config.load(path=os.path.dirname(os.path.abspath(__file__)))
@@ -117,7 +112,6 @@ def start_client(interacting_function, queue_dict):
         reactor.run()
     else:
         logger.error("Something went seriously wrong!")
-        import os
         os._exit(0)
 
     logger.info("Joined root state")
@@ -130,7 +124,6 @@ def start_client(interacting_function, queue_dict):
     logger.info("Exiting ...")
 
     # this is a ugly process shutdown method but works if gtk or twisted process are still blocking
-    import os
     os._exit(0)
 
 
