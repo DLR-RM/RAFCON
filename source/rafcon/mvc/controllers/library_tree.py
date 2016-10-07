@@ -21,6 +21,7 @@ from rafcon.mvc.utils import constants
 from rafcon.mvc.gui_helper import create_image_menu_item
 import rafcon.mvc.state_machine_helper as state_machine_helper
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.config import global_gui_config
 
 from rafcon.utils import log
 
@@ -149,6 +150,8 @@ class LibraryTreeController(ExtendedController):
             logger.info("Library tree have been initiated")
 
     def insert_rec(self, parent, library_key, library_item, library_path):
+        if global_gui_config.get_config_value('LIBRARY_TREE_PATH_HUMAN_READABLE', False):
+            library_key = library_key.replace('_', ' ')
         tree_item = self.library_tree_store.insert_before(parent, None, (library_key, library_item, library_path))
         if isinstance(library_item, dict) and not library_item:
             return
@@ -221,14 +224,14 @@ class LibraryTreeController(ExtendedController):
         :rtype: LibraryState
         """
         (model, row) = self.view.get_selection().get_selected()
-        library_key = model[row][0]
-        library = model[row][1]
+        library_item_key = model[row][0]
+        full_library_path = model[row][1]
         library_path = model[row][2]
 
-        if isinstance(library, dict):
+        if isinstance(full_library_path, dict):
             return None
 
-        logger.debug("Link library state %s (with file path %s, and library path %s) into the state machine" %
-                     (str(library_key), str(library), str(library_path)))
-
-        return LibraryState(library_path, library_key, "0.1", library_key)
+        logger.debug("Link library state '%s' (with file system path: %s, and library tree path: %s) into "
+                     "the state machine" % (str(library_item_key), str(full_library_path), str(library_path)))
+        library_name = full_library_path.split(os.path.sep)[-1]
+        return LibraryState(library_path, library_name, "0.1", library_name)
