@@ -3,8 +3,6 @@ import pytest
 
 import rafcon
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
 
 import test_basic_state_machine as basic_state_machines
 import testing_utils
@@ -24,81 +22,16 @@ if hasattr(rafcon.statemachine.state_elements.state_element.StateElement, '__del
         old_state_element_del = rafcon.statemachine.state_elements.state_element.StateElement.__del__
 
 
-def create_models(*args, **kargs):
-
-    state1 = ExecutionState('State1', state_id='STATE1')
-    output_state1 = state1.add_output_data_port("output", "int")
-    input_state1 = state1.add_input_data_port("input", "str", "zero")
-    state2 = ExecutionState('State2', state_id='STATE2')
-    input_par_state2 = state2.add_input_data_port("par", "int", 0)
-    output_res_state2 = state2.add_output_data_port("res", "int")
-    state4 = HierarchyState(name='Nested', state_id='NESTED')
-    state4.add_outcome('GoGo')
-    output_state4 = state4.add_output_data_port("out", "int")
-    state5 = ExecutionState('Nested2', state_id='NESTED2')
-    state5.add_outcome('HereWeGo')
-    input_state5 = state5.add_input_data_port("in", "int", 0)
-    state3 = HierarchyState(name='State3', state_id='STATE3')
-    input_state3 = state3.add_input_data_port("input", "int", 0)
-    output_state3 = state3.add_output_data_port("output", "int")
-    state3.add_state(state4)
-    state3.add_state(state5)
-    state3.set_start_state(state4)
-    state3.add_scoped_variable("share", "int", 3)
-    state3.add_transition(state4.state_id, 0, state5.state_id, None)
-    state3.add_transition(state5.state_id, 0, state3.state_id, 0)
-    state3.add_data_flow(state4.state_id, output_state4, state5.state_id, input_state5)
-    state3.add_outcome('Branch1')
-    state3.add_outcome('Branch2')
-
-    ctr_state = HierarchyState(name="Container", state_id='CONT2')
-    ctr_state.add_state(state1)
-    ctr_state.add_state(state2)
-    ctr_state.add_state(state3)
-    input_ctr_state = ctr_state.add_input_data_port("ctr_in", "str", "zero")
-    output_ctr_state = ctr_state.add_output_data_port("ctr_out", "int")
-    ctr_state.set_start_state(state1)
-    ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)
-    ctr_state.add_transition(state2.state_id, 0, state3.state_id, None)
-    ctr_state.add_transition(state3.state_id, 0, ctr_state.state_id, 0)
-    ctr_state.add_data_flow(state1.state_id, output_state1, state2.state_id, input_par_state2)
-    ctr_state.add_data_flow(state2.state_id, output_res_state2, state3.state_id, input_state3)
-    ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, state1.state_id, input_state1)
-    ctr_state.add_data_flow(state3.state_id, output_state3, ctr_state.state_id, output_ctr_state)
-    ctr_state.name = "Container"
-
-    ctr_state.add_input_data_port("input", "str", "default_value1")
-    ctr_state.add_input_data_port("pos_x", "str", "default_value2")
-    ctr_state.add_input_data_port("pos_y", "str", "default_value3")
-
-    ctr_state.add_output_data_port("output", "str", "default_value1")
-    ctr_state.add_output_data_port("result", "str", "default_value2")
-
-    scoped_variable1_ctr_state = ctr_state.add_scoped_variable("scoped", "str", "default_value1")
-    scoped_variable3_ctr_state = ctr_state.add_scoped_variable("ctr", "int", 42)
-
-    ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
-    ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
-
-    state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
-                  'Nested2': state5}
-
-    return ctr_state, state_dict
-
-
 def get_log_elements(with_prints=False):
-    state_del_file = []
-    for line in open(RAFCON_TEMP_PATH_BASE + '/state_del_log_file.txt', 'a+'):
-        state_del_file.append(line)
-    state_element_del_file = []
-    for line in open(RAFCON_TEMP_PATH_BASE + '/state_element_del_log_file.txt', 'a+'):
-        state_element_del_file.append(line)
-    state_gen_file = []
-    for line in open(RAFCON_TEMP_PATH_BASE + '/state_generation_log_file.txt', 'a+'):
-        state_gen_file.append(line)
-    state_element_gen_file = []
-    for line in open(RAFCON_TEMP_PATH_BASE + '/state_element_generation_log_file.txt', 'a+'):
-        state_element_gen_file.append(line)
+
+    with open(RAFCON_TEMP_PATH_BASE + '/state_del_log_file.txt') as f:
+        state_del_file = f.readlines()
+    with open(RAFCON_TEMP_PATH_BASE + '/state_element_del_log_file.txt') as f:
+        state_element_del_file = f.readlines()
+    with open(RAFCON_TEMP_PATH_BASE + '/state_generation_log_file.txt') as f:
+        state_gen_file = f.readlines()
+    with open(RAFCON_TEMP_PATH_BASE + '/state_element_generation_log_file.txt') as f:
+        state_element_gen_file = f.readlines()
 
     for elem in state_gen_file:
         name_and_id = elem.split("'")
@@ -190,6 +123,10 @@ def test_core_destruct(caplog):
     basic_state_machines.test_create_container_state(caplog)
 
     basic_state_machines.test_port_and_outcome_removal(caplog)
+
+    # Ensure that the garbage collector has removed all unreferenced objects
+    import gc
+    gc.collect()
 
     state_gen_file, state_del_file, state_element_gen_file, state_element_del_file = get_log_elements(with_prints=True)
 
