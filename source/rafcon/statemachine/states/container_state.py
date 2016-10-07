@@ -845,7 +845,12 @@ class ContainerState(State):
                 if isinstance(state, LibraryState) and old_state_was_library:
                     state.input_data_port_runtime_values[ip.data_port_id] = old_input_data_port_runtime_values[old_ip.data_port_id]
                     state.use_runtime_value_input_data_ports[ip.data_port_id] = old_use_runtime_value_input_data_ports[old_ip.data_port_id]
-                elif not isinstance(state, LibraryState):
+                elif isinstance(state, LibraryState) and not old_state_was_library:
+                    state.input_data_port_runtime_values[ip.data_port_id] = old_input_data_ports[old_ip.data_port_id].default_value
+                    state.use_runtime_value_input_data_ports[ip.data_port_id] = True
+                elif not isinstance(state, LibraryState) and old_state_was_library:
+                    ip.default_value = old_input_data_port_runtime_values[old_ip.data_port_id]
+                else:
                     ip.default_value = old_input_data_ports[old_ip.data_port_id].default_value
         for df in related_data_flows['external']['ingoing']:
             ip = act_input_data_port_by_name.get(old_input_data_ports[df.to_key].name, None)
@@ -858,7 +863,12 @@ class ContainerState(State):
                 if isinstance(state, LibraryState) and old_state_was_library:
                     state.output_data_port_runtime_values[op.data_port_id] = old_output_data_port_runtime_values[old_op.data_port_id]
                     state.use_runtime_value_output_data_ports[op.data_port_id] = old_use_runtime_value_output_data_ports[old_op.data_port_id]
-                elif not isinstance(state, LibraryState):
+                elif isinstance(state, LibraryState) and not old_state_was_library:
+                    state.output_data_port_runtime_values[op.data_port_id] = old_output_data_ports[old_op.data_port_id].default_value
+                    state.use_runtime_value_output_data_ports[op.data_port_id] = True
+                elif not isinstance(state, LibraryState) and old_state_was_library:
+                    op.default_value = old_output_data_port_runtime_values[old_op.data_port_id]
+                else:
                     op.default_value = old_output_data_ports[old_op.data_port_id].default_value
         for df in related_data_flows['external']['outgoing']:
             op = act_output_data_port_by_name.get(old_output_data_ports[df.from_key].name, None)
