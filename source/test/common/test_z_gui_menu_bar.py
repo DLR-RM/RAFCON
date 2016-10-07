@@ -270,7 +270,14 @@ def trigger_gui_signals(*args):
 
     # data flow is preserved if right data type and name is used
     state_m_parent.state.input_data_ports.items()[0][1].data_type = "float"
-    state_m_parent.state.states[new_state_id].input_data_ports.items()[0][1].default_value = 2.0
+    if isinstance(state_m_parent.state.states[new_state_id], LibraryState):
+        data_port_id = state_m_parent.state.states[new_state_id].input_data_ports.items()[0][0]
+        state_m_parent.state.states[new_state_id].use_runtime_value_input_data_ports[data_port_id] = True
+        state_m_parent.state.states[new_state_id].input_data_port_runtime_values[data_port_id] = 2.0
+        print
+    else:
+        raise
+        # state_m_parent.state.states[new_state_id].input_data_ports.items()[0][1].default_value = 2.0
     call_gui_callback(state_m_parent.state.add_data_flow,
                       state_m_parent.state.state_id,
                       state_m_parent.state.input_data_ports.items()[0][1].data_port_id,
