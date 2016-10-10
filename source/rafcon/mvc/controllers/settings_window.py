@@ -94,7 +94,7 @@ class SettingsWindowController(ExtendedController):
         self.view['cancel_button'].connect('clicked', self.on_cancel_button_clicked)
         self.load_stored_properties()
         self.set_label_paths()
-        self.update_changed_keys_dict(None, None, None)
+        self.update_changed_entries_dict(None, None, None)
 
     def on_add_library(self, *event):
         self.view['library_tree_view'].grab_focus()
@@ -122,7 +122,7 @@ class SettingsWindowController(ExtendedController):
         key = actual_list_store[int(path)][0]
         value = bool(actual_list_store[int(path)][6])
         value ^= True
-        self.model.set_config_view_value(key, value)
+        self.model.set_preliminary_config_value(key, value)
         self.model.ignore_changes(key, value)
 
     def set_label_paths(self):
@@ -267,7 +267,7 @@ class SettingsWindowController(ExtendedController):
         return gtk.TRUE
 
     def on_ok_button_clicked(self, widget):
-        if self.model.changed_keys:
+        if self.model.changed_entries:
             self.on_save_and_apply_configurations()
         self.view["properties_window"].hide()
 
@@ -282,17 +282,17 @@ class SettingsWindowController(ExtendedController):
         self.view["properties_window"].hide()
         self.load_stored_properties()
 
-    @ExtendedController.observe('config_list', after=True)
+    @ExtendedController.observe('current_core_config', after=True)
     def update_config_settings(self, model, prop_name, info):
         """
-        Updates the config_tree_view, triggered when config_list is changed
+        Updates the config_tree_view, triggered when current_core_config is changed
         :param model:
         :param prop_name:
         :param info:
         :return:
         """
         self.config_list_store.clear()
-        for key in self.model.config_list:
+        for key in self.model.current_core_config:
             setting, value = key
             # (setting, text, text_visible, toggle_activatable, togge_visible, text_editable, toggle_state)
             if type(value) == bool:
@@ -300,31 +300,31 @@ class SettingsWindowController(ExtendedController):
             else:
                 self.config_list_store.append((setting, value, True, False, False, True, value))
 
-    @ExtendedController.observe('config_library_list', after=True)
+    @ExtendedController.observe('current_library_config', after=True)
     def update_library_settings(self, model, prop_name, info):
         """
-        Updates the library_tree_view, triggered when config_library_list is changed
+        Updates the library_tree_view, triggered when current_library_config is changed
         :param model:
         :param prop_name:
         :param info:
         :return:
         """
         self.library_list_store.clear()
-        for key in self.model.config_library_list:
+        for key in self.model.current_library_config:
             setting, value = key
             self.library_list_store.append((setting, value))
 
-    @ExtendedController.observe('config_gui_list', after=True)
+    @ExtendedController.observe('current_gui_config', after=True)
     def update_gui_settings(self, model, prop_name, info):
         """
-        Updates the gui_tree_view, triggered when config_gui_list is changed
+        Updates the gui_tree_view, triggered when current_gui_config is changed
         :param model:
         :param prop_name:
         :param info:
         :return:
         """
         self.gui_list_store.clear()
-        for key in self.model.config_gui_list:
+        for key in self.model.current_gui_config:
             setting, value = key
             # (setting, text, text_visible, toggle_activatable, togge_visible, text_editable, toggle_state)
             if type(value) == bool:
@@ -332,23 +332,23 @@ class SettingsWindowController(ExtendedController):
             else:
                 self.gui_list_store.append((setting, value, True, False, False, True, value))
 
-    @ExtendedController.observe('config_shortcut_list', after=True)
+    @ExtendedController.observe('current_shortcut_config', after=True)
     def update_shortcut_settings(self, model, prop_name, info):
         """
-        Updates the shortcut_tree_view, triggered when config_shortcut_list is changed
+        Updates the shortcut_tree_view, triggered when current_shortcut_config is changed
         :param model:
         :param prop_name:
         :param info:
         :return:
         """
         self.shortcut_list_store.clear()
-        for key in self.model.config_shortcut_list:
+        for key in self.model.current_shortcut_config:
             setting, value = key
             self.shortcut_list_store.append((setting, value))
 
-    @ExtendedController.observe('changed_keys', after=True)
-    def update_changed_keys_dict(self, model, prop_name, info):
-        if self.model.changed_keys:
+    @ExtendedController.observe('changed_entries', after=True)
+    def update_changed_entries_dict(self, model, prop_name, info):
+        if self.model.changed_entries:
             self.view['apply_button'].set_sensitive(True)
         else:
             self.view['apply_button'].set_sensitive(False)
@@ -432,7 +432,7 @@ class SettingsWindowController(ExtendedController):
                 value = data_type(text)
             else:
                 value = text
-            self.model.set_config_view_value(key, value)
+            self.model.set_preliminary_config_value(key, value)
         except RuntimeError as e:
             logger.exception(e)
 
@@ -450,13 +450,12 @@ class SettingsWindowController(ExtendedController):
 
     def popup_message(self):
         changes_str = ''
-        if self.model.change_by_restart:
+        if self.model.changed_keys_requiring_restart:
             message = gtk.MessageDialog(parent=self.view["properties_window"], flags=gtk.DIALOG_MODAL,
                                         type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
             message_string = "You must restart RAFCON to apply following changes: \n"
-            if self.model.change_by_restart:
-                for key in self.model.change_by_restart:
-                    changes_str = ("%s\n%s" % (changes_str, key))
+            for key in self.model.changed_keys_requiring_restart:
+                changes_str = ("%s\n%s" % (changes_str, key))
             message.set_markup("%s %s" % (message_string, changes_str))
             message.run()
             message.destroy()
