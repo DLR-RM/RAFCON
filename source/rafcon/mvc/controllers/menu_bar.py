@@ -43,6 +43,9 @@ from rafcon.mvc.utils.dialog import RAFCONButtonDialog, ButtonDialog
 from rafcon.utils import plugins
 from rafcon.utils import log
 
+from rafcon.mvc.controllers.settings_window import SettingsWindowController
+from rafcon.mvc.views.settings_window import SettingsWindowView
+
 logger = log.get_logger(__name__)
 
 
@@ -64,7 +67,6 @@ class MenuBarController(ExtendedController):
         self.shortcut_manager = shortcut_manager
         self.logging_view = view.logging_view
         self.main_window_view = view
-        self.settings_window_view = view.settings_window_view
         self._destroyed = False
         self.handler_ids = {}
         self.registered_shortcut_callbacks = {}
@@ -81,6 +83,7 @@ class MenuBarController(ExtendedController):
         self.main_window_view.left_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.console_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.full_screen_event_handler = self.full_screen_window.connect('key_press_event', self.on_key_press_event)
+        self.settings_window_view = SettingsWindowView()
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -501,6 +504,8 @@ class MenuBarController(ExtendedController):
             return False
 
     def on_menu_properties_activate(self, widget, data=None):
+        settings_window_ctrl = SettingsWindowController(mvc_singleton.settings_model, self.settings_window_view)
+        mvc_singleton.main_window_controller.add_controller('settings_window_ctrl', settings_window_ctrl)
         self.settings_window_view.show()
         self.settings_window_view.get_top_widget().present()
 
@@ -727,7 +732,6 @@ class MenuBarController(ExtendedController):
         # Should close all tabs
         core_singletons.state_machine_manager.delete_all_state_machines()
         # Recursively destroys the main window
-
         mvc_singleton.main_window_controller.destroy()
         self.logging_view.quit_flag = True
         glib.idle_add(log.unregister_logging_view, 'main')

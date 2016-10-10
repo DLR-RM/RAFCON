@@ -19,6 +19,7 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.statemachine.config import global_config
 
 from rafcon.mvc.gui_helper import react_to_event
+from rafcon.mvc import singleton as mvc_singleton
 
 logger = log.get_logger(__name__)
 
@@ -44,6 +45,7 @@ class SettingsWindowController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
+        self.view['properties_window'].connect('delete-event', self.destroy_controller)
         self.view['add_btn'].connect('clicked', self.on_add_library)
         self.view["remove_btn"].connect('clicked', self.on_remove_library)
         self.view['value_toggle'].connect('toggled', self.on_checkbox_toggled, self.config_list_store)
@@ -95,6 +97,9 @@ class SettingsWindowController(ExtendedController):
         self.load_stored_properties()
         self.set_label_paths()
         self.update_changed_keys_dict(None, None, None)
+
+    def destroy_controller(self, *args):
+        self.destroy()
 
     def on_add_library(self, *event):
         self.view['library_tree_view'].grab_focus()

@@ -13,7 +13,6 @@ from rafcon.mvc.views.top_tool_bar import TopToolBarView
 from rafcon.mvc.views.menu_bar import MenuBarView
 from rafcon.mvc.views.tool_bar import ToolBarView
 from rafcon.mvc.views.undocked_window import UndockedWindowView
-from rafcon.mvc.views.settings_window import SettingsWindowView
 
 from rafcon.mvc.utils import constants
 from rafcon.utils.i18n import _
@@ -127,11 +126,6 @@ class MainWindowView(View):
         self['console'].remove(self['console_scroller'])
         self['console'].pack_start(self.logging_view.get_top_widget(), True, True, 0)
         self.logging_view.get_top_widget().show()
-
-        ################################################
-        # settings window view
-        ################################################
-        self.settings_window_view = SettingsWindowView()
 
         ##################################################
         # menu bar view
