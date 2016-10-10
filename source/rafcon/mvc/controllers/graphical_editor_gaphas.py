@@ -314,6 +314,12 @@ class GraphicalEditorController(ExtendedController):
 
             if method_name in ['change_state_type', 'change_root_state_type']:
                 self._change_state_type = True
+                if method_name == 'change_root_state_type':
+                    state_model_to_be_changed = model.root_state
+                else:
+                    state_to_be_changed = arguments[1]
+                    state_model_to_be_changed = state_machine_helper.get_state_model_for_state(state_to_be_changed)
+                self.observe_model(state_model_to_be_changed)
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
@@ -330,7 +336,7 @@ class GraphicalEditorController(ExtendedController):
         if 'method_name' in info and info['method_name'] == 'root_state_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
-            if self._change_state_type and method_name not in ['change_state_type', 'change_root_state_type']:
+            if self._change_state_type:
                 return
 
             # Always update canvas and handle all events in the gtk queue before performing any changes
@@ -502,48 +508,7 @@ class GraphicalEditorController(ExtendedController):
                 else:
                     self.canvas.request_update(state_v, matrix=False)
             elif method_name in ['change_state_type', 'change_root_state_type']:
-                self._change_state_type = False
-                if method_name == 'change_state_type':
-                    old_state = arguments[1]
-                    state_v = self.canvas.get_view_for_core_element(old_state)
-                    parent_state_m = model
-                    new_state = result
-                    new_state_m = parent_state_m.states[new_state.state_id]
-                else:
-                    state_machine_m = model
-                    new_state_m = state_machine_m.root_state
-                    state_v = self.canvas.get_root_items()[0]
-                state_v.model = new_state_m
-                if isinstance(new_state_m, ContainerStateModel):
-                    # Check for new states, which do not have a StateView (typically DeciderState)
-                    for child_state_m in new_state_m.states.itervalues():
-                        if not self.canvas.get_view_for_model(child_state_m):
-                            self.add_state_view_to_parent(child_state_m, new_state_m)
-                    # Check for new transitions, which do not have a TransitionView (typically related to DeciderState)
-                    for transition_m in new_state_m.transitions:
-                        if not self.canvas.get_view_for_model(transition_m):
-                            self.add_transition_view_for_model(transition_m, new_state_m)
-                    # Check for old StateViews (typically DeciderState) and TransitionViews, no longer existing
-                    for child_v in self.canvas.get_children(state_v):
-                        if isinstance(child_v, StateView):
-                            if child_v.model.state.state_id not in new_state_m.states:
-                                child_v.remove()
-                        elif isinstance(child_v, TransitionView):
-                            if child_v.model not in new_state_m.transitions:
-                                self.canvas.remove(child_v)
-                else:
-                    # Remove all child states, as StateModels cannot have children
-                    children = self.canvas.get_children(state_v)[:]
-                    for child_v in children:
-                        if isinstance(child_v, StateView):
-                            child_v.remove()
-                        elif not isinstance(child_v, NameView):  # Don't remove the name view
-                            self.canvas.remove(child_v)
-                parent_v = self.canvas.get_parent(state_v)
-                if parent_v:
-                    self.canvas.request_update(parent_v)
-                else:
-                    self.canvas.request_update(state_v)
+                pass
             elif method_name == 'parent':
                 pass
             elif method_name == 'description':
@@ -552,43 +517,71 @@ class GraphicalEditorController(ExtendedController):
                 logger.debug("Method '%s' not caught in GraphicalViewer" % method_name)
 
             if method_name in ['add_state', 'add_transition', 'add_data_flow', 'add_outcome', 'add_input_data_port',
-                               'add_output_data_port', 'add_scoped_variable', 'data_flow_change', 'transition_change',
-                               'change_state_type', 'change_root_state_type']:
+                               'add_output_data_port', 'add_scoped_variable', 'data_flow_change', 'transition_change']:
                 try:
                     self._meta_data_changed(None, model, 'append_to_last_change', True)
                 except Exception as e:
                     logger.error('Error while trying to emit meta data signal {}'.format(e))
 
-    @ExtendedController.observe("root_state", assign=True)
-    def root_state_change(self, state_machine_m, prop_name, info):
-        """Called when the root state was exchanged
+    @ExtendedController.observe("state_type_changed_signal", signal=True)
+    def state_type_changed(self, old_state_m, prop_name, info):
+        self._change_state_type = False
+        self.relieve_model(old_state_m)
+        signal_msg = info['arg']
+        new_state_m = signal_msg.new_state_m
+        state_v = self.canvas.get_view_for_model(old_state_m)
+        state_v.model = new_state_m
 
-        Exchanges the local reference to the root state and redraws.
+        # Always update canvas and handle all events in the gtk queue before performing any changes
+        self.canvas.update_now()
+        while gtk.events_pending():
+            gtk.main_iteration(False)
 
-        :param rafcon.mvc.models.state_machine.StateMachineModel state_machine_m: The state machine model
-        :param str prop_name: The root state
-        :param dict info: Information about the change
-        """
-        if self.root_state_m is not state_machine_m.root_state:
-            if self._change_state_type:
-                return
-            logger.debug("The root state was exchanged")
-
-            # Always update canvas and handle all events in the gtk queue before performing any changes
-            self.canvas.update_now()
-            while gtk.events_pending():
-                gtk.main_iteration(False)
-
-            # Remove old root state view
-            root_state_v = self.canvas.get_root_items()[0]
-            try:
-                root_state_v.remove()
-            except KeyError:
-                pass
+        # If the root state has been changed, we recreate the whole state machine view
+        if old_state_m is self.root_state_m:
+            state_v.remove()
 
             # Create and and new root state view from new root state model
-            self.root_state_m = state_machine_m.root_state
-            self.setup_state(self.root_state_m)
+            self.root_state_m = new_state_m
+            root_state_v = self.setup_state(self.root_state_m)
+            self.canvas.request_update(root_state_v)
+
+        # Otherwise we only look at the modified state and its children
+        else:
+            if isinstance(new_state_m, ContainerStateModel):
+                # Check for new states, which do not have a StateView (typically DeciderState)
+                for child_state_m in new_state_m.states.itervalues():
+                    if not self.canvas.get_view_for_model(child_state_m):
+                        self.add_state_view_to_parent(child_state_m, new_state_m)
+                # Check for new transitions, which do not have a TransitionView (typically related to DeciderState)
+                for transition_m in new_state_m.transitions:
+                    if not self.canvas.get_view_for_model(transition_m):
+                        self.add_transition_view_for_model(transition_m, new_state_m)
+                # Check for old StateViews (typically DeciderState) and TransitionViews, no longer existing
+                for child_v in self.canvas.get_children(state_v):
+                    if isinstance(child_v, StateView):
+                        if child_v.model.state.state_id not in new_state_m.states:
+                            child_v.remove()
+                    elif isinstance(child_v, TransitionView):
+                        if child_v.model not in new_state_m.transitions:
+                            self.canvas.remove(child_v)
+            else:
+                # Remove all child states, as StateModels cannot have children
+                children = self.canvas.get_children(state_v)[:]
+                for child_v in children:
+                    if isinstance(child_v, StateView):
+                        child_v.remove()
+                    elif not isinstance(child_v, NameView):  # Remove transitions and data flows but keep the NameView
+                        self.canvas.remove(child_v)
+            parent_v = self.canvas.get_parent(state_v)
+            self.canvas.request_update(parent_v)
+
+        self.canvas.update_now()
+
+        try:
+            self._meta_data_changed(None, new_state_m, 'append_to_last_change', True)
+        except Exception as e:
+            logger.error('Error while trying to emit meta data signal {}'.format(e))
 
     @ExtendedController.observe("selection", after=True)
     def selection_change(self, model, prop_name, info):
