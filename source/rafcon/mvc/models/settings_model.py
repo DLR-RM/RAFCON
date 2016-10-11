@@ -3,194 +3,89 @@
    :platform: Unix, Windows
    :synopsis: a module which manages the configuration settings GUI
 
-.. moduleauthor:: Benno Voggenreiter
+.. moduleauthor:: Benno Voggenreiter, Franz Steinmetz
 
 """
+from os import path
+from copy import copy
 from gtkmvc import ModelMT
-from rafcon.utils import log
-import yaml
 
-from rafcon.mvc.config import global_gui_config
-from rafcon.statemachine.config import global_config
+from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
 
 class SettingsModel(ModelMT):
+    """Model managing an ObservableConfig
     """
-    Model which manages the configuration settings GUI
-    """
-    current_core_config = []
-    current_gui_config = []
-    current_library_config = []
-    current_shortcut_config = []
-    changed_entries = {}
-    __observables__ = ["current_core_config", "current_gui_config", "current_library_config",
-                       "current_shortcut_config", "changed_entries"]
 
-    _keys_requiring_state_machine_refresh = ('GAPHAS_EDITOR', 'MAX_VISIBLE_LIBRARY_HIERARCHY', 'HISTORY_ENABLED',
-                                             'AUTO_BACKUP_ENABLED', 'AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL',
-                                             'AUTO_BACKUP_FORCED_STORAGE_INTERVAL',
-                                             'AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL',
-                                             'AUTO_RECOVERY_CHECK', 'AUTO_RECOVERY_LOCK_ENABLED')
-    _keys_requiring_restart = ('USE_ICONS_AS_TAB_LABELS',)
+    config = None
+    preliminary_config = None
 
-    def __init__(self, config_list=None, config_gui_list=None, config_library_list=None,
-                 config_shortcut_list=None):
-        ModelMT.__init__(self)
-        self.current_core_config = config_list if config_list else []
-        self.current_gui_config = config_gui_list if config_gui_list else []
-        self.current_library_config = config_library_list if config_library_list else []
-        self.current_shortcut_config = config_shortcut_list if config_shortcut_list else []
-        default_config_dict = yaml.load(global_config.default_config)
-        self._keys_core_config = set([k for k in default_config_dict.keys() if k not in ["LIBRARY_PATHS", "TYPE"]])
-        default_gui_config_dict = yaml.load(global_gui_config.default_config)
-        self._keys_gui_config = set([k for k in default_gui_config_dict.keys() if k not in ["SHORTCUTS", "TYPE"]])
-        self.changed_entries = {}
+    __observables__ = ("config", "preliminary_config")
+
+    def __init__(self, config):
+        super(SettingsModel, self).__init__()
+
+        self.config = config
+        self.preliminary_config = {}
+
         self.changed_keys_requiring_restart = set()
-        self.changed_libs = []
 
-    def detect_changes(self):
-        """Detects all changes when loading a new config file and updates the view
+    def update_config(self, config_dict, config_file):
+        """Update the content and reference of the config
+
+        :param dict config_dict: The new configuration
+        :param str config_file: The new file reference
         """
-        from rafcon.mvc.singleton import main_window_controller
+        config_path = path.dirname(config_file)
+        self.config.config_file_path = config_file
+        self.config.path = config_path
+        for config_key, config_value in config_dict.iteritems():
+            if config_value != self.config.get_config_value(config_key):
+                self.set_preliminary_config_value(config_key, config_value)
 
-        for key, value in self.current_core_config:
-            if value != global_config.get_config_value(key):
-                self.set_preliminary_config_value(key, global_config.get_config_value(key))
+    def get_current_config_value(self, config_key, use_preliminary=True, default=None):
+        """Returns the current config value for the given config key
 
-        for key, value in self.current_gui_config:
-            if value != global_gui_config.get_config_value(key):
-                self.set_preliminary_config_value(key, global_gui_config.get_config_value(key))
-
-        if dict(self.current_shortcut_config) != global_gui_config.get_config_value('SHORTCUTS'):
-            main_window_controller.get_controller('menu_bar_controller').refresh_shortcuts_activate()
-
-        if dict(self.current_library_config) != global_config.get_config_value("LIBRARY_PATHS"):
-            main_window_controller.get_controller('menu_bar_controller').on_refresh_libraries_activate(widget=None, data=None)
-
-    def load_settings(self):
-        """A function to load all values of settings listed in the dicts
+        :param str config_key: Config key who's value is requested
+        :param bool use_preliminary: Whether the preliminary config should be queried first
+        :param default: The value to return if config key does not exist
+        :return: Copy of the config value
         """
-        del self.current_core_config[:]
-        for key in sorted(self._keys_core_config):
-            if global_config.get_config_value(key) is not None:
-                self.current_core_config.append((key, global_config.get_config_value(key)))
+        if use_preliminary and config_key in self.preliminary_config:
+            return copy(self.preliminary_config[config_key])
+        return copy(self.config.get_config_value(config_key, default))
 
-        del self.current_library_config[:]
-        library_dict = global_config.get_config_value('LIBRARY_PATHS')
-        if library_dict is not None:
-            for key in sorted(library_dict.keys()):
-                self.current_library_config.append((key, library_dict[key]))
+    def set_preliminary_config_value(self, config_key, config_value):
+        """Stores a config value as preliminary new value
 
-        del self.current_gui_config[:]
-        for key in sorted(self._keys_gui_config):
-            if global_gui_config.get_config_value(key) is not None:
-                self.current_gui_config.append((key, global_gui_config.get_config_value(key)))
+        The config value is not yet applied to the configuration. If the value is identical to the one from the
+        configuration, the entry is deleted from the preliminary config.
 
-        del self.current_shortcut_config[:]
-        shortcut_dict = global_gui_config.get_config_value('SHORTCUTS')
-        if shortcut_dict is not None:
-            for key in sorted(shortcut_dict.keys()):
-                self.current_shortcut_config.append((key, shortcut_dict[key]))
-
-        self.changed_entries.clear()
-
-    def set_preliminary_config_value(self, key, value):
-        """A method to show all config values from current the config.yaml
-
-        :param key: setting which changed
-        :param value: new value for a config which shall be updated
+        :param str config_key: Key of the entry
+        :param config_value: New value
         """
-        if key in self._keys_core_config:
-            changed_config = self.current_core_config
-        elif key in self._keys_gui_config:
-            changed_config = self.current_gui_config
-        elif key in dict(self.current_shortcut_config):
-            changed_config = self.current_shortcut_config
-            value = [value[2:-2]]
-        else:
-            changed_config = self.current_library_config
-        for key_pair in changed_config:
-            if key == key_pair[0]:
-                index = changed_config.index(key_pair)
-                changed_config.remove(key_pair)
-                changed_config.insert(index, (key, value))
-                self.changed_entries[key] = value
+        if config_value != self.config.get_config_value(config_key):
+            self.preliminary_config[config_key] = config_value
+        # If the value was reverted to its original value, we can remove the entry
+        elif config_key in self.preliminary_config:
+            del self.preliminary_config[config_key]
 
-    def save_and_apply_config(self):
-        """Saving and applying changed settings
+    def apply_preliminary_config(self, save=True):
+        """Applies the preliminary config to the configuration
+
+        :param bool save: Whether the config file is be be written to the file system
+        :return: Whether the applied changes require a refresh of the state machines
+        :rtype: bool
         """
-        from rafcon.mvc.singleton import main_window_controller
-
         state_machine_refresh_required = False
-        for config_key, config_value in self.changed_entries.iteritems():
-            if config_key in SettingsModel._keys_requiring_state_machine_refresh:
-                global_gui_config.set_config_value(config_key, config_value)
+        for config_key, config_value in self.preliminary_config.iteritems():
+            self.config.set_config_value(config_key, config_value)
+            if config_key in self.config.keys_requiring_state_machine_refresh:
                 state_machine_refresh_required = True
-            elif config_key in SettingsModel._keys_requiring_restart:
-                global_gui_config.set_config_value(config_key, config_value)
+            elif config_key in self.config.keys_requiring_restart:
                 self.changed_keys_requiring_restart.add(config_key)
-            elif config_key in self._keys_core_config:
-                global_config.set_config_value(config_key, config_value)
-                self.changed_keys_requiring_restart.add(config_key)
-            elif config_key in dict(self.current_shortcut_config):
-                global_gui_config.set_config_value("SHORTCUTS", dict(self.current_shortcut_config))
-                main_window_controller.get_controller('menu_bar_controller').refresh_shortcuts_activate()
-            elif config_key in dict(self.current_library_config) or config_key in self.changed_libs:
-                global_config.set_config_value("LIBRARY_PATHS", dict(self.current_library_config))
-                main_window_controller.get_controller('menu_bar_controller').on_refresh_libraries_activate(
-                    widget=None, data=None)
-            else:
-                global_gui_config.set_config_value(config_key, config_value)
-                if config_key == "SOURCE_EDITOR_STYLE":
-                    main_window_controller.get_controller('states_editor_ctrl').reload_style()
-                if "LOGGING_SHOW_" in config_key:
-                    if "INFO" in config_key:
-                        main_window_controller.view['button_show_info'].set_active(config_value)
-                    elif "DEBUG" in config_key:
-                        main_window_controller.view['button_show_debug'].set_active(config_value)
-                    elif "WARNING" in config_key:
-                        main_window_controller.view['button_show_warning'].set_active(config_value)
-                    elif "ERROR" in config_key:
-                        main_window_controller.view['button_show_error'].set_active(config_value)
-                    main_window_controller.view.logging_view.update_filtered_buffer()
-
-        if state_machine_refresh_required:
-            main_window_controller.get_controller('menu_bar_controller').on_refresh_all_activate(widget=None, data=None)
-
-        global_config.save_configuration()
-        global_gui_config.save_configuration()
-        self.changed_entries.clear()
-        del self.changed_libs[:]
-
-    def ignore_changes(self, key, value):
-        """Called when every time a checkbox is toggled, avoids the refresh of a widget if value is old value
-
-        :param key: setting
-        :param value: value
-        """
-        if key in self._keys_core_config:
-            if value == global_config.get_config_value(key):
-                self.changed_entries.pop(key)
-        elif key in self._keys_gui_config:
-            if value == global_gui_config.get_config_value(key):
-                self.changed_entries.pop(key)
-
-    def delete_library(self, key):
-        for lib in self.current_library_config:
-            if key == lib[0]:
-                self.current_library_config.remove(lib)
-                self.changed_entries[lib[0]] = None
-                self.changed_libs.append(key)
-
-    def add_library(self, key, value):
-        self.current_library_config.append((key, value))
-        self.set_preliminary_config_value(key, value)
-
-    def set_library_key(self, key, old_key, value):
-        for key_tmp in self.current_library_config:
-            if key_tmp[0] == old_key:
-                self.current_library_config.remove(key_tmp)
-                self.current_library_config.append((key, value))
-                self.set_preliminary_config_value(key, value)
+        if save:
+            self.config.save_configuration()
+        return state_machine_refresh_required
