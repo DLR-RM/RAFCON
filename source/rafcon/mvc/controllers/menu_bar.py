@@ -43,8 +43,8 @@ from rafcon.mvc.utils.dialog import RAFCONButtonDialog, ButtonDialog
 from rafcon.utils import plugins
 from rafcon.utils import log
 
-from rafcon.mvc.controllers.settings_window import SettingsWindowController
-from rafcon.mvc.views.settings_window import SettingsWindowView
+from rafcon.mvc.controllers.config_window import ConfigWindowController
+from rafcon.mvc.views.config_window import ConfigWindowView
 
 logger = log.get_logger(__name__)
 
@@ -83,7 +83,7 @@ class MenuBarController(ExtendedController):
         self.main_window_view.left_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.console_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.full_screen_event_handler = self.full_screen_window.connect('key_press_event', self.on_key_press_event)
-        self.settings_window_view = SettingsWindowView()
+        self.config_window_view = ConfigWindowView()
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -504,10 +504,11 @@ class MenuBarController(ExtendedController):
             return False
 
     def on_menu_properties_activate(self, widget, data=None):
-        settings_window_ctrl = SettingsWindowController(mvc_singleton.settings_model, self.settings_window_view)
-        mvc_singleton.main_window_controller.add_controller('settings_window_ctrl', settings_window_ctrl)
-        self.settings_window_view.show()
-        self.settings_window_view.get_top_widget().present()
+        config_window_ctrl = ConfigWindowController(mvc_singleton.core_config_model, self.config_window_view,
+                                                    mvc_singleton.gui_config_model)
+        mvc_singleton.main_window_controller.add_controller('config_window_ctrl', config_window_ctrl)
+        self.config_window_view.show()
+        self.config_window_view.get_top_widget().present()
 
     def on_refresh_libraries_activate(self, widget, data=None):
         """
