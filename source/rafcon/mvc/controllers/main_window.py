@@ -125,7 +125,8 @@ class MainWindowController(ExtendedController):
         ######################################################
         # settings
         ######################################################
-        settings_window_ctrl = SettingsWindowController(mvc_singleton.settings_model, view.settings_window_view)
+        settings_window_ctrl = SettingsWindowController(mvc_singleton.core_settings_model, view.settings_window_view,
+                                                        mvc_singleton.gui_settings_model)
         self.add_controller('settings_window_ctrl', settings_window_ctrl)
 
         ######################################################
