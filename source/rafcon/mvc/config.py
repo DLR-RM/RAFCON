@@ -3,8 +3,9 @@ import sys
 import re
 import gtk
 import yaml
+from yaml_configuration.config import ConfigError
 
-from yaml_configuration.config import DefaultConfig, ConfigError
+from rafcon.statemachine.config import ObservableConfig
 from rafcon.utils import filesystem
 from rafcon.utils import storage_utils
 from rafcon.mvc.utils import constants
@@ -17,10 +18,17 @@ CONFIG_FILE = "gui_config.yaml"
 DEFAULT_CONFIG = filesystem.read_file(os.path.dirname(__file__), CONFIG_FILE)
 
 
-class GuiConfig(DefaultConfig):
+class GuiConfig(ObservableConfig):
     """
     Class to hold and load the global GUI configurations.
     """
+
+    keys_requiring_state_machine_refresh = ('GAPHAS_EDITOR', 'MAX_VISIBLE_LIBRARY_HIERARCHY', 'HISTORY_ENABLED',
+                                            'AUTO_BACKUP_ENABLED', 'AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL',
+                                            'AUTO_BACKUP_FORCED_STORAGE_INTERVAL',
+                                            'AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL',
+                                            'AUTO_RECOVERY_CHECK', 'AUTO_RECOVERY_LOCK_ENABLED')
+    keys_requiring_restart = ('USE_ICONS_AS_TAB_LABELS',)
 
     colors = {}
     gtk_colors = {}

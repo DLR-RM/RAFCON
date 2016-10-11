@@ -7,9 +7,11 @@
 
 
 """
+import yaml
 from os import path
-
+from gtkmvc import Observable
 from yaml_configuration.config import DefaultConfig, ConfigError
+
 from rafcon.utils import filesystem
 from rafcon.utils import log
 
@@ -20,7 +22,24 @@ CONFIG_FILE = "config.yaml"
 DEFAULT_CONFIG = filesystem.read_file(path.dirname(__file__), CONFIG_FILE)
 
 
-class Config(DefaultConfig):
+class ObservableConfig(DefaultConfig, Observable):
+
+    keys = set()
+    keys_requiring_state_machine_refresh = set()
+    keys_requiring_restart = set()
+
+    def __init__(self, defaults, logger_object=None):
+        DefaultConfig.__init__(self, defaults, logger_object)
+        Observable.__init__(self)
+        config = yaml.load(defaults)
+        self.keys = set([] if not config else config.keys())
+        
+    @Observable.observed
+    def set_config_value(self, key, value):
+        super(ObservableConfig, self).set_config_value(key, value)
+
+
+class Config(ObservableConfig):
     """ Class to hold and load the global state machine configurations.
 
     """
@@ -37,6 +56,7 @@ class Config(DefaultConfig):
         if self.get_config_value("TYPE") != "SM_CONFIG":
             raise ConfigError("Type should be SM_CONFIG for state machine configuration. "
                               "Please add \"TYPE: SM_CONFIG\" to your config.yaml file.")
+        self.keys_requiring_restart = set(self.keys)
 
     def load(self, config_file=None, path=None):
         """ Loads the configuration from a specific file

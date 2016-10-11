@@ -8,7 +8,8 @@
 
 """
 import gtk
-from yaml_configuration.config import DefaultConfig
+
+from rafcon.statemachine.config import ObservableConfig
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -16,7 +17,7 @@ logger = log.get_logger(__name__)
 CONFIG_FILE = "runtime_config.yaml"
 
 
-class RuntimeConfig(DefaultConfig):
+class RuntimeConfig(ObservableConfig):
     """Class to hold and load the runtime configuration"""
 
     def __init__(self):
