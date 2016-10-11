@@ -37,7 +37,7 @@ from rafcon.mvc import gui_helper
 from rafcon.utils import plugins
 from rafcon.utils import log
 
-from rafcon.mvc.controllers.settings_window import SettingsWindowController
+from rafcon.mvc.controllers.config_window import ConfigWindowController
 
 
 logger = log.get_logger(__name__)
@@ -125,9 +125,9 @@ class MainWindowController(ExtendedController):
         ######################################################
         # settings
         ######################################################
-        settings_window_ctrl = SettingsWindowController(mvc_singleton.core_settings_model, view.settings_window_view,
-                                                        mvc_singleton.gui_settings_model)
-        self.add_controller('settings_window_ctrl', settings_window_ctrl)
+        config_window_ctrl = ConfigWindowController(mvc_singleton.core_config_model, view.config_window_view,
+                                                    mvc_singleton.gui_config_model)
+        self.add_controller('config_window_ctrl', config_window_ctrl)
 
         ######################################################
         # menu bar

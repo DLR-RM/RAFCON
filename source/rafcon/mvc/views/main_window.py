@@ -13,7 +13,7 @@ from rafcon.mvc.views.top_tool_bar import TopToolBarView
 from rafcon.mvc.views.menu_bar import MenuBarView
 from rafcon.mvc.views.tool_bar import ToolBarView
 from rafcon.mvc.views.undocked_window import UndockedWindowView
-from rafcon.mvc.views.settings_window import SettingsWindowView
+from rafcon.mvc.views.config_window import ConfigWindowView
 
 from rafcon.mvc.utils import constants
 from rafcon.utils.i18n import _
@@ -129,9 +129,9 @@ class MainWindowView(View):
         self.logging_view.get_top_widget().show()
 
         ################################################
-        # settings window view
+        # config window view
         ################################################
-        self.settings_window_view = SettingsWindowView()
+        self.config_window_view = ConfigWindowView()
 
         ##################################################
         # menu bar view

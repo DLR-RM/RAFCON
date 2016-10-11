@@ -1,7 +1,7 @@
 """
-.. module:: settings window
+.. module:: config_window
    :platform: Unix, Windows
-   :synopsis: a module holding the controller for the configuration settings GUI
+   :synopsis: a module holding the controller for the configuration GUI
 
 .. moduleauthor:: Benno Voggenreiter, Franz Steinmetz
 
@@ -11,8 +11,8 @@ from os.path import dirname
 import yaml_configuration.config
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.models.settings_model import SettingsModel
-from rafcon.mvc.views.settings_window import SettingsWindowView
+from rafcon.mvc.models.config_model import ConfigModel
+from rafcon.mvc.views.config_window import ConfigWindowView
 
 from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
@@ -20,20 +20,19 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class SettingsWindowController(ExtendedController):
-    """
-    Controller handling the configuration settings GUI
+class ConfigWindowController(ExtendedController):
+    """Controller handling the configuration GUI
     """
 
     def __init__(self, core_config_model, view, gui_config_model):
-        assert isinstance(view, SettingsWindowView)
-        assert isinstance(core_config_model, SettingsModel)
+        assert isinstance(view, ConfigWindowView)
+        assert isinstance(core_config_model, ConfigModel)
         ExtendedController.__init__(self, core_config_model, view)
         self.core_config_model = core_config_model
         self.gui_config_model = gui_config_model
         self.observe_model(gui_config_model)
 
-        # (setting. text, text_visible, toggle_activatable, toggle_visible, text_editable, toggle_value)
+        # (config_key, config_value, text_visible, toggle_activatable, toggle_visible, text_editable, toggle_value)
         self.core_list_store = gtk.ListStore(str, str, bool, bool, bool, bool, bool)
         self.library_list_store = gtk.ListStore(str, str)
         self.gui_list_store = gtk.ListStore(str, str, bool, bool, bool, bool, bool)
@@ -93,7 +92,7 @@ class SettingsWindowController(ExtendedController):
 
         Only collects information, delegates handling further to _handle_config_update
 
-        :param SettingsModel config_m: The config model that has been changed
+        :param ConfigModel config_m: The config model that has been changed
         :param str prop_name: Should always be 'config'
         :param dict info: Information e.g. about the changed config key
         """
@@ -108,7 +107,7 @@ class SettingsWindowController(ExtendedController):
 
         Mainly collects information, delegates handling further to _handle_config_update
 
-        :param SettingsModel config_m: The config model that has been changed
+        :param ConfigModel config_m: The config model that has been changed
         :param str prop_name: Should always be 'preliminary_config'
         :param dict info: Information e.g. about the changed config key
         """
@@ -133,7 +132,7 @@ class SettingsWindowController(ExtendedController):
         The method ensure that the correct list stores are updated with the new values.
 
 
-        :param SettingsModel config_m: The config model that has been changed
+        :param ConfigModel config_m: The config model that has been changed
         :param config_key: The config key who's value has been changed
         :return:
         """
@@ -171,7 +170,7 @@ class SettingsWindowController(ExtendedController):
     def update_config_value(self, config_m, config_key):
         """Updates the corresponding list store of a changed config value
 
-        :param SettingsModel config_m: The config model that has been changed
+        :param ConfigModel config_m: The config model that has been changed
         :param str config_key: The config key who's value has been changed
         """
         config_value = config_m.get_current_config_value(config_key)
@@ -203,7 +202,7 @@ class SettingsWindowController(ExtendedController):
     def _update_list_store(config_m, list_store, ignore_keys=[]):
         """Generic method to create list store for a given config model
 
-        :param SettingsModel config_m: Config model to read into list store
+        :param ConfigModel config_m: Config model to read into list store
         :param gtk.ListStore list_store: List store to be filled
         :param list ignore_keys: List of keys that should be ignored
         """
@@ -300,7 +299,7 @@ class SettingsWindowController(ExtendedController):
 
         :param gtk.CellRenderer renderer: Cell renderer that has been toggled
         :param path: Path within the list store
-        :param SettingsModel config_m: The config model related to the toggle option
+        :param ConfigModel config_m: The config model related to the toggle option
         :param gtk.ListStore config_list_store: The list store related to the toggle option
         """
         config_key = config_list_store[int(path)][0]
@@ -506,7 +505,7 @@ class SettingsWindowController(ExtendedController):
 
         :param gtk.CellRenderer renderer: Cell renderer showing the shortcut
         :param path: Path of shortcuts within the list store
-        :param SettingsModel config_m: The config model that is to be changed
+        :param ConfigModel config_m: The config model that is to be changed
         :param gtk.ListStore list_store: The list store that is to be changed
         """
         config_key = list_store[int(path)][0]
@@ -542,7 +541,7 @@ class SettingsWindowController(ExtendedController):
         :param title_text: Title text
         :param description: Description
         """
-        dialog = gtk.Dialog(title_text, self.view["settings_window"],
+        dialog = gtk.Dialog(title_text, self.view["properties_window"],
                             flags=0, buttons=
                             (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                              gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))

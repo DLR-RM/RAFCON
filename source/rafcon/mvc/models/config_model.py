@@ -1,7 +1,7 @@
 """
-.. module:: settings_model
+.. module:: config_model
    :platform: Unix, Windows
-   :synopsis: a module which manages the configuration settings GUI
+   :synopsis: a module which manages the configuration GUI
 
 .. moduleauthor:: Benno Voggenreiter, Franz Steinmetz
 
@@ -15,7 +15,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class SettingsModel(ModelMT):
+class ConfigModel(ModelMT):
     """Model managing an ObservableConfig
     """
 
@@ -25,7 +25,7 @@ class SettingsModel(ModelMT):
     __observables__ = ("config", "preliminary_config")
 
     def __init__(self, config):
-        super(SettingsModel, self).__init__()
+        super(ConfigModel, self).__init__()
 
         self.config = config
         self.preliminary_config = {}
