@@ -393,7 +393,7 @@ class ConfigWindowController(ExtendedController):
     def _on_ok_button_clicked(self, *args):
         """OK button clicked: Applies the configurations and closes the window
         """
-        if self.model.changed_entries:
+        if self.core_config_model.preliminary_config or self.gui_config_model.preliminary_config:
             self._on_apply_button_clicked()
         self.view["properties_window"].hide()
 
@@ -421,8 +421,8 @@ class ConfigWindowController(ExtendedController):
             message = gtk.MessageDialog(parent=self.view["properties_window"], flags=gtk.DIALOG_MODAL,
                                         type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
             message_string = "You must restart RAFCON to apply following changes: \n"
-            for key in self.core_config_model.changed_keys_requiring_restart + \
-                    self.gui_config_model.changed_keys_requiring_restart:
+            for key in (self.core_config_model.changed_keys_requiring_restart |
+                        self.gui_config_model.changed_keys_requiring_restart):
                 changes_str = ("%s\n%s" % (changes_str, key))
             message.set_markup("%s %s" % (message_string, changes_str))
             message.run()
