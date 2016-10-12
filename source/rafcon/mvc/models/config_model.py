@@ -32,6 +32,22 @@ class ConfigModel(ModelMT):
 
         self.changed_keys_requiring_restart = set()
 
+    def as_dict(self, use_preliminary=False):
+        """Create a copy of the config in form of a dict
+
+        :param bool use_preliminary: Whether to include the preliminary config
+        :return: A dict with the copy of the config
+        :rtype: dict
+        """
+        config = dict()
+        for key in self.config.keys:
+            if use_preliminary and key in self.preliminary_config:
+                value = self.preliminary_config[key]
+            else:
+                value = self.config.get_config_value(key)
+            config[key] = value
+        return config
+
     def update_config(self, config_dict, config_file):
         """Update the content and reference of the config
 
