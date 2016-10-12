@@ -44,6 +44,8 @@ class Config(ObservableConfig):
 
     """
 
+    keys_requiring_restart = ('PROFILER_RUN',)
+
     def __init__(self, logger_object=None):
         """
         Default constructor
@@ -56,7 +58,6 @@ class Config(ObservableConfig):
         if self.get_config_value("TYPE") != "SM_CONFIG":
             raise ConfigError("Type should be SM_CONFIG for state machine configuration. "
                               "Please add \"TYPE: SM_CONFIG\" to your config.yaml file.")
-        self.keys_requiring_restart = set(self.keys)
 
     def load(self, config_file=None, path=None):
         """ Loads the configuration from a specific file
