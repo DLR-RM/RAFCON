@@ -163,7 +163,6 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("delete", self._delete_selection)
         shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))
         shortcut_manager.add_callback_for_action("add2", partial(self._add_new_state, state_type=StateType.HIERARCHY))
-        shortcut_manager.add_callback_for_action("info", self._toggle_data_flow_visibility)
         shortcut_manager.add_callback_for_action("abort", self._abort)
 
         shortcut_manager.add_callback_for_action("copy", self._copy_selection)
@@ -2111,12 +2110,6 @@ class GraphicalEditorController(ExtendedController):
         if react_to_event(self.view, self.view.editor, event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
             return state_machine_helper.add_new_state(self.model, state_type)
-
-    def _toggle_data_flow_visibility(self, *event):
-        if react_to_event(self.view, self.view.editor, event):
-            global_runtime_config.set_config_value('SHOW_DATA_FLOWS',
-                                                   not global_runtime_config.get_config_value("SHOW_DATA_FLOWS"))
-            self._redraw()
 
     def _abort(self, *event):
         if react_to_event(self.view, self.view.editor, event):
