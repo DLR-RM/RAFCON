@@ -35,6 +35,8 @@ from rafcon.mvc import singleton as mvc_singleton
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.views.utils.about_dialog import MyAboutDialog
 from rafcon.mvc.controllers.state_substitute import StateSubstituteChooseLibraryDialog
+from rafcon.mvc.controllers.config_window import ConfigWindowController
+from rafcon.mvc.views.config_window import ConfigWindowView
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 
@@ -42,9 +44,6 @@ from rafcon.mvc.utils import constants
 from rafcon.mvc.utils.dialog import RAFCONButtonDialog, ButtonDialog
 from rafcon.utils import plugins
 from rafcon.utils import log
-
-from rafcon.mvc.controllers.config_window import ConfigWindowController
-from rafcon.mvc.views.config_window import ConfigWindowView
 
 logger = log.get_logger(__name__)
 
@@ -67,6 +66,9 @@ class MenuBarController(ExtendedController):
         self.shortcut_manager = shortcut_manager
         self.logging_view = view.logging_view
         self.main_window_view = view
+        self.observe_model(mvc_singleton.core_config_model)
+        self.observe_model(mvc_singleton.gui_config_model)
+
         self._destroyed = False
         self.handler_ids = {}
         self.registered_shortcut_callbacks = {}
@@ -148,11 +150,27 @@ class MenuBarController(ExtendedController):
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
         self.registered_view = True
 
+    @ExtendedController.observe('config', after=True)
+    def on_config_value_changed(self, config_m, prop_name, info):
+        """Callback when a config value has been changed
+
+        :param ConfigModel config_m: The config model that has been changed
+        :param str prop_name: Should always be 'config'
+        :param dict info: Information e.g. about the changed config key
+        """
+        config_key = info['args'][1]
+        # config_value = info['args'][2]
+
+        if config_key == "LIBRARY_PATHS":
+            library_manager.refresh_libraries()
+        elif config_key == "SHORTCUTS":
+            self.refresh_shortcuts()
+
     def on_toggle_full_screen_mode(self, *args):
         if self.view["fullscreen"].get_active():
             self.view["fullscreen"].set_active(False)  # because toggle is not always working
         else:
-            self.view["fullscreen"].toggle() # because set active is not always working
+            self.view["fullscreen"].toggle()  # because set active is not always working
 
     def on_full_screen_mode_toggled(self, *args):
         if self.full_screen_flag == self.view["fullscreen"].active:
@@ -638,7 +656,7 @@ class MenuBarController(ExtendedController):
         self.prepare_destruction()
         return False
 
-    def refresh_shortcuts_activate(self):
+    def refresh_shortcuts(self):
         self.shortcut_manager.remove_shortcuts()
         self.shortcut_manager.update_shortcuts()
         for item_name, shortcuts in global_gui_config.get_config_value('SHORTCUTS', {}).iteritems():
