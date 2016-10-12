@@ -155,7 +155,7 @@ def wait_for_state_machine_finished(state_machine):
 
     from rafcon.statemachine.states.execution_state import ExecutionState
     if not isinstance(state_machine.root_state, ExecutionState):
-        while len(state_machine.execution_history_container.execution_histories[0].history_items) < 1:
+        while len(state_machine.execution_histories[0]) < 1:
             time.sleep(0.1)
     else:
         time.sleep(0.5)

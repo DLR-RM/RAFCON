@@ -14,7 +14,7 @@ from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 
 from rafcon.statemachine.id_generator import generate_state_machine_id
-from rafcon.statemachine.execution.execution_history import ExecutionHistoryContainer, ExecutionHistory
+from rafcon.statemachine.execution.execution_history import ExecutionHistory
 from rafcon.statemachine.enums import StateExecutionState
 
 from rafcon.utils.hashable import Hashable
@@ -63,7 +63,7 @@ class StateMachine(Observable, JSONObject, Hashable):
         else:
             self.last_update = get_current_time_string()
 
-        self.execution_history_container = ExecutionHistoryContainer()
+        self._execution_histories = []
 
     def __copy__(self):
         sm = self.__class__(copy(self._root_state), self.version, self.creation_time, self.last_update)
@@ -101,8 +101,7 @@ class StateMachine(Observable, JSONObject, Hashable):
         # load default input data for the state
         self._root_state.input_data = self._root_state.get_default_input_values_for_state(self._root_state)
         self._root_state.output_data = self._root_state.create_output_dictionary_for_state(self._root_state)
-        new_execution_history = ExecutionHistory()
-        self.execution_history_container.add_execution_history(new_execution_history)
+        new_execution_history = self._add_new_execution_history()
         self._root_state.start(new_execution_history)
 
     def join(self):
@@ -131,6 +130,20 @@ class StateMachine(Observable, JSONObject, Hashable):
                 raise AttributeError("root_state has to be of type State")
             root_state.parent = self
         self._root_state = root_state
+
+    @property
+    def execution_histories(self):
+        return self._execution_histories
+
+    @Observable.observed
+    def clear_execution_histories(self):
+        del self._execution_histories[:]
+
+    @Observable.observed
+    def _add_new_execution_history(self):
+        new_execution_history = ExecutionHistory()
+        self._execution_histories.append(new_execution_history)
+        return new_execution_history
 
     @Observable.observed
     def change_root_state_type(self, new_state_class):
