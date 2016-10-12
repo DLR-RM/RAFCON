@@ -55,6 +55,8 @@ class MainWindowController(ExtendedController):
 
         mvc_singleton.main_window_controller = self
         self.state_machine_manager_model = state_machine_manager_model
+        self.observe_model(mvc_singleton.gui_config_model)
+
         self.editor_type = editor_type
         self.shortcut_manager = None
         self.handler_ids = {}
@@ -256,10 +258,10 @@ class MainWindowController(ExtendedController):
                                         self.on_button_step_backward_shortcut_clicked)
 
         # Connect Debug console buttons' signals to their corresponding methods
-        self.connect_button_to_function('button_show_debug', "toggled", self.on_debug_content_change)
-        self.connect_button_to_function('button_show_info', "toggled", self.on_debug_content_change)
-        self.connect_button_to_function('button_show_warning', "toggled", self.on_debug_content_change)
-        self.connect_button_to_function('button_show_error', "toggled", self.on_debug_content_change)
+        for level in ["debug", "info", "warning", "error"]:
+            self.connect_button_to_function("button_show_{}".format(level), "toggled", self.on_log_button_toggled,
+                                            "LOGGING_SHOW_{}".format(level.upper()))
+        self.update_log_button_state()
 
         view['upper_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['upper_notebook_title'],
                                        view.left_bar_window, 'upper')
@@ -275,7 +277,6 @@ class MainWindowController(ExtendedController):
         # Initializing Pane positions
         for config_id in constants.PANE_ID.keys():
             self.set_pane_position(config_id)
-            # view[constants.PANE_ID[config_id]].get_child2().connect('size-allocate', self.print_paned_pos, config_id)
 
         if gui_config.get_config_value('AUTO_BACKUP_ENABLED') and gui_config.get_config_value('AUTO_RECOVERY_CHECK'):
             import rafcon.mvc.models.auto_backup as auto_backup
@@ -283,16 +284,22 @@ class MainWindowController(ExtendedController):
 
         plugins.run_hook("main_window_setup", self)
 
-    def print_paned_pos(self, width, height, config_id):
-        pane_id = constants.PANE_ID[config_id]
-        view = self.view[pane_id]
-        print "paned position {4} '{1}' is now {0}.{2}|{3}".format(view.get_position(), pane_id,
-                                                                   width, height, config_id)
-        # TODO scale panes proportional if window is re-sized
-        # TODO right-bar-pane hold position if left-bar-pane moves or becomes hide
+    @ExtendedController.observe('config', after=True)
+    def on_config_value_changed(self, config_m, prop_name, info):
+        """Callback when a config value has been changed
 
-    def connect_button_to_function(self, view_index, button_state, function):
-        handler_id = self.view[view_index].connect(button_state, function)
+        :param ConfigModel config_m: The config model that has been changed
+        :param str prop_name: Should always be 'config'
+        :param dict info: Information e.g. about the changed config key
+        """
+        config_key = info['args'][1]
+        # config_value = info['args'][2]
+
+        if "LOGGING_SHOW_" in config_key:
+            self.update_log_button_state()
+
+    def connect_button_to_function(self, view_index, button_state, function, *args):
+        handler_id = self.view[view_index].connect(button_state, function, *args)
         self.handler_ids[view_index] = handler_id
 
     def switch_state_machine_execution_engine(self, new_state_machine_execution_engine):
@@ -499,25 +506,14 @@ class MainWindowController(ExtendedController):
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_backward_step_activate(None)
 
-    def on_debug_content_change(self, widget, data=None):
-        if self.view['button_show_info'].get_active():
-            gui_config.set_config_value('LOGGING_SHOW_INFO', True)
-        else:
-            gui_config.set_config_value('LOGGING_SHOW_INFO', False)
-        if self.view['button_show_debug'].get_active():
-            gui_config.set_config_value('LOGGING_SHOW_DEBUG', True)
-        else:
-            gui_config.set_config_value('LOGGING_SHOW_DEBUG', False)
-        if self.view['button_show_warning'].get_active():
-            gui_config.set_config_value('LOGGING_SHOW_WARNING', True)
-        else:
-            gui_config.set_config_value('LOGGING_SHOW_WARNING', False)
-        if self.view['button_show_error'].get_active():
-            gui_config.set_config_value('LOGGING_SHOW_ERROR', True)
-        else:
-            gui_config.set_config_value('LOGGING_SHOW_ERROR', False)
-        # gui_config.save_configuration()
+    def on_log_button_toggled(self, log_button, config_key):
+        gui_config.set_config_value(config_key, log_button.get_active())
         self.view.logging_view.update_filtered_buffer()
+
+    def update_log_button_state(self):
+        for level in ["debug", "info", "warning", "error"]:
+            active = gui_config.get_config_value("LOGGING_SHOW_{}".format(level.upper()))
+            self.view["button_show_{}".format(level)].set_active(active)
 
     @staticmethod
     def on_notebook_tab_switch(notebook, page, page_num, title_label, window, notebook_identifier):
