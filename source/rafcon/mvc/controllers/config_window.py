@@ -373,10 +373,12 @@ class ConfigWindowController(ExtendedController):
                         logger.warn("There are changes in the configuration that have not yet been applied. These "
                                     "changes will not be exported.")
                     self._last_path = dirname(config_file)
-                    config_m.config.config_file_path = config_file
-                    config_m.config.path = self._last_path
+                    config_dict = config_m.as_dict()
+                    config_copy = yaml_configuration.config.DefaultConfig(str(config_dict))
+                    config_copy.config_file_path = config_file
+                    config_copy.path = self._last_path
                     try:
-                        config_m.config.save_configuration()
+                        config_copy.save_configuration()
                         logger.info("Configuration exported to {}" .format(config_file))
                     except IOError:
                         logger.error("Cannot open file '{}' for writing".format(config_file))
