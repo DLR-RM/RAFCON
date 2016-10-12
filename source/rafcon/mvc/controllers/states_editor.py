@@ -18,9 +18,9 @@ from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 from rafcon.mvc.selection import Selection
+from rafcon.mvc.singleton import gui_config_model
 
 from rafcon.mvc.config import global_gui_config
-
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 from rafcon.mvc.utils import constants, helpers
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS as EXECUTION_TRIGGERED_METHODS
@@ -112,6 +112,7 @@ class StatesEditorController(ExtendedController):
     def __init__(self, model, view, editor_type):
         assert isinstance(model, StateMachineManagerModel)
         ExtendedController.__init__(self, model, view)
+        self.observe_model(gui_config_model)
 
         for state_machine_m in self.model.state_machines.itervalues():
             self.observe_model(state_machine_m)
@@ -140,6 +141,20 @@ class StatesEditorController(ExtendedController):
         """
         shortcut_manager.add_callback_for_action('rename', self.rename_selected_state)
         super(StatesEditorController, self).register_actions(shortcut_manager)
+
+    @ExtendedController.observe('config', after=True)
+    def on_config_value_changed(self, config_m, prop_name, info):
+        """Callback when a config value has been changed
+
+        :param ConfigModel config_m: The config model that has been changed
+        :param str prop_name: Should always be 'config'
+        :param dict info: Information e.g. about the changed config key
+        """
+        config_key = info['args'][1]
+        # config_value = info['args'][2]
+
+        if config_key == "SOURCE_EDITOR_STYLE":
+            self.reload_style()
 
     def get_state_identifier(self, state_m):
         return id(state_m)
