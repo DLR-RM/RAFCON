@@ -95,8 +95,6 @@ class DataFlowView(ConnectionView):
         self._data_flow_m = None
         self.model = data_flow_m
 
-        self._show = global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
-
         self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
         self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_PORT'])
 
@@ -111,13 +109,7 @@ class DataFlowView(ConnectionView):
 
     @property
     def show_connection(self):
-        return global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True) or self._show
-
-    def show(self):
-        self._show = True
-
-    def hide(self):
-        self._show = False
+        return global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
 
     def draw(self, context):
         if not self.show_connection:

@@ -33,6 +33,7 @@ from rafcon.mvc.mygaphas.items.ports import OutcomeView, DataPortView, ScopedVar
 from rafcon.mvc.mygaphas.canvas import MyCanvas
 from rafcon.mvc.mygaphas import guide
 
+from rafcon.mvc.singleton import gui_config_model, runtime_config_model
 from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -54,8 +55,8 @@ class GraphicalEditorController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         assert type(view) == GraphicalEditorView
         assert isinstance(self.model, StateMachineModel)
-        # assert isinstance(self.view, GraphicalEditorView)
-        # assert isinstance(self.view.editor, GraphicalEditor)
+        self.observe_model(gui_config_model)
+        self.observe_model(runtime_config_model)
         self.root_state_m = model.root_state
 
         self.canvas = MyCanvas()
@@ -97,6 +98,21 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action('show_data_values', self.update_view)
         shortcut_manager.add_callback_for_action('data_flow_mode', self.data_flow_mode)
         shortcut_manager.add_callback_for_action('show_aborted_preempted', self.update_view)
+
+    @ExtendedController.observe('config', after=True)
+    def on_config_value_changed(self, config_m, prop_name, info):
+        """Callback when a config value has been changed
+
+        :param ConfigModel config_m: The config model that has been changed
+        :param str prop_name: Should always be 'config'
+        :param dict info: Information e.g. about the changed config key
+        """
+        config_key = info['args'][1]
+        # config_value = info['args'][2]
+
+        if config_key in ["ENABLE_CACHING", "SHOW_ABORTED_PREEMPTED", "SHOW_DATA_FLOWS",
+                          "SHOW_DATA_FLOW_VALUE_LABELS", "SHOW_NAMES_ON_DATA_FLOWS", "ROTATE_NAMES_ON_CONNECTION"]:
+            self.update_view()
 
     def on_drag_data_received(self, widget, context, x, y, data, info, time):
         """Receives state_id from LibraryTree and moves the state to the position of the mouse
@@ -255,18 +271,6 @@ class GraphicalEditorController(ExtendedController):
         if select_items or deselect_items:
             self.view.editor.emit('selection-changed', self.view.editor.selected_items)
         # TODO: Jump to the selected state in the view and adjust the zoom
-        # state_v = None
-
-        # if global_runtime_config.get_config_value("DATA_FLOW_MODE"):
-        #     for data_flow in self.get_connected_data_flows(state_v):
-        #         data_flow.show()
-        #     self.set_non_active_states_transparent(True, state_v)
-        # else:
-        #     for data_flow in self.get_connected_data_flows(state_v):
-        #         data_flow.hide()
-        #     self.set_non_active_states_transparent(False, state_v)
-        #
-        # self.view.editor.focused_item = state_v
 
     def _meta_data_changed(self, view, model, name, affects_children):
         msg = MetaSignalMsg('graphical_editor_gaphas', name, affects_children)
