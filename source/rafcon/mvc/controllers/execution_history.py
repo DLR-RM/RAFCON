@@ -135,7 +135,8 @@ class ExecutionHistoryTreeController(ExtendedController):
                 self.append_string_to_menu(popup_menu, "Scoped Data: ")
                 self.append_string_to_menu(popup_menu, "------------------------")
                 for key, data in scoped_data.iteritems():
-                    menu_item_string = "    %s (%s - %s):\t%s" % (data.name.replace("_", "__"), key, data.value_type, data.value)
+                    menu_item_string = "    %s (%s - %s):\t%s" % (
+                        data.name.replace("_", "__"), key, data.value_type, data.value)
                     self.append_string_to_menu(popup_menu, menu_item_string)
 
                 if input_output_data:
@@ -189,8 +190,11 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         Empties the execution history tree by adjusting the start index and updates tree store and view.
         """
-        self.state_machine_manager.get_active_state_machine().clear_execution_histories()
-        self.update()
+        self.history_tree_store.clear()
+        active_sm = self.state_machine_manager.get_active_state_machine()
+        if active_sm:
+            active_sm.clear_execution_histories()
+            self.update()
 
     def reload_history(self, widget, event=None):
         """Triggered when the 'Reload History' button is clicked."""
@@ -206,74 +210,74 @@ class ExecutionHistoryTreeController(ExtendedController):
         if not active_sm:
             return
 
-        execution_number = 0
-        for execution_history in active_sm.execution_histories:
+        for execution_number, execution_history in enumerate(active_sm.execution_histories):
             if len(execution_history) > 0:
-                execution_number += 1
                 first_history_item = execution_history[0]
                 tree_item = self.history_tree_store.insert_after(
-                    None, None, (first_history_item.state_reference.name + " - Run " + str(execution_number),
+                    None, None, (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
                                  first_history_item))
-                self.insert_recursively(tree_item, execution_history)
+                self.insert_execution_history(tree_item, execution_history, is_root=True)
 
-    def insert_recursively(self, parent, execution_history):
+    def insert_history_item(self, parent, history_item, description, dummy=False):
+        """Enters a single history item into the tree store
+
+        :param gtk.TreeItem parent: Parent tree item
+        :param HistoryItem history_item: History item to be inserted
+        :param str description: A description to be added to the entry
+        :param None dummy: Whether this is just a dummy entry (wrapper for concurrency items)
+        :return: Inserted tree item
+        :rtype: gtk.TreeItem
         """
-        Recursively insert a list of history items into a the tree store
-        :param parent: the parent to add the next history item to
+        tree_item = self.history_tree_store.insert_before(
+            parent, None, (history_item.state_reference.name + " - " + description, None if dummy else history_item))
+        return tree_item
+
+    def insert_execution_history(self, parent, execution_history, is_root=False):
+        """Insert a list of history items into a the tree store
+
+        If there are concurrency history items, the method is called recursively.
+
+        :param gtk.TreeItem parent: the parent to add the next history item to
         :param ExecutionHistory execution_history: all history items of a certain state machine execution
-        :return:
+        :param bool is_root: Whether this is the root execution history
         """
-        index = 0
         current_parent = parent
-        skip_next = False
-        for history_item in execution_history:
-            if skip_next:
-                skip_next = False
-                index += 1
-                continue
-
+        execution_history_iterator = iter(execution_history)
+        for history_item in execution_history_iterator:
             if isinstance(history_item, ConcurrencyItem):
-                self.insert_concurrency(current_parent, history_item.execution_histories)
-                # self.insert_recursively(current_parent, execution_history, new_index)
-            else:
-                if isinstance(history_item, CallItem):
-                    tree_item = self.history_tree_store.insert_before(
-                        current_parent, None, (history_item.state_reference.name + " - Call", history_item))
-                    if history_item.call_type is CallType.EXECUTE:
-                        # this is necessary that already the CallType.EXECUTE item opens a new hierarchy in the
-                        # tree view and not the CallType.CONTAINER item
-                        if history_item.next:
-                            next_history_item = history_item.next
-                            if next_history_item.call_type is CallType.CONTAINER:
-                                new_tree_item = self.history_tree_store.insert_before(
-                                    tree_item, None, (next_history_item.state_reference.name + " - Call",
-                                                      next_history_item))
-                                current_parent = tree_item
-                                skip_next = True
+                self.insert_concurrent_execution_histories(current_parent, history_item.execution_histories)
 
-                else:  # history_item is ReturnItem
-                    tree_item = self.history_tree_store.insert_before(
-                        current_parent, None, (history_item.state_reference.name + " - Return", history_item))
-                    if history_item.call_type is CallType.CONTAINER:
-                        current_parent = self.history_tree_store.iter_parent(current_parent)
+            elif isinstance(history_item, CallItem):
+                tree_item = self.insert_history_item(current_parent, history_item, "Enter" if is_root else "Call")
+                if history_item.call_type is CallType.EXECUTE:
+                    # this is necessary that already the CallType.EXECUTE item opens a new hierarchy in the
+                    # tree view and not the CallType.CONTAINER item
+                    next_history_item = history_item.next
+                    if next_history_item and next_history_item.call_type is CallType.CONTAINER:
+                        current_parent = tree_item
+                        self.insert_history_item(current_parent, next_history_item, "Enter")
+                        next(execution_history_iterator)  # skips the next history item in the iterator
 
-                index += 1
+            else:  # history_item is ReturnItem
+                if history_item.call_type is CallType.EXECUTE:
+                    self.insert_history_item(current_parent, history_item, "Return")
+                else:  # CONTAINER
+                    self.insert_history_item(current_parent, history_item, "Exit")
+                    current_parent = self.history_tree_store.iter_parent(current_parent)
 
-    def insert_concurrency(self, parent, child_execution_histories):
-        """
-        Recursively add the child execution histories of an concurrency state.
-        :param parent: the parent to add the next history item to
-        :param dict child_execution_histories: a list of all child execution histories
+            is_root = False
+
+    def insert_concurrent_execution_histories(self, parent, concurrent_execution_histories):
+        """Adds the child execution histories of a concurrency state.
+
+        :param gtk.TreeItem parent: the parent to add the next history item to
+        :param list[ExecutionHistory] concurrent_execution_histories: a list of all child execution histories
         :return:
         """
-        for child_history_number, child_execution_history in child_execution_histories.iteritems():
-            if len(child_execution_history) >= 1:
-                first_history_item = child_execution_history[0]
+        for execution_history in concurrent_execution_histories:
+            if len(execution_history) >= 1:
+                first_history_item = execution_history[0]
                 # this is just a dummy item to have an extra parent for each branch
                 # gives better overview in case that one of the child state is a simple execution state
-                tree_item = self.history_tree_store.insert_before(
-                    parent, None, (first_history_item.state_reference.name + " - Concurrency Branch",
-                                   None))
-                self.insert_recursively(tree_item, child_execution_history)
-
-
+                tree_item = self.insert_history_item(parent, first_history_item, "Concurrency Branch", dummy=True)
+                self.insert_execution_history(tree_item, execution_history)
