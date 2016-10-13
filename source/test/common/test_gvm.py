@@ -104,8 +104,8 @@ def test_type_check(caplog):
     a = gvm.get_variable("a")
     assert a == 3
 
-    # backward compatibility
-    gvm.set_variable("a", "test")
+    # backward compatibility TODO check whether this is valid as backward comp-test!?!
+    gvm.set_variable("a", "test", data_type=type(None))
     a = gvm.get_variable("a")
     assert a == "test"
 

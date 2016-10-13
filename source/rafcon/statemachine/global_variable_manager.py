@@ -46,19 +46,6 @@ class GlobalVariableManager(Observable):
         :param access_key: if the variable was explicitly locked with the  rafcon.state lock_variable
         :raises exceptions.RuntimeError: if a wrong access key is passed
         """
-        self.__dictionary_lock.acquire()
-        unlock = True
-        if self.variable_exist(key):
-            if self.is_locked(key) and self.__access_keys[key] != access_key:
-                raise RuntimeError("Wrong access key for accessing global variable")
-            elif self.is_locked(key):
-                unlock = False
-            else:
-                access_key = self.lock_variable(key)
-        else:
-            self.__variable_locks[key] = Lock()
-            access_key = self.lock_variable(key)
-
         if self.variable_exist(key):
             if data_type is None:
                 data_type = self.__global_variable_type_dictionary[key]
@@ -67,6 +54,20 @@ class GlobalVariableManager(Observable):
                 data_type = type(None)
         assert isinstance(data_type, type)
         self.check_value_and_type(value, data_type)
+
+        self.__dictionary_lock.acquire()
+        unlock = True
+        if self.variable_exist(key):
+            if self.is_locked(key) and self.__access_keys[key] != access_key:
+                self.__dictionary_lock.release()
+                raise RuntimeError("Wrong access key for accessing global variable")
+            elif self.is_locked(key):
+                unlock = False
+            else:
+                access_key = self.lock_variable(key)
+        else:
+            self.__variable_locks[key] = Lock()
+            access_key = self.lock_variable(key)
 
         # --- variable locked
         if per_reference:
