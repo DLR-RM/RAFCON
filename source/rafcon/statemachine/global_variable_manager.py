@@ -37,7 +37,7 @@ class GlobalVariableManager(Observable):
         self.__variable_references = {}
 
     @Observable.observed
-    def set_variable(self, key, value, per_reference=False, access_key=None, data_type=type(None)):
+    def set_variable(self, key, value, per_reference=False, access_key=None, data_type=None):
         """Sets a global variable
 
         :param key: the key of the global variable to be set
@@ -46,8 +46,6 @@ class GlobalVariableManager(Observable):
         :param access_key: if the variable was explicitly locked with the  rafcon.state lock_variable
         :raises exceptions.RuntimeError: if a wrong access key is passed
         """
-        assert isinstance(data_type, type)
-        self.check_value_and_type(value, data_type)
         self.__dictionary_lock.acquire()
         unlock = True
         if self.variable_exist(key):
@@ -60,6 +58,15 @@ class GlobalVariableManager(Observable):
         else:
             self.__variable_locks[key] = Lock()
             access_key = self.lock_variable(key)
+
+        if self.variable_exist(key):
+            if data_type is None:
+                data_type = self.__global_variable_type_dictionary[key]
+        else:
+            if data_type is None:
+                data_type = type(None)
+        assert isinstance(data_type, type)
+        self.check_value_and_type(value, data_type)
 
         # --- variable locked
         if per_reference:
@@ -257,12 +264,12 @@ class GlobalVariableManager(Observable):
 
     @staticmethod
     def check_value_and_type(value, data_type):
-        """
-        Checks if a given value is of a specific type
+        """Checks if a given value is of a specific type
+
         :param value: the value to check
         :param data_type: the type to be checked upon
         :return:
         """
         if value is not None and data_type is not type(None):
-            if type(value) is not data_type:
-                raise TypeError("Value '{0}' is not of data type '{1}'".format(value, data_type))
+            if not isinstance(value, data_type):
+                raise TypeError("Value: '{0}' is not of data type: '{1}', value type: {2}".format(value, data_type , type(value)))

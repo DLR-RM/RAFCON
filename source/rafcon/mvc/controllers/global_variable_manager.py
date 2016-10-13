@@ -281,7 +281,7 @@ class GlobalVariableManagerController(ExtendedController):
         else:  # new_data_type in [str, float, int, list, dict, tuple, bool]:
             try:
                 new_value = new_data_type(old_value)
-            except TypeError as e:
+            except (ValueError, TypeError) as e:
                 new_value = new_data_type()
                 logger.info("Global variable '{0}' old value '{1}' is not convertible to new data type '{2}'"
                             "therefore becomes empty new data type object '{3}' -> raised TypeError: {4}"
@@ -292,7 +292,8 @@ class GlobalVariableManagerController(ExtendedController):
         try:
             self.model.global_variable_manager.set_variable(global_variable_name, new_value, data_type=new_data_type)
         except (ValueError, RuntimeError, TypeError) as e:
-            logger.error("Could not set new value unexpected failure: {0}".format(e))
+            logger.error("Could not set new value unexpected failure {0} to value {1} -> raised error {2}"
+                         "".format(global_variable_name, new_value, e))
 
     def select_entry(self, global_variable_name):
         """Selects the global variable entry belonging to the given global variable name"""
