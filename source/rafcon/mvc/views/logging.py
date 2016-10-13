@@ -62,16 +62,16 @@ class LoggingView(View):
         # Store all new log entries
         if new:
             self._log_entries.append((log_level, message))
-        if log_level <= 10 and self.debug:
+        if log_level <= log.logging.DEBUG and self.debug:
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
                           priority=glib.PRIORITY_LOW)
-        elif 10 < log_level <= 20 and self.info:
+        elif log.logging.DEBUG < log_level <= log.logging.INFO and self.info:
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_info_color",
                           priority=glib.PRIORITY_LOW)
-        elif 20 < log_level <= 30 and self.warning:
+        elif log.logging.INFO < log_level <= log.logging.WARNING and self.warning:
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_warning_color",
                           priority=glib.PRIORITY_LOW)
-        elif 30 < log_level and self.error:
+        elif log.logging.WARNING < log_level and self.error:
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_error_color",
                           priority=glib.PRIORITY_LOW)
         self._lock.release()
