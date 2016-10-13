@@ -196,7 +196,7 @@ class ConcurrencyItem(HistoryItem):
     """
     def __init__(self, container_state, prev, number_concurrent_threads, run_id):
         HistoryItem.__init__(self, container_state, prev, run_id)
-        self.execution_histories = {i: ExecutionHistory() for i in xrange(number_concurrent_threads)}
+        self.execution_histories = [ExecutionHistory() for _ in xrange(number_concurrent_threads)]
 
     def __str__(self):
         return "ConcurrencyItem %s" % (HistoryItem.__str__(self))
