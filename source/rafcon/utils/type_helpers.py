@@ -22,9 +22,8 @@ def convert_string_to_type(string_value):
     :return: The type derived from string_value, e.g. int
     """
     # If the parameter is already a type, return it
-    if string_value == 'None':
-        return None
-
+    if string_value in ['None', type(None).__name__]:
+        return type(None)
     if isinstance(string_value, type) or isclass(string_value):
         return string_value
 
@@ -62,7 +61,7 @@ def convert_string_value_to_type_value(string_value, data_type):
     from ast import literal_eval
 
     try:
-        if data_type in (str, basestring, None):
+        if data_type in (str, basestring, type(None)):
             converted_value = str(string_value)
         elif data_type == unicode:
             converted_value = unicode(string_value)

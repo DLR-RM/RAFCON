@@ -37,7 +37,7 @@ class GlobalVariableManager(Observable):
         self.__variable_references = {}
 
     @Observable.observed
-    def set_variable(self, key, value, per_reference=False, access_key=None, data_type=None):
+    def set_variable(self, key, value, per_reference=False, access_key=None, data_type=type(None)):
         """Sets a global variable
 
         :param key: the key of the global variable to be set
@@ -46,8 +46,7 @@ class GlobalVariableManager(Observable):
         :param access_key: if the variable was explicitly locked with the  rafcon.state lock_variable
         :raises exceptions.RuntimeError: if a wrong access key is passed
         """
-        # if key in self.__global_variable_dictionary:
-        #     if self.__global_variable_dictionary[key] != value and data_type is not None:
+        assert isinstance(data_type, type)
         self.check_value_and_type(value, data_type)
         self.__dictionary_lock.acquire()
         unlock = True
@@ -76,7 +75,8 @@ class GlobalVariableManager(Observable):
         if unlock:
             self.unlock_variable(key, access_key)
         self.__dictionary_lock.release()
-        logger.debug("Global variable %s was set to %s" % (key, str(value)))
+        logger.debug("Global variable %s was set to %s with data type %s (value), %s (data_type)"
+                     "" % (key, str(value), type(value).__name__, data_type.__name__))
 
     def get_variable(self, key, per_reference=None, access_key=None, default=None):
         """Fetches the value of a global variable
@@ -263,6 +263,6 @@ class GlobalVariableManager(Observable):
         :param data_type: the type to be checked upon
         :return:
         """
-        if value is not None and data_type is not None:
+        if value is not None and data_type is not type(None):
             if type(value) is not data_type:
                 raise TypeError("Value '{0}' is not of data type '{1}'".format(value, data_type))
