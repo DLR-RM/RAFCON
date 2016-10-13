@@ -34,7 +34,7 @@ from rafcon.utils.i18n import _, setup_l10n, setup_l10n_gtk
 
 from rafcon.utils import log
 
-logger = log.get_logger("start")
+logger = log.get_logger("rafcon.start.gui")
 
 
 def setup_gtkmvc_logger():

@@ -3,11 +3,8 @@
    :platform: Unix, Windows
    :synopsis: A module caring about the logging capability of RAFCON
 
-.. moduleauthor:: Franz Steimetz
-
-
+.. moduleauthor:: Franz Steinmetz
 """
-
 
 import logging
 import sys
@@ -107,17 +104,20 @@ def unregister_logging_view(name):
     LoggingViewHandler.remove_logging_view(name)
 
 
-def get_logger(name):
-    """Generates and returns a logger object
+def setup_root_logger():
+    """Creates a RAFCON root logger
 
-    Returns a logger for a specific name i.e. a class name. There are several logging modes available:
-    info, debug, warn, error
+    Creates logger with namespace "rafcon". All further RAFCON logger which have sub-namespaces of "rafcon" will
+    inherit the handlers, formatter and logging level.
 
-    :param name: the name of the new logger
+    :return: Root logger
+    :rtype: logging.Logger
     """
+    global logging_view_handler
 
-    if name in existing_loggers:
-        return existing_loggers[name]
+    rafcon_root = "rafcon"
+    if rafcon_root in existing_loggers:
+        return existing_loggers[rafcon_root]
 
     full_formatter = logging.Formatter("%(asctime)s: %(levelname)8s - %(name)s:  %(message)s", "%H:%M:%S")
 
@@ -135,13 +135,32 @@ def get_logger(name):
     logging_view_handler.setFormatter(full_formatter)
     logging_view_handler.setLevel(logging.DEBUG)
 
+    root_logger = logging.getLogger(rafcon_root)
+    root_logger.addHandler(stdout_handler)
+    root_logger.addHandler(stderr_handler)
+    root_logger.addHandler(logging_view_handler)
+    root_logger.setLevel(logging.DEBUG)
+
+    existing_loggers[rafcon_root] = root_logger
+    return root_logger
+
+
+def get_logger(name):
+    """Generates and returns a logger object
+
+    Returns a logger for a specific name i.e. a class name. There are several logging modes available:
+    info, debug, warn, error
+
+    :param name: The namespace of the new logger
+    :return: Logger object with given namespace
+    :rtype: logging.Logger
+    """
+
+    if name in existing_loggers:
+        return existing_loggers[name]
+
     logger = logging.getLogger(name)
-    logger.addHandler(stdout_handler)
-    logger.addHandler(stderr_handler)
-    logger.addHandler(logging_view_handler)
-
-    logger.setLevel(logging.DEBUG)
-
+    logger.propagate = True
     existing_loggers[name] = logger
 
     return logger
@@ -179,3 +198,5 @@ class log_exceptions(object):
                     main_quit()
 
         return wrapper
+
+setup_root_logger()

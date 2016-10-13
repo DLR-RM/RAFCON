@@ -32,7 +32,7 @@ from rafcon.utils import profiler
 from rafcon.utils import plugins
 from rafcon.utils import log
 
-logger = log.get_logger("start core")
+logger = log.get_logger("rafcon.start.core")
 
 _user_abort = False
 
