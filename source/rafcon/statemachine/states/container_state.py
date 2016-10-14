@@ -1059,6 +1059,11 @@ class ContainerState(State):
 
         transition_id = self.check_transition_id(transition_id)
 
+        # Set from_state_id to None for start transitions, as from_state_id and from_outcome should both be None for
+        # these transitions
+        if from_state_id == self.state_id and from_outcome is None:
+            from_state_id = None
+
         new_transition = Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id, self)
         self.transitions[transition_id] = new_transition
 
