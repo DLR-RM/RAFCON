@@ -21,9 +21,9 @@ from rafcon.mvc.selection import Selection
 from rafcon.mvc.singleton import gui_config_model
 
 from rafcon.mvc.config import global_gui_config
-from rafcon.mvc.utils.notification_overview import NotificationOverview
+from rafcon.mvc.utils.notification_overview import NotificationOverview, \
+    is_execution_status_update_notification_from_state_machine_model
 from rafcon.mvc.utils import constants, helpers
-from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS as EXECUTION_TRIGGERED_METHODS
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -116,7 +116,6 @@ class StatesEditorController(ExtendedController):
 
         for state_machine_m in self.model.state_machines.itervalues():
             self.observe_model(state_machine_m)
-            self.observe_model(state_machine_m.root_state)
 
         self.editor_type = editor_type
 
@@ -196,8 +195,6 @@ class StatesEditorController(ExtendedController):
             self.close_page(state_identifier, delete=True)
 
         close_all_tabs_of_related_state_models_recursively(old_root_state_m)
-        self.relieve_model(info['old'])
-        self.observe_model(info['new'])
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):
@@ -229,14 +226,12 @@ class StatesEditorController(ExtendedController):
         if info['method_name'] == '__setitem__':
             state_machine_m = info.args[1]
             self.observe_model(state_machine_m)
-            self.observe_model(state_machine_m.root_state)
         # Relive models of closed state machine
         elif info['method_name'] == '__delitem__':
             state_machine_id = info.args[0]
             state_machine_m = self.model.state_machines[state_machine_id]
             try:
                 self.relieve_model(state_machine_m)
-                self.relieve_model(state_machine_m.root_state)
             except KeyError:
                 pass
             self.clean_up_tabs()
@@ -485,8 +480,7 @@ class StatesEditorController(ExtendedController):
         if selection.get_num_states() == 1 and len(selection) == 1:
             self.activate_state_tab(selection.get_states()[0])
 
-    @ExtendedController.observe("state", after=True)
-    @ExtendedController.observe("states", after=True)
+    @ExtendedController.observe("state_machine", after=True)
     def notify_state_removal(self, model, prop_name, info):
         """Close tabs of states that are being removed
 
@@ -519,36 +513,19 @@ class StatesEditorController(ExtendedController):
 
             return False
 
-        # A child state of a root-state child is affected
-        if info.method_name == 'state_change':
-            if info.kwargs.method_name == 'remove_state':
-                state_id = info.kwargs.args[1]
-                parent_state_m = info.kwargs.model
+        if not is_execution_status_update_notification_from_state_machine_model(prop_name, info):
+            overview = NotificationOverview(info, initiator_string='states-editor')
+            if overview['prop_name'][-1] in ['state', 'states'] and overview['method_name'][-1] == 'remove_state':
+                state_id = overview['args'][-1][1] if not len(overview['args'][-1]) == 1 else overview['kwargs'][-1]['state_id']
+                parent_state_m = overview['model'][-1]
                 close_state_of_parent(parent_state_m, state_id)
-        # A root-state child is affected
-        # -> does the same as the states-model-list observation below IS A BACKUP AT THE MOMENT
-        #   -> do we prefer observation of core changes or model changes?
-        elif info.method_name == 'remove_state':
-            # logger.warn("remove is triggered %s" % info)
-            state_id = info.args[1]
-            parent_state_m = info.model  # should be root_state
-            close_state_of_parent(parent_state_m, state_id)
-        # for the case that a StateModel gets removed from states-list of root-state-model
-        elif info.method_name in ['__delitem__']:
-            # logger.warn("delitem is triggered %s" % info)
-            state_id = info.args[0]
-            parent_state_m = info.model  # is root-state-model
-            close_state_of_parent(parent_state_m, state_id)
 
-    @ExtendedController.observe("state", after=True)
-    @ExtendedController.observe("states", after=True)
+    @ExtendedController.observe("state_machine", after=True)
     def notify_state_name_change(self, model, prop_name, info):
         """Checks whether the name of a state was changed and change the tab label accordingly
         """
         # avoid updates or checks because of execution status updates
-        if prop_name == 'states' and 'kwargs' in info and 'method_name' in info['kwargs'] and \
-                info['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS or \
-                prop_name == 'state' and 'method_name' in info and info['method_name'] in EXECUTION_TRIGGERED_METHODS:
+        if is_execution_status_update_notification_from_state_machine_model(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
