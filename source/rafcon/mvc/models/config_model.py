@@ -102,6 +102,8 @@ class ConfigModel(ModelMT):
                 state_machine_refresh_required = True
             elif config_key in self.config.keys_requiring_restart:
                 self.changed_keys_requiring_restart.add(config_key)
+        self.preliminary_config.clear()
+
         if save:
             self.config.save_configuration()
         return state_machine_refresh_required
