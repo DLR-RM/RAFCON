@@ -41,7 +41,8 @@ class LibraryManager(Observable):
         # a list to hold all library state already manually replaced by the user
         self._replaced_libraries = {}
         # a list to hold all library states that were skipped by the user during the replacement procedure
-        self._skipped_states = {}
+        self._skipped_states = []
+        self._skipped_library_roots = []
 
     def initialize(self):
         """Initializes the library manager
@@ -54,6 +55,9 @@ class LibraryManager(Observable):
         logger.debug("Initializing LibraryManager: Loading libraries ... ")
         self._libraries = {}
         self._library_paths = {}
+        self._replaced_libraries = {}
+        self._skipped_states = []
+        self._skipped_library_roots = []
 
         # 1. Load libraries from config.yaml
         for library_key, library_path in config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
@@ -173,17 +177,17 @@ class LibraryManager(Observable):
         :rtype: str, str, str
         :raises rafcon.statemachine.custom_exceptions.LibraryNotFoundException: if the cannot be found
         """
-        rafcon.statemachine.custom_exceptions.LibraryNotFoundException
         path_list = library_path.split(os.sep)
         target_lib_dict = self.libraries
 
         original_path_and_name = library_path + library_name
+        library_path_root = library_path.split(os.sep)[0]
 
         if not self._library_paths:
             raise LibraryNotFoundException("There are no libraries registered")
 
         # skip already skipped states
-        if original_path_and_name in self._skipped_states:
+        if original_path_and_name in self._skipped_states or library_path_root in self._skipped_library_roots:
             # if an already skipped state shall be loaded again, directly raise the exception to jump over this state
             raise LibraryNotFoundException("Library '{0}' not found in subfolder {1}".format(library_name,
                                                                                              library_path))
@@ -221,8 +225,15 @@ class LibraryManager(Observable):
                     new_library_path = interface.open_folder_func("Select root folder for library '{0}'".format(
                         library_name))
                 if new_library_path is None:
-                    # Cancel library search
-                    self._skipped_states[original_path_and_name] = True
+                    # User clicked cancel => cancel library search
+                    # If the library root is existent (e.g. "generic") and only the specific library state is not (
+                    # e.g. "generic/wait", then the state is added to the skipped states.
+                    # If the library root is not existing, we ignore the whole library, preventing the user from
+                    # endless dialogs for each missing library state.
+                    if library_path_root not in self.libraries:
+                        self._skipped_library_roots.append(library_path_root)
+                    else:
+                        self._skipped_states.append(original_path_and_name)
                     raise LibraryNotFoundException("Library '{0}' not found in subfolder {1}".format(library_name,
                                                                                                      library_path))
 
