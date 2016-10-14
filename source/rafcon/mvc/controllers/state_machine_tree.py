@@ -22,8 +22,8 @@ from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 
 from rafcon.mvc import state_machine_helper
 from rafcon.mvc.gui_helper import react_to_event
-from rafcon.mvc.utils.notification_overview import NotificationOverview
-from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS as EXECUTION_TRIGGERED_METHODS
+from rafcon.mvc.utils.notification_overview import NotificationOverview, \
+    is_execution_status_update_notification_from_state_machine_model
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -111,28 +111,10 @@ class StateMachineTreeController(ExtendedController):
         if react_to_event(self.view, self.view['state_machine_tree_view'], event):
             return state_machine_helper.delete_selected_elements(self._selected_sm_model)
 
-    @staticmethod
-    def is_to_avoid_because_execution_status_update(prop_name, info):
-        # avoid updates or checks because of execution status updates -> prop_name in ['state', 'states']
-        if prop_name == 'states' and 'kwargs' in info and 'method_name' in info['kwargs'] and \
-                info['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS or \
-                prop_name == 'state' and 'method_name' in info and info['method_name'] in EXECUTION_TRIGGERED_METHODS:
-            return True
-
-        # avoid updates or checks because of execution status updates -> prop_name == 'state_machine'
-        if prop_name == 'state_machine' and 'kwargs' in info and 'prop_name' in info['kwargs'] and \
-                info['kwargs']['prop_name'] in ['states', 'state']:
-            if 'method_name' in info['kwargs'] and info['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS or \
-                    'kwargs' in info['kwargs'] and 'method_name' in info['kwargs']['kwargs'] and \
-                    info['kwargs']['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS:
-                return True
-        if prop_name == 'state_machine' and 'method_name' in info and info['method_name'] == '_add_new_execution_history':
-            return True
-
     @ExtendedController.observe("state_machine", after=True)
     def states_update(self, model, prop_name, info):
 
-        if self.is_to_avoid_because_execution_status_update(prop_name, info):
+        if is_execution_status_update_notification_from_state_machine_model(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
@@ -147,7 +129,7 @@ class StateMachineTreeController(ExtendedController):
     @ExtendedController.observe("state_machine", before=True)
     def states_update_before(self, model, prop_name, info):
 
-        if self.is_to_avoid_because_execution_status_update(prop_name, info):
+        if is_execution_status_update_notification_from_state_machine_model(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)

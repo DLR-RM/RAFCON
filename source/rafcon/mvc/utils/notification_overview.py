@@ -2,6 +2,31 @@ import datetime
 from rafcon.utils import constants
 
 
+EXECUTION_TRIGGERED_METHODS = constants.BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
+
+
+def is_execution_status_update_notification_from_state_machine_model(prop_name, info):
+    # avoid updates or checks because of execution status updates -> prop_name == 'state_machine'
+    if prop_name == 'state_machine' and 'kwargs' in info and 'prop_name' in info['kwargs'] and \
+            info['kwargs']['prop_name'] in ['states', 'state']:
+        if 'method_name' in info['kwargs'] and info['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS or \
+                'kwargs' in info['kwargs'] and 'method_name' in info['kwargs']['kwargs'] and \
+                info['kwargs']['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS:
+            return True
+    if prop_name == 'state_machine' and 'method_name' in info and info['method_name'] == '_add_new_execution_history':
+        return True
+
+def is_execution_status_update_notification_from_state_model(prop_name, info):
+    # avoid updates or checks because of execution status updates -> prop_name in ['state', 'states']
+    if prop_name == 'states' and 'kwargs' in info and 'method_name' in info['kwargs'] and \
+            info['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS or \
+            prop_name == 'state' and 'method_name' in info and info['method_name'] in EXECUTION_TRIGGERED_METHODS:
+        return True
+
+def is_execution_status_update_notification(prop_name, info):
+    return is_execution_status_update_notification_from_state_machine_model(prop_name, info) or \
+           is_execution_status_update_notification_from_state_model(prop_name, info)
+
 class NotificationOverview(dict):
     empty_info = {'before': True, 'model': None, 'method_name': None, 'instance': None,
                   'prop_name': None, 'args': (), 'kwargs': {}, 'info': {}}
