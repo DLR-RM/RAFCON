@@ -58,7 +58,6 @@ class StateMachineTreeController(ExtendedController):
         self.__my_selected_sm_id = None
         self._selected_sm_model = None
 
-        self.__buffered_root_state = None  # needed to handle exchange of root_state
         self.__expansion_state = {}
 
         self.register()
@@ -85,18 +84,15 @@ class StateMachineTreeController(ExtendedController):
 
     def register(self):
         """Change the state machine that is observed for new selected states to the selected state machine."""
-        # relieve old models
+        # relieve old model
         if self.__my_selected_sm_id is not None:  # no old models available
-            self.relieve_model(self.__buffered_root_state)
             self.relieve_model(self._selected_sm_model)
         # set own selected state machine id
         self.__my_selected_sm_id = self.model.selected_state_machine_id
         if self.__my_selected_sm_id is not None:
-            # observe new models
+            # observe new model
             self._selected_sm_model = self.model.state_machines[self.__my_selected_sm_id]
             # logger.debug("NEW SM SELECTION %s" % self._selected_sm_model)
-            self.__buffered_root_state = self._selected_sm_model.root_state
-            self.observe_model(self._selected_sm_model.root_state)
             self.observe_model(self._selected_sm_model)  # for selection
             self.update()
         else:
@@ -117,14 +113,23 @@ class StateMachineTreeController(ExtendedController):
 
     @staticmethod
     def is_to_avoid_because_execution_status_update(prop_name, info):
-        # avoid updates or checks because of execution status updates
+        # avoid updates or checks because of execution status updates -> prop_name in ['state', 'states']
         if prop_name == 'states' and 'kwargs' in info and 'method_name' in info['kwargs'] and \
                 info['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS or \
                 prop_name == 'state' and 'method_name' in info and info['method_name'] in EXECUTION_TRIGGERED_METHODS:
-            return
+            return True
 
-    @ExtendedController.observe("state", after=True)  # root_state
-    @ExtendedController.observe("states", after=True)
+        # avoid updates or checks because of execution status updates -> prop_name == 'state_machine'
+        if prop_name == 'state_machine' and 'kwargs' in info and 'prop_name' in info['kwargs'] and \
+                info['kwargs']['prop_name'] in ['states', 'state']:
+            if 'method_name' in info['kwargs'] and info['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS or \
+                    'kwargs' in info['kwargs'] and 'method_name' in info['kwargs']['kwargs'] and \
+                    info['kwargs']['kwargs']['method_name'] in EXECUTION_TRIGGERED_METHODS:
+                return True
+        if prop_name == 'state_machine' and 'method_name' in info and info['method_name'] == '_add_new_execution_history':
+            return True
+
+    @ExtendedController.observe("state_machine", after=True)
     def states_update(self, model, prop_name, info):
 
         if self.is_to_avoid_because_execution_status_update(prop_name, info):
@@ -137,10 +142,9 @@ class StateMachineTreeController(ExtendedController):
             self.update_tree_store_row(overview['model'][-1])
         elif overview['prop_name'][-1] == 'state' and \
                 overview['method_name'][-1] in ["add_state", "remove_state"]:
-            self.update(model)
+            self.update(overview['model'][-1])
 
-    @ExtendedController.observe("state", before=True)  # root_state
-    @ExtendedController.observe("states", before=True)
+    @ExtendedController.observe("state_machine", before=True)
     def states_update_before(self, model, prop_name, info):
 
         if self.is_to_avoid_because_execution_status_update(prop_name, info):
@@ -160,12 +164,6 @@ class StateMachineTreeController(ExtendedController):
 
     @ExtendedController.observe("root_state", assign=True)
     def state_machine_notification(self, model, property, info):
-        if self.__my_selected_sm_id is not None:  # no old models available
-            self.relieve_model(self.__buffered_root_state)
-            # self.observe_model(info.new)
-            # self.__buffered_root_state = info.new
-            self.observe_model(self._selected_sm_model.root_state)
-            self.__buffered_root_state = self._selected_sm_model.root_state
         self.update(model.root_state)
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
@@ -357,4 +355,5 @@ class StateMachineTreeController(ExtendedController):
                     self.view.get_selection().select_iter(selected_iter)
 
             except (TypeError, KeyError) as e:
-                logger.error("Could not update selection {}".format(e))
+                logger.debug("Could not update selection for selected state model {0} -> raised error {1}"
+                             "".format(self._selected_sm_model.selection.get_selected_state(), e))
