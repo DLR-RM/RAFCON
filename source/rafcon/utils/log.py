@@ -95,6 +95,9 @@ existing_loggers = {}
 # global handler for logging on console and text views
 logging_view_handler = None
 
+# Root namespace
+rafcon_root = "rafcon"
+
 
 def register_logging_view(name, logging_view):
     LoggingViewHandler.set_logging_view(name, logging_view)
@@ -115,7 +118,6 @@ def setup_root_logger():
     """
     global logging_view_handler
 
-    rafcon_root = "rafcon"
     if rafcon_root in existing_loggers:
         return existing_loggers[rafcon_root]
 
@@ -151,7 +153,7 @@ def get_logger(name):
     Returns a logger for a specific name i.e. a class name. There are several logging modes available:
     info, debug, warn, error
 
-    :param name: The namespace of the new logger
+    :param str name: The namespace of the new logger
     :return: Logger object with given namespace
     :rtype: logging.Logger
     """
@@ -159,7 +161,9 @@ def get_logger(name):
     if name in existing_loggers:
         return existing_loggers[name]
 
-    logger = logging.getLogger(name)
+    # Ensure that all logger are within the RAFCON root namespace
+    namespace = name if name.startswith(rafcon_root + ".") else rafcon_root + "." + name
+    logger = logging.getLogger(namespace)
     logger.propagate = True
     existing_loggers[name] = logger
 
