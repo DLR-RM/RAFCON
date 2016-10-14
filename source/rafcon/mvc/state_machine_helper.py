@@ -352,6 +352,8 @@ def create_state_model_for_state(new_state, state_element_models):
     if isinstance(new_state, BarrierConcurrencyState):
         decider_state_m.parent = new_state_m
         new_state_m.states[UNIQUE_DECIDER_STATE_ID] = decider_state_m
+    if isinstance(new_state, ContainerState):
+        new_state_m.check_is_start_state()
     
     return new_state_m
 
