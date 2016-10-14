@@ -63,6 +63,8 @@ class ContainerStateModel(StateModel):
         for scoped_variable in self.state.scoped_variables.itervalues():
             self.scoped_variables.append(ScopedVariableModel(scoped_variable, self))
 
+        self.check_is_start_state()
+
         if load_meta_data:
             self.load_meta_data()
 
@@ -165,6 +167,12 @@ class ContainerStateModel(StateModel):
         # Finally call the method of the base class, to forward changes in ports and outcomes
         super(ContainerStateModel, self).model_changed(model, prop_name, info)
 
+    def check_is_start_state(self):
+        start_state_id = self.state.start_state_id
+        for state_id, state_m in self.states.iteritems():
+            if state_m.is_start != (state_id == start_state_id):
+                state_m.is_start = (state_id == start_state_id)
+
     def update_child_models(self, _, name, info):
         """ This method is always triggered when the state model changes
 
@@ -177,10 +185,7 @@ class ContainerStateModel(StateModel):
 
         # Update is_start flag in child states if the start state has changed (eventually)
         if info.method_name in ['start_state_id', 'add_transition', 'remove_transition']:
-            start_state_id = self.state.start_state_id
-            for state_id, state_m in self.states.iteritems():
-                if state_m.is_start != (state_id == start_state_id):
-                    state_m.is_start = (state_id == start_state_id)
+            self.check_is_start_state()
 
         model_list = None
 
@@ -272,6 +277,7 @@ class ContainerStateModel(StateModel):
                 new_state_m.parent = self
                 # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
                 self.states[state_id] = new_state_m
+                self.check_is_start_state()
 
                 state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
 
