@@ -116,7 +116,6 @@ def test_type_check(caplog):
     a = gvm.get_variable("a")
     assert a == "test"
 
-    print "last test"
     gvm.set_variable("a", 123)
     a = gvm.get_variable("a")
     assert a == 123
