@@ -162,6 +162,28 @@ class AbstractStateModel(ModelMT, Hashable):
         else:
             self._parent = None
 
+    def get_sm_m_for_state_m(self):
+        """ Get respective state machine model
+
+        Get a reference of the state machine model the state model belongs to. As long as the root state model
+        has no direct reference to its state machine model the state machine manager model is checked respective model.
+
+        :rtype: rafcon.mvc.models.state_machine.StateMachineModel
+        :return: respective state machine model
+        """
+        from rafcon.mvc.singleton import state_machine_manager_model
+        state_machine = self.state.get_sm_for_state()
+        if state_machine:
+            if state_machine.state_machine_id in state_machine_manager_model.state_machines:
+                sm_m = state_machine_manager_model.state_machines[state_machine.state_machine_id]
+                if sm_m.get_state_model_by_path(self.state.get_path()) is self:
+                    return sm_m
+                else:
+                    logger.warning("State model requesting its state machine model parent seems to be obsolete. "
+                                   "This is a hint to duplicated models and dirty coding")
+
+        return None
+
     def get_input_data_port_m(self, data_port_id):
         """Returns the input data port model for the given data port id
 
