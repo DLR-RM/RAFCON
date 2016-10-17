@@ -17,17 +17,17 @@ Patch releases 0.7.\*
 
   - ``ExecutionHistory`` is now observable
   - Configurations are now observable
-  - allow to set `from_state_id` id `add_transition` method for start transitions
+  - allow to set ``from_state_id`` id ``add_transition`` method for start transitions
 
 - Fixes
 
-  - `#177 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/177>`__:
+  - `#177 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/177>`_:
     Data flow hiding not working
-  - `#183 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/183>`__:
+  - `#183 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/183>`_:
     Rafcon freeze after global variable delete
-  - `#53 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/53>`__:
+  - `#53 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/53>`_:
     Configurations GUI
-  - `#181 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/181>`__:
+  - `#181 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/181>`_:
     State type change not working
   - Several further fixes
 
@@ -40,12 +40,12 @@ Patch releases 0.7.\*
 - Features:
 
   - Global variables can now be typed, see issue
-    `#81 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/81>`__
+    `#81 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/81>`_
   - GUI for modifying the configurations
   - Config files can be im- and exported
   - Graphical editor can be shown in fullscreen mode (default with
     F11), see issue
-    `#36 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/36>`__
+    `#36 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/36>`_
   - I18n: RAFCON can be translated into other languages, rudimentary
     German translation is available
   - RAFCON core can be started with several state machines
@@ -55,7 +55,7 @@ Patch releases 0.7.\*
   - Fix backward compatibility for old ``statemachine.yaml`` files
   - Undocked sidebars no longer have an entry in the task bar and are
     shown on top with the main window, see issue
-    `#136 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/136>`__
+    `#136 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/136>`_
   - Added tooltips
   - When starting RAFCON from the console, not only the path to, but
     also the file name of a config file can be specified. This allows
@@ -72,14 +72,14 @@ Patch releases 0.7.\*
 
 - Fixes
 
-  - `#161 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/161>`__:
+  - `#161 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/161>`_:
     When refreshing a running state machine, the refreshed one is
     still running
-  - `#168 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/168>`__:
+  - `#168 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/168>`_:
     Undocked sidebars cause issues with is\_focus()
-  - `#169 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/169>`__:
+  - `#169 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/169>`_:
     Wrong dirty flag handling
-  - `#182 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/182>`__:
+  - `#182 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/182>`_:
     Test start script waits infinitely
   - Several further fixes
 
@@ -108,25 +108,25 @@ Patch releases 0.7.\*
 - Issues fixed
 
   - `Issue
-    #143 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/143>`__
+    #143 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/143>`_
   - `Issue
-    #139 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/139>`__
+    #139 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/139>`_
   - `Issue
-    #146 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/146>`__
+    #146 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/146>`_
   - `Issue
-    #145 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/145>`__
+    #145 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/145>`_
   - `Issue
-    #122 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/122>`__
+    #122 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/122>`_
   - `Issue
-    #149 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/149>`__
+    #149 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/149>`_
   - `Issue
-    #119 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/119>`__
+    #119 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/119>`_
   - `Issue
-    #151 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/151>`__
+    #151 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/151>`_
   - `Issue
-    #155 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/155>`__
+    #155 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/155>`_
   - `Issue
-    #17 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/155>`__
+    #17 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/155>`_
 
 - Lots of further fixes and improvements
 
@@ -139,37 +139,34 @@ Patch releases 0.7.\*
   - Initial version of possibility to save arbitrary states as
     libraries and to substitute one state with another one
   - Right click menu for graphical editor
-  - add flags to ``mvc.start.py`` `\(see commit 87e8cd7\) <https://rmc-github.robotic.dlr.de/common/rafcon/commit/87e8cd7e64648aea8255db7b191112624a210c94>`__
+  - add flags to ``mvc.start.py`` `\(see commit 87e8cd7\) <https://rmc-github.robotic.dlr.de/common/rafcon/commit/87e8cd7e64648aea8255db7b191112624a210c94>`_
 
 - Bug fixes
 
   - `Issue
-    #132 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/132>`__
+    #132 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/132>`_
   - `Issue
-    #40 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/40>`__
+    #40 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/40>`_
   - `Issue
-    #65 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/65>`__
+    #65 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/65>`_
   - `Issue
-    #131 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/40>`__
+    #131 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/40>`_
   - `Issue
-    #105 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/105>`__
+    #105 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/105>`_
   - Kill RAFCON with Ctrl+C
   - Resizing of states in Gaphas
-  - Correctly distinguish string and unicode data port types when
-    using library states (should fix issues with ROS)
+  - Correctly distinguish string and unicode data port types when using library states (should fix issues with ROS)
   - Stepping starts a state machine if not started
 
 - Improvements
 
-  - Gaphas works more reliable, especially concerning copy'n'paste and
-    selection
+  - Gaphas works more reliable, especially concerning copy'n'paste and selection
   - History
 
 - Some changes in destruction hooks
 - Refactorings
 
-  - Many for Gaphas components, e.g. the border size of a state
-    depends on the state size now
+  - Many for Gaphas components, e.g. the border size of a state depends on the state size now
   - Obsolete models are deleted (=> less memory consumption)
   - Remove state\_helper.py
 
@@ -187,20 +184,15 @@ Patch releases 0.7.\*
 
 - Add three new hooks
 
-  - ``main_window_setup``: Passes reference to the main window
-    controller and is called after the view has been registered
-  - ``pre_main_window_destruction``: Passes reference to the main
-    window controller and is called right before the main window is
-    destroyed
-  - ``post_main_window_destruction``: is called after the GTK main
-    loop has been terminated
+  - ``main_window_setup``: Passes reference to the main window controller and is called after the view has been registered
+  - ``pre_main_window_destruction``: Passes reference to the main window controller and is called right before the main window is destroyed
+  - ``post_main_window_destruction``: is called after the GTK main loop has been terminated
 
 0.7.6
 -----
 
 - remove obsolete files
-- properly destruct states on their deletion (+ test to check
-  functionality)
+- properly destruct states on their deletion (+ test to check unctionality)
 - jump to state on double-click in ExecutionHistory
 - fixes in display of ExecutionHistory
 - fix not shown description of LibraryStates
@@ -211,10 +203,9 @@ Patch releases 0.7.\*
 - Show '+' for adding state machines
 - example on abortion handling
 - Add config option to hide data flow name
-- `Fix Issue #129 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/129>`__
+- `Fix Issue #129 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/129>`_
 - get rid of all plugin dependencies
-- no more need to change into the mvc-directory when working with the
-  GUI
+- no more need to change into the mvc-directory when working with the GUI
 - refactoring (especially in start.py)
 - more fixes
 
@@ -226,7 +217,7 @@ Patch releases 0.7.\*
   right-click)
 - Improve auto-backup and add lock files to offer formal procedure to
   recover state machine from temporary storage `Auto
-  Recovery <https://rmintra01.robotic.dlr.de/wiki/RAFCON#Auto_Backup>`__
+  Recovery <https://rmintra01.robotic.dlr.de/wiki/RAFCON#Auto_Backup>`_
 - Improve Description editor by undo/redo feature similar to the
   SourceEditor
 - Improve versions of "monitoring" and "execution hooks" plugins
@@ -242,18 +233,18 @@ Patch releases 0.7.\*
 - Improve performance of GUI while executing state machine with high
   frequent state changes
 - Fix `issue
-  121 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/121>`__:
+  121 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/121>`_:
   Properly copy nested ExecutionStates
 
 0.7.3
 -----
 
 - States are notified about pause and resume (See FAQ
-  `here <https://rmintra01.robotic.dlr.de/wiki/RAFCON/FAQ#How_does_preemption_work.3F_How_do_I_implement_preemptable_states_correctly.3F>`__
+  `here <https://rmintra01.robotic.dlr.de/wiki/RAFCON/FAQ#How_does_preemption_work.3F_How_do_I_implement_preemptable_states_correctly.3F>`_
   and
-  `here <https://rmintra01.robotic.dlr.de/wiki/RAFCON/FAQ#What_happens_if_the_state_machine_is_paused.3F_How_can_I_pause_running_services.2C_e._g._the_robot.3F>`__)
+  `here <https://rmintra01.robotic.dlr.de/wiki/RAFCON/FAQ#What_happens_if_the_state_machine_is_paused.3F_How_can_I_pause_running_services.2C_e._g._the_robot.3F>`_)
 - Load libraries specified in
-  ``RAFCON_LIBRARY_PATH`` \(See `this tutorial <https://rmintra01.robotic.dlr.de/wiki/RAFCON/Tutorials#How_to_create_and_re-use_a_library_state_machine>`__\)
+  ``RAFCON_LIBRARY_PATH`` \(See `this tutorial <https://rmintra01.robotic.dlr.de/wiki/RAFCON/Tutorials#How_to_create_and_re-use_a_library_state_machine>`_\)
 - improve stability
 - refactorings
 - bug fixes
@@ -279,7 +270,7 @@ Patch releases 0.7.\*
 
 This is a big minor release including many changes. State machines stored with version 0.6.\* are compatible with this version, but not state machines from older releases. Those have to be opened with 0.6.\* and then saved again. The following list is probably not complete:
 
-- Support for `openSUSE Leap <https://rmintra01.robotic.dlr.de/wiki/OpenSUSE_Leap>`__
+- Support for `openSUSE Leap <https://rmintra01.robotic.dlr.de/wiki/OpenSUSE_Leap>`_
 - Support for plugins
 - Major design overhaul: agrees with drafts from design and looks consistent on all platforms
 - Drag and Drop of states
@@ -298,7 +289,7 @@ This is a big minor release including many changes. State machines stored with v
 - Drop support of YAML state machine files
 - Rename state machine files
 - Extend documentation
-- `RMC-BuildBot <https://rmintra01.robotic.dlr.de/wiki/Buildbot>`__ support
+- `RMC-BuildBot <https://rmintra01.robotic.dlr.de/wiki/Buildbot>`_ support
 - Many bug fixes
 - A lot of refactorings, code optimizations, etc.
 
