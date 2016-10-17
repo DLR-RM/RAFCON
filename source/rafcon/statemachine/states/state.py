@@ -441,6 +441,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         :param str appendix: the part of the path that was already calculated by previous function calls
         :param bool by_name: The boolean enables name usage to generate the path
+        :rtype: str
         :return: the full path to the root state
         """
         if by_name:
@@ -460,10 +461,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 return state_identifier + PATH_SEPARATOR + appendix
 
     def get_sm_for_state(self):
-        """
-        Get a reference of the state_machine the state belongs to
-        :param state: the state to get the state machine reference for
-        :return:
+        """Get a reference of the state_machine the state belongs to
+
+        :rtype rafcon.statemachine.state_machine.StateMachine
+        :return: respective state machine
         """
         if self.parent:
             if self.is_root_state:
@@ -474,16 +475,16 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return None
 
     def set_file_system_path(self, file_system_path):
-        """
-        Caches a temporary file system path for the state
+        """Caches a temporary file system path for the state
+
         :param file_system_path:
         :return:
         """
         self._file_system_path = file_system_path
 
     def get_file_system_path(self):
-        """
-        Calculates the path in the filesystem where the state is stored
+        """Calculates the path in the filesystem where the state is stored
+
         :return: the path on the filesystem where the state is stored
         """
         if not self.get_sm_for_state() or self.get_sm_for_state().file_system_path is None:
