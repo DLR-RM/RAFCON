@@ -104,11 +104,19 @@ def test_type_check(caplog):
     a = gvm.get_variable("a")
     assert a == 3
 
-    # backward compatibility TODO check whether this is valid as backward comp-test!?!
-    gvm.set_variable("a", "test", data_type=type(None))
+    # invalid overwriting
+    with raises(TypeError):
+        gvm.set_variable("a", "any_string")
+    a = gvm.get_variable("a")
+    assert a == 3
+
+    # backward compatibility
+    gvm.delete_variable("a")
+    gvm.set_variable("a", "test")
     a = gvm.get_variable("a")
     assert a == "test"
 
+    print "last test"
     gvm.set_variable("a", 123)
     a = gvm.get_variable("a")
     assert a == 123
@@ -117,5 +125,5 @@ def test_type_check(caplog):
 if __name__ == '__main__':
     # test_locks(None)
     # test_references(None)
-    # test_type_check(None)
-    pytest.main([__file__])
+    test_type_check(None)
+    # pytest.main([__file__])
