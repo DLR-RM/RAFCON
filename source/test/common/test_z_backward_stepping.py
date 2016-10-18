@@ -1,3 +1,4 @@
+import pytest
 import sys
 import logging
 import gtk
@@ -6,24 +7,24 @@ import time
 import os
 import datetime
 
+# statemachine elements
+from rafcon.statemachine.singleton import state_machine_execution_engine
+from rafcon.statemachine.storage import storage
+from rafcon.statemachine.execution.state_machine_status import StateMachineExecutionStatus
+
 # general tool elements
 from rafcon.utils import log
 
 # mvc elements
-from rafcon.mvc.models import GlobalVariableManagerModel
+import rafcon.mvc.singleton
+from rafcon.mvc.models.global_variable_manager import GlobalVariableManagerModel
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-
-from rafcon.statemachine.storage import storage
-import rafcon.mvc.singleton
 import rafcon.mvc.config as gui_config
-from rafcon.statemachine.singleton import state_machine_execution_engine
-from rafcon.statemachine.execution.state_machine_status import StateMachineExecutionStatus
 
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
-import pytest
 
 
 def create_models():
@@ -311,7 +312,7 @@ def test_backward_stepping_barrier_state(caplog):
 
 
 if __name__ == '__main__':
-    # test_backward_stepping_barrier_state(None)
-    # test_backward_stepping_preemptive_state(None)
-    # test_backward_stepping_library_state(None)
-    pytest.main([__file__])
+    test_backward_stepping_barrier_state(None)
+    test_backward_stepping_preemptive_state(None)
+    test_backward_stepping_library_state(None)
+    # pytest.main([__file__])
