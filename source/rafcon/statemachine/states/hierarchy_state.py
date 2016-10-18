@@ -216,7 +216,6 @@ class HierarchyState(ContainerState):
 
         if transition is None:
             transition = self.handle_no_transition(self.child_state)
-        self.child_state.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
         # if the transition is still None, then the child_state was preempted or aborted, in this case
         # return
         if transition is None:
