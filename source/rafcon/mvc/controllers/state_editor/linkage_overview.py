@@ -10,6 +10,9 @@
 
 from gtkmvc import Model
 
+from rafcon.statemachine.states.execution_state import ExecutionState
+from rafcon.statemachine.states.library_state import LibraryState
+
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.state_editor.io_data_port_list import DataPortListController
 from rafcon.mvc.controllers.state_editor.scoped_variable_list import ScopedVariableListController
@@ -24,6 +27,9 @@ class LinkageOverviewController(ExtendedController, Model):
         self.add_controller('output_ctlr', DataPortListController(model, view['outputs_view'], "output"))
         self.add_controller('scoped_ctrl', ScopedVariableListController(model, view['scope_view']))
         self.add_controller('outcomes_ctrl', StateOutcomesEditorController(model, view['outcomes_view']))
+
+        if isinstance(self.model.state, LibraryState) or isinstance(self.model.state, ExecutionState):
+            view['scoped_box'].destroy()
 
         view['inputs_view'].show()
         view['outputs_view'].show()
