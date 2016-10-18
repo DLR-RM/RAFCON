@@ -32,7 +32,7 @@ class LinkageOverviewLogicView(View):
 
 
 class LinkageOverviewView(View):
-    builder = constants.get_glade_path("linkage_overview.glade")
+    builder = constants.get_glade_path("linkage_overview_one.glade")
     top = 'linkage_container'
 
     def __init__(self):
