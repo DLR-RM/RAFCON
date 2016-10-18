@@ -1215,11 +1215,11 @@ class RemoveObjectAction(Action):
 
         partial_path = self.removed_object_identifier._path.split('/')
         for path_element in storage_path.split('/'):
-            logger.info("pop: " + partial_path.pop(0))
+            logger.debug("pop: " + partial_path.pop(0))
         for path_element in partial_path:
             storage_version_of_state = storage_version_of_state.states[path_element]
             state = state.states[path_element]
-            logger.info("state is now: {0} {1}".format(state.state_id, storage_version_of_state.state_id))
+            logger.debug("state is now: {0} {1}".format(state.state_id, storage_version_of_state.state_id))
 
         return state, storage_version_of_state
 
