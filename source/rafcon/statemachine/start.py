@@ -100,7 +100,7 @@ def setup_argument_parser():
                         nargs='?', const=home_path,
                         help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
-    parser.add_argument('--run', action='store_true', default=True, help="Run the first state machine on startup")
+    parser.add_argument('--remote', action='store_true', default=False, help="Remote Control Mode")
     parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path',
                         default=None, nargs='?', help="path of to the state that should be launched")
     return parser
@@ -254,7 +254,7 @@ if __name__ == '__main__':
             if first_sm is None:
                 first_sm = sm
 
-        if user_input.run:
+        if not user_input.remote:
             start_state_machine(first_sm, user_input.start_state_path)
 
         if reactor_required():
@@ -263,7 +263,11 @@ if __name__ == '__main__':
             # Blocking call, return when state machine execution finishes
             reactor.run()
 
-        wait_for_state_machine_finished(first_sm)
+        if not user_input.remote:
+            wait_for_state_machine_finished(first_sm)
+        else:
+            while not _user_abort:
+                time.sleep(1)
 
         logger.info("State machine execution finished!")
         plugins.run_hook("post_destruction")
