@@ -410,7 +410,7 @@ class ConfigWindowController(ExtendedController):
         """Apply button clicked: Apply the configuration
         """
         refresh_required = self.core_config_model.apply_preliminary_config()
-        refresh_required &= self.gui_config_model.apply_preliminary_config()
+        refresh_required |= self.gui_config_model.apply_preliminary_config()
         if refresh_required:
             from rafcon.mvc.singleton import main_window_controller
             main_window_controller.get_controller('menu_bar_controller').on_refresh_all_activate(None, None)
