@@ -70,13 +70,16 @@ def trigger_copy_delete_bug_signals(*args):
     assert len(sm_manager_model.state_machines) == current_sm_length + 1
     sm_m = sm_manager_model.state_machines[first_sm_id]
     root_state_m = sm_m.root_state
-    new_state_m = root_state_m.states.items()[0][1]
+    logger.info("States of root state: {}".format(root_state_m.states.values()))
+    new_state_m = root_state_m.states.values()[0]
     call_gui_callback(sm_m.selection.set, new_state_m)
     call_gui_callback(root_state_m.state.change_state_type, new_state_m.state, HierarchyState)
-    new_hstate_m = root_state_m.states.items()[0][1]
+    logger.info("States of root state after type change: {}".format(root_state_m.states.values()))
+    new_hstate_m = root_state_m.states.values()[0]
     call_gui_callback(sm_m.selection.set, new_hstate_m)
     call_gui_callback(menubar_ctrl.on_add_state_activate, None)
-    new_state_m = new_hstate_m.states.items()[0][1]
+    logger.info("States of hierarchy state: {}".format(new_hstate_m.states.values()))
+    new_state_m = new_hstate_m.states.values()[0]
 
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
     page_id = state_machines_ctrl.get_page_id(first_sm_id)
@@ -89,9 +92,9 @@ def trigger_copy_delete_bug_signals(*args):
         assert isinstance(graphical_editor_ctrl, graphical_editor_gaphas.GraphicalEditorController)
         assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
 
-    new_estate_m = root_state_m.states.items()[0][1]
+    new_estate_m = root_state_m.states.values()[0]
     if new_estate_m.state.get_path() == new_hstate_m.state.get_path():
-        new_estate_m = root_state_m.states.items()[1][1]
+        new_estate_m = root_state_m.states.values()[0]
 
     call_gui_callback(sm_m.selection.set, new_estate_m)
     call_gui_callback(menubar_ctrl.on_delete_activate, None)
@@ -137,4 +140,5 @@ def test_copy_delete_bug(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main(['-s', __file__])
+    test_copy_delete_bug(None)
+    # pytest.main(['-s', __file__])
