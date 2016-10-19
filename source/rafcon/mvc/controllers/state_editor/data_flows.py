@@ -17,6 +17,7 @@ from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDa
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.selection import ListSelectionFeatureController
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 
@@ -28,7 +29,7 @@ logger = log.get_logger(__name__)
 PORT_TYPE_TAG = {InputDataPort: 'IP', OutputDataPort: 'OP', ScopedVariable: 'SV'}
 
 
-class StateDataFlowsListController(ExtendedController):
+class StateDataFlowsListController(ExtendedController, ListSelectionFeatureController):
     """Controller handling the view of transitions of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -57,15 +58,13 @@ class StateDataFlowsListController(ExtendedController):
     def __init__(self, model, view):
         """Constructor
         """
-        ExtendedController.__init__(self, model, view)
-
-        # TreeStore for: id, from-state, from-key, to-state, to-key, is_external,
+        # ListStore for: id, from-state, from-key, to-state, to-key, is_external,
         #                   name-color, to-state-color, data-flow-object, state-object, is_editable, data-flow-model
         self.view_dict = {'data_flows_internal': True, 'data_flows_external': True}
         self.list_store = ListStore(int, str, str, str, str, bool, str, str,
                                     gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
         self.tree_view = view.get_top_widget()
-        self.tree_view.set_model(self.list_store)
+        self._logger = logger
 
         self.tree_dict_combos = {'internal': {},
                                  'external': {}}
@@ -77,12 +76,36 @@ class StateDataFlowsListController(ExtendedController):
         self.debug_log = False
         self._actual_overview = None
 
-        # register other model and fill tree_store the model of the view
-        if not model.state.is_root_state:
-            self.observe_model(model.parent)
+        ExtendedController.__init__(self, model, view)
+        ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
 
-        self._update_internal_data_base()
-        self._update_tree_store()
+        # register other model and fill list_store the model of the view
+        if not self.model.state.is_root_state:
+            self.observe_model(self.model.parent)
+            # print type(self).__name__, self.model.state.name, "initialized parent observation"
+            if self.model.parent.parent is not None:
+                self.observe_model(self.model.parent.parent)
+                # print type(self).__name__, self.model.state.name, "initialized parent-parent observation"
+            # observe state machine model
+            if self.model.get_sm_m_for_state_m() is not None:
+                self.observe_model(self.model.get_sm_m_for_state_m())
+                # print type(self).__name__, self.model.state.name, "initialized sm observation"
+            else:
+                logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
+        else:
+            # observe state machine model
+            if self.model.parent is None:
+                if self.model.get_sm_m_for_state_m() is not None:
+                    self.observe_model(self.model.get_sm_m_for_state_m())
+                    # print type(self).__name__, self.model.state.name, "initialized sm observation"
+                else:
+                    logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
+            else:
+                logger.warning("StateModel's state is_root_state and has a parent should not be possible")
+                self.observe_model(self.model.parent)
+
+        self.tree_view.set_model(self.list_store)
+
 
     def register_view(self, view):
         """Called when the View was registered
@@ -123,19 +146,14 @@ class StateDataFlowsListController(ExtendedController):
         view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
         view['to_key_combo'].connect("edited", self.on_combo_changed_to_key)
         # view['external_toggle'].connect("edited", self.on_external_toggled)
-        view.tree_view.connect("grab-focus", self.on_focus)
+
+        self.tree_view.connect("grab-focus", self.on_focus)
+        ListSelectionFeatureController.register_view(self, view)
+        self.update()
 
     def register_adapters(self):
         """Adapters should be registered in this method call
         """
-
-    def on_focus(self, widget, data=None):
-        path = self.view.tree_view.get_cursor()
-        # logger.debug("DATAFLOWS_LIST get new FOCUS %s" % str(path[0]))
-        self._update_internal_data_base()
-        self._update_tree_store()
-        if path[0]:
-            self.view.tree_view.set_cursor(path[0])
 
     def find_free_and_valid_data_flows(self, depend_to_state_id=None):
         # print "\n internal from %s \n\n internal to %s" % (self.free_to_port_internal, self.from_port_internal)
@@ -167,6 +185,14 @@ class StateDataFlowsListController(ExtendedController):
                                                                 to_state_id, to_port.data_port_id))
 
         return internal_data_flows, external_data_flows
+
+    def on_focus(self, widget, data=None):
+        path = self.view.tree_view.get_cursor()
+        # logger.debug("DATAFLOWS_LIST get new FOCUS %s" % str(path[0]))
+        self._update_internal_data_base()
+        self._update_tree_store()
+        if path[0]:
+            self.view.tree_view.set_cursor(path[0])
 
     def on_add(self, button, info=None):
         # print "ADD DATA_FLOW"
@@ -321,9 +347,8 @@ class StateDataFlowsListController(ExtendedController):
         except ValueError as e:
             logger.error("Could not change to data port: {0}".format(e))
 
-    def update(self):
-        self._update_internal_data_base()
-        self._update_tree_store()
+    def on_right_click_menu(self):
+        logger.debug("do right click menu")
 
     def _update_internal_data_base(self):
         [free_to_int, free_to_ext, from_int, from_ext] = update_data_flows(self.model, self.data_flow_dict,
@@ -373,7 +398,21 @@ class StateDataFlowsListController(ExtendedController):
                                             '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True,
                                             self.model.parent.get_data_flow_m(data_flow.data_flow_id)])
 
-    @ExtendedController.observe("root_state", assigned=True)
+    def update(self):
+        self._update_internal_data_base()
+        self._update_tree_store()
+
+    def get_state_machine_selection(self):
+        # print type(self).__name__, "get state machine selection"
+        sm_selection = self.model.get_sm_m_for_state_m().selection
+        return sm_selection, sm_selection.data_flows
+
+    @ExtendedController.observe("selection", after=True)
+    def state_machine_selection_changed(self, model, prop_name, info):
+        if "data_flows" == info['method_name']:
+            self.update_selection_sm_prior()
+
+    @ExtendedController.observe("root_state", assign=True)
     def root_state_changed(self, model, prop_name, info):
         """ Relieve all observed models to avoid updates on old root state.
         """

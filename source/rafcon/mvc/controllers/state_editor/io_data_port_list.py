@@ -17,6 +17,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
+from rafcon.mvc.controllers.utils.selection import ListSelectionFeatureController
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 
 from rafcon.mvc.gui_helper import react_to_event
@@ -26,7 +27,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class DataPortListController(ExtendedController):
+class DataPortListController(ExtendedController, ListSelectionFeatureController):
     """Controller handling the input and output Data Port List
 
     :param rafcon.mvc.models.
@@ -41,14 +42,15 @@ class DataPortListController(ExtendedController):
 
     def __init__(self, model, view, io_type):
         """Constructor"""
-        ExtendedController.__init__(self, model, view)
-        self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view.get_top_widget())
-        self.tree_view = view.get_top_widget()
 
+        self.tree_view = view.get_top_widget()
         self.type = io_type
         self.state_data_port_dict = None
         self.list_store = self.get_new_list_store()
-        self.tree_view.set_model(self.list_store)
+
+        ExtendedController.__init__(self, model, view)
+        ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
+        self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(self.tree_view)
 
 
         if self.type == "input":
@@ -65,13 +67,13 @@ class DataPortListController(ExtendedController):
         self._do_type_change = False
         self._do_value_change = False
         self._do_store_update = False
-        self._do_selection_update = False
 
-        self.reload_data_port_list_store()
         if self.model.get_sm_m_for_state_m() is not None:
             self.observe_model(self.model.get_sm_m_for_state_m())
         else:
             logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
+
+        self.tree_view.set_model(self.list_store)
 
     def get_new_list_store(self):
         return ListStore(str, str, str, int, bool, str, gobject.TYPE_PYOBJECT)
@@ -145,9 +147,9 @@ class DataPortListController(ExtendedController):
             # view['runtime_value_text'].set_property("editable", True)
             # view['runtime_value_text'].connect("edited", self.on_runtime_value_edited)
 
+        ListSelectionFeatureController.register_view(self, view)
         self.tab_edit_controller.register_view()
-        view.get_top_widget().get_selection().set_mode(gtk.SELECTION_MULTIPLE)
-        self.update_selection_sm_prior()
+        self.reload_data_port_list_store()
 
     def register_adapters(self):
         """Adapters should be registered in this method call"""
@@ -202,7 +204,7 @@ class DataPortListController(ExtendedController):
         """ Change-name-method to set the name of actual selected (row) data-port.
         """
         # logger.info("FOCUS_OUT NAME entry: {0} event: {1}".format(entry, event))
-        if self.get_data_port_id_from_selection() is None:
+        if self.get_list_store_row_from_cursor_selection() is None:
             return
 
         self.on_name_changed(entry, None, text=entry.get_text())
@@ -211,7 +213,7 @@ class DataPortListController(ExtendedController):
         """ Change-data-type-method to set the data_type of actual selected (row) data-port.
         """
         # logger.info("FOCUS_OUT TYPE entry: {0} event: {1}".format(entry, event))
-        if self.get_data_port_id_from_selection() is None:
+        if self.get_list_store_row_from_cursor_selection() is None:
             return
 
         self.on_data_type_changed(entry, None, text=entry.get_text())
@@ -220,28 +222,13 @@ class DataPortListController(ExtendedController):
         """ Change-value-method to set the default_value or runtime_value of actual selected (row) data-port.
         """
         # logger.info("FOCUS_OUT VALUE entry: {0} event: {1}".format(entry, event))
-        if self.get_data_port_id_from_selection() is None:
+        if self.get_list_store_row_from_cursor_selection() is None:
             return
 
         self.on_default_value_changed(entry, None, text=entry.get_text())
 
-    def mouse_click(self, widget, event=None):
-
-        # if event.type == gtk.gdk.BUTTON_PRESS:
-        #     pthinfo = self.tree_view.get_path_at_pos(int(event.x), int(event.y))
-        #     if pthinfo is None:
-        #         # logger.info("deselect rows")
-        #         tree_selection = self.tree_view.get_selection()
-        #         tree_selection.unselect_all()
-
-        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
-            pthinfo = self.tree_view.get_path_at_pos(int(event.x), int(event.y))
-            if pthinfo is not None:
-                logger.debug("do right click menu")
-                self.tree_view.grab_focus()
-                return True
-
     def get_state_machine_selection(self):
+        # print type(self).__name__, "get state machine selection"
         sm_selection = self.model.get_sm_m_for_state_m().selection
         sm_selected_model_list = None
         if self.type == 'input':
@@ -250,73 +237,8 @@ class DataPortListController(ExtendedController):
             sm_selected_model_list = sm_selection.output_data_ports
         return sm_selection, sm_selected_model_list
 
-    def get_view_selection(self):
-        tree_selection = self.tree_view.get_selection()
-        model, paths = tree_selection.get_selected_rows()
-        selected_model_list = []
-        for row_num, path in enumerate(paths):
-            model = self.list_store[path[0]][self.MODEL_STORAGE_ID]
-            selected_model_list.append(model)
-        return tree_selection, selected_model_list
-
-    def get_selections(self):
-        sm_selection, sm_selected_port_m_list = self.get_state_machine_selection()
-        tree_selection, selected_port_m_list = self.get_view_selection()
-        return tree_selection, selected_port_m_list, sm_selection, sm_selected_port_m_list
-
-    def update_selection_sm_prior(self):
-        if self._do_selection_update:
-            return
-        self._do_selection_update = True
-        tree_selection, selected_port_m_list, sm_selection, sm_selected_port_m_list = self.get_selections()
-        for path, port_row in enumerate(self.list_store):
-            port_m = port_row[self.MODEL_STORAGE_ID]
-            if port_m not in sm_selected_port_m_list and port_m in selected_port_m_list:
-                # print type(self).__name__, self.type, "sm un-select port_m", port_m
-                tree_selection.unselect_path((path,))
-            if port_m in sm_selected_port_m_list and port_m not in selected_port_m_list:
-                # print type(self).__name__, self.type, "sm select port_m", port_m
-                tree_selection.select_path((path,))
-
-            # else:
-            #     if port_m in sm_selected_port_m_list and port_m in selected_port_m_list:
-            #         print type(self).__name__, self.type, "sm is selected"
-        # tree_selection, selected_port_m_list, sm_selection, sm_selected_port_m_list = self.get_selections()
-        # if self.type == 'input':
-        #     print type(self).__name__, self.type, sm_selection.get_num_input_data_ports(), sm_selection.get_input_data_ports(), len(selected_port_m_list), selected_port_m_list
-        # elif self.type == 'output':
-        #     print type(self).__name__, self.type, sm_selection.get_num_output_data_ports(), sm_selection.get_output_data_ports(), len(selected_port_m_list), selected_port_m_list
-        self._do_selection_update = False
-
-    def update_selection_self_prior(self):
-        if self._do_selection_update:
-            return
-        self._do_selection_update = True
-        tree_selection, selected_port_m_list, sm_selection, sm_selected_port_m_list = self.get_selections()
-        for port_row in self.list_store:
-            port_m = port_row[self.MODEL_STORAGE_ID]
-            if port_m in sm_selected_port_m_list and port_m not in selected_port_m_list:
-                sm_selection.remove(port_m)
-            if port_m not in sm_selected_port_m_list and port_m in selected_port_m_list:
-                # print type(self).__name__, self.type, "select port_m", port_m
-                sm_selection.add(port_m)
-
-            # else:
-            #     if port_m in sm_selected_port_m_list and port_m in selected_port_m_list:
-            #         print type(self).__name__, self.type, "is selected"
-        # if self.type == 'input':
-        #     print type(self).__name__, self.type, sm_selection.get_num_input_data_ports(), sm_selection.get_input_data_ports()
-        # elif self.type == 'output':
-        #     print type(self).__name__, self.type, sm_selection.get_num_output_data_ports(), sm_selection.get_output_data_ports()
-        self._do_selection_update = False
-
-    def selection_changed(self, widget, event=None):
-        # print type(self).__name__, self.type, "select changed"
-        self.update_selection_self_prior()
-
     @ExtendedController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
-        # print model, prop_name, info
         if "{}_data_ports".format(self.type) == info['method_name']:
             self.update_selection_sm_prior()
 
@@ -382,41 +304,6 @@ class DataPortListController(ExtendedController):
                 self.view[self.view.top].set_cursor(min(path[0], len(self.list_store) - 1))
             return True
 
-    def get_data_port_id_from_selection(self):
-        """Returns the data_port_id of the currently selected port entry"""
-        path = self.get_path()
-        if path is not None:
-            data_port_id = self.list_store[int(path)][self.ID_STORAGE_ID]
-            return data_port_id
-        return None
-
-    def get_use_runtime_value_from_selection(self):
-        """Returns the use_runtime_value flag of the currently selected port entry"""
-        path = self.get_path()
-        if path is not None:
-            use_runtime_value = self.list_store[int(path)][self.USE_RUNTIME_VALUE_STORAGE_ID]
-            return use_runtime_value
-        return None
-
-    def select_entry(self, data_port_id, by_cursor=True):
-        """Selects the port entry belonging to the given data_port_id"""
-        for row_num, data_port_entry in enumerate(self.list_store):
-            # Compare data port ids
-            if data_port_entry[3] == data_port_id:
-                if by_cursor:
-                    self.view[self.view.top].set_cursor(row_num)
-                else:
-                    self.view[self.view.top].get_selection().select_path((row_num, ))
-                break
-
-    def get_path(self):
-        """Returns the path/index to the currently selected port entry"""
-        cursor = self.view[self.view.top].get_cursor()
-        # the cursor is a tuple containing the current path and the focused column
-        if cursor[0] is None:
-            return None
-        return cursor[0][0]
-
     def on_use_runtime_value_toggled(self, widget, path):
         """Try to set the use runtime value flag to the newly entered one
         """
@@ -440,7 +327,7 @@ class DataPortListController(ExtendedController):
             return
         self._do_name_change = True
         try:
-            data_port_id = self.get_data_port_id_from_selection()
+            data_port_id = self.get_list_store_row_from_cursor_selection()[self.ID_STORAGE_ID]
             if self.state_data_port_dict[data_port_id].name != text:
                 self.state_data_port_dict[data_port_id].name = text
         except (TypeError, ValueError) as e:
@@ -455,7 +342,7 @@ class DataPortListController(ExtendedController):
             return
         self._do_type_change = True
         try:
-            data_port_id = self.get_data_port_id_from_selection()
+            data_port_id = self.get_list_store_row_from_cursor_selection()[self.ID_STORAGE_ID]
             if self.state_data_port_dict[data_port_id].data_type.__name__ != text:
                 self.state_data_port_dict[data_port_id].change_data_type(text)
         except ValueError as e:
@@ -470,11 +357,11 @@ class DataPortListController(ExtendedController):
             return
         self._do_value_change = True
         try:
-            data_port_id = self.get_data_port_id_from_selection()
+            data_port_id = self.get_list_store_row_from_cursor_selection()[self.ID_STORAGE_ID]
             if isinstance(self.model.state, LibraryState):
                 # this always have to be true, as the runtime value column can only be edited
                 # if the use_runtime_value flag is True
-                if self.get_use_runtime_value_from_selection():
+                if self.get_list_store_row_from_cursor_selection()[self.USE_RUNTIME_VALUE_STORAGE_ID]:
                     if self.type == "input":
                         if str(self.model.state.input_data_port_runtime_values[data_port_id]) != text:
                             self.model.state.set_input_runtime_value(data_port_id, text)
@@ -487,6 +374,9 @@ class DataPortListController(ExtendedController):
         except (TypeError, AttributeError) as e:
             logger.error("Error while changing default value: {0}".format(e))
         self._do_value_change = False
+
+    def on_right_click_menu(self):
+        logger.debug("do right click menu")
 
     def reload_data_port_list_store(self):
         """Reloads the input data port list store from the data port models"""

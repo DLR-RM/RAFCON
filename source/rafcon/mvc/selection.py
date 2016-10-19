@@ -143,7 +143,7 @@ class Selection(Observable):
     @data_flows.setter
     @Observable.observed
     def data_flows(self, model_list):
-        assert all([isinstance(m, DataPortModel) for m in model_list])
+        assert all([isinstance(m, DataFlowModel) for m in model_list])
         assert self.get_data_flows() == model_list
         self._data_flows = model_list
 

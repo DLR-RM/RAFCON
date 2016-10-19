@@ -15,6 +15,7 @@ import gobject
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.selection import ListSelectionFeatureController
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.state_machine_helper import insert_self_transition_meta_data
 
@@ -24,7 +25,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateOutcomesListController(ExtendedController):
+class StateOutcomesListController(ExtendedController, ListSelectionFeatureController):
 
     """The controller handles the outcomes of one respective state
 
@@ -42,8 +43,12 @@ class StateOutcomesListController(ExtendedController):
     MODEL_STORAGE_ID = 8
 
     def __init__(self, model, view):
-        ExtendedController.__init__(self, model, view)
+        # initiate data base and tree
+        # id, name, to-state, to-outcome, name-color, to-state-color, outcome, state, outcome_model
+        self.list_store = gtk.ListStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
+                                        gobject.TYPE_PYOBJECT)
         self.tree_view = view['tree_view']
+        self._logger = logger
 
         self.to_state_combo_list = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
         self.to_outcome_combo_list = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
@@ -56,20 +61,22 @@ class StateOutcomesListController(ExtendedController):
 
         self._actual_entry = None
 
-        if not model.state.is_root_state:
-            self.observe_model(model.parent)
-
         # variables to avoid to create and to be robust against chained notification calls
         self._do_name_change = False
         self._do_store_update = False
 
-        # initiate data base and tree
-        # id, name, to-state, to-outcome, name-color, to-state-color, outcome, state, outcome_model
-        self.list_store = gtk.ListStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
-                                        gobject.TYPE_PYOBJECT)
+        ExtendedController.__init__(self, model, view)
+        ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
+        if not model.state.is_root_state:
+            self.observe_model(model.parent)
+
+        if self.model.get_sm_m_for_state_m() is not None:
+            self.observe_model(self.model.get_sm_m_for_state_m())
+            # print type(self).__name__, self.model.state.name, "initialized sm observation"
+        else:
+            logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
+
         self.tree_view.set_model(self.list_store)
-        self.update_internal_data_base()
-        self.update_list_store()
 
     def register_view(self, view):
         """Called when the View was registered
@@ -116,6 +123,9 @@ class StateOutcomesListController(ExtendedController):
         view['name_cell'].connect('editing-started', self.editing_started)
         view['name_cell'].connect('editing-canceled', self.editing_canceled)
         view['tree_view'].connect("grab-focus", self.on_focus)
+
+        ListSelectionFeatureController.register_view(self, view)
+        self.update()
 
     def editing_started(self, renderer, editable, path):
         """ Callback method to connect entry-widget focus-out-event to the respective change-method.
@@ -291,6 +301,9 @@ class StateOutcomesListController(ExtendedController):
             except AttributeError as e:
                 logger.warning("Error while removing outcome: {0}".format(e))
 
+    def on_right_click_menu(self):
+        logger.debug("do right click menu")
+
     def update_internal_data_base(self):
 
         if self._do_store_update:
@@ -385,14 +398,28 @@ class StateOutcomesListController(ExtendedController):
                                     outcome, self.model.state, self.model.get_outcome_m(outcome.outcome_id)])
         self._do_store_update = False
 
+    def update(self):
+        self.update_internal_data_base()
+        self.update_list_store()
+
+
+    def get_state_machine_selection(self):
+        # print type(self).__name__, "get state machine selection"
+        sm_selection = self.model.get_sm_m_for_state_m().selection
+        return sm_selection, sm_selection.outcomes
+
+    @ExtendedController.observe("selection", after=True)
+    def state_machine_selection_changed(self, model, prop_name, info):
+        if "outcomes" == info['method_name']:
+            self.update_selection_sm_prior()
+
     @ExtendedController.observe("parent", after=True)
     @ExtendedController.observe("outcomes", after=True)
     @ExtendedController.observe("transitions", after=True)
     def outcomes_changed(self, model, prop_name, info):
         # logger.debug("call_notification - AFTER:prop-%s instance-%s method-%s result-%s" %
         #              (prop_name, info.instance, info.method_name, info.result))
-        self.update_internal_data_base()
-        self.update_list_store()
+        self.update()
 
 
 class StateOutcomesEditorController(ExtendedController):
