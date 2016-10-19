@@ -11,6 +11,7 @@
 
 import gtk
 import gobject
+from gtk.gdk import CONTROL_MASK, SHIFT_MASK
 
 from rafcon.statemachine.states.library_state import LibraryState
 
@@ -37,33 +38,51 @@ class StateTransitionsListController(ExtendedController):
     :param rafcon.mvc.models.ContainerStateModel model: The container state model containing the data
     :param rafcon.mvc.views.TransitionListView view: The GTK view showing the transitions as a table
     """
-
+    MODEL_STORAGE_ID = 9
     def __init__(self, model, view):
         """Constructor
         """
 
         # TreeStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
-        #                   name-color, to-state-color, transition-object, state-object, is_editable
+        #                   name-color, to-state-color, transition-object, state-object, is_editable, transition-model
         self.view_dict = {'transitions_internal': True, 'transitions_external': True}
         self.tree_store = gtk.TreeStore(int, str, str, str, str, bool,
-                                        gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
+                                        gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
         self.combo = {}
         self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
         self.no_update_state_destruction = False
         self.no_update_self_or_parent_state_destruction = False
+        self._do_selection_update = False
         self.debug_log = False
         self._actual_overview = None
+        self._last_path_selection = None
 
         ExtendedController.__init__(self, model, view)
+        # print type(self).__name__, self.model.state.name, "initialized state observation"
         if not self.model.state.is_root_state:
             self.observe_model(self.model.parent)
+            # print type(self).__name__, self.model.state.name, "initialized parent observation"
             if self.model.parent.parent is not None:
                 self.observe_model(self.model.parent.parent)
+                # print type(self).__name__, self.model.state.name, "initialized parent-parent observation"
+                # observe state machine model
+            if self.model.get_sm_m_for_state_m() is not None:
+                self.observe_model(self.model.get_sm_m_for_state_m())
+                # print type(self).__name__, self.model.state.name, "initialized sm observation"
+            else:
+                logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
         else:
-            if self.model.parent is not None:
+            # observe state machine model
+            if self.model.parent is None:
+                if self.model.get_sm_m_for_state_m() is not None:
+                    self.observe_model(self.model.get_sm_m_for_state_m())
+                    # print type(self).__name__, self.model.state.name, "initialized sm observation"
+                else:
+                    logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
+            else:
+                logger.warning("StateModel's state is_root_state and has a parent should not be possible")
                 self.observe_model(self.model.parent)
 
-        self.update()
         view.get_top_widget().set_model(self.tree_store)
 
     def register_view(self, view):
@@ -75,7 +94,6 @@ class StateTransitionsListController(ExtendedController):
         format_cell(view['from_outcome_combo'], None, 0)
         format_cell(view['to_outcome_combo'], None, 0)
         def cell_text(column, cell_renderer, model, iter, container_model):
-
             t_id = model.get_value(iter, 0)
             # state = model.get_value(iter, 9)
             in_external = 'internal'
@@ -112,9 +130,16 @@ class StateTransitionsListController(ExtendedController):
         view['from_outcome_combo'].connect("edited", self.on_combo_changed_from_outcome)
         view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
         view['to_outcome_combo'].connect("edited", self.on_combo_changed_to_outcome)
+        view.get_top_widget().connect('button_press_event', self.mouse_click)
+        view.get_top_widget().get_selection().connect('changed', self.selection_changed)
 
         # view['external_toggle'].set_radio(True)
         view.tree_view.connect("grab-focus", self.on_focus)
+        selection = view.get_top_widget().get_selection()
+        selection.set_mode(gtk.SELECTION_SINGLE)
+        selection.set_mode(gtk.SELECTION_MULTIPLE)
+        self.update_selection_sm_prior()
+        self.update()
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -312,6 +337,9 @@ class StateTransitionsListController(ExtendedController):
                                                                              to_outcome=new_to_outcome_id)
         except ValueError as e:
             logger.error("Could not change the target outcome of the transition: {0}".format(e))
+
+    def on_right_click_menu(self):
+        logger.debug("do right click menu")
 
     @staticmethod
     def get_possible_combos_for_transition(trans, model, self_model, is_external=False):
@@ -549,7 +577,9 @@ class StateTransitionsListController(ExtendedController):
                                               to_outcome_label,  # to-outcome
                                               False,  # is_external
                                               t,
-                                              self.model.state, True])
+                                              self.model.state,
+                                              True,
+                                              self.model.get_transition_m(transition_id)])
 
         if self.view_dict['transitions_external'] and self.model.parent and \
                 len(self.model.parent.state.transitions) > 0:
@@ -588,11 +618,154 @@ class StateTransitionsListController(ExtendedController):
                                                   to_state_label,  # to-state
                                                   to_outcome_label,  # to-outcome
                                                   True,  # is_external
-                                                  t, self.model.state, True])
+                                                  t,
+                                                  self.model.state,
+                                                  True,
+                                                  self.model.parent.get_transition_m(transition_id)])
                 except Exception as e:
                     logger.warning("There was a problem while updating the data-flow widget TreeStore. {0}".format(e))
 
-    @ExtendedController.observe("root_state", assigned=True)
+    def mouse_click(self, widget, event=None):
+
+        # selection = self.view.get_top_widget().get_selection()
+        # print selection.get_mode(), bool(event.state & SHIFT_MASK), bool(event.state & CONTROL_MASK), type(event)
+
+        if event.type == gtk.gdk.BUTTON_PRESS:
+            pthinfo = self.view.get_top_widget().get_path_at_pos(int(event.x), int(event.y))
+
+            if not bool(event.state & CONTROL_MASK) and not bool(event.state & SHIFT_MASK) and \
+                    event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
+                pthinfo = self.view.get_top_widget().get_path_at_pos(int(event.x), int(event.y))
+                if pthinfo is not None:
+                    model, paths = self.view.tree_view.get_selection().get_selected_rows()
+                    # print paths
+                    if pthinfo[0] not in paths:
+                        # logger.info("force single selection for right click")
+                        self.view.tree_view.set_cursor(pthinfo[0])
+                        self._last_path_selection = pthinfo[0]
+                    else:
+                        # logger.info("single- or multi-selection for right click")
+                        pass
+                    self.on_right_click_menu()
+                    return True
+
+            if (bool(event.state & CONTROL_MASK) or bool(event.state & SHIFT_MASK)) and \
+                    event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
+                return True
+
+            if not bool(event.state & SHIFT_MASK) and event.button == 1:
+                if pthinfo is not None:
+                    # logger.info("last select row {}".format(pthinfo[0]))
+                    self._last_path_selection = pthinfo[0]
+                # else:
+                #     logger.info("deselect rows")
+                #     self.view.get_top_widget().get_selection().unselect_all()
+
+            if bool(event.state & SHIFT_MASK) and event.button == 1:
+                # logger.info("SHIFT adjust selection range")
+                pthinfo = self.view.get_top_widget().get_path_at_pos(int(event.x), int(event.y))
+                model, paths = self.view.tree_view.get_selection().get_selected_rows()
+                # print model, paths, pthinfo[0]
+                if paths and pthinfo[0]:
+                    if self._last_path_selection[0] <= pthinfo[0][0]:
+                        new_row_ids_selected = range(self._last_path_selection[0], pthinfo[0][0]+1)
+                    else:
+                        new_row_ids_selected = range(self._last_path_selection[0], pthinfo[0][0]-1, -1)
+                    # logger.info("range to select {0}, {1}".format(new_row_ids_selected, model))
+                    self.view.tree_view.get_selection().unselect_all()
+                    for path in new_row_ids_selected:
+                        self.view.tree_view.get_selection().select_path(path)
+                    return True
+                else:
+                    # logger.info("nothing selected {}".format(model))
+                    pass
+
+            if bool(event.state & CONTROL_MASK) and event.button == 1:
+                # logger.info("CONTROL adjust selection range")
+                pthinfo = self.view.get_top_widget().get_path_at_pos(int(event.x), int(event.y))
+                model, paths = self.view.tree_view.get_selection().get_selected_rows()
+                # print model, paths, pthinfo[0]
+                if paths and pthinfo[0]:
+                    if pthinfo[0] in paths:
+                        self.view.tree_view.get_selection().unselect_path(pthinfo[0])
+                    else:
+                        self.view.tree_view.get_selection().select_path(pthinfo[0])
+                    return True
+                elif pthinfo[0]:
+                    self.view.tree_view.get_selection().select_path(pthinfo[0])
+                    return True
+
+    def get_selections(self):
+        # print "get selection"
+        sm_selection = self.model.get_sm_m_for_state_m().selection
+        sm_selected_model_list = sm_selection.transitions
+
+        tree_selection = self.view.get_top_widget().get_selection()
+        model, paths = tree_selection.get_selected_rows()
+        selected_model_list = []
+        for path in paths:
+            # print path
+            model = self.tree_store[path[0]][self.MODEL_STORAGE_ID]
+            selected_model_list.append(model)
+        return selected_model_list, tree_selection, sm_selected_model_list, sm_selection
+
+    def update_selection_sm_prior(self):
+        if self._do_selection_update:
+            return
+        # print "update selection sm prior"
+        self._do_selection_update = True
+        selected_model_list, tree_selection, sm_selected_model_list, sm_selection = self.get_selections()
+        for path, row in enumerate(self.tree_store):
+            model = row[self.MODEL_STORAGE_ID]
+            if model not in sm_selected_model_list and model in selected_model_list:
+                # print type(self).__name__, "transition", "sm un-select model", model
+                tree_selection.unselect_path(path)
+            if model in sm_selected_model_list and model not in selected_model_list:
+                # print type(self).__name__, "transition", "sm select model", model
+                tree_selection.select_path(path)
+
+        #     else:
+        #         if model in sm_selected_model_list and model in selected_model_list:
+        #             print type(self).__name__, "transition", "sm is selected"
+        # selected_model_list, tree_selection, sm_selected_model_list, sm_selection = self.get_selections()
+        # print type(self).__name__, sm_selection.get_num_transitions(), sm_selection.get_transitions(), \
+        #     sm_selection.transitions, self.view.tree_view.get_selection().get_selected_rows()[1], "\n\n"
+        self._do_selection_update = False
+
+    def update_selection_self_prior(self):
+        if self._do_selection_update:
+            return
+        # print "update selection self prior"
+        self._do_selection_update = True
+        selected_model_list, tree_selection, sm_selected_model_list, sm_selection = self.get_selections()
+        for row in self.tree_store:
+            model = row[self.MODEL_STORAGE_ID]
+            if model in sm_selected_model_list and model not in selected_model_list:
+                # print type(self).__name__, "transition", "unselect model", model
+                sm_selection.remove(model)
+            if model not in sm_selected_model_list and model in selected_model_list:
+                # print type(self).__name__, "transition", "select model", model
+                sm_selection.add(model)
+
+            # else:
+            #     if model in sm_selected_model_list and model in selected_model_list:
+            #         print type(self).__name__, "transition", "is selected"
+        # selected_model_list, tree_selection, sm_selected_model_list, sm_selection = self.get_selections()
+        # print type(self).__name__, sm_selection.get_num_transitions(), sm_selection.get_transitions(), \
+        #     sm_selection.transitions, self.view.tree_view.get_selection().get_selected_rows()[1], "\n\n"
+        self._do_selection_update = False
+
+    def selection_changed(self, widget, event=None):
+        # print type(self).__name__, "select changed", widget, event, self
+        self.update_selection_self_prior()
+
+    @ExtendedController.observe("selection", after=True)
+    def state_machine_selection_changed(self, model, prop_name, info):
+        # print model, prop_name, info
+        if "transitions" == info['method_name']:
+            self.update_selection_sm_prior()
+
+    @ExtendedController.observe("root_state", assign=True)
     def root_state_changed(self, model, prop_name, info):
         """ Relieve all observed models to avoid updates on old root state.
         """
@@ -649,7 +822,9 @@ class StateTransitionsListController(ExtendedController):
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
-        if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state:
+        if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state or \
+                overview['instance'][-1] in [self.model.state, self.model.state.parent] and \
+                overview['method_name'][-1] in ["remove_outcome", "remove_transition"]:
             self.update()
         self._actual_overview = None
 
@@ -666,7 +841,7 @@ class StateTransitionsListController(ExtendedController):
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
-        return
+        # return
         # avoid updates because of execution status updates
         if 'kwargs' in info and 'method_name' in info['kwargs'] and \
                 info['kwargs']['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
@@ -684,10 +859,12 @@ class StateTransitionsListController(ExtendedController):
         # print self, self.model.state.get_path(), overview
 
         if overview['prop_name'][0] in ['states', 'outcomes', 'transitions'] and \
-                overview['method_name'][-1] not in ['append', '__setitem__', 'name',  # , '__delitem__', 'remove'
+                overview['method_name'][-1] not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove'
                                                     'from_outcome', 'to_outcome', 'from_state', 'to_state',
                                                     'modify_origin', 'modify_target']:
             # TODO check why while deletion sometimes model and core lists are not consistent
+            # TODO -> while adding core elements, list are not always consistent because multiple elements
+            # TODO    can be added and remove in the core at the same time what could not be done in a model
             return
         # print "TUPDATE ", self, overview
 
