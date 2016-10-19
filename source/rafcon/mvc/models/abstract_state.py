@@ -179,7 +179,7 @@ class AbstractStateModel(ModelMT, Hashable):
                 if sm_m.get_state_model_by_path(self.state.get_path()) is self:
                     return sm_m
                 else:
-                    logger.warning("State model requesting its state machine model parent seems to be obsolete. "
+                    logger.debug("State model requesting its state machine model parent seems to be obsolete. "
                                    "This is a hint to duplicated models and dirty coding")
 
         return None
