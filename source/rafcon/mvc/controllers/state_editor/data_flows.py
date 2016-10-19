@@ -10,7 +10,7 @@
 """
 
 import gobject
-from gtk import ListStore, TreeStore
+from gtk import ListStore
 
 from rafcon.statemachine.state_elements.scope import ScopedVariable
 from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
@@ -40,10 +40,19 @@ class StateDataFlowsListController(ExtendedController):
     :param rafcon.mvc.views.DataFlowListView view: The GTK view showing the data flows as a table
     """
 
+    ID_STORAGE_ID = 0
+    FROM_STATE_STORAGE_ID = 1
+    FROM_KEY_STORAGE_ID = 2
+    TO_STATE_STORAGE_ID = 3
+    TO_KEY_STORAGE_ID = 4
+    IS_EXTERNAL_STORAGE_ID = 5
+    MODEL_STORAGE_ID = 11
     free_to_port_internal = None
     free_to_port_external = None
     from_port_internal = None
     from_port_external = None
+
+    # TODO siblings ports are not observed
 
     def __init__(self, model, view):
         """Constructor
@@ -51,12 +60,12 @@ class StateDataFlowsListController(ExtendedController):
         ExtendedController.__init__(self, model, view)
 
         # TreeStore for: id, from-state, from-key, to-state, to-key, is_external,
-        #                   name-color, to-state-color, data-flow-object, state-object, is_editable
+        #                   name-color, to-state-color, data-flow-object, state-object, is_editable, data-flow-model
         self.view_dict = {'data_flows_internal': True, 'data_flows_external': True}
-        self.tree_store = TreeStore(int, str, str, str, str, bool,
-                                    str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
-
-        view.get_top_widget().set_model(self.tree_store)
+        self.list_store = ListStore(int, str, str, str, str, bool, str, str,
+                                    gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
+        self.tree_view = view.get_top_widget()
+        self.tree_view.set_model(self.list_store)
 
         self.tree_dict_combos = {'internal': {},
                                  'external': {}}
@@ -81,9 +90,9 @@ class StateDataFlowsListController(ExtendedController):
 
         def cell_text(column, cell_renderer, model, iter, container_model):
 
-            df_id = model.get_value(iter, 0)
+            df_id = model.get_value(iter, self.ID_STORAGE_ID)
             in_external = 'internal'
-            if model.get_value(iter, 5):
+            if model.get_value(iter, self.IS_EXTERNAL_STORAGE_ID):
                 in_external = 'external'
             if column.get_title() == 'Source State':
                 cell_renderer.set_property("model", self.tree_dict_combos[in_external][df_id]['from_state'])
@@ -201,17 +210,17 @@ class StateDataFlowsListController(ExtendedController):
 
         # set focus on this new element
         # - at the moment every new element is the last -> easy work around :(
-        self.view.tree_view.set_cursor(len(self.tree_store) - 1)
+        self.view.tree_view.set_cursor(len(self.list_store) - 1)
         return True
 
     def on_remove(self, button, info=None):
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
         if path:
             try:
-                if self.tree_store[path[0][0]][5]:
-                    self.model.parent.state.remove_data_flow(self.tree_store[path[0][0]][0])
+                if self.list_store[path[0][0]][self.IS_EXTERNAL_STORAGE_ID]:
+                    self.model.parent.state.remove_data_flow(self.list_store[path[0][0]][self.ID_STORAGE_ID])
                 else:
-                    self.model.state.remove_data_flow(self.tree_store[path[0][0]][0])
+                    self.model.state.remove_data_flow(self.list_store[path[0][0]][self.ID_STORAGE_ID])
             except (AttributeError, ValueError) as e:
                 logger.error("Data Flow couldn't be removed: {0}".format(e))
                 return
@@ -221,17 +230,17 @@ class StateDataFlowsListController(ExtendedController):
 
         # selection to next element
         row_number = path[0][0]
-        if len(self.tree_store) > 0:
-            self.view.tree_view.set_cursor(min(row_number, len(self.tree_store) - 1))
+        if len(self.list_store) > 0:
+            self.view.tree_view.set_cursor(min(row_number, len(self.list_store) - 1))
         return True
 
     def on_combo_changed_from_state(self, widget, path, text):
-        if text is None or self.tree_store[path][1] == text:
+        if text is None or self.list_store[path][self.FROM_STATE_STORAGE_ID] == text:
             return
         text = text.split('.')
         new_from_state_id = text[-1]
-        data_flow_id = self.tree_store[path][0]
-        is_external_data_flow = self.tree_store[path][5]
+        data_flow_id = self.list_store[path][self.ID_STORAGE_ID]
+        is_external_data_flow = self.list_store[path][self.IS_EXTERNAL_STORAGE_ID]
         new_from_data_port_id = None  # df.from_key
         if is_external_data_flow:
             new_from_data_port_id = self.from_port_external[new_from_state_id][0].data_port_id
@@ -261,8 +270,8 @@ class StateDataFlowsListController(ExtendedController):
         if text is None:
             return
         new_from_data_port_id = int(text.split('.#')[-1].split('.')[0])
-        data_flow_id = self.tree_store[path][0]
-        is_external_data_flow = self.tree_store[path][5]
+        data_flow_id = self.list_store[path][self.ID_STORAGE_ID]
+        is_external_data_flow = self.list_store[path][self.IS_EXTERNAL_STORAGE_ID]
         if is_external_data_flow:
             data_flow_parent_state = self.model.parent.state
         else:
@@ -276,12 +285,12 @@ class StateDataFlowsListController(ExtendedController):
             logger.error("Could not change from data port: {0}".format(e))
 
     def on_combo_changed_to_state(self, widget, path, text):
-        if text is None or self.tree_store[path][3] == text:
+        if text is None or self.list_store[path][self.TO_STATE_STORAGE_ID] == text:
             return
         text = text.split('.')
         new_to_state_id = text[-1]
-        data_flow_id = self.tree_store[path][0]
-        is_external_data_flow = self.tree_store[path][5]
+        data_flow_id = self.list_store[path][self.ID_STORAGE_ID]
+        is_external_data_flow = self.list_store[path][self.IS_EXTERNAL_STORAGE_ID]
         if is_external_data_flow:
             data_flow_parent_state = self.model.parent.state
             new_to_data_port_id = self.free_to_port_external[new_to_state_id][0].data_port_id
@@ -297,8 +306,8 @@ class StateDataFlowsListController(ExtendedController):
         if text is None:
             return
         new_to_data_port_id = int(text.split('.#')[-1].split('.')[0])
-        data_flow_id = self.tree_store[path][0]
-        is_external_data_flow = self.tree_store[path][5]
+        data_flow_id = self.list_store[path][self.ID_STORAGE_ID]
+        is_external_data_flow = self.list_store[path][self.IS_EXTERNAL_STORAGE_ID]
         if is_external_data_flow:
             data_flow_parent_state = self.model.parent.state
         else:
@@ -325,7 +334,7 @@ class StateDataFlowsListController(ExtendedController):
         self.from_port_external = from_ext
 
     def _update_tree_store(self):
-        self.tree_store.clear()
+        self.list_store.clear()
 
         if self.view_dict['data_flows_internal'] and isinstance(self.model, ContainerStateModel):
             for data_flow in self.model.state.data_flows.values():
@@ -337,13 +346,14 @@ class StateDataFlowsListController(ExtendedController):
                     #       name-color, to-state-color, data-flow-object, state-object, is_editable
                     # print 'insert int: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], \
                     #     df_dict['to_state'], df_dict['to_key']
-                    self.tree_store.append(None, [data_flow.data_flow_id,
-                                                  df_dict['from_state'],
-                                                  df_dict['from_key'],
-                                                  df_dict['to_state'],
-                                                  df_dict['to_key'],
-                                                  False,
-                                                  '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True])
+                    self.list_store.append([data_flow.data_flow_id,
+                                            df_dict['from_state'],
+                                            df_dict['from_key'],
+                                            df_dict['to_state'],
+                                            df_dict['to_key'],
+                                            False,
+                                            '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True,
+                                            self.model.get_data_flow_m(data_flow.data_flow_id)])
 
         if self.view_dict['data_flows_external'] and not self.model.state.is_root_state:
             for data_flow in self.model.parent.state.data_flows.values():
@@ -354,13 +364,14 @@ class StateDataFlowsListController(ExtendedController):
                     #       name-color, to-state-color, data-flow-object, state-object, is_editable
                     # print 'insert ext: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], \
                     #     df_dict['to_state'], df_dict['to_key']
-                    self.tree_store.append(None, [data_flow.data_flow_id,
-                                                  df_dict['from_state'],
-                                                  df_dict['from_key'],
-                                                  df_dict['to_state'],
-                                                  df_dict['to_key'],
-                                                  True,
-                                                  '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True])
+                    self.list_store.append([data_flow.data_flow_id,
+                                            df_dict['from_state'],
+                                            df_dict['from_key'],
+                                            df_dict['to_state'],
+                                            df_dict['to_key'],
+                                            True,
+                                            '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True,
+                                            self.model.parent.get_data_flow_m(data_flow.data_flow_id)])
 
     @ExtendedController.observe("root_state", assigned=True)
     def root_state_changed(self, model, prop_name, info):
@@ -414,7 +425,11 @@ class StateDataFlowsListController(ExtendedController):
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
-        if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state:
+
+        if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state or \
+                overview['instance'][-1] in [self.model.state, self.model.state.parent] and \
+                overview['method_name'][-1] in ["remove_input_data_port", "remove_output_data_port",
+                                                "remove_scoped_variable", "remove_data_flow"]:
             self.update()
         self._actual_overview = None
 
@@ -431,7 +446,7 @@ class StateDataFlowsListController(ExtendedController):
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
-        return
+
         # avoid updates because of execution status updates
         if 'kwargs' in info and 'method_name' in info['kwargs'] and \
                 info['kwargs']['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
@@ -450,7 +465,7 @@ class StateDataFlowsListController(ExtendedController):
 
         # avoid updates because of unimportant methods
         if overview['prop_name'][0] in ['states', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'data_flows'] and \
-                overview['method_name'][-1] not in ['append', '__setitem__', '__delitem__', 'remove', 'name',
+                overview['method_name'][-1] not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove',
                                                     'change_data_type', 'from_key', 'to_key', 'from_state', 'to_state',
                                                     'modify_origin', 'modify_target']:
             return
