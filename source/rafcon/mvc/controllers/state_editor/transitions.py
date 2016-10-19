@@ -45,6 +45,9 @@ class StateTransitionsListController(ExtendedController):
     TO_OUTCOME_STORAGE_ID = 4
     IS_EXTERNAL_STORAGE_ID = 5
     MODEL_STORAGE_ID = 9
+
+    # TODO siblings outcomes are not observed
+
     def __init__(self, model, view):
         """Constructor
         """
@@ -54,6 +57,8 @@ class StateTransitionsListController(ExtendedController):
         self.view_dict = {'transitions_internal': True, 'transitions_external': True}
         self.list_store = gtk.ListStore(int, str, str, str, str, bool,
                                         gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
+        self.tree_view = view.get_top_widget()
+
         self.combo = {}
         self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
         self.no_update_state_destruction = False
@@ -89,7 +94,7 @@ class StateTransitionsListController(ExtendedController):
                 logger.warning("StateModel's state is_root_state and has a parent should not be possible")
                 self.observe_model(self.model.parent)
 
-        view.get_top_widget().set_model(self.list_store)
+        self.tree_view.set_model(self.list_store)
 
     def register_view(self, view):
         """Called when the View was registered

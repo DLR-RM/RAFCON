@@ -43,11 +43,13 @@ class DataPortListController(ExtendedController):
         """Constructor"""
         ExtendedController.__init__(self, model, view)
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view.get_top_widget())
-        self.tree_view = self.view.get_top_widget()
+        self.tree_view = view.get_top_widget()
 
         self.type = io_type
         self.state_data_port_dict = None
         self.list_store = self.get_new_list_store()
+        self.tree_view.set_model(self.list_store)
+
 
         if self.type == "input":
             self.state_data_port_dict = self.model.state.input_data_ports
@@ -64,7 +66,6 @@ class DataPortListController(ExtendedController):
         self._do_value_change = False
         self._do_store_update = False
         self._do_selection_update = False
-
 
         self.reload_data_port_list_store()
         if self.model.get_sm_m_for_state_m() is not None:
@@ -98,9 +99,6 @@ class DataPortListController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
-        # top widget is a tree view => set the model of the tree view to be a list store
-        view.get_top_widget().set_model(self.list_store)
-        view.get_top_widget().set_cursor(0)
 
         view['name_col'].add_attribute(view['name_text'], 'text', self.NAME_STORAGE_ID)
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', self.DATA_TYPE_NAME_STORAGE_ID)
