@@ -35,11 +35,15 @@ class StateOutcomesListController(ExtendedController):
     state's respective outcomes-list, transitions-list or change of parent-state and use additionally the focus change
     to update after a modification (e.g. the focus change updates if not observed state-names change).
     """
+    ID_STORAGE_ID = 0
+    NAME_STORAGE_ID = 1
+    CORE_STORAGE_ID = 6
+    CORE_PARENT_STORAGE_ID = 7
+    MODEL_STORAGE_ID = 8
 
     def __init__(self, model, view):
         ExtendedController.__init__(self, model, view)
-
-        self.tree_store = view.tree_store
+        self.tree_view = view['tree_view']
 
         self.to_state_combo_list = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
         self.to_outcome_combo_list = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
@@ -60,8 +64,12 @@ class StateOutcomesListController(ExtendedController):
         self._do_store_update = False
 
         # initiate data base and tree
+        # id, name, to-state, to-outcome, name-color, to-state-color, outcome, state, outcome_model
+        self.list_store = gtk.ListStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
+                                        gobject.TYPE_PYOBJECT)
+        self.tree_view.set_model(self.list_store)
         self.update_internal_data_base()
-        self.update_tree_store()
+        self.update_list_store()
 
     def register_view(self, view):
         """Called when the View was registered
@@ -71,7 +79,7 @@ class StateOutcomesListController(ExtendedController):
 
         def cell_text(column, cell_renderer, model, iter, container_model):
 
-            outcome = model.get_value(iter, 6)
+            outcome = model.get_value(iter, self.CORE_STORAGE_ID)
             if column.get_title() == 'ID':
                 if int(outcome.outcome_id) < 0:
                     cell_renderer.set_alignment(0.9, 0.5)
@@ -96,7 +104,6 @@ class StateOutcomesListController(ExtendedController):
             else:
                 logger.warning("Column does not have cell_data_func %s %s" % (column.get_name(), column.get_title()))
 
-        view['tree_view'].set_model(self.tree_store)
         view['id_col'].set_cell_data_func(view['id_cell'], cell_text, self.model)
         view['name_col'].set_cell_data_func(view['name_cell'], cell_text, self.model)
         if view['to_state_col'] and view['to_outcome_col'] and view['to_state_combo'] and view['to_outcome_combo']:
@@ -108,7 +115,7 @@ class StateOutcomesListController(ExtendedController):
         view['name_cell'].connect('edited', self.on_name_changed)
         view['name_cell'].connect('editing-started', self.editing_started)
         view['name_cell'].connect('editing-canceled', self.editing_canceled)
-        view.tree_view.connect("grab-focus", self.on_focus)
+        view['tree_view'].connect("grab-focus", self.on_focus)
 
     def editing_started(self, renderer, editable, path):
         """ Callback method to connect entry-widget focus-out-event to the respective change-method.
@@ -131,24 +138,24 @@ class StateOutcomesListController(ExtendedController):
         """ Change-name-method to set the name of actual selected (row) data-port.
         """
         # logger.info("FOCUS_OUT NAME entry: {0} event: {1}".format(entry, event))
-        if self.view.tree_view.get_cursor()[0] is None:
+        if self.tree_view.get_cursor()[0] is None:
             return
 
-        self.on_name_changed(entry, self.view.tree_view.get_cursor()[0], text=entry.get_text())
+        self.on_name_changed(entry, self.tree_view.get_cursor()[0], text=entry.get_text())
 
     def on_focus(self, widget, data=None):
         # logger.debug("OUTCOMES_LIST get new FOCUS")
-        path = self.view.tree_view.get_cursor()
+        path = self.tree_view.get_cursor()
         try:
             self.update_internal_data_base()
-            self.update_tree_store()
+            self.update_list_store()
         except Exception:
             logger.warning("update failed")
         if path[0]:  # if valid -> is possible as long as set_cursor does not trigger on_focus again
-            self.view.tree_view.set_cursor(path[0])
+            self.tree_view.set_cursor(path[0])
 
     def on_name_changed(self, widget, path, text):
-        outcome_id = self.tree_store[path][6].outcome_id
+        outcome_id = self.list_store[path][self.CORE_STORAGE_ID].outcome_id
         outcome = self.model.state.outcomes[outcome_id]
         if self._do_name_change:
             return
@@ -159,11 +166,11 @@ class StateOutcomesListController(ExtendedController):
         except (ValueError, TypeError) as e:
             logger.warning("The name of the outcome could not be changed: {0}".format(e))
         self._do_name_change = False
-        self.tree_store[path][1] = outcome.name
+        self.list_store[path][self.NAME_STORAGE_ID] = outcome.name
 
     def on_to_state_modification(self, widget, path, text):
         # logger.debug("on_to_state_modification %s, %s, %s" % (widget, path, text))
-        outcome_id = int(self.tree_store[path][0])
+        outcome_id = int(self.list_store[path][self.ID_STORAGE_ID])
         if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
             transition_parent_state = self.model.parent.state
             if outcome_id in self.dict_to_other_state.keys():
@@ -210,7 +217,7 @@ class StateOutcomesListController(ExtendedController):
         # logger.debug("on_to_outcome_modification %s, %s, %s" % (widget, path, text))
         if self.model.parent is None:
             return
-        outcome_id = int(self.tree_store[path][0])
+        outcome_id = int(self.list_store[path][self.ID_STORAGE_ID])
         transition_parent_state = self.model.parent.state
         if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
             if outcome_id in self.dict_to_other_state.keys():
@@ -261,10 +268,10 @@ class StateOutcomesListController(ExtendedController):
                     return
         # Search for new entry and select it
         ctr = 0
-        for outcome_entry in self.tree_store:
+        for outcome_row in self.list_store:
             # Compare outcome ids
-            if outcome_entry[6].outcome_id == outcome_id:
-                self.view.tree_view.set_cursor(ctr)
+            if outcome_row[self.CORE_STORAGE_ID].outcome_id == outcome_id:
+                self.tree_view.set_cursor(ctr)
                 break
             ctr += 1
 
@@ -272,14 +279,14 @@ class StateOutcomesListController(ExtendedController):
 
     def on_remove(self, button, info=None):
 
-        tree, path = self.view.tree_view.get_selection().get_selected_rows()
-        if path:  # and not self.tree_store[path[0][0]][6].outcome_id < 0 leave this check for the state
-            outcome_id = self.tree_store[path[0][0]][6].outcome_id
+        tree, path = self.tree_view.get_selection().get_selected_rows()
+        if path:  # and not self.list_store[path[0][0]][self.CORE_STORAGE_ID].outcome_id < 0 leave this check for the state
+            outcome_id = self.list_store[path[0][0]][self.CORE_STORAGE_ID].outcome_id
             try:
                 self.model.state.remove_outcome(outcome_id)
                 row_number = path[0][0]
-                if len(self.tree_store) > 0:
-                    self.view.tree_view.set_cursor(min(row_number, len(self.tree_store)-1))
+                if len(self.list_store) > 0:
+                    self.tree_view.set_cursor(min(row_number, len(self.list_store)-1))
                 return True
             except AttributeError as e:
                 logger.warning("Error while removing outcome: {0}".format(e))
@@ -356,12 +363,12 @@ class StateOutcomesListController(ExtendedController):
         # print "state.name: ", self.model.state.name
         self._do_store_update = False
 
-    def update_tree_store(self):
+    def update_list_store(self):
 
         if self._do_store_update:
             return
         self._do_store_update = True
-        self.tree_store.clear()
+        self.list_store.clear()
         for outcome in self.model.state.outcomes.values():
             to_state = None
             if outcome.outcome_id in self.dict_to_other_state.keys():
@@ -370,12 +377,12 @@ class StateOutcomesListController(ExtendedController):
             if outcome.outcome_id in self.dict_to_other_outcome.keys():
                 to_outcome = self.dict_to_other_outcome[outcome.outcome_id][0]
                 to_state = 'parent'
-            from_state = None
-            if outcome.outcome_id in self.dict_from_other_state.keys():
-                from_state = self.dict_from_other_state[outcome.outcome_id][0]
-            # print "treestore: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
-            self.tree_store.append(None, [outcome.outcome_id, outcome.name, to_state, to_outcome,
-                                          '#f0E5C7', '#f0E5c7', outcome, self.model.state])
+            # from_state = None
+            # if outcome.outcome_id in self.dict_from_other_state.keys():
+            #     from_state = self.dict_from_other_state[outcome.outcome_id][0]
+            # print "list_store: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
+            self.list_store.append([outcome.outcome_id, outcome.name, to_state, to_outcome, '#f0E5C7', '#f0E5c7',
+                                    outcome, self.model.state, self.model.get_outcome_m(outcome.outcome_id)])
         self._do_store_update = False
 
     @ExtendedController.observe("parent", after=True)
@@ -385,7 +392,7 @@ class StateOutcomesListController(ExtendedController):
         # logger.debug("call_notification - AFTER:prop-%s instance-%s method-%s result-%s" %
         #              (prop_name, info.instance, info.method_name, info.result))
         self.update_internal_data_base()
-        self.update_tree_store()
+        self.update_list_store()
 
 
 class StateOutcomesEditorController(ExtendedController):
