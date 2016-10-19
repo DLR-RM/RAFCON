@@ -161,8 +161,7 @@ def test_window_positions(caplog):
     global_runtime_config.load(config_file='runtime_config.yaml', path=DOCKING_TEST_FOLDER)
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                  editor_type='LogicDataGrouped')
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
     # Wait for GUI to initialize
     while gtk.events_pending():
         gtk.main_iteration(False)
@@ -181,8 +180,7 @@ def test_pane_positions(caplog):
     global_runtime_config.load(config_file='runtime_config.yaml', path=DOCKING_TEST_FOLDER)
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                  editor_type='LogicDataGrouped')
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
     # Wait for GUI to initialize
     while gtk.events_pending():
         gtk.main_iteration(False)

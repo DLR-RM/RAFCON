@@ -2,8 +2,6 @@ import sys
 import logging
 import gtk
 import threading
-import os
-from os.path import dirname, join
 
 # general tool elements
 from rafcon.utils import log
@@ -14,20 +12,16 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.state_machine import StateMachine
+import rafcon.statemachine.singleton
 
 # mvc elements
-import rafcon.mvc
+import rafcon.mvc.singleton
 from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.main_window import MainWindowView
+import rafcon.mvc.config as gui_config
 from rafcon.mvc.views.graphical_editor import GraphicalEditor as OpenGLEditor
 from rafcon.mvc.mygaphas.view import ExtendedGtkView as GaphasEditor
-from rafcon.mvc.views.main_window import MainWindowView
-
 import rafcon.mvc.state_machine_helper as state_machine_helper
-
-# singleton elements
-import rafcon.mvc.singleton
-import rafcon.statemachine.singleton
-import rafcon.mvc.config as gui_config
 
 # test environment elements
 import testing_utils
@@ -327,8 +321,7 @@ def test_gui(caplog):
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                  editor_type='LogicDataGrouped')
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 
     # Wait for GUI to initialize
     testing_utils.wait_for_gui()

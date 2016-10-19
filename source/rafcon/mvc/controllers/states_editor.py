@@ -104,20 +104,17 @@ class StatesEditorController(ExtendedController):
     :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel model: The state machine manager model,
         holding data regarding state machines.
     :param rafcon.mvc.views.states_editor.StatesEditorView view: The GTK view showing state editor tabs.
-    :param editor_type:
     :ivar tabs: Currently open State Editor tabs.
     :ivar closed_tabs: Previously opened, non-deleted State Editor tabs.
     """
 
-    def __init__(self, model, view, editor_type):
+    def __init__(self, model, view):
         assert isinstance(model, StateMachineManagerModel)
         ExtendedController.__init__(self, model, view)
         self.observe_model(gui_config_model)
 
         for state_machine_m in self.model.state_machines.itervalues():
             self.observe_model(state_machine_m)
-
-        self.editor_type = editor_type
 
         # TODO: Workaround used for tab-close on middle click
         # Workaround used for tab-close on middle click
@@ -130,7 +127,7 @@ class StatesEditorController(ExtendedController):
     def register_view(self, view):
         self.view.notebook.connect('switch-page', self.on_switch_page)
         if self.current_state_machine_m:
-            self.add_state_editor(self.current_state_machine_m.root_state, self.editor_type)
+            self.add_state_editor(self.current_state_machine_m.root_state)
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -236,7 +233,7 @@ class StatesEditorController(ExtendedController):
                 pass
             self.clean_up_tabs()
 
-    def add_state_editor(self, state_m, editor_type=None):
+    def add_state_editor(self, state_m):
         """Triggered whenever a state is selected.
 
         :param state_m: The selected state model.
@@ -430,7 +427,7 @@ class StatesEditorController(ExtendedController):
             # The desired state is not open, yet
             if state_identifier not in self.tabs:
                 # add tab for desired state
-                page_id = self.add_state_editor(state_m, self.editor_type)
+                page_id = self.add_state_editor(state_m)
                 self.view.notebook.set_current_page(page_id)
 
             # bring tab for desired state into foreground

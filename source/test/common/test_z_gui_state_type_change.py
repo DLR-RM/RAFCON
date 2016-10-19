@@ -684,8 +684,7 @@ def test_state_type_change_test(caplog):
     if with_gui:
         main_window_view = MainWindowView()
         # load the meta data for the state machine
-        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                      editor_type='LogicDataGrouped')
+        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 
     if with_gui:
         # Wait for GUI to initialize

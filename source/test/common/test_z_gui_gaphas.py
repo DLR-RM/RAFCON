@@ -121,8 +121,7 @@ def test_copy_delete_bug(caplog):
 
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                  editor_type='LogicDataGrouped')
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 
     # Wait for GUI to initialize
     testing_utils.wait_for_gui()
