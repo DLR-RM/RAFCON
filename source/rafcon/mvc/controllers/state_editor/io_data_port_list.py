@@ -228,8 +228,7 @@ class DataPortListController(ExtendedController):
         #     if pthinfo is None:
         #         # logger.info("deselect rows")
         #         tree_selection = self.view.get_top_widget().get_selection()
-        #         for path in tree_selection.get_selected_rows()[1]:
-        #             tree_selection.unselect_path(path)
+        #         tree_selection.unselect_all()
 
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             pthinfo = self.view.get_top_widget().get_path_at_pos(int(event.x), int(event.y))
