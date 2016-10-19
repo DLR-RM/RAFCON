@@ -95,7 +95,7 @@ def start_client(interacting_function, queue_dict):
     sm_singletons.state_machine_manager.add_state_machine(state_machine)
 
     sm_manager_model = mvc_singletons.state_machine_manager_model
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type='LogicDataGrouped')
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view)
 
     plugins.run_post_inits(setup_config)
 

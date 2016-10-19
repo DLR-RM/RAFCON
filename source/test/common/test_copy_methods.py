@@ -417,8 +417,7 @@ def test_complex(with_gui, caplog):
         from rafcon.mvc.controllers.main_window import MainWindowController
         from rafcon.mvc.views.main_window import MainWindowView
         main_window_view = MainWindowView()
-        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                      editor_type='LogicDataGrouped')
+        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 
         # Wait for GUI to initialize
         while gtk.events_pending():

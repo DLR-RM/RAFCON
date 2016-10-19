@@ -155,6 +155,8 @@ def check_state_editor_models(sm_m, parent_state_m, main_window_controller, logg
             assert state_editor_ctrl.model is state_m
 
     state_identifier = states_editor_controller.get_state_identifier(parent_state_m)
+    parent_state_m.get_sm_m_for_state_m()
+    print "try to select", parent_state_m
     call_gui_callback(sm_m.selection.set, [parent_state_m])
     [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, state_identifier, sleep_time_max)
     # logger.debug("wait for state's state editor %s" % time_waited)
@@ -249,8 +251,7 @@ def test_state_type_change_test(with_gui, caplog):
         # load the meta data for the state machine
         testing_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
-        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                      editor_type='LogicDataGrouped')
+        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
         # Wait for GUI to initialize
         while gtk.events_pending():
             gtk.main_iteration(False)

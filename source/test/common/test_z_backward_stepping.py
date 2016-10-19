@@ -124,8 +124,7 @@ def test_backward_stepping_library_state(caplog):
     if testing_utils.sm_manager_model is None:
         testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                  editor_type="LogicDataGrouped")
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 
     # Wait for GUI to initialize
     while gtk.events_pending():
@@ -210,8 +209,7 @@ def test_backward_stepping_preemptive_state(caplog):
     if testing_utils.sm_manager_model is None:
         testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                  editor_type="LogicDataGrouped")
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 
     # Wait for GUI to initialize
     while gtk.events_pending():
@@ -294,8 +292,7 @@ def test_backward_stepping_barrier_state(caplog):
     if testing_utils.sm_manager_model is None:
         testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                  editor_type="LogicDataGrouped")
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 
     # Wait for GUI to initialize
     while gtk.events_pending():

@@ -1171,10 +1171,9 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
 
     print "initialize MainWindow"
     main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                  editor_type='LogicDataGrouped')
-    # Wait for GUI to initialize
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
     while gtk.events_pending():
+        # Wait for GUI to initialize
         gtk.main_iteration(False)
     print "start thread"
     thread = threading.Thread(target=trigger_state_type_change_tests,
@@ -1209,8 +1208,7 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     if with_gui:
         print "initialize MainWindow"
         main_window_view = MainWindowView()
-        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                      editor_type='LogicDataGrouped')
+        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
         if with_gui:
             # Wait for GUI to initialize
             while gtk.events_pending():
