@@ -103,12 +103,9 @@ class StateTransitionsListController(ExtendedController, ListSelectionFeatureCon
         format_cell(view['to_state_combo'], None, 0)
         format_cell(view['from_outcome_combo'], None, 0)
         format_cell(view['to_outcome_combo'], None, 0)
-        def cell_text(column, cell_renderer, model, iter, container_model):
-            t_id = model.get_value(iter, 0)
-            # state = model.get_value(iter, 9)
-            in_external = 'internal'
-            if model.get_value(iter, self.IS_EXTERNAL_STORAGE_ID):
-                in_external = 'external'
+        def cell_text(column, cell_renderer, model, iter):
+            t_id = model.get_value(iter, self.ID_STORAGE_ID)
+            in_external = 'external' if model.get_value(iter, self.IS_EXTERNAL_STORAGE_ID) else 'internal'
             # print t_id, in_external, self.combo[in_external]
             if column.get_title() == 'Source State':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['from_state'])
@@ -126,15 +123,13 @@ class StateTransitionsListController(ExtendedController, ListSelectionFeatureCon
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['to_outcome'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-                # print "to_outcome: ", type(cell_renderer)
-                # find to outcome by from_outcome == model.state.state_id and from_outcome == outcome.name
             else:
                 logger.warning("Column has no cell_data_func %s %s" % (column.get_name(), column.get_title()))
 
-        view['from_state_col'].set_cell_data_func(view['from_state_combo'], cell_text, self.model)
-        view['to_state_col'].set_cell_data_func(view['to_state_combo'], cell_text, self.model)
-        view['from_outcome_col'].set_cell_data_func(view['from_outcome_combo'], cell_text, self.model)
-        view['to_outcome_col'].set_cell_data_func(view['to_outcome_combo'], cell_text, self.model)
+        view['from_state_col'].set_cell_data_func(view['from_state_combo'], cell_text)
+        view['to_state_col'].set_cell_data_func(view['to_state_combo'], cell_text)
+        view['from_outcome_col'].set_cell_data_func(view['from_outcome_combo'], cell_text)
+        view['to_outcome_col'].set_cell_data_func(view['to_outcome_combo'], cell_text)
 
         view['from_state_combo'].connect("edited", self.on_combo_changed_from_state)
         view['from_outcome_combo'].connect("edited", self.on_combo_changed_from_outcome)

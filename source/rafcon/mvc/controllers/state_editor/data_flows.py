@@ -114,9 +114,8 @@ class StateDataFlowsListController(ExtendedController, ListSelectionFeatureContr
         def cell_text(column, cell_renderer, model, iter, container_model):
 
             df_id = model.get_value(iter, self.ID_STORAGE_ID)
-            in_external = 'internal'
-            if model.get_value(iter, self.IS_EXTERNAL_STORAGE_ID):
-                in_external = 'external'
+            in_external = 'external' if model.get_value(iter, self.IS_EXTERNAL_STORAGE_ID) else 'internal'
+
             if column.get_title() == 'Source State':
                 cell_renderer.set_property("model", self.tree_dict_combos[in_external][df_id]['from_state'])
                 cell_renderer.set_property("text-column", 0)
