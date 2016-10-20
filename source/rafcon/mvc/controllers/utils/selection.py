@@ -4,7 +4,8 @@ from rafcon.utils import log
 
 module_logger = log.get_logger(__name__)
 
-class ListSelectionFeatureController:
+
+class ListSelectionFeatureController(object):
     list_store = None
     tree_view = None
     _logger = None
