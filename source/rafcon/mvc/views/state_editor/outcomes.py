@@ -22,7 +22,6 @@ class StateOutcomesEditorView(View):
 
         self.vbox = gtk.VBox()
         self.treeView = StateOutcomesTreeView()
-        self.tree = self.treeView['tree_view']
 
         add_button = gtk.Button('Add')
         add_button.set_focus_on_click(False)
@@ -62,7 +61,6 @@ class StateOutcomesEditorView(View):
         self.vbox.show_all()
 
         self['main_frame'] = self.vbox
-        self['tree'] = self.tree
 
     def get_top_widget(self):
         return self.vbox

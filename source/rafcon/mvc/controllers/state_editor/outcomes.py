@@ -50,8 +50,8 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         self.tree_view = view['tree_view']
         self._logger = logger
 
-        self.to_state_combo_list = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
-        self.to_outcome_combo_list = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
+        self.to_state_combo_list = gtk.ListStore(str, str, str)
+        self.to_outcome_combo_list = gtk.ListStore(str, str, str)
         # key-outcome_id -> label,  to_state_id,  transition_id
         self.dict_to_other_state = {}
         # key-outcome_id ->  label,  to_outcome_id,  transition_id
@@ -83,39 +83,7 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-
-        def cell_text(column, cell_renderer, model, iter, container_model):
-
-            outcome = model.get_value(iter, self.CORE_STORAGE_ID)
-            if column.get_title() == 'ID':
-                if int(outcome.outcome_id) < 0:
-                    cell_renderer.set_alignment(0.9, 0.5)
-                    # this is False per default thus in the else case "editable" will be False as well
-                    cell_renderer.set_property('editable', False)
-            elif column.get_title() == 'Name':
-                if int(outcome.outcome_id) < 0:
-                    cell_renderer.set_property('editable', False)
-                else:
-                    if not isinstance(self.model.state, LibraryState):
-                        cell_renderer.set_property('editable', True)
-            elif column.get_title() == 'To-State':
-                cell_renderer.set_property("editable", True)
-                cell_renderer.set_property("model", self.to_state_combo_list)
-                cell_renderer.set_property("text-column", 0)
-                cell_renderer.set_property("has-entry", False)
-            elif column.get_title() == 'To-Outcome':
-                cell_renderer.set_property("editable", True)
-                cell_renderer.set_property("model", self.to_outcome_combo_list)
-                cell_renderer.set_property("text-column", 0)
-                cell_renderer.set_property("has-entry", False)
-            else:
-                logger.warning("Column does not have cell_data_func %s %s" % (column.get_name(), column.get_title()))
-
-        view['id_col'].set_cell_data_func(view['id_cell'], cell_text, self.model)
-        view['name_col'].set_cell_data_func(view['name_cell'], cell_text, self.model)
         if view['to_state_col'] and view['to_outcome_col'] and view['to_state_combo'] and view['to_outcome_combo']:
-            view['to_state_col'].set_cell_data_func(view['to_state_combo'], cell_text, self.model)
-            view['to_outcome_col'].set_cell_data_func(view['to_outcome_combo'], cell_text, self.model)
             view['to_state_combo'].connect("edited", self.on_to_state_modification)
             view['to_outcome_combo'].connect("edited", self.on_to_outcome_modification)
 
@@ -396,6 +364,19 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
             # print "list_store: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
             self.list_store.append([outcome.outcome_id, outcome.name, to_state, to_outcome, '#f0E5C7', '#f0E5c7',
                                     outcome, self.model.state, self.model.get_outcome_m(outcome.outcome_id)])
+
+        if self.view and self.view['to_state_col'] and self.view['to_state_combo']:
+            for cell_renderer in self.view['to_state_col'].get_cell_renderers():
+                cell_renderer.set_property("editable", True)
+                cell_renderer.set_property("model", self.to_state_combo_list)
+                cell_renderer.set_property("text-column", 0)
+                cell_renderer.set_property("has-entry", False)
+        if self.view and self.view['to_outcome_col'] and self.view['to_outcome_combo']:
+            for cell_renderer in self.view['to_outcome_col'].get_cell_renderers():
+                cell_renderer.set_property("editable", True)
+                cell_renderer.set_property("model", self.to_outcome_combo_list)
+                cell_renderer.set_property("text-column", 0)
+                cell_renderer.set_property("has-entry", False)
         self._do_store_update = False
 
     def update(self):
@@ -461,9 +442,9 @@ class StateOutcomesEditorController(ExtendedController):
             shortcut_manager.add_callback_for_action("add", self.add_outcome)
 
     def add_outcome(self, *event):
-        if react_to_event(self.view, self.view.tree, event) and not isinstance(self.model.state, LibraryState):
+        if react_to_event(self.view, self.view.treeView.tree_view, event) and not isinstance(self.model.state, LibraryState):
             return self.oc_list_ctrl.on_add(None)
 
     def remove_outcome(self, *event):
-        if react_to_event(self.view, self.view.tree, event) and not isinstance(self.model.state, LibraryState):
+        if react_to_event(self.view, self.view.treeView.tree_view, event) and not isinstance(self.model.state, LibraryState):
             return self.oc_list_ctrl.on_remove(None)
