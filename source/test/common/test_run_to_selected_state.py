@@ -16,9 +16,9 @@ def test_run_to_selected_state(caplog):
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     testing_utils.test_multithrading_lock.acquire()
 
-    sm = storage.load_state_machine_from_path("/home_local/stoertebeker/develop/rafcon_tests/run_selected_state")
+    sm = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/"
+                                                                             "run_to_selected_state_test"))
     # select state machine for this purpose
-
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
     rafcon.statemachine.singleton.state_machine_execution_engine.run_to_selected_state("VVBPOY/AOZXRY", sm.state_machine_id)
     # run the statemachine to the state before AOYXRY, this is an asychronous task
