@@ -21,6 +21,7 @@ class ExtendedController(Controller):
         self.__registered_models = set()
         Controller.__init__(self, model, view, spurious=spurious)
         self.__action_registered_controllers = []
+        self.__signal_handler_ids = {}
         self.__child_controllers = dict()
         self.__shortcut_manager = None
         self.__parent = None
@@ -150,12 +151,77 @@ class ExtendedController(Controller):
         """Recursively destroy all Controllers
 
         The method remove all controllers, which calls the destroy method of the child controllers. Then,
-        all registered models are relieved and the widget is destroyed.
+        all registered models are relieved, by the controller connected signal handlers are disconnected
+        and the widget is destroyed.
         """
         controller_names = [key for key in self.__child_controllers]
         for controller_name in controller_names:
             self.remove_controller(controller_name)
         self.relieve_all_models()
+        self.disconnect_all_signal_handlers()
+
+    def connect_signal_handler(self, widget, signal_name, callback, *callback_args):
+        """ Connect signal handler function with handed widget
+
+        The method is connecting signal handler functions with widget/view and stores respective handler ids and widgets
+        relation to have the option to fully disconnecting controller methods from widget/view signals.
+        If the view is continued to be used in future connected signal handler from old controllers could cause
+        cross effects.
+
+        :param widget: The widget for which signal a handler callback should be connected.
+        :param str signal_name: Signal name.
+        :param callback: Callback for respective emit signal.
+        :param callback_args: Callback arguments.
+        :rtype: int
+        :return: handler_id
+        """
+        if hasattr(widget, 'connect'):
+            # callback -> may be we should restrict it to own functions to prevent cross effects and bad coding
+            try:
+                handler_id = widget.connect(signal_name, callback, callback_args)
+            except Exception as e:
+                logger.error("Error while connecting signal handler for {0} and signal name: {1}: -> {2}"
+                             "".format(widget, signal_name, e))
+                return
+
+            if widget in self.__signal_handler_ids:
+                self.__signal_handler_ids[widget].append(handler_id)
+            else:
+                self.__signal_handler_ids[widget] = [handler_id]
+            return handler_id
+        else:
+            logger.warning("The widget has to provide the connect method as a interface -> widget {0}".format(widget))
+
+    def disconnect_signal_handler(self, widget, handler_id):
+        """Disconnect signal handler.
+
+        The method only disconnects signal handler that has been connected by the widget.
+
+        :param widget: The widget the handler id belongs to.
+        :param int handler_id: Signal handler id of connected callback.
+        :return:
+        """
+        assert isinstance(handler_id, int)
+        if widget in self.__signal_handler_ids:
+            assert handler_id in self.__signal_handler_ids[widget]
+            try:
+                widget.disconnect(handler_id)
+                self.__signal_handler_ids[widget].remove(handler_id)
+            except Exception as e:
+                logger.error("Error while disconnecting signal handler for {0}: -> {2}".format(widget, e))
+                return
+        else:
+            logger.warning("This controller has no registered handler id for widget {0}".format(widget))
+
+    def disconnect_all_signal_handlers(self):
+        """Disconnects all connected signal handler functions
+
+        The method uses the dictionary of connected signal handler ids for respective widgets.
+        """
+        for widget in self.__signal_handler_ids.keys():
+            for handler_id in self.__signal_handler_ids[widget]:
+                widget.disconnect(handler_id)
+            del self.__signal_handler_ids[widget]
 
     def observe_model(self, model):
         """Make this model observable within the controller
