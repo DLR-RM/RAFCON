@@ -6,6 +6,7 @@ from rafcon.statemachine.storage import storage
 # test environment elements
 import testing_utils
 from rafcon.statemachine.enums import StateExecutionState
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
 
 import time
@@ -34,10 +35,8 @@ def test_run_to_selected_state(caplog):
     # wait until the statemachine is executed until ABNQFK the state before AOZXRY, so it doesnt check for the file
     # before its even written
 
-    with open('/tmp/test_file', 'r') as test_file:
+    with open(RAFCON_TEMP_PATH_BASE + '/test_file', 'r') as test_file:
         lines = test_file.readlines()
-
-    logger.debug("last entry in file is " + lines[len(lines)-1])
 
     # the state machines waits at ABNQFK with state WAIT_FOR_NEXT_STATE, so it needs to be stopped manually
     rafcon.statemachine.singleton.state_machine_execution_engine.stop()
