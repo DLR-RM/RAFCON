@@ -150,12 +150,15 @@ class ExtendedController(Controller):
         """Recursively destroy all Controllers
 
         The method remove all controllers, which calls the destroy method of the child controllers. Then,
-        all registered models are relieved and the widget is destroyed.
+        all registered models are relieved and and the widget hand by the initial view argument is destroyed.
         """
         controller_names = [key for key in self.__child_controllers]
         for controller_name in controller_names:
             self.remove_controller(controller_name)
         self.relieve_all_models()
+        if self.parent:
+            self.__parent = None
+        self.view.get_top_widget().destroy()
 
     def observe_model(self, model):
         """Make this model observable within the controller

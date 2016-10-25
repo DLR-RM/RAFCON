@@ -27,6 +27,7 @@ class ConfigWindowController(ExtendedController):
     def __init__(self, core_config_model, view, gui_config_model):
         assert isinstance(view, ConfigWindowView)
         assert isinstance(core_config_model, ConfigModel)
+        assert isinstance(gui_config_model, ConfigModel)
         ExtendedController.__init__(self, core_config_model, view)
         self.core_config_model = core_config_model
         self.gui_config_model = gui_config_model
@@ -42,6 +43,13 @@ class ConfigWindowController(ExtendedController):
         self._gui_checkbox = gtk.CheckButton("GUI Config")
         self._core_checkbox = gtk.CheckButton("Core Config")
         self._last_path = self.core_config_model.config.path
+
+    def __destroy(self):
+        """Remove controller from parent controller and/or destroy it self."""
+        if self.parent:
+            self.parent.remove_controller(self)
+        else:
+            self.destroy()
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -397,20 +405,20 @@ class ConfigWindowController(ExtendedController):
         """
         if self.core_config_model.preliminary_config or self.gui_config_model.preliminary_config:
             self._on_apply_button_clicked()
-        self.view["properties_window"].hide()
+        self.__destroy()
 
     def _on_cancel_button_clicked(self, *args):
         """Cancel button clicked: Dismiss preliminary config and close the window
         """
         self.core_config_model.preliminary_config.clear()
         self.gui_config_model.preliminary_config.clear()
-        self.view["properties_window"].hide()
+        self.__destroy()
 
     def _on_apply_button_clicked(self, *args):
         """Apply button clicked: Apply the configuration
         """
         refresh_required = self.core_config_model.apply_preliminary_config()
-        refresh_required &= self.gui_config_model.apply_preliminary_config()
+        refresh_required |= self.gui_config_model.apply_preliminary_config()
         if refresh_required:
             from rafcon.mvc.singleton import main_window_controller
             main_window_controller.get_controller('menu_bar_controller').on_refresh_all_activate(None, None)

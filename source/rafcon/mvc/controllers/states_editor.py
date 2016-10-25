@@ -279,11 +279,9 @@ class StatesEditorController(ExtendedController):
         return page_id
 
     def recreate_state_editor(self, old_state_m, new_state_m):
-        selection = self.current_state_machine_m.selection
         old_state_identifier = self.get_state_identifier(old_state_m)
         self.close_page(old_state_identifier, delete=True)
         self.add_state_editor(new_state_m)
-        selection.add(new_state_m)
 
     def reload_style(self):
         tabs_to_delete = []

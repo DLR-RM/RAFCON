@@ -84,7 +84,6 @@ class MenuBarController(ExtendedController):
         self.main_window_view.right_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.left_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.console_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
-        self.config_window_view = ConfigWindowView()
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -522,11 +521,12 @@ class MenuBarController(ExtendedController):
             return False
 
     def on_menu_properties_activate(self, widget, data=None):
-        config_window_ctrl = ConfigWindowController(mvc_singleton.core_config_model, self.config_window_view,
+        config_window_view = ConfigWindowView()
+        config_window_ctrl = ConfigWindowController(mvc_singleton.core_config_model, config_window_view,
                                                     mvc_singleton.gui_config_model)
         mvc_singleton.main_window_controller.add_controller('config_window_ctrl', config_window_ctrl)
-        self.config_window_view.show()
-        self.config_window_view.get_top_widget().present()
+        config_window_view.show()
+        config_window_view.get_top_widget().present()
 
     def on_refresh_libraries_activate(self, widget, data=None):
         """
