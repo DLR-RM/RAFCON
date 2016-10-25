@@ -1553,13 +1553,11 @@ class StateAction(Action):
         else:
             self.script_diff = None
         if self.action_type == 'description':
-            print self.action_type, self.before_overview['args'][-1][1]
             d = difflib.Differ()
             diff = list(d.compare(self.before_overview['args'][-1][0].description.split('\n') if self.before_overview['args'][-1][0].description else [''] ,
                                   self.before_overview['args'][-1][1].split('\n') if self.before_overview['args'][-1][1] else ['']))
             self.description_diff = '\n'.join(diff)
         else:
-            print "NONE diff"
             self.description_diff = None
 
     @staticmethod
