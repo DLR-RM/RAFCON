@@ -28,7 +28,7 @@ logger = log.get_logger(__name__)
 # TODO  -> to be more useful for more right click extention
 
 
-class StateMachineRightClickMenu:
+class StateMachineRightClickMenu(object):
 
     def __init__(self, state_machine_manager_model=None):
         if state_machine_manager_model is None:

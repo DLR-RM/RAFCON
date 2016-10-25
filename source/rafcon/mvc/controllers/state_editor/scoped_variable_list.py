@@ -9,12 +9,13 @@
 """
 
 import gtk
-from gtk import ListStore
+import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
+from rafcon.mvc.controllers.utils.selection import ListSelectionFeatureController
 from rafcon.mvc.models.container_state import ContainerStateModel
 
 from rafcon.mvc.gui_helper import react_to_event
@@ -24,17 +25,28 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class ScopedVariableListController(ExtendedController):
+class ScopedVariableListController(ExtendedController, ListSelectionFeatureController):
     """Controller handling the scoped variable list
 
     :param rafcon.mvc.models.state.StateModel model: The state model, holding state data.
     :param rafcon.mvc.views.scoped_variables_list.ScopedVariablesListView view: The GTK view showing the list of scoped
         variables.
     """
+    NAME_STORAGE_ID = 0
+    DATA_TYPE_NAME_STORAGE_ID = 1
+    DEFAULT_VALUE_STORAGE_ID = 2
+    ID_STORAGE_ID = 3
+    MODEL_STORAGE_ID = 4
 
     def __init__(self, model, view):
         """Constructor"""
+
+        self.tree_view = view.get_top_widget()
+        self.list_store = self.get_new_list_store()
+        self._logger = logger
+
         ExtendedController.__init__(self, model, view)
+        ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view.get_top_widget())
 
         self.last_entry_widget = None
@@ -48,20 +60,28 @@ class ScopedVariableListController(ExtendedController):
         self._do_value_change = False
         self._do_store_update = False
 
-        self.scoped_variables_list_store = ListStore(str, str, str, int)
+        if self.model.get_sm_m_for_state_m() is not None:
+            self.observe_model(self.model.get_sm_m_for_state_m())
+            # print type(self).__name__, self.model.state.name, "initialized sm observation"
+        else:
+            logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
+
+        self.tree_view.set_model(self.list_store)
+
+    def get_new_list_store(self):
+        return gtk.ListStore(str, str, str, int, gobject.TYPE_PYOBJECT)
 
     def register_view(self, view):
         """Called when the View was registered"""
-        view.get_top_widget().set_model(self.scoped_variables_list_store)
 
-        view['name_col'].add_attribute(view['name_text'], 'text', 0)
+        view['name_col'].add_attribute(view['name_text'], 'text', self.NAME_STORAGE_ID)
         if not isinstance(self.model.state, LibraryState):
             view['name_text'].set_property("editable", True)
-        view['data_type_col'].add_attribute(view['data_type_text'], 'text', 1)
+        view['data_type_col'].add_attribute(view['data_type_text'], 'text', self.DATA_TYPE_NAME_STORAGE_ID)
         if not isinstance(self.model.state, LibraryState):
             view['data_type_text'].set_property("editable", True)
         if view['default_value_col'] and view['default_value_text']:
-            view['default_value_col'].add_attribute(view['default_value_text'], 'text', 2)
+            view['default_value_col'].add_attribute(view['default_value_text'], 'text', self.DEFAULT_VALUE_STORAGE_ID)
             if not isinstance(self.model.state, LibraryState):
                 view['default_value_text'].set_property("editable", True)
             view['default_value_text'].connect("edited", self.on_default_value_changed)
@@ -75,6 +95,7 @@ class ScopedVariableListController(ExtendedController):
         view['data_type_text'].connect('editing-started', self.editing_started)
         view['data_type_text'].connect('editing-canceled', self.editing_canceled)
 
+        ListSelectionFeatureController.register_view(self, view)
         self.tab_edit_controller.register_view()
 
         if isinstance(self.model, ContainerStateModel):
@@ -127,7 +148,7 @@ class ScopedVariableListController(ExtendedController):
         """ Change-name-method to set the name of actual selected (row) data-port.
         """
         # logger.info("FOCUS_OUT NAME entry: {0} event: {1}".format(entry, event))
-        if self.get_data_port_id_from_selection() is None:
+        if self.get_list_store_row_from_cursor_selection() is None:
             return
 
         self.on_name_changed(entry, None, text=entry.get_text())
@@ -136,7 +157,7 @@ class ScopedVariableListController(ExtendedController):
         """ Change-data-type-method to set the data_type of actual selected (row) data-port.
         """
         # logger.info("FOCUS_OUT TYPE entry: {0} event: {1}".format(entry, event))
-        if self.get_data_port_id_from_selection() is None:
+        if self.get_list_store_row_from_cursor_selection() is None:
             return
 
         self.on_data_type_changed(entry, None, text=entry.get_text())
@@ -145,24 +166,32 @@ class ScopedVariableListController(ExtendedController):
         """ Change-value-method to set the default_value of actual selected (row) data-port.
         """
         # logger.info("FOCUS_OUT VALUE entry: {0} event: {1}".format(entry, event))
-        if self.get_data_port_id_from_selection() is None:
+        if self.get_list_store_row_from_cursor_selection() is None:
             return
 
         self.on_default_value_changed(entry, None, text=entry.get_text())
+
+    def get_state_machine_selection(self):
+        # print type(self).__name__, "get state machine selection"
+        sm_selection = self.model.get_sm_m_for_state_m().selection
+        return sm_selection, sm_selection.scoped_variables
+
+    @ExtendedController.observe("selection", after=True)
+    def state_machine_selection_changed(self, model, prop_name, info):
+        if "scoped_variables" == info['method_name']:
+            self.update_selection_sm_prior()
 
     @ExtendedController.observe("scoped_variables", after=True)
     def scoped_variables_changed(self, model, prop_name, info):
         # store port selection
         path_list = None
-        selected_data_port_id = None
         if self.view is not None:
             model, path_list = self.view.get_top_widget().get_selection().get_selected_rows()
-        if len(self.scoped_variables_list_store) > 0 and path_list:
-            selected_data_port_id = self.scoped_variables_list_store[path_list[0][0]][3]
+        selected_data_port_ids = [self.list_store[path[0]][self.ID_STORAGE_ID] for path in path_list] if path_list else []
         self.reload_scoped_variables_list_store()
         # recover port selection
-        if selected_data_port_id is not None:
-            self.select_entry(selected_data_port_id)
+        if selected_data_port_ids:
+            [self.select_entry(selected_data_port_id, False) for selected_data_port_id in selected_data_port_ids]
 
     def on_new_scoped_variable_button_clicked(self, widget, data=None):
         """Triggered when the New button in the Scoped Variables tab is clicked.
@@ -192,15 +221,15 @@ class ScopedVariableListController(ExtendedController):
 
             path = self.get_path()  # tree_view.get_cursor()[0][0]
             if path is not None:
-                scoped_variable_key = self.scoped_variables_list_store[int(path)][3]
-                self.scoped_variables_list_store.clear()
+                scoped_variable_key = self.list_store[int(path)][self.ID_STORAGE_ID]
+                self.list_store.clear()
                 try:
                     self.model.state.remove_scoped_variable(scoped_variable_key)
                 except AttributeError as e:
                     logger.warn("The scoped variable couldn't be removed: {0}".format(e))
                     return False
-            if len(self.scoped_variables_list_store) > 0:
-                self.view[self.view.top].set_cursor(min(path, len(self.scoped_variables_list_store) - 1))
+            if len(self.list_store) > 0:
+                self.view[self.view.top].set_cursor(min(path, len(self.list_store) - 1))
             return True
 
     def on_name_changed(self, widget, path, text):
@@ -214,7 +243,7 @@ class ScopedVariableListController(ExtendedController):
         if self._do_name_change:
             return
         self._do_name_change = True
-        data_port_id = self.get_data_port_id_from_selection()
+        data_port_id = self.get_list_store_row_from_cursor_selection()[self.ID_STORAGE_ID]
         try:
             if self.model.state.scoped_variables[data_port_id].name != text:
                 self.model.state.scoped_variables[data_port_id].name = text
@@ -233,7 +262,7 @@ class ScopedVariableListController(ExtendedController):
         if self._do_type_change:
             return
         self._do_type_change = True
-        data_port_id = self.get_data_port_id_from_selection()
+        data_port_id = self.get_list_store_row_from_cursor_selection()[self.ID_STORAGE_ID]
         try:
             if self.model.state.scoped_variables[data_port_id].data_type.__name__ != text:
                 self.model.state.scoped_variables[data_port_id].change_data_type(text)
@@ -252,7 +281,7 @@ class ScopedVariableListController(ExtendedController):
         if self._do_value_change:
             return
         self._do_value_change = True
-        data_port_id = self.get_data_port_id_from_selection()
+        data_port_id = self.get_list_store_row_from_cursor_selection()[self.ID_STORAGE_ID]
         try:
             if str(self.model.state.scoped_variables[data_port_id].default_value) != text:
                 self.model.state.scoped_variables[data_port_id].default_value = text
@@ -260,35 +289,14 @@ class ScopedVariableListController(ExtendedController):
             logger.error("Error while changing default value: {0}".format(e))
         self._do_value_change = False
 
-    def get_data_port_id_from_selection(self):
-        """Returns the data_port_id of the currently selected port entry"""
-        path = self.get_path()
-        if path is not None:
-            data_port_id = self.scoped_variables_list_store[int(path)][3]
-            return data_port_id
-        return None
-
-    def select_entry(self, data_port_id):
-        """Selects the port entry belonging to the given data_port_id"""
-        for row_num, data_port_entry in enumerate(self.scoped_variables_list_store):
-            # Compare transition ids
-            if data_port_entry[3] == data_port_id:
-                self.view[self.view.top].set_cursor(row_num)
-                break
-
-    def get_path(self):
-        """Returns the path/index to the currently selected port entry"""
-        cursor = self.view[self.view.top].get_cursor()
-        # the cursor is a tuple containing the current path and the focused column
-        if cursor[0] is None:
-            return None
-        return cursor[0][0]
+    def on_right_click_menu(self):
+        logger.debug("do right click menu")
 
     def reload_scoped_variables_list_store(self):
         """Reloads the scoped variable list store from the data port models"""
 
         if isinstance(self.model, ContainerStateModel):
-            tmp = ListStore(str, str, str, int)
+            tmp = self.get_new_list_store()
             for sv_model in self.model.scoped_variables:
                 data_type = sv_model.scoped_variable.data_type
                 # get name of type (e.g. ndarray)
@@ -299,7 +307,7 @@ class ScopedVariableListController(ExtendedController):
                 if data_type_module != '__builtin__':
                     data_type_name = data_type_module + '.' + data_type_name
                 tmp.append([sv_model.scoped_variable.name, data_type_name,
-                            sv_model.scoped_variable.default_value, sv_model.scoped_variable.data_port_id])
+                            sv_model.scoped_variable.default_value, sv_model.scoped_variable.data_port_id, sv_model])
             tms = gtk.TreeModelSort(tmp)
             tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
             tms.set_sort_func(0, compare_variables)
@@ -309,9 +317,9 @@ class ScopedVariableListController(ExtendedController):
                 return
             self._do_store_update = True
             try:
-                self.scoped_variables_list_store.clear()
+                self.list_store.clear()
                 for elem in tmp:
-                    self.scoped_variables_list_store.append(elem)
+                    self.list_store.append(elem)
             except:
                 pass
             self._do_store_update = False

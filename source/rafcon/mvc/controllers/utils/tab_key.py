@@ -12,7 +12,7 @@ from gtk import TreeView
 from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 
 
-class MoveAndEditWithTabKeyListFeatureController:
+class MoveAndEditWithTabKeyListFeatureController(object):
     """ The Controller introduce motion and edit functionality by using "tab"- or "shift-tab"-key for a gtk.TreeView.
      It is designed to work with a gtk.TreeView which model is a gtk.ListStore and only uses text cell renderer.
      Additional, the TreeView is assumed to be used as a list not as a tree.
