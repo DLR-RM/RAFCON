@@ -445,9 +445,9 @@ class StateOutcomesEditorController(ExtendedController):
             shortcut_manager.add_callback_for_action("add", self.add_outcome)
 
     def add_outcome(self, *event):
-        if react_to_event(self.view, self.view.treeView.tree_view, event) and not isinstance(self.model.state, LibraryState):
+        if react_to_event(self.view, self.view.treeView['tree_view'], event) and not isinstance(self.model.state, LibraryState):
             return self.oc_list_ctrl.on_add(None)
 
     def remove_outcome(self, *event):
-        if react_to_event(self.view, self.view.treeView.tree_view, event) and not isinstance(self.model.state, LibraryState):
+        if react_to_event(self.view, self.view.treeView['tree_view'], event) and not isinstance(self.model.state, LibraryState):
             return self.oc_list_ctrl.on_remove(None)

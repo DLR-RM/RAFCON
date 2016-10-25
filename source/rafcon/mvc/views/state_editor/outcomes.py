@@ -11,7 +11,6 @@ class StateOutcomesTreeView(View):
 
     def __init__(self):
         View.__init__(self)
-        self.tree_view = self['tree_view']
 
 
 class StateOutcomesEditorView(View):
