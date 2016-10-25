@@ -27,6 +27,7 @@ class ConfigWindowController(ExtendedController):
     def __init__(self, core_config_model, view, gui_config_model):
         assert isinstance(view, ConfigWindowView)
         assert isinstance(core_config_model, ConfigModel)
+        assert isinstance(gui_config_model, ConfigModel)
         ExtendedController.__init__(self, core_config_model, view)
         self.core_config_model = core_config_model
         self.gui_config_model = gui_config_model
@@ -43,46 +44,53 @@ class ConfigWindowController(ExtendedController):
         self._core_checkbox = gtk.CheckButton("Core Config")
         self._last_path = self.core_config_model.config.path
 
+    def __destroy(self):
+        """Remove controller from parent controller and/or destroy it self."""
+        if self.parent:
+            self.parent.remove_controller(self)
+        else:
+            self.destroy()
+
     def register_view(self, view):
         """Called when the View was registered"""
-        self.connect_signal_handler(self.view['add_library_button'], 'clicked', self._on_add_library)
-        self.connect_signal_handler(self.view["remove_library_button"], 'clicked', self._on_remove_library)
+        self.view['add_library_button'].connect('clicked', self._on_add_library)
+        self.view["remove_library_button"].connect('clicked', self._on_remove_library)
 
-        self.connect_signal_handler(self.view['core_config_toggle_renderer'], 'toggled', self._on_checkbox_toggled,
-                                    self.core_config_model, self.core_list_store)
-        self.connect_signal_handler(self.view['gui_config_toggle_renderer'], 'toggled', self._on_checkbox_toggled,
-                                    self.gui_config_model, self.gui_list_store)
+        self.view['core_config_toggle_renderer'].connect('toggled', self._on_checkbox_toggled,
+                                                         self.core_config_model, self.core_list_store)
+        self.view['gui_config_toggle_renderer'].connect('toggled', self._on_checkbox_toggled, self.gui_config_model,
+                                                        self.gui_list_store)
 
         self.view['core_config_value_renderer'].set_property('editable', True)
-        self.connect_signal_handler(self.view['core_config_value_renderer'], 'edited', self._on_config_value_changed,
-                                    self.core_config_model, self.core_list_store)
+        self.view['core_config_value_renderer'].connect('edited', self._on_config_value_changed, self.core_config_model,
+                                                        self.core_list_store)
 
         self.view['gui_config_value_renderer'].set_property('editable', True)
-        self.connect_signal_handler(self.view['gui_config_value_renderer'], 'edited', self._on_config_value_changed,
-                                    self.gui_config_model, self.gui_list_store)
+        self.view['gui_config_value_renderer'].connect('edited', self._on_config_value_changed, self.gui_config_model,
+                                                       self.gui_list_store)
 
         self.view['shortcut_config_value_renderer'].set_property('editable', True)
-        self.connect_signal_handler(self.view['shortcut_config_value_renderer'], 'edited', self._on_shortcut_changed)
+        self.view['shortcut_config_value_renderer'].connect('edited', self._on_shortcut_changed)
 
         self.view['library_config_key_renderer'].set_property('editable', True)
-        self.connect_signal_handler(self.view['library_config_key_renderer'], 'edited', self._on_library_name_changed)
+        self.view['library_config_key_renderer'].connect('edited', self._on_library_name_changed)
 
         self.view['library_config_value_renderer'].set_property('editable', True)
-        self.connect_signal_handler(self.view['library_config_value_renderer'], 'edited', self._on_library_path_changed)
+        self.view['library_config_value_renderer'].connect('edited', self._on_library_path_changed)
 
         self.view['config_tree_view'].set_model(self.core_list_store)
         self.view['library_tree_view'].set_model(self.library_list_store)
         self.view['gui_tree_view'].set_model(self.gui_list_store)
         self.view['shortcut_tree_view'].set_model(self.shortcut_list_store)
 
-        self.connect_signal_handler(self.view['apply_button'], "clicked", self._on_apply_button_clicked)
-        self.connect_signal_handler(self.view['ok_button'], 'clicked', self._on_ok_button_clicked)
-        self.connect_signal_handler(self.view['cancel_button'], 'clicked', self._on_cancel_button_clicked)
+        self.view['apply_button'].connect("clicked", self._on_apply_button_clicked)
+        self.view['ok_button'].connect('clicked', self._on_ok_button_clicked)
+        self.view['cancel_button'].connect('clicked', self._on_cancel_button_clicked)
 
-        self.connect_signal_handler(self.view['import_button'], "clicked", self._on_import_config)
-        self.connect_signal_handler(self.view['export_button'], 'clicked', self._on_export_config)
+        self.view['import_button'].connect("clicked", self._on_import_config)
+        self.view['export_button'].connect('clicked', self._on_export_config)
 
-        self.connect_signal_handler(self.view['properties_window'], 'delete_event', self._on_delete_event)
+        self.view['properties_window'].connect('delete_event', self._on_delete_event)
 
         self.update_all()
 
@@ -397,16 +405,14 @@ class ConfigWindowController(ExtendedController):
         """
         if self.core_config_model.preliminary_config or self.gui_config_model.preliminary_config:
             self._on_apply_button_clicked()
-        self.view["properties_window"].hide()
-        self.destroy()
+        self.__destroy()
 
     def _on_cancel_button_clicked(self, *args):
         """Cancel button clicked: Dismiss preliminary config and close the window
         """
         self.core_config_model.preliminary_config.clear()
         self.gui_config_model.preliminary_config.clear()
-        self.view["properties_window"].hide()
-        self.destroy()
+        self.__destroy()
 
     def _on_apply_button_clicked(self, *args):
         """Apply button clicked: Apply the configuration
