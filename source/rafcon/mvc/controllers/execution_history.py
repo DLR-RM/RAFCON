@@ -53,8 +53,6 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.history_tree = view['history_tree']
         self.history_tree.set_model(self.history_tree_store)
 
-        view['reload_button'].connect('clicked', self.reload_history)
-        view['clean_button'].connect('clicked', self.clean_history)
         self._start_idx = 0
 
         self.state_machine_execution_model = rafcon.mvc.singleton.state_machine_execution_model
@@ -67,6 +65,8 @@ class ExecutionHistoryTreeController(ExtendedController):
 
     def register_view(self, view):
         self.history_tree.connect('button_press_event', self.mouse_click)
+        view['reload_button'].connect('clicked', self.reload_history)
+        view['clean_button'].connect('clicked', self.clean_history)
 
     # TODO: unused
     def switch_state_machine_execution_manager_model(self, new_state_machine_execution_engine):
