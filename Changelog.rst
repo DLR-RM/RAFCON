@@ -4,6 +4,11 @@ Patch releases 0.7.\*
 0.7.12
 ------
 
+- Features:
+
+  - Bidirectional graphical editor and states-editor selection with multi-selection support
+  - Linkage overview widget redesign for optimized space usage and better interface
+
 - Improvements:
 
   - Global variable manager and its type handling
@@ -12,6 +17,7 @@ Patch releases 0.7.\*
   - Group/ungroup states
   - ``LibraryManager`` remembers missing ignored libraries
   - New config option ``LIBRARY_TREE_PATH_HUMAN_READABLE``: Replaces underscores with spaces in Library tree
+  - Update of transition and data flow widgets
 
 - API:
 
