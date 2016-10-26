@@ -33,7 +33,7 @@ FILE_NAME_CORE_DATA_OLD = 'meta.json'
 SCRIPT_FILE = 'script.py'
 STATEMACHINE_FILE = 'statemachine.json'
 STATEMACHINE_FILE_OLD = 'statemachine.yaml'
-ID_NAME_DELIMITER = "$"
+ID_NAME_DELIMITER = "_"
 
 
 # clean the DEFAULT_SCRIPT_PATH folder at each program start
