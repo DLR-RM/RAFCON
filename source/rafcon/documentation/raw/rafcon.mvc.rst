@@ -1,5 +1,5 @@
-Model-View-Controller (mvc)
-===========================
+The GUI: ``mvc``
+================
 
 .. contents::
     :backlinks: top

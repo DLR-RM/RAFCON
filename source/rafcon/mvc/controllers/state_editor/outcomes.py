@@ -16,6 +16,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils.selection import ListSelectionFeatureController
+from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.state_machine_helper import insert_self_transition_meta_data
 
@@ -24,6 +25,7 @@ from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
+# TODO find out why not editable ID-column cause segfault ->  if sometimes move into widget by tab and enter is pressed
 
 class StateOutcomesListController(ExtendedController, ListSelectionFeatureController):
 
@@ -67,6 +69,7 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
 
         ExtendedController.__init__(self, model, view)
         ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
+        self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(self.tree_view)
         if not model.state.is_root_state:
             self.observe_model(model.parent)
 
@@ -442,9 +445,9 @@ class StateOutcomesEditorController(ExtendedController):
             shortcut_manager.add_callback_for_action("add", self.add_outcome)
 
     def add_outcome(self, *event):
-        if react_to_event(self.view, self.view.treeView.tree_view, event) and not isinstance(self.model.state, LibraryState):
+        if react_to_event(self.view, self.view.treeView['tree_view'], event) and not isinstance(self.model.state, LibraryState):
             return self.oc_list_ctrl.on_add(None)
 
     def remove_outcome(self, *event):
-        if react_to_event(self.view, self.view.treeView.tree_view, event) and not isinstance(self.model.state, LibraryState):
+        if react_to_event(self.view, self.view.treeView['tree_view'], event) and not isinstance(self.model.state, LibraryState):
             return self.oc_list_ctrl.on_remove(None)

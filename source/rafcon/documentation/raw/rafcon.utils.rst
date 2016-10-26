@@ -1,5 +1,5 @@
-Utils
-=====
+Utilities: ``utils``
+====================
 
 .. contents::
     :backlinks: top
@@ -15,6 +15,14 @@ filesystem
 geometry
 --------
 .. automodule:: rafcon.utils.geometry
+
+hashable
+--------
+.. automodule:: rafcon.utils.hashable
+
+i18n
+----
+.. automodule:: rafcon.utils.i18n
 
 log
 ---

@@ -52,7 +52,6 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
         ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(self.tree_view)
 
-
         if self.type == "input":
             self.state_data_port_dict = self.model.state.input_data_ports
             self.data_port_model_list = self.model.input_data_ports

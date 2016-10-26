@@ -1,5 +1,5 @@
-RAFCON package 'rafcon'
-=======================
+RAFCON API: The ``rafcon`` package
+==================================
 
 RAFCON completely separates the GUI from the core, allowing state machines to be created, stored, loaded and started
 without having any user interface but the console.

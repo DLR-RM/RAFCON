@@ -240,9 +240,17 @@ class ModificationHistoryTreeController(ExtendedController):
                 line = ""
                 for elem in action.script_diff.split('\n'):
                     line = elem
-                    if not line.replace(' ', '') == '':
+                    if not line.replace(' ', '') == '' and ('+' in line or '-' in line):
                         break
                 tool_tip = action.script_diff
+                parameters = [line]  # + "\n -> [hover for source script diff in tooltip.]"]
+            if hasattr(action, 'action_type') and action.action_type == "description" and hasattr(action, 'description_diff'):
+                line = ""
+                for elem in action.description_diff.split('\n'):
+                    line = elem
+                    if not line.replace(' ', '') == '' and ('+' in line or '-' in line):
+                        break
+                tool_tip = action.description_diff
                 parameters = [line]  # + "\n -> [hover for source script diff in tooltip.]"]
 
             # find active actions in to be marked in view
