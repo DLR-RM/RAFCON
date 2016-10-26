@@ -678,7 +678,8 @@ class GraphicalEditorController(ExtendedController):
         new_transition_hierarchy_level = parent_state_v.hierarchy_level
         new_transition_v = TransitionView(transition_m, new_transition_hierarchy_level)
 
-        self.canvas.add(new_transition_v, parent_state_v, index=0)
+        # Draw transition above all other state elements
+        self.canvas.add(new_transition_v, parent_state_v, index=None)
 
         self.add_transition(transition_m, new_transition_v, parent_state_m, parent_state_v)
 
@@ -688,7 +689,8 @@ class GraphicalEditorController(ExtendedController):
         new_data_flow_hierarchy_level = parent_state_v.hierarchy_level
         new_data_flow_v = DataFlowView(data_flow_m, new_data_flow_hierarchy_level)
 
-        self.canvas.add(new_data_flow_v, parent_state_v, index=0)
+        # Draw data flow above NameView but beneath all other state elements
+        self.canvas.add(new_data_flow_v, parent_state_v, index=1)
         self.add_data_flow(data_flow_m, new_data_flow_v, parent_state_m)
 
     def _remove_connection_view(self, parent_state_m, transitions=True):
@@ -782,7 +784,10 @@ class GraphicalEditorController(ExtendedController):
         rel_pos = state_meta_gaphas['rel_pos']
 
         state_v = StateView(state_m, size, hierarchy_level)
-        self.canvas.add(state_v, parent)
+
+        # Draw state above data flows and NameView but beneath transitions
+        index = 1 if not parent else len(state_m.state.parent.data_flows) + 1
+        self.canvas.add(state_v, parent, index=index)
         state_v.matrix.translate(*rel_pos)
 
         for outcome_m in state_m.outcomes:
@@ -844,7 +849,8 @@ class GraphicalEditorController(ExtendedController):
         assert isinstance(parent_state_v, StateView)
         for transition_m in parent_state_m.transitions:
             transition_v = TransitionView(transition_m, hierarchy_level)
-            self.canvas.add(transition_v, parent_state_v, index=0)
+            # Draw transition above all other state elements
+            self.canvas.add(transition_v, parent_state_v, index=None)
 
             self.add_transition(transition_m, transition_v, parent_state_m, parent_state_v)
 
@@ -915,7 +921,8 @@ class GraphicalEditorController(ExtendedController):
         for data_flow_m in parent_state_m.data_flows:
             data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
 
-            self.canvas.add(data_flow_v, parent_state_v, index=0)
+            # Draw data flow above NameView but beneath all other state elements
+            self.canvas.add(data_flow_v, parent_state_v, index=1)
             self.add_data_flow(data_flow_m, data_flow_v, parent_state_m)
 
     def add_data_flow(self, data_flow_m, data_flow_v, parent_state_m):

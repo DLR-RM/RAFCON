@@ -108,7 +108,8 @@ class StateView(Element):
 
         self.update_minimum_size()
 
-        canvas.add(self.name_view, self)
+        # Draw NameView beneath all other state elements
+        canvas.add(self.name_view, self, index=0)
         self.name_view.update_minimum_size()
 
         self.add_keep_rect_within_constraint(canvas, self, self._name_view)
