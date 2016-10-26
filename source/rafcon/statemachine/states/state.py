@@ -519,14 +519,14 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 return self._file_system_path
             else:
                 if self.get_sm_for_state().supports_saving_state_names:
-                    return os.path.join(RAFCON_TEMP_PATH_STORAGE, "/", str(self.get_storage_path()))
+                    return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
                 else:
-                    return os.path.join(RAFCON_TEMP_PATH_STORAGE, "/", str(self.get_path()))
+                    return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
         else:
             if self.get_sm_for_state().supports_saving_state_names:
-                return os.path.join(self.get_sm_for_state().file_system_path, "/", self.get_storage_path())
+                return os.path.join(self.get_sm_for_state().file_system_path, self.get_storage_path())
             else:
-                return os.path.join(self.get_sm_for_state().file_system_path, "/", self.get_path())
+                return os.path.join(self.get_sm_for_state().file_system_path, self.get_path())
 
     @Observable.observed
     def add_outcome(self, name, outcome_id=None):
