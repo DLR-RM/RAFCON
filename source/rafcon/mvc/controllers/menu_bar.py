@@ -381,8 +381,11 @@ class MenuBarController(ExtendedController):
             message_string = "The source code of the state '{}' (path: {}) has net been applied yet and would " \
                              "therefore not be stored.\n\nDo you want to apply the changes now?".format(state.name,
                                                                                                      state.get_path())
-            RAFCONButtonDialog(message_string, ["Apply", "Ignore changes"], on_message_dialog_response_signal,
-                               [dirty_source_editor_ctrl], type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+            if global_gui_config.get_config_value("AUTO_APPLY_SOURCE_CODE_CHANGES", False):
+                dirty_source_editor_ctrl.apply_clicked(None)
+            else:
+                RAFCONButtonDialog(message_string, ["Apply", "Ignore changes"], on_message_dialog_response_signal,
+                                   [dirty_source_editor_ctrl], type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
 
         save_path = state_machine_m.state_machine.file_system_path
         if save_path is None:
