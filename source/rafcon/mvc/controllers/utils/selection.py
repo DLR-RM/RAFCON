@@ -34,8 +34,8 @@ class ListSelectionFeatureController(object):
     def get_view_selection(self):
         model, paths = self._tree_selection.get_selected_rows()
         selected_model_list = []
-        for row_num, path in enumerate(paths):
-            model = self.list_store[path[0]][self.MODEL_STORAGE_ID]
+        for path in paths:
+            model = self.list_store[path][self.MODEL_STORAGE_ID]
             selected_model_list.append(model)
         return self._tree_selection, selected_model_list
 
@@ -200,3 +200,129 @@ class ListSelectionFeatureController(object):
         if cursor[0] is None:
             return None
         return cursor[0][0]
+
+
+class TreeSelectionFeatureController(object):
+    tree_store = None
+    tree_view = None
+    _logger = None
+    ID_STORAGE_ID = None
+    MODEL_STORAGE_ID = None
+
+    def __init__(self, model, view, logger=None):
+        assert isinstance(model, gtk.TreeStore)
+        assert isinstance(view, gtk.TreeView)
+        assert self.tree_store is model
+        assert self.tree_view is view
+        self._logger = logger if logger is not None else module_logger
+        self._do_selection_update = False
+        self._tree_selection = self.tree_view.get_selection()
+        self._last_path_selection = None
+
+    def register_view(self, view):
+        # self.tree_view.connect('button_press_event', self.mouse_click)
+        self._tree_selection.connect('changed', self.selection_changed)
+        self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
+        self.update_selection_sm_prior()
+
+    def on_right_click_menu(self):
+        raise NotImplementedError
+
+    def get_view_selection(self):
+        model, paths = self._tree_selection.get_selected_rows()
+        selected_model_list = []
+        for path in paths:
+            model = self.tree_store[path][self.MODEL_STORAGE_ID]
+            selected_model_list.append(model)
+        return self._tree_selection, selected_model_list
+
+    def get_state_machine_selection(self):
+        self._logger.info(self.__class__.__name__)
+        raise NotImplementedError
+
+    def get_selections(self):
+        sm_selection, sm_selected_model_list = self.get_state_machine_selection()
+        tree_selection, selected_model_list = self.get_view_selection()
+        return tree_selection, selected_model_list, sm_selection, sm_selected_model_list
+
+    def iter_tree_with_handed_function(self, function, *function_args):
+
+        def iter_all_children(state_row_iter, function, function_args):
+            function(state_row_iter, *function_args)
+
+            if isinstance(state_row_iter, gtk.TreeIter):
+                for n in reversed(range(self.tree_store.iter_n_children(state_row_iter))):
+                    child_iter = self.tree_store.iter_nth_child(state_row_iter, n)
+                    iter_all_children(child_iter, function, function_args)
+            else:
+                self._logger.warning("Iter has to be TreeIter")
+
+        iter_all_children(self.tree_store.get_iter_root(), function, function_args)
+
+    def update_selection_sm_prior_condition(self, state_row_iter, selected_model_list, sm_selected_model_list):
+        selected_path = self.tree_store.get_path(state_row_iter)
+        tree_model_row = self.tree_store[selected_path]
+        model = tree_model_row[self.MODEL_STORAGE_ID]
+        # self._logger.info("check state {1} {2} {0}".format([model],
+        #                                                    model in sm_selected_model_list,
+        #                                                    model in selected_model_list))
+
+        if model not in sm_selected_model_list and model in selected_model_list:
+            # print type(self).__name__, "sm un-select model", model
+            self._tree_selection.unselect_iter(state_row_iter)
+        elif model in sm_selected_model_list and model not in selected_model_list:
+            # print type(self).__name__, "sm select model", model
+            self.tree_view.expand_to_path(selected_path)
+            self._tree_selection.select_iter(state_row_iter)
+
+    def update_selection_self_prior_condition(self, state_row_iter, sm_selection, selected_model_list, sm_selected_model_list):
+        selected_path = self.tree_store.get_path(state_row_iter)
+        tree_model_row = self.tree_store[selected_path]
+        model = tree_model_row[self.MODEL_STORAGE_ID]
+        # self._logger.info("check state {1} {2} {0}".format([model],
+        #                                                    model in sm_selected_model_list,
+        #                                                    model in selected_model_list))
+
+        if model in sm_selected_model_list and model not in selected_model_list:
+            # print type(self).__name__, "unselect model", model
+            sm_selection.remove(model)
+        elif model not in sm_selected_model_list and model in selected_model_list:
+            # print type(self).__name__, "select model", model
+            sm_selection.add(model)
+
+    def update_selection_self_prior(self):
+        if self._do_selection_update:
+            return
+        tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
+        if sm_selection is None:
+            return
+
+        # self._logger.info("SELF SELECTION IS: {2}\nSELF {0}, \nSM   {1}".format(selected_model_list, sm_selected_model_list,
+        #                                                                         tree_selection.get_mode()))
+        self._do_selection_update = True
+        self.iter_tree_with_handed_function(self.update_selection_self_prior_condition,
+                                            sm_selection, selected_model_list, sm_selected_model_list)
+        # tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
+        # print selected_model_list, sm_selected_model_list
+
+        self._do_selection_update = False
+
+    def update_selection_sm_prior(self):
+        if self._do_selection_update:
+            return
+        tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
+        if sm_selection is None:
+            return
+
+        # self._logger.info("SM SELECTION IS: {2}\n{0}, \n{1}".format(selected_model_list, sm_selected_model_list,
+        #                                                             tree_selection.get_mode()))
+        self._do_selection_update = True
+        self.iter_tree_with_handed_function(self.update_selection_sm_prior_condition,
+                                            selected_model_list, sm_selected_model_list)
+        # tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
+        # print selected_model_list, sm_selected_model_list
+        self._do_selection_update = False
+
+    def selection_changed(self, widget, event=None):
+        # print type(self).__name__, "select changed", widget, event, self
+        self.update_selection_self_prior()
