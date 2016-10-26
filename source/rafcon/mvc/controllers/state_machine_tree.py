@@ -105,6 +105,7 @@ class StateMachineTreeController(ExtendedController, TreeSelectionFeatureControl
             self.observe_model(self._selected_sm_model)  # for selection
             self.update()
         else:
+            self._selected_sm_model = None
             self.tree_store.clear()
 
     def _add_new_state(self, *event, **kwargs):
@@ -177,7 +178,8 @@ class StateMachineTreeController(ExtendedController, TreeSelectionFeatureControl
                 if state_row_path is not None:
                     act_expansion_state[state_path] = self.view.row_expanded(state_row_path)
                 else:
-                    if self._selected_sm_model.state_machine.get_state_by_path(state_path, as_check=True):
+                    if self._selected_sm_model and \
+                            self._selected_sm_model.state_machine.get_state_by_path(state_path, as_check=True):
                         # happens if refresh all is performed -> otherwise it is a error
                         logger.debug("State not in StateMachineTree but in StateMachine, {0}. {1}, {2}".format(state_path,
                                                                                                             state_row_path,
@@ -197,7 +199,8 @@ class StateMachineTreeController(ExtendedController, TreeSelectionFeatureControl
                             if state_row_expanded:
                                 self.view.expand_to_path(state_row_path)
                     else:
-                        if self._selected_sm_model.state_machine.get_state_by_path(state_path, as_check=True):
+                        if self._selected_sm_model and \
+                                self._selected_sm_model.state_machine.get_state_by_path(state_path, as_check=True):
                             logger.error("State not in StateMachineTree but in StateMachine, {0}.".format(state_path))
 
             except (TypeError, KeyError):
@@ -315,7 +318,7 @@ class StateMachineTreeController(ExtendedController, TreeSelectionFeatureControl
 
     @ExtendedController.observe("selection", after=True)
     def assign_notification_selection(self, model, prop_name, info):
-        if info is None and self._selected_sm_model.selection.get_selected_state() or \
+        if info is None and self._selected_sm_model and self._selected_sm_model.selection.get_selected_state() or \
                 info and self.tree_store.get_iter_root() and info['method_name'] == 'states':
             # logger.info("selection state {0}".format(info))
             self.update_selection_sm_prior()
