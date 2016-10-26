@@ -266,8 +266,7 @@ def test_storage_with_gui(caplog):
     logger.debug("initialize MainWindow")
     main_window_view = MainWindowView()
 
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                  editor_type='LogicDataGrouped')
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     # Wait for GUI to initialize

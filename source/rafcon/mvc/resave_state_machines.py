@@ -125,7 +125,7 @@ def convert(config_path, source_path, target_path=None):
 
     sm_manager_model = mvc_singletons.state_machine_manager_model
 
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type="LogicDataGrouped")
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view)
     main_window = main_window_view.get_top_widget()
     size = global_runtime_config.get_config_value("WINDOW_SIZE", None)
     position = global_runtime_config.get_config_value("WINDOW_POS", None)

@@ -84,8 +84,6 @@ class MenuBarController(ExtendedController):
         self.main_window_view.right_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.left_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.console_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
-        self.full_screen_event_handler = self.full_screen_window.connect('key_press_event', self.on_key_press_event)
-        self.config_window_view = ConfigWindowView()
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -134,7 +132,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('show_data_values', 'toggled', self.on_show_data_values_toggled)
         self.connect_button_to_function('show_aborted_preempted', 'toggled', self.on_show_aborted_preempted_toggled)
         self.connect_button_to_function('expert_view', 'activate', self.on_expert_view_activate)
-        self.connect_button_to_function('fullscreen', 'toggled', self.on_full_screen_mode_toggled)
+        self.connect_button_to_function('full_screen', 'toggled', self.on_full_screen_mode_toggled)
 
         self.connect_button_to_function('start', 'activate', self.on_start_activate)
         self.connect_button_to_function('start_from_selected', 'activate', self.on_start_from_selected_state_activate)
@@ -147,6 +145,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('step_out', 'activate', self.on_step_out_activate)
         self.connect_button_to_function('backward_step', 'activate', self.on_backward_step_activate)
         self.connect_button_to_function('about', 'activate', self.on_about_activate)
+        self.full_screen_window.connect('key_press_event', self.on_key_press_event)
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
         self.registered_view = True
 
@@ -167,16 +166,16 @@ class MenuBarController(ExtendedController):
             self.refresh_shortcuts()
 
     def on_toggle_full_screen_mode(self, *args):
-        if self.view["fullscreen"].get_active():
-            self.view["fullscreen"].set_active(False)  # because toggle is not always working
+        if self.view["full_screen"].get_active():
+            self.view["full_screen"].set_active(False)  # because toggle is not always working
         else:
-            self.view["fullscreen"].toggle()  # because set active is not always working
+            self.view["full_screen"].toggle()  # because set active is not always working
 
     def on_full_screen_mode_toggled(self, *args):
-        if self.full_screen_flag == self.view["fullscreen"].active:
+        if self.full_screen_flag == self.view["full_screen"].active:
             return False
 
-        if self.view["fullscreen"].active and not self.full_screen_flag:
+        if self.view["full_screen"].active and not self.full_screen_flag:
             self.full_screen_flag = True
             self.on_full_screen_activate()
         else:
@@ -187,7 +186,7 @@ class MenuBarController(ExtendedController):
     def on_key_press_event(self, widget, event):
         keyname = gtk.gdk.keyval_name(event.keyval)
         if keyname == "Escape" and self.full_screen_window.get_window().get_state() == gtk.gdk.WINDOW_STATE_FULLSCREEN:
-            self.view["fullscreen"].set_active(False)
+            self.view["full_screen"].set_active(False)
             return True
 
     def on_full_screen_activate(self, *args):
@@ -279,7 +278,7 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('data_flow_mode', self.data_flow_mode_toggled_shortcut)
         self.add_callback_to_shortcut_manager('show_aborted_preempted', self.show_aborted_preempted)
 
-        self.add_callback_to_shortcut_manager('fullscreen', self.on_toggle_full_screen_mode)
+        self.add_callback_to_shortcut_manager('full_screen', self.on_toggle_full_screen_mode)
 
     def call_action_callback(self, callback_name, *args):
         """Wrapper for action callbacks
@@ -522,11 +521,12 @@ class MenuBarController(ExtendedController):
             return False
 
     def on_menu_properties_activate(self, widget, data=None):
-        config_window_ctrl = ConfigWindowController(mvc_singleton.core_config_model, self.config_window_view,
+        config_window_view = ConfigWindowView()
+        config_window_ctrl = ConfigWindowController(mvc_singleton.core_config_model, config_window_view,
                                                     mvc_singleton.gui_config_model)
         mvc_singleton.main_window_controller.add_controller('config_window_ctrl', config_window_ctrl)
-        self.config_window_view.show()
-        self.config_window_view.get_top_widget().present()
+        config_window_view.show()
+        config_window_view.get_top_widget().present()
 
     def on_refresh_libraries_activate(self, widget, data=None):
         """

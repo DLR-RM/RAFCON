@@ -134,7 +134,7 @@ def setup_gui():
     # Create the GUI-View
     main_window_view = MainWindowView()
     sm_manager_model = mvc_singletons.state_machine_manager_model
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type='LogicDataGrouped')
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view)
     return main_window_controller
 
 

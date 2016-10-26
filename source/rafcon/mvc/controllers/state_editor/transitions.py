@@ -16,6 +16,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.selection import ListSelectionFeatureController
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 
 from rafcon.mvc.gui_helper import format_cell, react_to_event
@@ -26,7 +27,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateTransitionsListController(ExtendedController):
+class StateTransitionsListController(ExtendedController, ListSelectionFeatureController):
     """Controller handling the view of transitions of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -37,16 +38,27 @@ class StateTransitionsListController(ExtendedController):
     :param rafcon.mvc.models.ContainerStateModel model: The container state model containing the data
     :param rafcon.mvc.views.TransitionListView view: The GTK view showing the transitions as a table
     """
+    ID_STORAGE_ID = 0
+    FROM_STATE_STORAGE_ID = 1
+    FROM_OUTCOME_STORAGE_ID = 2
+    TO_STATE_STORAGE_ID = 3
+    TO_OUTCOME_STORAGE_ID = 4
+    IS_EXTERNAL_STORAGE_ID = 5
+    MODEL_STORAGE_ID = 9
+
+    # TODO siblings outcomes are not observed
 
     def __init__(self, model, view):
         """Constructor
         """
-
-        # TreeStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
-        #                   name-color, to-state-color, transition-object, state-object, is_editable
+        # ListStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
+        #                   name-color, to-state-color, transition-object, state-object, is_editable, transition-model
         self.view_dict = {'transitions_internal': True, 'transitions_external': True}
-        self.tree_store = gtk.TreeStore(int, str, str, str, str, bool,
-                                        gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool)
+        self.list_store = gtk.ListStore(int, str, str, str, str, bool,
+                                        gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
+        self.tree_view = view.get_top_widget()
+        self._logger = logger
+
         self.combo = {}
         self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
         self.no_update_state_destruction = False
@@ -55,16 +67,33 @@ class StateTransitionsListController(ExtendedController):
         self._actual_overview = None
 
         ExtendedController.__init__(self, model, view)
+        ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
+        # print type(self).__name__, self.model.state.name, "initialized state observation"
         if not self.model.state.is_root_state:
             self.observe_model(self.model.parent)
+            # print type(self).__name__, self.model.state.name, "initialized parent observation"
             if self.model.parent.parent is not None:
                 self.observe_model(self.model.parent.parent)
+                # print type(self).__name__, self.model.state.name, "initialized parent-parent observation"
+            # observe state machine model
+            if self.model.get_sm_m_for_state_m() is not None:
+                self.observe_model(self.model.get_sm_m_for_state_m())
+                # print type(self).__name__, self.model.state.name, "initialized sm observation"
+            else:
+                logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
         else:
-            if self.model.parent is not None:
+            # observe state machine model
+            if self.model.parent is None:
+                if self.model.get_sm_m_for_state_m() is not None:
+                    self.observe_model(self.model.get_sm_m_for_state_m())
+                    # print type(self).__name__, self.model.state.name, "initialized sm observation"
+                else:
+                    logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
+            else:
+                logger.warning("StateModel's state is_root_state and has a parent should not be possible")
                 self.observe_model(self.model.parent)
 
-        self.update()
-        view.get_top_widget().set_model(self.tree_store)
+        self.tree_view.set_model(self.list_store)
 
     def register_view(self, view):
         """Called when the View was registered
@@ -74,13 +103,9 @@ class StateTransitionsListController(ExtendedController):
         format_cell(view['to_state_combo'], None, 0)
         format_cell(view['from_outcome_combo'], None, 0)
         format_cell(view['to_outcome_combo'], None, 0)
-        def cell_text(column, cell_renderer, model, iter, container_model):
-
-            t_id = model.get_value(iter, 0)
-            # state = model.get_value(iter, 9)
-            in_external = 'internal'
-            if model.get_value(iter, 5):
-                in_external = 'external'
+        def cell_text(column, cell_renderer, model, iter):
+            t_id = model.get_value(iter, self.ID_STORAGE_ID)
+            in_external = 'external' if model.get_value(iter, self.IS_EXTERNAL_STORAGE_ID) else 'internal'
             # print t_id, in_external, self.combo[in_external]
             if column.get_title() == 'Source State':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['from_state'])
@@ -98,23 +123,23 @@ class StateTransitionsListController(ExtendedController):
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['to_outcome'])
                 cell_renderer.set_property("text-column", 0)
                 cell_renderer.set_property("has-entry", False)
-                # print "to_outcome: ", type(cell_renderer)
-                # find to outcome by from_outcome == model.state.state_id and from_outcome == outcome.name
             else:
                 logger.warning("Column has no cell_data_func %s %s" % (column.get_name(), column.get_title()))
 
-        view['from_state_col'].set_cell_data_func(view['from_state_combo'], cell_text, self.model)
-        view['to_state_col'].set_cell_data_func(view['to_state_combo'], cell_text, self.model)
-        view['from_outcome_col'].set_cell_data_func(view['from_outcome_combo'], cell_text, self.model)
-        view['to_outcome_col'].set_cell_data_func(view['to_outcome_combo'], cell_text, self.model)
+        view['from_state_col'].set_cell_data_func(view['from_state_combo'], cell_text)
+        view['to_state_col'].set_cell_data_func(view['to_state_combo'], cell_text)
+        view['from_outcome_col'].set_cell_data_func(view['from_outcome_combo'], cell_text)
+        view['to_outcome_col'].set_cell_data_func(view['to_outcome_combo'], cell_text)
 
         view['from_state_combo'].connect("edited", self.on_combo_changed_from_state)
         view['from_outcome_combo'].connect("edited", self.on_combo_changed_from_outcome)
         view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
         view['to_outcome_combo'].connect("edited", self.on_combo_changed_to_outcome)
-
         # view['external_toggle'].set_radio(True)
+
         view.tree_view.connect("grab-focus", self.on_focus)
+        ListSelectionFeatureController.register_view(self, view)
+        self.update()
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -159,9 +184,9 @@ class StateTransitionsListController(ExtendedController):
             t_id = responsible_parent.add_transition(from_state_id, from_outcome, to_state_id, to_outcome)
             # Set the selection to the new transition
             ctr = 0
-            for transition_entry in self.tree_store:
+            for transition_row in self.list_store:
                 # Compare transition ids
-                if transition_entry[0] == t_id:
+                if transition_row[self.ID_STORAGE_ID] == t_id:
                     self.view.tree_view.set_cursor(ctr)
                     break
                 ctr += 1
@@ -173,9 +198,9 @@ class StateTransitionsListController(ExtendedController):
         tree, path = self.view.tree_view.get_selection().get_selected_rows()
         if path:
             row_number = path[0][0]
-            transition_id = self.tree_store[row_number][0]
+            transition_id = self.list_store[row_number][self.ID_STORAGE_ID]
             try:
-                if self.tree_store[row_number][5]:
+                if self.list_store[row_number][self.IS_EXTERNAL_STORAGE_ID]:
                     self.model.parent.state.remove_transition(int(transition_id))
                 else:
                     self.model.state.remove_transition(int(transition_id))
@@ -183,21 +208,21 @@ class StateTransitionsListController(ExtendedController):
                 logger.error("Transition couldn't be removed: {0}".format(e))
 
             # selection to next element
-            if len(self.tree_store) > 0:
-                self.view.tree_view.set_cursor(min(row_number, len(self.tree_store) - 1))
+            if len(self.list_store) > 0:
+                self.view.tree_view.set_cursor(min(row_number, len(self.list_store) - 1))
             return True
         else:
             logger.warning("Please select the data flow to be deleted")
 
     def on_combo_changed_from_state(self, widget, path, text):
         # Check whether the from state was changed or the combo entry is empty
-        t_id = self.tree_store[path][0]
+        t_id = self.list_store[path][0]
         if text is None:
             return
 
         # corresponding transition id
 
-        is_external = self.tree_store[path][5]
+        is_external = self.list_store[path][self.IS_EXTERNAL_STORAGE_ID]
         from_state_combo = self.combo['external' if is_external else 'internal'][t_id]['from_state']
         # get selected combo entry by comparing the state names or by state_id
         if text.split('.')[0] in ['self', 'parent']:
@@ -210,9 +235,9 @@ class StateTransitionsListController(ExtendedController):
                 from_state_entry = reduce(lambda s1, s2: s1 if s1[0] == text else s2, from_state_combo)
                 new_from_state_id = from_state_entry[1]
 
-        if self.tree_store[path][5] and self.model.parent.state.transitions[t_id].from_state == text.split('.')[-1] or \
+        if self.list_store[path][self.IS_EXTERNAL_STORAGE_ID] and self.model.parent.state.transitions[t_id].from_state == text.split('.')[-1] or \
                 isinstance(self.model, ContainerStateModel) and \
-                (self.model.state.transitions[t_id].from_state == new_from_state_id or \
+                (self.model.state.transitions[t_id].from_state == new_from_state_id or
                 self.model.state.transitions[t_id].from_state is None and self.model.state.state_id == new_from_state_id):
             return
 
@@ -241,15 +266,15 @@ class StateTransitionsListController(ExtendedController):
 
     def on_combo_changed_from_outcome(self, widget, path, text):
         # check if the outcome may has not changed or combo is empty
-        if text is None or self.tree_store[path][2] == text.split('.')[0]:
+        if text is None or self.list_store[path][self.FROM_OUTCOME_STORAGE_ID] == text.split('.')[0]:
             return
 
         # transition gets modified
         text = text.split('.')
         new_from_outcome_id = int(text[-1])
-        transition_id = self.tree_store[path][0]
+        transition_id = self.list_store[path][self.ID_STORAGE_ID]
 
-        if self.tree_store[path][5]:  # is external transition
+        if self.list_store[path][self.IS_EXTERNAL_STORAGE_ID]:  # is external transition
             transition_parent_state = self.model.parent.state
         else:
             transition_parent_state = self.model.state
@@ -267,9 +292,9 @@ class StateTransitionsListController(ExtendedController):
         # transition gets modified
         text = text.split('.')
         new_to_state_id = text[-1]
-        transition_id = self.tree_store[path][0]
+        transition_id = self.list_store[path][self.ID_STORAGE_ID]
 
-        if self.tree_store[path][5]:  # is external transition
+        if self.list_store[path][self.IS_EXTERNAL_STORAGE_ID]:  # is external transition
             transition_parent_state = self.model.parent.state
         else:
             transition_parent_state = self.model.state
@@ -292,15 +317,15 @@ class StateTransitionsListController(ExtendedController):
 
     def on_combo_changed_to_outcome(self, widget, path, text):
         # check if the outcome may has not changed or combo is empty
-        if text is None or self.tree_store[path][4] == text.split('.')[1]:
+        if text is None or self.list_store[path][self.TO_OUTCOME_STORAGE_ID] == text.split('.')[1]:
             return
 
         # transition gets modified
         text = text.split('.')
         new_to_outcome_id = int(text[-1])
-        transition_id = self.tree_store[path][0]
+        transition_id = self.list_store[path][self.ID_STORAGE_ID]
 
-        if self.tree_store[path][5]:  # is external transition
+        if self.list_store[path][self.IS_EXTERNAL_STORAGE_ID]:  # is external transition
             transition_parent_state = self.model.parent.state
             new_to_state_id = self.model.parent.state.state_id
         else:
@@ -312,6 +337,9 @@ class StateTransitionsListController(ExtendedController):
                                                                              to_outcome=new_to_outcome_id)
         except ValueError as e:
             logger.error("Could not change the target outcome of the transition: {0}".format(e))
+
+    def on_right_click_menu(self):
+        logger.debug("do right click menu")
 
     @staticmethod
     def get_possible_combos_for_transition(trans, model, self_model, is_external=False):
@@ -514,7 +542,7 @@ class StateTransitionsListController(ExtendedController):
         _update_internal_data_base function call.
         """
 
-        self.tree_store.clear()
+        self.list_store.clear()
         if self.view_dict['transitions_internal'] and isinstance(self.model, ContainerStateModel) and \
                 len(self.model.state.transitions) > 0:
             for transition_id in self.combo['internal'].keys():
@@ -542,14 +570,16 @@ class StateTransitionsListController(ExtendedController):
                         to_state_label = self.model.state.states[t.to_state].name
                         to_outcome_label = None
 
-                self.tree_store.append(None, [transition_id,  # id
-                                              from_state_label,  # from-state
-                                              from_outcome_label,  # from-outcome
-                                              to_state_label,  # to-state
-                                              to_outcome_label,  # to-outcome
-                                              False,  # is_external
-                                              t,
-                                              self.model.state, True])
+                self.list_store.append([transition_id,  # id
+                                        from_state_label,  # from-state
+                                        from_outcome_label,  # from-outcome
+                                        to_state_label,  # to-state
+                                        to_outcome_label,  # to-outcome
+                                        False,  # is_external
+                                        t,
+                                        self.model.state,
+                                        True,
+                                        self.model.get_transition_m(transition_id)])
 
         if self.view_dict['transitions_external'] and self.model.parent and \
                 len(self.model.parent.state.transitions) > 0:
@@ -582,17 +612,30 @@ class StateTransitionsListController(ExtendedController):
                             to_state_label = self.model.parent.state.states[t.to_state].name
                         to_outcome_label = None
 
-                    self.tree_store.append(None, [transition_id,  # id
-                                                  from_state_label,  # from-state
-                                                  from_outcome_label,  # from-outcome
-                                                  to_state_label,  # to-state
-                                                  to_outcome_label,  # to-outcome
-                                                  True,  # is_external
-                                                  t, self.model.state, True])
+                    self.list_store.append([transition_id,  # id
+                                            from_state_label,  # from-state
+                                            from_outcome_label,  # from-outcome
+                                            to_state_label,  # to-state
+                                            to_outcome_label,  # to-outcome
+                                            True,  # is_external
+                                            t,
+                                            self.model.state,
+                                            True,
+                                            self.model.parent.get_transition_m(transition_id)])
                 except Exception as e:
                     logger.warning("There was a problem while updating the data-flow widget TreeStore. {0}".format(e))
 
-    @ExtendedController.observe("root_state", assigned=True)
+    def get_state_machine_selection(self):
+        # print type(self).__name__, "get state machine selection"
+        sm_selection = self.model.get_sm_m_for_state_m().selection
+        return sm_selection, sm_selection.transitions
+
+    @ExtendedController.observe("selection", after=True)
+    def state_machine_selection_changed(self, model, prop_name, info):
+        if "transitions" == info['method_name']:
+            self.update_selection_sm_prior()
+
+    @ExtendedController.observe("root_state", assign=True)
     def root_state_changed(self, model, prop_name, info):
         """ Relieve all observed models to avoid updates on old root state.
         """
@@ -649,7 +692,9 @@ class StateTransitionsListController(ExtendedController):
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
-        if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state:
+        if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state or \
+                overview['instance'][-1] in [self.model.state, self.model.state.parent] and \
+                overview['method_name'][-1] in ["remove_outcome", "remove_transition"]:
             self.update()
         self._actual_overview = None
 
@@ -666,7 +711,7 @@ class StateTransitionsListController(ExtendedController):
         # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
         #         isinstance(overview['result'][-1], Exception):
         #     return
-        return
+        # return
         # avoid updates because of execution status updates
         if 'kwargs' in info and 'method_name' in info['kwargs'] and \
                 info['kwargs']['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
@@ -684,10 +729,12 @@ class StateTransitionsListController(ExtendedController):
         # print self, self.model.state.get_path(), overview
 
         if overview['prop_name'][0] in ['states', 'outcomes', 'transitions'] and \
-                overview['method_name'][-1] not in ['append', '__setitem__', 'name',  # , '__delitem__', 'remove'
+                overview['method_name'][-1] not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove'
                                                     'from_outcome', 'to_outcome', 'from_state', 'to_state',
                                                     'modify_origin', 'modify_target']:
             # TODO check why while deletion sometimes model and core lists are not consistent
+            # TODO -> while adding core elements, list are not always consistent because multiple elements
+            # TODO    can be added and remove in the core at the same time what could not be done in a model
             return
         # print "TUPDATE ", self, overview
 

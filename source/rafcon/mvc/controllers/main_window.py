@@ -50,14 +50,13 @@ class MainWindowController(ExtendedController):
     :ivar docked: Dict holding mappings between bars/console and their current docking-status.
     """
 
-    def __init__(self, state_machine_manager_model, view, editor_type='PortConnectionGrouped'):
+    def __init__(self, state_machine_manager_model, view):
         ExtendedController.__init__(self, state_machine_manager_model, view)
 
         mvc_singleton.main_window_controller = self
         self.state_machine_manager_model = state_machine_manager_model
         self.observe_model(mvc_singleton.gui_config_model)
 
-        self.editor_type = editor_type
         self.shortcut_manager = None
         self.handler_ids = {}
 
@@ -93,7 +92,7 @@ class MainWindowController(ExtendedController):
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
 
         # states editor
-        states_editor_ctrl = StatesEditorController(state_machine_manager_model, view.states_editor, editor_type)
+        states_editor_ctrl = StatesEditorController(state_machine_manager_model, view.states_editor)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
 
         # state machines editor

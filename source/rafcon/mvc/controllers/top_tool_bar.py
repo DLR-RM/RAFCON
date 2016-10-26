@@ -32,15 +32,14 @@ class TopToolBarController(ExtendedController):
         self.shortcut_manager = None
 
         self.top_level_window = top_level_window
-        self.fullscreen = False
+        self.full_screen = False
         self.menu_bar_controller = mvc_singleton.main_window_controller.get_controller('menu_bar_controller')
         self.main_window_controller = mvc_singleton.main_window_controller
 
-        view.get_top_widget().connect("motion_notify_event", self.motion_detected)
-        view.get_top_widget().connect("button_press_event", self.button_pressed_event)
-
     def register_view(self, view):
         """Called when the View was registered"""
+        view.get_top_widget().connect("motion_notify_event", self.motion_detected)
+        view.get_top_widget().connect("button_press_event", self.button_pressed_event)
         view['minimize_button'].connect('clicked', self.on_minimize_button_clicked)
         view['maximize_button'].connect('clicked', self.on_maximize_button_clicked)
         view['close_button'].connect('clicked', self.on_close_button_clicked)
@@ -50,13 +49,13 @@ class TopToolBarController(ExtendedController):
         self.top_level_window.iconify()
 
     def on_maximize_button_clicked(self, widget, data=None):
-        if self.fullscreen:
+        if self.full_screen:
             self.top_level_window.unmaximize()
             self.top_level_window.unfullscreen()
-            self.fullscreen = False
+            self.full_screen = False
         else:
             self.top_level_window.maximize()
-            self.fullscreen = True
+            self.full_screen = True
 
     def on_close_button_clicked(self, widget, data=None):
         self.menu_bar_controller.on_quit_activate(None)

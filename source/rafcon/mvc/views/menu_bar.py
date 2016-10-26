@@ -46,7 +46,7 @@ class MenuBarView(View):
         'show_data_values':     None,
         'show_aborted_preempted': None,
         'expert_view':          constants.BUTTON_VIEW,
-        'fullscreen':           None,
+        'full_screen':          None,
         # -----------------------------------------------
         # Execution
         # -----------------------------------------------

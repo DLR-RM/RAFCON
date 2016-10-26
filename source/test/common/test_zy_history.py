@@ -1171,10 +1171,9 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
 
     print "initialize MainWindow"
     main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                  editor_type='LogicDataGrouped')
-    # Wait for GUI to initialize
+    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
     while gtk.events_pending():
+        # Wait for GUI to initialize
         gtk.main_iteration(False)
     print "start thread"
     thread = threading.Thread(target=trigger_state_type_change_tests,
@@ -1209,8 +1208,7 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     if with_gui:
         print "initialize MainWindow"
         main_window_view = MainWindowView()
-        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
-                                                      editor_type='LogicDataGrouped')
+        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
         if with_gui:
             # Wait for GUI to initialize
             while gtk.events_pending():
@@ -1391,6 +1389,8 @@ def trigger_state_type_change_tests(*args):
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
+
+    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
@@ -1447,6 +1447,7 @@ def trigger_state_type_change_tests(*args):
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
+    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
@@ -1507,6 +1508,8 @@ def trigger_state_type_change_tests(*args):
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
+
+    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 

@@ -211,7 +211,7 @@ class StateMachineExecutionEngine(Observable):
             self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OUT)
 
     def run_to_selected_state(self, path, state_machine_id=None):
-        """Take a forward step (out) for all active states in the state machine
+        """Execute the state machine until a specific state. This state won't be executed. This is an asynchronous task
         """
 
         if self.state_machine_manager.get_active_state_machine() is not None:
