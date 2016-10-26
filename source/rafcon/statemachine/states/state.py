@@ -23,6 +23,8 @@ from rafcon.statemachine.enums import DataPortType, StateExecutionState
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
 from rafcon.statemachine.state_elements.outcome import Outcome
+from rafcon.statemachine.storage.storage import get_storage_id_for_state, ID_NAME_DELIMITER
+
 from rafcon.utils import log
 from rafcon.utils import multi_event
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
@@ -436,7 +438,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """ Recursively create the path of the state.
 
         The path is generated in bottom up method i.e. from the nested child states to the root state. The method
-        concatenate either State.state_id (always unique) or State.name (maybe not unique but human readable) as
+        concatenates either State.state_id (always unique) or State.name (maybe not unique but human readable) as
         state identifier for the path.
 
         :param str appendix: the part of the path that was already calculated by previous function calls
@@ -454,6 +456,30 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 return self.parent.get_path(state_identifier, by_name)
             else:
                 return self.parent.get_path(state_identifier + PATH_SEPARATOR + appendix, by_name)
+        else:
+            if appendix is None:
+                return state_identifier
+            else:
+                return state_identifier + PATH_SEPARATOR + appendix
+
+    def get_storage_path(self, appendix=None):
+        """ Recursively create the storage path of the state.
+
+        The path is generated in bottom up method i.e. from the nested child states to the root state. The method
+        concatenates the concatentation of (State.state_id and State.name) as state identifier for the path.
+
+        :param str appendix: the part of the path that was already calculated by previous function calls
+        :param bool by_name: The boolean enables name usage to generate the path
+        :rtype: str
+        :return: the full path to the root state
+        """
+        state_identifier = get_storage_id_for_state(self)
+
+        if not self.is_root_state:
+            if appendix is None:
+                return self.parent.get_storage_path(state_identifier)
+            else:
+                return self.parent.get_storage_path(state_identifier + PATH_SEPARATOR + appendix)
         else:
             if appendix is None:
                 return state_identifier
@@ -491,9 +517,15 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             if self._file_system_path:
                 return self._file_system_path
             else:
-                return RAFCON_TEMP_PATH_STORAGE + "/" + str(self.get_path())
+                if self.get_sm_for_state().supports_saving_state_names:
+                    return RAFCON_TEMP_PATH_STORAGE + "/" + str(self.get_storage_path())
+                else:
+                    return RAFCON_TEMP_PATH_STORAGE + "/" + str(self.get_path())
         else:
-            return self.get_sm_for_state().file_system_path + "/" + self.get_path()
+            if self.get_sm_for_state().supports_saving_state_names:
+                return self.get_sm_for_state().file_system_path + "/" + self.get_storage_path()
+            else:
+                return self.get_sm_for_state().file_system_path + "/" + self.get_path()
 
     @Observable.observed
     def add_outcome(self, name, outcome_id=None):
@@ -757,6 +789,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     @Observable.observed
     def name(self, name):
         if name is not None:
+            if "/" in name:
+                raise ValueError("Name must not include the \"/\" character")
+            if ID_NAME_DELIMITER in name:
+                raise ValueError("Name must not include the \"" + ID_NAME_DELIMITER + "\" character")
             if not isinstance(name, basestring):
                 raise TypeError("Name must be of type str")
             if len(name) < 1:

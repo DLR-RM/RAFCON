@@ -164,7 +164,7 @@ class Script(Observable, yaml.YAMLObject):
     @path.setter
     def path(self, value):
         if value is not None:
-            if not isinstance(value, str):
+            if not isinstance(value, basestring):
                 raise TypeError("The path of a script has to be a string or None to use the default value.")
 
             if self._check_path:

@@ -65,6 +65,9 @@ class StateMachine(Observable, JSONObject, Hashable):
 
         self._execution_histories = []
 
+        # specifies if this state machine supports saving states with state_id + state_name
+        self._support_saving_state_names = True
+
     def __copy__(self):
         sm = self.__class__(copy(self._root_state), self.version, self.creation_time, self.last_update)
         sm._marked_dirty = self._marked_dirty
@@ -87,8 +90,9 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     @staticmethod
     def state_machine_to_dict(state_machine):
+        from rafcon.statemachine.storage.storage import get_storage_id_for_state
         dict_representation = {
-            'root_state_id': state_machine.root_state.state_id,
+            'root_state_storage_id': get_storage_id_for_state(state_machine.root_state),
             'version': state_machine.version,
             'creation_time': state_machine.creation_time,
             'last_update': state_machine.last_update,
@@ -214,3 +218,13 @@ class StateMachine(Observable, JSONObject, Hashable):
         if not isinstance(file_system_path, basestring):
             raise AttributeError("file_system_path has to be of type str")
         self._file_system_path = file_system_path
+
+    @property
+    def supports_saving_state_names(self):
+        return self._support_saving_state_names
+
+    @Observable.observed
+    def supports_saving_state_names(self, supports_saving_state_names):
+        if not isinstance(supports_saving_state_names, bool):
+            raise AttributeError("supports_saving_state_names has to be of type bool")
+        self._support_saving_state_names = supports_saving_state_names

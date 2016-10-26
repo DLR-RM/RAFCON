@@ -144,7 +144,7 @@ class GuiConfig(ObservableConfig):
         # Get color definitions
         color_file_path = os.path.join(self.path_to_tool, 'themes', theme, 'colors.json')
         try:
-            colors = storage_utils.load_dict_from_json(color_file_path)
+            colors = storage_utils.load_objects_from_json(color_file_path)
         except IOError:
             raise ValueError("No color definitions for theme '{0}' found".format(theme))
 

@@ -69,7 +69,7 @@ def write_dict_to_json(dictionary, path, **kwargs):
         f.write(result_string)
 
 
-def load_dict_from_json(path, as_dict=False):
+def load_objects_from_json(path, as_dict=False):
     """Loads a dictionary from a json file.
 
     :param path: The relative path of the json file.

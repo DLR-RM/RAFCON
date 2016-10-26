@@ -229,7 +229,7 @@ def test_port_and_outcome_removal(caplog):
 
 
 if __name__ == '__main__':
-    # test_create_state(None)
-    # test_port_and_outcome_removal(None)
-    # test_create_container_state(None)
-    pytest.main([__file__])
+    test_create_state(None)
+    test_port_and_outcome_removal(None)
+    test_create_container_state(None)
+    # pytest.main([__file__])

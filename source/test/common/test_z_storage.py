@@ -26,10 +26,11 @@ import testing_utils
 from testing_utils import test_multithrading_lock, call_gui_callback, get_unique_temp_path
 import pytest
 
+logger = log.get_logger(__name__)
+
 
 def create_models(*args, **kargs):
 
-    logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
@@ -102,7 +103,7 @@ def create_models(*args, **kargs):
     sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     # return ctr_state, sm_m, state_dict
-    return logger, ctr_state, sm_m, state_dict
+    return ctr_state, sm_m, state_dict
 
 
 def on_save_activate(state_machine_m, logger):
@@ -137,12 +138,12 @@ def save_state_machine(sm_model, path, logger, with_gui, menubar_ctrl):
 
 def check_file(file_path, kind, missing_elements=None, existing_elements=None):
     if os.path.isfile(file_path):
-        print "%s: '%s' exists" % (kind, file_path)
+        logger.debug("%s: '%s' exists" % (kind, file_path))
         if existing_elements is not None:
             existing_elements.append(file_path)
         return True
     else:
-        print "%s: '%s' DOESN'T exist" % (kind, file_path)
+        logger.debug("%s: '%s' DOESN'T exist" % (kind, file_path))
         if missing_elements is not None:
             missing_elements.append(file_path)
         return False
@@ -150,12 +151,12 @@ def check_file(file_path, kind, missing_elements=None, existing_elements=None):
 
 def check_folder(folder_path, kind, missing_elements=None, existing_elements=None):
     if os.path.exists(folder_path):
-        print "%s: '%s' exists" % (kind, folder_path)
+        logger.debug("%s: '%s' exists" % (kind, folder_path))
         if existing_elements is not None:
             existing_elements.append(folder_path)
         return True
     else:
-        print "%s: '%s' DOESN'T exist" % (kind, folder_path)
+        logger.debug("%s: '%s' DOESN'T exist" % (kind, folder_path))
         if missing_elements is not None:
             missing_elements.append(folder_path)
         return False
@@ -180,24 +181,24 @@ def check_state_machine_storage(state_machine, path, missing_elements, existing_
 
 
 def check_state_storage(state, parent_path, missing_elements, existing_elements=None, check_meta_data=False):
-
+    from rafcon.statemachine.storage.storage import get_storage_id_for_state
     # check state folder exists
-    folder_path = os.path.join(parent_path, state.state_id)
+    folder_path = os.path.join(parent_path, get_storage_id_for_state(state))
     check_folder(folder_path, "state_path", missing_elements, existing_elements)
 
     # check state script exists
     if isinstance(state, ExecutionState):
-        file_path = os.path.join(parent_path, state.state_id, storage.SCRIPT_FILE)
+        file_path = os.path.join(parent_path, get_storage_id_for_state(state), storage.SCRIPT_FILE)
         check_file(file_path, "script", missing_elements, existing_elements)
 
     # check state-meta data exists (transitions and so on)
-    file_path = os.path.join(parent_path, state.state_id, storage.FILE_NAME_CORE_DATA)
+    file_path = os.path.join(parent_path, get_storage_id_for_state(state), storage.FILE_NAME_CORE_DATA)
     check_file(file_path, "core data", missing_elements, existing_elements)
 
     # check if optional gui-meta-data exists
     if check_meta_data:
         # gtk gui meta data
-        file_path = os.path.join(parent_path, state.state_id, storage.FILE_NAME_META_DATA)
+        file_path = os.path.join(parent_path, get_storage_id_for_state(state), storage.FILE_NAME_META_DATA)
         check_file(file_path, "meta data", missing_elements, existing_elements)
 
     if isinstance(state, ContainerState):
@@ -205,7 +206,8 @@ def check_state_storage(state, parent_path, missing_elements, existing_elements=
             check_state_storage(child_state, folder_path, missing_elements, existing_elements, check_meta_data)
 
 
-def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, with_print=False, old_exists=None, old_base_path=None):
+def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, with_print=False,
+                                   old_exists=None, old_base_path=None):
     root_state = sm_m.state_machine.root_state
     base_path = sm_m.state_machine.file_system_path
     missing_elements = []
@@ -217,29 +219,29 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, 
     else:
         old_without_base = None
     if with_print and missing_elements:
-        print 30*"#"
-        print "State machine %s with root_state.state_id %s MISSING the following FILES" % \
-              (sm_m.state_machine.state_machine_id, root_state.state_id)
-        print 30*"#"
+        logger.debug(30*"#")
+        logger.debug("State machine %s with root_state.state_id %s MISSING the following FILES" % \
+              (sm_m.state_machine.state_machine_id, root_state.state_id))
+        logger.debug(30*"#")
         for path in missing_elements:
             if old_without_base is not None and path.replace(base_path, "") in old_without_base:
-                print path, " ... but exists in ", old_base_path
+                logger.debug(path, " ... but exists in ", old_base_path)
             else:
-                print path, " ... but does not exist before"
+                logger.debug(path, " ... but does not exist before")
     else:
-        print 30*"#"
-        print "All Files and Folders where Found of state machine %s with root_state.state_id %s" % \
-              (sm_m.state_machine.state_machine_id, root_state.state_id)
-        print 30*"#"
+        logger.debug(30*"#")
+        logger.debug("All Files and Folders where Found of state machine %s with root_state.state_id %s" % \
+              (sm_m.state_machine.state_machine_id, root_state.state_id))
+        logger.debug(30*"#")
 
     return missing_elements, existing_elements
 
 
 def test_storage_without_gui(caplog):
     with_gui = False
-    print "create model"
-    [logger, state, sm_m, state_dict] = create_models()
-    print "init libs"
+    logger.debug("create model")
+    [state, sm_m, state_dict] = create_models()
+    logger.debug("init libs")
     testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.library_manager.initialize()
     save_state_machine(sm_model=sm_m, path=get_unique_temp_path(), logger=logger, with_gui=with_gui,
@@ -255,13 +257,13 @@ def test_storage_without_gui(caplog):
 def test_storage_with_gui(caplog):
     with_gui = True
     testing_utils.start_rafcon()
-    print "create model"
-    [logger, state, sm_m, state_dict] = create_models()
-    print "init libs"
+    logger.debug("create model")
+    [state, sm_m, state_dict] = create_models()
+    logger.debug("init libs")
 
     if testing_utils.sm_manager_model is None:
         testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
-    print "initialize MainWindow"
+    logger.debug("initialize MainWindow")
     main_window_view = MainWindowView()
 
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view,
@@ -271,7 +273,7 @@ def test_storage_with_gui(caplog):
     # Wait for GUI to initialize
     while gtk.events_pending():
         gtk.main_iteration(False)
-    print "start thread"
+    logger.debug("start thread")
     import threading
     thread = threading.Thread(target=save_state_machine,
                               args=[sm_m, get_unique_temp_path(), logger, with_gui, menubar_ctrl])
@@ -291,4 +293,6 @@ def test_storage_with_gui(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    test_storage_without_gui(None)
+    test_storage_with_gui(None)
+    # pytest.main([__file__])

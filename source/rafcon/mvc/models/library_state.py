@@ -3,17 +3,15 @@ from os.path import join
 
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.statemachine.singleton import library_manager
+from rafcon.statemachine.storage.storage import get_storage_id_for_state
 
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel
-
 from rafcon.mvc.models.abstract_state import get_state_model_class_for_state
 
-from rafcon.statemachine.singleton import library_manager
-
 from rafcon.utils import log
-
 logger = log.get_logger(__name__)
 
 
@@ -83,5 +81,9 @@ class LibraryStateModel(AbstractStateModel):
         super(LibraryStateModel, self).load_meta_data(path)
         lib_os_path, _, _ = library_manager.get_os_path_to_library(self.state.library_path,
                                                                    self.state.library_name)
-        root_state_path = join(lib_os_path, self.state_copy.state.state_id)
+
+        if self.state.get_sm_for_state().supports_saving_state_names:
+            root_state_path = join(lib_os_path, get_storage_id_for_state(self.state_copy.state))
+        else:
+            root_state_path = join(lib_os_path, self.state_copy.state.state_id)
         self.state_copy.load_meta_data(root_state_path)

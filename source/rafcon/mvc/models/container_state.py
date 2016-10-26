@@ -4,6 +4,7 @@ from os.path import join
 from gtkmvc import ModelMT
 
 from rafcon.statemachine.states.container_state import ContainerState
+from rafcon.statemachine.storage.storage import get_storage_id_for_state
 
 from rafcon.mvc.models.state import StateModel
 from rafcon.mvc.models.abstract_state import AbstractStateModel, diff_for_state_element_lists, MetaSignalMsg
@@ -517,8 +518,12 @@ class ContainerStateModel(StateModel):
         Recursively loads meta data of child states.
         """
         super(ContainerStateModel, self).load_meta_data(path)
+
         for state_key, state_m in self.states.iteritems():
-            child_path = None if not path else join(path, state_key)
+            if self.state.get_sm_for_state().supports_saving_state_names:
+                child_path = None if not path else join(path, get_storage_id_for_state(self.states[state_key].state))
+            else:
+                child_path = None if not path else join(path, state_key)
             state_m.load_meta_data(child_path)
 
     def store_meta_data(self, temp_path=None):

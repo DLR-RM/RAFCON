@@ -304,6 +304,7 @@ class AbstractStateModel(ModelMT, Hashable):
         try:
             tmp_meta = storage.load_data_file(path_meta_data)
         except ValueError:
+            # raise
             tmp_meta = {}
 
         # JSON returns a dict, which must be converted to a Vividict
@@ -322,12 +323,12 @@ class AbstractStateModel(ModelMT, Hashable):
         elements (data ports, outcomes, etc.) and stores it on the filesystem.
         """
         if temp_path:
-            meta_file_json = os.path.join(temp_path, self.state.get_path(), storage.FILE_NAME_META_DATA)
+            meta_file_path_json = os.path.join(temp_path, self.state.get_storage_path(), storage.FILE_NAME_META_DATA)
         else:
-            meta_file_json = os.path.join(self.state.get_file_system_path(), storage.FILE_NAME_META_DATA)
+            meta_file_path_json = os.path.join(self.state.get_file_system_path(), storage.FILE_NAME_META_DATA)
         meta_data = deepcopy(self.meta)
         self._generate_element_meta_data(meta_data)
-        storage_utils.write_dict_to_json(meta_data, meta_file_json)
+        storage_utils.write_dict_to_json(meta_data, meta_file_path_json)
 
     def copy_meta_data_from_state_m(self, source_state_m):
         """Dismiss current meta data and copy meta data from given state model

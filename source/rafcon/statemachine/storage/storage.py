@@ -12,13 +12,14 @@ import glob
 import copy
 import yaml
 
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
-from rafcon.statemachine.enums import DEFAULT_SCRIPT_PATH
-
 from rafcon.utils.filesystem import read_file, write_file
 from rafcon.utils import storage_utils
 from rafcon.utils import log
+
+from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
+from rafcon.statemachine.enums import DEFAULT_SCRIPT_PATH
+from rafcon.statemachine.state_machine import StateMachine
+
 logger = log.get_logger(__name__)
 
 
@@ -32,6 +33,7 @@ FILE_NAME_CORE_DATA_OLD = 'meta.json'
 SCRIPT_FILE = 'script.py'
 STATEMACHINE_FILE = 'statemachine.json'
 STATEMACHINE_FILE_OLD = 'statemachine.yaml'
+ID_NAME_DELIMITER = "$"
 
 
 # clean the DEFAULT_SCRIPT_PATH folder at each program start
@@ -102,6 +104,8 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
     :param bool temporary_storage: Whether to use a temporary storage for the state machine
     """
 
+    state_machine.supports_saving_state_names = True
+
     if not temporary_storage:
         if save_as:
             # A copy of the state machine is created at a new place in the filesystem. Therefore, there are no paths
@@ -168,7 +172,6 @@ def save_script_file_for_state_and_source_path(state, state_path_full, temporary
             state.script.path = state_path_full
 
 
-
 def save_state_recursively(state, base_path, parent_path, temporary_storage=False):
     """Recursively saves a state to a yaml file
 
@@ -182,7 +185,7 @@ def save_state_recursively(state, base_path, parent_path, temporary_storage=Fals
     from rafcon.statemachine.states.execution_state import ExecutionState
     from rafcon.statemachine.states.container_state import ContainerState
 
-    state_path = os.path.join(parent_path, str(state.state_id))
+    state_path = os.path.join(parent_path, get_storage_id_for_state(state))
     state_path_full = os.path.join(base_path, state_path)
     if not os.path.exists(state_path_full):
         os.makedirs(state_path_full)
@@ -218,19 +221,23 @@ def load_state_machine_from_path(base_path):
             raise ValueError("Provided path doesn't contain a valid state machine: {0}".format(base_path))
 
     if os.path.exists(state_machine_file_path):
-        state_machine_dict = storage_utils.load_dict_from_json(state_machine_file_path)
+        state_machine_dict = storage_utils.load_objects_from_json(state_machine_file_path)
         state_machine = StateMachine.from_dict(state_machine_dict)
-        root_state_id = state_machine_dict['root_state_id']
+        if "root_state_storage_id" not in state_machine_dict:
+            root_state_storage_id = state_machine_dict['root_state_id']
+            state_machine.supports_saving_state_names = False
+        else:
+            root_state_storage_id = state_machine_dict['root_state_storage_id']
 
     # TODO: Remove this with next minor release
     else:
         stream = file(state_machine_file_path_old, 'r')
         tmp_dict = yaml.load(stream)
-        root_state_id = None
+        root_state_storage_id = None
         if "root_state" in tmp_dict:
-            root_state_id = tmp_dict['root_state']
+            root_state_storage_id = tmp_dict['root_state']
         else:
-            root_state_id = tmp_dict['root_state_id']
+            root_state_storage_id = tmp_dict['root_state_id']
         version = tmp_dict['version']
         # Prevents storage as datetime object
         creation_time = str(tmp_dict['creation_time'])
@@ -239,8 +246,9 @@ def load_state_machine_from_path(base_path):
         else:
             last_update = tmp_dict['last_update']
         state_machine = StateMachine(version=version, creation_time=creation_time, last_update=last_update)
+        state_machine.supports_saving_state_names = False
 
-    root_state_path = os.path.join(base_path, root_state_id)
+    root_state_path = os.path.join(base_path, root_state_storage_id)
     state_machine.file_system_path = base_path
     state_machine.root_state = load_state_recursively(parent=state_machine, state_path=root_state_path)
     state_machine.marked_dirty = False
@@ -270,7 +278,7 @@ def load_state_recursively(parent, state_path=None):
     It calls this method on each sub-state of a container state.
 
     :param parent:  the root state of the last load call to which the loaded state will be added
-    :param state_path: the path on the filesystem where to find eht meta file for the state
+    :param state_path: the path on the filesystem where to find the meta file for the state
     :return:
     """
     from rafcon.statemachine.states.state import State
@@ -292,7 +300,7 @@ def load_state_recursively(parent, state_path=None):
     except LibraryNotFoundException, e:
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(str(e.message)))
-        state_info = storage_utils.load_dict_from_json(path_core_data, as_dict=True)
+        state_info = storage_utils.load_objects_from_json(path_core_data, as_dict=True)
         state_id = state_info["state_id"]
         dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id)
         # set parent of dummy state
@@ -357,5 +365,12 @@ def load_data_file(filename):
     :raises exceptions.ValueError: if the file was not found
     """
     if os.path.exists(filename):
-        return storage_utils.load_dict_from_json(filename)
+        return storage_utils.load_objects_from_json(filename)
     raise ValueError("Data file not found: {0}".format(filename))
+
+
+def get_storage_id_for_state(state):
+    """ Calculates the storage id of a state. This ID can be used for generating the file path for a state.
+    """
+    return state.name + ID_NAME_DELIMITER + state.state_id
+
