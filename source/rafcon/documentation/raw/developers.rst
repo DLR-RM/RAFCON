@@ -1,5 +1,5 @@
-Developers Guide
-================
+Developer's Guide
+=================
 
 Everybody is encouraged to contribute to the RAFCON project. However, collaboration needs some guidelines. We try to
 collect all this information in this document, so please stick to this.

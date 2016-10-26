@@ -1,6 +1,23 @@
 Patch releases 0.7.\*
 =====================
 
+0.7.13
+------
+
+- Features:
+
+- Improvements:
+
+- API:
+
+- Documentation:
+
+  - started creation of "Developer's Guide"
+  - moved ``odt`` document about commit guidelines into ``rst`` file for "Developer's Guide"
+
+- Fixes:
+
+
 0.7.12
 ------
 
