@@ -223,7 +223,7 @@ class StateMachine(Observable, JSONObject, Hashable):
     def supports_saving_state_names(self):
         return self._support_saving_state_names
 
-    @Observable.observed
+    @supports_saving_state_names.setter
     def supports_saving_state_names(self, supports_saving_state_names):
         if not isinstance(supports_saving_state_names, bool):
             raise AttributeError("supports_saving_state_names has to be of type bool")
