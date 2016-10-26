@@ -14,6 +14,7 @@ import sys
 import threading
 from __builtin__ import staticmethod
 from weakref import ref
+import os
 
 from yaml import YAMLObject
 
@@ -518,14 +519,14 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 return self._file_system_path
             else:
                 if self.get_sm_for_state().supports_saving_state_names:
-                    return RAFCON_TEMP_PATH_STORAGE + "/" + str(self.get_storage_path())
+                    return os.path.join(RAFCON_TEMP_PATH_STORAGE, "/", str(self.get_storage_path()))
                 else:
-                    return RAFCON_TEMP_PATH_STORAGE + "/" + str(self.get_path())
+                    return os.path.join(RAFCON_TEMP_PATH_STORAGE, "/", str(self.get_path()))
         else:
             if self.get_sm_for_state().supports_saving_state_names:
-                return self.get_sm_for_state().file_system_path + "/" + self.get_storage_path()
+                return os.path.join(self.get_sm_for_state().file_system_path, "/", self.get_storage_path())
             else:
-                return self.get_sm_for_state().file_system_path + "/" + self.get_path()
+                return os.path.join(self.get_sm_for_state().file_system_path, "/", self.get_path())
 
     @Observable.observed
     def add_outcome(self, name, outcome_id=None):
@@ -789,8 +790,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     @Observable.observed
     def name(self, name):
         if name is not None:
-            if "/" in name:
-                raise ValueError("Name must not include the \"/\" character")
+            if PATH_SEPARATOR in name:
+                raise ValueError("Name must not include the \"" + PATH_SEPARATOR + "\" character")
             if ID_NAME_DELIMITER in name:
                 raise ValueError("Name must not include the \"" + ID_NAME_DELIMITER + "\" character")
             if not isinstance(name, basestring):
