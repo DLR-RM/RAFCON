@@ -9,7 +9,7 @@
 
 """
 
-from gtk import ListStore
+import gtk
 
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
@@ -46,7 +46,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
     def __init__(self, model, view):
         """Constructor"""
         # list store order -> gv_name, data_type, data_value, is_locked
-        self.list_store = ListStore(str, str, str, str)
+        self.list_store = gtk.ListStore(str, str, str, str)
         ExtendedController.__init__(self, model, view)
         self.tree_view = view['global_variable_tree_view']
         self.tree_view.set_model(self.list_store)
@@ -75,7 +75,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         view['type_text'].connect('editing-canceled', self.editing_canceled)
         view['new_global_variable_button'].connect('clicked', self.on_new_global_variable_button_clicked)
         view['delete_global_variable_button'].connect('clicked', self.on_delete_global_variable_button_clicked)
-
+        self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         self.tab_edit_controller.register_view()
 
     def register_adapters(self):
@@ -170,20 +170,22 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
             return True
 
     def on_delete_global_variable_button_clicked(self, *event):
-        """Deletes the selected global variable and re-selects next variable row
+        """Remove the selected global variables and re-select next variable row
 
-        Triggered when the Delete button in the Global Variables tab is clicked.
+        Triggered when the Delete button in the global variables tab is clicked.
         """
         if react_to_event(self.view, self.tree_view, event):
-            path = self.get_path()
-            if path is not None:
-                gv_name = self.get_list_store_row_from_cursor_selection()[self.NAME_STORAGE_ID]
-                try:
-                    self.model.global_variable_manager.delete_variable(gv_name)
-                except AttributeError as e:
-                    logger.warning("Delete of global variable '{0}' failed -> Exception:{1}".format(gv_name, e))
+            tree, path_list = self.tree_view.get_selection().get_selected_rows()
+            old_path = self.get_path()
+            gv_names = [self.list_store[path][self.ID_STORAGE_ID] for path in path_list] if path_list else []
+            if gv_names:
+                for gv_name in gv_names:
+                    try:
+                        self.model.global_variable_manager.delete_variable(gv_name)
+                    except AttributeError as e:
+                        logger.warning("Delete of global variable '{0}' failed -> Exception:{1}".format(gv_name, e))
                 if len(self.list_store) > 0:
-                    self.tree_view.set_cursor(min(path, len(self.list_store) - 1))
+                    self.tree_view.set_cursor(min(old_path[0], len(self.list_store) - 1))
             return True
 
     def on_name_changed(self, widget, path, new_gv_name):

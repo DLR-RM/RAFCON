@@ -194,10 +194,7 @@ class ScopedVariableListController(ExtendedController, ListSelectionFeatureContr
             [self.select_entry(selected_data_port_id, False) for selected_data_port_id in selected_data_port_ids]
 
     def on_new_scoped_variable_button_clicked(self, widget, data=None):
-        """Triggered when the New button in the Scoped Variables tab is clicked.
-
-        Create a new scoped variable with default values.
-        """
+        """Create a new scoped variable with default values"""
         num_data_ports = len(self.model.state.scoped_variables)
         if isinstance(self.model, ContainerStateModel):
             data_port_id = None
@@ -213,23 +210,22 @@ class ScopedVariableListController(ExtendedController, ListSelectionFeatureContr
             return True
 
     def on_delete_scoped_variable_button_clicked(self, widget, data=None):
-        """Triggered when the Delete button in the Scoped Variables tab is clicked.
-
-        Deletes the selected scoped variable.
-        """
+        """Remove the selected scoped variables and select the next one"""
         if isinstance(self.model, ContainerStateModel):
-
-            path = self.get_path()  # tree_view.get_cursor()[0][0]
-            if path is not None:
-                scoped_variable_key = self.list_store[int(path)][self.ID_STORAGE_ID]
-                self.list_store.clear()
-                try:
-                    self.model.state.remove_scoped_variable(scoped_variable_key)
-                except AttributeError as e:
-                    logger.warn("The scoped variable couldn't be removed: {0}".format(e))
-                    return False
+            path_list = None
+            if self.view is not None:
+                model, path_list = self.tree_view.get_selection().get_selected_rows()
+            old_path = self.get_path()
+            scoped_variable_ids = [self.list_store[path][self.ID_STORAGE_ID] for path in path_list] if path_list else []
+            if scoped_variable_ids:
+                for scoped_variable_id in scoped_variable_ids:
+                    try:
+                        self.model.state.remove_scoped_variable(scoped_variable_id)
+                    except AttributeError as e:
+                        logger.warn("The scoped variable couldn't be removed: {0}".format(e))
+                        return False
             if len(self.list_store) > 0:
-                self.view[self.view.top].set_cursor(min(path, len(self.list_store) - 1))
+                self.view[self.view.top].set_cursor(min(old_path[0], len(self.list_store) - 1))
             return True
 
     def on_name_changed(self, widget, path, text):
