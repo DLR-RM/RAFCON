@@ -16,6 +16,7 @@ import gobject
 from rafcon.statemachine.enums import StateType
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.controllers.utils.selection import TreeSelectionFeatureController
 from rafcon.mvc.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
@@ -32,7 +33,7 @@ logger = log.get_logger(__name__)
 # TODO Comment
 
 
-class StateMachineTreeController(ExtendedController):
+class StateMachineTreeController(ExtendedController, TreeSelectionFeatureController):
     """Controller handling the state machine tree.
 
     :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel model: The state machine manager model,
@@ -42,16 +43,24 @@ class StateMachineTreeController(ExtendedController):
 
     # TODO hold expansion if refresh all is performed -> minor feature (use storage_path instate of state_machine_id)
     # TODO hold expansion type changes are re- and undone -> minor feature which also depends on modification-history
+    NAME_STORAGE_ID = 0
+    ID_STORAGE_ID = 1
+    TYPE_NAME_STORAGE_ID = 2
+    MODEL_STORAGE_ID = 3
+    STATE_PATH_STORAGE_ID = 4
 
     def __init__(self, model, view):
         """Constructor"""
         assert isinstance(model, StateMachineManagerModel)
 
+        self.tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT, str)
+        self.tree_view = view
         ExtendedController.__init__(self, model, view)
+        TreeSelectionFeatureController.__init__(self, self.tree_store, self.tree_view, logger)
         self.state_right_click_ctrl = StateMachineTreeRightClickMenuController(model, view)
 
         self.view_is_registered = False
-        self.tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT, str)
+
         view.set_model(self.tree_store)
         # view.set_hover_expand(True)
         self.state_row_iter_dict_by_state_path = {}
@@ -64,10 +73,10 @@ class StateMachineTreeController(ExtendedController):
 
     def register_view(self, view):
         """Called when the view was registered"""
-        self.view.connect('cursor-changed', self.on_cursor_changed)
         self.view.connect('button_press_event', self.mouse_click)
         self.view_is_registered = True
         self.update(with_expand=True)
+        TreeSelectionFeatureController.register_view(self, view)
 
     def register_adapters(self):
         pass
@@ -96,6 +105,7 @@ class StateMachineTreeController(ExtendedController):
             self.observe_model(self._selected_sm_model)  # for selection
             self.update()
         else:
+            self._selected_sm_model = None
             self.tree_store.clear()
 
     def _add_new_state(self, *event, **kwargs):
@@ -105,7 +115,8 @@ class StateMachineTreeController(ExtendedController):
         """
         if react_to_event(self.view, self.view['state_machine_tree_view'], event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-            return state_machine_helper.add_new_state(self._selected_sm_model, state_type)
+            state_machine_helper.add_new_state(self._selected_sm_model, state_type)
+            return True
 
     def _delete_selection(self, *event):
         if react_to_event(self.view, self.view['state_machine_tree_view'], event):
@@ -167,7 +178,8 @@ class StateMachineTreeController(ExtendedController):
                 if state_row_path is not None:
                     act_expansion_state[state_path] = self.view.row_expanded(state_row_path)
                 else:
-                    if self._selected_sm_model.state_machine.get_state_by_path(state_path, as_check=True):
+                    if self._selected_sm_model and \
+                            self._selected_sm_model.state_machine.get_state_by_path(state_path, as_check=True):
                         # happens if refresh all is performed -> otherwise it is a error
                         logger.debug("State not in StateMachineTree but in StateMachine, {0}. {1}, {2}".format(state_path,
                                                                                                             state_row_path,
@@ -187,7 +199,8 @@ class StateMachineTreeController(ExtendedController):
                             if state_row_expanded:
                                 self.view.expand_to_path(state_row_path)
                     else:
-                        if self._selected_sm_model.state_machine.get_state_by_path(state_path, as_check=True):
+                        if self._selected_sm_model and \
+                                self._selected_sm_model.state_machine.get_state_by_path(state_path, as_check=True):
                             logger.error("State not in StateMachineTree but in StateMachine, {0}.".format(state_path))
 
             except (TypeError, KeyError):
@@ -228,12 +241,12 @@ class StateMachineTreeController(ExtendedController):
         # print "check for update row of state: ", state_model.state.get_path()
         state_row_path = self.tree_store.get_path(state_row_iter)
 
-        if not type(state_model.state).__name__ == self.tree_store[state_row_path][2] or \
-                not state_model.state.name == self.tree_store[state_row_path][0]:
+        if not type(state_model.state).__name__ == self.tree_store[state_row_path][self.TYPE_NAME_STORAGE_ID] or \
+                not state_model.state.name == self.tree_store[state_row_path][self.NAME_STORAGE_ID]:
             # print "update row of state: ", state_model.state.get_path()
-            self.tree_store[state_row_path][0] = state_model.state.name
-            self.tree_store[state_row_path][2] = type(state_model.state).__name__
-            self.tree_store[state_row_path][3] = state_model
+            self.tree_store[state_row_path][self.NAME_STORAGE_ID] = state_model.state.name
+            self.tree_store[state_row_path][self.TYPE_NAME_STORAGE_ID] = type(state_model.state).__name__
+            self.tree_store[state_row_path][self.MODEL_STORAGE_ID] = state_model
             self.tree_store.row_changed(state_row_path, state_row_iter)
 
     def insert_and_update_rec(self, parent_iter, state_model, with_expand=False):
@@ -267,9 +280,9 @@ class StateMachineTreeController(ExtendedController):
             child_iter = self.tree_store.iter_nth_child(state_row_iter, n)
             # check if there are left over rows of old states (switch from HS or CS to S and so on)
             if not type(state_model) is ContainerStateModel or \
-                    not self.tree_store.get_value(child_iter, 1) in state_model.states:
+                    not self.tree_store.get_value(child_iter, self.ID_STORAGE_ID) in state_model.states:
                 self.remove_tree_children(child_iter)
-                del self.state_row_iter_dict_by_state_path[self.tree_store.get_value(child_iter, 4)]
+                del self.state_row_iter_dict_by_state_path[self.tree_store.get_value(child_iter, self.STATE_PATH_STORAGE_ID)]
                 self.tree_store.remove(child_iter)
 
     def remove_tree_children(self, child_tree_iter):
@@ -277,65 +290,35 @@ class StateMachineTreeController(ExtendedController):
             child_iter = self.tree_store.iter_nth_child(child_tree_iter, n)
             if self.tree_store.iter_n_children(child_iter):
                 self.remove_tree_children(child_iter)
-            del self.state_row_iter_dict_by_state_path[self.tree_store.get_value(child_iter, 4)]
+            del self.state_row_iter_dict_by_state_path[self.tree_store.get_value(child_iter, self.STATE_PATH_STORAGE_ID)]
             # self.tree_store.remove(child_iter)
 
-    def on_cursor_changed(self, widget):
-        (model, row) = self.view.get_selection().get_selected()
-        if row is not None:
-            state_model = model[row][3]
-
-            state_row_path = self.tree_store.get_path(self.state_row_iter_dict_by_state_path[model[row][4]])
-            self.view.expand_to_path(state_row_path)
-
-            self._selected_sm_model.selection.set(state_model)
+    def get_state_machine_selection(self):
+        if self._selected_sm_model:
+            return self._selected_sm_model.selection, self._selected_sm_model.selection.states
+        else:
+            return None, None
 
     def mouse_click(self, widget, event=None):
         # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}"
         #             "".format(event.button, gtk.gdk.BUTTON_PRESS, event.type == gtk.gdk._2BUTTON_PRESS,
         #                       event.type == gtk.gdk.BUTTON_PRESS, event.button == 1))
-        (model, row) = self.view.get_selection().get_selected()
-        if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
-            state_model = model[row][3]
-            # logger.info("left double click event detected -> unfold state tree: {0}/{1}".format(model[row][2],
-            #                                                                                     model[row][0]))
-            state_row_path = self.tree_store.get_path(row)
-            if state_row_path is not None:
-                if self.view.row_expanded(state_row_path):
-                    self.view.collapse_row(state_row_path)
-                else:
-                    if isinstance(state_model, ContainerStateModel):
-                        self.view.expand_to_path(state_row_path)
+        (model, paths) = self.view.get_selection().get_selected_rows()
+        if paths and event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
+            state_model = model[paths[0]][self.MODEL_STORAGE_ID]
+            # logger.info("left double click event detected -> unfold state tree: {0}/{1}".format(model[row][self.TYPE_NAME_STORAGE_ID],
+            #                                                                                     model[row][self.NAME_STORAGE_ID]))
+            if self.view.row_expanded(paths[0]):
+                self.view.collapse_row(paths[0])
+            else:
+                if isinstance(state_model, ContainerStateModel):
+                    self.view.expand_to_path(paths[0])
 
             return True
 
     @ExtendedController.observe("selection", after=True)
     def assign_notification_selection(self, model, prop_name, info):
-        if self._selected_sm_model.selection.get_selected_state():
-
-            # # work around to avoid already selected but not insert state rows
-            # if not self._selected_sm_model.selection.get_selected_state().state.get_path() in self.path_store:
-            #     self.update(self._selected_sm_model.root_state)
-
-            (model, actual_iter) = self.view.get_selection().get_selected()
-            try:
-                selected_iter = self.state_row_iter_dict_by_state_path[
-                    self._selected_sm_model.selection.get_selected_state().state.get_path()]
-                # logger.debug("TreeSelectionPaths actual %s and in state_machine.selection %s " % (actual_iter, selected_iter))
-                # print "\n\n####### 3 ########\n\n"
-                selected_path = self.tree_store.get_path(selected_iter)
-                if actual_iter is None:
-                    actual_path = None
-                else:
-                    # print "\n\n####### 4 ########\n\n"
-                    actual_path = self.tree_store.get_path(actual_iter)
-                # logger.debug("TreeSelectionPaths actual %s and in state_machine.selection %s " % (actual_path, selected_path))
-                if not selected_path == actual_path:
-                    # logger.debug("reselect state machine tree-selection")
-                    # if single selection-mode is set no un-select is needed
-                    self.view.expand_to_path(selected_path)
-                    self.view.get_selection().select_iter(selected_iter)
-
-            except (TypeError, KeyError) as e:
-                logger.debug("Could not update selection for selected state model {0} -> raised error {1}"
-                             "".format(self._selected_sm_model.selection.get_selected_state(), e))
+        if info is None and self._selected_sm_model and self._selected_sm_model.selection.get_selected_state() or \
+                info and self.tree_store.get_iter_root() and info['method_name'] == 'states':
+            # logger.info("selection state {0}".format(info))
+            self.update_selection_sm_prior()

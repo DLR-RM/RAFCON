@@ -122,12 +122,12 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         :param gtk.Entry entry: The entry that was focused out
         :param gtk.Event event: Event object with information about the event
         """
-        if self.tree_view.get_cursor()[0] is None:
+        if self.get_path() is None:
             return
 
         # We have to use idle_add to prevent core dumps:
         # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
-        glib.idle_add(self.on_name_edited, entry, self.tree_view.get_cursor()[0], entry.get_text())
+        glib.idle_add(self.on_name_edited, entry, self.get_path(), entry.get_text())
 
     def on_name_edited(self, renderer, path, new_name):
         """Apply the newly entered outcome name it is was changed
@@ -260,18 +260,20 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         return True
 
     def on_remove(self, button, info=None):
-
-        tree, path = self.tree_view.get_selection().get_selected_rows()
-        if path:  # and not self.list_store[path[0][0]][self.CORE_STORAGE_ID].outcome_id < 0 leave this check for the state
-            outcome_id = self.list_store[path[0][0]][self.CORE_STORAGE_ID].outcome_id
-            try:
-                self.model.state.remove_outcome(outcome_id)
-                row_number = path[0][0]
-                if len(self.list_store) > 0:
-                    self.tree_view.set_cursor(min(row_number, len(self.list_store)-1))
-                return True
-            except AttributeError as e:
-                logger.warning("Error while removing outcome: {0}".format(e))
+        """Remove the selected outcomes and select the next one
+        """
+        tree, path_list = self.tree_view.get_selection().get_selected_rows()
+        old_path = self.get_path()
+        outcome_ids = [self.list_store[path][self.ID_STORAGE_ID] for path in path_list] if path_list else []
+        if outcome_ids:
+            for outcome_id in outcome_ids:
+                try:
+                    self.model.state.remove_outcome(outcome_id)
+                    return True
+                except AttributeError as e:
+                    logger.warning("Error while removing outcome: {0}".format(e))
+            if len(self.list_store) > 0:
+                self.tree_view.set_cursor(min(old_path[0], len(self.list_store)-1))
 
     def on_right_click_menu(self):
         pass
