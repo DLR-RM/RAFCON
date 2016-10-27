@@ -119,21 +119,21 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         """ Change-name-method to set the name of actual selected (row) data-port.
         """
         # logger.info("FOCUS_OUT NAME entry: {0} event: {1}".format(entry, event))
-        if self.tree_view.get_cursor()[0] is None:
+        if self.get_path() is None:
             return
 
-        self.on_name_changed(entry, self.tree_view.get_cursor()[0], text=entry.get_text())
+        self.on_name_changed(entry, self.get_path(), text=entry.get_text())
 
     def on_focus(self, widget, data=None):
         # logger.debug("OUTCOMES_LIST get new FOCUS")
-        path = self.tree_view.get_cursor()
+        path = self.get_path()
         try:
             self.update_internal_data_base()
             self.update_list_store()
         except Exception:
             logger.warning("update failed")
-        if path[0]:  # if valid -> is possible as long as set_cursor does not trigger on_focus again
-            self.tree_view.set_cursor(path[0])
+        if path:  # if valid -> is possible as long as set_cursor does not trigger on_focus again
+            self.tree_view.set_cursor(path)
 
     def on_name_changed(self, widget, path, text):
         outcome_id = self.list_store[path][self.CORE_STORAGE_ID].outcome_id
@@ -259,18 +259,19 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         return True
 
     def on_remove(self, button, info=None):
-
-        tree, path = self.tree_view.get_selection().get_selected_rows()
-        if path:  # and not self.list_store[path[0][0]][self.CORE_STORAGE_ID].outcome_id < 0 leave this check for the state
-            outcome_id = self.list_store[path[0][0]][self.CORE_STORAGE_ID].outcome_id
-            try:
-                self.model.state.remove_outcome(outcome_id)
-                row_number = path[0][0]
-                if len(self.list_store) > 0:
-                    self.tree_view.set_cursor(min(row_number, len(self.list_store)-1))
-                return True
-            except AttributeError as e:
-                logger.warning("Error while removing outcome: {0}".format(e))
+        """Remove the selected outcomes and select the next one"""
+        tree, path_list = self.tree_view.get_selection().get_selected_rows()
+        old_path = self.get_path()
+        outcome_ids = [self.list_store[path][self.ID_STORAGE_ID] for path in path_list] if path_list else []
+        if outcome_ids:
+            for outcome_id in outcome_ids:
+                try:
+                    self.model.state.remove_outcome(outcome_id)
+                    return True
+                except AttributeError as e:
+                    logger.warning("Error while removing outcome: {0}".format(e))
+            if len(self.list_store) > 0:
+                self.tree_view.set_cursor(min(old_path[0], len(self.list_store)-1))
 
     def on_right_click_menu(self):
         logger.debug("do right click menu")

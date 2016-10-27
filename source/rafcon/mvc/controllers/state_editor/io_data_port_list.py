@@ -288,19 +288,24 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
         return True
 
     def on_delete_port_button_clicked(self, widget, data=None):
-        """Delete the selected port and select the next one"""
+        """Remove the selected ports and select the next one"""
         path_list = None
         if self.view is not None:
             model, path_list = self.tree_view.get_selection().get_selected_rows()
-        data_port_ids = [self.list_store[path[0]][self.ID_STORAGE_ID] for path in path_list] if path_list else []
+        old_path = self.get_path()
+        data_port_ids = [self.list_store[path][self.ID_STORAGE_ID] for path in path_list] if path_list else []
         if data_port_ids:
             for data_port_id in data_port_ids:
-                if self.type == "input":
-                    self.model.state.remove_input_data_port(data_port_id)
-                else:
-                    self.model.state.remove_output_data_port(data_port_id)
+                try:
+                    if self.type == "input":
+                        self.model.state.remove_input_data_port(data_port_id)
+                    else:
+                        self.model.state.remove_output_data_port(data_port_id)
+                except AttributeError as e:
+                    logger.warn("The data port couldn't be removed: {0}".format(e))
+                    return False
             if len(self.list_store) > 0:
-                self.view[self.view.top].set_cursor(min(path[0], len(self.list_store) - 1))
+                self.view[self.view.top].set_cursor(min(old_path[0], len(self.list_store) - 1))
             return True
 
     def on_use_runtime_value_toggled(self, widget, path):
