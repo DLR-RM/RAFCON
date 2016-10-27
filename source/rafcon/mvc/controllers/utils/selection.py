@@ -86,7 +86,6 @@ class ListSelectionFeatureController(object):
 
             if not bool(event.state & CONTROL_MASK) and not bool(event.state & SHIFT_MASK) and \
                     event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
-                pthinfo = self.tree_view.get_path_at_pos(int(event.x), int(event.y))
                 if pthinfo is not None:
                     model, paths = self._tree_selection.get_selected_rows()
                     # print paths
@@ -114,10 +113,9 @@ class ListSelectionFeatureController(object):
 
             if bool(event.state & SHIFT_MASK) and event.button == 1:
                 # self._logger.info("SHIFT adjust selection range")
-                pthinfo = self.tree_view.get_path_at_pos(int(event.x), int(event.y))
                 model, paths = self._tree_selection.get_selected_rows()
                 # print model, paths, pthinfo[0]
-                if paths and pthinfo[0]:
+                if paths and pthinfo and pthinfo[0]:
                     if self._last_path_selection[0] <= pthinfo[0][0]:
                         new_row_ids_selected = range(self._last_path_selection[0], pthinfo[0][0]+1)
                     else:
@@ -129,21 +127,20 @@ class ListSelectionFeatureController(object):
                     return True
                 else:
                     # self._logger.info("nothing selected {}".format(model))
-                    if pthinfo[0]:
+                    if pthinfo and pthinfo[0]:
                         self._last_path_selection = pthinfo[0]
 
             if bool(event.state & CONTROL_MASK) and event.button == 1:
                 # self._logger.info("CONTROL adjust selection range")
-                pthinfo = self.tree_view.get_path_at_pos(int(event.x), int(event.y))
                 model, paths = self._tree_selection.get_selected_rows()
                 # print model, paths, pthinfo[0]
-                if paths and pthinfo[0]:
+                if paths and pthinfo and pthinfo[0]:
                     if pthinfo[0] in paths:
                         self._tree_selection.unselect_path(pthinfo[0])
                     else:
                         self._tree_selection.select_path(pthinfo[0])
                     return True
-                elif pthinfo[0]:
+                elif pthinfo and pthinfo[0]:
                     self._tree_selection.select_path(pthinfo[0])
                     return True
 
