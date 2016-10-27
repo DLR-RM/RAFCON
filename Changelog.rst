@@ -4,6 +4,12 @@ Patch releases 0.7.\*
 0.7.12
 ------
 
+- Hotfix:
+    - fix unmovable windows for sled11 64bit
+
+0.7.12
+------
+
 - Features:
 
   - Bidirectional graphical editor and states-editor selection with multi-selection support
