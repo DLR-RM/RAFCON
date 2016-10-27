@@ -34,7 +34,7 @@ class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
         if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][1], dict):  # double click on folder, not library
-                state_row_path = self.library_tree_store.get_path(row)
+                state_row_path = self.tree_store.get_path(row)
                 if state_row_path is not None:
                     if self.view.row_expanded(state_row_path):
                         self.view.collapse_row(state_row_path)

@@ -18,6 +18,7 @@ import gobject
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.utils import constants
+from rafcon.mvc.utils.dialog import RAFCONButtonDialog, ButtonDialog
 from rafcon.mvc.gui_helper import create_image_menu_item
 import rafcon.mvc.state_machine_helper as state_machine_helper
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
@@ -29,10 +30,16 @@ logger = log.get_logger(__name__)
 
 
 class LibraryTreeController(ExtendedController):
+
+    ID_STORAGE_ID = 0
+    ITEM_STORAGE_ID = 1
+    LIB_PATH_STORAGE_ID = 2
+
     def __init__(self, model=None, view=None, state_machine_manager_model=None):
+        assert isinstance(view, gtk.TreeView)
         ExtendedController.__init__(self, model, view)
-        self.library_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
-        view.set_model(self.library_tree_store)
+        self.tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
+        view.set_model(self.tree_store)
 
         view.drag_source_set(gtk.gdk.BUTTON1_MASK, [('STRING', 0, 0)], gtk.gdk.ACTION_COPY)
 
@@ -63,6 +70,7 @@ class LibraryTreeController(ExtendedController):
         menu.append(create_image_menu_item("Open", constants.BUTTON_OPEN, self.open_button_clicked))
         menu.append(create_image_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
         menu.append(gtk.SeparatorMenuItem())
+        menu.append(create_image_menu_item("Remove library", constants.BUTTON_DEL, self.delete_button_clicked))
         menu.append(create_image_menu_item("Substitute as library", constants.BUTTON_REFR,
                                            self.substitute_as_library_clicked))
         menu.append(create_image_menu_item("Substitute as template", constants.BUTTON_REFR,
@@ -74,8 +82,8 @@ class LibraryTreeController(ExtendedController):
         # Double click with left mouse button
         if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
             (model, row) = self.view.get_selection().get_selected()
-            if isinstance(model[row][1], dict):  # double click on folder, not library
-                state_row_path = self.library_tree_store.get_path(row)
+            if isinstance(model[row][self.ITEM_STORAGE_ID], dict):  # double click on folder, not library
+                state_row_path = self.tree_store.get_path(row)
                 if state_row_path is not None:
                     if self.view.row_expanded(state_row_path):
                         self.view.collapse_row(state_row_path)
@@ -100,7 +108,7 @@ class LibraryTreeController(ExtendedController):
                 self.view.set_cursor(path, col, 0)
 
                 (model, row) = self.view.get_selection().get_selected()
-                if isinstance(model[row][1], dict):  # right click on folder, not library
+                if isinstance(model[row][self.ITEM_STORAGE_ID], dict):  # right click on folder, not library
                     return False
 
                 menu.popup(None, None, None, event.button, time)
@@ -115,7 +123,7 @@ class LibraryTreeController(ExtendedController):
         try:
             act_expansion_library = {}
             for library_path, library_row_iter in self.library_row_iter_dict_by_library_path.iteritems():
-                library_row_path = self.library_tree_store.get_path(library_row_iter)
+                library_row_path = self.tree_store.get_path(library_row_iter)
                 act_expansion_library[library_path] = self.view.row_expanded(library_row_path)
                 # if act_expansion_library[library_path]:
                 #     print library_path
@@ -130,7 +138,7 @@ class LibraryTreeController(ExtendedController):
                 for library_path, library_row_expanded in self.__expansion_state.iteritems():
                     library_row_iter = self.library_row_iter_dict_by_library_path[library_path]
                     if library_row_iter:  # may elements are missing afterwards
-                        library_row_path = self.library_tree_store.get_path(library_row_iter)
+                        library_row_path = self.tree_store.get_path(library_row_iter)
                         if library_row_expanded:
                             self.view.expand_to_path(library_row_path)
                             # print library_path
@@ -139,7 +147,7 @@ class LibraryTreeController(ExtendedController):
 
     def update(self):
         self.store_expansion_state()
-        self.library_tree_store.clear()
+        self.tree_store.clear()
         self.library_row_iter_dict_by_library_path.clear()
         for library_key, library_item in self.model.library_manager.libraries.iteritems():
             self.insert_rec(None, library_key, library_item, "")
@@ -152,7 +160,7 @@ class LibraryTreeController(ExtendedController):
     def insert_rec(self, parent, library_key, library_item, library_path):
         if global_gui_config.get_config_value('LIBRARY_TREE_PATH_HUMAN_READABLE', False):
             library_key = library_key.replace('_', ' ')
-        tree_item = self.library_tree_store.insert_before(parent, None, (library_key, library_item, library_path))
+        tree_item = self.tree_store.insert_before(parent, None, (library_key, library_item, library_path))
         if isinstance(library_item, dict) and not library_item:
             return
         if not library_path:
@@ -203,13 +211,50 @@ class LibraryTreeController(ExtendedController):
         from rafcon.statemachine.storage import storage
         smm_m = self.state_machine_manager_model
         (model, row) = self.view.get_selection().get_selected()
-        library_path = model[row][1]
+        physical_library_path = model[row][self.ITEM_STORAGE_ID]
+        assert isinstance(physical_library_path, str)
 
-        logger.debug("Opening library as state-machine from path '{0}'".format(library_path))
-        state_machine = storage.load_state_machine_from_path(library_path)
+        logger.debug("Opening library as state-machine from path '{0}'".format(physical_library_path))
+        state_machine = storage.load_state_machine_from_path(physical_library_path)
 
         smm_m.state_machine_manager.add_state_machine(state_machine)
         return state_machine
+
+    def delete_button_clicked(self, widget):
+        """Removes library from hard drive after request second confirmation"""
+        logger.info("delete library")
+        model, path = self.view.get_selection().get_selected()
+        if path:
+            # Second confirmation to delete library
+            tree_m_row = self.tree_store[path]
+            assert isinstance(tree_m_row[self.ITEM_STORAGE_ID], str)
+            physical_library_path = tree_m_row[self.ITEM_STORAGE_ID]
+            def on_message_dialog_response_signal(widget, response_id):
+                if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, -4]:
+                    widget.destroy()
+
+                if response_id == ButtonDialog.OPTION_1.value:
+                    logger.debug("Remove of Library {} is triggered.".format(tree_m_row[self.ITEM_STORAGE_ID]))
+
+                    self.model.library_manager.remove_library_physically(tree_m_row[self.LIB_PATH_STORAGE_ID],
+                                                                         tree_m_row[self.ID_STORAGE_ID])
+                elif response_id in [ButtonDialog.OPTION_2.value, -4]:
+                    pass
+                else:
+                    logger.warning("Response id: {} is not considered".format(response_id))
+
+            message_string = "You choose to remove library with " \
+                             "\n\nlibrary tree path:   {0}" \
+                             "\n\nphysical path:        {1}.\n\n\n"\
+                             "You will remove the this library from hard drive! You really wanna do that?" \
+                             "".format(tree_m_row[self.LIB_PATH_STORAGE_ID] + '/' + tree_m_row[self.ID_STORAGE_ID],
+                                       physical_library_path)
+            width = 8*len("physical path:        " + physical_library_path)
+            RAFCONButtonDialog(message_string, ["Remove library", "Cancel"],
+                               on_message_dialog_response_signal,
+                               type=gtk.MESSAGE_QUESTION, parent=self.get_root_window(), width=min(width, 1400))
+            return True
+        return False
 
     def substitute_as_library_clicked(self, widget):
         state_machine_helper.substitute_state(self._get_selected_library_state(), as_template=False)
@@ -224,14 +269,16 @@ class LibraryTreeController(ExtendedController):
         :rtype: LibraryState
         """
         (model, row) = self.view.get_selection().get_selected()
-        library_item_key = model[row][0]
-        full_library_path = model[row][1]
-        library_path = model[row][2]
+        library_item_key = model[row][self.ID_STORAGE_ID]
+        library_item = model[row][self.ITEM_STORAGE_ID]
+        library_path = model[row][self.LIB_PATH_STORAGE_ID]
 
-        if isinstance(full_library_path, dict):
+        if isinstance(library_item, dict):
             return None
+        assert isinstance(library_item, str)
+        physical_library_path = library_item
 
         logger.debug("Link library state '%s' (with file system path: %s, and library tree path: %s) into "
-                     "the state machine" % (str(library_item_key), str(full_library_path), str(library_path)))
-        library_name = full_library_path.split(os.path.sep)[-1]
+                     "the state machine" % (str(library_item_key), physical_library_path, str(library_path)))
+        library_name = library_item.split(os.path.sep)[-1]
         return LibraryState(library_path, library_name, "0.1", library_name)

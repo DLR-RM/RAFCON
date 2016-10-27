@@ -7,7 +7,7 @@
 """
 
 import os
-import sys
+import shutil
 from gtkmvc import Observable
 
 import rafcon
@@ -314,3 +314,8 @@ class LibraryManager(Observable):
             return LibraryState(library_path, library_name, "0.1")
         else:
             logger.warning("Library manager will not create a library instance which is not in the mounted libraries.")
+
+    def remove_library_physically(self, library_path, library_name):
+        physical_path = self.get_os_path_to_library(library_path, library_name)[0]
+        shutil.rmtree(physical_path)
+        self.refresh_libraries()
