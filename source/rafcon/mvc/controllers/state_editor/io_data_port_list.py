@@ -12,6 +12,7 @@ import gtk
 import gobject
 from gtk import ListStore
 from gtk import TreeViewColumn, CellRendererToggle
+import glib
 
 from rafcon.statemachine.states.library_state import LibraryState
 
@@ -205,8 +206,9 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
         # logger.info("FOCUS_OUT NAME entry: {0} event: {1}".format(entry, event))
         if self.get_list_store_row_from_cursor_selection() is None:
             return
-
-        self.on_name_changed(entry, None, text=entry.get_text())
+        # We have to use idle_add to prevent core dumps:
+        # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
+        glib.idle_add(self.on_name_changed, entry, None, entry.get_text())
 
     def change_data_type(self, entry, event):
         """ Change-data-type-method to set the data_type of actual selected (row) data-port.
@@ -215,7 +217,7 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
         if self.get_list_store_row_from_cursor_selection() is None:
             return
 
-        self.on_data_type_changed(entry, None, text=entry.get_text())
+        glib.idle_add(self.on_data_type_changed, entry, None, entry.get_text())
 
     def change_value(self, entry, event):
         """ Change-value-method to set the default_value or runtime_value of actual selected (row) data-port.
@@ -224,7 +226,7 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
         if self.get_list_store_row_from_cursor_selection() is None:
             return
 
-        self.on_default_value_changed(entry, None, text=entry.get_text())
+        glib.idle_add(self.on_default_value_changed, entry, None, entry.get_text())
 
     def get_state_machine_selection(self):
         # print type(self).__name__, "get state machine selection"

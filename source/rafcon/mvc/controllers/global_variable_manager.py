@@ -10,6 +10,7 @@
 """
 
 import gtk
+import glib
 
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
@@ -136,7 +137,9 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         """
         # logger.info("change name {0}".format(event.type))
         if self.get_list_store_row_from_cursor_selection() is not None:
-            self.on_name_changed(entry, self.get_path(), new_gv_name=entry.get_text())
+            # We have to use idle_add to prevent core dumps:
+            # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
+            glib.idle_add(self.on_name_changed, entry, self.get_path(), entry.get_text())
 
     def change_value(self, entry, event):
         """Change value based on handed entry widget
@@ -145,14 +148,14 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         """
         # logger.info("change value {0}".format(event.type))
         if self.get_list_store_row_from_cursor_selection() is not None:
-            self.on_value_changed(entry, self.get_path(), new_value_as_string=entry.get_text())
+            glib.idle_add(self.on_value_changed, entry, self.get_path(), entry.get_text())
 
     def change_data_type(self, entry, event):
         """Change data type method to set the data_type of actual selected (row) global variable.
         """
         # logger.info("change data type {0}".format(event.type))
         if self.get_list_store_row_from_cursor_selection() is not None:
-            self.on_data_type_changed(entry, self.get_path(), new_data_type_as_string=entry.get_text())
+            glib.idle_add(self.on_data_type_changed, entry, self.get_path(), entry.get_text())
 
     def on_new_global_variable_button_clicked(self, *event):
         """Creates a new global variable with default values and selects its row
@@ -240,7 +243,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
             if data_type == type(None):
                 old_type = type(old_value)
                 logger.debug("Global variable list widget try to preserve type of variable {0} with type "
-                            "'NoneType'".format(gv_name))
+                             "'NoneType'".format(gv_name))
             try:
                 new_value = type_helpers.convert_string_value_to_type_value(new_value_as_string, old_type)
             except (AttributeError, ValueError) as e:
