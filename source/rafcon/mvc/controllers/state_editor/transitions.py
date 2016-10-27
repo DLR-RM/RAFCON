@@ -266,7 +266,7 @@ class StateTransitionsListController(ExtendedController, ListSelectionFeatureCon
 
     def on_combo_changed_from_outcome(self, widget, path, text):
         # check if the outcome may has not changed or combo is empty
-        if text is None or self.list_store[path][self.FROM_OUTCOME_STORAGE_ID] == text.split('.')[0]:
+        if text is None or text == "None" or self.list_store[path][self.FROM_OUTCOME_STORAGE_ID] == text.split('.')[0]:
             return
 
         # transition gets modified
