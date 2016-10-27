@@ -175,7 +175,8 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         Triggered when the Delete button in the Global Variables tab is clicked.
         """
         if react_to_event(self.view, self.tree_view, event):
-            if self.get_path() is not None:
+            path = self.get_path()
+            if path is not None:
                 gv_name = self.get_list_store_row_from_cursor_selection()[self.NAME_STORAGE_ID]
                 try:
                     self.model.global_variable_manager.delete_variable(gv_name)
