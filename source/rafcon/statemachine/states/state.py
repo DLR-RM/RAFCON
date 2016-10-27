@@ -517,11 +517,13 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if not self.get_sm_for_state() or self.get_sm_for_state().file_system_path is None:
             if self._file_system_path:
                 return self._file_system_path
-            else:
+            elif self.get_sm_for_state():
                 if self.get_sm_for_state().supports_saving_state_names:
                     return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
                 else:
                     return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
+            else:
+                return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
         else:
             if self.get_sm_for_state().supports_saving_state_names:
                 return os.path.join(self.get_sm_for_state().file_system_path, self.get_storage_path())
