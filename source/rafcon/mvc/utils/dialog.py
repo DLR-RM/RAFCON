@@ -48,8 +48,16 @@ class RAFCONDialog(gtk.MessageDialog):
 
 
 class RAFCONButtonDialog(RAFCONDialog):
-    def __init__(self, markup_text, button_texts, callback, callback_args=(), type=gtk.MESSAGE_INFO, parent=None):
+    def __init__(self, markup_text, button_texts, callback, callback_args=(), type=gtk.MESSAGE_INFO, parent=None,
+                 width=None):
         super(RAFCONButtonDialog, self).__init__(type, gtk.BUTTONS_NONE, gtk.DIALOG_MODAL, parent)
+        if isinstance(width, int):
+            hbox = self.get_action_area()
+            vbox = hbox.parent
+            msg_ctr = vbox.get_children()[0]
+            text_ctr = msg_ctr.get_children()[1]
+            text_ctr.get_children()[0].set_size_request(width, -1)
+            text_ctr.get_children()[1].set_size_request(width, -1)
         self.set_markup(markup_text)
         for button_text, option in zip(button_texts, ButtonDialog):
             self.add_button(button_text, option.value)
