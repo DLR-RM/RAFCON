@@ -287,10 +287,15 @@ class StateMachineModel(ModelMT, Hashable):
 
     def __send_root_state_notification(self, model, prop_name, info):
         cause = 'root_state_change'
-        if 'before' in info:
-            self.state_machine._notify_method_before(self.state_machine, cause, (self.state_machine, ), info)
-        elif 'after' in info:
-            self.state_machine._notify_method_after(self.state_machine, cause, None, (self.state_machine, ), info)
+        try:
+            if 'before' in info:
+                self.state_machine._notify_method_before(self.state_machine, cause, (self.state_machine, ), info)
+            elif 'after' in info:
+                self.state_machine._notify_method_after(self.state_machine, cause, None, (self.state_machine, ), info)
+        except AssertionError:
+            # This fixes an AssertionError raised by GTKMVC. It can probably occur, when a controller unregisters
+            # itself from a model, while the notification chain still propagates upwards.
+            pass
 
     #######################################################
     # --------------------- meta data methods ---------------------
