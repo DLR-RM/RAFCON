@@ -219,6 +219,18 @@ class StateDataFlowsListController(ListViewController):
         self.tree_view.set_cursor(len(self.list_store) - 1)
         return True
 
+    def remove_core_element(self, model):
+        """Remove respective core element of handed data flow model
+
+        :param DataFlowModel model: Data Flow model which core element should be removed
+        :return:
+        """
+        assert model.data_flow.parent is self.model.state or model.data_flow.parent is self.model.parent.state
+        if model.data_flow.parent is self.model.parent.state:
+            self.model.parent.state.remove_data_flow(model.data_flow.data_flow_id)
+        else:
+            self.model.state.remove_data_flow(model.data_flow.data_flow_id)
+
     def on_remove(self, button, info=None):
         """Remove the selected data flows and select the next one"""
         tree, path_list = self._tree_selection.get_selected_rows()

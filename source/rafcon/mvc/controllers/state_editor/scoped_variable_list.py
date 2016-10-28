@@ -101,7 +101,7 @@ class ScopedVariableListController(ListViewController):
 
     def remove_port(self, *event):
         if react_to_event(self.view, self.view[self.view.top], event) and not isinstance(self.model.state, LibraryState):
-            return self.on_delete_scoped_variable_button_clicked(None)
+            return self.on_remove(None)
 
     def get_state_machine_selection(self):
         # print type(self).__name__, "get state machine selection"
@@ -141,24 +141,14 @@ class ScopedVariableListController(ListViewController):
             self.select_entry(data_port_id)
             return True
 
-    def on_delete_scoped_variable_button_clicked(self, widget, data=None):
-        """Remove the selected scoped variables and select the next one"""
-        if isinstance(self.model, ContainerStateModel):
-            path_list = None
-            if self.view is not None:
-                model, path_list = self.tree_view.get_selection().get_selected_rows()
-            old_path = self.get_path()
-            scoped_variable_ids = [self.list_store[path][self.ID_STORAGE_ID] for path in path_list] if path_list else []
-            if scoped_variable_ids:
-                for scoped_variable_id in scoped_variable_ids:
-                    try:
-                        self.model.state.remove_scoped_variable(scoped_variable_id)
-                    except AttributeError as e:
-                        logger.warn("The scoped variable couldn't be removed: {0}".format(e))
-                        return False
-            if len(self.list_store) > 0:
-                self.view[self.view.top].set_cursor(min(old_path[0], len(self.list_store) - 1))
-            return True
+    def remove_core_element(self, model):
+        """Remove respective core element of handed scoped variable model
+
+        :param ScopedVariableModel model: Scoped variable model which core element should be removed
+        :return:
+        """
+        assert model.scoped_variable.parent is self.model.state
+        self.model.state.remove_scoped_variable(model.scoped_variable.data_port_id)
 
     def apply_new_scoped_variable_name(self, path, new_name):
         """Applies the new name of the scoped variable defined by path

@@ -16,10 +16,13 @@ class ListViewController(ExtendedController):
 
     :ivar gtk.ListStore list_store: List store that set by inherit class
     :ivar gtk.TreeView tree_view: Tree view that set by inherit class
-    :ivar int ID_STORAGE_ID: Index for list store used to select entries set by inherit class
-    :ivar int MODEL_STORAGE_ID: Index for list store used to update selections in state machine or tree view set by inherit class
+    :ivar int ID_STORAGE_ID: Index of core element id represented by row in list store and
+        used to select entries set by inherit class
+    :ivar int MODEL_STORAGE_ID: Index of model represented by row in list store and
+        used to update selections in state machine or tree view set by inherit class
     """
     ID_STORAGE_ID = None
+    CORE_STORAGE_ID = None
     MODEL_STORAGE_ID = None
     _logger = None
 
@@ -107,6 +110,36 @@ class ListViewController(ExtendedController):
 
         renderer.connect('editing-started', on_editing_started)
         renderer.connect('edited', on_edited)
+
+    def remove_core_element(self, model):
+        """An abstract remove method that removes respective core element by handed core element id
+
+        The method has to be implemented by inherit classes
+
+        :param StateElementModel model: Model which core element should be removed
+        :return:
+        """
+        raise NotImplementedError
+
+    def on_remove(self, widget, data=None):
+        """Remove respective selected core elements and select the next one"""
+        path_list = None
+        if self.view is not None:
+            model, path_list = self.tree_view.get_selection().get_selected_rows()
+        old_path = self.get_path()
+        models = [self.list_store[path][self.MODEL_STORAGE_ID] for path in path_list] if path_list else []
+        if models:
+            for model in models:
+                try:
+                    self.remove_core_element(model)
+                except AttributeError as e:
+                    self._logger.warn("The respective core element of {1}.list_store couldn't be removed. -> {0}"
+                                      "".format(e, self.__class__.__name__))
+            if len(self.list_store) > 0:
+                self.view[self.view.top].set_cursor(min(old_path[0], len(self.list_store) - 1))
+            return True
+        else:
+            self._logger.warning("Please select a element to be removed.")
 
     def on_right_click_menu(self):
         """An abstract method called after right click events"""
@@ -290,8 +323,10 @@ class TreeViewController(ExtendedController):
 
     :ivar gtk.TreeStore tree_store: Tree store that set by inherit class
     :ivar gtk.TreeView tree_view: Tree view that set by inherit class
-    :ivar int ID_STORAGE_ID: Index for list store used to select entries set by inherit class
-    :ivar int MODEL_STORAGE_ID: Index for list store used to update selections in state machine or tree view set by inherit class
+    :ivar int ID_STORAGE_ID: Index of core element id represented by row in list store and
+        used to select entries set by inherit class
+    :ivar int MODEL_STORAGE_ID: Index of model represented by row in list store and
+        used to update selections in state machine or tree view set by inherit class
     """
     ID_STORAGE_ID = None
     MODEL_STORAGE_ID = None

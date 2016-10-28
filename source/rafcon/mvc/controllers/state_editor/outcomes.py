@@ -47,7 +47,7 @@ class StateOutcomesListController(ListViewController):
     def __init__(self, model, view):
         # initiate data base and tree
         # id, name, to-state, to-outcome, name-color, to-state-color, outcome, state, outcome_model
-        list_store = gtk.ListStore(str, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
+        list_store = gtk.ListStore(int, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
                                    gobject.TYPE_PYOBJECT)
         super(StateOutcomesListController, self).__init__(model, view, view['tree_view'], list_store, logger)
 
@@ -93,8 +93,7 @@ class StateOutcomesListController(ListViewController):
         if new_name == self.list_store[path][self.NAME_STORAGE_ID]:
             return
 
-        outcome_id = self.list_store[path][self.CORE_STORAGE_ID].outcome_id
-        outcome = self.model.state.outcomes[outcome_id]
+        outcome = self.list_store[path][self.CORE_STORAGE_ID]
         try:
             outcome.name = new_name
             logger.debug("Outcome name changed to '{0}'".format(outcome.name))
@@ -109,13 +108,13 @@ class StateOutcomesListController(ListViewController):
         :param str path: The path string of the renderer
         :param str new_state_identifier: An identifier for the new state that was selected
         """
-        outcome_id = int(self.list_store[path][self.ID_STORAGE_ID])
+        outcome_id = self.list_store[path][self.ID_STORAGE_ID]
         if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
             transition_parent_state = self.model.parent.state
             if outcome_id in self.dict_to_other_state.keys():
-                t_id = int(self.dict_to_other_state[outcome_id][2])
+                t_id = self.dict_to_other_state[outcome_id][2]
             else:
-                t_id = int(self.dict_to_other_outcome[outcome_id][2])
+                t_id = self.dict_to_other_outcome[outcome_id][2]
             if new_state_identifier is not None:
                 to_state_id = new_state_identifier.split('.')[1]
                 if not transition_parent_state.transitions[t_id].to_state == to_state_id:
@@ -157,13 +156,13 @@ class StateOutcomesListController(ListViewController):
         """
         if self.model.parent is None:
             return
-        outcome_id = int(self.list_store[path][self.ID_STORAGE_ID])
+        outcome_id = self.list_store[path][self.ID_STORAGE_ID]
         transition_parent_state = self.model.parent.state
         if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
             if outcome_id in self.dict_to_other_state.keys():
-                t_id = int(self.dict_to_other_state[outcome_id][2])
+                t_id = self.dict_to_other_state[outcome_id][2]
             else:
-                t_id = int(self.dict_to_other_outcome[outcome_id][2])
+                t_id = self.dict_to_other_outcome[outcome_id][2]
             if new_outcome_identifier is not None:
                 new_to_outcome_id = int(new_outcome_identifier.split('.')[2])
                 if not transition_parent_state.transitions[t_id].to_outcome == new_to_outcome_id:
@@ -200,7 +199,7 @@ class StateOutcomesListController(ListViewController):
             except ValueError as e:
                 if run_id == num_success_outcomes:
                     logger.warn("The outcome couldn't be added: {0}".format(e))
-                    return
+                    return True
         # Search for new entry and select it
         ctr = 0
         for outcome_row in self.list_store:
@@ -212,21 +211,14 @@ class StateOutcomesListController(ListViewController):
 
         return True
 
-    def on_remove(self, button, info=None):
-        """Remove the selected outcomes and select the next one
+    def remove_core_element(self, model):
+        """Remove respective core element of handed outcome model
+
+        :param OutcomeModel model: Outcome model which core element should be removed
+        :return:
         """
-        tree, path_list = self.tree_view.get_selection().get_selected_rows()
-        old_path = self.get_path()
-        outcome_ids = [self.list_store[path][self.ID_STORAGE_ID] for path in path_list] if path_list else []
-        if outcome_ids:
-            for outcome_id in outcome_ids:
-                try:
-                    self.model.state.remove_outcome(outcome_id)
-                    return True
-                except AttributeError as e:
-                    logger.warning("Error while removing outcome: {0}".format(e))
-            if len(self.list_store) > 0:
-                self.tree_view.set_cursor(min(old_path[0], len(self.list_store)-1))
+        assert model.outcome.parent is self.model.state
+        self.model.state.remove_outcome(model.outcome.outcome_id)
 
     def on_right_click_menu(self):
         pass
