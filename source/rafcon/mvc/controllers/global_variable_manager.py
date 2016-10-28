@@ -10,7 +10,6 @@
 """
 
 import gtk
-import glib
 
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
@@ -57,7 +56,6 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         self.global_variable_counter = 0
         self.list_store_iterators = {}
         self._actual_entry = None
-        self._locked = False
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -65,15 +63,9 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         view['value_text'].set_property('editable', True)
         view['type_text'].set_property('editable', True)
 
-        view['name_text'].connect('edited', self.on_name_changed)
-        view['name_text'].connect('editing-started', self.editing_started)
-        view['name_text'].connect('editing-canceled', self.editing_canceled)
-        view['value_text'].connect('edited', self.on_value_changed)
-        view['value_text'].connect('editing-started', self.editing_started)
-        view['value_text'].connect('editing-canceled', self.editing_canceled)
-        view['type_text'].connect('edited', self.on_data_type_changed)
-        view['type_text'].connect('editing-started', self.editing_started)
-        view['type_text'].connect('editing-canceled', self.editing_canceled)
+        self._apply_value_on_edited_and_focus_out(view['name_text'], self.apply_new_global_variable_name)
+        self._apply_value_on_edited_and_focus_out(view['value_text'], self.apply_new_global_variable_value)
+        self._apply_value_on_edited_and_focus_out(view['type_text'], self.apply_new_global_variable_type)
         view['new_global_variable_button'].connect('clicked', self.on_new_global_variable_button_clicked)
         view['delete_global_variable_button'].connect('clicked', self.on_delete_global_variable_button_clicked)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
@@ -109,54 +101,6 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
             return False
         return True
 
-    def disconnect_actual_entry_widget(self):
-        """Disconnect actual observed entry widget used for edit"""
-        if self._actual_entry is not None:
-            self._actual_entry[0].disconnect(self._actual_entry[1])
-            self._actual_entry = None
-
-    def editing_started(self, renderer, editable, path):
-        """Callback method to connect focus out event of entry widget to the respective change method"""
-        if self.view['name_text'] is renderer:
-            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_name))
-        elif self.view['value_text'] is renderer:
-            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_value))
-        elif self.view['type_text'] is renderer:
-            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_data_type))
-        else:
-            logger.error("Not registered Renderer was used")
-
-    def editing_canceled(self, event):
-        """Callback method to disconnect focus out event of entry widget to the respective change method"""
-        self.disconnect_actual_entry_widget()
-
-    def change_name(self, entry, event):
-        """Change name based on handed entry widget
-
-        Set the name of actual selected (row) global variable if focused out of entry widget.
-        """
-        # logger.info("change name {0}".format(event.type))
-        if self.get_list_store_row_from_cursor_selection() is not None:
-            # We have to use idle_add to prevent core dumps:
-            # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
-            glib.idle_add(self.on_name_changed, entry, self.get_path(), entry.get_text())
-
-    def change_value(self, entry, event):
-        """Change value based on handed entry widget
-
-        Set the value of actual selected (row) global variable if focused out of entry widget.
-        """
-        # logger.info("change value {0}".format(event.type))
-        if self.get_list_store_row_from_cursor_selection() is not None:
-            glib.idle_add(self.on_value_changed, entry, self.get_path(), entry.get_text())
-
-    def change_data_type(self, entry, event):
-        """Change data type method to set the data_type of actual selected (row) global variable.
-        """
-        # logger.info("change data type {0}".format(event.type))
-        if self.get_list_store_row_from_cursor_selection() is not None:
-            glib.idle_add(self.on_data_type_changed, entry, self.get_path(), entry.get_text())
-
     def on_new_global_variable_button_clicked(self, *event):
         """Creates a new global variable with default values and selects its row
 
@@ -191,16 +135,14 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
                     self.tree_view.set_cursor(min(old_path[0], len(self.list_store) - 1))
             return True
 
-    def on_name_changed(self, widget, path, new_gv_name):
+    def apply_new_global_variable_name(self, path, new_gv_name):
         """Change global variable name/key according handed string
 
         Updates the global variable name only if different and already in list store.
 
-        :param gtk.Object widget: Object which is the source of method call, e.g. signal callback
         :param path: The path identifying the edited global variable tree view row, can be str, int or tuple.
         :param str new_gv_name: New global variable name
         """
-        # logger.info("changing name widget: {0}, path: {1}, text: {2}".format(widget, path, new_gv_name))
         gv_name = self.list_store[path][self.NAME_STORAGE_ID]
         if gv_name == new_gv_name or not self.global_variable_is_editable(gv_name, 'Name change'):
             return
@@ -208,27 +150,23 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         data_value = self.model.global_variable_manager.get_representation(gv_name)
         data_type = self.model.global_variable_manager.get_data_type(gv_name)
         self.disconnect_actual_entry_widget()
-        self._locked = True
         try:
             self.model.global_variable_manager.delete_variable(gv_name)
             self.model.global_variable_manager.set_variable(new_gv_name, data_value, data_type=data_type)
             gv_name = new_gv_name
         except (AttributeError, RuntimeError, TypeError) as e:
             logger.warning(str(e))
-        self._locked = False
         self.update_global_variables_list_store()
         self.select_entry(gv_name)
 
-    def on_value_changed(self, widget, path, new_value_as_string):
+    def apply_new_global_variable_value(self, path, new_value_as_string):
         """Change global variable value according handed string
 
         Updates the global variable value only if new value string is different to old representation.
 
-        :param gtk.Object widget: Object which is the source of method call, e.g. signal callback
         :param path: The path identifying the edited global variable tree view row, can be str, int or tuple.
         :param str new_value_as_string: New global variable value as string
         """
-        # logger.info("changing value widget: {0}, path: {1}, text: {2}".format(widget, path, new_value_as_string))
         if self.list_store[path][self.DATA_TYPE_AS_STRING_STORAGE_ID] == new_value_as_string:
             return
         gv_name = self.list_store[path][self.NAME_STORAGE_ID]
@@ -263,23 +201,20 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
                                                                              [type(old_value), type(None)],
                                                                              gv_name))
 
-        self.disconnect_actual_entry_widget()
         try:
             self.model.global_variable_manager.set_variable(gv_name, new_value, data_type=data_type)
         except (RuntimeError, AttributeError, TypeError) as e:
             logger.error("Error while setting global variable {1} to value {2} -> raised error {0}"
                          "".format(gv_name, new_value, e))
 
-    def on_data_type_changed(self, widget, path, new_data_type_as_string):
+    def apply_new_global_variable_type(self, path, new_data_type_as_string):
         """Change global variable value according handed string
 
         Updates the global variable data type only if different.
 
-        :param gtk.Object widget: Object which is the source of method call, e.g. signal callback
         :param path: The path identifying the edited global variable tree view row, can be str, int or tuple.
         :param str new_data_type_as_string: New global variable data type as string
         """
-        # logger.info("changing type widget: {0}, path: {1}, text: {2}".format(widget, path, new_data_type_as_string))
         if self.list_store[path][self.DATA_TYPE_AS_STRING_STORAGE_ID] == new_data_type_as_string:
             return
         gv_name = self.list_store[path][self.NAME_STORAGE_ID]
@@ -308,7 +243,6 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
                             "".format(gv_name, old_value, new_data_type, new_value, e))
 
         # set value in global variable manager
-        self.disconnect_actual_entry_widget()
         try:
             self.model.global_variable_manager.set_variable(gv_name, new_value, data_type=new_data_type)
         except (ValueError, RuntimeError, TypeError) as e:
@@ -323,8 +257,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         Holds tree store and updates row elements if is-locked or global variable value changes.
         """
 
-        if info['method_name'] in ['set_locked_variable'] or self._locked or \
-                info['result'] is Exception:
+        if info['method_name'] in ['set_locked_variable'] or info['result'] is Exception:
             return
 
         if info['method_name'] in ['lock_variable', 'unlock_variable']:
