@@ -25,6 +25,7 @@ from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.storage.storage import get_storage_id_for_state, ID_NAME_DELIMITER
+from rafcon.statemachine.storage import storage
 
 from rafcon.utils import log
 from rafcon.utils import multi_event
@@ -800,7 +801,17 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 raise TypeError("Name must be of type str")
             if len(name) < 1:
                 raise ValueError("Name must have at least one character")
+
+        marked_path_for_removal = False
+        if self._name:
+            # remove old path, as the state will be saved und another directory as its names changes
+            storage.mark_path_for_removal_for_sm_id(self.get_sm_for_state().state_machine_id, self.get_file_system_path())
+            marked_path_for_removal = True
         self._name = name
+        # make sure that the new name is not accidently removed if the state is renamed to its original name
+        if marked_path_for_removal:
+            storage.unmark_path_for_removal_for_sm_id(self.get_sm_for_state().state_machine_id, self.get_file_system_path())
+
 
     @property
     def parent(self):

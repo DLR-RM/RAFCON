@@ -66,6 +66,9 @@ class GuiConfig(ObservableConfig):
         gtkrc_file_path = os.path.join(self.path_to_tool, 'themes', theme, 'gtk-2.0', 'gtkrc')
         if not os.path.exists(gtkrc_file_path):
             raise ValueError("GTK theme '{0}' does not exist".format(theme))
+        # TODO: this is a hack, but decreases the chance that RAFCON does not start up as rc_parse does not return
+        import time
+        time.sleep(0.3)
         gtk.rc_parse(gtkrc_file_path)
 
     def configure_fonts(self):
