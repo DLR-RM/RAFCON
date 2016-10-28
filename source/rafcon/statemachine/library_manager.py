@@ -315,7 +315,7 @@ class LibraryManager(Observable):
         else:
             logger.warning("Library manager will not create a library instance which is not in the mounted libraries.")
 
-    def remove_library_physically(self, library_path, library_name):
-        physical_path = self.get_os_path_to_library(library_path, library_name)[0]
-        shutil.rmtree(physical_path)
+    def remove_library_from_file_system(self, library_path, library_name):
+        library_file_system_path = self.get_os_path_to_library(library_path, library_name)[0]
+        shutil.rmtree(library_file_system_path)
         self.refresh_libraries()

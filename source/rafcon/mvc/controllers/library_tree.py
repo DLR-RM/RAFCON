@@ -228,7 +228,7 @@ class LibraryTreeController(ExtendedController):
             # Second confirmation to delete library
             tree_m_row = self.tree_store[path]
             assert isinstance(tree_m_row[self.ITEM_STORAGE_ID], str)
-            physical_library_path = tree_m_row[self.ITEM_STORAGE_ID]
+            library_file_system_path = tree_m_row[self.ITEM_STORAGE_ID]
             def on_message_dialog_response_signal(widget, response_id):
                 if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, -4]:
                     widget.destroy()
@@ -236,8 +236,8 @@ class LibraryTreeController(ExtendedController):
                 if response_id == ButtonDialog.OPTION_1.value:
                     logger.debug("Remove of Library {} is triggered.".format(tree_m_row[self.ITEM_STORAGE_ID]))
 
-                    self.model.library_manager.remove_library_physically(tree_m_row[self.LIB_PATH_STORAGE_ID],
-                                                                         tree_m_row[self.ID_STORAGE_ID])
+                    self.model.library_manager.remove_library_from_file_system(tree_m_row[self.LIB_PATH_STORAGE_ID],
+                                                                               tree_m_row[self.ID_STORAGE_ID])
                 elif response_id in [ButtonDialog.OPTION_2.value, -4]:
                     pass
                 else:
@@ -248,8 +248,8 @@ class LibraryTreeController(ExtendedController):
                              "\n\nphysical path:        {1}.\n\n\n"\
                              "You will remove the this library from hard drive! You really wanna do that?" \
                              "".format(tree_m_row[self.LIB_PATH_STORAGE_ID] + '/' + tree_m_row[self.ID_STORAGE_ID],
-                                       physical_library_path)
-            width = 8*len("physical path:        " + physical_library_path)
+                                       library_file_system_path)
+            width = 8*len("physical path:        " + library_file_system_path)
             RAFCONButtonDialog(message_string, ["Remove library", "Cancel"],
                                on_message_dialog_response_signal,
                                type=gtk.MESSAGE_QUESTION, parent=self.get_root_window(), width=min(width, 1400))
@@ -276,9 +276,10 @@ class LibraryTreeController(ExtendedController):
         if isinstance(library_item, dict):
             return None
         assert isinstance(library_item, str)
-        physical_library_path = library_item
+        library_file_system_path = library_item
 
-        logger.debug("Link library state '%s' (with file system path: %s, and library tree path: %s) into "
-                     "the state machine" % (str(library_item_key), physical_library_path, str(library_path)))
-        library_name = library_item.split(os.path.sep)[-1]
+        logger.debug("Link library state '{0}' (with library tree path: {1} and file system path: {2}) into state "
+                     "machine.".format((str(library_item_key), library_file_system_path,
+                                        str(library_path) + "/" + str(library_item_key))))
+        library_name = library_file_system_path.split(os.path.sep)[-1]
         return LibraryState(library_path, library_name, "0.1", library_name)
