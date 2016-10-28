@@ -15,8 +15,7 @@ import gobject
 
 from rafcon.statemachine.enums import StateType
 
-from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils.selection import TreeSelectionFeatureController
+from rafcon.mvc.controllers.utils.selection import TreeViewController
 from rafcon.mvc.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
@@ -33,7 +32,7 @@ logger = log.get_logger(__name__)
 # TODO Comment
 
 
-class StateMachineTreeController(ExtendedController, TreeSelectionFeatureController):
+class StateMachineTreeController(TreeViewController):
     """Controller handling the state machine tree.
 
     :param rafcon.mvc.models.state_machine_manager.StateMachineManagerModel model: The state machine manager model,
@@ -50,18 +49,14 @@ class StateMachineTreeController(ExtendedController, TreeSelectionFeatureControl
     STATE_PATH_STORAGE_ID = 4
 
     def __init__(self, model, view):
-        """Constructor"""
         assert isinstance(model, StateMachineManagerModel)
+        tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT, str)
+        super(StateMachineTreeController, self).__init__(model, view, view, tree_store)
 
-        self.tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT, str)
-        self.tree_view = view
-        ExtendedController.__init__(self, model, view)
-        TreeSelectionFeatureController.__init__(self, self.tree_store, self.tree_view, logger)
         self.state_right_click_ctrl = StateMachineTreeRightClickMenuController(model, view)
 
         self.view_is_registered = False
 
-        view.set_model(self.tree_store)
         # view.set_hover_expand(True)
         self.state_row_iter_dict_by_state_path = {}
         self.__my_selected_sm_id = None
@@ -76,7 +71,7 @@ class StateMachineTreeController(ExtendedController, TreeSelectionFeatureControl
         self.view.connect('button_press_event', self.mouse_click)
         self.view_is_registered = True
         self.update(with_expand=True)
-        TreeSelectionFeatureController.register_view(self, view)
+        super(StateMachineTreeController, self).register_view(view)
 
     def register_adapters(self):
         pass
@@ -101,7 +96,6 @@ class StateMachineTreeController(ExtendedController, TreeSelectionFeatureControl
         if self.__my_selected_sm_id is not None:
             # observe new model
             self._selected_sm_model = self.model.state_machines[self.__my_selected_sm_id]
-            # logger.debug("NEW SM SELECTION %s" % self._selected_sm_model)
             self.observe_model(self._selected_sm_model)  # for selection
             self.update()
         else:
@@ -122,7 +116,7 @@ class StateMachineTreeController(ExtendedController, TreeSelectionFeatureControl
         if react_to_event(self.view, self.view['state_machine_tree_view'], event):
             return state_machine_helper.delete_selected_elements(self._selected_sm_model)
 
-    @ExtendedController.observe("state_machine", after=True)
+    @TreeViewController.observe("state_machine", after=True)
     def states_update(self, model, prop_name, info):
 
         if is_execution_status_update_notification_from_state_machine_model(prop_name, info):
@@ -137,7 +131,7 @@ class StateMachineTreeController(ExtendedController, TreeSelectionFeatureControl
                 overview['method_name'][-1] in ["add_state", "remove_state"]:
             self.update(overview['model'][-1])
 
-    @ExtendedController.observe("state_machine", before=True)
+    @TreeViewController.observe("state_machine", before=True)
     def states_update_before(self, model, prop_name, info):
 
         if is_execution_status_update_notification_from_state_machine_model(prop_name, info):
@@ -150,16 +144,16 @@ class StateMachineTreeController(ExtendedController, TreeSelectionFeatureControl
             changed_model = self._selected_sm_model.get_state_model_by_path(overview['args'][-1][1].get_path())
             self.observe_model(changed_model)
 
-    @ExtendedController.observe("state_type_changed_signal", signal=True)
+    @TreeViewController.observe("state_type_changed_signal", signal=True)
     def notification_state_type_changed(self, model, prop_name, info):
         self.relieve_model(model)
         self.update() if model.state.is_root_state else self.update(model.parent)
 
-    @ExtendedController.observe("root_state", assign=True)
+    @TreeViewController.observe("root_state", assign=True)
     def state_machine_notification(self, model, property, info):
         self.update(model.root_state)
 
-    @ExtendedController.observe("selected_state_machine_id", assign=True)
+    @TreeViewController.observe("selected_state_machine_id", assign=True)
     def state_machine_manager_notification(self, model, property, info):
         # store expansion state
         self.store_expansion_state()
@@ -316,7 +310,7 @@ class StateMachineTreeController(ExtendedController, TreeSelectionFeatureControl
 
             return True
 
-    @ExtendedController.observe("selection", after=True)
+    @TreeViewController.observe("selection", after=True)
     def assign_notification_selection(self, model, prop_name, info):
         if info is None and self._selected_sm_model and self._selected_sm_model.selection.get_selected_state() or \
                 info and self.tree_store.get_iter_root() and info['method_name'] == 'states':

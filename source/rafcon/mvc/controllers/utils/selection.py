@@ -9,8 +9,10 @@ module_logger = log.get_logger(__name__)
 
 
 class ListViewController(ExtendedController):
-    """Class that implements a full selection control for lists that consists of a gtk.TreeView and a gtk.ListStore
-    as model.
+    """Base class for controller having a gtk.Tree view with a gtk.ListStore
+
+    The class implements methods for e.g. handling (multi-)selection and offers default callback methods for various
+    signals.
 
     :ivar gtk.ListStore list_store: List store that set by inherit class
     :ivar gtk.TreeView tree_view: Tree view that set by inherit class
@@ -281,30 +283,26 @@ class ListViewController(ExtendedController):
         return self.tree_view.get_cursor()[0]
 
 
-class TreeSelectionFeatureController(object):
-    """Class that implements a full selection control for Trees that consists of a gtk.TreeView and a gtk.TreeStore
-    as model.
+class TreeViewController(ExtendedController):
+    """Base class for controller having a gtk.Tree view with a gtk.TreeStore
+
+    The class implements methods for e.g. handling (multi-)selection.
 
     :ivar gtk.TreeStore tree_store: Tree store that set by inherit class
     :ivar gtk.TreeView tree_view: Tree view that set by inherit class
     :ivar int ID_STORAGE_ID: Index for list store used to select entries set by inherit class
     :ivar int MODEL_STORAGE_ID: Index for list store used to update selections in state machine or tree view set by inherit class
     """
-    tree_store = None
-    tree_view = None
-    _logger = None
     ID_STORAGE_ID = None
     MODEL_STORAGE_ID = None
+    _logger = None
 
-    def __init__(self, model, view, logger=None):
-        assert isinstance(model, gtk.TreeStore)
-        assert isinstance(view, gtk.TreeView)
-        assert self.tree_store is model
-        assert self.tree_view is view
+    def __init__(self, model, view, tree_view, tree_store, logger=None):
+        super(TreeViewController, self).__init__(model, view)
         self._logger = logger if logger is not None else module_logger
         self._do_selection_update = False
-        self._tree_selection = self.tree_view.get_selection()
         self._last_path_selection = None
+        self._setup_tree_view(tree_view, tree_store)
 
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
@@ -312,6 +310,12 @@ class TreeSelectionFeatureController(object):
         self._tree_selection.connect('changed', self.selection_changed)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         self.update_selection_sm_prior()
+
+    def _setup_tree_view(self, tree_view, tree_store):
+        self.tree_view = tree_view
+        self.tree_view.set_model(tree_store)
+        self.tree_store = tree_store
+        self._tree_selection = self.tree_view.get_selection()
 
     def get_view_selection(self):
         """Get actual tree selection object and all respective models of selected rows"""
