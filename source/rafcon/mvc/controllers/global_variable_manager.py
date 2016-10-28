@@ -12,7 +12,7 @@
 import gtk
 
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.utils.selection import TreeViewController
+from rafcon.mvc.controllers.utils.selection import ListViewController
 
 from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
@@ -21,12 +21,12 @@ from rafcon.utils import type_helpers
 logger = log.get_logger(__name__)
 
 
-class GlobalVariableManagerController(TreeViewController):
+class GlobalVariableManagerController(ListViewController):
     """Controller handling the Global Variable Manager
 
      The controller enables to edit, add and remove global variable to the global variable manager by a tree view.
      Every global variable is accessible by it key which is in the tree view equivalent with its name and in the
-     methods it is gv_name. This Controller inherit and use rudimentary methods of the TreeViewController
+     methods it is gv_name. This Controller inherit and use rudimentary methods of the ListViewController
      (therefore it introduce the ID_STORAGE_ID class attribute) and avoids to use the selection methods of those which
      need a MODEL_STORAGE_ID and a state machine selection and it is not registering the view to the mixed in controller.
 
@@ -240,7 +240,7 @@ class GlobalVariableManagerController(TreeViewController):
             logger.error("Could not set new value unexpected failure {0} to value {1} -> raised error {2}"
                          "".format(gv_name, new_value, e))
 
-    @TreeViewController.observe("global_variable_manager", after=True)
+    @ListViewController.observe("global_variable_manager", after=True)
     def assign_notification_state(self, model, prop_name, info):
         """Handles gtkmvc notification from global variable manager
 

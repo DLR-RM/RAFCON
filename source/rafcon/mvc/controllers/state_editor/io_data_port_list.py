@@ -16,7 +16,7 @@ from gtk import TreeViewColumn, CellRendererToggle
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.utils.selection import TreeViewController
+from rafcon.mvc.controllers.utils.selection import ListViewController
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 
 from rafcon.mvc.gui_helper import react_to_event
@@ -26,7 +26,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class DataPortListController(TreeViewController):
+class DataPortListController(ListViewController):
     """Controller handling the input and output Data Port List
     """
     NAME_STORAGE_ID = 0
@@ -158,13 +158,13 @@ class DataPortListController(TreeViewController):
             sm_selected_model_list = sm_selection.output_data_ports
         return sm_selection, sm_selected_model_list
 
-    @TreeViewController.observe("selection", after=True)
+    @ListViewController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
         if "{}_data_ports".format(self.type) == info['method_name']:
             self.update_selection_sm_prior()
 
-    @TreeViewController.observe("input_data_ports", after=True)
-    @TreeViewController.observe("output_data_ports", after=True)
+    @ListViewController.observe("input_data_ports", after=True)
+    @ListViewController.observe("output_data_ports", after=True)
     def data_ports_changed(self, model, prop_name, info):
         """Reload list store and reminds selection when the model was changed"""
         if "{}_data_ports".format(self.type) == prop_name and isinstance(model, AbstractStateModel):
@@ -178,7 +178,7 @@ class DataPortListController(TreeViewController):
             if selected_data_port_ids:
                 [self.select_entry(selected_data_port_id, False) for selected_data_port_id in selected_data_port_ids]
 
-    @TreeViewController.observe("state", after=True)
+    @ListViewController.observe("state", after=True)
     def runtime_values_changed(self, model, prop_name, info):
         """Handle cases for the library runtime values"""
         if ("_{}_runtime_value".format(self.type) in info.method_name or

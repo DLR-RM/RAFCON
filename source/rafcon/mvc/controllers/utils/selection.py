@@ -8,7 +8,7 @@ from rafcon.utils import log
 module_logger = log.get_logger(__name__)
 
 
-class TreeViewController(ExtendedController):
+class ListViewController(ExtendedController):
     """Class that implements a full selection control for lists that consists of a gtk.TreeView and a gtk.ListStore
     as model.
 
@@ -22,7 +22,7 @@ class TreeViewController(ExtendedController):
     _logger = None
 
     def __init__(self, model, view, tree_view, list_store, logger=None):
-        super(TreeViewController, self).__init__(model, view)
+        super(ListViewController, self).__init__(model, view)
         self._logger = logger if logger is not None else module_logger
         self._do_selection_update = False
         self._last_path_selection = None

@@ -17,7 +17,7 @@ from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDa
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils.selection import TreeViewController
+from rafcon.mvc.controllers.utils.selection import ListViewController
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 
@@ -29,7 +29,7 @@ logger = log.get_logger(__name__)
 PORT_TYPE_TAG = {InputDataPort: 'IP', OutputDataPort: 'OP', ScopedVariable: 'SV'}
 
 
-class StateDataFlowsListController(TreeViewController):
+class StateDataFlowsListController(ListViewController):
     """Controller handling the view of transitions of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -392,19 +392,19 @@ class StateDataFlowsListController(TreeViewController):
         sm_selection = self.model.get_sm_m_for_state_m().selection
         return sm_selection, sm_selection.data_flows
 
-    @TreeViewController.observe("selection", after=True)
+    @ListViewController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
         if "data_flows" == info['method_name']:
             self.update_selection_sm_prior()
 
-    @TreeViewController.observe("root_state", assign=True)
+    @ListViewController.observe("root_state", assign=True)
     def root_state_changed(self, model, prop_name, info):
         """ Relieve all observed models to avoid updates on old root state.
         """
         # TODO may re-observe if the states-editor supports this feature
         self.relieve_all_models()
 
-    @TreeViewController.observe("state", before=True)
+    @ListViewController.observe("state", before=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
         """ Set the no update flag to avoid updates in between of a state removal.
         """
@@ -419,14 +419,14 @@ class StateDataFlowsListController(TreeViewController):
                     self.relieve_all_models()
                 # print "DNOUPDATE_PARENT ", self.no_update_self_or_parent_state_destruction, info.args[1], self.model.state.state_id
 
-    @TreeViewController.observe("change_state_type", before=True)
-    @TreeViewController.observe("change_root_state_type", before=True)
+    @ListViewController.observe("change_state_type", before=True)
+    @ListViewController.observe("change_root_state_type", before=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
         """ Set the no update flag to avoid updates in between of a state-type-change.
         """
         self.no_update = True
 
-    @TreeViewController.observe("state", after=True)
+    @ListViewController.observe("state", after=True)
     def after_notification_state(self, model, prop_name, info):
         # The method causing the change raised an exception, thus nothing was changed
         # avoid updates because of execution status updates
@@ -457,13 +457,13 @@ class StateDataFlowsListController(TreeViewController):
             self.update()
         self._actual_overview = None
 
-    @TreeViewController.observe("states", after=True)
-    @TreeViewController.observe("change_state_type", after=True)
-    @TreeViewController.observe("change_root_state_type", after=True)
-    @TreeViewController.observe("input_data_ports", after=True)
-    @TreeViewController.observe("output_data_ports", after=True)
-    @TreeViewController.observe("scoped_variables", after=True)
-    @TreeViewController.observe("data_flows", after=True)
+    @ListViewController.observe("states", after=True)
+    @ListViewController.observe("change_state_type", after=True)
+    @ListViewController.observe("change_root_state_type", after=True)
+    @ListViewController.observe("input_data_ports", after=True)
+    @ListViewController.observe("output_data_ports", after=True)
+    @ListViewController.observe("scoped_variables", after=True)
+    @ListViewController.observe("data_flows", after=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
         # The method causing the change raised an exception, thus nothing was changed
         # overview = NotificationOverview(info, False, 'DataFlowWidget')

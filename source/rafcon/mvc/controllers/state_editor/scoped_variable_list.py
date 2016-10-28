@@ -14,7 +14,7 @@ import gobject
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.utils.selection import TreeViewController
+from rafcon.mvc.controllers.utils.selection import ListViewController
 from rafcon.mvc.models.container_state import ContainerStateModel
 
 from rafcon.mvc.gui_helper import react_to_event
@@ -24,7 +24,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class ScopedVariableListController(TreeViewController):
+class ScopedVariableListController(ListViewController):
     """Controller handling the scoped variable list
 
     :param rafcon.mvc.models.state.StateModel model: The state model, holding state data.
@@ -108,12 +108,12 @@ class ScopedVariableListController(TreeViewController):
         sm_selection = self.model.get_sm_m_for_state_m().selection
         return sm_selection, sm_selection.scoped_variables
 
-    @TreeViewController.observe("selection", after=True)
+    @ListViewController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
         if "scoped_variables" == info['method_name']:
             self.update_selection_sm_prior()
 
-    @TreeViewController.observe("scoped_variables", after=True)
+    @ListViewController.observe("scoped_variables", after=True)
     def scoped_variables_changed(self, model, prop_name, info):
         # store port selection
         path_list = None

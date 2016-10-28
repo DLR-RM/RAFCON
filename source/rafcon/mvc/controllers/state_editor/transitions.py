@@ -16,7 +16,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils.selection import TreeViewController
+from rafcon.mvc.controllers.utils.selection import ListViewController
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 
 from rafcon.mvc.gui_helper import format_cell, react_to_event
@@ -27,7 +27,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateTransitionsListController(TreeViewController):
+class StateTransitionsListController(ListViewController):
     """Controller handling the view of transitions of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -615,19 +615,19 @@ class StateTransitionsListController(TreeViewController):
         sm_selection = self.model.get_sm_m_for_state_m().selection
         return sm_selection, sm_selection.transitions
 
-    @TreeViewController.observe("selection", after=True)
+    @ListViewController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
         if "transitions" == info['method_name']:
             self.update_selection_sm_prior()
 
-    @TreeViewController.observe("root_state", assign=True)
+    @ListViewController.observe("root_state", assign=True)
     def root_state_changed(self, model, prop_name, info):
         """ Relieve all observed models to avoid updates on old root state.
         """
         # TODO may re-observe if the states-editor supports this feature
         self.relieve_all_models()
 
-    @TreeViewController.observe("state", before=True)
+    @ListViewController.observe("state", before=True)
     def before_notification_state(self, model, prop_name, info):
         """ Set the no update flag to avoid updates in between of a state removal.
         """
@@ -644,14 +644,14 @@ class StateTransitionsListController(TreeViewController):
                     self.relieve_all_models()
                 # print "TNOUPDATE_PARENT ", self.no_update_self_or_parent_state_destruction, info.args[1], self.model.state.state_id
 
-    @TreeViewController.observe("change_root_state_type", before=True)
-    @TreeViewController.observe("change_state_type", before=True)
+    @ListViewController.observe("change_root_state_type", before=True)
+    @ListViewController.observe("change_state_type", before=True)
     def before_notification_of_type_change(self, model, prop_name, info):
         """ Set the no update flag to avoid updates in between of a state-type-change.
         """
         self.no_update = True
 
-    @TreeViewController.observe("state", after=True)
+    @ListViewController.observe("state", after=True)
     def after_notification_state(self, model, prop_name, info):
 
         # avoid updates because of execution status updates
@@ -683,11 +683,11 @@ class StateTransitionsListController(TreeViewController):
             self.update()
         self._actual_overview = None
 
-    @TreeViewController.observe("states", after=True)
-    @TreeViewController.observe("transitions", after=True)
-    @TreeViewController.observe("outcomes", after=True)
-    @TreeViewController.observe("change_root_state_type", after=True)
-    @TreeViewController.observe("change_state_type", after=True)
+    @ListViewController.observe("states", after=True)
+    @ListViewController.observe("transitions", after=True)
+    @ListViewController.observe("outcomes", after=True)
+    @ListViewController.observe("change_root_state_type", after=True)
+    @ListViewController.observe("change_state_type", after=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
         """ Activates the update after a state-type-change happend and triggers update if outcomes, transitions or
         states list has been changed.

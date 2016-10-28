@@ -15,7 +15,7 @@ import gobject
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils.selection import TreeViewController
+from rafcon.mvc.controllers.utils.selection import ListViewController
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.state_machine_helper import insert_self_transition_meta_data
@@ -28,7 +28,7 @@ logger = log.get_logger(__name__)
 # TODO find out why not editable ID-column cause segfault ->  if sometimes move into widget by tab and enter is pressed
 
 
-class StateOutcomesListController(TreeViewController):
+class StateOutcomesListController(ListViewController):
     """The controller handles the outcomes of one respective state
 
     The controller allows to add and remove outcomes as well as to add, remove and to modify the related transition.
@@ -320,14 +320,14 @@ class StateOutcomesListController(TreeViewController):
         sm_selection = self.model.get_sm_m_for_state_m().selection
         return sm_selection, sm_selection.outcomes
 
-    @TreeViewController.observe("selection", after=True)
+    @ListViewController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
         if "outcomes" == info['method_name']:
             self.update_selection_sm_prior()
 
-    @TreeViewController.observe("parent", after=True)
-    @TreeViewController.observe("outcomes", after=True)
-    @TreeViewController.observe("transitions", after=True)
+    @ListViewController.observe("parent", after=True)
+    @ListViewController.observe("outcomes", after=True)
+    @ListViewController.observe("transitions", after=True)
     def outcomes_changed(self, model, prop_name, info):
         self.update()
 
