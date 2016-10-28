@@ -10,13 +10,12 @@
 """
 
 import gtk
-import glib
 import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils.selection import ListSelectionFeatureController
+from rafcon.mvc.controllers.utils.selection import TreeViewController
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.state_machine_helper import insert_self_transition_meta_data
@@ -29,7 +28,7 @@ logger = log.get_logger(__name__)
 # TODO find out why not editable ID-column cause segfault ->  if sometimes move into widget by tab and enter is pressed
 
 
-class StateOutcomesListController(ExtendedController, ListSelectionFeatureController):
+class StateOutcomesListController(TreeViewController):
     """The controller handles the outcomes of one respective state
 
     The controller allows to add and remove outcomes as well as to add, remove and to modify the related transition.
@@ -48,10 +47,9 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
     def __init__(self, model, view):
         # initiate data base and tree
         # id, name, to-state, to-outcome, name-color, to-state-color, outcome, state, outcome_model
-        self.list_store = gtk.ListStore(str, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
-                                        gobject.TYPE_PYOBJECT)
-        self.tree_view = view['tree_view']
-        self._logger = logger
+        list_store = gtk.ListStore(str, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
+                                   gobject.TYPE_PYOBJECT)
+        super(StateOutcomesListController, self).__init__(model, view, view['tree_view'], list_store, logger)
 
         self.to_state_combo_list = gtk.ListStore(str, str, str)
         self.to_outcome_combo_list = gtk.ListStore(str, str, str)
@@ -62,10 +60,6 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         # not used at the moment key-outcome_id -> label,  from_state_id,  transition_id
         self.dict_from_other_state = {}  # if widget gets extended
 
-        self._current_editable_with_event = None
-
-        ExtendedController.__init__(self, model, view)
-        ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(self.tree_view)
         if not model.state.is_root_state:
             self.observe_model(model.parent)
@@ -75,66 +69,25 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         else:
             logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
 
-        self.tree_view.set_model(self.list_store)
-
     def register_view(self, view):
         """Called when the View was registered
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
+        super(StateOutcomesListController, self).register_view(view)
         if view['to_state_col'] and view['to_outcome_col'] and view['to_state_combo'] and view['to_outcome_combo']:
             view['to_state_combo'].connect("edited", self.on_to_state_edited)
             view['to_outcome_combo'].connect("edited", self.on_to_outcome_edited)
 
-        view['name_cell'].connect('edited', self.on_name_edited)
-        view['name_cell'].connect('editing-started', self.on_editing_started)
-        view['name_cell'].connect('editing-canceled', self.on_editing_canceled)
+        self._apply_value_on_edited_and_focus_out(view['name_cell'], self.apply_new_outcome_name)
 
-        ListSelectionFeatureController.register_view(self, view)
         self.update()
 
-    def on_editing_started(self, renderer, editable, path):
-        """Connects the a handler for the focus-out-event of the current editable
-
-        :param gtk.CellRendererText renderer: The cell renderer who's editing was started
-        :param gtk.CellEditable editable: interface for editing the current TreeView cell
-        :param str path: the path identifying the edited cell
-        """
-        if self.view['name_cell'] is renderer:
-            self._current_editable_with_event = (editable, editable.connect('focus-out-event', self.on_focus_out))
-        else:
-            logger.error("Not registered Renderer was used")
-
-    def on_editing_canceled(self, renderer):
-        """Disconnects the focus-out-event handler of cancelled editable
-
-        :param gtk.CellRendererText renderer: The cell renderer who's editing was cancelled
-        """
-        if self._current_editable_with_event is not None:
-            self._current_editable_with_event[0].disconnect(self._current_editable_with_event[1])
-            self._current_editable_with_event = None
-
-    def on_focus_out(self, entry, event):
-        """Applies the changed name
-
-        The default behaviour for the focus out event dismisses the edited name. Therefore we apply the name beforehand.
-
-        :param gtk.Entry entry: The entry that was focused out
-        :param gtk.Event event: Event object with information about the event
-        """
-        if self.get_path() is None:
-            return
-
-        # We have to use idle_add to prevent core dumps:
-        # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
-        glib.idle_add(self.on_name_edited, entry, self.get_path(), entry.get_text())
-
-    def on_name_edited(self, renderer, path, new_name):
+    def apply_new_outcome_name(self, path, new_name):
         """Apply the newly entered outcome name it is was changed
 
-        :param gtk.CellRendererText renderer: The cell renderer that was edited
         :param str path: The path string of the renderer
-        :param str new_name:
+        :param str new_name: Newly entered outcome name
         """
         # Don't do anything if outcome name didn't change
         if new_name == self.list_store[path][self.NAME_STORAGE_ID]:
@@ -367,14 +320,14 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         sm_selection = self.model.get_sm_m_for_state_m().selection
         return sm_selection, sm_selection.outcomes
 
-    @ExtendedController.observe("selection", after=True)
+    @TreeViewController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
         if "outcomes" == info['method_name']:
             self.update_selection_sm_prior()
 
-    @ExtendedController.observe("parent", after=True)
-    @ExtendedController.observe("outcomes", after=True)
-    @ExtendedController.observe("transitions", after=True)
+    @TreeViewController.observe("parent", after=True)
+    @TreeViewController.observe("outcomes", after=True)
+    @TreeViewController.observe("transitions", after=True)
     def outcomes_changed(self, model, prop_name, info):
         self.update()
 

@@ -12,13 +12,11 @@ import gtk
 import gobject
 from gtk import ListStore
 from gtk import TreeViewColumn, CellRendererToggle
-import glib
 
 from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.utils.selection import ListSelectionFeatureController
+from rafcon.mvc.controllers.utils.selection import TreeViewController
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 
 from rafcon.mvc.gui_helper import react_to_event
@@ -28,10 +26,8 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class DataPortListController(ExtendedController, ListSelectionFeatureController):
+class DataPortListController(TreeViewController):
     """Controller handling the input and output Data Port List
-
-    :param rafcon.mvc.models.
     """
     NAME_STORAGE_ID = 0
     DATA_TYPE_NAME_STORAGE_ID = 1
@@ -42,15 +38,11 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
     MODEL_STORAGE_ID = 6
 
     def __init__(self, model, view, io_type):
-        """Constructor"""
-
-        self.tree_view = view.get_top_widget()
+        super(DataPortListController, self).__init__(model, view, view.get_top_widget(), self.get_new_list_store(),
+                                                     logger)
         self.type = io_type
         self.state_data_port_dict = None
-        self.list_store = self.get_new_list_store()
 
-        ExtendedController.__init__(self, model, view)
-        ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(self.tree_view)
 
         if self.type == "input":
@@ -60,22 +52,13 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
             self.state_data_port_dict = self.model.state.output_data_ports
             self.data_port_model_list = self.model.output_data_ports
 
-        self._actual_entry = None
-
-        # variables to avoid to create and to be robust against chained notification calls
-        self._do_name_change = False
-        self._do_type_change = False
-        self._do_value_change = False
-        self._do_store_update = False
-
         if self.model.get_sm_m_for_state_m() is not None:
             self.observe_model(self.model.get_sm_m_for_state_m())
         else:
             logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
 
-        self.tree_view.set_model(self.list_store)
-
-    def get_new_list_store(self):
+    @staticmethod
+    def get_new_list_store():
         return ListStore(str, str, str, int, bool, str, gobject.TYPE_PYOBJECT)
 
     def default_value_renderer(self, tree_view_column, cell, model, iter):
@@ -101,6 +84,7 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(DataPortListController, self).register_view(view)
 
         view['name_col'].add_attribute(view['name_text'], 'text', self.NAME_STORAGE_ID)
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', self.DATA_TYPE_NAME_STORAGE_ID)
@@ -113,19 +97,13 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', self.DEFAULT_VALUE_STORAGE_ID)
             # if not isinstance(self.model.state, LibraryState):
             view['default_value_text'].set_property("editable", True)
-            view['default_value_text'].connect("edited", self.on_default_value_changed)
-            view['default_value_text'].connect('editing-started', self.editing_started)
-            view['default_value_text'].connect('editing-canceled', self.editing_canceled)
+            self._apply_value_on_edited_and_focus_out(view['default_value_text'], self.apply_new_data_port_default_value)
             if isinstance(self.model.state, LibraryState):
                 view['default_value_col'].set_title("Used value")
             view['default_value_col'].set_cell_data_func(view['default_value_text'], self.default_value_renderer)
 
-        view['name_text'].connect("edited", self.on_name_changed)
-        view['name_text'].connect('editing-started', self.editing_started)
-        view['name_text'].connect('editing-canceled', self.editing_canceled)
-        view['data_type_text'].connect("edited", self.on_data_type_changed)
-        view['data_type_text'].connect('editing-started', self.editing_started)
-        view['data_type_text'].connect('editing-canceled', self.editing_canceled)
+        self._apply_value_on_edited_and_focus_out(view['name_text'], self.apply_new_data_port_name)
+        self._apply_value_on_edited_and_focus_out(view['data_type_text'], self.apply_new_data_port_type)
         view.get_top_widget().connect('button_press_event', self.mouse_click)
         view.get_top_widget().get_selection().connect('changed', self.selection_changed)
 
@@ -139,15 +117,6 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
             view['use_runtime_value_toggle'].set_property("activatable", True)
             view['use_runtime_value_toggle'].connect("toggled", self.on_use_runtime_value_toggled)
 
-            # view['runtime_value_text'] = CellRendererText()
-            # view['runtime_value_col'] = TreeViewColumn("Runtime Value")
-            # view.get_top_widget().append_column(view['runtime_value_col'])
-            # view['runtime_value_col'].pack_start(view['runtime_value_text'], True)
-            # view['runtime_value_col'].add_attribute(view['runtime_value_text'], 'text', self.RUNTIME_VALUE_STORAGE_ID)
-            # view['runtime_value_text'].set_property("editable", True)
-            # view['runtime_value_text'].connect("edited", self.on_runtime_value_edited)
-
-        ListSelectionFeatureController.register_view(self, view)
         self.tab_edit_controller.register_view()
         self.reload_data_port_list_store()
 
@@ -179,55 +148,6 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
             self.on_delete_port_button_clicked(None)
             return True
 
-    def editing_started(self, renderer, editable, path):
-        """ Callback method to connect entry-widget focus-out-event to the respective change-method.
-        """
-        # logger.info("CONNECT editable: {0} path: {1}".format(editable, path))
-        if self.view['name_text'] is renderer:
-            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_name))
-        elif self.view['data_type_text'] is renderer:
-            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_data_type))
-        elif self.view['default_value_text'] is renderer:
-            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_value))
-        else:
-            logger.error("Not registered Renderer was used")
-
-    def editing_canceled(self, event):
-        """ Callback method to disconnect entry-widget focus-out-event to the respective change-method.
-        """
-        # logger.info("DISCONNECT text: {1} event: {0}".format(event, event.get_property('text')))
-        if self._actual_entry is not None:
-            self._actual_entry[0].disconnect(self._actual_entry[1])
-            self._actual_entry = None
-
-    def change_name(self, entry, event):
-        """ Change-name-method to set the name of actual selected (row) data-port.
-        """
-        # logger.info("FOCUS_OUT NAME entry: {0} event: {1}".format(entry, event))
-        if self.get_list_store_row_from_cursor_selection() is None:
-            return
-        # We have to use idle_add to prevent core dumps:
-        # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
-        glib.idle_add(self.on_name_changed, entry, None, entry.get_text())
-
-    def change_data_type(self, entry, event):
-        """ Change-data-type-method to set the data_type of actual selected (row) data-port.
-        """
-        # logger.info("FOCUS_OUT TYPE entry: {0} event: {1}".format(entry, event))
-        if self.get_list_store_row_from_cursor_selection() is None:
-            return
-
-        glib.idle_add(self.on_data_type_changed, entry, None, entry.get_text())
-
-    def change_value(self, entry, event):
-        """ Change-value-method to set the default_value or runtime_value of actual selected (row) data-port.
-        """
-        # logger.info("FOCUS_OUT VALUE entry: {0} event: {1}".format(entry, event))
-        if self.get_list_store_row_from_cursor_selection() is None:
-            return
-
-        glib.idle_add(self.on_default_value_changed, entry, None, entry.get_text())
-
     def get_state_machine_selection(self):
         # print type(self).__name__, "get state machine selection"
         sm_selection = self.model.get_sm_m_for_state_m().selection
@@ -238,13 +158,13 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
             sm_selected_model_list = sm_selection.output_data_ports
         return sm_selection, sm_selected_model_list
 
-    @ExtendedController.observe("selection", after=True)
+    @TreeViewController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
         if "{}_data_ports".format(self.type) == info['method_name']:
             self.update_selection_sm_prior()
 
-    @ExtendedController.observe("input_data_ports", after=True)
-    @ExtendedController.observe("output_data_ports", after=True)
+    @TreeViewController.observe("input_data_ports", after=True)
+    @TreeViewController.observe("output_data_ports", after=True)
     def data_ports_changed(self, model, prop_name, info):
         """Reload list store and reminds selection when the model was changed"""
         if "{}_data_ports".format(self.type) == prop_name and isinstance(model, AbstractStateModel):
@@ -258,7 +178,7 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
             if selected_data_port_ids:
                 [self.select_entry(selected_data_port_id, False) for selected_data_port_id in selected_data_port_ids]
 
-    @ExtendedController.observe("state", after=True)
+    @TreeViewController.observe("state", after=True)
     def runtime_values_changed(self, model, prop_name, info):
         """Handle cases for the library runtime values"""
         if ("_{}_runtime_value".format(self.type) in info.method_name or
@@ -325,61 +245,55 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
         except TypeError as e:
             logger.error("Error while trying to change the use_runtime_value flag: {0}".format(e))
 
-    def on_name_changed(self, widget, column_id, text):
-        """Try to set the port name to the newly entered one
+    def apply_new_data_port_name(self, path, new_name):
+        """Applies the new name of the data port defined by path
+
+        :param str path: The path identifying the edited data port
+        :param str new_name: New name
         """
-        # logger.info("on_name_changed widget: {0} path: {1} text: {2}".format(widget, column_id, text))
-        if self._do_name_change:
-            return
-        self._do_name_change = True
         try:
-            data_port_id = self.get_list_store_row_from_cursor_selection()[self.ID_STORAGE_ID]
-            if self.state_data_port_dict[data_port_id].name != text:
-                self.state_data_port_dict[data_port_id].name = text
+            data_port_id = self.list_store[path][self.ID_STORAGE_ID]
+            if self.state_data_port_dict[data_port_id].name != new_name:
+                self.state_data_port_dict[data_port_id].name = new_name
         except (TypeError, ValueError) as e:
             logger.error("Error while trying to change the port name: {0}".format(e))
-        self._do_name_change = False
 
-    def on_data_type_changed(self, widget, column_id, text):
-        """Try to set the port type the the newly entered one
+    def apply_new_data_port_type(self, path, new_data_type_str):
+        """Applies the new data type of the data port defined by path
+
+        :param str path: The path identifying the edited data port
+        :param str new_data_type_str: New data type as str
         """
-        # logger.info("on_data_type_changed widget: {0} path: {1} text: {2}".format(widget, column_id, text))
-        if self._do_type_change:
-            return
-        self._do_type_change = True
         try:
-            data_port_id = self.get_list_store_row_from_cursor_selection()[self.ID_STORAGE_ID]
-            if self.state_data_port_dict[data_port_id].data_type.__name__ != text:
-                self.state_data_port_dict[data_port_id].change_data_type(text)
+            data_port_id = self.list_store[path][self.ID_STORAGE_ID]
+            if self.state_data_port_dict[data_port_id].data_type.__name__ != new_data_type_str:
+                self.state_data_port_dict[data_port_id].change_data_type(new_data_type_str)
         except ValueError as e:
             logger.error("Error while changing data type: {0}".format(e))
-        self._do_type_change = False
 
-    def on_default_value_changed(self, widget, column_id, text):
-        """Try to set the port default value to the newly entered one
+    def apply_new_data_port_default_value(self, path, new_default_value_str):
+        """Applies the new default value of the data port defined by path
+
+        :param str path: The path identifying the edited variable
+        :param str new_default_value_str: New default value as string
         """
-        # logger.info("on_default_value_changed widget: {0} path: {1} text: {2}".format(widget, column_id, text))
-        if self._do_value_change:
-            return
-        self._do_value_change = True
         try:
-            data_port_id = self.get_list_store_row_from_cursor_selection()[self.ID_STORAGE_ID]
+            data_port_id = self.list_store[path][self.ID_STORAGE_ID]
             if isinstance(self.model.state, LibraryState):
                 # this always have to be true, as the runtime value column can only be edited
                 # if the use_runtime_value flag is True
-                if self.get_list_store_row_from_cursor_selection()[self.USE_RUNTIME_VALUE_STORAGE_ID]:
+                if self.list_store[path][self.USE_RUNTIME_VALUE_STORAGE_ID]:
                     if self.type == "input":
-                        if str(self.model.state.input_data_port_runtime_values[data_port_id]) != text:
-                            self.model.state.set_input_runtime_value(data_port_id, text)
+                        if str(self.model.state.input_data_port_runtime_values[data_port_id]) != new_default_value_str:
+                            self.model.state.set_input_runtime_value(data_port_id, new_default_value_str)
                     else:
-                        if str(self.model.state.output_data_port_runtime_values[data_port_id]) != text:
-                            self.model.state.set_output_runtime_value(data_port_id, text)
+                        if str(self.model.state.output_data_port_runtime_values[data_port_id]) != new_default_value_str:
+                            self.model.state.set_output_runtime_value(data_port_id, new_default_value_str)
             else:
-                if str(self.state_data_port_dict[data_port_id].default_value) != text:
-                    self.state_data_port_dict[data_port_id].default_value = text
+                if str(self.state_data_port_dict[data_port_id].default_value) != new_default_value_str:
+                    self.state_data_port_dict[data_port_id].default_value = new_default_value_str
         except (TypeError, AttributeError) as e:
             logger.error("Error while changing default value: {0}".format(e))
-        self._do_value_change = False
 
     def on_right_click_menu(self):
         logger.debug("do right click menu")
@@ -428,13 +342,6 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
         tms.set_sort_func(0, compare_variables)
         tms.sort_column_changed()
         tmp = tms
-        if self._do_store_update:
-            return
-        self._do_store_update = True
-        try:
-            self.list_store.clear()
-            for elem in tmp:
-                self.list_store.append(elem)
-        except:
-            pass
-        self._do_store_update = False
+        self.list_store.clear()
+        for elem in tmp:
+            self.list_store.append(elem)
