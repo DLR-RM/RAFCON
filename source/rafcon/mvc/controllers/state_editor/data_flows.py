@@ -231,32 +231,6 @@ class StateDataFlowsListController(ListViewController):
         else:
             self.model.state.remove_data_flow(model.data_flow.data_flow_id)
 
-    def on_remove(self, button, info=None):
-        """Remove the selected data flows and select the next one"""
-        tree, path_list = self._tree_selection.get_selected_rows()
-        old_path = self.get_path()
-        data_flow_ids = [self.list_store[path][self.ID_STORAGE_ID] for path in path_list] if path_list else []
-        is_external_dict = {self.list_store[path][self.ID_STORAGE_ID]: self.list_store[path][self.IS_EXTERNAL_STORAGE_ID]
-                            for path in path_list} if path_list else {}
-        if data_flow_ids:
-            for data_flow_id in data_flow_ids:
-                try:
-                    if is_external_dict[data_flow_id]:
-                        self.model.parent.state.remove_data_flow(data_flow_id)
-                    else:
-                        self.model.state.remove_data_flow(data_flow_id)
-                except (AttributeError, ValueError) as e:
-                    logger.error("Data Flow couldn't be removed: {0}".format(e))
-                    return
-        else:
-            logger.warning("Please select the data flow to be deleted")
-            return
-
-        # selection to next element
-        if len(self.list_store) > 0:
-            self.tree_view.set_cursor(min(old_path[0], len(self.list_store) - 1))
-        return True
-
     def on_combo_changed_from_state(self, widget, path, text):
         if text is None or self.list_store[path][self.FROM_STATE_STORAGE_ID] == text:
             return

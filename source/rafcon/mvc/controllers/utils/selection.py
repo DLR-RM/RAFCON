@@ -136,7 +136,7 @@ class ListViewController(ExtendedController):
                     self._logger.warn("The respective core element of {1}.list_store couldn't be removed. -> {0}"
                                       "".format(e, self.__class__.__name__))
             if len(self.list_store) > 0:
-                self.view[self.view.top].set_cursor(min(old_path[0], len(self.list_store) - 1))
+                self.tree_view.set_cursor(min(old_path[0], len(self.list_store) - 1))
             return True
         else:
             self._logger.warning("Please select a element to be removed.")
@@ -271,7 +271,7 @@ class ListViewController(ExtendedController):
             return
         self._do_selection_update = True
         tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        if tree_selection:
+        if sm_selection:
             for row in self.list_store:
                 model = row[self.MODEL_STORAGE_ID]
                 if model in sm_selected_model_list and model not in selected_model_list:

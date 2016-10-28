@@ -12,7 +12,7 @@
 import gtk
 
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.utils.selection import ListViewController
+from rafcon.mvc.controllers.utils.selection import ListViewController, ExtendedController
 
 from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
@@ -28,7 +28,9 @@ class GlobalVariableManagerController(ListViewController):
      Every global variable is accessible by it key which is in the tree view equivalent with its name and in the
      methods it is gv_name. This Controller inherit and use rudimentary methods of the ListViewController
      (therefore it introduce the ID_STORAGE_ID class attribute) and avoids to use the selection methods of those which
-     need a MODEL_STORAGE_ID and a state machine selection and it is not registering the view to the mixed in controller.
+     need a MODEL_STORAGE_ID (there is no global variable model) and a state machine selection (is model based).
+     Therefore the register view is only called for the extended controller. Because of this and the fact that
+     name = key for a global variable ID_STORAGE_ID, NAME_STORAGE_ID and MODEL_STORAGE_ID are all equal.
 
     :param rafcon.mvc.models.global_variable_manager.GlobalVariableManagerModel model: The Global Variable Manager Model
     :param rafcon.mvc.views.global_variable_editor.GlobalVariableEditorView view: The GTK view showing the list of
@@ -37,6 +39,7 @@ class GlobalVariableManagerController(ListViewController):
     :ivar gtk.ListStore list_store: A gtk list store storing the rows of data of respective global variables in.
     """
     ID_STORAGE_ID = 0
+    MODEL_STORAGE_ID = 0
     NAME_STORAGE_ID = 0
     DATA_TYPE_AS_STRING_STORAGE_ID = 1
     VALUE_AS_STRING_STORAGE_ID = 2
@@ -54,7 +57,7 @@ class GlobalVariableManagerController(ListViewController):
 
     def register_view(self, view):
         """Called when the View was registered"""
-        super(GlobalVariableManagerController, self).register_view(view)
+        ExtendedController.register_view(self, view)
         view['name_text'].set_property('editable', True)
         view['value_text'].set_property('editable', True)
         view['type_text'].set_property('editable', True)
@@ -63,7 +66,8 @@ class GlobalVariableManagerController(ListViewController):
         self._apply_value_on_edited_and_focus_out(view['value_text'], self.apply_new_global_variable_value)
         self._apply_value_on_edited_and_focus_out(view['type_text'], self.apply_new_global_variable_type)
         view['new_global_variable_button'].connect('clicked', self.on_new_global_variable_button_clicked)
-        view['delete_global_variable_button'].connect('clicked', self.on_delete_global_variable_button_clicked)
+        view['delete_global_variable_button'].connect('clicked', self.on_remove)
+        self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         self.tab_edit_controller.register_view()
 
     def register_actions(self, shortcut_manager):
@@ -108,23 +112,17 @@ class GlobalVariableManagerController(ListViewController):
             return True
 
     def on_delete_global_variable_button_clicked(self, *event):
-        """Remove the selected global variables and re-select next variable row
-
-        Triggered when the Delete button in the global variables tab is clicked.
-        """
         if react_to_event(self.view, self.tree_view, event):
-            tree, path_list = self.tree_view.get_selection().get_selected_rows()
-            old_path = self.get_path()
-            gv_names = [self.list_store[path][self.ID_STORAGE_ID] for path in path_list] if path_list else []
-            if gv_names:
-                for gv_name in gv_names:
-                    try:
-                        self.model.global_variable_manager.delete_variable(gv_name)
-                    except AttributeError as e:
-                        logger.warning("Delete of global variable '{0}' failed -> Exception:{1}".format(gv_name, e))
-                if len(self.list_store) > 0:
-                    self.tree_view.set_cursor(min(old_path[0], len(self.list_store) - 1))
-            return True
+            self.on_remove(None)
+
+    def remove_core_element(self, model):
+        """Remove respective core element of handed global variable name
+
+        :param str model: String that is the key/gv_name of core element which should be removed
+        :return:
+        """
+        gv_name = model
+        self.model.global_variable_manager.delete_variable(gv_name)
 
     def apply_new_global_variable_name(self, path, new_gv_name):
         """Change global variable name/key according handed string
