@@ -279,7 +279,7 @@ class LibraryTreeController(ExtendedController):
         library_file_system_path = library_item
 
         logger.debug("Link library state '{0}' (with library tree path: {1} and file system path: {2}) into state "
-                     "machine.".format((str(library_item_key), library_file_system_path,
-                                        str(library_path) + "/" + str(library_item_key))))
+                     "machine.".format(str(library_item_key), library_file_system_path,
+                                       str(library_path) + "/" + str(library_item_key)))
         library_name = library_file_system_path.split(os.path.sep)[-1]
         return LibraryState(library_path, library_name, "0.1", library_name)
