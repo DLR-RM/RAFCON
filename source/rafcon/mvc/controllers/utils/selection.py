@@ -52,22 +52,22 @@ class TreeViewController(ExtendedController):
         """
         assert isinstance(renderer, gtk.CellRenderer)
 
-        def on_editing_canceled(renderer, editable):
+        def on_editing_canceled(renderer):
             """Disconnects the focus-out-event handler of cancelled editable
 
             :param gtk.CellRendererText renderer: The cell renderer who's editing was cancelled
-            :param gtk.CellEditable editable: interface for editing the current TreeView cell
             """
+            editable = renderer.get_data("editable")
             editable.disconnect(editable.get_data("focus_out_handler_id"))
             renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
 
-        def on_focus_out(entry, event, editable):
+        def on_focus_out(entry, event):
             """Applies the changes to the entry
 
             :param gtk.Entry entry: The entry that was focused out
             :param gtk.Event event: Event object with information about the event
-            :param gtk.CellEditable editable: interface for editing the current TreeView cell
             """
+            editable = renderer.get_data("editable")
             editable.disconnect(editable.get_data("focus_out_handler_id"))
             renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
 
@@ -84,10 +84,12 @@ class TreeViewController(ExtendedController):
             :param gtk.CellEditable editable: interface for editing the current TreeView cell
             :param str path: the path identifying the edited cell
             """
-            focus_out_handler_id = editable.connect('focus-out-event', on_focus_out, editable)
-            editing_cancelled_handler_id = renderer.connect('editing-canceled', on_editing_canceled, editable)
-            editable.set_data("focus_out_handler_id", focus_out_handler_id)
+            editing_cancelled_handler_id = renderer.connect('editing-canceled', on_editing_canceled)
+            focus_out_handler_id = editable.connect('focus-out-event', on_focus_out)
+            # Store reference to editable and signal handler ids for later access when removing the handlers
+            renderer.set_data("editable", editable)
             renderer.set_data("editing_cancelled_handler_id", editing_cancelled_handler_id)
+            editable.set_data("focus_out_handler_id", focus_out_handler_id)
 
         def on_edited(renderer, path, new_value_str):
             """Calls the apply method with the new value
@@ -96,9 +98,13 @@ class TreeViewController(ExtendedController):
             :param str path: The path string of the renderer
             :param str new_value_str: The new value as string
             """
+            editable = renderer.get_data("editable")
+            editable.disconnect(editable.get_data("focus_out_handler_id"))
+            renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
             apply_method(path, new_value_str)
-        renderer.connect('edited', on_edited)
+
         renderer.connect('editing-started', on_editing_started)
+        renderer.connect('edited', on_edited)
 
     def on_right_click_menu(self):
         """An abstract method called after right click events"""

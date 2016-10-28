@@ -87,7 +87,7 @@ class StateOutcomesListController(TreeViewController):
         """Apply the newly entered outcome name it is was changed
 
         :param str path: The path string of the renderer
-        :param str new_name:
+        :param str new_name: Newly entered outcome name
         """
         # Don't do anything if outcome name didn't change
         if new_name == self.list_store[path][self.NAME_STORAGE_ID]:
@@ -96,7 +96,6 @@ class StateOutcomesListController(TreeViewController):
         outcome_id = self.list_store[path][self.CORE_STORAGE_ID].outcome_id
         outcome = self.model.state.outcomes[outcome_id]
         try:
-            print "old name", outcome.name, "new name", new_name
             outcome.name = new_name
             logger.debug("Outcome name changed to '{0}'".format(outcome.name))
         except (ValueError, TypeError) as e:
