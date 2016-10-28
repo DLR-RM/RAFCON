@@ -10,13 +10,11 @@
 
 import gtk
 import gobject
-import glib
 
 from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.utils.selection import ListSelectionFeatureController
+from rafcon.mvc.controllers.utils.selection import TreeViewController
 from rafcon.mvc.models.container_state import ContainerStateModel
 
 from rafcon.mvc.gui_helper import react_to_event
@@ -26,7 +24,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class ScopedVariableListController(ExtendedController, ListSelectionFeatureController):
+class ScopedVariableListController(TreeViewController):
     """Controller handling the scoped variable list
 
     :param rafcon.mvc.models.state.StateModel model: The state model, holding state data.
@@ -41,33 +39,26 @@ class ScopedVariableListController(ExtendedController, ListSelectionFeatureContr
 
     def __init__(self, model, view):
         """Constructor"""
+        super(ScopedVariableListController, self).__init__(model, view, view.get_top_widget(),
+                                                           self.get_new_list_store(), logger)
 
-        self.tree_view = view.get_top_widget()
-        self.list_store = self.get_new_list_store()
-        self._logger = logger
-
-        ExtendedController.__init__(self, model, view)
-        ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view.get_top_widget())
 
-        self.last_entry_widget = None
-        self._actual_entry = None
         self.next_focus_column = {}
         self.prev_focus_column = {}
 
         if self.model.get_sm_m_for_state_m() is not None:
             self.observe_model(self.model.get_sm_m_for_state_m())
-            # print type(self).__name__, self.model.state.name, "initialized sm observation"
         else:
             logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
 
-        self.tree_view.set_model(self.list_store)
-
-    def get_new_list_store(self):
+    @staticmethod
+    def get_new_list_store():
         return gtk.ListStore(str, str, str, int, gobject.TYPE_PYOBJECT)
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(ScopedVariableListController, self).register_view(view)
 
         view['name_col'].add_attribute(view['name_text'], 'text', self.NAME_STORAGE_ID)
         if not isinstance(self.model.state, LibraryState):
@@ -85,7 +76,6 @@ class ScopedVariableListController(ExtendedController, ListSelectionFeatureContr
         self._apply_value_on_edited_and_focus_out(view['name_text'], self.apply_new_scoped_variable_name)
         self._apply_value_on_edited_and_focus_out(view['data_type_text'], self.apply_new_scoped_variable_type)
 
-        ListSelectionFeatureController.register_view(self, view)
         self.tab_edit_controller.register_view()
 
         if isinstance(self.model, ContainerStateModel):
@@ -118,12 +108,12 @@ class ScopedVariableListController(ExtendedController, ListSelectionFeatureContr
         sm_selection = self.model.get_sm_m_for_state_m().selection
         return sm_selection, sm_selection.scoped_variables
 
-    @ExtendedController.observe("selection", after=True)
+    @TreeViewController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
         if "scoped_variables" == info['method_name']:
             self.update_selection_sm_prior()
 
-    @ExtendedController.observe("scoped_variables", after=True)
+    @TreeViewController.observe("scoped_variables", after=True)
     def scoped_variables_changed(self, model, prop_name, info):
         # store port selection
         path_list = None

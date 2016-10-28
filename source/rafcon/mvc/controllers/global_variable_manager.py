@@ -12,8 +12,7 @@
 import gtk
 
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils.selection import ListSelectionFeatureController
+from rafcon.mvc.controllers.utils.selection import TreeViewController
 
 from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
@@ -22,12 +21,12 @@ from rafcon.utils import type_helpers
 logger = log.get_logger(__name__)
 
 
-class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureController):
+class GlobalVariableManagerController(TreeViewController):
     """Controller handling the Global Variable Manager
 
      The controller enables to edit, add and remove global variable to the global variable manager by a tree view.
      Every global variable is accessible by it key which is in the tree view equivalent with its name and in the
-     methods it is gv_name. This Controller inherit and use rudimentary methods of the ListSelectionFeatureController
+     methods it is gv_name. This Controller inherit and use rudimentary methods of the TreeViewController
      (therefore it introduce the ID_STORAGE_ID class attribute) and avoids to use the selection methods of those which
      need a MODEL_STORAGE_ID and a state machine selection and it is not registering the view to the mixed in controller.
 
@@ -44,21 +43,18 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
     IS_LOCKED_AS_STRING_STORAGE_ID = 3
 
     def __init__(self, model, view):
-        """Constructor"""
         # list store order -> gv_name, data_type, data_value, is_locked
-        self.list_store = gtk.ListStore(str, str, str, str)
-        ExtendedController.__init__(self, model, view)
-        self.tree_view = view['global_variable_tree_view']
-        self.tree_view.set_model(self.list_store)
-        ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view)
+        super(GlobalVariableManagerController, self).__init__(model, view,
+                                                              view['global_variable_tree_view'],
+                                                              gtk.ListStore(str, str, str, str), logger)
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(self.tree_view)
 
         self.global_variable_counter = 0
         self.list_store_iterators = {}
-        self._actual_entry = None
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(GlobalVariableManagerController, self).register_view(view)
         view['name_text'].set_property('editable', True)
         view['value_text'].set_property('editable', True)
         view['type_text'].set_property('editable', True)
@@ -68,12 +64,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         self._apply_value_on_edited_and_focus_out(view['type_text'], self.apply_new_global_variable_type)
         view['new_global_variable_button'].connect('clicked', self.on_new_global_variable_button_clicked)
         view['delete_global_variable_button'].connect('clicked', self.on_delete_global_variable_button_clicked)
-        self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         self.tab_edit_controller.register_view()
-
-    def register_adapters(self):
-        """Adapters should be registered in this method call"""
-        pass
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -149,7 +140,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
 
         data_value = self.model.global_variable_manager.get_representation(gv_name)
         data_type = self.model.global_variable_manager.get_data_type(gv_name)
-        self.disconnect_actual_entry_widget()
+
         try:
             self.model.global_variable_manager.delete_variable(gv_name)
             self.model.global_variable_manager.set_variable(new_gv_name, data_value, data_type=data_type)
@@ -249,7 +240,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
             logger.error("Could not set new value unexpected failure {0} to value {1} -> raised error {2}"
                          "".format(gv_name, new_value, e))
 
-    @ExtendedController.observe("global_variable_manager", after=True)
+    @TreeViewController.observe("global_variable_manager", after=True)
     def assign_notification_state(self, model, prop_name, info):
         """Handles gtkmvc notification from global variable manager
 

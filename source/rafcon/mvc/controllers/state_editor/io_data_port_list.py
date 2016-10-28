@@ -12,13 +12,11 @@ import gtk
 import gobject
 from gtk import ListStore
 from gtk import TreeViewColumn, CellRendererToggle
-import glib
 
 from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.utils.selection import ListSelectionFeatureController
+from rafcon.mvc.controllers.utils.selection import TreeViewController
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 
 from rafcon.mvc.gui_helper import react_to_event
@@ -28,7 +26,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class DataPortListController(ExtendedController, ListSelectionFeatureController):
+class DataPortListController(TreeViewController):
     """Controller handling the input and output Data Port List
     """
     NAME_STORAGE_ID = 0
@@ -40,15 +38,11 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
     MODEL_STORAGE_ID = 6
 
     def __init__(self, model, view, io_type):
-        """Constructor"""
-
-        self.tree_view = view.get_top_widget()
+        super(DataPortListController, self).__init__(model, view, view.get_top_widget(), self.get_new_list_store(),
+                                                     logger)
         self.type = io_type
         self.state_data_port_dict = None
-        self.list_store = self.get_new_list_store()
 
-        ExtendedController.__init__(self, model, view)
-        ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(self.tree_view)
 
         if self.type == "input":
@@ -58,16 +52,13 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
             self.state_data_port_dict = self.model.state.output_data_ports
             self.data_port_model_list = self.model.output_data_ports
 
-        self._actual_entry = None
-
         if self.model.get_sm_m_for_state_m() is not None:
             self.observe_model(self.model.get_sm_m_for_state_m())
         else:
             logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
 
-        self.tree_view.set_model(self.list_store)
-
-    def get_new_list_store(self):
+    @staticmethod
+    def get_new_list_store():
         return ListStore(str, str, str, int, bool, str, gobject.TYPE_PYOBJECT)
 
     def default_value_renderer(self, tree_view_column, cell, model, iter):
@@ -93,6 +84,7 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(DataPortListController, self).register_view(view)
 
         view['name_col'].add_attribute(view['name_text'], 'text', self.NAME_STORAGE_ID)
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', self.DATA_TYPE_NAME_STORAGE_ID)
@@ -125,7 +117,6 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
             view['use_runtime_value_toggle'].set_property("activatable", True)
             view['use_runtime_value_toggle'].connect("toggled", self.on_use_runtime_value_toggled)
 
-        ListSelectionFeatureController.register_view(self, view)
         self.tab_edit_controller.register_view()
         self.reload_data_port_list_store()
 
@@ -167,13 +158,13 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
             sm_selected_model_list = sm_selection.output_data_ports
         return sm_selection, sm_selected_model_list
 
-    @ExtendedController.observe("selection", after=True)
+    @TreeViewController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
         if "{}_data_ports".format(self.type) == info['method_name']:
             self.update_selection_sm_prior()
 
-    @ExtendedController.observe("input_data_ports", after=True)
-    @ExtendedController.observe("output_data_ports", after=True)
+    @TreeViewController.observe("input_data_ports", after=True)
+    @TreeViewController.observe("output_data_ports", after=True)
     def data_ports_changed(self, model, prop_name, info):
         """Reload list store and reminds selection when the model was changed"""
         if "{}_data_ports".format(self.type) == prop_name and isinstance(model, AbstractStateModel):
@@ -187,7 +178,7 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
             if selected_data_port_ids:
                 [self.select_entry(selected_data_port_id, False) for selected_data_port_id in selected_data_port_ids]
 
-    @ExtendedController.observe("state", after=True)
+    @TreeViewController.observe("state", after=True)
     def runtime_values_changed(self, model, prop_name, info):
         """Handle cases for the library runtime values"""
         if ("_{}_runtime_value".format(self.type) in info.method_name or

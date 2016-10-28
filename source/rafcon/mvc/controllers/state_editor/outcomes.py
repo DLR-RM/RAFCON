@@ -10,13 +10,12 @@
 """
 
 import gtk
-import glib
 import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils.selection import ListSelectionFeatureController
+from rafcon.mvc.controllers.utils.selection import TreeViewController
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.state_machine_helper import insert_self_transition_meta_data
@@ -29,7 +28,7 @@ logger = log.get_logger(__name__)
 # TODO find out why not editable ID-column cause segfault ->  if sometimes move into widget by tab and enter is pressed
 
 
-class StateOutcomesListController(ExtendedController, ListSelectionFeatureController):
+class StateOutcomesListController(TreeViewController):
     """The controller handles the outcomes of one respective state
 
     The controller allows to add and remove outcomes as well as to add, remove and to modify the related transition.
@@ -48,10 +47,9 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
     def __init__(self, model, view):
         # initiate data base and tree
         # id, name, to-state, to-outcome, name-color, to-state-color, outcome, state, outcome_model
-        self.list_store = gtk.ListStore(str, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
-                                        gobject.TYPE_PYOBJECT)
-        self.tree_view = view['tree_view']
-        self._logger = logger
+        list_store = gtk.ListStore(str, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
+                                   gobject.TYPE_PYOBJECT)
+        super(StateOutcomesListController, self).__init__(model, view, view['tree_view'], list_store, logger)
 
         self.to_state_combo_list = gtk.ListStore(str, str, str)
         self.to_outcome_combo_list = gtk.ListStore(str, str, str)
@@ -62,10 +60,6 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         # not used at the moment key-outcome_id -> label,  from_state_id,  transition_id
         self.dict_from_other_state = {}  # if widget gets extended
 
-        self._current_editable_with_event = None
-
-        ExtendedController.__init__(self, model, view)
-        ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
         self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(self.tree_view)
         if not model.state.is_root_state:
             self.observe_model(model.parent)
@@ -75,20 +69,18 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         else:
             logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
 
-        self.tree_view.set_model(self.list_store)
-
     def register_view(self, view):
         """Called when the View was registered
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
+        super(StateOutcomesListController, self).register_view(view)
         if view['to_state_col'] and view['to_outcome_col'] and view['to_state_combo'] and view['to_outcome_combo']:
             view['to_state_combo'].connect("edited", self.on_to_state_edited)
             view['to_outcome_combo'].connect("edited", self.on_to_outcome_edited)
 
         self._apply_value_on_edited_and_focus_out(view['name_cell'], self.apply_new_outcome_name)
 
-        ListSelectionFeatureController.register_view(self, view)
         self.update()
 
     def apply_new_outcome_name(self, path, new_name):
@@ -104,6 +96,7 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         outcome_id = self.list_store[path][self.CORE_STORAGE_ID].outcome_id
         outcome = self.model.state.outcomes[outcome_id]
         try:
+            print "old name", outcome.name, "new name", new_name
             outcome.name = new_name
             logger.debug("Outcome name changed to '{0}'".format(outcome.name))
         except (ValueError, TypeError) as e:
@@ -328,14 +321,14 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         sm_selection = self.model.get_sm_m_for_state_m().selection
         return sm_selection, sm_selection.outcomes
 
-    @ExtendedController.observe("selection", after=True)
+    @TreeViewController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
         if "outcomes" == info['method_name']:
             self.update_selection_sm_prior()
 
-    @ExtendedController.observe("parent", after=True)
-    @ExtendedController.observe("outcomes", after=True)
-    @ExtendedController.observe("transitions", after=True)
+    @TreeViewController.observe("parent", after=True)
+    @TreeViewController.observe("outcomes", after=True)
+    @TreeViewController.observe("transitions", after=True)
     def outcomes_changed(self, model, prop_name, info):
         self.update()
 

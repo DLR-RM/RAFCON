@@ -1,12 +1,14 @@
 import gtk
 import glib
 from gtk.gdk import CONTROL_MASK, SHIFT_MASK
-from rafcon.utils import log
 
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+
+from rafcon.utils import log
 module_logger = log.get_logger(__name__)
 
 
-class ListSelectionFeatureController(object):
+class TreeViewController(ExtendedController):
     """Class that implements a full selection control for lists that consists of a gtk.TreeView and a gtk.ListStore
     as model.
 
@@ -15,21 +17,16 @@ class ListSelectionFeatureController(object):
     :ivar int ID_STORAGE_ID: Index for list store used to select entries set by inherit class
     :ivar int MODEL_STORAGE_ID: Index for list store used to update selections in state machine or tree view set by inherit class
     """
-    list_store = None
-    tree_view = None
-    _logger = None
     ID_STORAGE_ID = None
     MODEL_STORAGE_ID = None
+    _logger = None
 
-    def __init__(self, model, view, logger=None):
-        assert isinstance(model, gtk.ListStore)
-        assert isinstance(view, gtk.TreeView)
-        assert self.list_store is model
-        assert self.tree_view is view
+    def __init__(self, model, view, tree_view, list_store, logger=None):
+        super(TreeViewController, self).__init__(model, view)
         self._logger = logger if logger is not None else module_logger
         self._do_selection_update = False
-        self._tree_selection = self.tree_view.get_selection()
         self._last_path_selection = None
+        self._setup_tree_view(tree_view, list_store)
 
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
@@ -37,6 +34,12 @@ class ListSelectionFeatureController(object):
         self._tree_selection.connect('changed', self.selection_changed)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         self.update_selection_sm_prior()
+
+    def _setup_tree_view(self, tree_view, list_store):
+        self.tree_view = tree_view
+        self.tree_view.set_model(list_store)
+        self.list_store = list_store
+        self._tree_selection = self.tree_view.get_selection()
 
     def _apply_value_on_edited_and_focus_out(self, renderer, apply_method):
         """Sets up the renderer to apply changed when loosing focus
@@ -103,6 +106,8 @@ class ListSelectionFeatureController(object):
 
     def get_view_selection(self):
         """Get actual tree selection object and all respective models of selected rows"""
+        if not self.MODEL_STORAGE_ID:
+            return None, None
         model, paths = self._tree_selection.get_selected_rows()
         selected_model_list = []
         for path in paths:
@@ -118,8 +123,7 @@ class ListSelectionFeatureController(object):
         :return: selection
         :rtype: rafcon.mvc.selection.Selection
         """
-        self._logger.info(self.__class__.__name__)
-        raise NotImplementedError
+        return None, None
 
     def get_selections(self):
         """Get actual model selection status in state machine selection and tree selection of the widget"""
@@ -208,53 +212,31 @@ class ListSelectionFeatureController(object):
         """State machine prior update of tree selection"""
         if self._do_selection_update:
             return
-        # print "update selection sm prior", self.tree_selection.get_mode()
         self._do_selection_update = True
         tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        # print sm_selected_model_list, "STATEMACHINE:\n", '\n'.join([str(model) for model in  sm_selected_model_list])
-        # print selected_model_list, "WIDGET:\n", '\n'.join([str(model) for model in  selected_model_list])
-        for path, row in enumerate(self.list_store):
-            model = row[self.MODEL_STORAGE_ID]
-            # print "condition: ", model, model in sm_selected_model_list, model in selected_model_list
-            if model not in sm_selected_model_list and model in selected_model_list:
-                # print type(self).__name__, "sm un-select model", model
-                tree_selection.unselect_path(path)
-            if model in sm_selected_model_list and model not in selected_model_list:
-                # print type(self).__name__, "sm select model", model
-                tree_selection.select_path(path)
+        if tree_selection:
+            for path, row in enumerate(self.list_store):
+                model = row[self.MODEL_STORAGE_ID]
+                if model not in sm_selected_model_list and model in selected_model_list:
+                    tree_selection.unselect_path(path)
+                if model in sm_selected_model_list and model not in selected_model_list:
+                    tree_selection.select_path(path)
 
-        #     else:
-        #         print "else"
-        #         if model in sm_selected_model_list and model in selected_model_list:
-        #             print type(self).__name__, "sm is selected"
-        # tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        # print selected_model_list, sm_selected_model_list
         self._do_selection_update = False
 
     def update_selection_self_prior(self):
         """Tree view prior update of state machine selection"""
         if self._do_selection_update:
             return
-        # print "update selection self prior"
         self._do_selection_update = True
         tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        # print sm_selected_model_list, "STATEMACHINE:\n", '\n'.join([str(model) for model in  sm_selected_model_list])
-        # print selected_model_list, "WIDGET:\n", '\n'.join([str(model) for model in  selected_model_list])
-        for row in self.list_store:
-            model = row[self.MODEL_STORAGE_ID]
-            # print "condition: ", model, model in sm_selected_model_list, model in selected_model_list
-            if model in sm_selected_model_list and model not in selected_model_list:
-                # print type(self).__name__, "unselect model", model
-                sm_selection.remove(model)
-            if model not in sm_selected_model_list and model in selected_model_list:
-                # print type(self).__name__, "select model", model
-                sm_selection.add(model)
-
-            # else:
-            #     if model in sm_selected_model_list and model in selected_model_list:
-            #         print type(self).__name__, "is selected"
-        # tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        # print selected_model_list, sm_selected_model_list
+        if tree_selection:
+            for row in self.list_store:
+                model = row[self.MODEL_STORAGE_ID]
+                if model in sm_selected_model_list and model not in selected_model_list:
+                    sm_selection.remove(model)
+                if model not in sm_selected_model_list and model in selected_model_list:
+                    sm_selection.add(model)
         self._do_selection_update = False
 
     def selection_changed(self, widget, event=None):

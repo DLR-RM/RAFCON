@@ -16,7 +16,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils.selection import ListSelectionFeatureController
+from rafcon.mvc.controllers.utils.selection import TreeViewController
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 
 from rafcon.mvc.gui_helper import format_cell, react_to_event
@@ -27,7 +27,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateTransitionsListController(ExtendedController, ListSelectionFeatureController):
+class StateTransitionsListController(TreeViewController):
     """Controller handling the view of transitions of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -49,15 +49,12 @@ class StateTransitionsListController(ExtendedController, ListSelectionFeatureCon
     # TODO siblings outcomes are not observed
 
     def __init__(self, model, view):
-        """Constructor
-        """
         # ListStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
         #                   name-color, to-state-color, transition-object, state-object, is_editable, transition-model
+        list_store = gtk.ListStore(int, str, str, str, str, bool,
+                                   gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
+        super(StateTransitionsListController, self).__init__(model, view, view.get_top_widget(), list_store, logger)
         self.view_dict = {'transitions_internal': True, 'transitions_external': True}
-        self.list_store = gtk.ListStore(int, str, str, str, str, bool,
-                                        gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
-        self.tree_view = view.get_top_widget()
-        self._logger = logger
 
         self.combo = {}
         self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
@@ -66,19 +63,13 @@ class StateTransitionsListController(ExtendedController, ListSelectionFeatureCon
         self.debug_log = False
         self._actual_overview = None
 
-        ExtendedController.__init__(self, model, view)
-        ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
-        # print type(self).__name__, self.model.state.name, "initialized state observation"
         if not self.model.state.is_root_state:
             self.observe_model(self.model.parent)
-            # print type(self).__name__, self.model.state.name, "initialized parent observation"
             if self.model.parent.parent is not None:
                 self.observe_model(self.model.parent.parent)
-                # print type(self).__name__, self.model.state.name, "initialized parent-parent observation"
             # observe state machine model
             if self.model.get_sm_m_for_state_m() is not None:
                 self.observe_model(self.model.get_sm_m_for_state_m())
-                # print type(self).__name__, self.model.state.name, "initialized sm observation"
             else:
                 logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
         else:
@@ -86,23 +77,21 @@ class StateTransitionsListController(ExtendedController, ListSelectionFeatureCon
             if self.model.parent is None:
                 if self.model.get_sm_m_for_state_m() is not None:
                     self.observe_model(self.model.get_sm_m_for_state_m())
-                    # print type(self).__name__, self.model.state.name, "initialized sm observation"
                 else:
                     logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
             else:
                 logger.warning("StateModel's state is_root_state and has a parent should not be possible")
                 self.observe_model(self.model.parent)
 
-        self.tree_view.set_model(self.list_store)
-
     def register_view(self, view):
         """Called when the View was registered
         """
-
+        super(StateTransitionsListController, self).register_view(view)
         format_cell(view['from_state_combo'], None, 0)
         format_cell(view['to_state_combo'], None, 0)
         format_cell(view['from_outcome_combo'], None, 0)
         format_cell(view['to_outcome_combo'], None, 0)
+
         def cell_text(column, cell_renderer, model, iter):
             t_id = model.get_value(iter, self.ID_STORAGE_ID)
             in_external = 'external' if model.get_value(iter, self.IS_EXTERNAL_STORAGE_ID) else 'internal'
@@ -135,10 +124,8 @@ class StateTransitionsListController(ExtendedController, ListSelectionFeatureCon
         view['from_outcome_combo'].connect("edited", self.on_combo_changed_from_outcome)
         view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
         view['to_outcome_combo'].connect("edited", self.on_combo_changed_to_outcome)
-        # view['external_toggle'].set_radio(True)
 
         view.tree_view.connect("grab-focus", self.on_focus)
-        ListSelectionFeatureController.register_view(self, view)
         self.update()
 
     def register_adapters(self):
@@ -628,19 +615,19 @@ class StateTransitionsListController(ExtendedController, ListSelectionFeatureCon
         sm_selection = self.model.get_sm_m_for_state_m().selection
         return sm_selection, sm_selection.transitions
 
-    @ExtendedController.observe("selection", after=True)
+    @TreeViewController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
         if "transitions" == info['method_name']:
             self.update_selection_sm_prior()
 
-    @ExtendedController.observe("root_state", assign=True)
+    @TreeViewController.observe("root_state", assign=True)
     def root_state_changed(self, model, prop_name, info):
         """ Relieve all observed models to avoid updates on old root state.
         """
         # TODO may re-observe if the states-editor supports this feature
         self.relieve_all_models()
 
-    @ExtendedController.observe("state", before=True)
+    @TreeViewController.observe("state", before=True)
     def before_notification_state(self, model, prop_name, info):
         """ Set the no update flag to avoid updates in between of a state removal.
         """
@@ -657,14 +644,14 @@ class StateTransitionsListController(ExtendedController, ListSelectionFeatureCon
                     self.relieve_all_models()
                 # print "TNOUPDATE_PARENT ", self.no_update_self_or_parent_state_destruction, info.args[1], self.model.state.state_id
 
-    @ExtendedController.observe("change_root_state_type", before=True)
-    @ExtendedController.observe("change_state_type", before=True)
+    @TreeViewController.observe("change_root_state_type", before=True)
+    @TreeViewController.observe("change_state_type", before=True)
     def before_notification_of_type_change(self, model, prop_name, info):
         """ Set the no update flag to avoid updates in between of a state-type-change.
         """
         self.no_update = True
 
-    @ExtendedController.observe("state", after=True)
+    @TreeViewController.observe("state", after=True)
     def after_notification_state(self, model, prop_name, info):
 
         # avoid updates because of execution status updates
@@ -696,11 +683,11 @@ class StateTransitionsListController(ExtendedController, ListSelectionFeatureCon
             self.update()
         self._actual_overview = None
 
-    @ExtendedController.observe("states", after=True)
-    @ExtendedController.observe("transitions", after=True)
-    @ExtendedController.observe("outcomes", after=True)
-    @ExtendedController.observe("change_root_state_type", after=True)
-    @ExtendedController.observe("change_state_type", after=True)
+    @TreeViewController.observe("states", after=True)
+    @TreeViewController.observe("transitions", after=True)
+    @TreeViewController.observe("outcomes", after=True)
+    @TreeViewController.observe("change_root_state_type", after=True)
+    @TreeViewController.observe("change_state_type", after=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
         """ Activates the update after a state-type-change happend and triggers update if outcomes, transitions or
         states list has been changed.
