@@ -105,7 +105,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
             message = ' if not existing' if not self.model.global_variable_manager.variable_exist(gv_name) else ''
             message += ', while no iterator is registered for its row' if gv_name not in self.list_store_iterators else ''
             message += ', while it is locked.' if self.model.global_variable_manager.is_locked(gv_name) else ''
-            logger.error("{2} of global variable '{0}' is not possible{1}".format(gv_name, message, intro_message))
+            logger.error("{2} of global variable '{0}' is not possible -> Exception:{1}".format(gv_name, message, intro_message))
             return False
         return True
 
@@ -160,7 +160,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
     def on_new_global_variable_button_clicked(self, *event):
         """Creates a new global variable with default values and selects its row
 
-        Triggered when the New button in the Global Variables tab is clicked.
+        Triggered when the 'New' button in the global variables tab is clicked.
         """
         if react_to_event(self.view, self.tree_view, event):
             gv_name = "new_global_%s" % self.global_variable_counter
@@ -175,7 +175,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
     def on_delete_global_variable_button_clicked(self, *event):
         """Remove the selected global variables and re-select next variable row
 
-        Triggered when the Delete button in the global variables tab is clicked.
+        Triggered when the 'Delete' button in the global variables tab is clicked.
         """
         if react_to_event(self.view, self.tree_view, event):
             tree, path_list = self.tree_view.get_selection().get_selected_rows()
@@ -192,7 +192,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
             return True
 
     def on_name_changed(self, widget, path, new_gv_name):
-        """Change global variable name/key according handed string
+        """Change global variable name/key according to handed string
 
         Updates the global variable name only if different and already in list store.
 
@@ -242,7 +242,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
             old_type = data_type
             if data_type == type(None):
                 old_type = type(old_value)
-                logger.debug("Global variable list widget try to preserve type of variable {0} with type "
+                logger.debug("Global variable list widget try to preserve type of variable '{0}' with type "
                              "'NoneType'".format(gv_name))
             try:
                 new_value = type_helpers.convert_string_value_to_type_value(new_value_as_string, old_type)
@@ -254,7 +254,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
                                    "".format(gv_name, new_value, type(old_value), old_value))
                 else:
                     raise TypeError("Unexpected outcome of change value operation for global variable '{0}' and "
-                                    "handed value '{1}' type '{2}' -> raised error {3}"
+                                    "handed value '{1}' type '{2}' -> Exception:{3}"
                                     "".format(gv_name, new_value_as_string, type(new_value_as_string), e))
 
         else:
@@ -267,7 +267,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         try:
             self.model.global_variable_manager.set_variable(gv_name, new_value, data_type=data_type)
         except (RuntimeError, AttributeError, TypeError) as e:
-            logger.error("Error while setting global variable {1} to value {2} -> raised error {0}"
+            logger.error("Error while setting global variable '{0}' to value '{1}' -> Exception:{2}"
                          "".format(gv_name, new_value, e))
 
     def on_data_type_changed(self, widget, path, new_data_type_as_string):
@@ -291,7 +291,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         try:
             new_data_type = type_helpers.convert_string_to_type(new_data_type_as_string)
         except (AttributeError, ValueError) as e:
-            logger.error("Could not change data type to '{0}': {1}".format(new_data_type_as_string, e))
+            logger.error("Could not change data type to '{0}' -> Exception:{1}".format(new_data_type_as_string, e))
             return
         assert isinstance(new_data_type, type)
 
@@ -304,7 +304,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
             except (ValueError, TypeError) as e:
                 new_value = new_data_type()
                 logger.info("Global variable '{0}' old value '{1}' is not convertible to new data type '{2}'"
-                            "therefore becomes empty new data type object '{3}' -> raised TypeError: {4}"
+                            "therefore becomes empty new data type object '{3}' -> Exception:{4}"
                             "".format(gv_name, old_value, new_data_type, new_value, e))
 
         # set value in global variable manager
@@ -312,14 +312,14 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         try:
             self.model.global_variable_manager.set_variable(gv_name, new_value, data_type=new_data_type)
         except (ValueError, RuntimeError, TypeError) as e:
-            logger.error("Could not set new value unexpected failure {0} to value {1} -> raised error {2}"
+            logger.error("Could not set new value unexpected failure '{0}' to value '{1}' -> Exception:{2}"
                          "".format(gv_name, new_value, e))
 
     @ExtendedController.observe("global_variable_manager", after=True)
     def assign_notification_state(self, model, prop_name, info):
         """Handles gtkmvc notification from global variable manager
 
-        Calls update of hole list store in case new variable was added. Avoids to run updates without reasonable change.
+        Calls update of whole list store in case new variable was added. Avoids to run updates without reasonable change.
         Holds tree store and updates row elements if is-locked or global variable value changes.
         """
 
