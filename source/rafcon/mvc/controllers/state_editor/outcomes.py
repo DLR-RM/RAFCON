@@ -86,53 +86,14 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
             view['to_state_combo'].connect("edited", self.on_to_state_edited)
             view['to_outcome_combo'].connect("edited", self.on_to_outcome_edited)
 
-        view['name_cell'].connect('edited', self.on_name_edited)
-        view['name_cell'].connect('editing-started', self.on_editing_started)
-        view['name_cell'].connect('editing-canceled', self.on_editing_canceled)
+        self._apply_value_on_edited_and_focus_out(view['name_cell'], self.apply_new_outcome_name)
 
         ListSelectionFeatureController.register_view(self, view)
         self.update()
 
-    def on_editing_started(self, renderer, editable, path):
-        """Connects the a handler for the focus-out-event of the current editable
-
-        :param gtk.CellRendererText renderer: The cell renderer who's editing was started
-        :param gtk.CellEditable editable: interface for editing the current TreeView cell
-        :param str path: the path identifying the edited cell
-        """
-        if self.view['name_cell'] is renderer:
-            self._current_editable_with_event = (editable, editable.connect('focus-out-event', self.on_focus_out))
-        else:
-            logger.error("Not registered Renderer was used")
-
-    def on_editing_canceled(self, renderer):
-        """Disconnects the focus-out-event handler of cancelled editable
-
-        :param gtk.CellRendererText renderer: The cell renderer who's editing was cancelled
-        """
-        if self._current_editable_with_event is not None:
-            self._current_editable_with_event[0].disconnect(self._current_editable_with_event[1])
-            self._current_editable_with_event = None
-
-    def on_focus_out(self, entry, event):
-        """Applies the changed name
-
-        The default behaviour for the focus out event dismisses the edited name. Therefore we apply the name beforehand.
-
-        :param gtk.Entry entry: The entry that was focused out
-        :param gtk.Event event: Event object with information about the event
-        """
-        if self.get_path() is None:
-            return
-
-        # We have to use idle_add to prevent core dumps:
-        # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
-        glib.idle_add(self.on_name_edited, entry, self.get_path(), entry.get_text())
-
-    def on_name_edited(self, renderer, path, new_name):
+    def apply_new_outcome_name(self, path, new_name):
         """Apply the newly entered outcome name it is was changed
 
-        :param gtk.CellRendererText renderer: The cell renderer that was edited
         :param str path: The path string of the renderer
         :param str new_name:
         """
