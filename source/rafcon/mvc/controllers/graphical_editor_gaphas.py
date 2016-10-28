@@ -293,15 +293,18 @@ class GraphicalEditorController(ExtendedController):
         notification = meta_signal_message.notification
         if not notification:    # For changes applied to the root state, there are always two notifications
             return              # Ignore the one with less information
-        state_m = notification.model
-        state_v = self.canvas.get_view_for_model(state_m)
+        model = notification.model
+        view = self.canvas.get_view_for_model(model)
 
         # Always update canvas and handle all events in the gtk queue before performing any changes
         self.canvas.update_now()
         while gtk.events_pending():
             gtk.main_iteration(False)
-        state_v.apply_meta_data(recursive=meta_signal_message.affects_children)
-        self.canvas.request_update(state_v, matrix=True)
+        if isinstance(view, StateView):
+            view.apply_meta_data(recursive=meta_signal_message.affects_children)
+        else:
+            view.apply_meta_data()
+        self.canvas.request_update(view, matrix=True)
 
     def manual_notify_after(self, state_m):
         state_v = self.canvas.get_view_for_model(state_m)

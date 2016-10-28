@@ -12,6 +12,7 @@
 import gtk
 from gtk.gdk import keyval_name
 from gtkmvc import Model
+import glib
 
 from rafcon.statemachine.enums import StateType
 from rafcon.statemachine.states.execution_state import ExecutionState
@@ -71,7 +72,7 @@ class StateOverviewController(ExtendedController, Model):
             self.state_types_dict[str(StateType.PREEMPTION_CONCURRENCY).split('.')[1]] = {
                 'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
 
-        view['entry_name'].connect('focus-out-event', self.change_name)
+        view['entry_name'].connect('focus-out-event', self.on_focus_out)
         view['entry_name'].connect('key-press-event', self.check_for_enter)
         if self.model.state.name:
             view['entry_name'].set_text(self.model.state.name)
@@ -158,12 +159,16 @@ class StateOverviewController(ExtendedController, Model):
         if self.view is not None and info['method_name'] == 'name':
             self.view['entry_name'].set_text(self.model.state.name)
 
-    def change_name(self, entry, event):
-        entry_text = entry.get_text()
-        if self.model.state.name != entry_text:
+    def on_focus_out(self, entry, event):
+        # We have to use idle_add to prevent core dumps:
+        # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
+        glib.idle_add(self.change_name, entry.get_text())
+
+    def change_name(self, new_name):
+        if self.model.state.name != new_name:
             try:
-                self.model.state.name = entry_text
-                logger.debug("State '{0}' changed name to '{1}'".format(self.model.state.name, entry_text))
+                self.model.state.name = new_name
+                logger.debug("State '{0}' changed name to '{1}'".format(self.model.state.name, new_name))
             except (TypeError, ValueError) as e:
                 logger.warn("Could not change state name: {0}".format(e))
             self.view['entry_name'].set_text(self.model.state.name)
@@ -196,4 +201,4 @@ class StateOverviewController(ExtendedController, Model):
     def check_for_enter(self, entry, event):
         key_name = keyval_name(event.keyval)
         if key_name in ["Return", "KP_Enter"]:
-            self.change_name(entry, None)
+            self.change_name(entry.get_text())

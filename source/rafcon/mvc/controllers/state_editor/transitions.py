@@ -146,10 +146,10 @@ class StateTransitionsListController(ExtendedController, ListSelectionFeatureCon
         """
 
     def on_focus(self, widget, data=None):
-        path = self.view.tree_view.get_cursor()
+        path = self.get_path()
         self.update()
-        if path[0]:
-            self.view.tree_view.set_cursor(path[0])
+        if path:
+            self.tree_view.set_cursor(path)
 
     def on_add(self, button, info=None):
 
@@ -183,40 +183,38 @@ class StateTransitionsListController(ExtendedController, ListSelectionFeatureCon
                 from_state_id = None
             t_id = responsible_parent.add_transition(from_state_id, from_outcome, to_state_id, to_outcome)
             # Set the selection to the new transition
-            ctr = 0
-            for transition_row in self.list_store:
-                # Compare transition ids
-                if transition_row[self.ID_STORAGE_ID] == t_id:
-                    self.view.tree_view.set_cursor(ctr)
-                    break
-                ctr += 1
+            self.select_entry(t_id)
             return True
         except (AttributeError, ValueError) as e:
             logger.error("Transition couldn't be added: {0}".format(e))
 
     def on_remove(self, button, info=None):
-        tree, path = self.view.tree_view.get_selection().get_selected_rows()
-        if path:
-            row_number = path[0][0]
-            transition_id = self.list_store[row_number][self.ID_STORAGE_ID]
-            try:
-                if self.list_store[row_number][self.IS_EXTERNAL_STORAGE_ID]:
-                    self.model.parent.state.remove_transition(int(transition_id))
-                else:
-                    self.model.state.remove_transition(int(transition_id))
-            except (AttributeError, ValueError) as e:
-                logger.error("Transition couldn't be removed: {0}".format(e))
+
+        tree, path_list = self.tree_view.get_selection().get_selected_rows()
+        old_path = self.get_path()
+        transition_ids = [self.list_store[path][self.ID_STORAGE_ID] for path in path_list] if path_list else []
+        is_external_dict = {self.list_store[path][self.ID_STORAGE_ID]: self.list_store[path][self.IS_EXTERNAL_STORAGE_ID]
+                            for path in path_list} if path_list else {}
+        if transition_ids:
+            for transition_id in transition_ids:
+                try:
+                    if is_external_dict[transition_id]:
+                        self.model.parent.state.remove_transition(transition_id)
+                    else:
+                        self.model.state.remove_transition(transition_id)
+                except (AttributeError, ValueError) as e:
+                    logger.error("Transition couldn't be removed: {0}".format(e))
 
             # selection to next element
             if len(self.list_store) > 0:
-                self.view.tree_view.set_cursor(min(row_number, len(self.list_store) - 1))
+                self.tree_view.set_cursor(min(old_path[0], len(self.list_store) - 1))
             return True
         else:
             logger.warning("Please select the data flow to be deleted")
 
     def on_combo_changed_from_state(self, widget, path, text):
         # Check whether the from state was changed or the combo entry is empty
-        t_id = self.list_store[path][0]
+        t_id = self.list_store[path][self.ID_STORAGE_ID]
         if text is None:
             return
 
@@ -266,7 +264,7 @@ class StateTransitionsListController(ExtendedController, ListSelectionFeatureCon
 
     def on_combo_changed_from_outcome(self, widget, path, text):
         # check if the outcome may has not changed or combo is empty
-        if text is None or self.list_store[path][self.FROM_OUTCOME_STORAGE_ID] == text.split('.')[0]:
+        if text is None or text == "None" or self.list_store[path][self.FROM_OUTCOME_STORAGE_ID] == text.split('.')[0]:
             return
 
         # transition gets modified

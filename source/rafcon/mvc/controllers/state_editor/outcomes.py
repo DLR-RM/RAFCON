@@ -10,6 +10,7 @@
 """
 
 import gtk
+import glib
 import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
@@ -27,8 +28,8 @@ logger = log.get_logger(__name__)
 
 # TODO find out why not editable ID-column cause segfault ->  if sometimes move into widget by tab and enter is pressed
 
-class StateOutcomesListController(ExtendedController, ListSelectionFeatureController):
 
+class StateOutcomesListController(ExtendedController, ListSelectionFeatureController):
     """The controller handles the outcomes of one respective state
 
     The controller allows to add and remove outcomes as well as to add, remove and to modify the related transition.
@@ -40,14 +41,14 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
     """
     ID_STORAGE_ID = 0
     NAME_STORAGE_ID = 1
-    CORE_STORAGE_ID = 6
-    CORE_PARENT_STORAGE_ID = 7
-    MODEL_STORAGE_ID = 8
+    CORE_STORAGE_ID = 4
+    CORE_PARENT_STORAGE_ID = 5
+    MODEL_STORAGE_ID = 6
 
     def __init__(self, model, view):
         # initiate data base and tree
         # id, name, to-state, to-outcome, name-color, to-state-color, outcome, state, outcome_model
-        self.list_store = gtk.ListStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
+        self.list_store = gtk.ListStore(str, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
                                         gobject.TYPE_PYOBJECT)
         self.tree_view = view['tree_view']
         self._logger = logger
@@ -61,11 +62,7 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         # not used at the moment key-outcome_id -> label,  from_state_id,  transition_id
         self.dict_from_other_state = {}  # if widget gets extended
 
-        self._actual_entry = None
-
-        # variables to avoid to create and to be robust against chained notification calls
-        self._do_name_change = False
-        self._do_store_update = False
+        self._current_editable_with_event = None
 
         ExtendedController.__init__(self, model, view)
         ListSelectionFeatureController.__init__(self, self.list_store, self.tree_view, logger)
@@ -75,7 +72,6 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
 
         if self.model.get_sm_m_for_state_m() is not None:
             self.observe_model(self.model.get_sm_m_for_state_m())
-            # print type(self).__name__, self.model.state.name, "initialized sm observation"
         else:
             logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
 
@@ -87,81 +83,88 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
         if view['to_state_col'] and view['to_outcome_col'] and view['to_state_combo'] and view['to_outcome_combo']:
-            view['to_state_combo'].connect("edited", self.on_to_state_modification)
-            view['to_outcome_combo'].connect("edited", self.on_to_outcome_modification)
+            view['to_state_combo'].connect("edited", self.on_to_state_edited)
+            view['to_outcome_combo'].connect("edited", self.on_to_outcome_edited)
 
-        view['name_cell'].connect('edited', self.on_name_changed)
-        view['name_cell'].connect('editing-started', self.editing_started)
-        view['name_cell'].connect('editing-canceled', self.editing_canceled)
-        view['tree_view'].connect("grab-focus", self.on_focus)
+        view['name_cell'].connect('edited', self.on_name_edited)
+        view['name_cell'].connect('editing-started', self.on_editing_started)
+        view['name_cell'].connect('editing-canceled', self.on_editing_canceled)
 
         ListSelectionFeatureController.register_view(self, view)
         self.update()
 
-    def editing_started(self, renderer, editable, path):
-        """ Callback method to connect entry-widget focus-out-event to the respective change-method.
+    def on_editing_started(self, renderer, editable, path):
+        """Connects the a handler for the focus-out-event of the current editable
+
+        :param gtk.CellRendererText renderer: The cell renderer who's editing was started
+        :param gtk.CellEditable editable: interface for editing the current TreeView cell
+        :param str path: the path identifying the edited cell
         """
-        # logger.info("CONNECT editable: {0} path: {1}".format(editable, path))
         if self.view['name_cell'] is renderer:
-            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_name))
+            self._current_editable_with_event = (editable, editable.connect('focus-out-event', self.on_focus_out))
         else:
             logger.error("Not registered Renderer was used")
 
-    def editing_canceled(self, event):
-        """ Callback method to disconnect entry-widget focus-out-event to the respective change-method.
-        """
-        # logger.info("DISCONNECT text: {1} event: {0}".format(event, event.get_property('text')))
-        if self._actual_entry is not None:
-            self._actual_entry[0].disconnect(self._actual_entry[1])
-            self._actual_entry = None
+    def on_editing_canceled(self, renderer):
+        """Disconnects the focus-out-event handler of cancelled editable
 
-    def change_name(self, entry, event):
-        """ Change-name-method to set the name of actual selected (row) data-port.
+        :param gtk.CellRendererText renderer: The cell renderer who's editing was cancelled
         """
-        # logger.info("FOCUS_OUT NAME entry: {0} event: {1}".format(entry, event))
-        if self.tree_view.get_cursor()[0] is None:
+        if self._current_editable_with_event is not None:
+            self._current_editable_with_event[0].disconnect(self._current_editable_with_event[1])
+            self._current_editable_with_event = None
+
+    def on_focus_out(self, entry, event):
+        """Applies the changed name
+
+        The default behaviour for the focus out event dismisses the edited name. Therefore we apply the name beforehand.
+
+        :param gtk.Entry entry: The entry that was focused out
+        :param gtk.Event event: Event object with information about the event
+        """
+        if self.get_path() is None:
             return
 
-        self.on_name_changed(entry, self.tree_view.get_cursor()[0], text=entry.get_text())
+        # We have to use idle_add to prevent core dumps:
+        # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
+        glib.idle_add(self.on_name_edited, entry, self.get_path(), entry.get_text())
 
-    def on_focus(self, widget, data=None):
-        # logger.debug("OUTCOMES_LIST get new FOCUS")
-        path = self.tree_view.get_cursor()
-        try:
-            self.update_internal_data_base()
-            self.update_list_store()
-        except Exception:
-            logger.warning("update failed")
-        if path[0]:  # if valid -> is possible as long as set_cursor does not trigger on_focus again
-            self.tree_view.set_cursor(path[0])
+    def on_name_edited(self, renderer, path, new_name):
+        """Apply the newly entered outcome name it is was changed
 
-    def on_name_changed(self, widget, path, text):
+        :param gtk.CellRendererText renderer: The cell renderer that was edited
+        :param str path: The path string of the renderer
+        :param str new_name:
+        """
+        # Don't do anything if outcome name didn't change
+        if new_name == self.list_store[path][self.NAME_STORAGE_ID]:
+            return
+
         outcome_id = self.list_store[path][self.CORE_STORAGE_ID].outcome_id
         outcome = self.model.state.outcomes[outcome_id]
-        if self._do_name_change:
-            return
-        self._do_name_change = True
         try:
-            outcome.name = text
+            outcome.name = new_name
             logger.debug("Outcome name changed to '{0}'".format(outcome.name))
         except (ValueError, TypeError) as e:
             logger.warning("The name of the outcome could not be changed: {0}".format(e))
-        self._do_name_change = False
         self.list_store[path][self.NAME_STORAGE_ID] = outcome.name
 
-    def on_to_state_modification(self, widget, path, text):
-        # logger.debug("on_to_state_modification %s, %s, %s" % (widget, path, text))
+    def on_to_state_edited(self, renderer, path, new_state_identifier):
+        """Connects the outcome with a transition to the newly set state
+
+        :param gtk.CellRendererText renderer: The cell renderer that was edited
+        :param str path: The path string of the renderer
+        :param str new_state_identifier: An identifier for the new state that was selected
+        """
         outcome_id = int(self.list_store[path][self.ID_STORAGE_ID])
         if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
             transition_parent_state = self.model.parent.state
             if outcome_id in self.dict_to_other_state.keys():
-                # logger.debug("1")
                 t_id = int(self.dict_to_other_state[outcome_id][2])
             else:
-                # logger.debug("2")
                 t_id = int(self.dict_to_other_outcome[outcome_id][2])
-            if text is not None:
-                to_state_id = text.split('.')[1]
+            if new_state_identifier is not None:
+                to_state_id = new_state_identifier.split('.')[1]
                 if not transition_parent_state.transitions[t_id].to_state == to_state_id:
                     try:
                         transition_parent_state.transitions[t_id].modify_target(to_state=to_state_id)
@@ -173,10 +176,9 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
                 except AttributeError as e:
                     logger.warn("The transition couldn't be removed: {0}".format(e))
         else:  # there is no transition till now
-            if text is not None and not self.model.state.is_root_state:
-                # logger.debug("s31")
+            if new_state_identifier is not None and not self.model.state.is_root_state:
                 transition_parent_state = self.model.parent.state
-                to_state_id = text.split('.')[1]
+                to_state_id = new_state_identifier.split('.')[1]
                 try:
                     t_id = transition_parent_state.add_transition(from_state_id=self.model.state.state_id,
                                                                   from_outcome=outcome_id,
@@ -187,28 +189,30 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
                     return
 
                 # add self transition meta data
-                if 'self' in text.split('.'):
+                if 'self' in new_state_identifier.split('.'):
                     insert_self_transition_meta_data(self.model, t_id, 'outcomes_widget', 'append_to_last_change')
 
             else:
-                # logger.debug("s32")
                 logger.debug("outcome-editor got None in to_state-combo-change no transition is added")
 
-    def on_to_outcome_modification(self, widget, path, text):
-        # logger.debug("on_to_outcome_modification %s, %s, %s" % (widget, path, text))
+    def on_to_outcome_edited(self, renderer, path, new_outcome_identifier):
+        """Connects the outcome with a transition to the newly set outcome
+
+        :param gtk.CellRendererText renderer: The cell renderer that was edited
+        :param str path: The path string of the renderer
+        :param str new_outcome_identifier: An identifier for the new outcome that was selected
+        """
         if self.model.parent is None:
             return
         outcome_id = int(self.list_store[path][self.ID_STORAGE_ID])
         transition_parent_state = self.model.parent.state
         if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
             if outcome_id in self.dict_to_other_state.keys():
-                # logger.debug("o1")
                 t_id = int(self.dict_to_other_state[outcome_id][2])
             else:
-                # logger.debug("o2")
                 t_id = int(self.dict_to_other_outcome[outcome_id][2])
-            if text is not None:
-                new_to_outcome_id = int(text.split('.')[2])
+            if new_outcome_identifier is not None:
+                new_to_outcome_id = int(new_outcome_identifier.split('.')[2])
                 if not transition_parent_state.transitions[t_id].to_outcome == new_to_outcome_id:
                     to_state_id = self.model.parent.state.state_id
                     try:
@@ -220,9 +224,8 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
 
                 transition_parent_state.remove_transition(t_id)
         else:  # there is no transition till now
-            if text is not None:
-                # logger.debug("o31")
-                to_outcome = int(text.split('.')[2])
+            if new_outcome_identifier is not None:
+                to_outcome = int(new_outcome_identifier.split('.')[2])
 
                 try:
                     self.model.parent.state.add_transition(from_state_id=self.model.state.state_id,
@@ -232,11 +235,9 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
                 except (ValueError, TypeError) as e:
                     logger.warn("The transition couldn't be added: {0}".format(e))
             else:
-                # logger.debug("o32")
                 logger.debug("outcome-editor got None in to_outcome-combo-change no transition is added")
 
     def on_add(self, button, info=None):
-        # logger.debug("add outcome")
         outcome_id = None
         num_success_outcomes = len(self.model.state.outcomes) - 2
         for run_id in range(num_success_outcomes + 1, 0, -1):
@@ -259,31 +260,28 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         return True
 
     def on_remove(self, button, info=None):
-
-        tree, path = self.tree_view.get_selection().get_selected_rows()
-        if path:  # and not self.list_store[path[0][0]][self.CORE_STORAGE_ID].outcome_id < 0 leave this check for the state
-            outcome_id = self.list_store[path[0][0]][self.CORE_STORAGE_ID].outcome_id
-            try:
-                self.model.state.remove_outcome(outcome_id)
-                row_number = path[0][0]
-                if len(self.list_store) > 0:
-                    self.tree_view.set_cursor(min(row_number, len(self.list_store)-1))
-                return True
-            except AttributeError as e:
-                logger.warning("Error while removing outcome: {0}".format(e))
+        """Remove the selected outcomes and select the next one
+        """
+        tree, path_list = self.tree_view.get_selection().get_selected_rows()
+        old_path = self.get_path()
+        outcome_ids = [self.list_store[path][self.ID_STORAGE_ID] for path in path_list] if path_list else []
+        if outcome_ids:
+            for outcome_id in outcome_ids:
+                try:
+                    self.model.state.remove_outcome(outcome_id)
+                    return True
+                except AttributeError as e:
+                    logger.warning("Error while removing outcome: {0}".format(e))
+            if len(self.list_store) > 0:
+                self.tree_view.set_cursor(min(old_path[0], len(self.list_store)-1))
 
     def on_right_click_menu(self):
-        logger.debug("do right click menu")
+        pass
 
     def update_internal_data_base(self):
 
-        if self._do_store_update:
-            return
-        self._do_store_update = True
-
         model = self.model
 
-        # print "clean data base"
         self.to_state_combo_list.clear()
         self.to_state_combo_list.append([None, None, None])
         self.to_outcome_combo_list.clear()
@@ -304,14 +302,9 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
                                                      parent_child_state_m.state.state_id, parent_id])
             # check for "to outcome combos" -> so all outcomes of parent
             for outcome in model.parent.state.outcomes.values():
-                # print "type outcome: ", outcome.name, type(outcome)
                 self.to_outcome_combo_list.append(['parent.' + outcome.name + '.' + str(outcome.outcome_id),
                                                    outcome.outcome_id, parent_id])
             for transition_id, transition in model.parent.state.transitions.items():
-                # print transition.from_state, transition.from_outcome, \
-                #         transition.to_state, transition.to_outcome, model.parent.state.name, \
-                #         model.parent.state.state_id, \
-                #         transition_id, transition.transition_id, model.parent.state.transitions[transition_id].transition_id
                 # check for "to other state" connections -> so from self-state and self-outcome "external" transitions
                 if transition.from_state == model.state.state_id and transition.from_outcome in model.state.outcomes.keys():
                     # check for "to other outcomes" connections -> so to parent-state and parent-outcome "ext" transitions
@@ -332,26 +325,14 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
         if isinstance(model, ContainerStateModel):
             # check for "from other state" connections -> so to self-state and self-outcome "internal" transitions
             for transition_id, transition in model.state.transitions.items():
-                # print transition.from_state, transition.from_outcome, \
-                #         transition.to_state, transition.to_outcome, model.state.name, model.state.state_id, \
-                #         transition_id, transition.transition_id
                 if transition.to_state is None:  # no to_state means self
                     if transition.to_outcome in self.dict_from_other_state:
                         self.dict_from_other_state[transition.to_outcome].append([transition.from_state, transition.from_outcome, transition.transition_id])
                     else:
                         self.dict_from_other_state[transition.to_outcome] = [[transition.from_state, transition.from_outcome, transition.transition_id]]
 
-        # print "to_state: ", self.list_to_other_state
-        # print "to_outcome: ", self.list_to_other_outcome
-        # print "from state: ", self.list_from_other_state
-        # print "state.name: ", self.model.state.name
-        self._do_store_update = False
-
     def update_list_store(self):
 
-        if self._do_store_update:
-            return
-        self._do_store_update = True
         self.list_store.clear()
         for outcome in self.model.state.outcomes.values():
             to_state = None
@@ -361,31 +342,25 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
             if outcome.outcome_id in self.dict_to_other_outcome.keys():
                 to_outcome = self.dict_to_other_outcome[outcome.outcome_id][0]
                 to_state = 'parent'
-            # from_state = None
-            # if outcome.outcome_id in self.dict_from_other_state.keys():
-            #     from_state = self.dict_from_other_state[outcome.outcome_id][0]
-            # print "list_store: ", [outcome.outcome_id, outcome.name, to_state, to_outcome]
-            self.list_store.append([outcome.outcome_id, outcome.name, to_state, to_outcome, '#f0E5C7', '#f0E5c7',
+            self.list_store.append([outcome.outcome_id, outcome.name, to_state, to_outcome,
                                     outcome, self.model.state, self.model.get_outcome_m(outcome.outcome_id)])
 
         if self.view and self.view['to_state_col'] and self.view['to_state_combo']:
             for cell_renderer in self.view['to_state_col'].get_cell_renderers():
                 cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_state_combo_list)
-                cell_renderer.set_property("text-column", 0)
+                cell_renderer.set_property("text-column", self.ID_STORAGE_ID)
                 cell_renderer.set_property("has-entry", False)
         if self.view and self.view['to_outcome_col'] and self.view['to_outcome_combo']:
             for cell_renderer in self.view['to_outcome_col'].get_cell_renderers():
                 cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_outcome_combo_list)
-                cell_renderer.set_property("text-column", 0)
+                cell_renderer.set_property("text-column", self.ID_STORAGE_ID)
                 cell_renderer.set_property("has-entry", False)
-        self._do_store_update = False
 
     def update(self):
         self.update_internal_data_base()
         self.update_list_store()
-
 
     def get_state_machine_selection(self):
         # print type(self).__name__, "get state machine selection"
@@ -401,8 +376,6 @@ class StateOutcomesListController(ExtendedController, ListSelectionFeatureContro
     @ExtendedController.observe("outcomes", after=True)
     @ExtendedController.observe("transitions", after=True)
     def outcomes_changed(self, model, prop_name, info):
-        # logger.debug("call_notification - AFTER:prop-%s instance-%s method-%s result-%s" %
-        #              (prop_name, info.instance, info.method_name, info.result))
         self.update()
 
 

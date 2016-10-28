@@ -12,6 +12,7 @@ import gtk
 import gobject
 from gtk import ListStore
 from gtk import TreeViewColumn, CellRendererToggle
+import glib
 
 from rafcon.statemachine.states.library_state import LibraryState
 
@@ -205,8 +206,9 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
         # logger.info("FOCUS_OUT NAME entry: {0} event: {1}".format(entry, event))
         if self.get_list_store_row_from_cursor_selection() is None:
             return
-
-        self.on_name_changed(entry, None, text=entry.get_text())
+        # We have to use idle_add to prevent core dumps:
+        # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
+        glib.idle_add(self.on_name_changed, entry, None, entry.get_text())
 
     def change_data_type(self, entry, event):
         """ Change-data-type-method to set the data_type of actual selected (row) data-port.
@@ -215,7 +217,7 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
         if self.get_list_store_row_from_cursor_selection() is None:
             return
 
-        self.on_data_type_changed(entry, None, text=entry.get_text())
+        glib.idle_add(self.on_data_type_changed, entry, None, entry.get_text())
 
     def change_value(self, entry, event):
         """ Change-value-method to set the default_value or runtime_value of actual selected (row) data-port.
@@ -224,7 +226,7 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
         if self.get_list_store_row_from_cursor_selection() is None:
             return
 
-        self.on_default_value_changed(entry, None, text=entry.get_text())
+        glib.idle_add(self.on_default_value_changed, entry, None, entry.get_text())
 
     def get_state_machine_selection(self):
         # print type(self).__name__, "get state machine selection"
@@ -288,19 +290,24 @@ class DataPortListController(ExtendedController, ListSelectionFeatureController)
         return True
 
     def on_delete_port_button_clicked(self, widget, data=None):
-        """Delete the selected port and select the next one"""
+        """Remove the selected ports and select the next one"""
         path_list = None
         if self.view is not None:
             model, path_list = self.tree_view.get_selection().get_selected_rows()
-        data_port_ids = [self.list_store[path[0]][self.ID_STORAGE_ID] for path in path_list] if path_list else []
+        old_path = self.get_path()
+        data_port_ids = [self.list_store[path][self.ID_STORAGE_ID] for path in path_list] if path_list else []
         if data_port_ids:
             for data_port_id in data_port_ids:
-                if self.type == "input":
-                    self.model.state.remove_input_data_port(data_port_id)
-                else:
-                    self.model.state.remove_output_data_port(data_port_id)
+                try:
+                    if self.type == "input":
+                        self.model.state.remove_input_data_port(data_port_id)
+                    else:
+                        self.model.state.remove_output_data_port(data_port_id)
+                except AttributeError as e:
+                    logger.warn("The data port couldn't be removed: {0}".format(e))
+                    return False
             if len(self.list_store) > 0:
-                self.view[self.view.top].set_cursor(min(path[0], len(self.list_store) - 1))
+                self.view[self.view.top].set_cursor(min(old_path[0], len(self.list_store) - 1))
             return True
 
     def on_use_runtime_value_toggled(self, widget, path):
