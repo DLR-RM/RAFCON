@@ -1,4 +1,5 @@
 import gtk
+import glib
 from gtk.gdk import CONTROL_MASK, SHIFT_MASK
 from rafcon.utils import log
 
@@ -36,6 +37,65 @@ class ListSelectionFeatureController(object):
         self._tree_selection.connect('changed', self.selection_changed)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         self.update_selection_sm_prior()
+
+    def _apply_value_on_edited_and_focus_out(self, renderer, apply_method):
+        """Sets up the renderer to apply changed when loosing focus
+
+        The default behaviour for the focus out event dismisses the changes in the renderer. Therefore we setup
+        handlers for that event, applying the changes.
+
+        :param gtk.CellRendererText renderer: The cell renderer who's changes are to be applied on focus out events
+        :param apply_method: The callback method applying the newly entered value
+        """
+        assert isinstance(renderer, gtk.CellRenderer)
+
+        def on_editing_canceled(renderer, editable):
+            """Disconnects the focus-out-event handler of cancelled editable
+
+            :param gtk.CellRendererText renderer: The cell renderer who's editing was cancelled
+            :param gtk.CellEditable editable: interface for editing the current TreeView cell
+            """
+            editable.disconnect(editable.get_data("focus_out_handler_id"))
+            renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
+
+        def on_focus_out(entry, event, editable):
+            """Applies the changes to the entry
+
+            :param gtk.Entry entry: The entry that was focused out
+            :param gtk.Event event: Event object with information about the event
+            :param gtk.CellEditable editable: interface for editing the current TreeView cell
+            """
+            editable.disconnect(editable.get_data("focus_out_handler_id"))
+            renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
+
+            if self.get_path() is None:
+                return
+            # We have to use idle_add to prevent core dumps:
+            # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
+            glib.idle_add(apply_method, self.get_path(), entry.get_text())
+
+        def on_editing_started(renderer, editable, path):
+            """Connects the a handler for the focus-out-event of the current editable
+
+            :param gtk.CellRendererText renderer: The cell renderer who's editing was started
+            :param gtk.CellEditable editable: interface for editing the current TreeView cell
+            :param str path: the path identifying the edited cell
+            """
+            focus_out_handler_id = editable.connect('focus-out-event', on_focus_out, editable)
+            editing_cancelled_handler_id = renderer.connect('editing-canceled', on_editing_canceled, editable)
+            editable.set_data("focus_out_handler_id", focus_out_handler_id)
+            renderer.set_data("editing_cancelled_handler_id", editing_cancelled_handler_id)
+
+        def on_edited(renderer, path, new_value_str):
+            """Calls the apply method with the new value
+
+            :param gtk.CellRendererText renderer: The cell renderer that was edited
+            :param str path: The path string of the renderer
+            :param str new_value_str: The new value as string
+            """
+            apply_method(path, new_value_str)
+        renderer.connect('edited', on_edited)
+        renderer.connect('editing-started', on_editing_started)
 
     def on_right_click_menu(self):
         """An abstract method called after right click events"""
