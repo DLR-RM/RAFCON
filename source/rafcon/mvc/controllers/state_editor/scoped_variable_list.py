@@ -55,12 +55,6 @@ class ScopedVariableListController(ExtendedController, ListSelectionFeatureContr
         self.next_focus_column = {}
         self.prev_focus_column = {}
 
-        # variables to avoid to create and to be robust against chained notification calls
-        self._do_name_change = False
-        self._do_type_change = False
-        self._do_value_change = False
-        self._do_store_update = False
-
         if self.model.get_sm_m_for_state_m() is not None:
             self.observe_model(self.model.get_sm_m_for_state_m())
             # print type(self).__name__, self.model.state.name, "initialized sm observation"
@@ -85,16 +79,11 @@ class ScopedVariableListController(ExtendedController, ListSelectionFeatureContr
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', self.DEFAULT_VALUE_STORAGE_ID)
             if not isinstance(self.model.state, LibraryState):
                 view['default_value_text'].set_property("editable", True)
-            view['default_value_text'].connect("edited", self.on_default_value_changed)
-            view['default_value_text'].connect('editing-started', self.editing_started)
-            view['default_value_text'].connect('editing-canceled', self.editing_canceled)
+            self._apply_value_on_edited_and_focus_out(view['default_value_text'],
+                                                      self.apply_new_scoped_variable_default_value)
 
-        view['name_text'].connect("edited", self.on_name_changed)
-        view['name_text'].connect('editing-started', self.editing_started)
-        view['name_text'].connect('editing-canceled', self.editing_canceled)
-        view['data_type_text'].connect("edited", self.on_data_type_changed)
-        view['data_type_text'].connect('editing-started', self.editing_started)
-        view['data_type_text'].connect('editing-canceled', self.editing_canceled)
+        self._apply_value_on_edited_and_focus_out(view['name_text'], self.apply_new_scoped_variable_name)
+        self._apply_value_on_edited_and_focus_out(view['data_type_text'], self.apply_new_scoped_variable_type)
 
         ListSelectionFeatureController.register_view(self, view)
         self.tab_edit_controller.register_view()
@@ -123,56 +112,6 @@ class ScopedVariableListController(ExtendedController, ListSelectionFeatureContr
     def remove_port(self, *event):
         if react_to_event(self.view, self.view[self.view.top], event) and not isinstance(self.model.state, LibraryState):
             return self.on_delete_scoped_variable_button_clicked(None)
-
-    def editing_started(self, renderer, editable, path):
-        """ Callback method to connect entry-widget focus-out-event to the respective change-method.
-        """
-        # logger.info("CONNECT editable: {0} path: {1}".format(editable, path))
-        if self.view['name_text'] is renderer:
-            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_name))
-        elif self.view['data_type_text'] is renderer:
-            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_data_type))
-        elif self.view['default_value_text'] is renderer:
-            self._actual_entry = (editable, editable.connect('focus-out-event', self.change_value))
-        else:
-            logger.error("Not registered Renderer was used")
-
-    def editing_canceled(self, event):
-        """ Callback method to disconnect entry-widget focus-out-event to the respective change-method.
-        """
-        # logger.info("DISCONNECT text: {1} event: {0}".format(event, event.get_property('text')))
-        if self._actual_entry is not None:
-            self._actual_entry[0].disconnect(self._actual_entry[1])
-            self._actual_entry = None
-
-    def change_name(self, entry, event):
-        """ Change-name-method to set the name of actual selected (row) data-port.
-        """
-        # logger.info("FOCUS_OUT NAME entry: {0} event: {1}".format(entry, event))
-        if self.get_list_store_row_from_cursor_selection() is None:
-            return
-
-        # We have to use idle_add to prevent core dumps:
-        # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
-        glib.idle_add(self.on_name_changed, entry, None, entry.get_text())
-
-    def change_data_type(self, entry, event):
-        """ Change-data-type-method to set the data_type of actual selected (row) data-port.
-        """
-        # logger.info("FOCUS_OUT TYPE entry: {0} event: {1}".format(entry, event))
-        if self.get_list_store_row_from_cursor_selection() is None:
-            return
-
-        glib.idle_add(self.on_data_type_changed, entry, None, entry.get_text())
-
-    def change_value(self, entry, event):
-        """ Change-value-method to set the default_value of actual selected (row) data-port.
-        """
-        # logger.info("FOCUS_OUT VALUE entry: {0} event: {1}".format(entry, event))
-        if self.get_list_store_row_from_cursor_selection() is None:
-            return
-
-        glib.idle_add(self.on_default_value_changed, entry, None, entry.get_text())
 
     def get_state_machine_selection(self):
         # print type(self).__name__, "get state machine selection"
@@ -231,65 +170,47 @@ class ScopedVariableListController(ExtendedController, ListSelectionFeatureContr
                 self.view[self.view.top].set_cursor(min(old_path[0], len(self.list_store) - 1))
             return True
 
-    def on_name_changed(self, widget, path, text):
-        """Triggered when a scoped variable's name is edited
+    def apply_new_scoped_variable_name(self, path, new_name):
+        """Applies the new name of the scoped variable defined by path
 
-        Changes the scoped variable's name.
-
-        :param path: The path identifying the edited variable
-        :param text: New variable's name
+        :param str path: The path identifying the edited variable
+        :param str new_name: New name
         """
-        if self._do_name_change:
-            return
-        self._do_name_change = True
-        data_port_id = self.get_list_store_row_from_cursor_selection()[self.ID_STORAGE_ID]
+        data_port_id = self.list_store[path][self.ID_STORAGE_ID]
         try:
-            if self.model.state.scoped_variables[data_port_id].name != text:
-                self.model.state.scoped_variables[data_port_id].name = text
+            if self.model.state.scoped_variables[data_port_id].name != new_name:
+                self.model.state.scoped_variables[data_port_id].name = new_name
         except TypeError as e:
             logger.error("Error while changing port name: {0}".format(e))
-        self._do_name_change = False
 
-    def on_data_type_changed(self, widget, path, text):
-        """Triggered when a scoped variable's data type is edited.
+    def apply_new_scoped_variable_type(self, path, new_variable_type_str):
+        """Applies the new data type of the scoped variable defined by path
 
-        Changes the scoped variable's data type.
-
-        :param path: The path identifying the edited variable
-        :param text: New variable's data type
+        :param str path: The path identifying the edited variable
+        :param str new_variable_type_str: New data type as str
         """
-        if self._do_type_change:
-            return
-        self._do_type_change = True
-        data_port_id = self.get_list_store_row_from_cursor_selection()[self.ID_STORAGE_ID]
+        data_port_id = self.list_store[path][self.ID_STORAGE_ID]
         try:
-            if self.model.state.scoped_variables[data_port_id].data_type.__name__ != text:
-                self.model.state.scoped_variables[data_port_id].change_data_type(text)
+            if self.model.state.scoped_variables[data_port_id].data_type.__name__ != new_variable_type_str:
+                self.model.state.scoped_variables[data_port_id].change_data_type(new_variable_type_str)
         except ValueError as e:
             logger.error("Error while changing data type: {0}".format(e))
-        self._do_type_change = False
 
-    def on_default_value_changed(self, widget, path, text):
-        """Triggered when a scoped variable's value is edited.
+    def apply_new_scoped_variable_default_value(self, path, new_default_value_str):
+        """Applies the new default value of the scoped variable defined by path
 
-        Changes the scoped variable's value.
-
-        :param path: The path identifying the edited variable
-        :param text: New variable's value
+        :param str path: The path identifying the edited variable
+        :param str new_default_value_str: New default value as string
         """
-        if self._do_value_change:
-            return
-        self._do_value_change = True
         data_port_id = self.get_list_store_row_from_cursor_selection()[self.ID_STORAGE_ID]
         try:
-            if str(self.model.state.scoped_variables[data_port_id].default_value) != text:
-                self.model.state.scoped_variables[data_port_id].default_value = text
+            if str(self.model.state.scoped_variables[data_port_id].default_value) != new_default_value_str:
+                self.model.state.scoped_variables[data_port_id].default_value = new_default_value_str
         except (TypeError, AttributeError) as e:
             logger.error("Error while changing default value: {0}".format(e))
-        self._do_value_change = False
 
     def on_right_click_menu(self):
-        logger.debug("do right click menu")
+        pass
 
     def reload_scoped_variables_list_store(self):
         """Reloads the scoped variable list store from the data port models"""
@@ -312,16 +233,9 @@ class ScopedVariableListController(ExtendedController, ListSelectionFeatureContr
             tms.set_sort_func(0, compare_variables)
             tms.sort_column_changed()
             tmp = tms
-            if self._do_store_update:
-                return
-            self._do_store_update = True
-            try:
-                self.list_store.clear()
-                for elem in tmp:
-                    self.list_store.append(elem)
-            except:
-                pass
-            self._do_store_update = False
+            self.list_store.clear()
+            for elem in tmp:
+                self.list_store.append(elem)
         else:
             raise RuntimeError("The reload_scoped_variables_list_store function should be never called for "
                                "a non Container State Model")
