@@ -3,6 +3,7 @@ import glib
 from gtk.gdk import CONTROL_MASK, SHIFT_MASK
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.gui_helper import react_to_event
 
 from rafcon.utils import log
 module_logger = log.get_logger(__name__)
@@ -110,6 +111,22 @@ class ListViewController(ExtendedController):
 
         renderer.connect('editing-started', on_editing_started)
         renderer.connect('edited', on_edited)
+
+    def add_action_callback(self, *event):
+        """Callback method for add action"""
+        if react_to_event(self.view, self.tree_view, event):
+            self.on_add(None)
+            return True
+
+    def remove_action_callback(self, *event):
+        """Callback method for remove action"""
+        if react_to_event(self.view, self.tree_view, event):
+            self.on_remove(None)
+            return True
+
+    def on_add(self, widget, data=None):
+        """An abstract add method for a respective new core element and final selection of those"""
+        raise NotImplementedError
 
     def remove_core_element(self, model):
         """An abstract remove method that removes respective core element by handed core element id

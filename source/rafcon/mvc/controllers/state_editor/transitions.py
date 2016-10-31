@@ -13,14 +13,13 @@ import gtk
 import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.state_elements.transition import Transition
 
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 
-from rafcon.mvc.gui_helper import format_cell, react_to_event
+from rafcon.mvc.gui_helper import format_cell
 
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS, RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
@@ -128,10 +127,6 @@ class StateTransitionsListController(ListViewController):
 
         view.tree_view.connect("grab-focus", self.on_focus)
         self.update()
-
-    def register_adapters(self):
-        """Adapters should be registered in this method call
-        """
 
     def on_focus(self, widget, data=None):
         path = self.get_path()
@@ -788,29 +783,13 @@ class StateTransitionsEditorController(ExtendedController):
             self.trans_list_ctrl.view_dict['transitions_internal'] = False
             view['internal_t_checkbutton'].set_active(False)
 
-    def register_adapters(self):
-        """Adapters should be registered in this method call
-
-        Each property of the state should have its own adapter, connecting a label in the View with the attribute of
-        the State.
-        """
-        # self.adapt(self.__state_property_adapter("name", "input_name"))
-
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
         :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
-        shortcut_manager.add_callback_for_action("delete", self.remove_transition)
-        shortcut_manager.add_callback_for_action("add", self.add_transition)
-
-    def add_transition(self, *event):
-        if react_to_event(self.view, self.view.transitions_listView.tree_view, event):
-            return self.trans_list_ctrl.on_add(None)
-
-    def remove_transition(self, *event):
-        if react_to_event(self.view, self.view.transitions_listView.tree_view, event):
-            return self.trans_list_ctrl.on_remove(None)
+        shortcut_manager.add_callback_for_action("delete", self.trans_list_ctrl.remove_action_callback)
+        shortcut_manager.add_callback_for_action("add", self.trans_list_ctrl.add_action_callback)
 
     def toggled_button(self, button, name=None):
 

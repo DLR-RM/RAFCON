@@ -20,7 +20,6 @@ from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatur
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.state_machine_helper import insert_self_transition_meta_data
 
-from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -200,15 +199,7 @@ class StateOutcomesListController(ListViewController):
                 if run_id == num_success_outcomes:
                     logger.warn("The outcome couldn't be added: {0}".format(e))
                     return True
-        # Search for new entry and select it
-        ctr = 0
-        for outcome_row in self.list_store:
-            # Compare outcome ids
-            if outcome_row[self.CORE_STORAGE_ID].outcome_id == outcome_id:
-                self.tree_view.set_cursor(ctr)
-                break
-            ctr += 1
-
+        self.select_entry(outcome_id)
         return True
 
     def remove_core_element(self, model):
@@ -359,13 +350,5 @@ class StateOutcomesEditorController(ExtendedController):
         :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
         if not isinstance(self.model.state, LibraryState):
-            shortcut_manager.add_callback_for_action("delete", self.remove_outcome)
-            shortcut_manager.add_callback_for_action("add", self.add_outcome)
-
-    def add_outcome(self, *event):
-        if react_to_event(self.view, self.view.treeView['tree_view'], event) and not isinstance(self.model.state, LibraryState):
-            return self.oc_list_ctrl.on_add(None)
-
-    def remove_outcome(self, *event):
-        if react_to_event(self.view, self.view.treeView['tree_view'], event) and not isinstance(self.model.state, LibraryState):
-            return self.oc_list_ctrl.on_remove(None)
+            shortcut_manager.add_callback_for_action("delete", self.oc_list_ctrl.remove_action_callback)
+            shortcut_manager.add_callback_for_action("add", self.oc_list_ctrl.add_action_callback)
