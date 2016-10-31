@@ -35,6 +35,29 @@ from rafcon.utils.hashable import Hashable
 logger = log.get_logger(__name__)
 PATH_SEPARATOR = '/'
 
+global_lock_counter = 0
+
+
+def lock_state_machine(func):
+    def func_wrapper(*args, **kwargs):
+        global global_lock_counter
+        self_reference = args[0]
+        state_machine_exists = self_reference.get_sm_for_state()
+        target_state_machine = self_reference.get_sm_for_state()
+        if state_machine_exists:
+            target_state_machine.acquire_modification_lock()
+            global_lock_counter += 1
+            # print func.__name__, "lock ", str(global_lock_counter)
+
+        return_value = func(*args, **kwargs)
+
+        if state_machine_exists:
+            target_state_machine.release_modification_lock()
+            global_lock_counter -= 1
+            # print func.__name__, "unlock ", str(global_lock_counter)
+        return return_value
+    return func_wrapper
+
 
 class State(Observable, YAMLObject, JSONObject, Hashable):
 
@@ -301,6 +324,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     # ----------------------------------- data port functions -------------------------------------
     # ---------------------------------------------------------------------------------------------
 
+    @lock_state_machine
     @Observable.observed
     def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
         """Add a new input data port to the state.
@@ -325,6 +349,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         return data_port_id
 
+    @lock_state_machine
     @Observable.observed
     def remove_input_data_port(self, data_port_id, force=False):
         """Remove an input data port from the state
@@ -339,6 +364,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         else:
             raise AttributeError("input data port with name %s does not exit", data_port_id)
 
+    @lock_state_machine
     def remove_data_flows_with_data_port_id(self, data_port_id):
         """Remove all data flows whose from_key or to_key equals the passed data_port_id
 
@@ -357,6 +383,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             for data_flow_id in data_flow_ids_to_remove:
                 self.parent.remove_data_flow(data_flow_id)
 
+    @lock_state_machine
     @Observable.observed
     def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
         """Add a new output data port to the state
@@ -381,6 +408,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         return data_port_id
 
+    @lock_state_machine
     @Observable.observed
     def remove_output_data_port(self, data_port_id, force=False):
         """Remove an output data port from the state
@@ -502,6 +530,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         return None
 
+    @lock_state_machine
     def set_file_system_path(self, file_system_path):
         """Caches a temporary file system path for the state
 
@@ -531,6 +560,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             else:
                 return os.path.join(self.get_sm_for_state().file_system_path, self.get_path())
 
+    @lock_state_machine
     @Observable.observed
     def add_outcome(self, name, outcome_id=None):
         """Add a new outcome to the state
@@ -553,6 +583,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self._outcomes[outcome_id] = outcome
         return outcome_id
 
+    @lock_state_machine
     @Observable.observed
     def remove_outcome(self, outcome_id, force=False):
         """Remove an outcome from the state
@@ -581,6 +612,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         # delete outcome it self
         del self._outcomes[outcome_id]
 
+    @lock_state_machine
     def remove_outcome_hook(self, outcome_id):
         """Hook for adding more logic when removing an outcome
 
@@ -728,6 +760,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     # -------------------------------------- misc functions ---------------------------------------
     # ---------------------------------------------------------------------------------------------
 
+    @lock_state_machine
     def change_state_id(self, state_id=None):
         """
         Changes the id of the state to a new id. If now state_id is passed as parameter, a new state id is generated.
@@ -756,6 +789,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         return 0
 
+    @lock_state_machine
     def destruct(self):
         """ Removes all the state elements.
 
@@ -790,6 +824,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._name
 
     @name.setter
+    @lock_state_machine
     @Observable.observed
     def name(self, name):
         if name is not None:
@@ -817,6 +852,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._parent()
 
     @parent.setter
+    @lock_state_machine
     @Observable.observed
     def parent(self, parent):
         if parent is None:
@@ -843,6 +879,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._input_data_ports
 
     @input_data_ports.setter
+    @lock_state_machine
     @Observable.observed
     def input_data_ports(self, input_data_ports):
         """Property for the _input_data_ports field
@@ -892,6 +929,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._output_data_ports
 
     @output_data_ports.setter
+    @lock_state_machine
     @Observable.observed
     def output_data_ports(self, output_data_ports):
         """ Setter for _output_data_ports field
@@ -941,6 +979,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._outcomes
 
     @outcomes.setter
+    @lock_state_machine
     @Observable.observed
     def outcomes(self, outcomes):
         """ Setter for _outcomes field
@@ -981,6 +1020,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._input_data
 
     @input_data.setter
+    @lock_state_machine
     #@Observable.observed
     def input_data(self, input_data):
         if not isinstance(input_data, dict):
@@ -995,6 +1035,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._output_data
 
     @output_data.setter
+    @lock_state_machine
     #@Observable.observed
     def output_data(self, output_data):
         if not isinstance(output_data, dict):
@@ -1008,6 +1049,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._preempted.is_set()
 
     @preempted.setter
+    @lock_state_machine
     def preempted(self, preempted):
         if not isinstance(preempted, bool):
             raise TypeError("preempted must be of type bool")
@@ -1023,6 +1065,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._started.is_set()
 
     @started.setter
+    @lock_state_machine
     def started(self, started):
         if not isinstance(started, bool):
             raise TypeError("started must be of type bool")
@@ -1038,6 +1081,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._paused.is_set()
 
     @paused.setter
+    @lock_state_machine
     def paused(self, paused):
         if not isinstance(paused, bool):
             raise TypeError("paused must be of type bool")
@@ -1072,6 +1116,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._concurrency_queue
 
     @concurrency_queue.setter
+    @lock_state_machine
     #@Observable.observed
     def concurrency_queue(self, concurrency_queue):
         if not isinstance(concurrency_queue, Queue.Queue):
@@ -1090,6 +1135,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._final_outcome
 
     @final_outcome.setter
+    @lock_state_machine
     #@Observable.observed
     def final_outcome(self, final_outcome):
         if not isinstance(final_outcome, Outcome):
@@ -1104,6 +1150,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._description
 
     @description.setter
+    @lock_state_machine
     @Observable.observed
     def description(self, description):
         if not description:
@@ -1134,6 +1181,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._state_execution_status
 
     @state_execution_status.setter
+    @lock_state_machine
     @Observable.observed
     def state_execution_status(self, state_execution_status):
         if not isinstance(state_execution_status, StateExecutionState):
@@ -1188,3 +1236,5 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         """
         return self._run_id
+
+
