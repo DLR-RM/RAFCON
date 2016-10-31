@@ -17,7 +17,7 @@ from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDa
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils.selection import ListViewController
+from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 

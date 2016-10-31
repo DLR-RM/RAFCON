@@ -12,7 +12,8 @@
 import gtk
 
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.utils.selection import ListViewController, ExtendedController
+from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 
 from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log

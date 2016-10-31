@@ -16,7 +16,7 @@ from gtk import TreeViewColumn, CellRendererToggle
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.utils.selection import ListViewController
+from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 
 from rafcon.mvc.gui_helper import react_to_event
