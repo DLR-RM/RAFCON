@@ -15,7 +15,7 @@ from copy import copy, deepcopy
 
 from gtkmvc import Observable
 
-from rafcon.statemachine.states.state import State
+from rafcon.statemachine.states.state import State, lock_state_machine
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.script import Script
 from rafcon.statemachine.enums import StateExecutionState
@@ -59,6 +59,7 @@ class ExecutionState(State):
 
     __deepcopy__ = __copy__
 
+    @lock_state_machine
     def update_hash(self, obj_hash):
         super(ExecutionState, self).update_hash(obj_hash)
         obj_hash.update(self.script.script)
@@ -152,10 +153,10 @@ class ExecutionState(State):
 # Properties for all class fields that must be observed by gtkmvc
 #########################################################################
 
-    @State.name.setter
+    @lock_state_machine
     @Observable.observed
     def name(self, name):
-        State.name.fset(self, name)
+        State.name(self, name)
         self.logger = log.get_logger(self.name)
 
     @property
@@ -166,6 +167,7 @@ class ExecutionState(State):
         return self._script
 
     @script.setter
+    @lock_state_machine
     @Observable.observed
     def script(self, script):
         if script.parent is not self:
@@ -177,6 +179,7 @@ class ExecutionState(State):
         return self._script.script
 
     @script_text.setter
+    @lock_state_machine
     @Observable.observed
     def script_text(self, text):
         self._script.script = text

@@ -13,6 +13,7 @@ import traceback
 from gtkmvc import Observable
 
 from rafcon.statemachine.state_elements.outcome import Outcome
+from rafcon.statemachine.states.state import lock_state_machine
 from rafcon.statemachine.states.concurrency_state import ConcurrencyState
 from rafcon.statemachine.enums import StateExecutionState
 from rafcon.statemachine.states.execution_state import ExecutionState
@@ -212,6 +213,7 @@ class BarrierConcurrencyState(ConcurrencyState):
 
         return True, message
 
+    @lock_state_machine
     def add_state(self, state, storage_load=False):
         """Overwrite the parent class add_state method
 
@@ -229,6 +231,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         return state_id
 
     @ContainerState.states.setter
+    @lock_state_machine
     @Observable.observed
     def states(self, states):
         """ Overwrite the setter of the container state base class as special handling for the decider state is needed.
@@ -254,6 +257,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             for state in states.itervalues():
                 self.add_state(state)
 
+    @lock_state_machine
     def remove_state(self, state_id, recursive_deletion=True, force=False, destruct=False):
         """ Overwrite the parent class remove state method by checking if the user tries to delete the decider state
 

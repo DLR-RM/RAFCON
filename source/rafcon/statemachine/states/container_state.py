@@ -19,7 +19,7 @@ from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.state_elements.data_flow import DataFlow
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.state_elements.transition import Transition
-from rafcon.statemachine.states.state import State
+from rafcon.statemachine.states.state import State, lock_state_machine
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.validity_check.validity_checker import ValidityChecker
@@ -77,6 +77,7 @@ class ContainerState(State):
     # ----------------------------------- generic methods -----------------------------------------
     # ---------------------------------------------------------------------------------------------
 
+    @lock_state_machine
     def update_hash(self, obj_hash):
         super(ContainerState, self).update_hash(obj_hash)
         for child in self.states.itervalues():
@@ -275,6 +276,7 @@ class ContainerState(State):
     # -------------------------------------- state functions --------------------------------------
     # ---------------------------------------------------------------------------------------------
 
+    @lock_state_machine
     @Observable.observed
     def group_states(self, state_ids, scoped_variables=None):
         """ Group states and scoped variables into a new hierarchy state and remain internal connections.
@@ -552,6 +554,7 @@ class ContainerState(State):
 
         return state_id
 
+    @lock_state_machine
     @Observable.observed
     def ungroup_state(self, state_id):
         """ Ungroup state with state id state_id into its parent and remain internal linkage in parent.
@@ -635,6 +638,7 @@ class ContainerState(State):
                     else:
                         self.add_data_flow(state_id_dict[df.from_state], df.from_key, ext_df.to_state, ext_df.to_key)
 
+    @lock_state_machine
     @Observable.observed
     def add_state(self, state, storage_load=False):
         """Adds a state to the container state.
@@ -667,6 +671,7 @@ class ContainerState(State):
 
         return state.state_id
 
+    @lock_state_machine
     @Observable.observed
     def remove_state(self, state_id, recursive_deletion=True, force=True, destruct=True):
         """Remove a state from the container state.
@@ -728,6 +733,8 @@ class ContainerState(State):
         del self.states[state_id]
 
     def related_linkage_state(self, state_id):
+        """ TODO: document
+        """
 
         related_transitions = {'external': {'ingoing': [], 'outgoing': []},
                                'internal': {'enclosed': [], 'ingoing': [], 'outgoing': []}}
@@ -779,6 +786,8 @@ class ContainerState(State):
         return related_transitions, related_data_flows
 
     def related_linkage_states_and_scoped_variables(self, state_ids, scoped_variables):
+        """ TODO: document
+        """
 
         # find all related transitions
         related_transitions = {'enclosed': [], 'ingoing': [], 'outgoing': []}
@@ -808,6 +817,7 @@ class ContainerState(State):
 
         return related_transitions, related_data_flows
 
+    @lock_state_machine
     @Observable.observed
     def substitute_state(self, state_id, state):
 
@@ -896,6 +906,7 @@ class ContainerState(State):
         logger.info("substitute finished")
         return state_id
 
+    @lock_state_machine
     @Observable.observed
     def change_state_type(self, state, new_state_class):
         """ Changes the type of the state to another type
@@ -922,6 +933,7 @@ class ContainerState(State):
 
         return new_state
 
+    @lock_state_machine
     # @Observable.observed
     def set_start_state(self, state):
         """Sets the start state of a container state
@@ -1005,6 +1017,7 @@ class ContainerState(State):
                     raise AttributeError("Outcome %s of state %s is already connected" %
                                          (str(from_outcome), str(from_state_id)))
 
+    @lock_state_machine
     def create_transition(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id):
         """ Creates a new transition.
 
@@ -1051,6 +1064,7 @@ class ContainerState(State):
 
         return transition_id
 
+    @lock_state_machine
     @Observable.observed
     def add_transition(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id=None):
         """Adds a transition to the container state
@@ -1099,6 +1113,7 @@ class ContainerState(State):
                 result_transition = transition
         return result_transition
 
+    @lock_state_machine
     @Observable.observed
     def remove_transition(self, transition_id, force=False):
         """Removes a transition from the container state
@@ -1112,6 +1127,7 @@ class ContainerState(State):
             raise AttributeError("The transition_id %s does not exist" % str(transition_id))
         del self._transitions[transition_id]
 
+    @lock_state_machine
     def remove_outcome_hook(self, outcome_id):
         """Removes internal transition going to the outcome
         """
@@ -1128,6 +1144,7 @@ class ContainerState(State):
     # TODO output-in, input-in nur ein data flow
     # TODO data flows mit gleichen Attributen nur einmal
 
+    @lock_state_machine
     @Observable.observed
     #Primary key is data_flow_id.
     def add_data_flow(self, from_state_id, from_data_port_id, to_state_id, to_data_port_id, data_flow_id=None):
@@ -1148,6 +1165,7 @@ class ContainerState(State):
                                                  data_flow_id, self)
         return data_flow_id
 
+    @lock_state_machine
     @Observable.observed
     def remove_data_flow(self, data_flow_id):
         """ Removes a data flow from the container state
@@ -1159,6 +1177,7 @@ class ContainerState(State):
             raise AttributeError("The data_flow_id %s does not exist" % str(data_flow_id))
         del self.data_flows[data_flow_id]
 
+    @lock_state_machine
     def remove_data_flows_with_data_port_id(self, data_port_id):
         """Remove an data ports whose from_key or to_key equals the passed data_port_id
 
@@ -1203,6 +1222,7 @@ class ContainerState(State):
                 return scoped_variable_id
         raise AttributeError("Name %s is not in scoped_variables dictionary", name)
 
+    @lock_state_machine
     @Observable.observed
     def add_scoped_variable(self, name, data_type=None, default_value=None, scoped_variable_id=None):
         """ Adds a scoped variable to the container state
@@ -1228,6 +1248,7 @@ class ContainerState(State):
 
         return scoped_variable_id
 
+    @lock_state_machine
     @Observable.observed
     def remove_scoped_variable(self, scoped_variable_id):
         """Remove a scoped variable from the container state
@@ -1335,6 +1356,7 @@ class ContainerState(State):
     # ---------------------------- functions to modify the scoped data ----------------------------
     # ---------------------------------------------------------------------------------------------
 
+    @lock_state_machine
     def add_input_data_to_scoped_data(self, dictionary):
         """Add a dictionary to the scoped data
 
@@ -1358,6 +1380,7 @@ class ContainerState(State):
                                     ScopedData(current_scoped_variable.name, value, type(value), self.state_id,
                                                DataPortType.SCOPED)
 
+    @lock_state_machine
     def add_state_execution_output_to_scoped_data(self, dictionary, state):
         """Add a state execution output to the scoped data
 
@@ -1370,6 +1393,7 @@ class ContainerState(State):
                     self.scoped_data[str(output_data_port_key)+state.state_id] = \
                         ScopedData(data_port.name, value, type(value), state.state_id, DataPortType.OUTPUT)
 
+    @lock_state_machine
     def add_default_values_of_scoped_variables_to_scoped_data(self):
         """Add the scoped variables default values to the scoped_data dictionary
 
@@ -1379,6 +1403,7 @@ class ContainerState(State):
                 ScopedData(scoped_var.name, scoped_var.default_value, scoped_var.data_type, self.state_id,
                            DataPortType.SCOPED)
 
+    @lock_state_machine
     def update_scoped_variables_with_output_dictionary(self, dictionary, state):
         """Update the values of the scoped variables with the output dictionary of a specific state.
 
@@ -1409,6 +1434,7 @@ class ContainerState(State):
     # ------------------------ functions to modify the scoped data end ----------------------------
     # ---------------------------------------------------------------------------------------------
 
+    @lock_state_machine
     def change_state_id(self, state_id=None):
         """
         Changes the id of the state to a new id. This functions replaces the old state_id with the new state_id in all
@@ -1850,6 +1876,7 @@ class ContainerState(State):
         return self._states
 
     @states.setter
+    @lock_state_machine
     @Observable.observed
     def states(self, states):
         """ Setter for _states field
@@ -1891,6 +1918,7 @@ class ContainerState(State):
         return self._transitions
 
     @transitions.setter
+    @lock_state_machine
     @Observable.observed
     def transitions(self, transitions):
         """ Setter for _transitions field
@@ -1933,6 +1961,7 @@ class ContainerState(State):
         return self._data_flows
 
     @data_flows.setter
+    @lock_state_machine
     @Observable.observed
     def data_flows(self, data_flows):
         """ Setter for _data_flows field
@@ -1979,6 +2008,7 @@ class ContainerState(State):
         return None
 
     @start_state_id.setter
+    @lock_state_machine
     # @Observable.observed
     def start_state_id(self, start_state_id, to_outcome=None):
         """Set the start state of the container state
@@ -2024,6 +2054,7 @@ class ContainerState(State):
         return self._scoped_variables
 
     @scoped_variables.setter
+    @lock_state_machine
     @Observable.observed
     def scoped_variables(self, scoped_variables):
         """ Setter for _scoped_variables field
@@ -2060,6 +2091,7 @@ class ContainerState(State):
         return self._scoped_data
 
     @scoped_data.setter
+    @lock_state_machine
     #@Observable.observed
     def scoped_data(self, scoped_data):
         if not isinstance(scoped_data, dict):
@@ -2077,6 +2109,7 @@ class ContainerState(State):
         return self._v_checker
 
     @v_checker.setter
+    @lock_state_machine
     #@Observable.observed
     def v_checker(self, v_checker):
         if not isinstance(v_checker, ValidityChecker):

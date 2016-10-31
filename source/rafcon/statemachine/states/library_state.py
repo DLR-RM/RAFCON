@@ -12,7 +12,7 @@ from copy import copy
 from gtkmvc import Observable
 from rafcon.statemachine.enums import StateExecutionState
 from rafcon.statemachine.singleton import library_manager
-from rafcon.statemachine.states.state import State
+from rafcon.statemachine.states.state import State, lock_state_machine
 from rafcon.statemachine.storage import storage
 from rafcon.utils import log
 from rafcon.utils import type_helpers
@@ -180,6 +180,7 @@ class LibraryState(State):
         super(LibraryState, self).recursively_resume_states()
         self.state_copy.recursively_resume_states()
 
+    @lock_state_machine
     def add_outcome(self, name, outcome_id=None):
         """Overwrites the add_outcome method of the State class. Prevents user from adding a
         outcome to the library state.
@@ -190,6 +191,7 @@ class LibraryState(State):
         """
         raise NotImplementedError("Add outcome is not implemented for library state {}".format(self))
 
+    @lock_state_machine
     def remove_outcome(self, outcome_id, force=False):
         """Overwrites the remove_outcome method of the State class. Prevents user from removing a
         outcome from the library state.
@@ -203,6 +205,7 @@ class LibraryState(State):
         else:
             raise NotImplementedError("Remove outcome is not implemented for library state {}".format(self))
 
+    @lock_state_machine
     def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
         """Overwrites the add_input_data_port method of the State class. Prevents user from adding a
         output data port to the library state.
@@ -212,6 +215,7 @@ class LibraryState(State):
         """
         raise NotImplementedError("Add input data port is not implemented for library state {}".format(self))
 
+    @lock_state_machine
     def remove_input_data_port(self, data_port_id, force=False):
         """
         Overwrites the remove_input_data_port method of the State class. Prevents user from removing a
@@ -227,6 +231,7 @@ class LibraryState(State):
         else:
             raise NotImplementedError("Remove input data port is not implemented for library state {}".format(self))
 
+    @lock_state_machine
     def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
         """Overwrites the add_output_data_port method of the State class. Prevents user from adding a
         output data port to the library state.
@@ -236,6 +241,7 @@ class LibraryState(State):
         """
         raise NotImplementedError("Add a output data port is not implemented for library state {}".format(self))
 
+    @lock_state_machine
     def remove_output_data_port(self, data_port_id, force=False):
         """Overwrites the remove_output_data_port method of the State class. Prevents user from removing a
         output data port from the library state.
@@ -249,20 +255,24 @@ class LibraryState(State):
         else:
             raise NotImplementedError("Remove output data port is not implemented for library state {}".format(self))
 
+    @lock_state_machine
     @Observable.observed
     def set_input_runtime_value(self, input_data_port_id, value):
         checked_value = self.state_copy.input_data_ports[input_data_port_id].check_default_value(value)
         self._input_data_port_runtime_values[input_data_port_id] = checked_value
 
+    @lock_state_machine
     @Observable.observed
     def set_use_input_runtime_value(self, input_data_port_id, use_value):
         self._use_runtime_value_input_data_ports[input_data_port_id] = use_value
 
+    @lock_state_machine
     @Observable.observed
     def set_output_runtime_value(self, output_data_port_id, value):
         checked_value = self.state_copy.output_data_ports[output_data_port_id].check_default_value(value)
         self._output_data_port_runtime_values[output_data_port_id] = checked_value
 
+    @lock_state_machine
     @Observable.observed
     def set_use_output_runtime_value(self, output_data_port_id, use_value):
         self._use_runtime_value_output_data_ports[output_data_port_id] = use_value
@@ -345,6 +355,7 @@ class LibraryState(State):
         return self._library_path
 
     @library_path.setter
+    @lock_state_machine
     @Observable.observed
     def library_path(self, library_path):
         if not isinstance(library_path, basestring):
@@ -360,6 +371,7 @@ class LibraryState(State):
         return self._library_name
 
     @library_name.setter
+    @lock_state_machine
     @Observable.observed
     def library_name(self, library_name):
         if not isinstance(library_name, basestring):
@@ -375,6 +387,7 @@ class LibraryState(State):
         return self._version
 
     @version.setter
+    @lock_state_machine
     @Observable.observed
     def version(self, version):
         if version is not None and not isinstance(version, (basestring, int, float)):
@@ -390,6 +403,7 @@ class LibraryState(State):
         return self._state_copy
 
     @state_copy.setter
+    @lock_state_machine
     @Observable.observed
     def state_copy(self, state_copy):
         if not isinstance(state_copy, State):
@@ -405,6 +419,7 @@ class LibraryState(State):
         return self._input_data_port_runtime_values
 
     @input_data_port_runtime_values.setter
+    @lock_state_machine
     @Observable.observed
     def input_data_port_runtime_values(self, input_data_port_runtime_values):
         if not input_data_port_runtime_values:
@@ -422,6 +437,7 @@ class LibraryState(State):
         return self._use_runtime_value_input_data_ports
 
     @use_runtime_value_input_data_ports.setter
+    @lock_state_machine
     @Observable.observed
     def use_runtime_value_input_data_ports(self, use_runtime_value_input_data_ports):
         if not use_runtime_value_input_data_ports:
@@ -439,6 +455,7 @@ class LibraryState(State):
         return self._output_data_port_runtime_values
 
     @output_data_port_runtime_values.setter
+    @lock_state_machine
     @Observable.observed
     def output_data_port_runtime_values(self, output_data_port_runtime_values):
         if not output_data_port_runtime_values:
@@ -456,6 +473,7 @@ class LibraryState(State):
         return self._use_runtime_value_output_data_ports
 
     @use_runtime_value_output_data_ports.setter
+    @lock_state_machine
     @Observable.observed
     def use_runtime_value_output_data_ports(self, use_runtime_value_output_data_ports):
         if not use_runtime_value_output_data_ports:
@@ -465,6 +483,7 @@ class LibraryState(State):
                 raise TypeError("use_runtime_value_output_data_ports must be of type dict")
             self._use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
 
+    @lock_state_machine
     @staticmethod
     def copy_state(source_state):
         """
