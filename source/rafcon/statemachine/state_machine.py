@@ -9,6 +9,7 @@
 """
 
 from copy import copy
+from threading import RLock
 
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
@@ -44,6 +45,8 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     def __init__(self, root_state=None, version=None, creation_time=None, last_update=None):
         Observable.__init__(self)
+
+        self._modification_lock = RLock()
 
         self.state_machine_id = generate_state_machine_id()
 
@@ -112,6 +115,21 @@ class StateMachine(Observable, JSONObject, Hashable):
         """Wait for root state to finish execution"""
         self._root_state.join()
         self._root_state.state_execution_status = StateExecutionState.INACTIVE
+
+    @Observable.observed
+    def acquire_modification_lock(self):
+        """Acquires the modifiction lock of the state machine.
+
+        This must be used for all methods, that perform any modifications on the state machine
+        """
+        self._modification_lock.acquire()
+
+    @Observable.observed
+    def release_modification_lock(self):
+        """Releases the acquired state machine modification lock.
+
+        """
+        self._modification_lock.release()
 
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc
