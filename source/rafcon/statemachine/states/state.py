@@ -36,6 +36,7 @@ from rafcon.utils.hashable import Hashable
 logger = log.get_logger(__name__)
 PATH_SEPARATOR = '/'
 
+
 global_lock_counter = 0
 
 
@@ -47,8 +48,6 @@ def lock_state_machine(func):
         if target_state_machine:
             target_state_machine.acquire_modification_lock()
             global_lock_counter += 1
-            # print func.__name__, "lock ", str(global_lock_counter)
-
         try:
             return_value = func(*args, **kwargs)
         except Exception:
@@ -58,7 +57,6 @@ def lock_state_machine(func):
             if target_state_machine:
                 target_state_machine.release_modification_lock()
                 global_lock_counter -= 1
-                # print func.__name__, "unlock ", str(global_lock_counter)
         return return_value
     return func_wrapper
 
