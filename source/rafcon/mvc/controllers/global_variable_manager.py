@@ -66,7 +66,7 @@ class GlobalVariableManagerController(ListViewController):
         self._apply_value_on_edited_and_focus_out(view['name_text'], self.apply_new_global_variable_name)
         self._apply_value_on_edited_and_focus_out(view['value_text'], self.apply_new_global_variable_value)
         self._apply_value_on_edited_and_focus_out(view['type_text'], self.apply_new_global_variable_type)
-        view['new_global_variable_button'].connect('clicked', self.on_new_global_variable_button_clicked)
+        view['new_global_variable_button'].connect('clicked', self.on_add)
         view['delete_global_variable_button'].connect('clicked', self.on_remove)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         self.tab_edit_controller.register_view()
@@ -77,8 +77,8 @@ class GlobalVariableManagerController(ListViewController):
         :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
             between shortcuts and actions.
         """
-        shortcut_manager.add_callback_for_action("delete", self.on_delete_global_variable_button_clicked)
-        shortcut_manager.add_callback_for_action("add", self.on_new_global_variable_button_clicked)
+        shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)
+        shortcut_manager.add_callback_for_action("add", self.add_action_callback)
 
     def global_variable_is_editable(self, gv_name, intro_message='edit'):
         """Check whether global variable is locked
@@ -97,24 +97,19 @@ class GlobalVariableManagerController(ListViewController):
             return False
         return True
 
-    def on_new_global_variable_button_clicked(self, *event):
+    def on_add(self, widget, data=None):
         """Creates a new global variable with default values and selects its row
 
         Triggered when the New button in the Global Variables tab is clicked.
         """
-        if react_to_event(self.view, self.tree_view, event):
-            gv_name = "new_global_%s" % self.global_variable_counter
-            self.global_variable_counter += 1
-            try:
-                self.model.global_variable_manager.set_variable(gv_name, None)
-            except (RuntimeError, AttributeError, TypeError) as e:
-                logger.warning("Adding of new global variable '{0}' failed -> Exception:{1}".format(gv_name, e))
-            self.select_entry(gv_name)
-            return True
-
-    def on_delete_global_variable_button_clicked(self, *event):
-        if react_to_event(self.view, self.tree_view, event):
-            self.on_remove(None)
+        gv_name = "new_global_%s" % self.global_variable_counter
+        self.global_variable_counter += 1
+        try:
+            self.model.global_variable_manager.set_variable(gv_name, None)
+        except (RuntimeError, AttributeError, TypeError) as e:
+            logger.warning("Adding of new global variable '{0}' failed -> Exception:{1}".format(gv_name, e))
+        self.select_entry(gv_name)
+        return True
 
     def remove_core_element(self, model):
         """Remove respective core element of handed global variable name
@@ -240,7 +235,7 @@ class GlobalVariableManagerController(ListViewController):
                          "".format(gv_name, new_value, e))
 
     @ListViewController.observe("global_variable_manager", after=True)
-    def assign_notification_state(self, model, prop_name, info):
+    def assign_notification_from_gvm(self, model, prop_name, info):
         """Handles gtkmvc notification from global variable manager
 
         Calls update of hole list store in case new variable was added. Avoids to run updates without reasonable change.
