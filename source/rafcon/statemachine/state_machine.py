@@ -117,12 +117,12 @@ class StateMachine(Observable, JSONObject, Hashable):
         self._root_state.state_execution_status = StateExecutionState.INACTIVE
 
     @Observable.observed
-    def acquire_modification_lock(self):
+    def acquire_modification_lock(self, blocking=True):
         """Acquires the modifiction lock of the state machine.
 
         This must be used for all methods, that perform any modifications on the state machine
         """
-        self._modification_lock.acquire()
+        return self._modification_lock.acquire(blocking)
 
     @Observable.observed
     def release_modification_lock(self):
