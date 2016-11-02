@@ -3,6 +3,7 @@
 **/*.pdf
 !documents/paper/*.pdf
 .~*
+source/test/network_test/runtime_config.yaml
 
 workspace.xml
 
