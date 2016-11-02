@@ -52,7 +52,7 @@ def lock_state_machine(func):
         try:
             return_value = func(*args, **kwargs)
         except Exception:
-            logger.error("Exception occurred during execution of function {0}. ".format(str(func)))
+            # logger.debug("Exception occurred during execution of function {0}. ".format(str(func)))
             raise
         finally:
             if target_state_machine:
