@@ -110,21 +110,13 @@ class StateEditorController(ExtendedController):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-        view['new_input_port_button'].connect('clicked',
-                                              self.get_controller('inputs_ctrl').on_new_port_button_clicked)
-        view['new_output_port_button'].connect('clicked',
-                                               self.get_controller('outputs_ctrl').on_new_port_button_clicked)
-        view['new_scoped_variable_button'].connect('clicked',
-                                                   self.get_controller(
-                                                       'scoped_ctrl').on_new_scoped_variable_button_clicked)
+        view['new_input_port_button'].connect('clicked', self.get_controller('inputs_ctrl').on_add)
+        view['new_output_port_button'].connect('clicked', self.get_controller('outputs_ctrl').on_add)
+        view['new_scoped_variable_button'].connect('clicked', self.get_controller('scoped_ctrl').on_add)
 
-        view['delete_input_port_button'].connect('clicked',
-                                                 self.get_controller('inputs_ctrl').on_delete_port_button_clicked)
-        view['delete_output_port_button'].connect('clicked',
-                                                  self.get_controller('outputs_ctrl').on_delete_port_button_clicked)
-        view['delete_scoped_variable_button'].connect('clicked',
-                                                      self.get_controller(
-                                                          'scoped_ctrl').on_delete_scoped_variable_button_clicked)
+        view['delete_input_port_button'].connect('clicked', self.get_controller('inputs_ctrl').on_remove)
+        view['delete_output_port_button'].connect('clicked', self.get_controller('outputs_ctrl').on_remove)
+        view['delete_scoped_variable_button'].connect('clicked', self.get_controller('scoped_ctrl').on_remove)
 
         if isinstance(self.model.state, LibraryState):
             view['new_input_port_button'].set_sensitive(False)

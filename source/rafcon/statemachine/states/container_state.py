@@ -673,6 +673,10 @@ class ContainerState(State):
 
         :param state_id: the id of the state to remove
         :param recursive_deletion: a flag to indicate a recursive deletion of all substates
+        :param force: a flag to indicate forcefully deletion of all states (important for the decider state in the
+                barrier concurrency state)
+        :param destruct: a flag which indicates if the state should not only be disconnected from the state but also
+                destructed, including all its state elements
         :raises exceptions.AttributeError: if state.state_id does not
         """
         if state_id not in self.states:
@@ -708,12 +712,15 @@ class ContainerState(State):
         if recursive_deletion:
             # Recursively delete all transitions, data flows and states within the state to be deleted
             if isinstance(self.states[state_id], ContainerState):
-                for child_state_id in self.states[state_id].states.keys():
-                    self.states[state_id].remove_state(child_state_id, force=True)
                 for transition_id in self.states[state_id].transitions.keys():
                     self.states[state_id].remove_transition(transition_id)
                 for data_flow_id in self.states[state_id].data_flows.keys():
                     self.states[state_id].remove_data_flow(data_flow_id)
+                for child_state_id in self.states[state_id].states.keys():
+                    self.states[state_id].remove_state(child_state_id,
+                                                       recursive_deletion=recursive_deletion,
+                                                       force=force,
+                                                       destruct=destruct)
 
         if destruct:
             self.states[state_id].destruct()

@@ -221,10 +221,48 @@ def draw_for_all_gtk_states(object, function_name, color):
 
 
 def react_to_event(view, widget, event):
+    """Checks whether the widget is supposed to react to passed event
+
+    The function is intended for callback methods registering to shortcut actions. As several widgets can register to
+    the same shortcut, only the one having the focus should react to it.
+
+    :param gtkmvc.View view: The view in which the widget is registered
+    :param gtk.Widget widget: The widget that subscribed to the shortcut action, should be the top widget of the view
+    :param event: The event that caused the callback
+    :return: Whether the widget is supposed to react to the event or not
+    :rtype: bool
+    """
+    # See
+    # http://pygtk.org/pygtk2reference/class-gtkwidget.html#method-gtkwidget--is-focus and
+    # http://pygtk.org/pygtk2reference/class-gtkwidget.html#method-gtkwidget--has-focus
+    # for detailed information about the difference between is_focus() and has_focus()
     if not view:  # view needs to be initialized
         return False
-    if not widget or not isinstance(widget, gtk.Widget) or not widget.is_focus():  # widget must be in focus:
+    # widget parameter must be set and a gtk.Widget
+    if not isinstance(widget, gtk.Widget):
         return False
-    if widget.has_focus() or (len(event) == 2 and not isinstance(event[1], gtk.gdk.ModifierType)):
+    # Either the widget itself or one of its children must be the focus widget within their toplevel
+    child_is_focus = False if not isinstance(widget, gtk.Container) else bool(widget.get_focus_child())
+    if not child_is_focus and not widget.is_focus():
+        return False
+
+    def has_focus(widget):
+        """Checks whether `widget` or one of its children ``has_focus()`` is ``True``
+
+        :param gtk.Widget widget: The widget to be checked
+        :return: If any (child) widget has the global input focus
+        """
+        if widget.has_focus():
+            return True
+        if not isinstance(widget, gtk.Container):
+            return False
+        return any(has_focus(child) for child in widget.get_children())
+    # Either, for any of widget or its children, has_focus must be True, in this case the widget has the global focus.
+    if has_focus(widget):
+        return True
+    # Or the callback was not triggered by a shortcut, but e.g. a mouse click or a call from a test.
+    # If the callback was triggered by a shortcut action, the event has at least a length of two and the second
+    # element is a gtk.gdk.ModifierType
+    if len(event) < 2 or (len(event) >= 2 and not isinstance(event[1], gtk.gdk.ModifierType)):
         return True
     return False

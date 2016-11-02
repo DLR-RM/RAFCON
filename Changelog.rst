@@ -8,6 +8,9 @@ Patch releases 0.7.\*
 
 - Improvements:
 
+  - Gaphas: Change drawing order of state elements. Transitions are now drawn above states, Names of states are drawn
+    beneath everything. This should ease the manipulation of transitions.
+
 - API:
 
 - Documentation:
@@ -16,6 +19,14 @@ Patch releases 0.7.\*
   - moved ``odt`` document about commit guidelines into ``rst`` file for "Developer's Guide"
 
 - Fixes:
+
+  - `#202 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/202>`_: RAFCON crash
+  - `#159 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/159>`_: Transitions cannot be selected
+
+- Refactoring:
+
+  - Widgets have TreeViews not have a common base class. This allowed to get rid of a lot of duplicate code and made
+    some implementations more robust
 
 
 0.7.13
