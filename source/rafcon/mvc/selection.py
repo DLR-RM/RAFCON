@@ -8,12 +8,25 @@ logger = log.get_logger(__name__)
 
 
 def reduce_to_parent_states(models):
+    """Remove all models of states that have a state model with parent relation in the list
+
+    The function reduce multiple selection queueing over multiple hierarchy levels with respect to the parent tree
+    to the parent model. All hierarchy level and its parent relations are checked recursively.
+    This helps to have more reasonable selection for states if using rubber band selections.
+
+    :param models:
+    :return:
+    """
     models_to_remove = []
+    # check all models
     for model in models:
         parent_m = model.parent
-        while parent_m is not None and model is AbstractStateModel:
+        # while parent model is not None, a state model and in selection list then remove this child model
+        while parent_m is not None and isinstance(model, AbstractStateModel):
             if parent_m in models:
                 models_to_remove.append(model)
+                logger.debug("Parent state selection -> the model of state is removed from selection -> state {0}"
+                             "".format(model.state))
                 break
             parent_m = parent_m.parent
     for model in models_to_remove:
