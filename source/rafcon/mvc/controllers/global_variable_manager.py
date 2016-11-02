@@ -90,7 +90,7 @@ class GlobalVariableManagerController(ListViewController):
             message = ' if not existing' if not self.model.global_variable_manager.variable_exist(gv_name) else ''
             message += ', while no iterator is registered for its row' if gv_name not in self.list_store_iterators else ''
             message += ', while it is locked.' if self.model.global_variable_manager.is_locked(gv_name) else ''
-            logger.error("{2} of global variable '{0}' is not possible -> Exception: {1}".format(gv_name, message, intro_message))
+            logger.error("'{2}' of global variable '{0}' is not possible -> Exception: {1}".format(gv_name, message, intro_message))
             return False
         return True
 
@@ -104,7 +104,7 @@ class GlobalVariableManagerController(ListViewController):
         try:
             self.model.global_variable_manager.set_variable(gv_name, None)
         except (RuntimeError, AttributeError, TypeError) as e:
-            logger.warning("Adding of new global variable '{0}' failed -> Exception:{1}".format(gv_name, e))
+            logger.warning("Adding of new global variable '{0}' failed -> Exception: {1}".format(gv_name, e))
         self.select_entry(gv_name)
         return True
 
