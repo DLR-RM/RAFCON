@@ -10,55 +10,30 @@
 
 import Queue
 import copy
+import os
 import sys
 import threading
 from __builtin__ import staticmethod
-from decimal import DivisionByZero
 from weakref import ref
-import os
-
-from yaml import YAMLObject
 
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
+from yaml import YAMLObject
+
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
 from rafcon.statemachine.state_elements.outcome import Outcome
-from rafcon.statemachine.storage.storage import get_storage_id_for_state, ID_NAME_DELIMITER
 from rafcon.statemachine.storage import storage
-
+from rafcon.statemachine.storage.storage import get_storage_id_for_state
 from rafcon.utils import log
 from rafcon.utils import multi_event
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils.hashable import Hashable
+from rafcon.statemachine.decorators import lock_state_machine
 
 logger = log.get_logger(__name__)
 PATH_SEPARATOR = '/'
-
-
-global_lock_counter = 0
-
-
-def lock_state_machine(func):
-    def func_wrapper(*args, **kwargs):
-        global global_lock_counter
-        self_reference = args[0]
-        target_state_machine = self_reference.get_sm_for_state()
-        if target_state_machine:
-            target_state_machine.acquire_modification_lock()
-            global_lock_counter += 1
-        try:
-            return_value = func(*args, **kwargs)
-        except Exception:
-            # logger.debug("Exception occurred during execution of function {0}. ".format(str(func)))
-            raise
-        finally:
-            if target_state_machine:
-                target_state_machine.release_modification_lock()
-                global_lock_counter -= 1
-        return return_value
-    return func_wrapper
 
 
 class State(Observable, YAMLObject, JSONObject, Hashable):

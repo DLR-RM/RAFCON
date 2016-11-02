@@ -104,47 +104,53 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
     :param bool temporary_storage: Whether to use a temporary storage for the state machine
     """
 
-    state_machine.supports_saving_state_names = True
+    state_machine.acquire_modification_lock()
+    try:
+        state_machine.supports_saving_state_names = True
 
-    if not temporary_storage:
-        if save_as:
-            # A copy of the state machine is created at a new place in the filesystem. Therefore, there are no paths
-            # to be removed
-            clean_state_machine_paths(state_machine.state_machine_id)
+        if not temporary_storage:
+            if save_as:
+                # A copy of the state machine is created at a new place in the filesystem. Therefore, there are no paths
+                # to be removed
+                clean_state_machine_paths(state_machine.state_machine_id)
+            else:
+                # When saving the state machine, all changed made by the user should finally take affect on the
+                # filesystem. This includes the removal of all information about deleted states.
+                remove_state_machine_paths(state_machine.state_machine_id)
+
+        root_state = state_machine.root_state
+
+        # clean old path first
+        if delete_old_state_machine:
+            if os.path.exists(base_path):
+                shutil.rmtree(base_path)
+
+        # Ensure that path is existing
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+
+        old_update_time = state_machine.last_update
+        state_machine.last_update = storage_utils.get_current_time_string()
+        state_machine_dict = state_machine.to_dict()
+        storage_utils.write_dict_to_json(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE))
+        storage_utils.write_dict_to_yaml(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE_OLD))
+
+        # set the file_system_path of the state machine
+        if not temporary_storage:
+            state_machine.file_system_path = copy.copy(base_path)
         else:
-            # When saving the state machine, all changed made by the user should finally take affect on the
-            # filesystem. This includes the removal of all information about deleted states.
-            remove_state_machine_paths(state_machine.state_machine_id)
+            state_machine.last_update = old_update_time
 
-    root_state = state_machine.root_state
+        # add root state recursively
+        save_state_recursively(root_state, base_path, "", temporary_storage)
 
-    # clean old path first
-    if delete_old_state_machine:
-        if os.path.exists(base_path):
-            shutil.rmtree(base_path)
-
-    # Ensure that path is existing
-    if not os.path.exists(base_path):
-        os.makedirs(base_path)
-
-    old_update_time = state_machine.last_update
-    state_machine.last_update = storage_utils.get_current_time_string()
-    state_machine_dict = state_machine.to_dict()
-    storage_utils.write_dict_to_json(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE))
-    storage_utils.write_dict_to_yaml(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE_OLD))
-
-    # set the file_system_path of the state machine
-    if not temporary_storage:
-        state_machine.file_system_path = copy.copy(base_path)
-    else:
-        state_machine.last_update = old_update_time
-
-    # add root state recursively
-    save_state_recursively(root_state, base_path, "", temporary_storage)
-
-    if state_machine.marked_dirty and not temporary_storage:
-        state_machine.marked_dirty = False
-    logger.debug("State machine with id {0} was saved at {1}".format(state_machine.state_machine_id, base_path))
+        if state_machine.marked_dirty and not temporary_storage:
+            state_machine.marked_dirty = False
+        logger.debug("State machine with id {0} was saved at {1}".format(state_machine.state_machine_id, base_path))
+    except Exception:
+        raise
+    finally:
+        state_machine.release_modification_lock()
 
 
 def save_script_file_for_state_and_source_path(state, state_path_full, temporary_storage=False):

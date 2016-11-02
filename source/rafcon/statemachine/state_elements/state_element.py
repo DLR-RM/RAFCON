@@ -14,6 +14,8 @@ from yaml import YAMLObject
 
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
+
+from rafcon.statemachine.decorators import lock_state_machine
 from rafcon.utils import log
 from rafcon.utils.hashable import Hashable
 
@@ -64,6 +66,7 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
         return self._parent()
 
     @parent.setter
+    @lock_state_machine
     @Observable.observed
     def parent(self, parent):
         """Setter for the parent state of the state element
@@ -116,6 +119,7 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
         state_element = cls.from_dict(dict_representation)
         return state_element
 
+    @lock_state_machine
     def _change_property_with_validity_check(self, property_name, value):
         """Helper method to change a property and reset it if the validity check fails
 

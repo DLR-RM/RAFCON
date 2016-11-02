@@ -19,7 +19,8 @@ from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.state_elements.data_flow import DataFlow
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.state_elements.transition import Transition
-from rafcon.statemachine.states.state import State, lock_state_machine
+from rafcon.statemachine.states.state import State
+from rafcon.statemachine.decorators import lock_state_machine
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.storage import storage
 from rafcon.utils.type_helpers import type_inherits_of_type

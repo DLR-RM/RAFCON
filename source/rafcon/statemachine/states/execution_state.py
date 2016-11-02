@@ -15,7 +15,8 @@ from copy import copy, deepcopy
 
 from gtkmvc import Observable
 
-from rafcon.statemachine.states.state import State, lock_state_machine
+from rafcon.statemachine.states.state import State
+from rafcon.statemachine.decorators import lock_state_machine
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.script import Script
 from rafcon.statemachine.enums import StateExecutionState

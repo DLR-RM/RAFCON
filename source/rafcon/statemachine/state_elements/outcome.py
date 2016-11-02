@@ -11,6 +11,7 @@
 from gtkmvc import Observable
 
 from rafcon.statemachine.state_elements.state_element import StateElement
+from rafcon.statemachine.decorators import lock_state_machine
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -94,6 +95,7 @@ class Outcome(StateElement):
         return self._name
 
     @name.setter
+    @lock_state_machine
     @Observable.observed
     def name(self, name):
         if not isinstance(name, basestring):

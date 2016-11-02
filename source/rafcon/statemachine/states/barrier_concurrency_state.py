@@ -13,7 +13,7 @@ import traceback
 from gtkmvc import Observable
 
 from rafcon.statemachine.state_elements.outcome import Outcome
-from rafcon.statemachine.states.state import lock_state_machine
+from rafcon.statemachine.decorators import lock_state_machine
 from rafcon.statemachine.states.concurrency_state import ConcurrencyState
 from rafcon.statemachine.enums import StateExecutionState
 from rafcon.statemachine.states.execution_state import ExecutionState

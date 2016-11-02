@@ -15,6 +15,7 @@ from gtkmvc import Observable
 
 from rafcon.statemachine.enums import DataPortType
 from rafcon.statemachine.state_elements.data_port import DataPort
+from rafcon.statemachine.decorators import lock_state_machine
 from rafcon.utils import type_helpers
 
 
@@ -141,6 +142,7 @@ class ScopedData(Observable):
         return self._name
 
     @name.setter
+    @lock_state_machine
     @Observable.observed
     def name(self, name):
         if not isinstance(name, basestring):
@@ -157,6 +159,7 @@ class ScopedData(Observable):
         return self._value
 
     @value.setter
+    @lock_state_machine
     @Observable.observed
     def value(self, value):
         # check for primitive data types
@@ -181,6 +184,7 @@ class ScopedData(Observable):
         return self._value_type
 
     @value_type.setter
+    @lock_state_machine
     @Observable.observed
     def value_type(self, value_type):
         self._value_type = type_helpers.convert_string_to_type(value_type)
@@ -193,6 +197,7 @@ class ScopedData(Observable):
         return self._from_state
 
     @from_state.setter
+    @lock_state_machine
     @Observable.observed
     def from_state(self, from_state):
         if not from_state is None:
@@ -211,6 +216,7 @@ class ScopedData(Observable):
         return self._data_port_type
 
     @data_port_type.setter
+    @lock_state_machine
     @Observable.observed
     def data_port_type(self, data_port_type):
         if not isinstance(data_port_type, DataPortType):
@@ -227,6 +233,7 @@ class ScopedData(Observable):
     # WARNING: This setter function should never be used, as the timestamp is generated when the setter function of
     # the self._result variable is called
     @timestamp.setter
+    @lock_state_machine
     @Observable.observed
     def timestamp(self, timestamp):
         if not isinstance(timestamp, float):

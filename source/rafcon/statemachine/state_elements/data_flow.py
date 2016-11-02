@@ -12,6 +12,7 @@ from gtkmvc import Observable
 
 from rafcon.statemachine.id_generator import generate_data_flow_id
 from rafcon.statemachine.state_elements.state_element import StateElement
+from rafcon.statemachine.decorators import lock_state_machine
 
 
 class DataFlow(StateElement):
@@ -85,6 +86,7 @@ class DataFlow(StateElement):
 # Properties for all class field that must be observed by the gtkmvc
 #########################################################################
 
+    @lock_state_machine
     @Observable.observed
     def modify_origin(self, from_state, from_key):
         """ Set from_state and from_outcome at ones to support fully valid transition modifications.
@@ -117,6 +119,7 @@ class DataFlow(StateElement):
         return self._from_state
 
     @from_state.setter
+    @lock_state_machine
     # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
         if not isinstance(from_state, basestring):
@@ -131,6 +134,7 @@ class DataFlow(StateElement):
         return self._from_key
 
     @from_key.setter
+    @lock_state_machine
     @Observable.observed
     def from_key(self, from_key):
         if not isinstance(from_key, int):
@@ -138,6 +142,7 @@ class DataFlow(StateElement):
 
         self._change_property_with_validity_check('_from_key', from_key)
 
+    @lock_state_machine
     @Observable.observed
     def modify_target(self, to_state, to_key):
         """ Set to_state and to_key (Data Port) at ones to support fully valid transition modifications.
@@ -171,6 +176,7 @@ class DataFlow(StateElement):
         return self._to_state
 
     @to_state.setter
+    @lock_state_machine
     # @Observable.observed  # should not be observed to stay consistent
     def to_state(self, to_state):
         if not isinstance(to_state, basestring):
@@ -185,6 +191,7 @@ class DataFlow(StateElement):
         return self._to_key
 
     @to_key.setter
+    @lock_state_machine
     @Observable.observed
     def to_key(self, to_key):
         if not isinstance(to_key, int):

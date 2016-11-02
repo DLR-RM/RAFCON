@@ -12,6 +12,7 @@ from gtkmvc import Observable
 
 from rafcon.statemachine.id_generator import generate_data_port_id
 from rafcon.statemachine.state_elements.state_element import StateElement
+from rafcon.statemachine.decorators import lock_state_machine
 from rafcon.utils import log
 from rafcon.utils import type_helpers
 logger = log.get_logger(__name__)
@@ -115,6 +116,7 @@ class DataPort(StateElement):
         return self._name
 
     @name.setter
+    @lock_state_machine
     @Observable.observed
     def name(self, name):
         if not isinstance(name, basestring):
@@ -135,6 +137,7 @@ class DataPort(StateElement):
         return self._data_type
 
     @data_type.setter
+    @lock_state_machine
     @Observable.observed
     def data_type(self, data_type):
         try:
@@ -152,6 +155,7 @@ class DataPort(StateElement):
         return self._default_value
 
     @default_value.setter
+    @lock_state_machine
     @Observable.observed
     def default_value(self, default_value):
         try:
@@ -160,6 +164,7 @@ class DataPort(StateElement):
         except (TypeError, AttributeError) as e:
             raise e
 
+    @lock_state_machine
     @Observable.observed
     def change_data_type(self, data_type, default_value=None):
         """This method changes both the data type and default value. If one of the parameters does not fit,

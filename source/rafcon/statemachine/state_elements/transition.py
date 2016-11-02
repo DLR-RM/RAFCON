@@ -11,6 +11,7 @@
 from gtkmvc import Observable
 
 from rafcon.statemachine.state_elements.state_element import StateElement
+from rafcon.statemachine.decorators import lock_state_machine
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -93,6 +94,7 @@ class Transition(StateElement):
 # Properties for all class field that must be observed by the gtkmvc
 #########################################################################
 
+    @lock_state_machine
     @Observable.observed
     def modify_origin(self, from_state, from_outcome):
         """ Set from_state and from_outcome at ones to support fully valid transition modifications.
@@ -119,6 +121,7 @@ class Transition(StateElement):
             self._from_outcome = old_from_outcome
             raise ValueError("The transition origin could not be changed: {0}".format(message))
 
+    @lock_state_machine
     @Observable.observed
     def modify_target(self, to_state, to_outcome=None):
         """ Set from_state and from_outcome at ones to support fully valid transition modifications.
@@ -153,6 +156,7 @@ class Transition(StateElement):
         return self._from_state
 
     @from_state.setter
+    @lock_state_machine
     # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
         if from_state is not None and not isinstance(from_state, basestring):
@@ -168,6 +172,7 @@ class Transition(StateElement):
         return self._from_outcome
 
     @from_outcome.setter
+    @lock_state_machine
     @Observable.observed
     def from_outcome(self, from_outcome):
         if from_outcome is not None and not isinstance(from_outcome, int):
@@ -183,6 +188,7 @@ class Transition(StateElement):
         return self._to_state
 
     @to_state.setter
+    @lock_state_machine
     @Observable.observed
     def to_state(self, to_state):
         if to_state is not None and not isinstance(to_state, basestring):
@@ -198,6 +204,7 @@ class Transition(StateElement):
         return self._to_outcome
 
     @to_outcome.setter
+    @lock_state_machine
     @Observable.observed
     def to_outcome(self, to_outcome):
         if to_outcome is not None and not isinstance(to_outcome, int):
