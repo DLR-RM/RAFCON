@@ -37,9 +37,6 @@ class ListViewController(ExtendedController):
         self._setup_tree_view(tree_view, list_store)
         self.actual_entry_widget = None
         self.widget_columns = self.tree_view.get_columns()
-        # TODO maybe find a better way -> the delete key always has to be usable in entry widgets
-        self.use_delete_as_shortcut = any(['Delete' in sc_list
-                                           for sc_list in gui_config_model.config.get_config_value('SHORTCUTS').values()])
 
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
@@ -130,9 +127,16 @@ class ListViewController(ExtendedController):
             return True
 
     def remove_action_callback(self, *event):
-        """Callback method for remove action"""
+        """Callback method for remove action
+
+        The method checks whether a shortcut ('Delete') is in the gui config model which shadow the delete functionality
+        of maybe active a entry widget. If a entry widget is active the remove callback return with None.
+        """
+        # TODO maybe find a better way -> the delete key always has to be usable in entry widgets
+        delete_is_used_as_shortcut = any(['Delete' in sc_list
+                                         for sc_list in gui_config_model.config.get_config_value('SHORTCUTS').values()])
         if react_to_event(self.view, self.tree_view, event) and \
-                not (self.actual_entry_widget and self.use_delete_as_shortcut):
+                not (self.actual_entry_widget and delete_is_used_as_shortcut):
             self.on_remove(None)
             return True
 
