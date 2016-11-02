@@ -13,6 +13,7 @@ import copy
 import sys
 import threading
 from __builtin__ import staticmethod
+from decimal import DivisionByZero
 from weakref import ref
 import os
 
@@ -42,19 +43,22 @@ def lock_state_machine(func):
     def func_wrapper(*args, **kwargs):
         global global_lock_counter
         self_reference = args[0]
-        state_machine_exists = self_reference.get_sm_for_state()
         target_state_machine = self_reference.get_sm_for_state()
-        if state_machine_exists:
+        if target_state_machine:
             target_state_machine.acquire_modification_lock()
             global_lock_counter += 1
             # print func.__name__, "lock ", str(global_lock_counter)
 
-        return_value = func(*args, **kwargs)
-
-        if state_machine_exists:
-            target_state_machine.release_modification_lock()
-            global_lock_counter -= 1
-            # print func.__name__, "unlock ", str(global_lock_counter)
+        try:
+            return_value = func(*args, **kwargs)
+        except Exception:
+            logger.error("Exception occurred during execution of function {0}. ".format(str(func)))
+            raise
+        finally:
+            if target_state_machine:
+                target_state_machine.release_modification_lock()
+                global_lock_counter -= 1
+                # print func.__name__, "unlock ", str(global_lock_counter)
         return return_value
     return func_wrapper
 
