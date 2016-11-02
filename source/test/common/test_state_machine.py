@@ -11,7 +11,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-def test_create_state(caplog):
+def test_lock_state_machine(caplog):
 
     state_machine = StateMachine()
 
@@ -39,4 +39,4 @@ def test_create_state(caplog):
 
 
 if __name__ == '__main__':
-    test_create_state(None)
+    test_lock_state_machine(None)
