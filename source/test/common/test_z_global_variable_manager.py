@@ -24,9 +24,7 @@ from testing_utils import call_gui_callback
 logger = log.get_logger(__name__)
 
 @log.log_exceptions(None, gtk_quit=True)
-def trigger_gvm_signals(*args):
-
-    main_window_controller = args[0]
+def trigger_gvm_signals(main_window_controller):
 
     gvm = rafcon.statemachine.singleton.global_variable_manager
     gvm_controller = main_window_controller.get_controller('global_variable_manager_ctrl')
@@ -38,9 +36,8 @@ def trigger_gvm_signals(*args):
 
     gvm_controller.update_global_variables_list_store()
 
-    # change value to something else than the inital 0, so its true for the assert function
     gvm_controller.apply_new_global_variable_value(0, '2')
-    assert gvm.get_variable('new_0')
+    assert gvm.get_variable('new_0') == 2
 
     gvm_controller.apply_new_global_variable_name(0, 'changed_global_0')
     assert gvm.get_variable('changed_global_0')
@@ -48,17 +45,18 @@ def trigger_gvm_signals(*args):
     gvm_controller.apply_new_global_variable_type(0, 'float')
     assert gvm.get_data_type('changed_global_0') is float
 
-    gvm.lock_variable('changed_global_0')
+    access_key = gvm.lock_variable('changed_global_0')
     assert not gvm_controller.global_variable_is_editable('changed_global_0', 'testing...')
 
-    gvm_controller.on_add(view)
-    assert gvm.variable_exist('new_global_0')
+    gvm.unlock_variable('changed_global_0', access_key)
 
-    gvm_controller.remove_core_element('new_global_0')
-    assert not gvm.variable_exist('new_global_0')
+    gvm_controller.on_add(view)
+    assert not len(gvm.get_all_keys())-2
+
+    gvm_controller.remove_core_element('changed_global_0')
+    assert not len(gvm.get_all_keys())-1
 
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    call_gui_callback(menubar_ctrl.on_stop_activate, None)
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
@@ -78,7 +76,7 @@ def test_gui(caplog):
     # Wait for GUI to initialize
     testing_utils.wait_for_gui()
 
-    thread = threading.Thread(target=trigger_gvm_signals, args=[main_window_controller, main_window_view])
+    thread = threading.Thread(target=trigger_gvm_signals, args=[main_window_controller])
     thread.start()
     gtk.main()
     logger.debug("after gtk main")
