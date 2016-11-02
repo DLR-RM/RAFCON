@@ -13,7 +13,6 @@ Subpackages
     rafcon.statemachine.state_elements
     rafcon.statemachine.states
     rafcon.statemachine.storage
-    rafcon.statemachine.validity_check
 
 config
 ------

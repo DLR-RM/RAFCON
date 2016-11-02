@@ -22,7 +22,6 @@ from rafcon.statemachine.state_elements.transition import Transition
 from rafcon.statemachine.states.state import State, lock_state_machine
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.validity_check.validity_checker import ValidityChecker
 from rafcon.utils.type_helpers import type_inherits_of_type
 
 try:
