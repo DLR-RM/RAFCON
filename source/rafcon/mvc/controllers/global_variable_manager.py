@@ -11,11 +11,9 @@
 
 import gtk
 
-from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 
-from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
 from rafcon.utils import type_helpers
 
@@ -51,7 +49,6 @@ class GlobalVariableManagerController(ListViewController):
         super(GlobalVariableManagerController, self).__init__(model, view,
                                                               view['global_variable_tree_view'],
                                                               gtk.ListStore(str, str, str, str), logger)
-        self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(self.tree_view)
 
         self.global_variable_counter = 0
         self.list_store_iterators = {}
@@ -63,13 +60,13 @@ class GlobalVariableManagerController(ListViewController):
         view['value_text'].set_property('editable', True)
         view['type_text'].set_property('editable', True)
 
+        self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
         self._apply_value_on_edited_and_focus_out(view['name_text'], self.apply_new_global_variable_name)
         self._apply_value_on_edited_and_focus_out(view['value_text'], self.apply_new_global_variable_value)
         self._apply_value_on_edited_and_focus_out(view['type_text'], self.apply_new_global_variable_type)
         view['new_global_variable_button'].connect('clicked', self.on_add)
         view['delete_global_variable_button'].connect('clicked', self.on_remove)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
-        self.tab_edit_controller.register_view()
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -98,9 +95,9 @@ class GlobalVariableManagerController(ListViewController):
         return True
 
     def on_add(self, widget, data=None):
-        """Creates a new global variable with default values and selects its row
+        """Create a global variable with default value and select its row
 
-        Triggered when the New button in the Global Variables tab is clicked.
+        Triggered when the add button in the global variables tab is clicked.
         """
         gv_name = "new_global_%s" % self.global_variable_counter
         self.global_variable_counter += 1

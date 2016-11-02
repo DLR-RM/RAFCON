@@ -1,6 +1,7 @@
 import gtk
 import glib
 from gtk.gdk import CONTROL_MASK, SHIFT_MASK
+from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.gui_helper import react_to_event
@@ -13,7 +14,7 @@ class ListViewController(ExtendedController):
     """Base class for controller having a gtk.Tree view with a gtk.ListStore
 
     The class implements methods for e.g. handling (multi-)selection and offers default callback methods for various
-    signals.
+    signals and includes a move and edit by tab-key feature.
 
     :ivar gtk.ListStore list_store: List store that set by inherit class
     :ivar gtk.TreeView tree_view: Tree view that set by inherit class
@@ -33,10 +34,13 @@ class ListViewController(ExtendedController):
         self._do_selection_update = False
         self._last_path_selection = None
         self._setup_tree_view(tree_view, list_store)
+        self.actual_entry_widget = None
+        self.widget_columns = self.tree_view.get_columns()
 
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
         self.tree_view.connect('button_press_event', self.mouse_click)
+        self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
         self._tree_selection.connect('changed', self.selection_changed)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         self.update_selection_sm_prior()
@@ -66,6 +70,7 @@ class ListViewController(ExtendedController):
             editable = renderer.get_data("editable")
             editable.disconnect(editable.get_data("focus_out_handler_id"))
             renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
+            self.actual_entry_widget = None
 
         def on_focus_out(entry, event):
             """Applies the changes to the entry
@@ -96,6 +101,7 @@ class ListViewController(ExtendedController):
             renderer.set_data("editable", editable)
             renderer.set_data("editing_cancelled_handler_id", editing_cancelled_handler_id)
             editable.set_data("focus_out_handler_id", focus_out_handler_id)
+            self.actual_entry_widget = editable
 
         def on_edited(renderer, path, new_value_str):
             """Calls the apply method with the new value
@@ -108,6 +114,7 @@ class ListViewController(ExtendedController):
             editable.disconnect(editable.get_data("focus_out_handler_id"))
             renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
             apply_method(path, new_value_str)
+            self.actual_entry_widget = None
 
         renderer.connect('editing-started', on_editing_started)
         renderer.connect('edited', on_edited)
@@ -313,6 +320,18 @@ class ListViewController(ExtendedController):
                     self.tree_view.get_selection().select_path((row_num, ))
                 break
 
+    def get_path_for_core_element(self, core_element_id):
+        """Get path to the row representing core element described by handed core_element_id
+
+        :param core_element_id: Core element identifier used in the respective list store column
+        :rtype: tuple
+        :return: path
+        """
+        for row_num, element_row in enumerate(self.list_store):
+            # Compare data port ids
+            if element_row[self.ID_STORAGE_ID] == core_element_id:
+                return tuple([row_num])
+
     def get_list_store_row_from_cursor_selection(self):
         """Returns the list_store_row of the currently by cursor selected row entry
 
@@ -331,6 +350,73 @@ class ListViewController(ExtendedController):
         """
         # the cursor is a tuple containing the current path and the focused column
         return self.tree_view.get_cursor()[0]
+
+    def tree_view_keypress_callback(self, widget, event):
+        """Tab back and forward tab-key motion in list widget
+
+         The method introduce motion and edit functionality by using "tab"- or "shift-tab"-key for a gtk.TreeView.
+         It is designed to work with a gtk.TreeView which model is a gtk.ListStore and only uses text cell renderer.
+         Additional, the TreeView is assumed to be used as a list not as a tree.
+         With the "tab"-key the cell on the right site of the actual focused cell is started to be edit. Changes in the
+         gtk.Entry-Widget are confirmed by emitting a 'edited'-signal. If the row ends the edit process continues
+         with the first cell of the next row. With the "shift-tab"-key the inverse functionality of the "tab"-key is
+         provided.
+         The Controller over steps not editable cells.
+
+        :param gtk.TreeView widget: The tree view the controller use
+        :param gtk.gdk.Event event: The key press event
+        :return:
+        """
+        # self._logger("key_value: " + str(event.keyval))
+
+        if event.keyval == Key_Tab or event.keyval == ISO_Left_Tab:
+            [path, focus_column] = self.tree_view.get_cursor()
+            if not path:
+                return False
+            core_element_id = self.list_store[path][self.ID_STORAGE_ID]
+            # finish active edit process
+            if self.actual_entry_widget is not None:
+                text = self.actual_entry_widget.get_buffer().get_text()
+                if focus_column in self.widget_columns:
+                    focus_column.get_cell_renderers()[0].emit('edited', path[0], text)
+
+            # row could be updated by other call_backs caused by emitting 'edited' signal but selection stays an editable neighbor
+            path = self.get_path_for_core_element(core_element_id)
+            if event.keyval == Key_Tab:
+                # logger.info("move right")
+                direction = +1
+            else:
+                # logger.info("move left")
+                direction = -1
+
+            # get next row_id for focus
+            if direction < 0 and focus_column is self.widget_columns[0] \
+                    or direction > 0 and focus_column is self.widget_columns[-1]:
+                if direction < 0 < path[0] or direction > 0 and not path[0] + 1 > len(self.widget_columns):
+                    next_row = path[0] + direction
+                else:
+                    return False
+            else:
+                next_row = path[0]
+            # get next column_id for focus
+            focus_column_id = self.widget_columns.index(focus_column)
+            if focus_column_id is not None:
+                # search all columns for next editable cell renderer
+                for index in range(len(self.tree_view.get_model())):
+                    test_id = focus_column_id + direction * index + direction
+                    next_focus_column_id = test_id % len(self.widget_columns)
+                    if test_id > len(self.widget_columns) - 1 or test_id < 0:
+                        next_row = path[0] + direction
+                        if next_row < 0 or next_row > len(self.tree_view.get_model()) - 1:
+                            return False
+
+                    if self.widget_columns[next_focus_column_id].get_cell_renderers()[0].get_property('editable'):
+                        break
+            else:
+                return False
+
+            self.tree_view.set_cursor(next_row, self.widget_columns[next_focus_column_id], start_editing=True)
+            return True
 
 
 class TreeViewController(ExtendedController):
@@ -398,14 +484,14 @@ class TreeViewController(ExtendedController):
     def iter_tree_with_handed_function(self, function, *function_args):
         """Iterate tree view with condition check function"""
         def iter_all_children(state_row_iter, function, function_args):
-            function(state_row_iter, *function_args)
 
             if isinstance(state_row_iter, gtk.TreeIter):
+                function(state_row_iter, *function_args)
                 for n in reversed(range(self.tree_store.iter_n_children(state_row_iter))):
                     child_iter = self.tree_store.iter_nth_child(state_row_iter, n)
                     iter_all_children(child_iter, function, function_args)
             else:
-                self._logger.warning("Iter has to be TreeIter")
+                self._logger.warning("Iter has to be TreeIter -> handed argument is: {0}".format(state_row_iter))
 
         iter_all_children(self.tree_store.get_iter_root(), function, function_args)
 

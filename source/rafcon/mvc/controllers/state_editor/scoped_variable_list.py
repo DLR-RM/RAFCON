@@ -13,7 +13,6 @@ import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
 from rafcon.mvc.models.container_state import ContainerStateModel
 
@@ -40,8 +39,6 @@ class ScopedVariableListController(ListViewController):
         """Constructor"""
         super(ScopedVariableListController, self).__init__(model, view, view.get_top_widget(),
                                                            self.get_new_list_store(), logger)
-
-        self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view.get_top_widget())
 
         self.next_focus_column = {}
         self.prev_focus_column = {}
@@ -74,8 +71,6 @@ class ScopedVariableListController(ListViewController):
 
         self._apply_value_on_edited_and_focus_out(view['name_text'], self.apply_new_scoped_variable_name)
         self._apply_value_on_edited_and_focus_out(view['data_type_text'], self.apply_new_scoped_variable_type)
-
-        self.tab_edit_controller.register_view()
 
         if isinstance(self.model, ContainerStateModel):
             self.reload_scoped_variables_list_store()

@@ -15,7 +15,6 @@ from gtk import TreeViewColumn, CellRendererToggle
 
 from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
 from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 
@@ -41,8 +40,6 @@ class DataPortListController(ListViewController):
                                                      logger)
         self.type = io_type
         self.state_data_port_dict = None
-
-        self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(self.tree_view)
 
         if self.type == "input":
             self.state_data_port_dict = self.model.state.input_data_ports
@@ -119,7 +116,6 @@ class DataPortListController(ListViewController):
             view['use_runtime_value_toggle'].set_property("activatable", True)
             view['use_runtime_value_toggle'].connect("toggled", self.on_use_runtime_value_toggled)
 
-        self.tab_edit_controller.register_view()
         self.reload_data_port_list_store()
 
     def register_actions(self, shortcut_manager):
