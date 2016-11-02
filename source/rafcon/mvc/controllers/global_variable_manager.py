@@ -90,7 +90,9 @@ class GlobalVariableManagerController(ListViewController):
             message = ' if not existing' if not self.model.global_variable_manager.variable_exist(gv_name) else ''
             message += ', while no iterator is registered for its row' if gv_name not in self.list_store_iterators else ''
             message += ', while it is locked.' if self.model.global_variable_manager.is_locked(gv_name) else ''
-            logger.error("'{2}' of global variable '{0}' is not possible -> Exception: {1}".format(gv_name, message, intro_message))
+
+            logger.error("{2} of global variable '{0}' is not possible: {1}".format(gv_name, message, intro_message))
+
             return False
         return True
 
@@ -104,7 +106,9 @@ class GlobalVariableManagerController(ListViewController):
         try:
             self.model.global_variable_manager.set_variable(gv_name, None)
         except (RuntimeError, AttributeError, TypeError) as e:
-            logger.warning("Adding of new global variable '{0}' failed -> Exception: {1}".format(gv_name, e))
+
+            logger.warning("Adding of new global variable '{0}' failed: {1}".format(gv_name, e))
+
         self.select_entry(gv_name)
         return True
 
@@ -158,36 +162,32 @@ class GlobalVariableManagerController(ListViewController):
         old_value = self.model.global_variable_manager.get_representation(gv_name)
 
         # preserve type especially if type=NoneType
-        if data_type in [type(old_value), type(None)]:
+        if issubclass(data_type, (type(old_value), type(None))):
             old_type = data_type
-            if data_type == type(None):
+            if issubclass(data_type, type(None)):
                 old_type = type(old_value)
-                logger.debug("Global variable list widget try to preserve type of variable '{0}' with type "
-                             "'NoneType'".format(gv_name))
+                logger.debug("Trying to parse '{}' to type '{}' of old global variable value '{}'".format(
+                    new_value_as_string, old_type.__name__, old_value))
             try:
                 new_value = type_helpers.convert_string_value_to_type_value(new_value_as_string, old_type)
             except (AttributeError, ValueError) as e:
-                if data_type == type(None):
+                if issubclass(data_type, type(None)):
                     new_value = new_value_as_string
-                    logger.warning("Value of global variable '{0}' with old value data type '{2}', with value '{3}' and"
-                                   " data type NoneType was changed to string '{1}'"
-                                   "".format(gv_name, new_value, type(old_value), old_value))
+                    logger.warning("New value '{}' stored as string, previous value '{}' of global variable '{}' was "
+                                   "of type '{}'".format(new_value, old_value, gv_name, type(old_value).__name__))
                 else:
-                    raise TypeError("Unexpected outcome of change value operation for global variable '{0}' and "
-                                    "handed value '{1}' type '{2}' -> Exception: {3}"
-                                    "".format(gv_name, new_value_as_string, type(new_value_as_string), e))
-
+                    logger.warning("Restoring old value of global variable '{}': {}".format(gv_name, e))
+                    return
         else:
-            raise TypeError("Global variable manager has had no consistent value data type '{0}' "
-                            "and data type '{1}' for variable '{2}'.".format(data_type,
-                                                                             [type(old_value), type(None)],
-                                                                             gv_name))
+            logger.error("Global variable '{}' with inconsistent value data type '{}' and data type '{}'".format(
+                gv_name, [type(old_value).__name__, type(None).__name__], data_type.__name__))
+            return
 
         try:
             self.model.global_variable_manager.set_variable(gv_name, new_value, data_type=data_type)
         except (RuntimeError, AttributeError, TypeError) as e:
-            logger.error("Error while setting global variable '{0}' to value '{1}' -> Exception: {2}"
-                         "".format(gv_name, new_value, e))
+            logger.error("Error while setting global variable '{0}' to value '{1}' -> Exception: {2}".format(
+                gv_name, new_value, e))
 
     def apply_new_global_variable_type(self, path, new_data_type_as_string):
         """Change global variable value according handed string
@@ -208,21 +208,20 @@ class GlobalVariableManagerController(ListViewController):
         try:
             new_data_type = type_helpers.convert_string_to_type(new_data_type_as_string)
         except (AttributeError, ValueError) as e:
-            logger.error("Could not change data type to '{0}' -> Exception: {1}".format(new_data_type_as_string, e))
+            logger.error("Could not change data type to '{0}': {1}".format(new_data_type_as_string, e))
             return
         assert isinstance(new_data_type, type)
 
         # convert old value
-        if new_data_type == type(None):
+        if issubclass(new_data_type, type(None)):
             new_value = old_value
         else:  # new_data_type in [str, float, int, list, dict, tuple, bool]:
             try:
                 new_value = new_data_type(old_value)
             except (ValueError, TypeError) as e:
                 new_value = new_data_type()
-                logger.info("Global variable '{0}' old value '{1}' is not convertible to new data type '{2}'"
-                            "therefore becomes empty new data type object '{3}' -> Exception: {4}"
-                            "".format(gv_name, old_value, new_data_type, new_value, e))
+                logger.warn("Old value '{}' of global variable '{}' could not be parsed to new type '{}' and is "
+                            "therefore resetted: {}".format(old_value, gv_name, new_data_type.__name__, e))
 
         # set value in global variable manager
         try:
