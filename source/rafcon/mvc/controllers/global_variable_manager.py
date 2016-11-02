@@ -105,7 +105,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
             message = ' if not existing' if not self.model.global_variable_manager.variable_exist(gv_name) else ''
             message += ', while no iterator is registered for its row' if gv_name not in self.list_store_iterators else ''
             message += ', while it is locked.' if self.model.global_variable_manager.is_locked(gv_name) else ''
-            logger.error("{2} of global variable '{0}' is not possible -> Exception:{1}".format(gv_name, message, intro_message))
+            logger.error("{2} of global variable '{0}' is not possible -> Exception: {1}".format(gv_name, message, intro_message))
             return False
         return True
 
@@ -168,7 +168,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
             try:
                 self.model.global_variable_manager.set_variable(gv_name, None)
             except (RuntimeError, AttributeError, TypeError) as e:
-                logger.warning("Adding of new global variable '{0}' failed -> Exception:{1}".format(gv_name, e))
+                logger.warning("Adding of new global variable '{0}' failed -> Exception: {1}".format(gv_name, e))
             self.select_entry(gv_name)
             return True
 
@@ -186,7 +186,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
                     try:
                         self.model.global_variable_manager.delete_variable(gv_name)
                     except AttributeError as e:
-                        logger.warning("Delete of global variable '{0}' failed -> Exception:{1}".format(gv_name, e))
+                        logger.warning("Delete of global variable '{0}' failed -> Exception: {1}".format(gv_name, e))
                 if len(self.list_store) > 0:
                     self.tree_view.set_cursor(min(old_path[0], len(self.list_store) - 1))
             return True
@@ -254,7 +254,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
                                    "".format(gv_name, new_value, type(old_value), old_value))
                 else:
                     raise TypeError("Unexpected outcome of change value operation for global variable '{0}' and "
-                                    "handed value '{1}' type '{2}' -> Exception:{3}"
+                                    "handed value '{1}' type '{2}' -> Exception: {3}"
                                     "".format(gv_name, new_value_as_string, type(new_value_as_string), e))
 
         else:
@@ -267,7 +267,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         try:
             self.model.global_variable_manager.set_variable(gv_name, new_value, data_type=data_type)
         except (RuntimeError, AttributeError, TypeError) as e:
-            logger.error("Error while setting global variable '{0}' to value '{1}' -> Exception:{2}"
+            logger.error("Error while setting global variable '{0}' to value '{1}' -> Exception: {2}"
                          "".format(gv_name, new_value, e))
 
     def on_data_type_changed(self, widget, path, new_data_type_as_string):
@@ -291,7 +291,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         try:
             new_data_type = type_helpers.convert_string_to_type(new_data_type_as_string)
         except (AttributeError, ValueError) as e:
-            logger.error("Could not change data type to '{0}' -> Exception:{1}".format(new_data_type_as_string, e))
+            logger.error("Could not change data type to '{0}' -> Exception: {1}".format(new_data_type_as_string, e))
             return
         assert isinstance(new_data_type, type)
 
@@ -304,7 +304,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
             except (ValueError, TypeError) as e:
                 new_value = new_data_type()
                 logger.info("Global variable '{0}' old value '{1}' is not convertible to new data type '{2}'"
-                            "therefore becomes empty new data type object '{3}' -> Exception:{4}"
+                            "therefore becomes empty new data type object '{3}' -> Exception: {4}"
                             "".format(gv_name, old_value, new_data_type, new_value, e))
 
         # set value in global variable manager
@@ -312,7 +312,7 @@ class GlobalVariableManagerController(ExtendedController, ListSelectionFeatureCo
         try:
             self.model.global_variable_manager.set_variable(gv_name, new_value, data_type=new_data_type)
         except (ValueError, RuntimeError, TypeError) as e:
-            logger.error("Could not set new value unexpected failure '{0}' to value '{1}' -> Exception:{2}"
+            logger.error("Could not set new value unexpected failure '{0}' to value '{1}' -> Exception: {2}"
                          "".format(gv_name, new_value, e))
 
     @ExtendedController.observe("global_variable_manager", after=True)
