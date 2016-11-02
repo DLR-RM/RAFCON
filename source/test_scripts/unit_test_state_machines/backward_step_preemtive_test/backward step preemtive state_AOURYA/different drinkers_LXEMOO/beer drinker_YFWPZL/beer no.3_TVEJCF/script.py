@@ -1,3 +1,4 @@
+
 def execute(self, inputs, outputs, gvm):
     gvm.set_variable("beers", 3)
     return 0

@@ -163,7 +163,6 @@ def trigger_gui_signals_preemptive_state(*args):
     wait_for_execution_engine_sync_counter(1, logger)
 
     # forward
-
     for i in range(3):
         call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(2, logger)
@@ -171,6 +170,8 @@ def trigger_gui_signals_preemptive_state(*args):
     for i in range(2):
         call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
+
+    # "take turn" state reached
 
     # backward
     for i in range(1):

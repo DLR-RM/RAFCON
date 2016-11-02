@@ -2,7 +2,7 @@
     "__jsonqualname__": "rafcon.statemachine.states.execution_state.ExecutionState", 
     "description": null, 
     "input_data_ports": {}, 
-    "name": "return", 
+    "name": "take turn", 
     "outcomes": {
         "-2": {
             "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
