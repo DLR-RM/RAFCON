@@ -31,6 +31,7 @@ def setup_logger():
 def start_client(interacting_function, queue_dict):
 
     import os
+
     import rafcon
     from yaml_configuration.config import config_path
     from rafcon.utils import log
@@ -55,6 +56,7 @@ def start_client(interacting_function, queue_dict):
     from rafcon.utils import plugins
     # load all plugins specified in the RAFCON_PLUGIN_PATH
     plugins.load_plugins()
+    import testing_utils
 
     # check if twisted is imported
     if "twisted" in sys.modules.keys():
@@ -105,6 +107,7 @@ def start_client(interacting_function, queue_dict):
     interacting_thread = threading.Thread(target=interacting_function, args=[main_window_controller,
                                                                              global_monitoring_manager,
                                                                              queue_dict])
+    testing_utils.wait_for_gui()
     interacting_thread.start()
 
     # check if twisted is imported
