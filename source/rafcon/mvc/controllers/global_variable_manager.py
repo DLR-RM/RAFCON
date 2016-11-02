@@ -90,7 +90,7 @@ class GlobalVariableManagerController(ListViewController):
             message = ' if not existing' if not self.model.global_variable_manager.variable_exist(gv_name) else ''
             message += ', while no iterator is registered for its row' if gv_name not in self.list_store_iterators else ''
             message += ', while it is locked.' if self.model.global_variable_manager.is_locked(gv_name) else ''
-            logger.error("{2} of global variable '{0}' is not possible{1}".format(gv_name, message, intro_message))
+            logger.error("{2} of global variable '{0}' is not possible -> Exception: {1}".format(gv_name, message, intro_message))
             return False
         return True
 
@@ -162,7 +162,7 @@ class GlobalVariableManagerController(ListViewController):
             old_type = data_type
             if data_type == type(None):
                 old_type = type(old_value)
-                logger.debug("Global variable list widget try to preserve type of variable {0} with type "
+                logger.debug("Global variable list widget try to preserve type of variable '{0}' with type "
                              "'NoneType'".format(gv_name))
             try:
                 new_value = type_helpers.convert_string_value_to_type_value(new_value_as_string, old_type)
@@ -174,7 +174,7 @@ class GlobalVariableManagerController(ListViewController):
                                    "".format(gv_name, new_value, type(old_value), old_value))
                 else:
                     raise TypeError("Unexpected outcome of change value operation for global variable '{0}' and "
-                                    "handed value '{1}' type '{2}' -> raised error {3}"
+                                    "handed value '{1}' type '{2}' -> Exception: {3}"
                                     "".format(gv_name, new_value_as_string, type(new_value_as_string), e))
 
         else:
@@ -186,7 +186,7 @@ class GlobalVariableManagerController(ListViewController):
         try:
             self.model.global_variable_manager.set_variable(gv_name, new_value, data_type=data_type)
         except (RuntimeError, AttributeError, TypeError) as e:
-            logger.error("Error while setting global variable {1} to value {2} -> raised error {0}"
+            logger.error("Error while setting global variable '{0}' to value '{1}' -> Exception: {2}"
                          "".format(gv_name, new_value, e))
 
     def apply_new_global_variable_type(self, path, new_data_type_as_string):
@@ -208,7 +208,7 @@ class GlobalVariableManagerController(ListViewController):
         try:
             new_data_type = type_helpers.convert_string_to_type(new_data_type_as_string)
         except (AttributeError, ValueError) as e:
-            logger.error("Could not change data type to '{0}': {1}".format(new_data_type_as_string, e))
+            logger.error("Could not change data type to '{0}' -> Exception: {1}".format(new_data_type_as_string, e))
             return
         assert isinstance(new_data_type, type)
 
@@ -221,21 +221,21 @@ class GlobalVariableManagerController(ListViewController):
             except (ValueError, TypeError) as e:
                 new_value = new_data_type()
                 logger.info("Global variable '{0}' old value '{1}' is not convertible to new data type '{2}'"
-                            "therefore becomes empty new data type object '{3}' -> raised TypeError: {4}"
+                            "therefore becomes empty new data type object '{3}' -> Exception: {4}"
                             "".format(gv_name, old_value, new_data_type, new_value, e))
 
         # set value in global variable manager
         try:
             self.model.global_variable_manager.set_variable(gv_name, new_value, data_type=new_data_type)
         except (ValueError, RuntimeError, TypeError) as e:
-            logger.error("Could not set new value unexpected failure {0} to value {1} -> raised error {2}"
+            logger.error("Could not set new value unexpected failure '{0}' to value '{1}' -> Exception: {2}"
                          "".format(gv_name, new_value, e))
 
     @ListViewController.observe("global_variable_manager", after=True)
     def assign_notification_from_gvm(self, model, prop_name, info):
         """Handles gtkmvc notification from global variable manager
 
-        Calls update of hole list store in case new variable was added. Avoids to run updates without reasonable change.
+        Calls update of whole list store in case new variable was added. Avoids to run updates without reasonable change.
         Holds tree store and updates row elements if is-locked or global variable value changes.
         """
 
