@@ -4,8 +4,7 @@ from gtk.gdk import CONTROL_MASK, SHIFT_MASK
 from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.gui_helper import react_to_event
-from rafcon.mvc.singleton import gui_config_model
+from rafcon.mvc.gui_helper import react_to_event, is_event_of_key_string
 
 from rafcon.utils import log
 module_logger = log.get_logger(__name__)
@@ -142,11 +141,8 @@ class ListViewController(ExtendedController):
         The method checks whether a shortcut ('Delete') is in the gui config model which shadow the delete functionality
         of maybe active a entry widget. If a entry widget is active the remove callback return with None.
         """
-        # TODO maybe find a better way -> the delete key always has to be usable in entry widgets
-        delete_is_used_as_shortcut = any(['Delete' in sc_list
-                                         for sc_list in gui_config_model.config.get_config_value('SHORTCUTS').values()])
         if react_to_event(self.view, self.tree_view, event) and \
-                not (self.actual_entry_widget and delete_is_used_as_shortcut):
+                not (self.actual_entry_widget and is_event_of_key_string(event, 'Delete')):
             self.on_remove(None)
             return True
 
