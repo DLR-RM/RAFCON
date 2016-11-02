@@ -4,7 +4,7 @@ import pytest
 import rafcon
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
-import test_basic_state_machine as basic_state_machines
+import test_states as basic_state_machines
 import testing_utils
 
 FILES = [RAFCON_TEMP_PATH_BASE + '/state_generation_log_file.txt',
