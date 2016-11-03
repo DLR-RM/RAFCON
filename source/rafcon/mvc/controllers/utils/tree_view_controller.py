@@ -66,14 +66,24 @@ class ListViewController(ExtendedController):
         """
         assert isinstance(renderer, gtk.CellRenderer)
 
+        def remove_handler(widget, data_name):
+            """Remove handler from given widget
+
+            :param gtk.Widget widget: Widget from which a handler is to be removed
+            :param data_name: Name of the data of the widget in which the handler id is stored
+            """
+            handler_id = widget.get_data(data_name)
+            if widget.handler_is_connected(handler_id):
+                widget.disconnect(handler_id)
+
         def on_editing_canceled(renderer):
             """Disconnects the focus-out-event handler of cancelled editable
 
             :param gtk.CellRendererText renderer: The cell renderer who's editing was cancelled
             """
             editable = renderer.get_data("editable")
-            editable.disconnect(editable.get_data("focus_out_handler_id"))
-            renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
+            remove_handler(editable, "focus_out_handler_id")
+            remove_handler(renderer, "editing_cancelled_handler_id")
             self.actual_entry_widget = None
 
         def on_focus_out(entry, event):
@@ -83,8 +93,8 @@ class ListViewController(ExtendedController):
             :param gtk.Event event: Event object with information about the event
             """
             editable = renderer.get_data("editable")
-            editable.disconnect(editable.get_data("focus_out_handler_id"))
-            renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
+            remove_handler(editable, "focus_out_handler_id")
+            remove_handler(renderer, "editing_cancelled_handler_id")
 
             if self.get_path() is None:
                 return
@@ -115,8 +125,8 @@ class ListViewController(ExtendedController):
             :param str new_value_str: The new value as string
             """
             editable = renderer.get_data("editable")
-            editable.disconnect(editable.get_data("focus_out_handler_id"))
-            renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
+            remove_handler(editable, "focus_out_handler_id")
+            remove_handler(renderer, "editing_cancelled_handler_id")
             apply_method(path, new_value_str)
             self.actual_entry_widget = None
 
