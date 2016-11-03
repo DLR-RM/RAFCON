@@ -84,13 +84,8 @@ class GlobalVariableManagerController(ListViewController):
         :param str intro_message: Message which is used form a useful logger error message if needed
         :return:
         """
-        if gv_name not in self.list_store_iterators or \
-                not self.model.global_variable_manager.variable_exist(gv_name) or \
-                self.model.global_variable_manager.is_locked(gv_name):
-            message = ' if not existing' if not self.model.global_variable_manager.variable_exist(gv_name) else ''
-            message += ', while no iterator is registered for its row' if gv_name not in self.list_store_iterators else ''
-            message += ', while it is locked.' if self.model.global_variable_manager.is_locked(gv_name) else ''
-            logger.error("{2} of global variable '{0}' is not possible: {1}".format(gv_name, message, intro_message))
+        if self.model.global_variable_manager.is_locked(gv_name):
+            logger.error("{1} of global variable '{0}' is not possible, as it is locked".format(gv_name, intro_message))
             return False
         return True
 
@@ -104,7 +99,7 @@ class GlobalVariableManagerController(ListViewController):
         try:
             self.model.global_variable_manager.set_variable(gv_name, None)
         except (RuntimeError, AttributeError, TypeError) as e:
-            logger.warning("Adding of new global variable '{0}' failed: {1}".format(gv_name, e))
+            logger.warning("Addition of new global variable '{0}' failed: {1}".format(gv_name, e))
         self.select_entry(gv_name)
         return True
 
@@ -115,7 +110,8 @@ class GlobalVariableManagerController(ListViewController):
         :return:
         """
         gv_name = model
-        self.model.global_variable_manager.delete_variable(gv_name)
+        if self.global_variable_is_editable(gv_name, "Deletion"):
+            self.model.global_variable_manager.delete_variable(gv_name)
 
     def apply_new_global_variable_name(self, path, new_gv_name):
         """Change global variable name/key according handed string
