@@ -145,9 +145,8 @@ class GlobalVariableManager(Observable):
         :raises exceptions.AttributeError:  if the global variable does not exist
         """
         if self.is_locked(key):
-            logger.error("Deletion of global variable '%s' failed, variable is locked!" % str(key))
-            return
-        
+            raise RuntimeError("Global variable is locked")
+
         self.__dictionary_lock.acquire()
         if key in self.__global_variable_dictionary:
             access_key = self.lock_variable(key)
