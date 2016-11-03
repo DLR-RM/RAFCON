@@ -1,6 +1,7 @@
 import os
 import time
 import threading
+from sys import platform as _platform
 
 import gtk
 from gtkmvc import ModelMT
@@ -24,12 +25,16 @@ RAFCON_RUNTIME_BACKUP_PATH = os.path.join(RAFCON_TEMP_PATH_BASE, 'runtime_backup
 if not os.path.exists(RAFCON_RUNTIME_BACKUP_PATH):
     os.makedirs(RAFCON_RUNTIME_BACKUP_PATH)
 
-from sys import platform as _platform
-if _platform == "linux" or _platform == "linux2":
-    import subprocess
-    p = subprocess.Popen(['ps', '-A', '-o', 'pid'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = p.communicate()
-    process_id_list = ''.join(out).replace(' ', '').replace('PID', '').split('\n')
+
+if _platform in ["linux", "linux2"]:
+    try:
+        import subprocess
+        p = subprocess.Popen(['ps', '-A', '-o', 'pid'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        process_id_list = ''.join(out).replace(' ', '').replace('PID', '').split('\n')
+    except OSError:
+        logger.info("Could not retrieve list of current process ids")
+        process_id_list = []
 else:
     process_id_list = []
 
