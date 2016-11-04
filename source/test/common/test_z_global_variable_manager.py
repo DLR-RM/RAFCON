@@ -15,12 +15,11 @@ import rafcon.mvc.config as gui_config
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
-# test environment elements
-
 import testing_utils
 from testing_utils import call_gui_callback
 
 logger = log.get_logger(__name__)
+
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_gvm_signals(main_window_controller):
@@ -32,8 +31,6 @@ def trigger_gvm_signals(main_window_controller):
     view.grab_focus()
 
     gvm.set_variable('new_0', 0)
-
-    gvm_controller.update_global_variables_list_store()
 
     call_gui_callback(gvm_controller.apply_new_global_variable_value, 0, '2')
     assert gvm.get_variable('new_0') == 2
