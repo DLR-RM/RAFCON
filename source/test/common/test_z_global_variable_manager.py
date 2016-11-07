@@ -1,5 +1,6 @@
 import gtk
 import threading
+import pytest
 
 # general tool elements
 from rafcon.utils import log
@@ -21,7 +22,6 @@ from testing_utils import call_gui_callback
 logger = log.get_logger(__name__)
 
 
-@log.log_exceptions(None, gtk_quit=True)
 def trigger_gvm_signals(main_window_controller):
 
     gvm = rafcon.statemachine.singleton.global_variable_manager
@@ -63,6 +63,7 @@ def test_gui(caplog):
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
 
     testing_utils.remove_all_libraries()
+    testing_utils.remove_all_gvm_variables()
 
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
