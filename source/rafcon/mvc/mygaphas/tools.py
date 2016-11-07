@@ -68,6 +68,9 @@ class MoveItemTool(ItemTool):
         self._do_not_unselect = None
 
     def movable_items(self):
+        if self._do_not_unselect:
+            self.view.focused_item = self._do_not_unselect
+
         if self._move_name_v:
             return [InMotion(self._item, self.view)]
         else:
@@ -86,16 +89,16 @@ class MoveItemTool(ItemTool):
 
         # NameView can only be moved when the Ctrl-key is pressed
         self._move_name_v = isinstance(self._item, NameView) and event.state & gtk.gdk.CONTROL_MASK
-        parent_is_clicked_on = any([self._item.model is item.model.parent for item in self.view.selected_items
-                                    if isinstance(item, StateView) and isinstance(self._item, StateView)])
-        if self._item in self.view.selected_items and isinstance(self._item, NameView) and \
-                        event.state & gtk.gdk.CONTROL_MASK:
+        if self._item in self.view.selected_items and \
+                isinstance(self._item, NameView) and event.state & gtk.gdk.CONTROL_MASK:
             # self.view.unselect_item(self._item)
             pass
         else:
-            self.view.focused_item = self._item
-            # remember items that should not be unselected
-            self._do_not_unselect = self._item
+            if not event.state & gtk.gdk.CONTROL_MASK and self._item not in self.view.selected_items:
+                del self.view.selected_items
+            if self._item not in self.view.selected_items:
+                # remember items that should not be unselected and maybe focused if movement occur
+                self._do_not_unselect = self._item
 
         if not self.view.is_focus():
             self.view.grab_focus()
