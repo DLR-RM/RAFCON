@@ -508,7 +508,8 @@ class TreeViewController(ExtendedController):
             else:
                 self._logger.warning("Iter has to be TreeIter -> handed argument is: {0}".format(state_row_iter))
 
-        iter_all_children(self.tree_store.get_iter_root(), function, function_args)
+        if self.tree_store.get_iter_root():
+            iter_all_children(self.tree_store.get_iter_root(), function, function_args)
 
     def update_selection_sm_prior_condition(self, state_row_iter, selected_model_list, sm_selected_model_list):
         """State machine prior update of tree selection for one tree model row"""
@@ -543,6 +544,13 @@ class TreeViewController(ExtendedController):
             # print type(self).__name__, "select model", model
             sm_selection.add(model)
 
+    def check_selection_consistency(self, sm_check=True, tree_check=True):
+        tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
+        if not ((all([model in selected_model_list for model in sm_selected_model_list]) or not sm_check) and
+                (all([model in sm_selected_model_list for model in selected_model_list]) or not tree_check)):
+            self._logger.warning("Elements of sm and tree selection are not identical: \ntree: {0}\nsm:   {1}"
+                                 "".format(selected_model_list, sm_selected_model_list))
+
     def update_selection_self_prior(self):
         """Tree view prior update of state machine selection"""
         if self._do_selection_update:
@@ -556,9 +564,8 @@ class TreeViewController(ExtendedController):
         self._do_selection_update = True
         self.iter_tree_with_handed_function(self.update_selection_self_prior_condition,
                                             sm_selection, selected_model_list, sm_selected_model_list)
-        # tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        # print selected_model_list, sm_selected_model_list
-
+        # TODO check why sometimes not consistent with sm selection. e.g while modification history test
+        self.check_selection_consistency(sm_check=False)
         self._do_selection_update = False
 
     def update_selection_sm_prior(self):
@@ -574,8 +581,7 @@ class TreeViewController(ExtendedController):
         self._do_selection_update = True
         self.iter_tree_with_handed_function(self.update_selection_sm_prior_condition,
                                             selected_model_list, sm_selected_model_list)
-        # tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        # print selected_model_list, sm_selected_model_list
+        self.check_selection_consistency()
         self._do_selection_update = False
 
     def selection_changed(self, widget, event=None):
