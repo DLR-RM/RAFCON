@@ -65,6 +65,7 @@ class MoveItemTool(ItemTool):
         self._move_name_v = False
 
         self._item = None
+        self._do_not_unselect = None
 
     def movable_items(self):
         if self._move_name_v:
@@ -73,6 +74,8 @@ class MoveItemTool(ItemTool):
             return super(MoveItemTool, self).movable_items()
 
     def on_button_press(self, event):
+        # print "on_press_button: ", self.__class__.__name__
+
         if event.button not in self._buttons:
             return False  # Only handle events for registered buttons (left mouse clicks)
 
@@ -83,13 +86,16 @@ class MoveItemTool(ItemTool):
 
         # NameView can only be moved when the Ctrl-key is pressed
         self._move_name_v = isinstance(self._item, NameView) and event.state & gtk.gdk.CONTROL_MASK
-
-        if self._item in self.view.selected_items and event.state & gtk.gdk.CONTROL_MASK:
-            self.view.unselect_item(self._item)
+        parent_is_clicked_on = any([self._item.model is item.model.parent for item in self.view.selected_items
+                                    if isinstance(item, StateView) and isinstance(self._item, StateView)])
+        if self._item in self.view.selected_items and isinstance(self._item, NameView) and \
+                        event.state & gtk.gdk.CONTROL_MASK:
+            # self.view.unselect_item(self._item)
+            pass
         else:
-            if not event.state & gtk.gdk.CONTROL_MASK:
-                del self.view.selected_items
             self.view.focused_item = self._item
+            # remember items that should not be unselected
+            self._do_not_unselect = self._item
 
         if not self.view.is_focus():
             self.view.grab_focus()
@@ -97,6 +103,7 @@ class MoveItemTool(ItemTool):
         return True
 
     def on_button_release(self, event):
+        # print "on_release_button: ", self.__class__.__name__
 
         position_changed = False
         for inmotion in self._movable_items:
@@ -124,6 +131,16 @@ class MoveItemTool(ItemTool):
             if position_changed:
                 self._graphical_editor_view.emit('meta_data_changed', self.view.focused_item.parent.model,
                                                  "name_position", False)
+
+        if not position_changed:
+            if self._item in self.view.selected_items and event.state & gtk.gdk.CONTROL_MASK:
+                if not self._do_not_unselect is self._item:
+                    self.view.unselect_item(self._item)
+            else:
+                if not event.state & gtk.gdk.CONTROL_MASK:
+                    del self.view.selected_items
+                self.view.focused_item = self._item
+        self._do_not_unselect = None
 
         return super(MoveItemTool, self).on_button_release(event)
 
@@ -210,6 +227,7 @@ class MultiSelectionTool(RubberbandTool):
         self._graphical_editor_view = graphical_editor_view
 
     def on_button_press(self, event):
+        # print "on_button_press: ", self.__class__.__name__
         if event.state & gtk.gdk.SHIFT_MASK:
             return super(MultiSelectionTool, self).on_button_press(event)
         return False
@@ -223,22 +241,55 @@ class MultiSelectionTool(RubberbandTool):
             return True
 
     def on_button_release(self, event):
+        """Select or deselect rubber banded groups of items
+
+         The selection of elements is prior and never items are selected or deselected at the same time.
+         """
+        # print "on_release_press: ", self.__class__.__name__
         self.queue_draw(self.view)
         x0, y0, x1, y1 = self.x0, self.y0, self.x1, self.y1
         # Hold down Ctrl-key to add selection to current selection
         if event.state & gtk.gdk.CONTROL_MASK:
-            items_to_deselect = []
+            old_items_selected = []
         else:
-            items_to_deselect = list(self.view.selected_items)
-        self.view.select_in_rectangle((min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0)))
-
-        for item in self.view.selected_items:
-            if not isinstance(item, StateView):
-                items_to_deselect.append(item)
-
-        for item in items_to_deselect:
+            old_items_selected = list(self.view.selected_items)
+        for item in old_items_selected:
             if item in self.view.selected_items:
                 self.view.unselect_item(item)
+        self.view.select_in_rectangle((min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0)))
+
+        old_items_in_new_selection = [item in self.view.selected_items for item in old_items_selected]
+        actual_items_are_old_selection  = [item in old_items_selected for item in self.view.selected_items]
+        rubber_band_selection = list(self.view.selected_items)
+        new_selection = old_items_selected
+        if any(old_items_in_new_selection) and not all(actual_items_are_old_selection): # reselect elements
+            # add new  rubber band selection by preserving old state selection
+            for item in rubber_band_selection:
+                if item not in old_items_selected:
+                    old_items_selected.append(item)
+        else:
+            if not any(actual_items_are_old_selection):
+                # add rubber band selection
+                for item in rubber_band_selection:
+                    old_items_selected.append(item)
+            else:
+                # remove rubber band selection
+                for item in rubber_band_selection:
+                    old_items_selected.remove(item)
+
+        # unselect views that are not representing states or old states -> unselect all
+        items_intermediate_selected = list(old_items_selected) + list(rubber_band_selection)
+        for item in self.view.selected_items:
+            if not isinstance(item, StateView):
+                items_intermediate_selected.append(item)
+
+        for item in items_intermediate_selected:
+            if item in self.view.selected_items:
+                self.view.unselect_item(item)
+
+        # select actual selection
+        for item in new_selection:
+            self.view.select_item(item)
 
         return True
 
