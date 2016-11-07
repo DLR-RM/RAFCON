@@ -45,11 +45,15 @@ class SourceEditorController(EditorController):
     def register_view(self, view):
         super(SourceEditorController, self).register_view(view)
 
+        view['open_external_button'].connect('clicked', self.open_external_clicked)
         view['apply_button'].connect('clicked', self.apply_clicked)
         view['cancel_button'].connect('clicked', self.cancel_clicked)
+
         view['pylint_check_button'].set_active(global_gui_config.get_config_value('CHECK_PYTHON_FILES_WITH_PYLINT', False))
+
         view['pylint_check_button'].set_tooltip_text("Change global default value in GUI config.")
         view['apply_button'].set_tooltip_text(global_gui_config.get_config_value('SHORTCUTS')['apply'][0])
+        view['open_external_button'].set_tooltip_text("Open source in external editor.")
 
         if isinstance(self.model.state, LibraryState):
             view['pylint_check_button'].set_sensitive(False)
@@ -68,6 +72,37 @@ class SourceEditorController(EditorController):
     # ===============================================================
     def code_changed(self, source):
         self.view.apply_tag('default')
+        
+    def open_external_clicked(self, button):
+        logger.debug("Open_external was clicked")
+
+        def on_message_dialog_response_signal(widget, response_id, current_text):
+                if response_id == 42:
+                    global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', "gedit")
+                    global_gui_config.save_configuration()
+                widget.destroy()
+
+        file_path = self.model.state.get_file_system_path()
+
+        # global_gui_config.set_config_value
+        external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')
+
+        if not external_editor:
+            logger.debug("No external editor specified")
+
+            from rafcon.mvc.utils.dialog import RAFCONDialog
+            dialog = RAFCONDialog(parent=self.get_root_window())
+            message_string = "Please select editor"
+            dialog.add_action_widget(entry)
+            dialog.set_markup(message_string)
+            dialog.add_button("Set as default external editor", 42)
+            dialog.add_button("Cancel", 43)
+            dialog.finalize(on_message_dialog_response_signal, "nubnubububub")
+        else:
+            logger.debug("File opened with command: " + external_editor)
+            os.system(external_editor + " " + file_path + "/script.py")
+
+
 
     def apply_clicked(self, button):
         """Triggered when the Apply button in the source editor is clicked.
