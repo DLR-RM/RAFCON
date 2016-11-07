@@ -142,7 +142,7 @@ class ListViewController(ExtendedController):
         of maybe active a entry widget. If a entry widget is active the remove callback return with None.
         """
         if react_to_event(self.view, self.tree_view, event) and \
-                not (self.actual_entry_widget and is_event_of_key_string(event, 'Delete')):
+                not (self.actual_entry_widget and not is_event_of_key_string(event, 'Delete')):
             self.on_remove(None)
             return True
 
