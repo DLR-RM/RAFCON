@@ -11,10 +11,9 @@
 
 import gtk
 
-from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.utils.selection import ListViewController, ExtendedController
+from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 
-from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log
 from rafcon.utils import type_helpers
 
@@ -50,7 +49,6 @@ class GlobalVariableManagerController(ListViewController):
         super(GlobalVariableManagerController, self).__init__(model, view,
                                                               view['global_variable_tree_view'],
                                                               gtk.ListStore(str, str, str, str), logger)
-        self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(self.tree_view)
 
         self.global_variable_counter = 0
         self.list_store_iterators = {}
@@ -62,13 +60,13 @@ class GlobalVariableManagerController(ListViewController):
         view['value_text'].set_property('editable', True)
         view['type_text'].set_property('editable', True)
 
+        self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
         self._apply_value_on_edited_and_focus_out(view['name_text'], self.apply_new_global_variable_name)
         self._apply_value_on_edited_and_focus_out(view['value_text'], self.apply_new_global_variable_value)
         self._apply_value_on_edited_and_focus_out(view['type_text'], self.apply_new_global_variable_type)
-        view['new_global_variable_button'].connect('clicked', self.on_new_global_variable_button_clicked)
+        view['new_global_variable_button'].connect('clicked', self.on_add)
         view['delete_global_variable_button'].connect('clicked', self.on_remove)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
-        self.tab_edit_controller.register_view()
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -76,8 +74,8 @@ class GlobalVariableManagerController(ListViewController):
         :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
             between shortcuts and actions.
         """
-        shortcut_manager.add_callback_for_action("delete", self.on_delete_global_variable_button_clicked)
-        shortcut_manager.add_callback_for_action("add", self.on_new_global_variable_button_clicked)
+        shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)
+        shortcut_manager.add_callback_for_action("add", self.add_action_callback)
 
     def global_variable_is_editable(self, gv_name, intro_message='edit'):
         """Check whether global variable is locked
@@ -86,34 +84,24 @@ class GlobalVariableManagerController(ListViewController):
         :param str intro_message: Message which is used form a useful logger error message if needed
         :return:
         """
-        if gv_name not in self.list_store_iterators or \
-                not self.model.global_variable_manager.variable_exist(gv_name) or \
-                self.model.global_variable_manager.is_locked(gv_name):
-            message = ' if not existing' if not self.model.global_variable_manager.variable_exist(gv_name) else ''
-            message += ', while no iterator is registered for its row' if gv_name not in self.list_store_iterators else ''
-            message += ', while it is locked.' if self.model.global_variable_manager.is_locked(gv_name) else ''
-            logger.error("{2} of global variable '{0}' is not possible{1}".format(gv_name, message, intro_message))
+        if self.model.global_variable_manager.is_locked(gv_name):
+            logger.error("{1} of global variable '{0}' is not possible, as it is locked".format(gv_name, intro_message))
             return False
         return True
 
-    def on_new_global_variable_button_clicked(self, *event):
-        """Creates a new global variable with default values and selects its row
+    def on_add(self, widget, data=None):
+        """Create a global variable with default value and select its row
 
-        Triggered when the New button in the Global Variables tab is clicked.
+        Triggered when the add button in the global variables tab is clicked.
         """
-        if react_to_event(self.view, self.tree_view, event):
-            gv_name = "new_global_%s" % self.global_variable_counter
-            self.global_variable_counter += 1
-            try:
-                self.model.global_variable_manager.set_variable(gv_name, None)
-            except (RuntimeError, AttributeError, TypeError) as e:
-                logger.warning("Adding of new global variable '{0}' failed -> Exception:{1}".format(gv_name, e))
-            self.select_entry(gv_name)
-            return True
-
-    def on_delete_global_variable_button_clicked(self, *event):
-        if react_to_event(self.view, self.tree_view, event):
-            self.on_remove(None)
+        gv_name = "new_global_%s" % self.global_variable_counter
+        self.global_variable_counter += 1
+        try:
+            self.model.global_variable_manager.set_variable(gv_name, None)
+        except (RuntimeError, AttributeError, TypeError) as e:
+            logger.warning("Addition of new global variable '{0}' failed: {1}".format(gv_name, e))
+        self.select_entry(gv_name)
+        return True
 
     def remove_core_element(self, model):
         """Remove respective core element of handed global variable name
@@ -122,7 +110,8 @@ class GlobalVariableManagerController(ListViewController):
         :return:
         """
         gv_name = model
-        self.model.global_variable_manager.delete_variable(gv_name)
+        if self.global_variable_is_editable(gv_name, "Deletion"):
+            self.model.global_variable_manager.delete_variable(gv_name)
 
     def apply_new_global_variable_name(self, path, new_gv_name):
         """Change global variable name/key according handed string
@@ -165,36 +154,32 @@ class GlobalVariableManagerController(ListViewController):
         old_value = self.model.global_variable_manager.get_representation(gv_name)
 
         # preserve type especially if type=NoneType
-        if data_type in [type(old_value), type(None)]:
+        if issubclass(data_type, (type(old_value), type(None))):
             old_type = data_type
-            if data_type == type(None):
+            if issubclass(data_type, type(None)):
                 old_type = type(old_value)
-                logger.debug("Global variable list widget try to preserve type of variable {0} with type "
-                             "'NoneType'".format(gv_name))
+                logger.debug("Trying to parse '{}' to type '{}' of old global variable value '{}'".format(
+                    new_value_as_string, old_type.__name__, old_value))
             try:
                 new_value = type_helpers.convert_string_value_to_type_value(new_value_as_string, old_type)
             except (AttributeError, ValueError) as e:
-                if data_type == type(None):
+                if issubclass(data_type, type(None)):
                     new_value = new_value_as_string
-                    logger.warning("Value of global variable '{0}' with old value data type '{2}', with value '{3}' and"
-                                   " data type NoneType was changed to string '{1}'"
-                                   "".format(gv_name, new_value, type(old_value), old_value))
+                    logger.warning("New value '{}' stored as string, previous value '{}' of global variable '{}' was "
+                                   "of type '{}'".format(new_value, old_value, gv_name, type(old_value).__name__))
                 else:
-                    raise TypeError("Unexpected outcome of change value operation for global variable '{0}' and "
-                                    "handed value '{1}' type '{2}' -> raised error {3}"
-                                    "".format(gv_name, new_value_as_string, type(new_value_as_string), e))
-
+                    logger.warning("Restoring old value of global variable '{}': {}".format(gv_name, e))
+                    return
         else:
-            raise TypeError("Global variable manager has had no consistent value data type '{0}' "
-                            "and data type '{1}' for variable '{2}'.".format(data_type,
-                                                                             [type(old_value), type(None)],
-                                                                             gv_name))
+            logger.error("Global variable '{}' with inconsistent value data type '{}' and data type '{}'".format(
+                gv_name, [type(old_value).__name__, type(None).__name__], data_type.__name__))
+            return
 
         try:
             self.model.global_variable_manager.set_variable(gv_name, new_value, data_type=data_type)
         except (RuntimeError, AttributeError, TypeError) as e:
-            logger.error("Error while setting global variable {1} to value {2} -> raised error {0}"
-                         "".format(gv_name, new_value, e))
+            logger.error("Error while setting global variable '{0}' to value '{1}' -> Exception: {2}".format(
+                gv_name, new_value, e))
 
     def apply_new_global_variable_type(self, path, new_data_type_as_string):
         """Change global variable value according handed string
@@ -220,29 +205,28 @@ class GlobalVariableManagerController(ListViewController):
         assert isinstance(new_data_type, type)
 
         # convert old value
-        if new_data_type == type(None):
+        if issubclass(new_data_type, type(None)):
             new_value = old_value
         else:  # new_data_type in [str, float, int, list, dict, tuple, bool]:
             try:
                 new_value = new_data_type(old_value)
             except (ValueError, TypeError) as e:
                 new_value = new_data_type()
-                logger.info("Global variable '{0}' old value '{1}' is not convertible to new data type '{2}'"
-                            "therefore becomes empty new data type object '{3}' -> raised TypeError: {4}"
-                            "".format(gv_name, old_value, new_data_type, new_value, e))
+                logger.warn("Old value '{}' of global variable '{}' could not be parsed to new type '{}' and is "
+                            "therefore resetted: {}".format(old_value, gv_name, new_data_type.__name__, e))
 
         # set value in global variable manager
         try:
             self.model.global_variable_manager.set_variable(gv_name, new_value, data_type=new_data_type)
         except (ValueError, RuntimeError, TypeError) as e:
-            logger.error("Could not set new value unexpected failure {0} to value {1} -> raised error {2}"
+            logger.error("Could not set new value unexpected failure '{0}' to value '{1}' -> Exception: {2}"
                          "".format(gv_name, new_value, e))
 
     @ListViewController.observe("global_variable_manager", after=True)
-    def assign_notification_state(self, model, prop_name, info):
+    def assign_notification_from_gvm(self, model, prop_name, info):
         """Handles gtkmvc notification from global variable manager
 
-        Calls update of hole list store in case new variable was added. Avoids to run updates without reasonable change.
+        Calls update of whole list store in case new variable was added. Avoids to run updates without reasonable change.
         Holds tree store and updates row elements if is-locked or global variable value changes.
         """
 

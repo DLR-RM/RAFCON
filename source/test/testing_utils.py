@@ -50,6 +50,12 @@ def remove_all_libraries():
     rafcon.statemachine.singleton.library_manager.initialize()
 
 
+def remove_all_gvm_variables():
+    from rafcon.statemachine.singleton import global_variable_manager
+    for gv_name in global_variable_manager.get_all_keys():
+        global_variable_manager.delete_variable(gv_name)
+
+
 def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_errors=0):
     if caplog is None:
         return
@@ -107,7 +113,6 @@ def start_rafcon():
     environ['RAFCON_LIB_PATH'] = join(dirname(RAFCON_PATH), 'libraries')
     rafcon.statemachine.singleton.library_manager.initialize()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-
 
 def wait_for_gui():
     import gtk

@@ -17,11 +17,10 @@ from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDa
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils.selection import ListViewController
+from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 
-from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS, RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log, type_helpers
 
@@ -898,29 +897,13 @@ class StateDataFlowsEditorController(ExtendedController):
             self.df_list_ctrl.view_dict['data_flows_internal'] = False
             view['internal_d_checkbutton'].set_active(False)
 
-    def register_adapters(self):
-        """Adapters should be registered in this method call
-
-        Each property of the state should have its own adapter, connecting a label in the View with the attribute of
-        the State.
-        """
-        # self.adapt(self.__state_property_adapter("name", "input_name"))
-
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
         :param rafcon.mvc.shortcut_manager.ShortcutManager shortcut_manager:
         """
-        shortcut_manager.add_callback_for_action("delete", self.remove_data_flow)
-        shortcut_manager.add_callback_for_action("add", self.add_data_flow)
-
-    def add_data_flow(self, *event):
-        if react_to_event(self.view, self.view.data_flows_listView.tree_view, event):
-            return self.df_list_ctrl.on_add(None)
-
-    def remove_data_flow(self, *event):
-        if react_to_event(self.view, self.view.data_flows_listView.tree_view, event):
-            return self.df_list_ctrl.on_remove(None)
+        shortcut_manager.add_callback_for_action("delete", self.df_list_ctrl.remove_action_callback)
+        shortcut_manager.add_callback_for_action("add", self.df_list_ctrl.add_action_callback)
 
     def toggled_button(self, button, name=None):
 
@@ -936,5 +919,4 @@ class StateDataFlowsEditorController(ExtendedController):
             self.df_list_ctrl.view_dict['data_flows_internal'] = False
             button.set_active(False)
 
-        self.df_list_ctrl._update_internal_data_base()
-        self.df_list_ctrl._update_tree_store()
+        self.df_list_ctrl.update()

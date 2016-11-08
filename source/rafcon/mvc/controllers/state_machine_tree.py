@@ -15,7 +15,7 @@ import gobject
 
 from rafcon.statemachine.enums import StateType
 
-from rafcon.mvc.controllers.utils.selection import TreeViewController
+from rafcon.mvc.controllers.utils.tree_view_controller import TreeViewController
 from rafcon.mvc.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel

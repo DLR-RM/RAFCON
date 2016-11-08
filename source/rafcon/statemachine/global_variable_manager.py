@@ -83,8 +83,7 @@ class GlobalVariableManager(Observable):
         if unlock:
             self.unlock_variable(key, access_key)
         self.__dictionary_lock.release()
-        logger.debug("Global variable %s was set to %s with data type %s (value), %s (data_type)"
-                     "" % (key, str(value), type(value).__name__, data_type.__name__))
+        logger.debug("Global variable '{}' was set to value '{}' with type '{}'".format(key, value, data_type.__name__))
 
     def get_variable(self, key, per_reference=None, access_key=None, default=None):
         """Fetches the value of a global variable
@@ -145,6 +144,9 @@ class GlobalVariableManager(Observable):
         :param key: the key of the global variable to be deleted
         :raises exceptions.AttributeError:  if the global variable does not exist
         """
+        if self.is_locked(key):
+            raise RuntimeError("Global variable is locked")
+
         self.__dictionary_lock.acquire()
         if key in self.__global_variable_dictionary:
             access_key = self.lock_variable(key)

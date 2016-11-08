@@ -15,11 +15,9 @@ from gtk import TreeViewColumn, CellRendererToggle
 
 from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.utils.selection import ListViewController
+from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 
-from rafcon.mvc.gui_helper import react_to_event
 from rafcon.mvc.utils.comparison import compare_variables
 from rafcon.utils import log
 
@@ -43,8 +41,6 @@ class DataPortListController(ListViewController):
         self.type = io_type
         self.state_data_port_dict = None
 
-        self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(self.tree_view)
-
         if self.type == "input":
             self.state_data_port_dict = self.model.state.input_data_ports
             self.data_port_model_list = self.model.input_data_ports
@@ -61,8 +57,11 @@ class DataPortListController(ListViewController):
     def get_new_list_store():
         return ListStore(str, str, str, int, bool, str, gobject.TYPE_PYOBJECT)
 
-    def default_value_renderer(self, tree_view_column, cell, model, iter):
-        """
+    def default_value_cell_data_func(self, tree_view_column, cell, model, iter):
+        """Function set renderer properties for every single cell independently
+
+        The function controls the editable and color scheme for every cell in the default value column according
+        the use_runtime_value flag and whether the state is a library state.
 
         :param tree_view_column: the gtk.TreeViewColumn to be rendered
         :param cell: the current CellRenderer
@@ -100,7 +99,7 @@ class DataPortListController(ListViewController):
             self._apply_value_on_edited_and_focus_out(view['default_value_text'], self.apply_new_data_port_default_value)
             if isinstance(self.model.state, LibraryState):
                 view['default_value_col'].set_title("Used value")
-            view['default_value_col'].set_cell_data_func(view['default_value_text'], self.default_value_renderer)
+            view['default_value_col'].set_cell_data_func(view['default_value_text'], self.default_value_cell_data_func)
 
         self._apply_value_on_edited_and_focus_out(view['name_text'], self.apply_new_data_port_name)
         self._apply_value_on_edited_and_focus_out(view['data_type_text'], self.apply_new_data_port_type)
@@ -117,12 +116,7 @@ class DataPortListController(ListViewController):
             view['use_runtime_value_toggle'].set_property("activatable", True)
             view['use_runtime_value_toggle'].connect("toggled", self.on_use_runtime_value_toggled)
 
-        self.tab_edit_controller.register_view()
         self.reload_data_port_list_store()
-
-    def register_adapters(self):
-        """Adapters should be registered in this method call"""
-        pass
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -131,22 +125,8 @@ class DataPortListController(ListViewController):
             between shortcuts and actions.
         """
         if not isinstance(self.model.state, LibraryState):
-            shortcut_manager.add_callback_for_action("delete", self.remove_port)
-            shortcut_manager.add_callback_for_action("add", self.add_port)
-
-    def add_port(self, *event):
-        """Callback method for add action
-        """
-        if react_to_event(self.view, self.view[self.view.top], event) and not isinstance(self.model.state, LibraryState):
-            self.on_new_port_button_clicked(None)
-            return True
-
-    def remove_port(self, *event):
-        """Callback method for remove action
-        """
-        if react_to_event(self.view, self.view[self.view.top], event) and not isinstance(self.model.state, LibraryState):
-            self.on_remove(None)
-            return True
+            shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)
+            shortcut_manager.add_callback_for_action("add", self.add_action_callback)
 
     def get_state_machine_selection(self):
         # print type(self).__name__, "get state machine selection"
@@ -187,9 +167,8 @@ class DataPortListController(ListViewController):
                 self.model is model:
             self.data_ports_changed(model, "{}_data_ports".format(self.type), info)
 
-    def on_new_port_button_clicked(self, widget, data=None):
+    def on_add(self, widget, data=None):
         """Add a new port with default values and select it"""
-
         if self.type == "input":
             num_data_ports = len(self.model.state.input_data_ports)
         else:
@@ -226,7 +205,7 @@ class DataPortListController(ListViewController):
         """
         # logger.info("on_use_runtime_value_edited widget: {0} path: {1}".format(widget, path))
         try:
-            data_port_id = self.list_store[int(path)][self.ID_STORAGE_ID]
+            data_port_id = self.list_store[path][self.ID_STORAGE_ID]
             if self.type == "input":
                 current_value = self.model.state.use_runtime_value_input_data_ports[data_port_id]
                 self.model.state.set_use_input_runtime_value(data_port_id, not current_value)

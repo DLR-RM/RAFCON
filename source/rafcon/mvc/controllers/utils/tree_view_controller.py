@@ -1,8 +1,10 @@
 import gtk
 import glib
 from gtk.gdk import CONTROL_MASK, SHIFT_MASK
+from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.gui_helper import react_to_event, is_event_of_key_string
 
 from rafcon.utils import log
 module_logger = log.get_logger(__name__)
@@ -12,7 +14,7 @@ class ListViewController(ExtendedController):
     """Base class for controller having a gtk.Tree view with a gtk.ListStore
 
     The class implements methods for e.g. handling (multi-)selection and offers default callback methods for various
-    signals.
+    signals and includes a move and edit by tab-key feature.
 
     :ivar gtk.ListStore list_store: List store that set by inherit class
     :ivar gtk.TreeView tree_view: Tree view that set by inherit class
@@ -32,10 +34,13 @@ class ListViewController(ExtendedController):
         self._do_selection_update = False
         self._last_path_selection = None
         self._setup_tree_view(tree_view, list_store)
+        self.actual_entry_widget = None
+        self.widget_columns = self.tree_view.get_columns()
 
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
         self.tree_view.connect('button_press_event', self.mouse_click)
+        self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
         self._tree_selection.connect('changed', self.selection_changed)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         self.update_selection_sm_prior()
@@ -57,14 +62,25 @@ class ListViewController(ExtendedController):
         """
         assert isinstance(renderer, gtk.CellRenderer)
 
+        def remove_handler(widget, data_name):
+            """Remove handler from given widget
+
+            :param gtk.Widget widget: Widget from which a handler is to be removed
+            :param data_name: Name of the data of the widget in which the handler id is stored
+            """
+            handler_id = widget.get_data(data_name)
+            if widget.handler_is_connected(handler_id):
+                widget.disconnect(handler_id)
+
         def on_editing_canceled(renderer):
             """Disconnects the focus-out-event handler of cancelled editable
 
             :param gtk.CellRendererText renderer: The cell renderer who's editing was cancelled
             """
             editable = renderer.get_data("editable")
-            editable.disconnect(editable.get_data("focus_out_handler_id"))
-            renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
+            remove_handler(editable, "focus_out_handler_id")
+            remove_handler(renderer, "editing_cancelled_handler_id")
+            self.actual_entry_widget = None
 
         def on_focus_out(entry, event):
             """Applies the changes to the entry
@@ -73,8 +89,8 @@ class ListViewController(ExtendedController):
             :param gtk.Event event: Event object with information about the event
             """
             editable = renderer.get_data("editable")
-            editable.disconnect(editable.get_data("focus_out_handler_id"))
-            renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
+            remove_handler(editable, "focus_out_handler_id")
+            remove_handler(renderer, "editing_cancelled_handler_id")
 
             if self.get_path() is None:
                 return
@@ -95,6 +111,7 @@ class ListViewController(ExtendedController):
             renderer.set_data("editable", editable)
             renderer.set_data("editing_cancelled_handler_id", editing_cancelled_handler_id)
             editable.set_data("focus_out_handler_id", focus_out_handler_id)
+            self.actual_entry_widget = editable
 
         def on_edited(renderer, path, new_value_str):
             """Calls the apply method with the new value
@@ -104,12 +121,34 @@ class ListViewController(ExtendedController):
             :param str new_value_str: The new value as string
             """
             editable = renderer.get_data("editable")
-            editable.disconnect(editable.get_data("focus_out_handler_id"))
-            renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
+            remove_handler(editable, "focus_out_handler_id")
+            remove_handler(renderer, "editing_cancelled_handler_id")
             apply_method(path, new_value_str)
+            self.actual_entry_widget = None
 
         renderer.connect('editing-started', on_editing_started)
         renderer.connect('edited', on_edited)
+
+    def add_action_callback(self, *event):
+        """Callback method for add action"""
+        if react_to_event(self.view, self.tree_view, event):
+            self.on_add(None)
+            return True
+
+    def remove_action_callback(self, *event):
+        """Callback method for remove action
+
+        The method checks whether a shortcut ('Delete') is in the gui config model which shadow the delete functionality
+        of maybe active a entry widget. If a entry widget is active the remove callback return with None.
+        """
+        if react_to_event(self.view, self.tree_view, event) and \
+                not (self.actual_entry_widget and not is_event_of_key_string(event, 'Delete')):
+            self.on_remove(None)
+            return True
+
+    def on_add(self, widget, data=None):
+        """An abstract add method for a respective new core element and final selection of those"""
+        raise NotImplementedError
 
     def remove_core_element(self, model):
         """An abstract remove method that removes respective core element by handed core element id
@@ -296,6 +335,18 @@ class ListViewController(ExtendedController):
                     self.tree_view.get_selection().select_path((row_num, ))
                 break
 
+    def get_path_for_core_element(self, core_element_id):
+        """Get path to the row representing core element described by handed core_element_id
+
+        :param core_element_id: Core element identifier used in the respective list store column
+        :rtype: tuple
+        :return: path
+        """
+        for row_num, element_row in enumerate(self.list_store):
+            # Compare data port ids
+            if element_row[self.ID_STORAGE_ID] == core_element_id:
+                return tuple([row_num])
+
     def get_list_store_row_from_cursor_selection(self):
         """Returns the list_store_row of the currently by cursor selected row entry
 
@@ -314,6 +365,73 @@ class ListViewController(ExtendedController):
         """
         # the cursor is a tuple containing the current path and the focused column
         return self.tree_view.get_cursor()[0]
+
+    def tree_view_keypress_callback(self, widget, event):
+        """Tab back and forward tab-key motion in list widget
+
+         The method introduce motion and edit functionality by using "tab"- or "shift-tab"-key for a gtk.TreeView.
+         It is designed to work with a gtk.TreeView which model is a gtk.ListStore and only uses text cell renderer.
+         Additional, the TreeView is assumed to be used as a list not as a tree.
+         With the "tab"-key the cell on the right site of the actual focused cell is started to be edit. Changes in the
+         gtk.Entry-Widget are confirmed by emitting a 'edited'-signal. If the row ends the edit process continues
+         with the first cell of the next row. With the "shift-tab"-key the inverse functionality of the "tab"-key is
+         provided.
+         The Controller over steps not editable cells.
+
+        :param gtk.TreeView widget: The tree view the controller use
+        :param gtk.gdk.Event event: The key press event
+        :return:
+        """
+        # self._logger("key_value: " + str(event.keyval))
+
+        if event.keyval == Key_Tab or event.keyval == ISO_Left_Tab:
+            [path, focus_column] = self.tree_view.get_cursor()
+            if not path:
+                return False
+            core_element_id = self.list_store[path][self.ID_STORAGE_ID]
+            # finish active edit process
+            if self.actual_entry_widget is not None:
+                text = self.actual_entry_widget.get_buffer().get_text()
+                if focus_column in self.widget_columns:
+                    focus_column.get_cell_renderers()[0].emit('edited', path[0], text)
+
+            # row could be updated by other call_backs caused by emitting 'edited' signal but selection stays an editable neighbor
+            path = self.get_path_for_core_element(core_element_id)
+            if event.keyval == Key_Tab:
+                # logger.info("move right")
+                direction = +1
+            else:
+                # logger.info("move left")
+                direction = -1
+
+            # get next row_id for focus
+            if direction < 0 and focus_column is self.widget_columns[0] \
+                    or direction > 0 and focus_column is self.widget_columns[-1]:
+                if direction < 0 < path[0] or direction > 0 and not path[0] + 1 > len(self.widget_columns):
+                    next_row = path[0] + direction
+                else:
+                    return False
+            else:
+                next_row = path[0]
+            # get next column_id for focus
+            focus_column_id = self.widget_columns.index(focus_column)
+            if focus_column_id is not None:
+                # search all columns for next editable cell renderer
+                for index in range(len(self.tree_view.get_model())):
+                    test_id = focus_column_id + direction * index + direction
+                    next_focus_column_id = test_id % len(self.widget_columns)
+                    if test_id > len(self.widget_columns) - 1 or test_id < 0:
+                        next_row = path[0] + direction
+                        if next_row < 0 or next_row > len(self.tree_view.get_model()) - 1:
+                            return False
+
+                    if self.widget_columns[next_focus_column_id].get_cell_renderers()[0].get_property('editable'):
+                        break
+            else:
+                return False
+
+            self.tree_view.set_cursor(next_row, self.widget_columns[next_focus_column_id], start_editing=True)
+            return True
 
 
 class TreeViewController(ExtendedController):
@@ -381,16 +499,17 @@ class TreeViewController(ExtendedController):
     def iter_tree_with_handed_function(self, function, *function_args):
         """Iterate tree view with condition check function"""
         def iter_all_children(state_row_iter, function, function_args):
-            function(state_row_iter, *function_args)
 
             if isinstance(state_row_iter, gtk.TreeIter):
+                function(state_row_iter, *function_args)
                 for n in reversed(range(self.tree_store.iter_n_children(state_row_iter))):
                     child_iter = self.tree_store.iter_nth_child(state_row_iter, n)
                     iter_all_children(child_iter, function, function_args)
             else:
-                self._logger.warning("Iter has to be TreeIter")
+                self._logger.warning("Iter has to be TreeIter -> handed argument is: {0}".format(state_row_iter))
 
-        iter_all_children(self.tree_store.get_iter_root(), function, function_args)
+        if self.tree_store.get_iter_root():
+            iter_all_children(self.tree_store.get_iter_root(), function, function_args)
 
     def update_selection_sm_prior_condition(self, state_row_iter, selected_model_list, sm_selected_model_list):
         """State machine prior update of tree selection for one tree model row"""
@@ -425,6 +544,13 @@ class TreeViewController(ExtendedController):
             # print type(self).__name__, "select model", model
             sm_selection.add(model)
 
+    def check_selection_consistency(self, sm_check=True, tree_check=True):
+        tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
+        if not ((all([model in selected_model_list for model in sm_selected_model_list]) or not sm_check) and
+                (all([model in sm_selected_model_list for model in selected_model_list]) or not tree_check)):
+            self._logger.warning("Elements of sm and tree selection are not identical: \ntree: {0}\nsm:   {1}"
+                                 "".format(selected_model_list, sm_selected_model_list))
+
     def update_selection_self_prior(self):
         """Tree view prior update of state machine selection"""
         if self._do_selection_update:
@@ -438,9 +564,8 @@ class TreeViewController(ExtendedController):
         self._do_selection_update = True
         self.iter_tree_with_handed_function(self.update_selection_self_prior_condition,
                                             sm_selection, selected_model_list, sm_selected_model_list)
-        # tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        # print selected_model_list, sm_selected_model_list
-
+        # TODO check why sometimes not consistent with sm selection. e.g while modification history test
+        self.check_selection_consistency(sm_check=False)
         self._do_selection_update = False
 
     def update_selection_sm_prior(self):
@@ -456,8 +581,7 @@ class TreeViewController(ExtendedController):
         self._do_selection_update = True
         self.iter_tree_with_handed_function(self.update_selection_sm_prior_condition,
                                             selected_model_list, sm_selected_model_list)
-        # tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        # print selected_model_list, sm_selected_model_list
+        self.check_selection_consistency()
         self._do_selection_update = False
 
     def selection_changed(self, widget, event=None):

@@ -13,11 +13,9 @@ import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.mvc.controllers.utils.tab_key import MoveAndEditWithTabKeyListFeatureController
-from rafcon.mvc.controllers.utils.selection import ListViewController
+from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
 from rafcon.mvc.models.container_state import ContainerStateModel
 
-from rafcon.mvc.gui_helper import react_to_event
 from rafcon.mvc.utils.comparison import compare_variables
 from rafcon.utils import log
 
@@ -41,8 +39,6 @@ class ScopedVariableListController(ListViewController):
         """Constructor"""
         super(ScopedVariableListController, self).__init__(model, view, view.get_top_widget(),
                                                            self.get_new_list_store(), logger)
-
-        self.tab_edit_controller = MoveAndEditWithTabKeyListFeatureController(view.get_top_widget())
 
         self.next_focus_column = {}
         self.prev_focus_column = {}
@@ -76,14 +72,8 @@ class ScopedVariableListController(ListViewController):
         self._apply_value_on_edited_and_focus_out(view['name_text'], self.apply_new_scoped_variable_name)
         self._apply_value_on_edited_and_focus_out(view['data_type_text'], self.apply_new_scoped_variable_type)
 
-        self.tab_edit_controller.register_view()
-
         if isinstance(self.model, ContainerStateModel):
             self.reload_scoped_variables_list_store()
-
-    def register_adapters(self):
-        """Adapters should be registered in this method call"""
-        pass
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -92,16 +82,8 @@ class ScopedVariableListController(ListViewController):
             between shortcuts and actions.
         """
         if not isinstance(self.model.state, LibraryState):
-            shortcut_manager.add_callback_for_action("delete", self.remove_port)
-            shortcut_manager.add_callback_for_action("add", self.add_port)
-
-    def add_port(self, *event):
-        if react_to_event(self.view, self.view[self.view.top], event) and not isinstance(self.model.state, LibraryState):
-            return self.on_new_scoped_variable_button_clicked(None)
-
-    def remove_port(self, *event):
-        if react_to_event(self.view, self.view[self.view.top], event) and not isinstance(self.model.state, LibraryState):
-            return self.on_remove(None)
+            shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)
+            shortcut_manager.add_callback_for_action("add", self.add_action_callback)
 
     def get_state_machine_selection(self):
         # print type(self).__name__, "get state machine selection"
@@ -125,10 +107,10 @@ class ScopedVariableListController(ListViewController):
         if selected_data_port_ids:
             [self.select_entry(selected_data_port_id, False) for selected_data_port_id in selected_data_port_ids]
 
-    def on_new_scoped_variable_button_clicked(self, widget, data=None):
+    def on_add(self, widget, data=None):
         """Create a new scoped variable with default values"""
-        num_data_ports = len(self.model.state.scoped_variables)
         if isinstance(self.model, ContainerStateModel):
+            num_data_ports = len(self.model.state.scoped_variables)
             data_port_id = None
             for run_id in range(num_data_ports + 1, 0, -1):
                 try:
