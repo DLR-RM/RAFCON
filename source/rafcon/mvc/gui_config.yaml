@@ -40,6 +40,8 @@ AUTO_APPLY_SOURCE_CODE_CHANGES: True
 
 CHECK_PYTHON_FILES_WITH_PYLINT: False
 
+DEFAULT_EXTERNAL_EDITOR:
+
 SHORTCUTS:
     abort: Escape
     add: <Control>A             # In graphical editor: add execution state
