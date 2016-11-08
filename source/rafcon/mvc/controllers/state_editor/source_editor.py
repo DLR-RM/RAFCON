@@ -79,38 +79,23 @@ class SourceEditorController(EditorController):
         self.view.apply_tag('default')
         
     def open_external_clicked(self, button):
-        logger.debug("Open_external was clicked")
-
-        def on_message_dialog_response_signal(widget, response_id, path="gedit"):
-                if response_id is 42:
-                    global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', path)
-                    global_gui_config.save_configuration()
-
-                widget.destroy()
 
         file_path = self.model.state.get_file_system_path()
 
-        # global_gui_config.set_config_value
         external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')
 
         if not external_editor:
             logger.debug("No external editor specified")
 
-            # from rafcon.mvc.utils.dialog import RAFCONDialog
             from rafcon.mvc.utils.text_input import RAFCONTextInput
-            # dialog = RAFCONDialog(parent=self.get_root_window())
-            dia = RAFCONTextInput()
             message_string = "Please select external editor"
             entry_sample_text = "<editor shell command>"
-            dia.setup(message_string, entry_sample_text)
+            text_input = RAFCONTextInput(window_title=message_string,content=entry_sample_text)
 
-            # dialog.set_markup(message_string)
-            # dialog.add_button("Set as default external editor", 42)
-            # logger.debug(dia)
-            # dialog.add_button("Cancel", 44)
-            # dialog.finalize(on_message_dialog_response_signal, "gedit")
+            text_input.setup()
+
         else:
-            logger.debug("File opened with command: " + external_editor)
+            logger.debug("File opened with command: {}".format(external_editor))
             os.system(external_editor + " " + file_path + "/script.py")
 
     def apply_clicked(self, button):
