@@ -80,23 +80,34 @@ class SourceEditorController(EditorController):
         
     def open_external_clicked(self, button):
 
-        file_path = self.model.state.get_file_system_path()
-
         external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')
 
+        def open_file_in_editor(command):
+            file_path = self.model.state.get_file_system_path()
+
+            logger.debug("File opened with command: {}".format(command))
+            os.system(command + " " + file_path + "/script.py &")
+
         if not external_editor:
-            logger.debug("No external editor specified")
 
             from rafcon.mvc.utils.text_input import RAFCONTextInput
             message_string = "Please select external editor"
-            entry_sample_text = "<editor shell command>"
-            text_input = RAFCONTextInput(window_title=message_string,content=entry_sample_text)
+            entry_sample_text = "<shell command>"
+            widget_size = [550, 50]
 
-            text_input.setup()
+            text_input = RAFCONTextInput(size=widget_size, window_title=message_string,content=entry_sample_text)
 
+            text_input.add_button('Apply', 1)
+            text_input.add_button('Discard', 0)
+            response = text_input.run()
+
+            if response:
+                text_in_field = text_input.return_text()
+                global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', text_in_field)
+                open_file_in_editor(text_in_field)
+            text_input.destroy()
         else:
-            logger.debug("File opened with command: {}".format(external_editor))
-            os.system(external_editor + " " + file_path + "/script.py")
+            open_file_in_editor(external_editor)
 
     def apply_clicked(self, button):
         """Triggered when the Apply button in the source editor is clicked.
