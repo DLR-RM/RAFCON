@@ -22,6 +22,7 @@ from gtk import DEST_DEFAULT_ALL
 import gobject
 
 from rafcon.statemachine.enums import StateType, StateExecutionState
+from rafcon.statemachine.decorators import lock_state_machine
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
@@ -231,6 +232,7 @@ class GraphicalEditorController(ExtendedController):
             self.root_state_m = model.root_state
             self._redraw()
 
+    @lock_state_machine
     @ExtendedController.observe("selection", after=True)
     def selection_change(self, model, prop_name, info):
         """Called when the selection was changed externally
@@ -298,6 +300,7 @@ class GraphicalEditorController(ExtendedController):
             else:
                 return True  # Causes the periodic timer to continue
 
+    @lock_state_machine
     def _on_key_press(self, widget, event):
         key_name = keyval_name(event.keyval)
         if key_name == "Control_L" or key_name == "Control_R":
@@ -309,6 +312,7 @@ class GraphicalEditorController(ExtendedController):
         elif key_name == "space":
             self.space_bar = True
 
+    @lock_state_machine
     def _on_key_release(self, widget, event):
         key_name = keyval_name(event.keyval)
         if key_name == "Control_L" or key_name == "Control_R":
@@ -320,6 +324,7 @@ class GraphicalEditorController(ExtendedController):
         elif key_name == "space":
             self.space_bar = False
 
+    @lock_state_machine
     def _on_mouse_press(self, widget, event):
         """Triggered when the mouse is pressed
 
@@ -444,6 +449,7 @@ class GraphicalEditorController(ExtendedController):
                 if not waypoint_removed:
                     self._add_waypoint(clicked_model, click)
 
+    @lock_state_machine
     def _on_mouse_release(self, widget, event):
         """Triggered when a mouse button is being released
 
@@ -493,6 +499,7 @@ class GraphicalEditorController(ExtendedController):
 
         self._redraw()
 
+    @lock_state_machine
     def _on_mouse_motion(self, widget, event):
         """Triggered when the mouse is moved
 
@@ -643,6 +650,7 @@ class GraphicalEditorController(ExtendedController):
         self.mouse_move_last_pos = (event.x, event.y)
         self.mouse_move_last_coords = mouse_current_coord
 
+    @lock_state_machine
     def _on_scroll(self, widget, event):
         """Triggered when the mouse wheel is turned
 
@@ -653,6 +661,7 @@ class GraphicalEditorController(ExtendedController):
         """
         self._handle_zooming((event.x, event.y), event.direction)
 
+    @lock_state_machine
     def on_drag_data_received(self, widget, context, x, y, data, info, time):
         """Receives state_id from LibraryTree and moves the state to the position of the mouse
 
@@ -672,6 +681,7 @@ class GraphicalEditorController(ExtendedController):
         else:
             logger.warning('Could not select state at drag-position received.')
 
+    @lock_state_machine
     def on_drag_motion(self, widget, context, x, y, time):
         """Changes the selection on mouse over during drag motion
 
@@ -705,6 +715,7 @@ class GraphicalEditorController(ExtendedController):
                 pos_y = min(state_temp['pos'][1], state_temp['pos'][1] - state_meta['size'][1] + child_size[1])
         return pos_x, pos_y
 
+    @lock_state_machine
     def _check_for_waypoint_selection(self, selected_model, coords):
         """Check whether a waypoint was clicked on
 
@@ -781,6 +792,7 @@ class GraphicalEditorController(ExtendedController):
                     return port_m, "outer", True
         return None, None, False
 
+    @lock_state_machine
     def _check_for_resizer_selection(self, selected_model, coords):
         """Check whether a resizer (handle to resize a state) was clicked on
 
@@ -802,6 +814,7 @@ class GraphicalEditorController(ExtendedController):
             if point_in_triangle(coords, p1, p2, p3):
                 self.selected_resizer = selected_model
 
+    @lock_state_machine
     def _check_for_multi_selection(self):
         """Select all models beneath the selection frame
 
@@ -854,6 +867,7 @@ class GraphicalEditorController(ExtendedController):
         self.multi_selection_started = False
         self.model.temp['gui']['editor']['selection_frame'] = None
 
+    @lock_state_machine
     def _check_for_waypoint_removal(self, coords, connection_m):
         """Checks and removes a waypoint if necessary
 
@@ -876,6 +890,7 @@ class GraphicalEditorController(ExtendedController):
                 return True
         return False
 
+    @lock_state_machine
     def _draw_multi_selection_frame(self):
         """Shows a selection frame over the state machine
         """
@@ -884,6 +899,7 @@ class GraphicalEditorController(ExtendedController):
         self.model.temp['gui']['editor']['selection_frame'] = [corner1, corner2]
         self._redraw()
 
+    @lock_state_machine
     def _add_waypoint(self, connection_m, coords):
         """Adds a waypoint to the given connection
 
@@ -923,6 +939,7 @@ class GraphicalEditorController(ExtendedController):
         self._publish_changes(connection_m, "waypoint_add", False)
         self._redraw()
 
+    @lock_state_machine
     def _create_new_transition(self, to_state_m, to_outcome_id=None):
         """Tries to create a new transition
 
@@ -972,6 +989,7 @@ class GraphicalEditorController(ExtendedController):
 
         self._abort()
 
+    @lock_state_machine
     def _create_new_data_flow(self, target_port_m):
         """Tries to create a new data flow
 
@@ -1008,6 +1026,7 @@ class GraphicalEditorController(ExtendedController):
 
         self._abort()
 
+    @lock_state_machine
     def _move_state(self, state_m, new_pos, redraw=True, publish_changes=True, combined_action=False):
         """Move the state to the given position
 
@@ -1041,6 +1060,7 @@ class GraphicalEditorController(ExtendedController):
         if redraw:
             self._redraw()
 
+    @lock_state_machine
     def _move_data_port(self, port_m, new_pos, redraw=True, publish_changes=True):
         """Move the port to the given position
 
@@ -1074,6 +1094,7 @@ class GraphicalEditorController(ExtendedController):
         if redraw:
             self._redraw()
 
+    @lock_state_machine
     def _move_in_direction(self, direction, key, modifier):
         """Move the current selection into the given direction
 
@@ -1138,6 +1159,7 @@ class GraphicalEditorController(ExtendedController):
             return True  # Prevent shortcut from being passed to GTK
         return False  # Allow passing of shortcut
 
+    @lock_state_machine
     def _move_waypoint(self, connection_m, waypoint_id, new_pos, snap=False, redraw=True, publish_changes=False):
         """Moves the currently selected waypoint to the given position
 
@@ -1210,6 +1232,7 @@ class GraphicalEditorController(ExtendedController):
         if redraw:
             self._redraw()
 
+    @lock_state_machine
     def _resize_state(self, state_m, new_corner_pos, keep_ratio=False, resize_content=False, publish_changes=False,
                       redraw=True):
         """Resize the state by the given delta width and height
@@ -1370,6 +1393,7 @@ class GraphicalEditorController(ExtendedController):
         if redraw:
             self._redraw()
 
+    @lock_state_machine
     def _move_view(self, rel_motion, opengl_coords=False):
         """Move the view according to the relative coordinates
 
@@ -1392,6 +1416,7 @@ class GraphicalEditorController(ExtendedController):
         self.view.editor.top -= rel_motion[1]
         self._redraw()
 
+    @lock_state_machine
     def _handle_zooming(self, pos, direction):
         """Zooms in or out at a given position
 
@@ -1428,6 +1453,7 @@ class GraphicalEditorController(ExtendedController):
             # Move view to keep the previous mouse position in the view
             self._move_view(diff, opengl_coords=True)
 
+    @lock_state_machine
     def draw_state_machine(self):
         """Draws remaining components of the state machine
 
@@ -1439,6 +1465,7 @@ class GraphicalEditorController(ExtendedController):
         if isinstance(frame, list):
             self.view.editor.draw_frame(frame[0], frame[1], 10)
 
+    @lock_state_machine
     def draw_state(self, state_m, rel_pos=(0, 0), size=(100, 100), depth=1):
         """Draws a (container) state with all its content
 
@@ -1626,6 +1653,7 @@ class GraphicalEditorController(ExtendedController):
 
         return redraw
 
+    @lock_state_machine
     def draw_inner_data_ports(self, parent_state_m, parent_depth):
         """Draw the inner ports of a state
 
@@ -1701,6 +1729,7 @@ class GraphicalEditorController(ExtendedController):
             port_temp['id'] = opengl_id
             num_scoped_variables += 1
 
+    @lock_state_machine
     def draw_transitions(self, parent_state_m, parent_depth):
         """Draws the transitions belonging to a state
 
@@ -1767,6 +1796,7 @@ class GraphicalEditorController(ExtendedController):
             transition_m.temp['gui']['editor']['from_pos'] = from_pos
             transition_m.temp['gui']['editor']['to_pos'] = to_pos
 
+    @lock_state_machine
     def draw_data_flows(self, parent_state_m, parent_depth):
         """Draw all data flows contained in the given container state
 
@@ -1832,6 +1862,7 @@ class GraphicalEditorController(ExtendedController):
             data_flow_m.temp['gui']['editor']['from_pos'] = from_pos
             data_flow_m.temp['gui']['editor']['to_pos'] = to_pos
 
+    @lock_state_machine
     def _handle_new_waypoint(self):
         """Creates waypoints during the creation of transitions and data flows
 
@@ -1855,6 +1886,7 @@ class GraphicalEditorController(ExtendedController):
             rel_pos = self._get_position_relative_to_state(parent_state_m, restricted_click)
             self.temporary_waypoints.append(rel_pos)
 
+    @lock_state_machine
     def _handle_new_transition(self, parent_state_m, parent_depth):
         """Responsible for drawing new transition the user creates
 
@@ -1887,6 +1919,7 @@ class GraphicalEditorController(ExtendedController):
                 self.view.editor.draw_transition(origin, target, line_width,
                                                  waypoints, True, parent_depth + 0.6)
 
+    @lock_state_machine
     def _handle_new_data_flow(self, parent_state_m, parent_depth):
         """Responsible for drawing new data flows the user creates
 
@@ -1917,6 +1950,7 @@ class GraphicalEditorController(ExtendedController):
                 self.view.editor.draw_data_flow(connector, target, line_width,
                                                 waypoints, True, parent_depth + 0.6)
 
+    @lock_state_machine
     def _find_selection(self, pos_x, pos_y, width=6, height=6, all=False,
                         find_states=True, find_transitions=True, find_data_flows=True, find_data_ports=True):
         """Returns the model at the given position
@@ -1962,6 +1996,7 @@ class GraphicalEditorController(ExtendedController):
             pass
         return selection
 
+    @lock_state_machine
     def _selection_ids_to_model(self, ids, search_state_m, search_state_depth, selection, selection_depth, all=False,
                                 find_states=True, find_transitions=True, find_data_flows=True, find_data_ports=True):
         """Searches recursively for objects with the given ids
@@ -2098,10 +2133,12 @@ class GraphicalEditorController(ExtendedController):
         model.meta_signal.emit(msg)
         # logger.debug("publish changes to history")
 
+    @lock_state_machine
     def _delete_selection(self, *event):
         if react_to_event(self.view, self.view.editor, event):
             return state_machine_helper.delete_selected_elements(self.model)
 
+    @lock_state_machine
     def _add_new_state(self, *event, **kwargs):
         """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
 
@@ -2111,6 +2148,7 @@ class GraphicalEditorController(ExtendedController):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
             return state_machine_helper.add_new_state(self.model, state_type)
 
+    @lock_state_machine
     def _abort(self, *event):
         if react_to_event(self.view, self.view.editor, event):
             if self.mouse_move_redraw:
@@ -2148,6 +2186,7 @@ class GraphicalEditorController(ExtendedController):
                 self.last_button_pressed = None  # prevents further movements
                 self._redraw()
 
+    @lock_state_machine
     def _copy_selection(self, *event):
         """Copies the current selection to the clipboard.
         """
@@ -2156,6 +2195,7 @@ class GraphicalEditorController(ExtendedController):
             global_clipboard.copy(self.model.selection)
             return True
 
+    @lock_state_machine
     def _cut_selection(self, *event):
         """Cuts the current selection and copys it to the clipboard.
         """
@@ -2164,6 +2204,7 @@ class GraphicalEditorController(ExtendedController):
             global_clipboard.cut(self.model.selection)
             return True
 
+    @lock_state_machine
     def _paste_clipboard(self, *event):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
