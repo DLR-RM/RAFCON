@@ -91,12 +91,12 @@ class SourceEditorController(EditorController):
         if not external_editor:
 
             from rafcon.mvc.utils.text_input import RAFCONTextInput
-            message_string = "Please select external editor"
             entry_sample_text = "<shell command>"
-            widget_size = [550, 50]
 
-            text_input = RAFCONTextInput(size=widget_size, window_title=message_string,content=entry_sample_text)
+            text_input = RAFCONTextInput(content=entry_sample_text)
 
+            text_input.set_size_request(550, 50)
+            text_input.set_title("Please select external editor")
             text_input.add_button('Apply', 1)
             text_input.add_button('Discard', 0)
             response = text_input.run()
