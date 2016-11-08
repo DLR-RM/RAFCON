@@ -1,65 +1,34 @@
 import gtk
 
-from rafcon.mvc.utils import constants
+
 from rafcon.utils import log
-from rafcon.mvc.config import global_gui_config
 
 logger = log.get_logger(__name__)
 
 
-class RAFCONTextInput(gtk.Window):
+class RAFCONTextInput(gtk.Dialog):
 
-    def __init__(self, content='', window_title=''):
+    def __init__(self, content=''):
         super(RAFCONTextInput, self).__init__()
         self.content = content
-        self.window_title = window_title
+        self.entry = None
+        self.setup()
 
     def return_text(self):
-        return self.content
-
-    def update(self, widget, entry, text="gedit"):
-        logger.info("'{}' was set as external editor".format(entry.get_text()))
-        self.content = entry.get_text
-        global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', entry.get_text())
-        self.destroy()
-        return
+        return self.entry.get_text()
 
     def setup(self):
 
-        self.set_size_request(400, 100)
-        self.set_title(self.window_title)
+        self.entry = gtk.Entry()
 
-        vbox = gtk.VBox(spacing=constants.GRID_SIZE, homogeneous=False)
-        self.add(vbox)
+        self.entry.set_max_length(60)
+        self.entry.set_text(self.content)
+        self.entry.set_editable(1)
+        self.entry.select_region(0, len(self.entry.get_text()))
 
-        entry = gtk.Entry()
+        self.add_action_widget(self.entry, 1)
+        self.entry.show()
 
-        entry.set_max_length(40)
-        entry.connect("activate", self.update, entry)
-        entry.set_text(self.content)
-        entry.set_editable(1)
-        entry.select_region(0, len(entry.get_text()))
-
-        vbox.pack_start(entry, True, True, 0)
-
-        entry.show()
-
-        hbox = gtk.HBox(spacing=constants.GRID_SIZE, homogeneous=False)
-        vbox.add(hbox)
-
-        button = gtk.Button(stock=gtk.STOCK_OK)
-        button.connect("clicked", self.update, entry)
-        hbox.pack_start(button, True, True, 0)
-        button.show()
-
-        button_cancel = gtk.Button(stock=gtk.STOCK_CANCEL)
-        button_cancel.connect("clicked", lambda w: self.destroy())
-        hbox.pack_start(button_cancel, True, True, 0)
-        button_cancel.show()
-
-        vbox.show()
-        hbox.show()
-        hbox.show()
         self.show()
-        #return entry.get_text()
+        return
 
