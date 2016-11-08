@@ -388,7 +388,8 @@ class ListViewController(ExtendedController):
             [path, focus_column] = self.tree_view.get_cursor()
             if not path:
                 return False
-            core_element_id = self.list_store[path][self.ID_STORAGE_ID]
+            self.tree_view_keypress_callback.__func__.core_element_id = self.list_store[path][self.ID_STORAGE_ID]
+
             # finish active edit process
             if self.actual_entry_widget is not None:
                 text = self.actual_entry_widget.get_buffer().get_text()
@@ -396,7 +397,7 @@ class ListViewController(ExtendedController):
                     focus_column.get_cell_renderers()[0].emit('edited', path[0], text)
 
             # row could be updated by other call_backs caused by emitting 'edited' signal but selection stays an editable neighbor
-            path = self.get_path_for_core_element(core_element_id)
+            path = self.get_path_for_core_element(self.tree_view_keypress_callback.__func__.core_element_id)
             if event.keyval == Key_Tab:
                 # logger.info("move right")
                 direction = +1
@@ -430,6 +431,7 @@ class ListViewController(ExtendedController):
             else:
                 return False
 
+            del self.tree_view_keypress_callback.__func__.core_element_id
             self.tree_view.set_cursor(next_row, self.widget_columns[next_focus_column_id], start_editing=True)
             return True
 
