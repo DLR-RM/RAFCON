@@ -426,6 +426,7 @@ class StateTransitionsListController(ListViewController):
     def update(self):
         self._update_internal_data_base()
         self._update_tree_store()
+        self.update_selection_sm_prior()
 
     def _update_internal_data_base(self):
         """ Updates Internal combo knowledge for any actual transition by calling  get_possible_combos_for_transition-

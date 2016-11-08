@@ -371,6 +371,7 @@ class StateDataFlowsListController(ListViewController):
     def update(self):
         self._update_internal_data_base()
         self._update_tree_store()
+        self.update_selection_sm_prior()
 
     def get_state_machine_selection(self):
         # print type(self).__name__, "get state machine selection"
