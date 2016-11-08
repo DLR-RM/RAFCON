@@ -47,9 +47,6 @@ class SourceEditorController(EditorController):
     def register_view(self, view):
         super(SourceEditorController, self).register_view(view)
 
-        #JUST FOR DEBUG PURPOSES
-        global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', None)
-
         view['open_external_button'].connect('clicked', self.open_external_clicked)
         view['apply_button'].connect('clicked', self.apply_clicked)
         view['cancel_button'].connect('clicked', self.cancel_clicked)
