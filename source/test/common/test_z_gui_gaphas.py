@@ -11,16 +11,14 @@ from rafcon.utils import log
 # core elements
 import rafcon.statemachine.config
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
+import rafcon.statemachine.singleton
 
 # mvc elements
+import rafcon.mvc.singleton
 import rafcon.mvc
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 import rafcon.mvc.controllers.graphical_editor_gaphas as graphical_editor_gaphas
-
-# singleton elements
-import rafcon.mvc.singleton
-import rafcon.statemachine.singleton
 import rafcon.mvc.config as gui_config
 
 # test environment elements

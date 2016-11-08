@@ -17,16 +17,14 @@ from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveCo
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
 from rafcon.statemachine.state_machine import StateMachine
+from rafcon.statemachine.config import global_config
 
 # mvc elements
+import rafcon.mvc.singleton
 from rafcon.mvc.models import GlobalVariableManagerModel
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
-
-# singleton elements
-import rafcon.mvc.singleton
 from rafcon.mvc.config import global_gui_config
-from rafcon.statemachine.config import global_config
 
 # test environment elements
 import testing_utils
