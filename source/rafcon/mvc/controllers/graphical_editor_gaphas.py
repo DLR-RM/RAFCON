@@ -15,6 +15,7 @@ from gtk.gdk import ACTION_COPY
 from gaphas.aspect import InMotion, ItemFinder
 
 from rafcon.statemachine.enums import StateType
+from rafcon.statemachine.decorators import lock_state_machine
 
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc import state_machine_helper
@@ -114,6 +115,7 @@ class GraphicalEditorController(ExtendedController):
                           "SHOW_DATA_FLOW_VALUE_LABELS", "SHOW_NAMES_ON_DATA_FLOWS", "ROTATE_NAMES_ON_CONNECTION"]:
             self.update_view()
 
+    @lock_state_machine
     def on_drag_data_received(self, widget, context, x, y, data, info, time):
         """Receives state_id from LibraryTree and moves the state to the position of the mouse
 
@@ -132,6 +134,7 @@ class GraphicalEditorController(ExtendedController):
         motion.move((x, y))
         motion.stop_move()
 
+    @lock_state_machine
     def on_drag_motion(self, widget, context, x, y, time):
         """Changes the selection on mouse over during drag motion
 
@@ -156,10 +159,12 @@ class GraphicalEditorController(ExtendedController):
     def update_view(self, *args):
         self.canvas.update_root_items()
 
+    @lock_state_machine
     def data_flow_mode(self, *args):
         self.handle_selected_states(self.model.selection.get_states())
         self.canvas.update_root_items()
 
+    @lock_state_machine
     def _add_new_state(self, *event, **kwargs):
         """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
 
@@ -169,6 +174,7 @@ class GraphicalEditorController(ExtendedController):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
             return state_machine_helper.add_new_state(self.model, state_type)
 
+    @lock_state_machine
     def _copy_selection(self, *event):
         """Copies the current selection to the clipboard.
         """
@@ -177,6 +183,7 @@ class GraphicalEditorController(ExtendedController):
             global_clipboard.copy(self.model.selection)
             return True
 
+    @lock_state_machine
     def _cut_selection(self, *event):
         """Cuts the current selection and copys it to the clipboard.
         """
@@ -185,6 +192,7 @@ class GraphicalEditorController(ExtendedController):
             global_clipboard.cut(self.model.selection)
             return True
 
+    @lock_state_machine
     def _paste_clipboard(self, *event):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
@@ -244,6 +252,7 @@ class GraphicalEditorController(ExtendedController):
             return True
 
     def _update_selection_from_gaphas(self, view, selected_items):
+        print "selection in gaphas 2", self.model.selection
         selected_items = self.view.editor.selected_items
         selected_models = []
         for item in selected_items:
@@ -256,9 +265,11 @@ class GraphicalEditorController(ExtendedController):
                 logger.debug("Cannot select item {}".format(item))
         new_selected_models = any([model not in self.model.selection for model in selected_models])
         if new_selected_models or len(self.model.selection) != len(selected_models):
+            print "updating selection", selected_models
             self.model.selection.set(selected_models)
 
     def _update_selection_from_external(self):
+        print "selection in gaphas", self.model.selection
         selected_items = [self.canvas.get_view_for_model(model) for model in self.model.selection]
         select_items = filter(lambda item: item not in self.view.editor.selected_items, selected_items)
         deselect_items = filter(lambda item: item not in selected_items, self.view.editor.selected_items)
@@ -530,6 +541,7 @@ class GraphicalEditorController(ExtendedController):
                 except Exception as e:
                     logger.error('Error while trying to emit meta data signal {}'.format(e))
 
+    @lock_state_machine
     @ExtendedController.observe("state_type_changed_signal", signal=True)
     def state_type_changed(self, old_state_m, prop_name, info):
         self._change_state_type = False
@@ -675,6 +687,7 @@ class GraphicalEditorController(ExtendedController):
             return container_m
         return container_m.states[state_id]
 
+    @lock_state_machine
     def add_transition_view_for_model(self, transition_m, parent_state_m):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
 
@@ -686,6 +699,7 @@ class GraphicalEditorController(ExtendedController):
 
         self.add_transition(transition_m, new_transition_v, parent_state_m, parent_state_v)
 
+    @lock_state_machine
     def add_data_flow_view_for_model(self, data_flow_m, parent_state_m):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
 
@@ -696,6 +710,7 @@ class GraphicalEditorController(ExtendedController):
         self.canvas.add(new_data_flow_v, parent_state_v, index=1)
         self.add_data_flow(data_flow_m, new_data_flow_v, parent_state_m)
 
+    @lock_state_machine
     def _remove_connection_view(self, parent_state_m, transitions=True):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
 
@@ -713,12 +728,15 @@ class GraphicalEditorController(ExtendedController):
                 child.prepare_destruction()
                 self.canvas.remove(child)
 
+    @lock_state_machine
     def remove_data_flow_view_from_parent_view(self, parent_state_m):
         self._remove_connection_view(parent_state_m, False)
 
+    @lock_state_machine
     def remove_transition_view_from_parent_view(self, parent_state_m):
         self._remove_connection_view(parent_state_m)
 
+    @lock_state_machine
     def add_state_view_to_parent(self, state_m, parent_state_m):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
 
@@ -752,6 +770,7 @@ class GraphicalEditorController(ExtendedController):
             logger.info("Opening the state machine caused some meta data to be generated, which will be stored if the"
                         "state machine is saved.")
 
+    @lock_state_machine
     def setup_state(self, state_m, parent=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
 
         """Draws a (container) state with all its content
@@ -839,6 +858,7 @@ class GraphicalEditorController(ExtendedController):
 
         return state_v
 
+    @lock_state_machine
     def add_transitions(self, parent_state_m, hierarchy_level):
         """Draws the transitions belonging to a state
 
@@ -857,6 +877,7 @@ class GraphicalEditorController(ExtendedController):
 
             self.add_transition(transition_m, transition_v, parent_state_m, parent_state_v)
 
+    @lock_state_machine
     def add_transition(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
 
         transition_meta_gaphas = transition_m.meta['gui']['editor_gaphas']
@@ -910,6 +931,7 @@ class GraphicalEditorController(ExtendedController):
             except KeyError:
                 pass
 
+    @lock_state_machine
     def add_data_flows(self, parent_state_m, hierarchy_level):
         """Draw all data flows contained in the given container state
 
@@ -928,6 +950,7 @@ class GraphicalEditorController(ExtendedController):
             self.canvas.add(data_flow_v, parent_state_v, index=1)
             self.add_data_flow(data_flow_m, data_flow_v, parent_state_m)
 
+    @lock_state_machine
     def add_data_flow(self, data_flow_m, data_flow_v, parent_state_m):
         # Get id and references to the from and to state
         from_state_id = data_flow_m.data_flow.from_state
