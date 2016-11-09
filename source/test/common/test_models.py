@@ -1,6 +1,11 @@
 from gtkmvc.observer import Observer
 
+# mvc
+from rafcon.mvc.config import global_gui_config
+import rafcon.mvc.singleton
+
 # core elements
+import rafcon.statemachine.singleton
 from rafcon.statemachine.script import Script
 from rafcon.statemachine.enums import StateType
 from rafcon.statemachine.states.state import State
@@ -9,10 +14,6 @@ from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.storage import storage
-
-# singleton elements
-import rafcon.statemachine.singleton
-import rafcon.mvc.singleton
 
 import pytest
 import testing_utils

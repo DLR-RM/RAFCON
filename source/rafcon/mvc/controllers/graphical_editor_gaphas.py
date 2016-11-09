@@ -541,8 +541,8 @@ class GraphicalEditorController(ExtendedController):
                 except Exception as e:
                     logger.error('Error while trying to emit meta data signal {}'.format(e))
 
-    @lock_state_machine
     @ExtendedController.observe("state_type_changed_signal", signal=True)
+    @lock_state_machine
     def state_type_changed(self, old_state_m, prop_name, info):
         self._change_state_type = False
         self.relieve_model(old_state_m)
