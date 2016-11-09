@@ -19,7 +19,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.mvc.controllers.utils.editor import EditorController
 from rafcon.mvc.singleton import state_machine_manager_model
 from rafcon.mvc.config import global_gui_config
-
+from rafcon.utils import filesystem
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
 
@@ -147,6 +147,10 @@ class SourceEditorController(EditorController):
                 # no active text field in the case of an already specified editor. Its needed for the SyntaxError catch
                 open_file_in_editor(external_editor, text_field=None)
         else:
+
+            # Load file contents after unlocking
+            content = filesystem.read_file(self.model.state.get_file_system_path(), 'script.py')
+            self.set_script_text(content)
 
             # If button is clicked after one open a file in the external editor, unlock the internal editor
             button.set_label('Open external')
