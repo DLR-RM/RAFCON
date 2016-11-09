@@ -23,8 +23,6 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
 
-from rafcon.statemachine import interface
-
 logger = log.get_logger(__name__)
 
 
@@ -80,7 +78,7 @@ class SourceEditorController(EditorController):
 
         if button.get_active():
 
-            # TODO: Lock window
+            
             # Get the specified "Editor" as in shell command from the gui config yaml
             external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')
 
@@ -89,7 +87,7 @@ class SourceEditorController(EditorController):
                 file_path = self.model.state.get_file_system_path()
                 logger.debug("File opened with command: {}".format(command))
 
-                # This splits the command in a matter so that the executor gets called in a seperate chell and thus
+                # This splits the command in a matter so that the editor gets called in a separate shell and thus
                 # doesnt lock the window.
                 args = shlex.split(command + ' "' + file_path + '/script.py"')
 
@@ -108,6 +106,7 @@ class SourceEditorController(EditorController):
 
                 # Set the text on the button to 'Unlock' instead of 'Open external'
                 button.set_label('Unlock')
+                self.view.textview.set_sensitive(False)
 
             def open_text_window():
                 from rafcon.mvc.utils.text_input import RAFCONTextInput
@@ -151,7 +150,7 @@ class SourceEditorController(EditorController):
 
             # If button is clicked after one open a file in the external editor, unlock the internal editor
             button.set_label('Open external')
-            # TODO: unlock window
+            self.view.textview.set_sensitive(True)
 
     def apply_clicked(self, button):
         """Triggered when the Apply button in the source editor is clicked.

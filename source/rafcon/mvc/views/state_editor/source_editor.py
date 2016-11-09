@@ -19,7 +19,7 @@ class SourceEditorView(EditorView):
         except NameError:
             pass
         hbox = gtk.HBox()
-        pylint_check_button = gtk.CheckButton("Pylint-Check enabled")
+        pylint_check_button = gtk.CheckButton("Pylint-Check")
         pylint_check_button.set_focus_on_click(False)
 
         open_external_button = gtk.ToggleButton("Open external")
