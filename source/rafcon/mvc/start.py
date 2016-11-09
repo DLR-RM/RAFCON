@@ -1,14 +1,22 @@
 #!/usr/bin/env python
 
+# default libraries
 import os
 import logging
 import gtk
 import threading
-
 import signal
-
 from yaml_configuration.config import config_path
 
+# mvc
+from rafcon.mvc.config import global_gui_config
+import rafcon.mvc.singleton as mvc_singletons
+from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.main_window import MainWindowView
+from rafcon.mvc.runtime_config import global_runtime_config
+from rafcon.mvc.utils import constants
+
+# state machine
 from rafcon.statemachine.start import parse_state_machine_path, setup_environment, reactor_required, \
     setup_configuration, post_setup_plugins, register_signal_handlers
 from rafcon.statemachine.storage import storage
@@ -18,20 +26,12 @@ import rafcon.statemachine.singleton as sm_singletons
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.statemachine.config import global_config
 
-import rafcon.mvc.singleton as mvc_singletons
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.config import global_gui_config
-from rafcon.mvc.runtime_config import global_runtime_config
-from rafcon.mvc.utils import constants
-
+# utils
 import rafcon.utils.filesystem as filesystem
 from rafcon.utils import profiler
 from rafcon.utils import plugins
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
-
 from rafcon.utils.i18n import _, setup_l10n, setup_l10n_gtk
-
 from rafcon.utils import log
 
 logger = log.get_logger("rafcon.start.gui")
