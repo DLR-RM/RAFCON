@@ -54,7 +54,8 @@ class SourceEditorController(EditorController):
 
         view['pylint_check_button'].set_tooltip_text("Change global default value in GUI config.")
         view['apply_button'].set_tooltip_text(global_gui_config.get_config_value('SHORTCUTS')['apply'][0])
-        view['open_external_button'].set_tooltip_text("Open source in external editor.")
+        view['open_external_button'].set_tooltip_text("Open source in external editor. " +
+                                                      global_gui_config.get_config_value('SHORTCUTS')['open_external_editor'][0])
 
         if isinstance(self.model.state, LibraryState):
             view['pylint_check_button'].set_sensitive(False)
@@ -78,7 +79,6 @@ class SourceEditorController(EditorController):
 
         if button.get_active():
 
-            
             # Get the specified "Editor" as in shell command from the gui config yaml
             external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')
 

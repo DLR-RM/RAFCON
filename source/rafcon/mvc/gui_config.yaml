@@ -65,6 +65,7 @@ SHORTCUTS:
     - <Control><Shift>Left
     new: <Control>N
     open: <Control>O
+    open_external_editor: <Control><Shift>Q
     paste: <Control>V
     pause: F7
     quit: <Control>Q
