@@ -137,6 +137,10 @@ class GlobalVariableManagerController(ListViewController):
         self.update_global_variables_list_store()
         self.select_entry(gv_name)
 
+        # informing the tab key feature handler function about the changed core element id
+        if hasattr(self.tree_view_keypress_callback.__func__, "core_element_id"):
+            self.tree_view_keypress_callback.__func__.core_element_id = gv_name
+
     def apply_new_global_variable_value(self, path, new_value_as_string):
         """Change global variable value according handed string
 

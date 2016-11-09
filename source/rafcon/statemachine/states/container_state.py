@@ -1795,6 +1795,10 @@ class ContainerState(State):
         from_state_id = transition.from_state
         from_outcome_id = transition.from_outcome
 
+        if from_state_id == self.state_id:
+            return False, "from_state_id of transition must not be the container state itself." \
+                          " In the case of a start transition both the from state and the from_outcome are None."
+
         if from_state_id != self.state_id and from_state_id not in self.states:
             return False, "from_state not existing"
 
