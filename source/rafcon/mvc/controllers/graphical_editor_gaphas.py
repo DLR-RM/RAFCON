@@ -252,7 +252,6 @@ class GraphicalEditorController(ExtendedController):
             return True
 
     def _update_selection_from_gaphas(self, view, selected_items):
-        print "selection in gaphas 2", self.model.selection
         selected_items = self.view.editor.selected_items
         selected_models = []
         for item in selected_items:
@@ -265,11 +264,9 @@ class GraphicalEditorController(ExtendedController):
                 logger.debug("Cannot select item {}".format(item))
         new_selected_models = any([model not in self.model.selection for model in selected_models])
         if new_selected_models or len(self.model.selection) != len(selected_models):
-            print "updating selection", selected_models
             self.model.selection.set(selected_models)
 
     def _update_selection_from_external(self):
-        print "selection in gaphas", self.model.selection
         selected_items = [self.canvas.get_view_for_model(model) for model in self.model.selection]
         select_items = filter(lambda item: item not in self.view.editor.selected_items, selected_items)
         deselect_items = filter(lambda item: item not in selected_items, self.view.editor.selected_items)
