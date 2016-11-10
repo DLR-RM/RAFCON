@@ -297,6 +297,57 @@ class MultiSelectionTool(RubberbandTool):
         return True
 
 
+# 1. NameView: Corner handles => resize NameView
+# 2. StateView: Corner handles => resize StateView
+# 3. StateView: logical port handles => new Transition
+# 4. StateView: data port handles => new DataFlow
+# 5. TransitionView: segment handles => do nothing
+# 6. TransitionView: end point handles => move end point
+# 7. DataFlowView: segment handles => do nothing
+# 8. DataFlowView: end point handles => move end point
+
+class MoveHandleTool(HandleTool):
+    """Tool to move handles around
+
+    Handles can be moved using click'n'drag. This is already implemented in the base class `HandleTool`. This class
+    extends the behaviour by requiring a modifier key to be pressed when moving ports. It also allows to change the
+    modifier key, which are defined in `rafcon.mvc.utils.constants`.
+    """
+
+    def on_button_press(self, event):
+        """Handle button press events.
+
+        If the (mouse) button is pressed on top of a Handle (item.Handle), that handle is grabbed and can be
+        dragged around.
+        """
+        view = self.view
+
+        item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
+
+        if not handle:
+            return False
+
+        if isinstance(item, StateView) and handle in [port.handle for port in item.get_all_ports()] and not (
+                    event.state & constants.MOVE_PORT_MODIFIER):
+            return False
+
+        if handle:
+            # Deselect all items unless EXTEND_SELECTION_MODIFIER or RUBBERBAND_MODIFIER is pressed
+            # or the item is already selected.
+            if not (event.state & (constants.EXTEND_SELECTION_MODIFIER | constants.RUBBERBAND_MODIFIER)
+                    or view.hovered_item in view.selected_items):
+                del view.selected_items
+
+            view.hovered_item = item
+            view.focused_item = item
+
+            self.motion_handle = None
+
+            self.grab_handle(item, handle)
+
+            return True
+
+
 class HandleMoveTool(HandleTool):
     def __init__(self, graphical_editor_view, view=None):
         super(HandleMoveTool, self).__init__(view)
@@ -325,6 +376,7 @@ class HandleMoveTool(HandleTool):
         try:
             view = self.view
             item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
+            print "HandleMoveTool", item, handle
 
             if isinstance(item, ConnectionView):
                 # If moved handles item is a connection save all necessary information (where did the handle start,
