@@ -164,8 +164,6 @@ class LibraryTreeController(ExtendedController):
 
     def insert_rec(self, parent, library_key, library_item, library_path):
         _library_key = self.convert_if_human_readable(library_key)
-        if isinstance(library_item, str):
-            print library_item
         tree_item = self.tree_store.insert_before(parent, None, (_library_key, library_item, library_path))
         if isinstance(library_item, dict) and not library_item:
             return
