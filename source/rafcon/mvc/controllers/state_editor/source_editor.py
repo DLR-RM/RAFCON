@@ -9,8 +9,9 @@
 """
 
 import os
-
+import subprocess
 import gtk
+import shlex
 from pylint import epylint as lint
 
 from rafcon.statemachine.states.library_state import LibraryState
@@ -18,7 +19,7 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.mvc.controllers.utils.editor import EditorController
 from rafcon.mvc.singleton import state_machine_manager_model
 from rafcon.mvc.config import global_gui_config
-
+from rafcon.utils import filesystem
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
 
@@ -45,11 +46,16 @@ class SourceEditorController(EditorController):
     def register_view(self, view):
         super(SourceEditorController, self).register_view(view)
 
+        view['open_external_button'].connect('clicked', self.open_external_clicked)
         view['apply_button'].connect('clicked', self.apply_clicked)
         view['cancel_button'].connect('clicked', self.cancel_clicked)
+
         view['pylint_check_button'].set_active(global_gui_config.get_config_value('CHECK_PYTHON_FILES_WITH_PYLINT', False))
+
         view['pylint_check_button'].set_tooltip_text("Change global default value in GUI config.")
         view['apply_button'].set_tooltip_text(global_gui_config.get_config_value('SHORTCUTS')['apply'][0])
+        view['open_external_button'].set_tooltip_text("Open source in external editor. " +
+                                                      global_gui_config.get_config_value('SHORTCUTS')['open_external_editor'][0])
 
         if isinstance(self.model.state, LibraryState):
             view['pylint_check_button'].set_sensitive(False)
@@ -68,6 +74,87 @@ class SourceEditorController(EditorController):
     # ===============================================================
     def code_changed(self, source):
         self.view.apply_tag('default')
+        
+    def open_external_clicked(self, button):
+
+        if button.get_active():
+
+            # Get the specified "Editor" as in shell command from the gui config yaml
+            external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')
+
+            def open_file_in_editor(command, text_field):
+
+                file_path = self.model.state.get_file_system_path()
+                logger.debug("File opened with command: {}".format(command))
+
+                # This splits the command in a matter so that the editor gets called in a separate shell and thus
+                # doesnt lock the window.
+                args = shlex.split(command + ' "' + file_path + '/script.py"')
+
+                try:
+                    subprocess.Popen(args)
+                except OSError:
+
+                    # This catches most of the errors being returned from the shell, destroys the old textfield and
+                    # opens the dialog again, so the user can specify a new command. Its a bit dirty...
+                    # The if is required to catch the case that a OSerror occurs due to other reasons than
+                    # the specified command
+                    logger.error('Syntax Error occurred')
+                    if text_field:
+                        text_field.destroy()
+                    open_text_window()
+
+                # Set the text on the button to 'Unlock' instead of 'Open external'
+                button.set_label('Unlock')
+                self.view.textview.set_sensitive(False)
+
+            def open_text_window():
+                from rafcon.mvc.utils.text_input import RAFCONTextInput
+                entry_sample_text = "<shell command>"
+
+                text_input = RAFCONTextInput(content=entry_sample_text)
+
+                text_input.set_size_request(550, 50)
+                text_input.set_title("Please select external editor")
+                text_input.add_button('Apply', 1)
+                text_input.add_button('Discard', 0)
+
+                # Run the text_input Dialog until a response is emitted
+                response = text_input.run()
+
+                if response:
+
+                    # If the response emitted from the Dialog is 1 than handle the 'OK'
+                    global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', text_input.return_text())
+                    open_file_in_editor(text_input.return_text(), text_input)
+                else:
+
+                    # If Dialog is canceled either by the button or the cross, untoggle the button again and revert the
+                    # lock, which is not implemented yet
+                    button.set_active(False)
+
+                text_input.destroy()
+
+            if not external_editor:
+
+                # If no external editor is specified in the gui_config.yaml, open the Dialog and let the user choose
+                # a shell command to apply to the file path
+                open_text_window()
+
+            else:
+
+                # If an editor is specified, open the path with the specified command. Also text_field is None, there is
+                # no active text field in the case of an already specified editor. Its needed for the SyntaxError catch
+                open_file_in_editor(external_editor, text_field=None)
+        else:
+
+            # Load file contents after unlocking
+            content = filesystem.read_file(self.model.state.get_file_system_path(), 'script.py')
+            self.set_script_text(content)
+
+            # If button is clicked after one open a file in the external editor, unlock the internal editor
+            button.set_label('Open external')
+            self.view.textview.set_sensitive(True)
 
     def apply_clicked(self, button):
         """Triggered when the Apply button in the source editor is clicked.

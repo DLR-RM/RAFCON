@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> 953a76338f214767f355ab90208ab43f15335334
 import gtk
 import threading
 
@@ -36,13 +39,14 @@ def trigger_gvm_signals(main_window_controller):
 
     gvm_controller.update_global_variables_list_store()
 
-    gvm_controller.apply_new_global_variable_value(0, '2')
+    call_gui_callback(gvm_controller.apply_new_global_variable_value, 0, '2')
     assert gvm.get_variable('new_0') == 2
 
-    gvm_controller.apply_new_global_variable_name(0, 'changed_global_0')
+    call_gui_callback(gvm_controller.apply_new_global_variable_name, 0, 'changed_global_0')
     assert gvm.get_variable('changed_global_0')
 
-    gvm_controller.apply_new_global_variable_type(0, 'float')
+    call_gui_callback(gvm_controller.apply_new_global_variable_type, 0, 'float')
+
     assert gvm.get_data_type('changed_global_0') is float
 
     access_key = gvm.lock_variable('changed_global_0')
@@ -50,11 +54,13 @@ def trigger_gvm_signals(main_window_controller):
 
     gvm.unlock_variable('changed_global_0', access_key)
 
-    gvm_controller.on_add(view)
-    assert not len(gvm.get_all_keys())-2
 
-    gvm_controller.remove_core_element('changed_global_0')
-    assert not len(gvm.get_all_keys())-1
+    call_gui_callback(gvm_controller.on_add, view)
+    assert len(gvm.get_all_keys()) is 2
+
+    call_gui_callback(gvm_controller.remove_core_element, 'changed_global_0')
+    assert len(gvm.get_all_keys()) is 1
+
 
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
@@ -90,4 +96,6 @@ def test_gui(caplog):
 
 if __name__ == '__main__':
     test_gui(None)
+
     # pytest.main(['-s', __file__])
+

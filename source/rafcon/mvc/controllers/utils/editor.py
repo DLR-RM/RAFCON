@@ -52,6 +52,7 @@ class EditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("undo", self._undo)
         shortcut_manager.add_callback_for_action("redo", self._redo)
         shortcut_manager.add_callback_for_action("apply", self._apply)
+        shortcut_manager.add_callback_for_action("open_external_editor", self._open_external_editor)
 
     def _copy(self, *args):
         pass
@@ -69,8 +70,7 @@ class EditorController(ExtendedController):
         if react_to_event(self.view, self.view.textview, event) and hasattr(buffer, 'can_undo') and buffer.can_undo():
             logger.debug('Run undo on {}'.format(self.__class__.__name__))
             return buffer.undo()
-        else:
-            return False
+        return False
 
     def _redo(self, *event):
         if not self.view:
@@ -79,8 +79,7 @@ class EditorController(ExtendedController):
         if react_to_event(self.view, self.view.textview, event) and hasattr(buffer, 'can_redo') and buffer.can_redo():
             logger.debug('Run redo on {}'.format(self.__class__.__name__))
             return buffer.redo()
-        else:
-            return False
+        return False
 
     def _apply(self, *event):
 
@@ -93,8 +92,14 @@ class EditorController(ExtendedController):
             else:
                 self.apply_clicked(None)
             return True
-        else:
-            return False
+        return False
+
+    def _open_external_editor(self, *event):
+        if react_to_event(self.view, self.view.textview, event):
+            self.view['open_external_button'].set_active(True)
+            self.open_external_clicked(self.view['open_external_button'])
+            return True
+        return False
 
     @property
     def source_text(self):

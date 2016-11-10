@@ -144,6 +144,10 @@ class GlobalVariableManager(Observable):
         :param key: the key of the global variable to be deleted
         :raises exceptions.AttributeError:  if the global variable does not exist
         """
+        if self.is_locked(key):
+            logger.error("Deletion of global variable '%s' failed, variable is locked!" % str(key))
+            return
+        
         self.__dictionary_lock.acquire()
         if key in self.__global_variable_dictionary:
             access_key = self.lock_variable(key)
