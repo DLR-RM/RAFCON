@@ -18,8 +18,6 @@ from rafcon.mvc.views.main_window import MainWindowView
 
 # singleton elements
 import rafcon.mvc.singleton
-from rafcon.mvc.config import global_gui_config
-from rafcon.statemachine.config import global_config
 
 # test environment elements
 import testing_utils
@@ -79,9 +77,7 @@ def trigger_drag_and_drop_tests(*args):
     library_tree_controller = main_window_controller.get_controller('library_controller')
     state_icon_controller = main_window_controller.get_controller('state_icon_controller')
     graphical_editor_controller = states_machines_editor_controller.get_child_controllers()[0]
-    time.sleep(1)
-    graphical_editor_controller.view.editor.set_size_request(500, 500)
-    time.sleep(1)
+    call_gui_callback(graphical_editor_controller.view.editor.set_size_request, 500, 500)
 
     library_tree_controller.view.expand_all()
     library_tree_controller.view.get_selection().select_path((0, 0))
