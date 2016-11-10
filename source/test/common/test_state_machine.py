@@ -1,9 +1,8 @@
 import pytest
 from pytest import raises
-from rafcon.statemachine.states.state import State, global_lock_counter, lock_state_machine
+from rafcon.statemachine.states.state import State
+from rafcon.statemachine.decorators import global_lock_counter, lock_state_machine
 from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.state import InputDataPort
 from rafcon.statemachine.state_machine import StateMachine
 
 from testing_utils import assert_logger_warnings_and_errors
