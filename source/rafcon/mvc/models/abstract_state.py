@@ -162,7 +162,7 @@ class AbstractStateModel(ModelMT, Hashable):
         else:
             self._parent = None
 
-    def get_sm_m_for_state_m(self):
+    def get_sm_m_for_state_m(self, two_factor_check=True):
         """ Get respective state machine model
 
         Get a reference of the state machine model the state model belongs to. As long as the root state model
@@ -176,7 +176,7 @@ class AbstractStateModel(ModelMT, Hashable):
         if state_machine:
             if state_machine.state_machine_id in state_machine_manager_model.state_machines:
                 sm_m = state_machine_manager_model.state_machines[state_machine.state_machine_id]
-                if sm_m.get_state_model_by_path(self.state.get_path()) is self:
+                if not two_factor_check or sm_m.get_state_model_by_path(self.state.get_path()) is self:
                     return sm_m
                 else:
                     logger.debug("State model requesting its state machine model parent seems to be obsolete. "
