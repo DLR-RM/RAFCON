@@ -16,18 +16,17 @@ from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
+from rafcon.mvc.controllers.state_editor.data_flows import LinkageListController
 from rafcon.mvc.utils.notification_overview import NotificationOverview
 
 from rafcon.mvc.gui_helper import format_cell
 
-from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS, RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
 
-class StateTransitionsListController(ListViewController):
+class StateTransitionsListController(LinkageListController):
     """Controller handling the view of transitions of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -53,35 +52,11 @@ class StateTransitionsListController(ListViewController):
         #                   name-color, to-state-color, transition-object, state-object, is_editable, transition-model
         list_store = gtk.ListStore(int, str, str, str, str, bool,
                                    gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
-        super(StateTransitionsListController, self).__init__(model, view, view.get_top_widget(), list_store, logger)
+
         self.view_dict = {'transitions_internal': True, 'transitions_external': True}
-
         self.combo = {}
-        self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
-        self.no_update_state_destruction = False
-        self.no_update_self_or_parent_state_destruction = False
         self.debug_log = False
-        self._actual_overview = None
-
-        if not self.model.state.is_root_state:
-            self.observe_model(self.model.parent)
-            if self.model.parent.parent is not None:
-                self.observe_model(self.model.parent.parent)
-            # observe state machine model
-            if self.model.get_sm_m_for_state_m() is not None:
-                self.observe_model(self.model.get_sm_m_for_state_m())
-            else:
-                logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
-        else:
-            # observe state machine model
-            if self.model.parent is None:
-                if self.model.get_sm_m_for_state_m() is not None:
-                    self.observe_model(self.model.get_sm_m_for_state_m())
-                else:
-                    logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
-            else:
-                logger.warning("StateModel's state is_root_state and has a parent should not be possible")
-                self.observe_model(self.model.parent)
+        super(StateTransitionsListController, self).__init__(model, view, view.get_top_widget(), list_store, logger)
 
     def register_view(self, view):
         """Called when the View was registered
@@ -423,11 +398,6 @@ class StateTransitionsListController(ListViewController):
 
         return from_state_combo, from_outcome_combo, to_state_combo, to_outcome_combo, free_from_states, free_from_outcomes_dict
 
-    def update(self):
-        self._update_internal_data_base()
-        self._update_tree_store()
-        self.update_selection_sm_prior()
-
     def _update_internal_data_base(self):
         """ Updates Internal combo knowledge for any actual transition by calling  get_possible_combos_for_transition-
         function for those.
@@ -595,104 +565,51 @@ class StateTransitionsListController(ListViewController):
                 except Exception as e:
                     logger.warning("There was a problem while updating the data-flow widget TreeStore. {0}".format(e))
 
+    def update(self):
+        self._update_internal_data_base()
+        self._update_tree_store()
+        self.update_selection_sm_prior()
+
     def get_state_machine_selection(self):
         # print type(self).__name__, "get state machine selection"
-        sm_selection = self.model.get_sm_m_for_state_m().selection
-        return sm_selection, sm_selection.transitions
+        sm_selection = self.model.get_sm_m_for_state_m().selection if self.model.get_sm_m_for_state_m() else None
+        return sm_selection, sm_selection.transitions if sm_selection else []
 
-    @ListViewController.observe("selection", after=True)
+    @LinkageListController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
         if "transitions" == info['method_name']:
             self.update_selection_sm_prior()
 
-    @ListViewController.observe("root_state", assign=True)
-    def root_state_changed(self, model, prop_name, info):
-        """ Relieve all observed models to avoid updates on old root state.
-        """
-        # TODO may re-observe if the states-editor supports this feature
-        self.relieve_all_models()
+    @LinkageListController.observe("state", before=True)
+    def before_notification_of_parent_or_state(self, model, prop_name, info):
+        """ Set the no update flag to avoid updates in between of a state removal. """
+        self.check_no_update_flags_and_return_combined_flag(prop_name, info)
 
-    @ListViewController.observe("state", before=True)
-    def before_notification_state(self, model, prop_name, info):
-        """ Set the no update flag to avoid updates in between of a state removal.
-        """
-
-        # avoid updates because of state destruction
-        if info['method_name'] == "remove_state":
-            if info.instance.state_id == self.model.state.state_id:
-                self.no_update_state_destruction = True
-                # print "TNOUPDATE ", self.no_update_state_destruction, self.model.state.state_id
-            else:
-                if info.args[1] == self.model.state.state_id or \
-                        not self.model.state.is_root_state and info.args[1] == self.model.parent.state.state_id:
-                    self.no_update_self_or_parent_state_destruction = True
-                    self.relieve_all_models()
-                # print "TNOUPDATE_PARENT ", self.no_update_self_or_parent_state_destruction, info.args[1], self.model.state.state_id
-
-    @ListViewController.observe("change_root_state_type", before=True)
-    @ListViewController.observe("change_state_type", before=True)
-    def before_notification_of_type_change(self, model, prop_name, info):
-        """ Set the no update flag to avoid updates in between of a state-type-change.
-        """
-        self.no_update = True
-
-    @ListViewController.observe("state", after=True)
+    @LinkageListController.observe("state", after=True)
     def after_notification_state(self, model, prop_name, info):
 
-        # avoid updates because of execution status updates
-        if info['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
+        # avoid updates because of execution status updates or while multi-actions
+        if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
-
-        # avoid updates because of state destruction
-        if info['method_name'] == "remove_state":
-            if info.instance.state_id == self.model.state.state_id:
-
-                self.no_update_state_destruction = False
-                # print "TNOUPDATE ", self.no_update_state_destruction, self.model.state.state_id
-            # TODO introduce re-observe new objects to use commented code
-            # else:
-            #     if info.args[1] == self.model.state.state_id or \
-            #             not self.model.state.is_root_state and info.args[1] == self.model.parent.state.state_id:
-            #         self.no_update_self_or_parent_state_destruction = False
-            #     # print "TNOUPDATE_PARENT ", self.no_update_self_or_parent_state_destruction, info.args[1], self.model.state.state_id
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
         self._actual_overview = overview
-        # The method causing the change raised an exception, thus nothing was changed
-        # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
-        #         isinstance(overview['result'][-1], Exception):
-        #     return
+
         if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state or \
                 overview['instance'][-1] in [self.model.state, self.model.state.parent] and \
-                overview['method_name'][-1] in ["remove_outcome", "remove_transition"]:
+                overview['method_name'][-1] in ['group_states', 'ungroup_state', 'change_data_type',
+                                                "remove_outcome", "remove_transition"]:
             self.update()
         self._actual_overview = None
 
-    @ListViewController.observe("states", after=True)
-    @ListViewController.observe("transitions", after=True)
-    @ListViewController.observe("outcomes", after=True)
-    @ListViewController.observe("change_root_state_type", after=True)
-    @ListViewController.observe("change_state_type", after=True)
+    @LinkageListController.observe("states", after=True)
+    @LinkageListController.observe("transitions", after=True)
+    @LinkageListController.observe("outcomes", after=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
-        """ Activates the update after a state-type-change happend and triggers update if outcomes, transitions or
-        states list has been changed.
+        """ Activates the update after update if outcomes, transitions or states list has been changed.
         """
-        # The method causing the change raised an exception, thus nothing was changed
-        # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
-        #         isinstance(overview['result'][-1], Exception):
-        #     return
-        # return
-        # avoid updates because of execution status updates
-        if 'kwargs' in info and 'method_name' in info['kwargs'] and \
-                info['kwargs']['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
-            return
-
-        # self.notification_logs(model, prop_name, info)
-        if self.no_update and info.method_name in ["change_state_type", "change_root_state_type"]:
-            # print "DO_UNLOCK TRANSITION WIDGET"
-            self.no_update = False
-
-        if self.no_update or self.no_update_state_destruction or self.no_update_self_or_parent_state_destruction:
+        # avoid updates because of execution status updates or while multi-actions
+        if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
@@ -720,37 +637,6 @@ class StateTransitionsListController(ListViewController):
                          (self.model.state.name, self.model.state.state_id, e, self))
             print self._actual_overview
         self._actual_overview = None
-
-    def store_debug_log_file(self, string):
-        with open(RAFCON_TEMP_PATH_BASE + '/transition_widget_debug_log_file.txt', 'a+') as f:
-            f.write(string)
-
-    def notification_logs(self, model, prop_name, info):
-        # logger.debug("IP OP SV or DF %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-        # (self.model.state.state_id, prop_name, info.instance, info.method_name, info))
-
-        if model.state.state_id == self.model.state.state_id:
-            relative_str = "SELF"
-            from_state = self.model.state.state_id
-        elif self.model.parent and model.state.state_id == self.model.parent.state.state_id:
-            relative_str = "PARENT"
-            from_state = self.model.parent.state.state_id
-        else:
-            relative_str = "OTHER"
-            from_state = model.state.state_id
-
-        if prop_name == 'states':
-            logger.debug(
-                "%s gets notified by states from %s %s" % (self.model.state.state_id, relative_str, from_state))
-        elif prop_name == 'transitions':
-            logger.debug(
-                "%s gets notified by transitions from %s %s" % (self.model.state.state_id, relative_str, from_state))
-        elif prop_name == 'outcomes':
-            logger.debug(
-                "%s gets notified by outcomes from %s %s" % (self.model.state.state_id, relative_str, from_state))
-        else:
-            logger.debug("IP OP SV or DF !!! FAILURE !!! %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-                         (self.model.state.state_id, prop_name, info.instance, info.method_name, info.result))
 
 
 class StateTransitionsEditorController(ExtendedController):

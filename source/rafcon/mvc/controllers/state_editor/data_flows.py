@@ -19,16 +19,177 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
 from rafcon.mvc.models.container_state import ContainerStateModel
-from rafcon.mvc.utils.notification_overview import NotificationOverview
+from rafcon.mvc.utils.notification_overview import NotificationOverview, \
+    is_execution_status_update_notification_from_state_machine_model, \
+    is_execution_status_update_notification_from_state_model
 
-from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS, RAFCON_TEMP_PATH_BASE
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log, type_helpers
 
 logger = log.get_logger(__name__)
 PORT_TYPE_TAG = {InputDataPort: 'IP', OutputDataPort: 'OP', ScopedVariable: 'SV'}
 
 
-class StateDataFlowsListController(ListViewController):
+class LinkageListController(ListViewController):
+    no_update = True  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
+    no_update_state_destruction = True
+    no_update_self_or_parent_state_destruction = True
+    _actual_overview = None
+    _model_observed = []
+
+    def __init__(self, model, view, tree_view, list_store, logger):
+        self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
+        self.no_update_state_destruction = False
+        self.no_update_self_or_parent_state_destruction = False
+        self._actual_overview = None
+        self._model_observed = []
+        super(LinkageListController, self).__init__(model, view, tree_view, list_store, logger)
+        self._model_observed.append(self.model)
+        self.register_models_to_observe()
+
+    def register_view(self, view):
+        """Called when the View was registered
+        """
+        super(LinkageListController, self).register_view(view)
+
+    def register_models_to_observe(self):
+
+        model_to_observe = []
+        state_m_4_get_sm_m_from = self.model
+        if "unique_decider_state_id" == self.model.state.state_id:
+            print "initiateunique", self.model.state.get_path()
+        if not self.model.state.is_root_state:
+            # add self model to observe
+            model_to_observe.append(self.model.parent.states[self.model.state.state_id])
+            if self.model.parent.states[self.model.state.state_id] is not self.model:
+                self.model = self.model.parent.states[self.model.state.state_id]
+            # add parent model to observe
+            model_to_observe.append(self.model.parent)
+            state_m_4_get_sm_m_from = self.model.parent
+
+            # TODO maybe reduce the observation by this and add the check for sibling- and child-states
+            if not self.model.parent.state.is_root_state:
+                model_to_observe.append(self.model.parent.parent)
+                state_m_4_get_sm_m_from = self.model.parent.parent
+        else:
+            if self.model.get_sm_m_for_state_m(two_factor_check=False) is not None:
+                model_to_observe.append(self.model.get_sm_m_for_state_m(two_factor_check=False).root_state)
+            else:
+                logger.warning("State model has no state machine model as expected -> state model: {0}".format(self.model))
+
+
+        # observe state machine model
+        # print "is root state: ", state_m_4_get_sm_m_from.state.is_root_state, state_m_4_get_sm_m_from.state.name, self.model.state.name
+        two_factor_check = False if state_m_4_get_sm_m_from.state.is_root_state else True
+        if state_m_4_get_sm_m_from.get_sm_m_for_state_m(two_factor_check) is not None:
+            model_to_observe.append(state_m_4_get_sm_m_from.get_sm_m_for_state_m(two_factor_check))
+        else:
+            logger.warning("State model has no state machine model as expected -> state model: {0}".format(self.model))
+        # print "observe:", self.model.state.get_path(), "\n", model_to_observe
+
+        [self.relieve_model(model) for model in self._model_observed if model not in model_to_observe]
+        [self.observe_model(model) for model in model_to_observe if model not in self._model_observed]
+        self._model_observed = model_to_observe
+        print "observe:", self.model.state.get_path(), "\n", '\n'.join([str(model) for model in self._model_observed])
+
+    def check_info_on_no_update_flags(self, info):
+        """Stop updates while multi-actions"""
+        #TODO that could need a second clean up
+        # print NotificationOverview(info, False, self.__class__.__name__)
+        # if self.model.state.state_id == 'unique_decider_state_id':
+        #     print "uniquedeciderstate_id", self.model.state.get_path(), NotificationOverview(info, False, self.__class__.__name__)
+        # avoid updates because of state destruction
+        if 'before' in info and info['method_name'] == "remove_state":
+            if info.instance is self.model.state:
+                self.no_update_state_destruction = True
+                print "NOUPDATE ", self.__class__.__name__, self.no_update_state_destruction, self.model.state.state_id, info
+            else:
+                # if the state it self is removed lock the widget to never run updates and relieve all models
+                removed_state_id = info.args[1] if len(info.args) > 1 else info.kwargs['state_id']
+                if  removed_state_id == self.model.state.state_id or \
+                        not self.model.state.is_root_state and removed_state_id == self.model.parent.state.state_id:
+                    self.no_update_self_or_parent_state_destruction = True
+                    # print "Relieve model", self.model.state
+                    self.relieve_all_models()
+                # print "DNOUPDATE_PARENT ", self.no_update_self_or_parent_state_destruction, info.args[1], self.model.state.state_id
+
+        elif 'after' in info and info['method_name'] == "remove_state":
+            if info.instance.state_id == self.model.state.state_id:
+                print "DOUPDATE ", self.__class__.__name__, self.model.state.state_id, info
+                self.no_update_state_destruction = False
+
+        # reduce NotificationOverview generations by the fact that after could cause False and before could cause True
+        if not self.no_update_state_destruction and not self.no_update_self_or_parent_state_destruction and \
+                (not self.no_update and 'before' in info or 'after' in info and self.no_update):
+            return
+        overview = NotificationOverview(info, False, self.__class__.__name__)
+
+        # The method causing the change raised an exception, thus nothing was changed and updates are allowed
+        if 'after' in info and isinstance(overview['result'][-1], Exception):
+            self.no_update = False
+            self.no_update_state_destruction = False
+            # self.no_update_self_or_parent_state_destruction = False
+            return
+
+        if overview['method_name'][-1] in ['group_states', 'ungroup_state', "change_state_type",
+                                           "change_root_state_type"]:
+            # print "FOUND:", overview['method_name'][-1], self.model.state.name, 'after' if 'after' in info else 'before'
+            instance_is_self = self.model.state is overview['instance'][-1]
+            instance_is_parent = self.model.parent and self.model.parent.state is overview['instance'][-1]
+            instance_is_parent_parent = self.model.parent and self.model.parent.parent and self.model.parent.parent.state is overview['instance'][-1]
+            # print instance_is_self, instance_is_parent, instance_is_parent_parent
+            # print overview
+
+            if instance_is_self or instance_is_parent or instance_is_parent_parent:
+                self.no_update = True if 'before' in info else False
+
+            if overview['prop_name'][-1] == 'state' and \
+                overview['method_name'][-1] in ["change_state_type"] and self.model.get_sm_m_for_state_m() is not None:
+                changed_model = self.model.get_sm_m_for_state_m().get_state_model_by_path(overview['args'][-1][1].get_path())
+                if changed_model not in self._model_observed:
+                    # print "Register model"
+                    self.observe_model(changed_model)
+
+    def check_no_update_flags_and_return_combined_flag(self, prop_name, info):
+        # avoid updates because of execution status updates
+        if is_execution_status_update_notification_from_state_model(prop_name, info):
+            return True
+
+        self.check_info_on_no_update_flags(info)
+
+        # avoid updates while remove or multi-actions
+        if self.no_update or self.no_update_state_destruction or self.no_update_self_or_parent_state_destruction:
+            return True
+
+    @ListViewController.observe("state_type_changed_signal", signal=True)
+    def notification_state_type_changed(self, model, prop_name, info):
+        if model not in self._model_observed:
+            # print "UnRegister model"
+            self.relieve_model(model)
+        self.register_models_to_observe()
+
+    @ListViewController.observe("state_machine", before=True)
+    def before_notification_state_machine_observation_control(self, model, prop_name, info):
+        """Check for multi-actions and set respective no update flags. """
+        if is_execution_status_update_notification_from_state_machine_model(prop_name, info):
+            return
+        # do not update while multi-actions
+        self.check_info_on_no_update_flags(info)
+
+    @ListViewController.observe("root_state", assign=True)
+    def root_state_changed(self, model, prop_name, info):
+        """ Relieve all observed models to avoid updates on old root state.
+        """
+        # TODO may re-observe if the states-editor supports this feature
+        if self.model.state.is_root_state:
+            self.relieve_all_models()
+
+    def store_debug_log_file(self, string):
+        with open('{1}/{0}_debug_log_file.txt'.format(self.__class__.__name__, RAFCON_TEMP_PATH_BASE), 'a+') as f:
+            f.write(string)
+
+
+class StateDataFlowsListController(LinkageListController):
     """Controller handling the view of transitions of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -61,39 +222,14 @@ class StateDataFlowsListController(ListViewController):
         #                   name-color, to-state-color, data-flow-object, state-object, is_editable, data-flow-model
         list_store = ListStore(int, str, str, str, str, bool, str, str,
                                gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
-        super(StateDataFlowsListController, self).__init__(model, view, view.get_top_widget(), list_store, logger)
         self.view_dict = {'data_flows_internal': True, 'data_flows_external': True}
 
         self.tree_dict_combos = {'internal': {},
                                  'external': {}}
         self.data_flow_dict = {'internal': {},
                                'external': {}}
-        self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
-        self.no_update_state_destruction = False
-        self.no_update_self_or_parent_state_destruction = False
         self.debug_log = False
-        self._actual_overview = None
-
-        # register other model and fill list_store the model of the view
-        if not self.model.state.is_root_state:
-            self.observe_model(self.model.parent)
-            if self.model.parent.parent is not None:
-                self.observe_model(self.model.parent.parent)
-            # observe state machine model
-            if self.model.get_sm_m_for_state_m() is not None:
-                self.observe_model(self.model.get_sm_m_for_state_m())
-            else:
-                logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
-        else:
-            # observe state machine model
-            if self.model.parent is None:
-                if self.model.get_sm_m_for_state_m() is not None:
-                    self.observe_model(self.model.get_sm_m_for_state_m())
-                else:
-                    logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
-            else:
-                logger.warning("StateModel's state is_root_state and has a parent should not be possible")
-                self.observe_model(self.model.parent)
+        super(LinkageListController, self).__init__(model, view, view.get_top_widget(), list_store, logger)
 
     def register_view(self, view):
         """Called when the View was registered
@@ -374,100 +510,47 @@ class StateDataFlowsListController(ListViewController):
         self.update_selection_sm_prior()
 
     def get_state_machine_selection(self):
-        # print type(self).__name__, "get state machine selection"
-        sm_selection = self.model.get_sm_m_for_state_m().selection
-        return sm_selection, sm_selection.data_flows
+        # print type(self).__name__, "get state machine selection", self.model
+        sm_selection = self.model.get_sm_m_for_state_m().selection if self.model.get_sm_m_for_state_m() else None
+        return sm_selection, sm_selection.data_flows if sm_selection else []
 
-    @ListViewController.observe("selection", after=True)
+    @LinkageListController.observe("selection", after=True)
     def state_machine_selection_changed(self, model, prop_name, info):
         if "data_flows" == info['method_name']:
             self.update_selection_sm_prior()
 
-    @ListViewController.observe("root_state", assign=True)
-    def root_state_changed(self, model, prop_name, info):
-        """ Relieve all observed models to avoid updates on old root state.
-        """
-        # TODO may re-observe if the states-editor supports this feature
-        self.relieve_all_models()
+    @LinkageListController.observe("state", before=True)
+    def before_notification_of_parent_or_state(self, model, prop_name, info):
+        """ Set the no update flag to avoid updates in between of a state removal. """
+        self.check_no_update_flags_and_return_combined_flag(prop_name, info)
 
-    @ListViewController.observe("state", before=True)
-    def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
-        """ Set the no update flag to avoid updates in between of a state removal.
-        """
-        if info['method_name'] == "remove_state":
-            if info.instance.state_id == self.model.state.state_id:
-                self.no_update_state_destruction = True
-                # print "NOUPDATE ", self.no_update_state_destruction, self.model.state.state_id
-            else:
-                if info.args[1] == self.model.state.state_id or \
-                        not self.model.state.is_root_state and info.args[1] == self.model.parent.state.state_id:
-                    self.no_update_self_or_parent_state_destruction = True
-                    self.relieve_all_models()
-                # print "DNOUPDATE_PARENT ", self.no_update_self_or_parent_state_destruction, info.args[1], self.model.state.state_id
+    @LinkageListController.observe("state", after=True)
+    def after_notification_of_parent_or_state(self, model, prop_name, info):
 
-    @ListViewController.observe("change_state_type", before=True)
-    @ListViewController.observe("change_root_state_type", before=True)
-    def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
-        """ Set the no update flag to avoid updates in between of a state-type-change.
-        """
-        self.no_update = True
-
-    @ListViewController.observe("state", after=True)
-    def after_notification_state(self, model, prop_name, info):
-        # The method causing the change raised an exception, thus nothing was changed
-        # avoid updates because of execution status updates
-        if info['method_name'] == "remove_state":
-            if info.instance.state_id == self.model.state.state_id:
-                self.no_update_state_destruction = True
-                # print "DNOUPDATE ", self.no_update_state_destruction, self.model.state.state_id
-            # TODO introduce re-observe new objects to use commented code
-            # else:
-            #     if info.args[1] == self.model.state.state_id or \
-            #             not self.model.state.is_root_state and info.args[1] == self.model.parent.state.state_id:
-            #         self.no_update_self_or_parent_state_destruction = False
-            #     # print "DNOUPDATE_PARENT ", self.no_update_self_or_parent_state_destruction, info.args[1], self.model.state.state_id
-
-        if info['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
+        # avoid updates because of execution status updates or while multi-actions
+        if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
         self._actual_overview = overview
-        # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
-        #         isinstance(overview['result'][-1], Exception):
-        #     return
 
         if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state or \
                 overview['instance'][-1] in [self.model.state, self.model.state.parent] and \
-                overview['method_name'][-1] in ["remove_input_data_port", "remove_output_data_port",
+                overview['method_name'][-1] in ['group_states', 'ungroup_state', 'change_data_type',
+                                                "remove_input_data_port", "remove_output_data_port",
                                                 "remove_scoped_variable", "remove_data_flow"]:
             self.update()
         self._actual_overview = None
 
-    @ListViewController.observe("states", after=True)
-    @ListViewController.observe("change_state_type", after=True)
-    @ListViewController.observe("change_root_state_type", after=True)
-    @ListViewController.observe("input_data_ports", after=True)
-    @ListViewController.observe("output_data_ports", after=True)
-    @ListViewController.observe("scoped_variables", after=True)
-    @ListViewController.observe("data_flows", after=True)
+    @LinkageListController.observe("states", after=True)
+    @LinkageListController.observe("input_data_ports", after=True)
+    @LinkageListController.observe("output_data_ports", after=True)
+    @LinkageListController.observe("scoped_variables", after=True)
+    @LinkageListController.observe("data_flows", after=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
-        # The method causing the change raised an exception, thus nothing was changed
-        # overview = NotificationOverview(info, False, 'DataFlowWidget')
-        # if isinstance(overview['result'][-1], str) and "CRASH" in overview['result'][-1] or \
-        #         isinstance(overview['result'][-1], Exception):
-        #     return
 
-        # avoid updates because of execution status updates
-        if 'kwargs' in info and 'method_name' in info['kwargs'] and \
-                info['kwargs']['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
-            return
-
-        # self.notification_logs(model, prop_name, info)
-        if self.no_update and info.method_name in ["change_state_type", "change_root_state_type"]:
-            # print "DO_UNLOCK DATA-FLOW WIDGET"
-            self.no_update = False
-
-        if self.no_update or self.no_update_state_destruction or self.no_update_self_or_parent_state_destruction:
+        # avoid updates because of execution status updates or while multi-actions
+        if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
@@ -476,7 +559,8 @@ class StateDataFlowsListController(ListViewController):
         # avoid updates because of unimportant methods
         if overview['prop_name'][0] in ['states', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'data_flows'] and \
                 overview['method_name'][-1] not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove',
-                                                    'change_data_type', 'from_key', 'to_key', 'from_state', 'to_state',
+                                                    'group_states', 'ungroup_state', 'change_data_type',
+                                                    'from_key', 'to_key', 'from_state', 'to_state',
                                                     'modify_origin', 'modify_target']:
             return
         # print "DUPDATE ", self, overview
@@ -490,38 +574,6 @@ class StateDataFlowsListController(ListViewController):
                 self.store_debug_log_file(str(traceback.format_exc()))
             logger.error("update of data_flow widget fails while detecting change in state %s %s" %
                          (self.model.state.name, self.model.state.state_id))
-
-    def store_debug_log_file(self, string):
-        with open(RAFCON_TEMP_PATH_BASE + '/data_flow_widget_debug_log_file.txt', 'a+') as f:
-            f.write(string)
-
-    def notification_logs(self, model, prop_name, info):
-
-        if model.state.state_id == self.model.state.state_id:
-            relative_str = "SELF"
-            from_state = self.model.state.state_id
-        elif self.model.parent and model.state.state_id == self.model.parent.state.state_id:
-            relative_str = "PARENT"
-            from_state = self.model.parent.state.state_id
-        else:
-            relative_str = "OTHER"
-            from_state = model.state.state_id
-
-        if prop_name == 'data_flows':
-            logger.debug(
-                "%s gets notified by data_flows from %s %s" % (self.model.state.state_id, relative_str, from_state))
-        elif prop_name == 'input_data_ports':
-            logger.debug("%s gets notified by input_data_ports from %s %s" % (
-                self.model.state.state_id, relative_str, from_state))
-        elif prop_name == 'output_data_ports':
-            logger.debug("%s gets notified by output_data_ports from %s %s" % (
-                self.model.state.state_id, relative_str, from_state))
-        elif prop_name == 'scoped_variables':
-            logger.debug("%s gets notified by scoped_variables from %s %s" % (
-                self.model.state.state_id, relative_str, from_state))
-        else:
-            logger.debug("IP OP SV or DF !!! FAILURE !!! %s call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %
-                         (self.model.state.state_id, prop_name, info.instance, info.method_name, info.result))
 
 
 def get_key_combos(ports, keys_store, not_key=None):
