@@ -288,8 +288,7 @@ class ContainerState(State):
         """
         # TODO remain all related linkage by adding outcomes and input output port to new hierarchy state
         # TODO remember changed state or state element ids and provide them for the model functionalities
-
-        assert all([state_id in [state_id for state in self.states] for state_id in state_ids])
+        assert all([state_id in self.states.keys() for state_id in state_ids])
         if scoped_variables is None:
             scoped_variables = []
         assert all([p_id in self.scoped_variables.keys() for p_id in scoped_variables])
@@ -729,6 +728,8 @@ class ContainerState(State):
 
         if destruct:
             self.states[state_id].destruct()
+        else:
+            self.states[state_id].parent = None
         # final delete the state it self
         del self.states[state_id]
 
