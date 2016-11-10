@@ -77,27 +77,37 @@ class SourceEditorController(EditorController):
         
     def open_external_clicked(self, button):
 
+        def lock():
+                button.set_label('Unlock')
+                self.view.textview.set_sensitive(False)
+
+        def unlock():
+            button.set_label('Open external')
+            button.set_active(False)
+            self.view.textview.set_sensitive(True)
+
         if button.get_active():
 
             # Get the specified "Editor" as in shell command from the gui config yaml
             external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')
-            def lock():
-                button.set_label('Unlock')
-                self.view.textview.set_sensitive(False)
-
-            def unlock():
-                button.set_label('Open external')
-                button.set_active(False)
-                self.view.textview.set_sensitive(True)
 
             def open_file_in_editor(command, text_field):
 
                 file_path = self.model.state.get_file_system_path()
+
                 logger.debug("File opened with command: {}".format(command))
 
                 # This splits the command in a matter so that the editor gets called in a separate shell and thus
                 # doesnt lock the window.
                 args = shlex.split(command + ' "' + file_path + os.path.sep + 'script.py"')
+                self.apply_clicked(button)
+
+                try:
+                    filesystem.write_file(file_path + os.path.sep + 'script.py', self.source_text)
+                except IOError as e:
+                    # Only happens if the file doesnt exist yet and would be written to the temp folder.
+                    # The method write_file doesnt create the path
+                    logger.error('The operating system raised an error: {}'.format(e))
 
                 try:
                     subprocess.Popen(args)
@@ -166,8 +176,7 @@ class SourceEditorController(EditorController):
             self.set_script_text(content)
 
             # If button is clicked after one open a file in the external editor, unlock the internal editor
-            button.set_label('Open external')
-            self.view.textview.set_sensitive(True)
+            unlock()
 
     def apply_clicked(self, button):
         """Triggered when the Apply button in the source editor is clicked.
