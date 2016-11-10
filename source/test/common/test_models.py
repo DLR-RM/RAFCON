@@ -757,6 +757,7 @@ def test_add_remove_models(caplog):
     # remove data_flow
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     import rafcon
@@ -1017,6 +1018,7 @@ def test_add_remove_models(caplog):
     # # assert check_if_all_states_there(state_dict['Container'], state_check_dict2)
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1056,6 +1058,7 @@ def test_state_property_modifications_history(caplog):
     # change child_execution
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -1175,6 +1178,7 @@ def test_state_property_modifications_history(caplog):
     check_state_for_all_models(state, state_m)
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1185,6 +1189,7 @@ def test_outcome_property_modifications_history(caplog):
     # change name
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     def do_check_for_state(state_dict, state_name='Nested'):
@@ -1217,6 +1222,7 @@ def test_outcome_property_modifications_history(caplog):
     do_check_for_state(state_dict, state_name='Container')
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1241,6 +1247,7 @@ def test_transition_property_modifications_history(caplog):
     # modify_transition_to_state
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -1305,6 +1312,7 @@ def test_transition_property_modifications_history(caplog):
     state_dict['Nested'].transitions[new_df_id].to_outcome = oc_great_nested
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1321,6 +1329,7 @@ def test_input_port_modify_notification(caplog):
     # change datatype
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
     new_input_data_port_id = state_dict['Nested2'].add_input_data_port(name='new_input', data_type='str')
 
@@ -1342,6 +1351,7 @@ def test_input_port_modify_notification(caplog):
                                                                                     default_value='awesome_tool')
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1359,6 +1369,7 @@ def test_output_port_modify_notification(caplog):
     # change datatype
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
     new_output_data_port_id = state_dict['Nested2'].add_output_data_port(name='new_output', data_type='str')
 
@@ -1380,6 +1391,7 @@ def test_output_port_modify_notification(caplog):
                                                                                       default_value='awesome_tool')
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1396,6 +1408,7 @@ def test_scoped_variable_modify_notification(caplog):
     # change datatype
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
     new_scoped_variable_id = state_dict['Nested'].add_scoped_variable(name='new_output', data_type='str')
 
@@ -1423,6 +1436,7 @@ def test_scoped_variable_modify_notification(caplog):
                                                                                    default_value='awesome_tool')
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1449,6 +1463,7 @@ def test_data_flow_property_modifications_history(caplog):
     # modify_transition_to_state
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -1530,6 +1545,7 @@ def test_data_flow_property_modifications_history(caplog):
     state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
