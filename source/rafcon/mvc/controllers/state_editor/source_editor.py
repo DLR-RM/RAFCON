@@ -81,6 +81,14 @@ class SourceEditorController(EditorController):
 
             # Get the specified "Editor" as in shell command from the gui config yaml
             external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')
+            def lock():
+                button.set_label('Unlock')
+                self.view.textview.set_sensitive(False)
+
+            def unlock():
+                button.set_label('Open external')
+                button.set_active(False)
+                self.view.textview.set_sensitive(True)
 
             def open_file_in_editor(command, text_field):
 
@@ -89,49 +97,54 @@ class SourceEditorController(EditorController):
 
                 # This splits the command in a matter so that the editor gets called in a separate shell and thus
                 # doesnt lock the window.
-                args = shlex.split(command + ' "' + file_path + '/script.py"')
+                args = shlex.split(command + ' "' + file_path + os.path.sep + 'script.py"')
 
                 try:
                     subprocess.Popen(args)
-                except OSError:
+                except OSError as e:
 
                     # This catches most of the errors being returned from the shell, destroys the old textfield and
                     # opens the dialog again, so the user can specify a new command. Its a bit dirty...
                     # The if is required to catch the case that a OSerror occurs due to other reasons than
                     # the specified command
-                    logger.error('Syntax Error occurred')
+                    logger.error('The operating system raised an error: {}'.format(e))
                     if text_field:
                         text_field.destroy()
-                    open_text_window()
+                    global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', None)
+                    global_gui_config.save_configuration()
+
+                    unlock()
+                    return
 
                 # Set the text on the button to 'Unlock' instead of 'Open external'
-                button.set_label('Unlock')
-                self.view.textview.set_sensitive(False)
+                lock()
 
             def open_text_window():
-                from rafcon.mvc.utils.text_input import RAFCONTextInput
+                from rafcon.mvc.utils.dialog import RAFCONTextInput
                 entry_sample_text = "<shell command>"
 
                 text_input = RAFCONTextInput(content=entry_sample_text)
 
                 text_input.set_size_request(550, 50)
                 text_input.set_title("Please select external editor")
-                text_input.add_button('Apply', 1)
-                text_input.add_button('Discard', 0)
+                text_input.add_button('Apply', 0)
+                text_input.add_button('Discard', 1)
 
                 # Run the text_input Dialog until a response is emitted
                 response = text_input.run()
 
-                if response:
+                if not response:
 
                     # If the response emitted from the Dialog is 1 than handle the 'OK'
                     global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', text_input.return_text())
+                    global_gui_config.save_configuration()
                     open_file_in_editor(text_input.return_text(), text_input)
+
                 else:
 
                     # If Dialog is canceled either by the button or the cross, untoggle the button again and revert the
                     # lock, which is not implemented yet
-                    button.set_active(False)
+                    unlock()
 
                 text_input.destroy()
 
