@@ -345,7 +345,7 @@ class StateDataFlowsListController(LinkageListController):
         :return:
         """
         assert model.data_flow.parent is self.model.state or model.data_flow.parent is self.model.parent.state
-        if model.data_flow.parent is self.model.parent.state:
+        if self.model.parent and model.data_flow.parent is self.model.parent.state:
             self.model.parent.state.remove_data_flow(model.data_flow.data_flow_id)
         else:
             self.model.state.remove_data_flow(model.data_flow.data_flow_id)

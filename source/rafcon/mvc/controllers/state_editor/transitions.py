@@ -153,7 +153,7 @@ class StateTransitionsListController(LinkageListController):
         :return:
         """
         assert model.transition.parent is self.model.state or model.transition.parent is self.model.parent.state
-        if model.transition.parent is self.model.parent.state:
+        if self.model.parent and model.transition.parent is self.model.parent.state:
             self.model.parent.state.remove_transition(model.transition.transition_id)
         else:
             self.model.state.remove_transition(model.transition.transition_id)
