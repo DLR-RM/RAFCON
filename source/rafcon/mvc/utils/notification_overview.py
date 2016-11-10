@@ -1,4 +1,5 @@
 import datetime
+import time
 from rafcon.utils import constants
 
 
@@ -31,9 +32,13 @@ class NotificationOverview(dict):
     empty_info = {'before': True, 'model': None, 'method_name': None, 'instance': None,
                   'prop_name': None, 'args': (), 'kwargs': {}, 'info': {}}
     # TODO comment
+    _count = 0
+    _generation_time = 0.
 
     def __init__(self, info=None, with_prints=False, initiator_string=None):
 
+        NotificationOverview._count += 1
+        start_time = time.time()
         if info is None:
             info = self.empty_info
         self.initiator = initiator_string
@@ -51,6 +56,7 @@ class NotificationOverview(dict):
         self.__description = s
         if self.with_prints:
             print "\nNotificationOverview {}\n".format(str(self))
+        NotificationOverview._generation_time += time.time() - start_time
     #     self.store_debug_log_file("\nNotificationOverview {}\n".format(str(self)))
     #
     # def store_debug_log_file(self, string):
