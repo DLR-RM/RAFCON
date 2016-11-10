@@ -157,10 +157,16 @@ class LibraryTreeController(ExtendedController):
         else:
             logger.info("Library tree have been initiated")
 
+    @staticmethod
+    def convert_if_human_readable(s):
+        """Converts a string to format which is more human readable"""
+        return s.replace('_', ' ') if global_gui_config.get_config_value('LIBRARY_TREE_PATH_HUMAN_READABLE', False) else s
+
     def insert_rec(self, parent, library_key, library_item, library_path):
-        if global_gui_config.get_config_value('LIBRARY_TREE_PATH_HUMAN_READABLE', False):
-            library_key = library_key.replace('_', ' ')
-        tree_item = self.tree_store.insert_before(parent, None, (library_key, library_item, library_path))
+        _library_key = self.convert_if_human_readable(library_key)
+        if isinstance(library_item, str):
+            print library_item
+        tree_item = self.tree_store.insert_before(parent, None, (_library_key, library_item, library_path))
         if isinstance(library_item, dict) and not library_item:
             return
         if not library_path:
@@ -247,7 +253,8 @@ class LibraryTreeController(ExtendedController):
                              "\n\nlibrary tree path:   {0}" \
                              "\n\nphysical path:        {1}.\n\n\n"\
                              "You will remove the this library from hard drive! You really wanna do that?" \
-                             "".format(tree_m_row[self.LIB_PATH_STORAGE_ID] + '/' + tree_m_row[self.ID_STORAGE_ID],
+                             "".format(self.convert_if_human_readable(tree_m_row[self.LIB_PATH_STORAGE_ID]) +
+                                       '/' + tree_m_row[self.ID_STORAGE_ID],
                                        library_file_system_path)
             width = 8*len("physical path:        " + library_file_system_path)
             RAFCONButtonDialog(message_string, ["Remove library", "Cancel"],
@@ -278,8 +285,8 @@ class LibraryTreeController(ExtendedController):
         assert isinstance(library_item, str)
         library_file_system_path = library_item
 
-        logger.debug("Link library state '{0}' (with library tree path: {1} and file system path: {2}) into state "
+        logger.debug("Link library state '{0}' (with library tree path: {2} and file system path: {1}) into state "
                      "machine.".format(str(library_item_key), library_file_system_path,
-                                       str(library_path) + "/" + str(library_item_key)))
+                                       self.convert_if_human_readable(str(library_path)) + "/" + str(library_item_key)))
         library_name = library_file_system_path.split(os.path.sep)[-1]
         return LibraryState(library_path, library_name, "0.1", library_name)
