@@ -247,7 +247,14 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
                                        start_state_id=state_start_state_id,
                                        scoped_variables=source_state.scoped_variables,
                                        v_checker=source_state.v_checker)
+
     else:  # TRANSFORM from EXECUTION- TO CONTAINER-STATE or FROM CONTAINER- TO EXECUTION-STATE
+
+        # in case the new state is an execution state remove of child states (for observable notifications)
+        if current_state_is_container and issubclass(target_state_class, ExecutionState):
+            for state_id in source_state.states.keys():
+                source_state.remove_state(state_id=state_id)
+
         new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
                                        input_data_ports=source_state.input_data_ports,
                                        output_data_ports=source_state.output_data_ports,
