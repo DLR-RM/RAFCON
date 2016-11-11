@@ -506,27 +506,28 @@ class StateDataFlowsListController(LinkageListController):
     @LinkageListController.observe("state", before=True)
     def before_notification_of_parent_or_state(self, model, prop_name, info):
         """ Set the no update flag to avoid updates in between of a state removal. """
-        logger.info("before_notification_of_parent_or_state: ".format(NotificationOverview(info)))
+        # logger.info("before_notification_of_parent_or_state: {0}".format(NotificationOverview(info)))
         self.check_no_update_flags_and_return_combined_flag(prop_name, info)
 
     @LinkageListController.observe("state", after=True)
     def after_notification_of_parent_or_state(self, model, prop_name, info):
-        logger.info("after_notification_of_parent_or_state: {1}\n{0}".format(NotificationOverview(info),
-                                                                             self.model.state.get_path()))
+
         # avoid updates because of execution status updates or while multi-actions
+        # logger.info("after_notification_of_parent_or_state: {1}\n{0}".format(NotificationOverview(info),
+        #                                                                      self.model.state.get_path()))
         if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
         self._actual_overview = overview
-        logger.info("after_notification_of_parent_or_state: OK")
+        # logger.info("after_notification_of_parent_or_state: OK")
 
         if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state or \
                 overview['instance'][-1] in [self.model.state, self.model.state.parent] and \
                 overview['method_name'][-1] in ['name', 'group_states', 'ungroup_state', 'change_data_type',
                                                 "remove_input_data_port", "remove_output_data_port",
                                                 "remove_scoped_variable", "remove_data_flow"]:
-            logger.info("after_notification_of_parent_or_state: UPDATE")
+            # logger.info("after_notification_of_parent_or_state: UPDATE")
             self.update()
         self._actual_overview = None
 
@@ -536,15 +537,17 @@ class StateDataFlowsListController(LinkageListController):
     @LinkageListController.observe("scoped_variables", after=True)
     @LinkageListController.observe("data_flows", after=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
-        logger.info("after_notification_of_parent_or_state_from_lists: {1}\n{0}".format(NotificationOverview(info),
-                                                                                        self.model.state.get_path()))
+
         # avoid updates because of execution status updates or while multi-actions
+        # logger.info("after_notification_of_parent_or_state_from_lists: {1}\n{0}".format(NotificationOverview(info),
+        #                                                                                 self.model.state.get_path()))
         if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
         # print self, self.model.state.get_path(), overview
-        logger.info("after_notification_of_parent_or_state_from_lists: OK")
+        # logger.info("after_notification_of_parent_or_state_from_lists: OK")
+
         # avoid updates because of unimportant methods
         if overview['prop_name'][0] in ['states', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'data_flows'] and \
                 overview['method_name'][-1] not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove',
@@ -566,7 +569,7 @@ class StateDataFlowsListController(LinkageListController):
         # print "DUPDATE ", self, overview
 
         try:
-            logger.info("after_notification_of_parent_or_state_from_lists: UPDATE")
+            # logger.info("after_notification_of_parent_or_state_from_lists: UPDATE")
             self.update()
         except Exception as e:
             if self.debug_log:
