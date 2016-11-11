@@ -154,10 +154,13 @@ class ExecutionState(State):
 # Properties for all class fields that must be observed by gtkmvc
 #########################################################################
 
+    @State.name.setter
     @lock_state_machine
     @Observable.observed
     def name(self, name):
-        State.name(self, name)
+        # Important: fset is calling the setter of the property "name" of the State base class
+        # this will also trigger the name validity checks defined in the base class setter method
+        State.name.fset(self, name)
         self.logger = log.get_logger(self.name)
 
     @property
