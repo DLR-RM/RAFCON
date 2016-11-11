@@ -1,9 +1,6 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> 953a76338f214767f355ab90208ab43f15335334
 import gtk
 import threading
+import pytest
 
 # general tool elements
 from rafcon.utils import log
@@ -19,14 +16,12 @@ import rafcon.mvc.config as gui_config
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
-# test environment elements
-
 import testing_utils
 from testing_utils import call_gui_callback
 
 logger = log.get_logger(__name__)
 
-@log.log_exceptions(None, gtk_quit=True)
+
 def trigger_gvm_signals(main_window_controller):
 
     gvm = rafcon.statemachine.singleton.global_variable_manager
@@ -37,8 +32,6 @@ def trigger_gvm_signals(main_window_controller):
 
     gvm.set_variable('new_0', 0)
 
-    gvm_controller.update_global_variables_list_store()
-
     call_gui_callback(gvm_controller.apply_new_global_variable_value, 0, '2')
     assert gvm.get_variable('new_0') == 2
 
@@ -46,7 +39,6 @@ def trigger_gvm_signals(main_window_controller):
     assert gvm.get_variable('changed_global_0')
 
     call_gui_callback(gvm_controller.apply_new_global_variable_type, 0, 'float')
-
     assert gvm.get_data_type('changed_global_0') is float
 
     access_key = gvm.lock_variable('changed_global_0')
@@ -54,13 +46,11 @@ def trigger_gvm_signals(main_window_controller):
 
     gvm.unlock_variable('changed_global_0', access_key)
 
-
     call_gui_callback(gvm_controller.on_add, view)
     assert len(gvm.get_all_keys()) is 2
 
     call_gui_callback(gvm_controller.remove_core_element, 'changed_global_0')
     assert len(gvm.get_all_keys()) is 1
-
 
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
@@ -73,6 +63,7 @@ def test_gui(caplog):
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
 
     testing_utils.remove_all_libraries()
+    testing_utils.remove_all_gvm_variables()
 
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
@@ -96,6 +87,4 @@ def test_gui(caplog):
 
 if __name__ == '__main__':
     test_gui(None)
-
     # pytest.main(['-s', __file__])
-
