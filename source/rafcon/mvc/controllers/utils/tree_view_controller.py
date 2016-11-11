@@ -4,8 +4,7 @@ from gtk.gdk import CONTROL_MASK, SHIFT_MASK
 from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.gui_helper import react_to_event
-from rafcon.mvc.singleton import gui_config_model
+from rafcon.mvc.gui_helper import react_to_event, is_event_of_key_string
 
 from rafcon.utils import log
 module_logger = log.get_logger(__name__)
@@ -63,14 +62,24 @@ class ListViewController(ExtendedController):
         """
         assert isinstance(renderer, gtk.CellRenderer)
 
+        def remove_handler(widget, data_name):
+            """Remove handler from given widget
+
+            :param gtk.Widget widget: Widget from which a handler is to be removed
+            :param data_name: Name of the data of the widget in which the handler id is stored
+            """
+            handler_id = widget.get_data(data_name)
+            if widget.handler_is_connected(handler_id):
+                widget.disconnect(handler_id)
+
         def on_editing_canceled(renderer):
             """Disconnects the focus-out-event handler of cancelled editable
 
             :param gtk.CellRendererText renderer: The cell renderer who's editing was cancelled
             """
             editable = renderer.get_data("editable")
-            editable.disconnect(editable.get_data("focus_out_handler_id"))
-            renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
+            remove_handler(editable, "focus_out_handler_id")
+            remove_handler(renderer, "editing_cancelled_handler_id")
             self.actual_entry_widget = None
 
         def on_focus_out(entry, event):
@@ -80,8 +89,8 @@ class ListViewController(ExtendedController):
             :param gtk.Event event: Event object with information about the event
             """
             editable = renderer.get_data("editable")
-            editable.disconnect(editable.get_data("focus_out_handler_id"))
-            renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
+            remove_handler(editable, "focus_out_handler_id")
+            remove_handler(renderer, "editing_cancelled_handler_id")
 
             if self.get_path() is None:
                 return
@@ -112,8 +121,8 @@ class ListViewController(ExtendedController):
             :param str new_value_str: The new value as string
             """
             editable = renderer.get_data("editable")
-            editable.disconnect(editable.get_data("focus_out_handler_id"))
-            renderer.disconnect(renderer.get_data("editing_cancelled_handler_id"))
+            remove_handler(editable, "focus_out_handler_id")
+            remove_handler(renderer, "editing_cancelled_handler_id")
             apply_method(path, new_value_str)
             self.actual_entry_widget = None
 
@@ -132,11 +141,8 @@ class ListViewController(ExtendedController):
         The method checks whether a shortcut ('Delete') is in the gui config model which shadow the delete functionality
         of maybe active a entry widget. If a entry widget is active the remove callback return with None.
         """
-        # TODO maybe find a better way -> the delete key always has to be usable in entry widgets
-        delete_is_used_as_shortcut = any(['Delete' in sc_list
-                                         for sc_list in gui_config_model.config.get_config_value('SHORTCUTS').values()])
         if react_to_event(self.view, self.tree_view, event) and \
-                not (self.actual_entry_widget and delete_is_used_as_shortcut):
+                not (self.actual_entry_widget and not is_event_of_key_string(event, 'Delete')):
             self.on_remove(None)
             return True
 
@@ -382,7 +388,8 @@ class ListViewController(ExtendedController):
             [path, focus_column] = self.tree_view.get_cursor()
             if not path:
                 return False
-            core_element_id = self.list_store[path][self.ID_STORAGE_ID]
+            self.tree_view_keypress_callback.__func__.core_element_id = self.list_store[path][self.ID_STORAGE_ID]
+
             # finish active edit process
             if self.actual_entry_widget is not None:
                 text = self.actual_entry_widget.get_buffer().get_text()
@@ -390,7 +397,7 @@ class ListViewController(ExtendedController):
                     focus_column.get_cell_renderers()[0].emit('edited', path[0], text)
 
             # row could be updated by other call_backs caused by emitting 'edited' signal but selection stays an editable neighbor
-            path = self.get_path_for_core_element(core_element_id)
+            path = self.get_path_for_core_element(self.tree_view_keypress_callback.__func__.core_element_id)
             if event.keyval == Key_Tab:
                 # logger.info("move right")
                 direction = +1
@@ -424,6 +431,7 @@ class ListViewController(ExtendedController):
             else:
                 return False
 
+            del self.tree_view_keypress_callback.__func__.core_element_id
             self.tree_view.set_cursor(next_row, self.widget_columns[next_focus_column_id], start_editing=True)
             return True
 
@@ -502,7 +510,8 @@ class TreeViewController(ExtendedController):
             else:
                 self._logger.warning("Iter has to be TreeIter -> handed argument is: {0}".format(state_row_iter))
 
-        iter_all_children(self.tree_store.get_iter_root(), function, function_args)
+        if self.tree_store.get_iter_root():
+            iter_all_children(self.tree_store.get_iter_root(), function, function_args)
 
     def update_selection_sm_prior_condition(self, state_row_iter, selected_model_list, sm_selected_model_list):
         """State machine prior update of tree selection for one tree model row"""
@@ -537,6 +546,13 @@ class TreeViewController(ExtendedController):
             # print type(self).__name__, "select model", model
             sm_selection.add(model)
 
+    def check_selection_consistency(self, sm_check=True, tree_check=True):
+        tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
+        if not ((all([model in selected_model_list for model in sm_selected_model_list]) or not sm_check) and
+                (all([model in sm_selected_model_list for model in selected_model_list]) or not tree_check)):
+            self._logger.warning("Elements of sm and tree selection are not identical: \ntree: {0}\nsm:   {1}"
+                                 "".format(selected_model_list, sm_selected_model_list))
+
     def update_selection_self_prior(self):
         """Tree view prior update of state machine selection"""
         if self._do_selection_update:
@@ -550,9 +566,8 @@ class TreeViewController(ExtendedController):
         self._do_selection_update = True
         self.iter_tree_with_handed_function(self.update_selection_self_prior_condition,
                                             sm_selection, selected_model_list, sm_selected_model_list)
-        # tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        # print selected_model_list, sm_selected_model_list
-
+        # TODO check why sometimes not consistent with sm selection. e.g while modification history test
+        self.check_selection_consistency(sm_check=False)
         self._do_selection_update = False
 
     def update_selection_sm_prior(self):
@@ -568,8 +583,7 @@ class TreeViewController(ExtendedController):
         self._do_selection_update = True
         self.iter_tree_with_handed_function(self.update_selection_sm_prior_condition,
                                             selected_model_list, sm_selected_model_list)
-        # tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        # print selected_model_list, sm_selected_model_list
+        self.check_selection_consistency()
         self._do_selection_update = False
 
     def selection_changed(self, widget, event=None):
