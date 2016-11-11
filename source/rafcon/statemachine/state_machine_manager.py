@@ -119,6 +119,12 @@ class StateMachineManager(Observable):
         else:
             return None
 
+    def get_open_state_machine_of_file_system_path(self, file_system_path):
+        """Return a reference to the state machine with respective path if open
+        """
+        for sm in self.state_machines.itervalues():
+            if sm.file_system_path == file_system_path:
+                return sm
 
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc
@@ -126,7 +132,7 @@ class StateMachineManager(Observable):
 
     @property
     def state_machines(self):
-        """Returns a reference to the list of state machines
+        """Return a reference to the list of state machines
 
         Please use this with care and do not alter the list in any way!
         """
