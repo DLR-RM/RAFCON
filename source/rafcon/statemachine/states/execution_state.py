@@ -156,10 +156,10 @@ class ExecutionState(State):
 
     @State.name.setter
     @lock_state_machine
-    @Observable.observed
     def name(self, name):
         # Important: fset is calling the setter of the property "name" of the State base class
         # this will also trigger the name validity checks defined in the base class setter method
+        # and its decorator function of the observable pattern
         State.name.fset(self, name)
         self.logger = log.get_logger(self.name)
 

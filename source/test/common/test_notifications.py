@@ -1441,15 +1441,15 @@ def test_state_property_modify_notification(caplog):
 
     #######################################
     ######## Properties of State ##########
-    # Check for ExecutionState -> never remove this test!!! -> method is overloaded and uses fset
+
     forecast = 0
     # name(self, name)
+    # Check for ExecutionState -> never remove this test!!! -> method is overloaded and uses fset
     state_dict['Nested2'].name = 'nested'
     forecast += 1
     check_states_notifications(states_observer_dict, sub_state_name='Nested2', forecast=forecast)
     # Check for HierarchyState -> both are important!!!
-    forecast = 0
-    # name(self, name)
+    forecast = full_observer_dict_reset(states_observer_dict)
     state_dict['Nested'].name = 'nested'
     forecast += 1
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast)
