@@ -213,7 +213,7 @@ class StateDataFlowsListController(LinkageListController):
         self.data_flow_dict = {'internal': {},
                                'external': {}}
         self.debug_log = False
-        super(LinkageListController, self).__init__(model, view, view.get_top_widget(), list_store, logger)
+        super(StateDataFlowsListController, self).__init__(model, view, view.get_top_widget(), list_store, logger)
 
     def register_view(self, view):
         """Called when the View was registered
@@ -506,23 +506,27 @@ class StateDataFlowsListController(LinkageListController):
     @LinkageListController.observe("state", before=True)
     def before_notification_of_parent_or_state(self, model, prop_name, info):
         """ Set the no update flag to avoid updates in between of a state removal. """
+        logger.info("before_notification_of_parent_or_state: ".format(NotificationOverview(info)))
         self.check_no_update_flags_and_return_combined_flag(prop_name, info)
 
     @LinkageListController.observe("state", after=True)
     def after_notification_of_parent_or_state(self, model, prop_name, info):
-
+        logger.info("after_notification_of_parent_or_state: {1}\n{0}".format(NotificationOverview(info),
+                                                                             self.model.state.get_path()))
         # avoid updates because of execution status updates or while multi-actions
         if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
         self._actual_overview = overview
+        logger.info("after_notification_of_parent_or_state: OK")
 
         if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state or \
                 overview['instance'][-1] in [self.model.state, self.model.state.parent] and \
-                overview['method_name'][-1] in ['group_states', 'ungroup_state', 'change_data_type',
+                overview['method_name'][-1] in ['name', 'group_states', 'ungroup_state', 'change_data_type',
                                                 "remove_input_data_port", "remove_output_data_port",
                                                 "remove_scoped_variable", "remove_data_flow"]:
+            logger.info("after_notification_of_parent_or_state: UPDATE")
             self.update()
         self._actual_overview = None
 
@@ -532,24 +536,37 @@ class StateDataFlowsListController(LinkageListController):
     @LinkageListController.observe("scoped_variables", after=True)
     @LinkageListController.observe("data_flows", after=True)
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
-
+        logger.info("after_notification_of_parent_or_state_from_lists: {1}\n{0}".format(NotificationOverview(info),
+                                                                                        self.model.state.get_path()))
         # avoid updates because of execution status updates or while multi-actions
         if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
         # print self, self.model.state.get_path(), overview
-
+        logger.info("after_notification_of_parent_or_state_from_lists: OK")
         # avoid updates because of unimportant methods
         if overview['prop_name'][0] in ['states', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'data_flows'] and \
                 overview['method_name'][-1] not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove',
                                                     'group_states', 'ungroup_state', 'change_data_type',
                                                     'from_key', 'to_key', 'from_state', 'to_state',
                                                     'modify_origin', 'modify_target']:
-            return
+            if self.model.parent:
+                # check for a sibling port change
+                if overview['prop_name'][0] == 'states' and overview['instance'][0] is self.model.parent.state and \
+                        (overview['instance'][-1] in self.model.parent.state.states and
+                         overview['method_name'][-1] in ['add_input_data_port', 'add_output_data_port'] or
+                         overview['prop_name'][-1] in ['data_port', 'scoped_variable'] and
+                         overview['method_name'][-1] in ['name', 'change_data_type']):
+                    pass
+                else:
+                    return
+            else:
+                return
         # print "DUPDATE ", self, overview
 
         try:
+            logger.info("after_notification_of_parent_or_state_from_lists: UPDATE")
             self.update()
         except Exception as e:
             if self.debug_log:
@@ -816,16 +833,26 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                 to_keys_store = ListStore(str)
                 if get_state_model(model.parent, data_flow.to_state):
                     to_state_model = get_state_model(model.parent, data_flow.to_state)
-                    port = to_state_model.state.get_data_port_by_id(data_flow.to_key)
-                    # if not port.data_port_id == data_flow.from_key:
-                    to_keys_store.append([PORT_TYPE_TAG.get(type(port), 'None') + '.#' +
-                                          str(port.data_port_id) + '.' +
-                                          port.data_type.__name__ + '.' +
-                                          port.name])
-                if data_flow.to_state in free_to_port_external:
-                    for port in free_to_port_external[data_flow.to_state]:
+                    from_state_model = get_state_model(model.parent, data_flow.to_state)
+                    act_from_key_port = from_state_model.state.get_data_port_by_id(data_flow.from_key)
+                    act_to_key_port = to_state_model.state.get_data_port_by_id(data_flow.to_key)
+
+                    # first actual port
+                    to_keys_store.append([PORT_TYPE_TAG.get(type(act_to_key_port), 'None') + '.#' +
+                                          str(act_to_key_port.data_port_id) + '.' +
+                                          act_to_key_port.data_type.__name__ + '.' +
+                                          act_to_key_port.name])
+
+                    # second all other possible ones
+                    if to_state_model.state is model.state.parent:
+                        possible_port_ids = to_state_model.state.output_data_ports.keys() + to_state_model.state.scoped_variables.keys()
+                    else:
+                        possible_port_ids = to_state_model.state.input_data_ports.keys()
+                    for port_id in possible_port_ids:
+                        port = to_state_model.state.get_data_port_by_id(port_id)
                         # to_state = get_state_model(model.parent, data_flow.to_state).state
-                        if not port.data_port_id == data_flow.from_key:
+                        if not (PORT_TYPE_TAG.get(type(act_from_key_port), 'None') == 'SV' and port.data_port_id == data_flow.from_key)\
+                                and port is not act_to_key_port:
                             to_keys_store.append([PORT_TYPE_TAG.get(type(port), 'None') + '.#' +
                                                   str(port.data_port_id) + '.' +
                                                   port.data_type.__name__ + '.' +

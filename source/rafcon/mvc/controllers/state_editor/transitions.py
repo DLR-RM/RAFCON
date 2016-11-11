@@ -45,8 +45,6 @@ class StateTransitionsListController(LinkageListController):
     IS_EXTERNAL_STORAGE_ID = 5
     MODEL_STORAGE_ID = 9
 
-    # TODO siblings outcomes are not observed
-
     def __init__(self, model, view):
         # ListStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
         #                   name-color, to-state-color, transition-object, state-object, is_editable, transition-model
@@ -583,22 +581,26 @@ class StateTransitionsListController(LinkageListController):
     @LinkageListController.observe("state", before=True)
     def before_notification_of_parent_or_state(self, model, prop_name, info):
         """ Set the no update flag to avoid updates in between of a state removal. """
+        # logger.info("before state notification: {0}".format(NotificationOverview(info)))
         self.check_no_update_flags_and_return_combined_flag(prop_name, info)
 
     @LinkageListController.observe("state", after=True)
     def after_notification_state(self, model, prop_name, info):
 
         # avoid updates because of execution status updates or while multi-actions
+        # logger.info("after_notification_state: ".format(NotificationOverview(info)))
         if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
         self._actual_overview = overview
+        # logger.info("after_notification_state: OK")
 
         if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state or \
                 overview['instance'][-1] in [self.model.state, self.model.state.parent] and \
-                overview['method_name'][-1] in ['group_states', 'ungroup_state', 'change_data_type',
+                overview['method_name'][-1] in ['name', 'group_states', 'ungroup_state', 'change_data_type',
                                                 "remove_outcome", "remove_transition"]:
+            # logger.info("after_notification_state: UPDATE")
             self.update()
         self._actual_overview = None
 
@@ -609,24 +611,35 @@ class StateTransitionsListController(LinkageListController):
         """ Activates the update after update if outcomes, transitions or states list has been changed.
         """
         # avoid updates because of execution status updates or while multi-actions
+        # logger.info("after_notification_of_parent_or_state_from_lists: ".format(NotificationOverview(info)))
         if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
         # print self, self.model.state.get_path(), overview
+        # logger.info("after_notification_of_parent_or_state_from_lists: OK")
 
         if overview['prop_name'][0] in ['states', 'outcomes', 'transitions'] and \
                 overview['method_name'][-1] not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove'
                                                     'from_outcome', 'to_outcome', 'from_state', 'to_state',
                                                     'modify_origin', 'modify_target']:
-            # TODO check why while deletion sometimes model and core lists are not consistent
-            # TODO -> while adding core elements, list are not always consistent because multiple elements
-            # TODO    can be added and remove in the core at the same time what could not be done in a model
-            return
+                if self.model.parent:
+                    # check for sibling port change
+                    if overview['prop_name'][0] == 'states' and overview['instance'][0] is self.model.parent.state and \
+                            (overview['instance'][-1] in self.model.parent.state.states and
+                             overview['method_name'][-1] in ['add_outcome'] or
+                             overview['prop_name'][-1] in ['outcome'] and
+                             overview['method_name'][-1] in ['name']):
+                        pass
+                    else:
+                        return
+                else:
+                    return
         # print "TUPDATE ", self, overview
 
         try:
             self._actual_overview = overview
+            # logger.info("after_notification_of_parent_or_state_from_lists: UPDATE")
             self.update()
         except KeyError as e:
             if self.debug_log:
