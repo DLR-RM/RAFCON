@@ -345,7 +345,7 @@ class ListViewController(ExtendedController):
         for row_num, element_row in enumerate(self.list_store):
             # Compare data port ids
             if element_row[self.ID_STORAGE_ID] == core_element_id:
-                return tuple([row_num])
+                return row_num,
 
     def get_list_store_row_from_cursor_selection(self):
         """Returns the list_store_row of the currently by cursor selected row entry

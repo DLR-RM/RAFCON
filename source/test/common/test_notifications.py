@@ -73,11 +73,11 @@ class StateNotificationLogObserver(NotificationLogObserver):
     def reset(self):
         self.log = {"before": {'states': [], 'state': [],
                                'outcomes': [], 'input_data_ports': [], 'output_data_ports': [], 'scoped_variables': [],
-                               'transitions': [], 'data_flows': [], 'is_start': [],
+                               'transitions': [], 'data_flows': [], 'is_start': [], 'name': [],
                                'meta_signal': [], 'state_type_changed_signal': []},
                     "after": {'states': [], 'state': [],
                               'outcomes': [], 'input_data_ports': [], 'output_data_ports': [], 'scoped_variables': [],
-                              'transitions': [], 'data_flows': [], 'is_start': [],
+                              'transitions': [], 'data_flows': [], 'is_start': [], 'name': [],
                               'meta_signal': [], 'state_type_changed_signal': []}}
         self.no_failure = True
 
@@ -1338,7 +1338,7 @@ def test_state_add_remove_notification(caplog):
 # TODO do the notification checks for the LibraryState
 def test_state_property_modify_notification(caplog):
     """ Observable Attributes of State are:
-        - name        (setter-method -> 0 before and 0 after notification)
+        - name        (setter-method -> 1 before and 1 after notification)
         - parent          (setter-method -> 1 before and 1 after notification)
         - input_data_ports          (setter-method -> 1 before and 1 after notification)
         - output_data_ports            (setter-method -> 1 before and 1 after notification)
@@ -1441,6 +1441,13 @@ def test_state_property_modify_notification(caplog):
 
     #######################################
     ######## Properties of State ##########
+    # Check for ExecutionState -> never remove this test!!! -> method is overloaded and uses fset
+    forecast = 0
+    # name(self, name)
+    state_dict['Nested2'].name = 'nested'
+    forecast += 1
+    check_states_notifications(states_observer_dict, sub_state_name='Nested2', forecast=forecast)
+    # Check for HierarchyState -> both are important!!!
     forecast = 0
     # name(self, name)
     state_dict['Nested'].name = 'nested'
