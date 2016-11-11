@@ -97,10 +97,8 @@ class LibraryManager(Observable):
         # Replace environment variables
         path = os.path.expandvars(path)
         # If the path is relative, assume it is relative to the config file directory
-        if path.startswith('.'):
+        if not path.startswith('/'):
             path = os.path.join(config.global_config.path, path)
-        elif path.startswith('..'):
-            path = os.path.join(config.global_config.path, "./" + path)
         # Clean path, e.g. replace /./ with /
         path = os.path.abspath(path)
         # Eliminate symbolic links
