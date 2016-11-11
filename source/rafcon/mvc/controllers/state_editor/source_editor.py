@@ -78,8 +78,8 @@ class SourceEditorController(EditorController):
     def open_external_clicked(self, button):
 
         def lock():
-                button.set_label('Unlock')
-                self.view.textview.set_sensitive(False)
+            button.set_label('Unlock')
+            self.view.textview.set_sensitive(False)
 
         def unlock():
             button.set_label('Open external')
@@ -130,28 +130,25 @@ class SourceEditorController(EditorController):
                 lock()
 
             def open_text_window():
-                from rafcon.mvc.utils.dialog import RAFCONTextInput
-                entry_sample_text = "<shell command>"
 
-                text_input = RAFCONTextInput(content=entry_sample_text)
+                from rafcon.mvc.utils.dialog import RAFCONButtonInputDialog
+                markup_text = "No external editor specified. Please specify a shell command to open scripts externally"
 
-                text_input.set_size_request(550, 50)
-                text_input.set_title("Please select external editor")
-                text_input.add_button('Apply', 0)
-                text_input.add_button('Discard', 1)
+                # create a new RAFCONButtonInputDialog, add a checkbox and add the text 'remember' to it
+                text_input = RAFCONButtonInputDialog(markup_text, ["Apply", "Cancel"],
+                                                     checkbox=True, checkbox_text='remember')
 
                 # Run the text_input Dialog until a response is emitted
-                response = text_input.run()
-
-                if not response:
-
+                if text_input.run() == 1:
                     # If the response emitted from the Dialog is 1 than handle the 'OK'
-                    global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', text_input.return_text())
-                    global_gui_config.save_configuration()
+
+                    # If the checkbox is activated, also save the textinput the the config
+                    if text_input.return_check():
+                        global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', text_input.return_text())
+                        global_gui_config.save_configuration()
                     open_file_in_editor(text_input.return_text(), text_input)
 
                 else:
-
                     # If Dialog is canceled either by the button or the cross, untoggle the button again and revert the
                     # lock, which is not implemented yet
                     unlock()
