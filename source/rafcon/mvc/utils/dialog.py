@@ -95,6 +95,8 @@ class RAFCONButtonInputDialog(RAFCONButtonDialog):
         self.entry.set_activates_default(True)
         self.entry.set_width_chars(10)
 
+        self.entry.connect('activate', lambda w: self.response(1))
+
         self.entry.show()
 
         vbox = self.get_content_area()
