@@ -84,7 +84,7 @@ class SourceEditorController(EditorController):
             self.view.textview.set_sensitive(False)
 
         def unlock():
-            button.set_label('Open externally   ')
+            button.set_label('Open externally')
             # When hitting the Open external button, set_active(False) is not called, thus the button stays blue
             # while locked to highlight the reason why one cannot edit the text
             button.set_active(False)
@@ -108,7 +108,11 @@ class SourceEditorController(EditorController):
                 self.apply_clicked(button)
 
                 try:
-                    filesystem.write_file(file_path + os.path.sep + 'script.py', self.source_text, True)
+                    # Save the file before opening it to update the applied changes. Use option create_full_path=True
+                    # to assure that temporary state_machines' script files are saved to
+                    # (their path doesnt exist when not saved)
+                    filesystem.write_file(file_path + os.path.sep + 'script.py',
+                                          self.source_text, create_full_path=True)
                 except IOError as e:
                     # Only happens if the file doesnt exist yet and would be written to the temp folder.
                     # The method write_file doesnt create the path
@@ -124,6 +128,8 @@ class SourceEditorController(EditorController):
                     # the specified command
                     logger.error('The operating system raised an error: {}'.format(e))
                     if text_field:
+                        # If a text field exists destroy it. Errors can occur with a specified editor as well
+                        # e.g Permission changes or sth.
                         text_field.destroy()
                     global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', None)
                     global_gui_config.save_configuration()
