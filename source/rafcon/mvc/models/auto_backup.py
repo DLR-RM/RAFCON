@@ -25,17 +25,11 @@ RAFCON_RUNTIME_BACKUP_PATH = os.path.join(RAFCON_TEMP_PATH_BASE, 'runtime_backup
 if not os.path.exists(RAFCON_RUNTIME_BACKUP_PATH):
     os.makedirs(RAFCON_RUNTIME_BACKUP_PATH)
 
-
-if _platform in ["linux", "linux2"]:
-    try:
-        import subprocess
-        p = subprocess.Popen(['ps', '-A', '-o', 'pid'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        process_id_list = ''.join(out).replace(' ', '').replace('PID', '').split('\n')
-    except OSError:
-        logger.info("Could not retrieve list of current process ids")
-        process_id_list = []
-else:
+try:
+    import psutil
+    process_id_list = [process.pid for process in psutil.process_iter()]
+except OSError:
+    logger.info("Could not retrieve list of current process ids")
     process_id_list = []
 
 
