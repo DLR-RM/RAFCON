@@ -1,35 +1,76 @@
 from gaphas.geometry import distance_line_point, distance_rectangle_point
 from gaphas.segment import Segment
-from simplegeneric import generic
 
-from gaphas.aspect import HandleFinder, ItemHandleFinder, HandleSelection, ItemHandleSelection, ItemHandleInMotion
+from gaphas.aspect import HandleFinder, ItemHandleFinder, HandleSelection, ItemHandleSelection, ItemHandleInMotion, \
+    HandleInMotion, Connector, ConnectionSink
 from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_side_length_of_resize_handle
-from rafcon.mvc.mygaphas.items.connection import ConnectionView
+from rafcon.mvc.mygaphas.items.connection import ConnectionView, TransitionPlaceholderView, DataFlowPlaceholderView
 from rafcon.mvc.mygaphas.items.state import StateView
+from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
+    ScopedVariablePortView
 
 
-class ItemHandleInMotionExtended(ItemHandleInMotion):
+@HandleInMotion.when_type(ConnectionView)
+class ConnectionHandleInMotion(ItemHandleInMotion):
     """
     Move a handle (role is applied to the handle).
     This class replaces the default one in order to adjust the snap distance in move()
     """
 
-    distance = 0
-
-    def move(self, pos, distance):
-        self.distance = distance
-
-        # print type(self), self
-        return super(ItemHandleInMotionExtended, self).move(pos)
+    def _exclude_port(self, port):
+        return False
 
     def glue(self, pos, distance=None):
-        if not distance:
-            distance = self.distance
+        """
+        Glue to an item near a specific point.
 
-        return super(ItemHandleInMotionExtended, self).glue(pos, distance)
+        Returns a ConnectionSink or None.
+        """
+        item = self.item
+        handle = self.handle
+        view = self.view
+
+        if distance is None:
+            distance = self.GLUE_DISTANCE
+
+        if not handle.connectable:
+            return None
+
+        state_v, port, glue_pos = view.get_port_at_point(pos, distance=distance, exclude=(item,),
+                                                         exclude_port_fun=self._exclude_port)
+
+        # check if item and found item can be connected on closest port
+        if port is not None:
+            assert state_v is not None
+
+            connector = Connector(self.item, self.handle)
+            sink = ConnectionSink(state_v, port)
+
+            if connector.allow(sink):
+                # transform coordinates from view space to the item space and
+                # update position of item's handle
+                v2i = view.get_matrix_v2i(item).transform_point
+                handle.pos = v2i(*glue_pos)
+                return sink
+        return None
 
 
-HandleInMotion = generic(ItemHandleInMotionExtended)
+@HandleInMotion.when_type(TransitionPlaceholderView)
+class TransitionPlaceholderHandleInMotion(ConnectionHandleInMotion):
+
+    def _exclude_port(self, port):
+        port_v = getattr(port, "port_v", None)
+        if not isinstance(port_v, (IncomeView, OutcomeView)):
+            return True
+
+
+@HandleInMotion.when_type(DataFlowPlaceholderView)
+class DataFlowPlaceholderHandleInMotion(ConnectionHandleInMotion):
+
+    def _exclude_port(self, port):
+        port_v = getattr(port, "port_v", None)
+        if not isinstance(port_v, (InputPortView, OutputPortView, ScopedVariablePortView)):
+            return True
 
 
 @HandleFinder.when_type(StateView)
