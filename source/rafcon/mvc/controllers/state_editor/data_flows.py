@@ -574,7 +574,6 @@ class StateDataFlowsListController(LinkageListController):
                 self.store_debug_log_file(str(traceback.format_exc()))
             logger.error("update of data_flow widget fails while detecting change in state %s %s" %
                          (self.model.state.name, self.model.state.state_id))
-            print overview
 
 def get_key_combos(ports, keys_store, not_key=None):
 

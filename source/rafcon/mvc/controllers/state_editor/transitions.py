@@ -645,7 +645,6 @@ class StateTransitionsListController(LinkageListController):
                 self.store_debug_log_file(str(traceback.format_exc()))
             logger.error("update of transition widget fails while detecting list change of state %s %s %s\n%s" %
                          (self.model.state.name, self.model.state.state_id, e, self))
-            print overview
 
 
 class StateTransitionsEditorController(ExtendedController):
