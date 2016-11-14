@@ -31,7 +31,7 @@ class RAFCONDialog(gtk.MessageDialog):
 
     def finalize(self, callback, *args):
 
-        # If no special callback function was defined, dont connect one
+        # If no special callback function was defined, don't connect one
         if callback:
             self.connect('response', callback, *args)
 

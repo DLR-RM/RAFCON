@@ -78,12 +78,17 @@ class SourceEditorController(EditorController):
     def open_external_clicked(self, button):
 
         def lock():
+            # change the button label to suggest to the user that the text now is not editable
             button.set_label('Unlock')
+            # Disable the textinput events to the source editor widget
             self.view.textview.set_sensitive(False)
 
         def unlock():
             button.set_label('Open external')
+            # When hitting the Open external button, set_active(False) is not called, thus the button stays blue
+            # while locked to highlight the reason why one cannot edit the text
             button.set_active(False)
+            # Enable text input
             self.view.textview.set_sensitive(True)
 
         if button.get_active():
@@ -138,7 +143,8 @@ class SourceEditorController(EditorController):
                 text_input = RAFCONButtonInputDialog(markup_text, ["Apply", "Cancel"],
                                                      checkbox=True, checkbox_text='remember')
 
-                # Run the text_input Dialog until a response is emitted
+                # Run the text_input Dialog until a response is emitted. The apply button and the 'activate' signal of
+                # the textinput send response 1
                 if text_input.run() == 1:
                     # If the response emitted from the Dialog is 1 than handle the 'OK'
 
