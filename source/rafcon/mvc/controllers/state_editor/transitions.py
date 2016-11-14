@@ -593,7 +593,6 @@ class StateTransitionsListController(LinkageListController):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
-        self._actual_overview = overview
         # logger.info("after_notification_state: OK")
 
         if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state or \
@@ -602,7 +601,6 @@ class StateTransitionsListController(LinkageListController):
                                                 "remove_outcome", "remove_transition"]:
             # logger.info("after_notification_state: UPDATE")
             self.update()
-        self._actual_overview = None
 
     @LinkageListController.observe("states", after=True)
     @LinkageListController.observe("transitions", after=True)
@@ -638,7 +636,6 @@ class StateTransitionsListController(LinkageListController):
         # print "TUPDATE ", self, overview
 
         try:
-            self._actual_overview = overview
             # logger.info("after_notification_of_parent_or_state_from_lists: UPDATE")
             self.update()
         except KeyError as e:
@@ -648,8 +645,7 @@ class StateTransitionsListController(LinkageListController):
                 self.store_debug_log_file(str(traceback.format_exc()))
             logger.error("update of transition widget fails while detecting list change of state %s %s %s\n%s" %
                          (self.model.state.name, self.model.state.state_id, e, self))
-            print self._actual_overview
-        self._actual_overview = None
+            print overview
 
 
 class StateTransitionsEditorController(ExtendedController):

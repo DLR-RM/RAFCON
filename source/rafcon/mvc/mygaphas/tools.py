@@ -262,16 +262,16 @@ class MultiSelectionTool(RubberbandTool):
         self.view.select_in_rectangle((min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0)))
 
         old_items_in_new_selection = [item in self.view.selected_items for item in old_items_selected]
-        actual_items_are_old_selection  = [item in old_items_selected for item in self.view.selected_items]
+        current_items_which_are_old_selection  = [item in old_items_selected for item in self.view.selected_items]
         rubber_band_selection = list(self.view.selected_items)
         new_selection = old_items_selected
-        if any(old_items_in_new_selection) and not all(actual_items_are_old_selection): # reselect elements
+        if any(old_items_in_new_selection) and not all(current_items_which_are_old_selection): # reselect elements
             # add new  rubber band selection by preserving old state selection
             for item in rubber_band_selection:
                 if item not in old_items_selected:
                     old_items_selected.append(item)
         else:
-            if not any(actual_items_are_old_selection):
+            if not any(current_items_which_are_old_selection):
                 # add rubber band selection
                 for item in rubber_band_selection:
                     old_items_selected.append(item)

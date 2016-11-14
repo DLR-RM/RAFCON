@@ -34,7 +34,7 @@ class ListViewController(ExtendedController):
         self._do_selection_update = False
         self._last_path_selection = None
         self._setup_tree_view(tree_view, list_store)
-        self.actual_entry_widget = None
+        self.active_entry_widget = None
         self.widget_columns = self.tree_view.get_columns()
 
     def register_view(self, view):
@@ -80,7 +80,7 @@ class ListViewController(ExtendedController):
             editable = renderer.get_data("editable")
             remove_handler(editable, "focus_out_handler_id")
             remove_handler(renderer, "editing_cancelled_handler_id")
-            self.actual_entry_widget = None
+            self.active_entry_widget = None
 
         def on_focus_out(entry, event):
             """Applies the changes to the entry
@@ -111,7 +111,7 @@ class ListViewController(ExtendedController):
             renderer.set_data("editable", editable)
             renderer.set_data("editing_cancelled_handler_id", editing_cancelled_handler_id)
             editable.set_data("focus_out_handler_id", focus_out_handler_id)
-            self.actual_entry_widget = editable
+            self.active_entry_widget = editable
 
         def on_edited(renderer, path, new_value_str):
             """Calls the apply method with the new value
@@ -124,7 +124,7 @@ class ListViewController(ExtendedController):
             remove_handler(editable, "focus_out_handler_id")
             remove_handler(renderer, "editing_cancelled_handler_id")
             apply_method(path, new_value_str)
-            self.actual_entry_widget = None
+            self.active_entry_widget = None
 
         renderer.connect('editing-started', on_editing_started)
         renderer.connect('edited', on_edited)
@@ -142,7 +142,7 @@ class ListViewController(ExtendedController):
         of maybe active a entry widget. If a entry widget is active the remove callback return with None.
         """
         if react_to_event(self.view, self.tree_view, event) and \
-                not (self.actual_entry_widget and not is_event_of_key_string(event, 'Delete')):
+                not (self.active_entry_widget and not is_event_of_key_string(event, 'Delete')):
             self.on_remove(None)
             return True
 
@@ -391,8 +391,8 @@ class ListViewController(ExtendedController):
             self.tree_view_keypress_callback.__func__.core_element_id = self.list_store[path][self.ID_STORAGE_ID]
 
             # finish active edit process
-            if self.actual_entry_widget is not None:
-                text = self.actual_entry_widget.get_buffer().get_text()
+            if self.active_entry_widget is not None:
+                text = self.active_entry_widget.get_buffer().get_text()
                 if focus_column in self.widget_columns:
                     focus_column.get_cell_renderers()[0].emit('edited', path[0], text)
 
