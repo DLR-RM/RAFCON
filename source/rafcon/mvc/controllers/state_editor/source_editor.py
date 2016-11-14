@@ -84,7 +84,7 @@ class SourceEditorController(EditorController):
             self.view.textview.set_sensitive(False)
 
         def unlock():
-            button.set_label('Open external')
+            button.set_label('Open externally   ')
             # When hitting the Open external button, set_active(False) is not called, thus the button stays blue
             # while locked to highlight the reason why one cannot edit the text
             button.set_active(False)
@@ -108,7 +108,7 @@ class SourceEditorController(EditorController):
                 self.apply_clicked(button)
 
                 try:
-                    filesystem.write_file(file_path + os.path.sep + 'script.py', self.source_text)
+                    filesystem.write_file(file_path + os.path.sep + 'script.py', self.source_text, True)
                 except IOError as e:
                     # Only happens if the file doesnt exist yet and would be written to the temp folder.
                     # The method write_file doesnt create the path

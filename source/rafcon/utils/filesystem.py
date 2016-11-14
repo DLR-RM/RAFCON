@@ -78,8 +78,11 @@ def read_file(file_path, filename=None):
     return file_content
 
     
-def write_file(file_path, content):
+def write_file(file_path, content, create_full_path=False):
     file_path = os.path.realpath(file_path)
+    if create_full_path:
+        head, tail = os.path.split(file_path)
+        create_path(head)
     with open(file_path, 'w') as file_pointer:
         file_pointer.write(content)
     

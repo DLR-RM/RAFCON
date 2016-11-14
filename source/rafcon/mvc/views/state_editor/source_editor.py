@@ -22,7 +22,7 @@ class SourceEditorView(EditorView):
         pylint_check_button = gtk.CheckButton("Pylint-Check")
         pylint_check_button.set_focus_on_click(False)
 
-        open_external_button = gtk.ToggleButton("Open external")
+        open_external_button = gtk.ToggleButton("Open externally")
         open_external_button.set_focus_on_click(False)
         open_external_button.set_size_request(120, constants.BUTTON_MIN_HEIGHT)
 
