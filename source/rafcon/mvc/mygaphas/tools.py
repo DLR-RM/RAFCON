@@ -559,7 +559,8 @@ class ConnectionModificationTool(ConnectionTool):
         if not self.grabbed_handle:
             return False
 
-        self._handle_temporary_connection(self._current_sink, None)
+        reconnect_target = self._end_handle is self._connection_v.to_handle()
+        self._handle_temporary_connection(self._current_sink, None, of_target=reconnect_target)
 
         if not self._current_sink:  # Reset connection to original status, as it was not released above a port
             self._reset_connection()
@@ -577,7 +578,6 @@ class ConnectionModificationTool(ConnectionTool):
                 port_id = port.data_port_id
                 connection = self._connection_v.model.data_flow
             port_state_id = port.parent.state_id if port else None
-            reconnect_target = self._end_handle is self._connection_v.to_handle()
 
             try:
                 if reconnect_target:
