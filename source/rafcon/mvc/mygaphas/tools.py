@@ -593,8 +593,8 @@ class ConnectionModificationTool(ConnectionTool):
 
     def _reset_connection(self):
         reconnect_target = self._end_handle is self._connection_v.to_handle()
-        self._parent_state_v.connect_connection_to_port(self._connection_v, self._start_port,
-                                                        as_target=reconnect_target)
+        self._start_port.parent.connect_connection_to_port(self._connection_v, self._start_port,
+                                                           as_target=reconnect_target)
         self._redraw_port(self._start_port)
 
 
