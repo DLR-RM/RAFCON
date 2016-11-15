@@ -169,7 +169,8 @@ class HoverItemTool(HoverTool):
         self.view.window.set_cursor(gtk.gdk.Cursor(DEFAULT_CURSOR))
 
         if isinstance(view.hovered_item, StateView):
-            state_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos)
+            distance = view.hovered_item.border_width / 2.
+            state_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos, distance)
 
             # Hover over port => show hover state of port and different cursor
             if hovered_handle and hovered_handle not in state_v.corner_handles:
@@ -313,7 +314,11 @@ class MoveHandleTool(HandleTool):
             return False
         view = self.view
 
-        item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
+        if isinstance(view.hovered_item, StateView):
+            distance = view.hovered_item.border_width / 2.
+            item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y), distance)
+        else:
+            item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
 
         if not handle:
             return False
