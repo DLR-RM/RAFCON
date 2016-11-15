@@ -144,12 +144,13 @@ class PerpLine(Line):
         self.remove_all_waypoints()
 
     def get_parent_state_v(self):
-        if not self.from_port:
-            return None
         if not self._parent_state_v:
+            if not self.from_port:
+                return None
             if isinstance(self.from_port, (IncomeView, InputPortView, ScopedVariablePortView)):
-                return self.from_port.parent
-            self._parent_state_v = self.from_port.parent.parent
+                self._parent_state_v = self.from_port.parent
+            else:
+                self._parent_state_v = self.from_port.parent.parent
         return self._parent_state_v
 
     def draw_head(self, context, port):
