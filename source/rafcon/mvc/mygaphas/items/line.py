@@ -186,11 +186,25 @@ class PerpLine(Line):
         self.line_width = self._calc_line_width()
         cr = context.cairo
         cr.set_line_width(self.line_width)
-        draw_line_end(self._handles[0].pos, self._head_angle, self.from_port, self.draw_tail)
-        for h in self._handles[1:-1]:
+
+        # Draw connection tail (line perpendicular to from_port)
+        start_segment_index = 0
+        if self.from_port:
+            draw_line_end(self._handles[0].pos, self._head_angle, self.from_port, self.draw_tail)
+            start_segment_index = 1
+
+        # Draw connection head (line perpendicular to to_port)
+        end_segment_index = len(self._handles)
+        if self.to_port:
+            draw_line_end(self._handles[-1].pos, self._tail_angle, self.to_port, self.draw_head)
+            end_segment_index -= 1
+
+        # Draw connection line from waypoint to waypoint
+        cr.move_to(*self._handles[start_segment_index].pos)
+        for h in self._handles[start_segment_index+1:end_segment_index]:
             cr.line_to(*h.pos)
         cr.set_source_rgba(*self._line_color)
-        draw_line_end(self._handles[-1].pos, self._tail_angle, self.to_port, self.draw_head)
+        cr.stroke()
 
         if self.name and (isinstance(self.from_port, LogicPortView) or
                           global_gui_config.get_config_value("SHOW_NAMES_ON_DATA_FLOWS", default=True)):
