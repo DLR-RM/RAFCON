@@ -4,7 +4,8 @@ from gaphas.segment import Segment
 from gaphas.aspect import HandleFinder, ItemHandleFinder, HandleSelection, ItemHandleSelection, ItemHandleInMotion, \
     HandleInMotion, Connector, ConnectionSink
 from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_side_length_of_resize_handle
-from rafcon.mvc.mygaphas.items.connection import ConnectionView, TransitionPlaceholderView, DataFlowPlaceholderView
+from rafcon.mvc.mygaphas.items.connection import ConnectionView, TransitionView, DataFlowView, \
+    TransitionPlaceholderView, DataFlowPlaceholderView
 from rafcon.mvc.mygaphas.items.state import StateView
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedVariablePortView
@@ -55,8 +56,8 @@ class ConnectionHandleInMotion(ItemHandleInMotion):
         return None
 
 
-@HandleInMotion.when_type(TransitionPlaceholderView)
-class TransitionPlaceholderHandleInMotion(ConnectionHandleInMotion):
+@HandleInMotion.when_type(TransitionView, TransitionPlaceholderView)
+class TransitionHandleInMotion(ConnectionHandleInMotion):
 
     def _exclude_port(self, port):
         port_v = getattr(port, "port_v", None)
@@ -64,8 +65,8 @@ class TransitionPlaceholderHandleInMotion(ConnectionHandleInMotion):
             return True
 
 
-@HandleInMotion.when_type(DataFlowPlaceholderView)
-class DataFlowPlaceholderHandleInMotion(ConnectionHandleInMotion):
+@HandleInMotion.when_type(DataFlowView, DataFlowPlaceholderView)
+class DataFlowHandleInMotion(ConnectionHandleInMotion):
 
     def _exclude_port(self, port):
         port_v = getattr(port, "port_v", None)
