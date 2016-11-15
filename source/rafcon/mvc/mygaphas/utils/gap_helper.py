@@ -254,7 +254,7 @@ def get_relative_positions_of_waypoints(transition_v):
     handles_list = transition_v.handles()
     rel_pos_list = []
     for handle in handles_list:
-        if handle in transition_v.end_handles_perp():
+        if handle in transition_v.end_handles(include_waypoints=True):
             continue
         rel_pos = transition_v.canvas.get_matrix_i2i(transition_v, transition_v.parent).transform_point(*handle.pos)
         rel_pos_list.append(rel_pos)

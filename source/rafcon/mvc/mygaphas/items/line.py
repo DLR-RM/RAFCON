@@ -53,7 +53,7 @@ class PerpLine(Line):
     def waypoints(self):
         waypoints = []
         for handle in self.handles():
-            if handle not in self.end_handles_perp():
+            if handle not in self.end_handles(include_waypoints=True):
                 waypoints.append(handle)
         return waypoints
 
@@ -99,24 +99,14 @@ class PerpLine(Line):
             self._view = self.canvas.get_first_view()
         return self._view
 
-    def end_handles_perp(self):
+    def end_handles(self, include_waypoints=False):
         end_handles = [self.from_handle(), self.to_handle()]
-        if self._from_waypoint:
-            end_handles.append(self._from_waypoint)
-        if self._to_waypoint:
-            end_handles.append(self._to_waypoint)
+        if include_waypoints:
+            if self._from_waypoint:
+                end_handles.insert(1, self._from_waypoint)
+            if self._to_waypoint:
+                end_handles.insert(-1, self._to_waypoint)
         return end_handles
-
-    def end_handles(self):
-        return [self.from_handle(), self.to_handle()]
-
-    def perp_waypoint_handles(self):
-        waypoint_handles = []
-        if self._from_waypoint:
-            waypoint_handles.append(self._from_waypoint)
-        if self._to_waypoint:
-            waypoint_handles.append(self._to_waypoint)
-        return waypoint_handles
 
     def reset_from_port(self):
         self._from_port = None
