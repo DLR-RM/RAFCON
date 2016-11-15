@@ -298,15 +298,6 @@ class MultiSelectionTool(RubberbandTool):
         return True
 
 
-# 1. NameView: Corner handles => resize NameView
-# 2. StateView: Corner handles => resize StateView
-# 3. StateView: logical port handles => new Transition
-# 4. StateView: data port handles => new DataFlow
-# 5. TransitionView: segment handles => do nothing
-# 6. TransitionView: end point handles => move end point
-# 7. DataFlowView: segment handles => do nothing
-# 8. DataFlowView: end point handles => move end point
-
 class MoveHandleTool(HandleTool):
     """Tool to move handles around
 
@@ -330,8 +321,13 @@ class MoveHandleTool(HandleTool):
         if not handle:
             return False
 
+        # Only move ports when the MOVE_PORT_MODIFIER key is pressed
         if isinstance(item, StateView) and handle in [port.handle for port in item.get_all_ports()] and not (
                     event.state & constants.MOVE_PORT_MODIFIER):
+            return False
+
+        # Do not move from/to handles of connections (only their waypoints)
+        if isinstance(item, ConnectionView) and handle in item.end_handles(include_waypoints=True):
             return False
 
         if handle:
