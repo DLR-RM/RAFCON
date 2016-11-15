@@ -598,7 +598,10 @@ class ConnectionModificationTool(ConnectionTool):
                     port_id = None
                 connection = self._connection_v.model.transition
             else:
-                port = self._current_sink.port.port_v.model.data_port
+                try:
+                    port = self._current_sink.port.port_v.model.data_port
+                except AttributeError:  # Port is a scoped variable
+                    port = self._current_sink.port.port_v.model.scoped_variable
                 port_id = port.data_port_id
                 connection = self._connection_v.model.data_flow
             port_state_id = port.parent.state_id if port else None
