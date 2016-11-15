@@ -1,8 +1,8 @@
 from gaphas.geometry import distance_line_point, distance_rectangle_point
 from gaphas.segment import Segment
-
 from gaphas.aspect import HandleFinder, ItemHandleFinder, HandleSelection, ItemHandleSelection, ItemHandleInMotion, \
     HandleInMotion, Connector, ConnectionSink
+
 from rafcon.mvc.mygaphas.utils.gap_draw_helper import get_side_length_of_resize_handle
 from rafcon.mvc.mygaphas.items.connection import ConnectionView, TransitionView, DataFlowView, \
     TransitionPlaceholderView, DataFlowPlaceholderView

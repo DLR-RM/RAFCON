@@ -3,25 +3,22 @@ from gtk.gdk import CONTROL_MASK
 from enum import Enum
 from math import pow
 
-from gaphas.aspect import HandleFinder, ItemConnectionSink, Connector, InMotion, ItemSelection
-from rafcon.mvc import state_machine_helper
-
-from rafcon.mvc.config import global_gui_config
-
+from gaphas.aspect import HandleFinder, ItemConnectionSink, Connector, InMotion
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, ConnectHandleTool, RubberbandTool
 from gaphas.item import NW
 
-from rafcon.mvc.controllers.right_click_menu.state import StateRightClickMenuGaphas
-
 from rafcon.mvc.mygaphas.aspect import HandleInMotion, StateHandleFinder
 from rafcon.mvc.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, \
-    TransitionPlaceholderView, DataFlowPlaceholderView, TransitionView, \
-    DataFlowView
+    TransitionPlaceholderView, DataFlowPlaceholderView, TransitionView, DataFlowView
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedVariablePortView
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 from rafcon.mvc.mygaphas.utils import gap_helper
 
+from rafcon.mvc.controllers.right_click_menu.state import StateRightClickMenuGaphas
+
+from rafcon.mvc import state_machine_helper
+from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.gui_helper import react_to_event
 from rafcon.mvc.utils import constants
 from rafcon.utils import log
