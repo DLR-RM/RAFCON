@@ -116,6 +116,21 @@ class SegmentHandleFinder(ItemHandleFinder):
         item = view.hovered_item
         handle = None
         if self.item is view.focused_item:
+
+            end_handles = item.end_handles(include_waypoints=True)
+
+            if len(end_handles) == 4:
+                from_handle, from_handle_waypoint, to_handle_waypoint, to_handle = end_handles
+                state_v = item.parent
+                cur_pos = self.view.get_matrix_v2i(item).transform_point(*pos)
+
+                distance_from_segment, _ = distance_line_point(from_handle.pos, from_handle_waypoint.pos, cur_pos)
+                if distance_from_segment < state_v.border_width:
+                    return item, from_handle
+                distance_to_segment, _ = distance_line_point(to_handle.pos, to_handle_waypoint.pos, cur_pos)
+                if distance_to_segment < state_v.border_width:
+                    return item, to_handle
+
             try:
                 segment = Segment(self.item, self.view)
             except TypeError:
