@@ -1,5 +1,5 @@
-from gaphas.aspect import InMotion
-from gaphas.guide import GuidedItemInMotion, Guide
+from gaphas.aspect import InMotion, HandleInMotion
+from gaphas.guide import GuidedItemInMotion, GuidedItemHandleInMotion, Guide
 
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 
@@ -85,3 +85,19 @@ class GuidedNameInMotion(GuidedItemInMotion):
         if parent_item:
             constraint = parent_item.keep_rect_constraints[self.item]
             self.view.canvas.solver.request_resolve_constraint(constraint)
+
+
+@HandleInMotion.when_type(StateView)
+class GuidedStateHandleInMotion(GuidedItemHandleInMotion):
+    
+    def glue(self, pos, distance=None):
+        distance = distance if distance else self.GLUE_DISTANCE
+        super(GuidedStateHandleInMotion, self).glue(pos, distance)
+
+    def move(self, pos):
+        ports = self.item.get_all_ports()
+        for port in ports:
+            if port.handle is self.handle:
+                self.GLUE_DISTANCE = 0
+                return super(GuidedItemHandleInMotion, self).move(pos)
+        super(GuidedStateHandleInMotion, self).move(pos)
