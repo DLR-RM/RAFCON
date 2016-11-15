@@ -496,50 +496,51 @@ class StateView(Element):
                 transitions.append(child)
         return transitions
 
-    def connect_connection_to_port(self, connection_v, port):
+    def connect_connection_to_port(self, connection_v, port, as_target=True):
+        handle = connection_v.to_handle() if as_target else connection_v.from_handle()
         if isinstance(port, IncomeView):
-            self.connect_to_income(connection_v, connection_v.from_handle())
+            self.connect_to_income(connection_v, handle)
         elif isinstance(port, OutcomeView):
-            self.connect_to_outcome(port.outcome_id, connection_v, connection_v.from_handle())
+            self.connect_to_outcome(port.outcome_id, connection_v, handle)
         elif isinstance(port, InputPortView):
-            self.connect_to_input_port(port.port_id, connection_v, connection_v.from_handle())
+            self.connect_to_input_port(port.port_id, connection_v, handle)
         elif isinstance(port, OutputPortView):
-            self.connect_to_output_port(port.port_id, connection_v, connection_v.from_handle())
+            self.connect_to_output_port(port.port_id, connection_v, handle)
         elif isinstance(port, ScopedVariablePortView):
-            self.connect_to_scoped_variable_port(port.port_id, connection_v, connection_v.from_handle())
+            self.connect_to_scoped_variable_port(port.port_id, connection_v, handle)
 
-    def connect_to_income(self, item, handle):
-        self._income.add_connected_handle(handle, item)
-        item.set_port_for_handle(self._income, handle)
-        self._connect_to_port(self._income.port, item, handle)
+    def connect_to_income(self, connection_v, handle):
+        self._income.add_connected_handle(handle, connection_v)
+        connection_v.set_port_for_handle(self._income, handle)
+        self._connect_to_port(self._income.port, connection_v, handle)
 
-    def connect_to_outcome(self, outcome_id, item, handle):
+    def connect_to_outcome(self, outcome_id, connection_v, handle):
         outcome_v = self.outcome_port(outcome_id)
-        outcome_v.add_connected_handle(handle, item)
-        item.set_port_for_handle(outcome_v, handle)
-        self._connect_to_port(outcome_v.port, item, handle)
+        outcome_v.add_connected_handle(handle, connection_v)
+        connection_v.set_port_for_handle(outcome_v, handle)
+        self._connect_to_port(outcome_v.port, connection_v, handle)
 
-    def connect_to_input_port(self, port_id, item, handle):
+    def connect_to_input_port(self, port_id, connection_v, handle):
         port_v = self.input_port(port_id)
-        port_v.add_connected_handle(handle, item)
-        item.set_port_for_handle(port_v, handle)
-        self._connect_to_port(port_v.port, item, handle)
+        port_v.add_connected_handle(handle, connection_v)
+        connection_v.set_port_for_handle(port_v, handle)
+        self._connect_to_port(port_v.port, connection_v, handle)
 
-    def connect_to_output_port(self, port_id, item, handle):
+    def connect_to_output_port(self, port_id, connection_v, handle):
         port_v = self.output_port(port_id)
-        port_v.add_connected_handle(handle, item)
-        item.set_port_for_handle(port_v, handle)
-        self._connect_to_port(port_v.port, item, handle)
+        port_v.add_connected_handle(handle, connection_v)
+        connection_v.set_port_for_handle(port_v, handle)
+        self._connect_to_port(port_v.port, connection_v, handle)
 
-    def connect_to_scoped_variable_port(self, scoped_variable_id, item, handle):
+    def connect_to_scoped_variable_port(self, scoped_variable_id, connection_v, handle):
         port_v = self.scoped_variable(scoped_variable_id)
-        port_v.add_connected_handle(handle, item)
-        item.set_port_for_handle(port_v, handle)
-        self._connect_to_port(port_v.port, item, handle)
+        port_v.add_connected_handle(handle, connection_v)
+        connection_v.set_port_for_handle(port_v, handle)
+        self._connect_to_port(port_v.port, connection_v, handle)
 
-    def _connect_to_port(self, port, item, handle):
-        c = port.constraint(self.canvas, item, handle, self)
-        self.canvas.connect_item(item, handle, self, port, c)
+    def _connect_to_port(self, port, connection_v, handle):
+        c = port.constraint(self.canvas, connection_v, handle, self)
+        self.canvas.connect_item(connection_v, handle, self, port, c)
 
     def income_port(self):
         return self._income
