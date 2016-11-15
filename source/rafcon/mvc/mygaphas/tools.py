@@ -351,12 +351,86 @@ class ConnectionTool(ConnectHandleTool):
 
     def __init__(self):
         super(ConnectionTool, self).__init__()
-        self._start_handle = None
-        self._start_port = None
         self._is_transition = False
-        self._placeholder_connection_v = None
+        self._connection_v = None
         self._parent_state_v = None
-        self._last_sink = None
+        self._current_sink = None
+        self._start_port = None
+
+    def on_button_release(self, event):
+        self._is_transition = False
+        self._parent_state_v = None
+        self._connection_v = None
+        self._current_sink = None
+        self._start_port = None
+        self.grabbed_item = None
+        self.grabbed_handle = None
+
+    def _set_motion_handle(self, event):
+        """Sets motion handle to currently grabbed handle
+        """
+        item = self.grabbed_item
+        handle = self.grabbed_handle
+        pos = event.x, event.y
+        self.motion_handle = HandleInMotion(item, handle, self.view)
+        self.motion_handle.GLUE_DISTANCE = self._parent_state_v.border_width
+        self.motion_handle.start_move(pos)
+
+    def _create_temporary_connection(self):
+        if self._is_transition:
+            self._connection_v = TransitionPlaceholderView(self._parent_state_v.hierarchy_level)
+        else:
+            self._connection_v = DataFlowPlaceholderView(self._parent_state_v.hierarchy_level)
+        self.view.canvas.add(self._connection_v, self._parent_state_v)
+
+    def _handle_temporary_connection(self, old_sink, new_sink, of_target=True):
+        def sink_set_and_differs(sink_a, sink_b):
+            if not sink_a:
+                return False
+            if not sink_b:
+                return True
+            if sink_a.port != sink_b.port:
+                return True
+            return False
+
+        if sink_set_and_differs(old_sink, new_sink):
+            sink_port_v = old_sink.port.port_v
+            self._disconnect_temporarily(sink_port_v, target=of_target)
+
+        if sink_set_and_differs(new_sink, old_sink):
+            sink_port_v = new_sink.port.port_v
+            self._connect_temporarily(sink_port_v, target=of_target)
+
+    def _connect_temporarily(self, port_v, target=True):
+        if target:
+            handle = self._connection_v.to_handle()
+        else:
+            handle = self._connection_v.from_handle()
+        port_v.add_connected_handle(handle, self._connection_v, moving=True)
+        port_v.tmp_connect(handle, self._connection_v)
+        self._connection_v.set_port_for_handle(port_v, handle)
+        # Redraw state of port to make hover state visible
+        self._redraw_port(port_v)
+
+    def _disconnect_temporarily(self, port_v, target=True):
+        if target:
+            handle = self._connection_v.to_handle()
+        else:
+            handle = self._connection_v.from_handle()
+        port_v.remove_connected_handle(handle)
+        port_v.tmp_disconnect()
+        self._connection_v.reset_port_for_handle(handle)
+        # Redraw state of port to make hover state visible
+        self._redraw_port(port_v)
+
+    def _redraw_port(self, port_v):
+        self.view.queue_draw_area(*port_v.get_port_area(self.view))
+
+
+class ConnectionCreationTool(ConnectionTool):
+
+    def __init__(self):
+        super(ConnectionCreationTool, self).__init__()
 
     def on_button_press(self, event):
         """Handle button press events.
@@ -388,65 +462,44 @@ class ConnectionTool(ConnectHandleTool):
                     self._parent_state_v = port.parent.parent
                 else:
                     return False
-        self._start_handle = handle
 
         return True
 
     def on_motion_notify(self, event):
-        if not self._start_handle or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
+        if not self._parent_state_v or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
             return False
         # print "draw connection"
 
-        view = self.view
-        canvas = view.canvas
-
-        if not self._placeholder_connection_v:
-            if self._is_transition:
-                self._placeholder_connection_v = TransitionPlaceholderView(self._parent_state_v.hierarchy_level)
-            else:
-                self._placeholder_connection_v = DataFlowPlaceholderView(self._parent_state_v.hierarchy_level)
-            canvas.add(self._placeholder_connection_v, self._parent_state_v)
-            self._start_port.parent.connect_connection_to_port(self._placeholder_connection_v, self._start_port)
-            self.grab_handle(self._placeholder_connection_v, self._placeholder_connection_v.to_handle())
+        if not self._connection_v:
+            self._create_temporary_connection()
+            self._start_port.parent.connect_connection_to_port(self._connection_v, self._start_port, as_target=False)
+            self.grab_handle(self._connection_v, self._connection_v.to_handle())
             self._set_motion_handle(event)
 
-        old_last_sink = self._last_sink
-        self._last_sink = self.motion_handle.move((event.x, event.y))
+        last_sink = self._current_sink
+        self._current_sink = self.motion_handle.move((event.x, event.y))
 
-        def sink_set_and_differs(sink_a, sink_b):
-            if not sink_a:
-                return False
-            if not sink_b:
-                return True
-            if sink_a.port != sink_b.port:
-                return True
-            return False
-
-        if sink_set_and_differs(old_last_sink, self._last_sink):
-            sink_port_v = old_last_sink.port.port_v
-            self._disconnect_temporarily(sink_port_v, use_to_handle=True)
-
-        if sink_set_and_differs(self._last_sink, old_last_sink):
-            sink_port_v = self._last_sink.port.port_v
-            self._connect_temporarily(sink_port_v, use_to_handle=True)
-        # return False
+        self._handle_temporary_connection(last_sink, self._current_sink, of_target=True)
 
     def on_button_release(self, event):
-        if self._last_sink:
-            gap_helper.create_new_connection(self._placeholder_connection_v.from_port,
-                                             self._last_sink.port.port_v)
-        super(ConnectionTool, self).on_button_release(event)
-        self._start_handle = None
-        self._start_port = None
-        self._is_transition = False
-        self._parent_state_v = None
-        self._last_sink = None
+        if not self._connection_v:
+            return False
+
+        self.view.canvas.update_now()
+        if self._current_sink:
+            if self.motion_handle:
+                self.motion_handle.stop_move()
+            sink_port_v = self._current_sink.port.port_v
+            self._disconnect_temporarily(sink_port_v, target=True)
+            gap_helper.create_new_connection(self._connection_v.from_port, sink_port_v)
 
         # remove placeholder from canvas
-        if self._placeholder_connection_v:
-            self._placeholder_connection_v.remove_connection_from_ports()
-            self.view.canvas.remove(self._placeholder_connection_v)
-            self._placeholder_connection_v = None
+        if self._connection_v:
+            self._connection_v.remove_connection_from_ports()
+            self.view.canvas.remove(self._connection_v)
+
+        super(ConnectionCreationTool, self).on_button_release(event)
+
 
     def _set_motion_handle(self, event):
         """Sets motion handle to currently grabbed handle
