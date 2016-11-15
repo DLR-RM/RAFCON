@@ -91,7 +91,7 @@ class GuidedNameInMotion(GuidedItemInMotion):
 
 
 @HandleInMotion.when_type(StateView)
-class GuidedStateHandleInMotion(GuidedItemHandleInMotion):
+class GuidedStateHandleInMotion(GuidedStateMixin, GuidedItemHandleInMotion):
     
     def glue(self, pos, distance=None):
         distance = distance if distance else self.GLUE_DISTANCE
