@@ -351,18 +351,18 @@ class ConnectionTool(ConnectHandleTool):
 
     def __init__(self):
         super(ConnectionTool, self).__init__()
-        self._is_transition = False
         self._connection_v = None
+        self._start_port_v = None
         self._parent_state_v = None
+        self._is_transition = False
         self._current_sink = None
-        self._start_port = None
 
     def on_button_release(self, event):
         self._is_transition = False
-        self._parent_state_v = None
         self._connection_v = None
+        self._start_port_v = None
+        self._parent_state_v = None
         self._current_sink = None
-        self._start_port = None
         self.grabbed_item = None
         self.grabbed_handle = None
 
@@ -377,6 +377,11 @@ class ConnectionTool(ConnectHandleTool):
         self.motion_handle.start_move(pos)
 
     def _create_temporary_connection(self):
+        """Creates a placeholder connection view
+
+        :return: New placeholder connection
+        :rtype: rafcon.mvc.mygaphas.items.connection.ConnectionPlaceholderView
+        """
         if self._is_transition:
             self._connection_v = TransitionPlaceholderView(self._parent_state_v.hierarchy_level)
         else:
@@ -384,6 +389,16 @@ class ConnectionTool(ConnectHandleTool):
         self.view.canvas.add(self._connection_v, self._parent_state_v)
 
     def _handle_temporary_connection(self, old_sink, new_sink, of_target=True):
+        """Connect connection to new_sink
+
+        If new_sink is set, the connection origin or target will be set to new_sink. The connection to old_sink is
+        being removed.
+
+        :param gaphas.aspect.ConnectionSink old_sink: Old sink (if existing)
+        :param gaphas.aspect.ConnectionSink new_sink: New sink (if existing)
+        :param bool of_target: Whether the origin or target will be reconnected
+        :return:
+        """
         def sink_set_and_differs(sink_a, sink_b):
             if not sink_a:
                 return False
@@ -402,6 +417,11 @@ class ConnectionTool(ConnectHandleTool):
             self._connect_temporarily(sink_port_v, target=of_target)
 
     def _connect_temporarily(self, port_v, target=True):
+        """Set a connection between the current connection and the given port
+
+        :param rafcon.mvc.mygaphas.items.ports.PortView port_v: The port to be connected
+        :param bool target: Whether the connection origin or target should be connected
+        """
         if target:
             handle = self._connection_v.to_handle()
         else:
@@ -413,6 +433,11 @@ class ConnectionTool(ConnectHandleTool):
         self._redraw_port(port_v)
 
     def _disconnect_temporarily(self, port_v, target=True):
+        """Removes a connection between the current connection and the given port
+
+        :param rafcon.mvc.mygaphas.items.ports.PortView port_v: The port that was connected
+        :param bool target: Whether the connection origin or target should be disconnected
+        """
         if target:
             handle = self._connection_v.to_handle()
         else:
@@ -444,16 +469,17 @@ class ConnectionCreationTool(ConnectionTool):
 
         item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
 
-        if not handle:
+        if not handle:  # Require a handle
             return False
 
+        # Connection handle must belong to a port and the MOVE_PORT_MODIFIER must not be pressed
         if not isinstance(item, StateView) or handle not in [port.handle for port in item.get_all_ports()] or (
                     event.state & constants.MOVE_PORT_MODIFIER):
             return False
 
         for port in item.get_all_ports():
             if port.handle is handle:
-                self._start_port = port
+                self._start_port_v = port
                 if port in item.get_logic_ports():
                     self._is_transition = True
                 if port is item.income or isinstance(port, InputPortView) or port in item.scoped_variables:
@@ -468,11 +494,11 @@ class ConnectionCreationTool(ConnectionTool):
     def on_motion_notify(self, event):
         if not self._parent_state_v or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
             return False
-        # print "draw connection"
 
         if not self._connection_v:
+            # Create new temporary connection, with origin at the start port and target at the cursor
             self._create_temporary_connection()
-            self._start_port.parent.connect_connection_to_port(self._connection_v, self._start_port, as_target=False)
+            self._start_port_v.parent.connect_connection_to_port(self._connection_v, self._start_port_v, as_target=False)
             self.grab_handle(self._connection_v, self._connection_v.to_handle())
             self._set_motion_handle(event)
 
@@ -519,16 +545,14 @@ class ConnectionModificationTool(ConnectionTool):
 
         item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
 
-        if not handle:
-            return False
-
-        if not isinstance(item, ConnectionView) or handle not in item.end_handles():
+        # Handle must be the end handle of a connection
+        if not handle or not isinstance(item, ConnectionView) or handle not in item.end_handles():
             return False
 
         if handle is item.from_handle():
-            self._start_port = item.from_port
+            self._start_port_v = item.from_port
         else:
-            self._start_port = item.to_port
+            self._start_port_v = item.to_port
 
         self._parent_state_v = item.parent
         self._end_handle = handle
@@ -542,25 +566,25 @@ class ConnectionModificationTool(ConnectionTool):
         if not self._parent_state_v or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
             return False
 
-        reconnect_target = self._end_handle is self._connection_v.to_handle()
+        modify_target = self._end_handle is self._connection_v.to_handle()
 
         if not self.grabbed_handle:
             self.view.canvas.disconnect_item(self._connection_v, self._end_handle)
-            self._disconnect_temporarily(self._start_port, target=reconnect_target)
+            self._disconnect_temporarily(self._start_port_v, target=modify_target)
             self.grab_handle(self._connection_v, self._end_handle)
             self._set_motion_handle(event)
 
         last_sink = self._current_sink
         self._current_sink = self.motion_handle.move((event.x, event.y))
 
-        self._handle_temporary_connection(last_sink, self._current_sink, reconnect_target)
+        self._handle_temporary_connection(last_sink, self._current_sink, modify_target)
 
     def on_button_release(self, event):
         if not self.grabbed_handle:
             return False
 
-        reconnect_target = self._end_handle is self._connection_v.to_handle()
-        self._handle_temporary_connection(self._current_sink, None, of_target=reconnect_target)
+        modify_target = self._end_handle is self._connection_v.to_handle()
+        self._handle_temporary_connection(self._current_sink, None, of_target=modify_target)
 
         if not self._current_sink:  # Reset connection to original status, as it was not released above a port
             self._reset_connection()
@@ -580,7 +604,7 @@ class ConnectionModificationTool(ConnectionTool):
             port_state_id = port.parent.state_id if port else None
 
             try:
-                if reconnect_target:
+                if modify_target:
                     connection.modify_target(port_state_id, port_id)
                 else:
                     connection.modify_origin(port_state_id, port_id)
@@ -592,10 +616,10 @@ class ConnectionModificationTool(ConnectionTool):
         self._end_handle = None
 
     def _reset_connection(self):
-        reconnect_target = self._end_handle is self._connection_v.to_handle()
-        self._start_port.parent.connect_connection_to_port(self._connection_v, self._start_port,
-                                                           as_target=reconnect_target)
-        self._redraw_port(self._start_port)
+        modify_target = self._end_handle is self._connection_v.to_handle()
+        self._start_port_v.parent.connect_connection_to_port(self._connection_v, self._start_port_v,
+                                                             as_target=modify_target)
+        self._redraw_port(self._start_port_v)
 
 
 class HandleMoveTool(HandleTool):
