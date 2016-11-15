@@ -97,18 +97,17 @@ class Transition(StateElement):
     @lock_state_machine
     @Observable.observed
     def modify_origin(self, from_state, from_outcome):
-        """ Set from_state and from_outcome at ones to support fully valid transition modifications.
-        :param str from_state: valid origin state
-        :param int from_outcome: valid origin outcome
-        :raises exceptions.ValueError: if one the parameters if of wrong type
-        :raises exceptions.RuntimeError: if the transition could not be changed
-        :return:
+        """Set both from_state and from_outcome at the same time to modify transition origin
+
+        :param str from_state: State id of the origin state
+        :param int from_outcome: Outcome id of the origin port
+        :raises exceptions.ValueError: If parameters have wrong types or the new transition is not valid
         """
         if not (from_state is None and from_outcome is None):
             if not isinstance(from_state, basestring):
-                raise ValueError("from_state must be of type str")
+                raise ValueError("Invalid transition origin port: from_state must be of type str")
             if not isinstance(from_outcome, int):
-                raise ValueError("from_outcome must be of type int")
+                raise ValueError("Invalid transition origin port: from_outcome must be of type int")
 
         old_from_state = self.from_state
         old_from_outcome = self.from_outcome
@@ -124,18 +123,18 @@ class Transition(StateElement):
     @lock_state_machine
     @Observable.observed
     def modify_target(self, to_state, to_outcome=None):
-        """ Set from_state and from_outcome at ones to support fully valid transition modifications.
-        :param str from_state: valid origin state
-        :param int from_outcome: valid origin outcome
-        :raises exceptions.ValueError: if one the parameters if of wrong type
-        :raises exceptions.RuntimeError: if the transition could not be changed
-        :return:
+        """Set both to_state and to_outcome at the same time to modify transition target
+
+        :param str to_state: State id of the target state
+        :param int to_outcome: Outcome id of the target port
+        :raises exceptions.ValueError: If parameters have wrong types or the new transition is not valid
         """
         if not (to_state is None and (to_outcome is not int and to_outcome is not None)):
             if not isinstance(to_state, basestring):
-                raise ValueError("to_state must be of type str")
-            if not isinstance(to_outcome, int) and not to_outcome is None:
-                raise ValueError("to_outcome must be of type int or None (if to_state is of type str)")
+                raise ValueError("Invalid transition target port: to_state must be of type str")
+            if not isinstance(to_outcome, int) and to_outcome is not None:
+                raise ValueError("Invalid transition target port: to_outcome must be of type int or None (if to_state "
+                                 "is of type str)")
 
         old_to_state = self.to_state
         old_to_outcome = self.to_outcome

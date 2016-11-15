@@ -41,17 +41,21 @@ class ConnectionView(PerpLine):
 
 
 class ConnectionPlaceholderView(ConnectionView):
-    def __init__(self, hierarchy_level, transition_placeholder):
-        super(ConnectionPlaceholderView, self).__init__(hierarchy_level)
+    pass
 
-        self.transition_placeholder = transition_placeholder
 
-        if transition_placeholder:
-            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE'])
-            self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'])
-        else:
-            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
-            self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_PORT'])
+class TransitionPlaceholderView(ConnectionPlaceholderView):
+    def __init__(self, hierarchy_level):
+        super(TransitionPlaceholderView, self).__init__(hierarchy_level)
+        self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE'])
+        self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'])
+
+
+class DataFlowPlaceholderView(ConnectionPlaceholderView):
+    def __init__(self, hierarchy_level):
+        super(DataFlowPlaceholderView, self).__init__(hierarchy_level)
+        self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
+        self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_PORT'])
 
 
 class TransitionView(ConnectionView):

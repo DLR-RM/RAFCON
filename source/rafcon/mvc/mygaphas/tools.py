@@ -4,23 +4,21 @@ from enum import Enum
 from math import pow
 
 from gaphas.aspect import HandleFinder, ItemConnectionSink, Connector, InMotion
-from rafcon.mvc import state_machine_helper
-
-from rafcon.mvc.config import global_gui_config
-
-from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, RubberbandTool
+from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, ConnectHandleTool, RubberbandTool
 from gaphas.item import NW
 
-from rafcon.mvc.controllers.right_click_menu.state import StateRightClickMenuGaphas
-
 from rafcon.mvc.mygaphas.aspect import HandleInMotion, StateHandleFinder
-from rafcon.mvc.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, TransitionView, \
-    DataFlowView
+from rafcon.mvc.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, \
+    TransitionPlaceholderView, DataFlowPlaceholderView, TransitionView, DataFlowView
 from rafcon.mvc.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
     ScopedVariablePortView
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 from rafcon.mvc.mygaphas.utils import gap_helper
 
+from rafcon.mvc.controllers.right_click_menu.state import StateRightClickMenuGaphas
+
+from rafcon.mvc import state_machine_helper
+from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.gui_helper import react_to_event
 from rafcon.mvc.utils import constants
 from rafcon.utils import log
@@ -295,6 +293,333 @@ class MultiSelectionTool(RubberbandTool):
             self.view.select_item(item)
 
         return True
+
+
+class MoveHandleTool(HandleTool):
+    """Tool to move handles around
+
+    Handles can be moved using click'n'drag. This is already implemented in the base class `HandleTool`. This class
+    extends the behaviour by requiring a modifier key to be pressed when moving ports. It also allows to change the
+    modifier key, which are defined in `rafcon.mvc.utils.constants`.
+    """
+
+    def on_button_press(self, event):
+        """Handle button press events.
+
+        If the (mouse) button is pressed on top of a Handle (item.Handle), that handle is grabbed and can be
+        dragged around.
+        """
+        if not event.button == 1:  # left mouse button
+            return False
+        view = self.view
+
+        item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
+
+        if not handle:
+            return False
+
+        # Only move ports when the MOVE_PORT_MODIFIER key is pressed
+        if isinstance(item, StateView) and handle in [port.handle for port in item.get_all_ports()] and not (
+                    event.state & constants.MOVE_PORT_MODIFIER):
+            return False
+
+        # Do not move from/to handles of connections (only their waypoints)
+        if isinstance(item, ConnectionView) and handle in item.end_handles(include_waypoints=True):
+            return False
+
+        if handle:
+            # Deselect all items unless EXTEND_SELECTION_MODIFIER or RUBBERBAND_MODIFIER is pressed
+            # or the item is already selected.
+            if not (event.state & (constants.EXTEND_SELECTION_MODIFIER | constants.RUBBERBAND_MODIFIER)
+                    or view.hovered_item in view.selected_items):
+                del view.selected_items
+
+            view.hovered_item = item
+            view.focused_item = item
+
+            self.motion_handle = None
+
+            self.grab_handle(item, handle)
+
+            return True
+
+
+class ConnectionTool(ConnectHandleTool):
+
+    def __init__(self):
+        super(ConnectionTool, self).__init__()
+        self._connection_v = None
+        self._start_port_v = None
+        self._parent_state_v = None
+        self._is_transition = False
+        self._current_sink = None
+
+    def on_button_release(self, event):
+        self._is_transition = False
+        self._connection_v = None
+        self._start_port_v = None
+        self._parent_state_v = None
+        self._current_sink = None
+        self.grabbed_item = None
+        self.grabbed_handle = None
+
+    def _set_motion_handle(self, event):
+        """Sets motion handle to currently grabbed handle
+        """
+        item = self.grabbed_item
+        handle = self.grabbed_handle
+        pos = event.x, event.y
+        self.motion_handle = HandleInMotion(item, handle, self.view)
+        self.motion_handle.GLUE_DISTANCE = self._parent_state_v.border_width
+        self.motion_handle.start_move(pos)
+
+    def _create_temporary_connection(self):
+        """Creates a placeholder connection view
+
+        :return: New placeholder connection
+        :rtype: rafcon.mvc.mygaphas.items.connection.ConnectionPlaceholderView
+        """
+        if self._is_transition:
+            self._connection_v = TransitionPlaceholderView(self._parent_state_v.hierarchy_level)
+        else:
+            self._connection_v = DataFlowPlaceholderView(self._parent_state_v.hierarchy_level)
+        self.view.canvas.add(self._connection_v, self._parent_state_v)
+
+    def _handle_temporary_connection(self, old_sink, new_sink, of_target=True):
+        """Connect connection to new_sink
+
+        If new_sink is set, the connection origin or target will be set to new_sink. The connection to old_sink is
+        being removed.
+
+        :param gaphas.aspect.ConnectionSink old_sink: Old sink (if existing)
+        :param gaphas.aspect.ConnectionSink new_sink: New sink (if existing)
+        :param bool of_target: Whether the origin or target will be reconnected
+        :return:
+        """
+        def sink_set_and_differs(sink_a, sink_b):
+            if not sink_a:
+                return False
+            if not sink_b:
+                return True
+            if sink_a.port != sink_b.port:
+                return True
+            return False
+
+        if sink_set_and_differs(old_sink, new_sink):
+            sink_port_v = old_sink.port.port_v
+            self._disconnect_temporarily(sink_port_v, target=of_target)
+
+        if sink_set_and_differs(new_sink, old_sink):
+            sink_port_v = new_sink.port.port_v
+            self._connect_temporarily(sink_port_v, target=of_target)
+
+    def _connect_temporarily(self, port_v, target=True):
+        """Set a connection between the current connection and the given port
+
+        :param rafcon.mvc.mygaphas.items.ports.PortView port_v: The port to be connected
+        :param bool target: Whether the connection origin or target should be connected
+        """
+        if target:
+            handle = self._connection_v.to_handle()
+        else:
+            handle = self._connection_v.from_handle()
+        port_v.add_connected_handle(handle, self._connection_v, moving=True)
+        port_v.tmp_connect(handle, self._connection_v)
+        self._connection_v.set_port_for_handle(port_v, handle)
+        # Redraw state of port to make hover state visible
+        self._redraw_port(port_v)
+
+    def _disconnect_temporarily(self, port_v, target=True):
+        """Removes a connection between the current connection and the given port
+
+        :param rafcon.mvc.mygaphas.items.ports.PortView port_v: The port that was connected
+        :param bool target: Whether the connection origin or target should be disconnected
+        """
+        if target:
+            handle = self._connection_v.to_handle()
+        else:
+            handle = self._connection_v.from_handle()
+        port_v.remove_connected_handle(handle)
+        port_v.tmp_disconnect()
+        self._connection_v.reset_port_for_handle(handle)
+        # Redraw state of port to make hover state visible
+        self._redraw_port(port_v)
+
+    def _redraw_port(self, port_v):
+        self.view.queue_draw_area(*port_v.get_port_area(self.view))
+
+
+class ConnectionCreationTool(ConnectionTool):
+
+    def __init__(self):
+        super(ConnectionCreationTool, self).__init__()
+
+    def on_button_press(self, event):
+        """Handle button press events.
+
+        If the (mouse) button is pressed on top of a Handle (item.Handle), that handle is grabbed and can be
+        dragged around.
+        """
+        if not event.button == 1:  # left mouse button
+            return False
+        view = self.view
+
+        item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
+
+        if not handle:  # Require a handle
+            return False
+
+        # Connection handle must belong to a port and the MOVE_PORT_MODIFIER must not be pressed
+        if not isinstance(item, StateView) or handle not in [port.handle for port in item.get_all_ports()] or (
+                    event.state & constants.MOVE_PORT_MODIFIER):
+            return False
+
+        for port in item.get_all_ports():
+            if port.handle is handle:
+                self._start_port_v = port
+                if port in item.get_logic_ports():
+                    self._is_transition = True
+                if port is item.income or isinstance(port, InputPortView) or port in item.scoped_variables:
+                    self._parent_state_v = port.parent
+                elif port.parent.parent:
+                    self._parent_state_v = port.parent.parent
+                else:
+                    return False
+
+        return True
+
+    def on_motion_notify(self, event):
+        if not self._parent_state_v or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
+            return False
+
+        if not self._connection_v:
+            # Create new temporary connection, with origin at the start port and target at the cursor
+            self._create_temporary_connection()
+            self._start_port_v.parent.connect_connection_to_port(self._connection_v, self._start_port_v, as_target=False)
+            self.grab_handle(self._connection_v, self._connection_v.to_handle())
+            self._set_motion_handle(event)
+
+        last_sink = self._current_sink
+        self._current_sink = self.motion_handle.move((event.x, event.y))
+
+        self._handle_temporary_connection(last_sink, self._current_sink, of_target=True)
+
+    def on_button_release(self, event):
+        if not self._connection_v:
+            return False
+
+        self.view.canvas.update_now()
+        if self._current_sink:
+            if self.motion_handle:
+                self.motion_handle.stop_move()
+            sink_port_v = self._current_sink.port.port_v
+            self._disconnect_temporarily(sink_port_v, target=True)
+            gap_helper.create_new_connection(self._connection_v.from_port, sink_port_v)
+
+        # remove placeholder from canvas
+        if self._connection_v:
+            self._connection_v.remove_connection_from_ports()
+            self.view.canvas.remove(self._connection_v)
+
+        super(ConnectionCreationTool, self).on_button_release(event)
+
+
+class ConnectionModificationTool(ConnectionTool):
+
+    def __init__(self):
+        super(ConnectionModificationTool, self).__init__()
+        self._end_handle = None
+
+    def on_button_press(self, event):
+        """Handle button press events.
+
+        If the (mouse) button is pressed on top of a Handle (item.Handle), that handle is grabbed and can be
+        dragged around.
+        """
+        if not event.button == 1:  # left mouse button
+            return False
+        view = self.view
+
+        item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point((event.x, event.y))
+
+        # Handle must be the end handle of a connection
+        if not handle or not isinstance(item, ConnectionView) or handle not in item.end_handles():
+            return False
+
+        if handle is item.from_handle():
+            self._start_port_v = item.from_port
+        else:
+            self._start_port_v = item.to_port
+
+        self._parent_state_v = item.parent
+        self._end_handle = handle
+        if isinstance(item, TransitionView):
+            self._is_transition = True
+        self._connection_v = item
+
+        return True
+
+    def on_motion_notify(self, event):
+        if not self._parent_state_v or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
+            return False
+
+        modify_target = self._end_handle is self._connection_v.to_handle()
+
+        if not self.grabbed_handle:
+            self.view.canvas.disconnect_item(self._connection_v, self._end_handle)
+            self._disconnect_temporarily(self._start_port_v, target=modify_target)
+            self.grab_handle(self._connection_v, self._end_handle)
+            self._set_motion_handle(event)
+
+        last_sink = self._current_sink
+        self._current_sink = self.motion_handle.move((event.x, event.y))
+
+        self._handle_temporary_connection(last_sink, self._current_sink, modify_target)
+
+    def on_button_release(self, event):
+        if not self.grabbed_handle:
+            return False
+
+        modify_target = self._end_handle is self._connection_v.to_handle()
+        self._handle_temporary_connection(self._current_sink, None, of_target=modify_target)
+
+        if not self._current_sink:  # Reset connection to original status, as it was not released above a port
+            self._reset_connection()
+        else:  # Modify the source/target of the connection
+            if self._is_transition:
+                try:
+                    port = self._current_sink.port.port_v.model.outcome
+                    port_id = port.outcome_id
+                except AttributeError:  # Port is an income
+                    port = None
+                    port_id = None
+                connection = self._connection_v.model.transition
+            else:
+                try:
+                    port = self._current_sink.port.port_v.model.data_port
+                except AttributeError:  # Port is a scoped variable
+                    port = self._current_sink.port.port_v.model.scoped_variable
+                port_id = port.data_port_id
+                connection = self._connection_v.model.data_flow
+            port_state_id = port.parent.state_id if port else None
+
+            try:
+                if modify_target:
+                    connection.modify_target(port_state_id, port_id)
+                else:
+                    connection.modify_origin(port_state_id, port_id)
+            except ValueError as e:
+                self._reset_connection()
+                logger.error(e)
+        self.view.canvas.update_now()
+        super(ConnectionModificationTool, self).on_button_release(event)
+        self._end_handle = None
+
+    def _reset_connection(self):
+        modify_target = self._end_handle is self._connection_v.to_handle()
+        self._start_port_v.parent.connect_connection_to_port(self._connection_v, self._start_port_v,
+                                                             as_target=modify_target)
+        self._redraw_port(self._start_port_v)
 
 
 class HandleMoveTool(HandleTool):
