@@ -23,7 +23,7 @@ import rafcon.mvc.singleton
 
 # test environment elements
 import testing_utils
-from testing_utils import test_multithrading_lock, call_gui_callback, get_unique_temp_path
+from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
 import pytest
 
 logger = log.get_logger(__name__)
@@ -281,7 +281,7 @@ def test_storage_with_gui(caplog):
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
-        test_multithrading_lock.release()
+        test_multithreading_lock.release()
 
     thread.join()
 

@@ -21,7 +21,7 @@ import rafcon.mvc.singleton
 
 # test environment elements
 import testing_utils
-from testing_utils import test_multithrading_lock, call_gui_callback, get_unique_temp_path
+from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
 import pytest
 
 
@@ -171,7 +171,7 @@ def test_drag_and_drop_test(caplog):
         logger.debug("Joined currently executing state machine!")
         thread.join()
         logger.debug("Joined test triggering thread!")
-    test_multithrading_lock.release()
+    test_multithreading_lock.release()
 
     testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
