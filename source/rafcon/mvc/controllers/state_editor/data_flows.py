@@ -34,14 +34,12 @@ class LinkageListController(ListViewController):
     no_update = True  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
     no_update_state_destruction = True
     no_update_self_or_parent_state_destruction = True
-    _actual_overview = None
     _model_observed = []
 
     def __init__(self, model, view, tree_view, list_store, logger):
         self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
         self.no_update_state_destruction = False
         self.no_update_self_or_parent_state_destruction = False
-        self._actual_overview = None
         self._model_observed = []
         super(LinkageListController, self).__init__(model, view, tree_view, list_store, logger)
         self._model_observed.append(self.model)
@@ -519,7 +517,6 @@ class StateDataFlowsListController(LinkageListController):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
-        self._actual_overview = overview
         # logger.info("after_notification_of_parent_or_state: OK")
 
         if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state or \
@@ -529,7 +526,6 @@ class StateDataFlowsListController(LinkageListController):
                                                 "remove_scoped_variable", "remove_data_flow"]:
             # logger.info("after_notification_of_parent_or_state: UPDATE")
             self.update()
-        self._actual_overview = None
 
     @LinkageListController.observe("states", after=True)
     @LinkageListController.observe("input_data_ports", after=True)
@@ -578,7 +574,6 @@ class StateDataFlowsListController(LinkageListController):
                 self.store_debug_log_file(str(traceback.format_exc()))
             logger.error("update of data_flow widget fails while detecting change in state %s %s" %
                          (self.model.state.name, self.model.state.state_id))
-
 
 def get_key_combos(ports, keys_store, not_key=None):
 

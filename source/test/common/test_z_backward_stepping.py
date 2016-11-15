@@ -138,7 +138,7 @@ def test_backward_stepping_library_state(caplog):
     logger.debug("Joined test triggering thread!")
     os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
     testing_utils.reload_config()
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -224,7 +224,7 @@ def test_backward_stepping_preemptive_state(caplog):
     thread.join()
     logger.debug("Joined test triggering thread!")
     testing_utils.reload_config()
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -308,7 +308,7 @@ def test_backward_stepping_barrier_state(caplog):
     thread.join()
     logger.debug("Joined test triggering thread!")
     testing_utils.reload_config()
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 

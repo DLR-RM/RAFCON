@@ -18,7 +18,7 @@ logger = log.get_logger(__name__)
 def test_run_to_selected_state(caplog):
 
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
 
     sm = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/"
                                                                              "run_to_selected_state_test"))
@@ -45,7 +45,7 @@ def test_run_to_selected_state(caplog):
     assert len(lines) < 3
 
     # read all lines of the file and check if not more than 2 states have written to it
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 

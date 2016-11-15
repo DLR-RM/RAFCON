@@ -54,8 +54,7 @@ class ModificationsHistoryModel(ModelMT):
         self.observe_model(self.state_machine_model.root_state)
         self.__buffered_root_state_model = self.state_machine_model.root_state
 
-        self.actual_action = None
-        self.actual_root_state_action = None
+        self.active_action = None
         self.locked = False
         self.busy = False
         self.count_before = 0
@@ -101,7 +100,7 @@ class ModificationsHistoryModel(ModelMT):
         """
         # search for traceable path -> list of action to undo and list of action to redo
         logger.info("Going to history status #{0}".format(pointer_on_version_to_recover))
-        undo_redo_list = self.modifications.undo_redo_list_from_actual_trail_history_to_version_id(pointer_on_version_to_recover)
+        undo_redo_list = self.modifications.get_undo_redo_list_from_active_trail_history_item_to_version_id(pointer_on_version_to_recover)
         logger.debug("Multiple undo and redo to reach modification history element of version {0} "
                     "-> undo-redo-list is: {1}".format(pointer_on_version_to_recover, undo_redo_list))
         self.state_machine_model.storage_lock.acquire()
@@ -173,7 +172,7 @@ class ModificationsHistoryModel(ModelMT):
         self.state_machine_model.storage_lock.release()
         self.change_count += 1
 
-    def _interrupt_actual_action(self, info=None):
+    def _interrupt_active_action(self, info=None):
         if self.with_prints:
             logger.warning("function crash detected {}_after".format(info['prop_name']))
         # self.busy = True
@@ -204,7 +203,7 @@ class ModificationsHistoryModel(ModelMT):
         :return:
         """
         if self.fake:
-            self.actual_action = ActionDummy()
+            self.active_action = ActionDummy()
             return True
 
         result = True
@@ -234,14 +233,14 @@ class ModificationsHistoryModel(ModelMT):
                     action_class = ScopedVariableAction  # is a DataPort too
                 if self.with_debug_logs:
                     self.store_test_log_file("#1 DataFlow, Transition, ScopedVariable \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview['instance'][-1].parent.get_path()))
-                self.actual_action = action_class(parent_path=overview['instance'][-1].parent.get_path(),
+                self.active_action = action_class(parent_path=overview['instance'][-1].parent.get_path(),
                                                   state_machine_model=self.state_machine_model,
                                                   overview=overview)
             elif isinstance(overview['instance'][-1], Outcome):
                 assert overview['instance'][-1] is overview['model'][-1].outcome
                 if self.with_debug_logs:
                     self.store_test_log_file("#2 Outcome \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview['instance'][-1].parent.get_path()))
-                self.actual_action = OutcomeAction(parent_path=overview['instance'][-1].parent.get_path(),
+                self.active_action = OutcomeAction(parent_path=overview['instance'][-1].parent.get_path(),
                                                    state_machine_model=self.state_machine_model,
                                                    overview=overview)
             elif isinstance(overview['instance'][-1], DataPort):
@@ -251,7 +250,7 @@ class ModificationsHistoryModel(ModelMT):
                     assert overview['instance'][-1] is overview['model'][-1].data_port
                 if self.with_debug_logs:
                     self.store_test_log_file("#3 DataPort \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview['instance'][-1].parent.get_path()))
-                self.actual_action = DataPortAction(parent_path=overview['instance'][-1].parent.get_path(),
+                self.active_action = DataPortAction(parent_path=overview['instance'][-1].parent.get_path(),
                                                     state_machine_model=self.state_machine_model,
                                                     overview=overview)
             elif isinstance(overview['instance'][-1], State):
@@ -259,7 +258,7 @@ class ModificationsHistoryModel(ModelMT):
                 if "add_" in cause:
                     if self.with_debug_logs:
                         self.store_test_log_file("#3 ADD \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
-                    self.actual_action = AddObjectAction(parent_path=overview['instance'][-1].get_path(),
+                    self.active_action = AddObjectAction(parent_path=overview['instance'][-1].get_path(),
                                                          state_machine_model=self.state_machine_model,
                                                          overview=overview)
                 elif "remove_" in cause:
@@ -271,7 +270,7 @@ class ModificationsHistoryModel(ModelMT):
                             self.store_test_log_file("#4 REMOVE1 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
                         # if "transition" in cause:
                         #     return self.start_new_action_old(overview)
-                        self.actual_action = RemoveObjectAction(parent_path=overview['instance'][-1].get_path(),
+                        self.active_action = RemoveObjectAction(parent_path=overview['instance'][-1].get_path(),
                                                                 state_machine_model=self.state_machine_model,
                                                                 overview=overview)
                     elif "data_port" in cause or "outcome" in cause:
@@ -279,13 +278,13 @@ class ModificationsHistoryModel(ModelMT):
                         if isinstance(overview['instance'][-1].parent, State):
                             if self.with_debug_logs:
                                 self.store_test_log_file("#5 REMOVE2 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path()))
-                            self.actual_action = RemoveObjectAction(parent_path=overview['instance'][-1].parent.get_path(),
+                            self.active_action = RemoveObjectAction(parent_path=overview['instance'][-1].parent.get_path(),
                                                                     state_machine_model=self.state_machine_model,
                                                                     overview=overview)
                         else:
                             if self.with_debug_logs:
                                 self.store_test_log_file("#5 REMOVE3 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path()))
-                            self.actual_action = RemoveObjectAction(parent_path=overview['instance'][-1].get_path(),
+                            self.active_action = RemoveObjectAction(parent_path=overview['instance'][-1].get_path(),
                                                                     state_machine_model=self.state_machine_model,
                                                                     overview=overview)
                     else:
@@ -294,7 +293,7 @@ class ModificationsHistoryModel(ModelMT):
                 else:
                     if self.with_debug_logs:
                         self.store_test_log_file("#6 STATE \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
-                    self.actual_action = StateAction(parent_path=overview['instance'][-1].get_path(),
+                    self.active_action = StateAction(parent_path=overview['instance'][-1].get_path(),
                                                      state_machine_model=self.state_machine_model,
                                                      overview=overview)
             elif isinstance(overview['instance'][-1], StateMachine):
@@ -323,7 +322,7 @@ class ModificationsHistoryModel(ModelMT):
             if self.with_prints:
                 print "CHANGE OF OBJECT", overview['info'][-1]
             # the model should be StateModel or ContainerStateModel and "info" from those model notification
-            self.actual_action = Action(parent_path=overview['instance'][-1].parent.get_path(),
+            self.active_action = Action(parent_path=overview['instance'][-1].parent.get_path(),
                                         state_machine_model=self.state_machine_model,
                                         overview=overview)
 
@@ -344,17 +343,17 @@ class ModificationsHistoryModel(ModelMT):
             if overview['model'][-1].parent:
                 if not isinstance(overview['model'][-1].parent.state, State):
                     level_status = 'State'
-                    self.actual_action = Action(parent_path=overview['instance'][-1].get_path(),
+                    self.active_action = Action(parent_path=overview['instance'][-1].get_path(),
                                                 state_machine_model=self.state_machine_model,
                                                 overview=overview)
                 elif not isinstance(overview['model'][-1].parent.state.parent, State):  # is root_state
                     level_status = 'ParentState'
-                    self.actual_action = Action(parent_path=overview['instance'][-1].parent.get_path(),
+                    self.active_action = Action(parent_path=overview['instance'][-1].parent.get_path(),
                                                 state_machine_model=self.state_machine_model,
                                                 overview=overview)
                 else:
                     level_status = 'ParentParentState'
-                    self.actual_action = Action(parent_path=overview['instance'][-1].parent.parent.get_path(),
+                    self.active_action = Action(parent_path=overview['instance'][-1].parent.parent.get_path(),
                                                 state_machine_model=self.state_machine_model,
                                                 overview=overview)
                 if self.with_debug_logs:
@@ -371,13 +370,13 @@ class ModificationsHistoryModel(ModelMT):
             if "add_" in overview['method_name'][-1]:
                 if self.with_debug_logs:
                     self.store_test_log_file("$5 add Outcome,In-OutPut in root and State, ScopedVariable, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
-                self.actual_action = Action(parent_path=overview['instance'][-1].get_path(),
+                self.active_action = Action(parent_path=overview['instance'][-1].get_path(),
                                             state_machine_model=self.state_machine_model,
                                             overview=overview)
             else:
                 if self.with_debug_logs:
                     self.store_test_log_file("$5 remove Outcome,In-OutPut in root and State, ScopedVariables, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
-                self.actual_action = Action(parent_path=overview['instance'][-1].get_path(),
+                self.active_action = Action(parent_path=overview['instance'][-1].get_path(),
                                             state_machine_model=self.state_machine_model,
                                             overview=overview)
 
@@ -395,8 +394,8 @@ class ModificationsHistoryModel(ModelMT):
             self.store_test_log_file(str(overview) + "\n")
 
         try:
-            self.actual_action.set_after(overview)
-            self.state_machine_model.history.modifications.insert_action(self.actual_action)
+            self.active_action.set_after(overview)
+            self.state_machine_model.history.modifications.insert_action(self.active_action)
             # logger.debug("history is now: %s" % self.state_machine_model.history.modifications.single_trail_history())
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
         except:
@@ -424,7 +423,7 @@ class ModificationsHistoryModel(ModelMT):
         return True
 
     def re_initiate_meta_data(self):
-        self.actual_action = []
+        self.active_action = []
         self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
 
     @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state_model changed
@@ -450,24 +449,24 @@ class ModificationsHistoryModel(ModelMT):
         if overview['meta_signal'][-1]['origin'] == 'load_meta_data':
             return
 
-        if self.actual_action is None or overview['meta_signal'][-1]['change'] == 'append_initial_change':
+        if self.active_action is None or overview['meta_signal'][-1]['change'] == 'append_initial_change':
             # update last actions after_storage -> meta-data
             self.re_initiate_meta_data()
-        elif self.actual_action is None or overview['meta_signal'][-1]['change'] == 'append_to_last_change':
+        elif self.active_action is None or overview['meta_signal'][-1]['change'] == 'append_to_last_change':
             # update last actions after_storage -> meta-data
-            self.actual_action.after_storage = self.actual_action.get_storage()
+            self.active_action.after_storage = self.active_action.get_storage()
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
         else:
             if isinstance(overview['model'][-1], AbstractStateModel):
                 changed_parent_model = overview['model'][-1]
             else:
                 changed_parent_model = overview['model'][-1].parent
-            self.actual_action = MetaAction(changed_parent_model.state.get_path(),
+            self.active_action = MetaAction(changed_parent_model.state.get_path(),
                                             state_machine_model=self.state_machine_model,
                                             overview=overview)
             # b_tuple = self.actual_action.before_storage
             meta_dict = self.get_state_element_meta_from_internal_tmp_storage(changed_parent_model.state.get_path())
-            self.actual_action.before_storage = meta_dict
+            self.active_action.before_storage = meta_dict
             self.finish_new_action(overview)
 
     def manual_changed_notify_before(self, change_type, changed_parent_model, changed_model, recursive_changes):
@@ -504,7 +503,7 @@ class ModificationsHistoryModel(ModelMT):
             if self.with_debug_logs:
                 self.store_test_log_file(str(overview) + "\n")
             assert overview['method_name'][-1]
-            self.actual_action = StateMachineAction(parent_path=overview['instance'][-1].root_state.get_path(),
+            self.active_action = StateMachineAction(parent_path=overview['instance'][-1].root_state.get_path(),
                                                     state_machine_model=self.state_machine_model,
                                                     overview=overview)
             self.before_count()
@@ -514,7 +513,7 @@ class ModificationsHistoryModel(ModelMT):
         if info.method_name != "root_state_change":
             return
         if info.result == "CRASH in FUNCTION" or isinstance(info.result, Exception):
-            return self._interrupt_actual_action(info)
+            return self._interrupt_active_action(info)
 
         if self.busy:  # if proceeding undo or redo
             return
@@ -592,7 +591,7 @@ class ModificationsHistoryModel(ModelMT):
 
             # handle interrupts of action caused by exceptions
             if overview['result'][-1] == "CRASH in FUNCTION" or isinstance(overview['result'][-1], Exception):
-                return self._interrupt_actual_action(info)
+                return self._interrupt_active_action(info)
 
             # modifications of parent are not observed
             if not overview['method_name'][0] == 'state_change' or overview['method_name'][-1] == 'parent':
@@ -678,7 +677,7 @@ class ModificationsHistoryModel(ModelMT):
 
             # handle interrupts of action caused by exceptions
             if overview['result'][-1] == "CRASH in FUNCTION" or isinstance(overview['result'][-1], Exception):
-                return self._interrupt_actual_action(info)
+                return self._interrupt_active_action(info)
 
             # modifications of parent are not observed
             if overview['method_name'][-1] == 'parent':
@@ -885,8 +884,8 @@ class ModificationsHistory(Observable):
         if self.with_prints:
             logger.info("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
 
-    def undo_redo_list_from_actual_trail_history_to_version_id(self, version_id):
-        """Perform fast search from actual active branch to specific version_id and collect all recovery steps.
+    def get_undo_redo_list_from_active_trail_history_item_to_version_id(self, version_id):
+        """Perform fast search from currently active branch to specific version_id and collect all recovery steps.
         """
         all_trail_action = [a.version_id for a in self.single_trail_history() if a is not None]
         all_active_action = self.get_all_active_actions()

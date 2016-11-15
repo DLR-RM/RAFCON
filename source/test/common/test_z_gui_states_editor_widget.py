@@ -23,7 +23,7 @@ from rafcon.mvc.config import global_gui_config
 
 # test environment elements
 import testing_utils
-from testing_utils import test_multithrading_lock, call_gui_callback, get_unique_temp_path
+from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
 from test_z_gui_state_type_change import get_state_editor_ctrl_and_store_id_dict
 import pytest
 
@@ -267,7 +267,7 @@ def test_state_type_change_test(with_gui, caplog):
         logger.debug("Gtk main loop exited!")
         thread.join()
         logger.debug("Joined test triggering thread!")
-        test_multithrading_lock.release()
+        test_multithreading_lock.release()
     else:
         thread.join()
 

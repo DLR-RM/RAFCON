@@ -24,7 +24,7 @@ def test_resave(caplog):
     print "config path: " + config_path
     resave.convert_libraries_in_path(config_path, folder_to_convert, "/tmp/rafcon_unit_tests/resave_test")
 
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 if __name__ == '__main__':

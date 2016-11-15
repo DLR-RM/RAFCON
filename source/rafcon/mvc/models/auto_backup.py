@@ -25,17 +25,11 @@ RAFCON_RUNTIME_BACKUP_PATH = os.path.join(RAFCON_TEMP_PATH_BASE, 'runtime_backup
 if not os.path.exists(RAFCON_RUNTIME_BACKUP_PATH):
     os.makedirs(RAFCON_RUNTIME_BACKUP_PATH)
 
-
-if _platform in ["linux", "linux2"]:
-    try:
-        import subprocess
-        p = subprocess.Popen(['ps', '-A', '-o', 'pid'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        process_id_list = ''.join(out).replace(' ', '').replace('PID', '').split('\n')
-    except OSError:
-        logger.info("Could not retrieve list of current process ids")
-        process_id_list = []
-else:
+try:
+    import psutil
+    process_id_list = [process.pid for process in psutil.process_iter()]
+except OSError:
+    logger.info("Could not retrieve list of current process ids")
     process_id_list = []
 
 
@@ -261,21 +255,21 @@ class AutoBackupModel(ModelMT):
          self._timer_request_time and initiated by the check_for_auto_backup-method.
          The feature uses only one thread for each ModificationHistoryModel and lock to be thread save.
         """
-        actual_time = time.time()
+        current_time = time.time()
         self.timer_request_lock.acquire()
         sm = self.state_machine_model.state_machine
         # TODO check for self._timer_request_time is None to avoid and reset auto-backup in case and fix it better
-        # print str(self.timed_temp_storage_interval), str(actual_time), str(self._timer_request_time)
+        # print str(self.timed_temp_storage_interval), str(current_time), str(self._timer_request_time)
         if self._timer_request_time is None:
             # logger.warning("timer_request is None")
             return self.timer_request_lock.release()
-        if self.timed_temp_storage_interval < actual_time - self._timer_request_time:
+        if self.timed_temp_storage_interval < current_time - self._timer_request_time:
             # logger.info("{0} Perform timed auto-backup of state-machine {1}.".format(time.time(),
             #                                                                          sm.state_machine_id))
             self.check_for_auto_backup(force=True)
         else:
-            duration_to_wait = self.timed_temp_storage_interval - (actual_time - self._timer_request_time)
-            hard_limit_duration_to_wait = self.force_temp_storage_interval - (actual_time - self.last_backup_time)
+            duration_to_wait = self.timed_temp_storage_interval - (current_time - self._timer_request_time)
+            hard_limit_duration_to_wait = self.force_temp_storage_interval - (current_time - self.last_backup_time)
             hard_limit_active = hard_limit_duration_to_wait < duration_to_wait
             # logger.info('{2} restart_thread {0} time to go {1}, hard limit {3}'.format(sm.state_machine_id,
             #                                                                            duration_to_wait, time.time(),
@@ -333,32 +327,32 @@ class AutoBackupModel(ModelMT):
             return
 
         sm = self.state_machine_model.state_machine
-        actual_time = time.time()
+        current_time = time.time()
 
         if not self.only_fix_interval and not self.marked_dirty:
             # logger.info("adjust last_backup_time " + str(sm.state_machine_id))
-            self.last_backup_time = actual_time         # used as 'last-modification-not-backup-ed' time
+            self.last_backup_time = current_time         # used as 'last-modification-not-backup-ed' time
 
         is_not_timed_or_reached_time_to_force = \
-            actual_time - self.last_backup_time > self.force_temp_storage_interval or self.only_fix_interval
+            current_time - self.last_backup_time > self.force_temp_storage_interval or self.only_fix_interval
 
         if (sm.marked_dirty and is_not_timed_or_reached_time_to_force) or force:
             if not self.only_fix_interval or self.marked_dirty:
                 thread = threading.Thread(target=self.perform_temp_storage)
                 thread.start()
-                # self.last_backup_time = actual_time  # used as 'last-backup' time
+                # self.last_backup_time = current_time  # used as 'last-backup' time
             if self.only_fix_interval:
                 self.set_timed_thread(self.force_temp_storage_interval, self.check_for_auto_backup)
         else:
             if not self.only_fix_interval:
                 self.timer_request_lock.acquire()
                 if self._timer_request_time is None:
-                    # logger.info('{0} start_thread {1}'.format(actual_time, sm.state_machine_id))
-                    self._timer_request_time = actual_time
+                    # logger.info('{0} start_thread {1}'.format(current_time, sm.state_machine_id))
+                    self._timer_request_time = current_time
                     self.set_timed_thread(self.timed_temp_storage_interval, self._check_for_dyn_timed_auto_backup)
                 else:
-                    # logger.info('{0} update_thread {1}'.format(actual_time, sm.state_machine_id))
-                    self._timer_request_time = actual_time
+                    # logger.info('{0} update_thread {1}'.format(current_time, sm.state_machine_id))
+                    self._timer_request_time = current_time
                 self.timer_request_lock.release()
             else:
                 self.set_timed_thread(self.force_temp_storage_interval, self.check_for_auto_backup)

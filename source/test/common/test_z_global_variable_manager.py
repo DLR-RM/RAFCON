@@ -79,7 +79,7 @@ def test_gui(caplog):
     logger.debug("after gtk main")
 
     thread.join()
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
 
     # expected_errors=1 because global_variable_is_editable throws an error
     testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors = 1)

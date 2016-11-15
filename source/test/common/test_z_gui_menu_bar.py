@@ -331,7 +331,7 @@ def test_gui(caplog):
     gtk.main()
     logger.debug("after gtk main")
     thread.join()
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 

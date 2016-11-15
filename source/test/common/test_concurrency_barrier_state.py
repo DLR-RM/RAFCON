@@ -69,7 +69,7 @@ def test_concurrency_barrier_save_load(caplog):
     root_state.output_data = output_data
 
     state_machine = StateMachine(root_state)
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     rafcon.statemachine.singleton.state_machine_execution_engine.start()
@@ -80,7 +80,7 @@ def test_concurrency_barrier_save_load(caplog):
     assert root_state.final_outcome.outcome_id == 4
 
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
 
 if __name__ == '__main__':

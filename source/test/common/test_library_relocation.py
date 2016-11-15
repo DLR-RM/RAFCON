@@ -39,7 +39,7 @@ def open_folder(query):
 def test_library_relocation(caplog):
 
     signal.signal(signal.SIGINT, start.signal_handler)
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
 
     testing_utils.remove_all_libraries()
 
@@ -71,7 +71,7 @@ def test_library_relocation(caplog):
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
     testing_utils.reload_config(config=True, gui_config=False)
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
 
     logger.info("State machine execution finished!")
 
