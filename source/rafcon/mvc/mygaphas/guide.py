@@ -1,31 +1,15 @@
 from gaphas.aspect import InMotion, HandleInMotion
-from gaphas.guide import GuidedItemInMotion, GuidedItemHandleInMotion, Guide
+from gaphas.guide import GuidedItemInMotion, GuidedItemHandleInMotion, Guide, GuideMixin
 
 from rafcon.mvc.mygaphas.items.state import StateView, NameView
 
 
-@InMotion.when_type(StateView)
-class GuidedStateInMotion(GuidedItemInMotion):
+class GuidedStateMixin(GuideMixin):
 
     MARGIN = 5
 
     def get_excluded_items(self):
         return set()
-
-    def start_move(self, pos):
-        super(GuidedStateInMotion, self).start_move(pos)
-        self.item.moving = True
-
-    def move(self, pos):
-        super(GuidedStateInMotion, self).move(pos)
-        parent_item = self.item.parent
-        if parent_item:
-            constraint = parent_item.keep_rect_constraints[self.item]
-            self.view.canvas.solver.request_resolve_constraint(constraint)
-
-    def stop_move(self):
-        super(GuidedStateInMotion, self).stop_move()
-        self.item.moving = False
 
     def find_vertical_guides(self, item_vedges, pdx, height, excluded_items):
         # The root state cannot be aligned
@@ -75,6 +59,25 @@ class GuidedStateInMotion(GuidedItemInMotion):
             if isinstance(sibling, StateView) and sibling is not self.item:
                 states_v.append(sibling)
         return states_v
+
+
+@InMotion.when_type(StateView)
+class GuidedStateInMotion(GuidedStateMixin, GuidedItemInMotion):
+
+    def start_move(self, pos):
+        super(GuidedStateInMotion, self).start_move(pos)
+        self.item.moving = True
+
+    def move(self, pos):
+        super(GuidedStateInMotion, self).move(pos)
+        parent_item = self.item.parent
+        if parent_item:
+            constraint = parent_item.keep_rect_constraints[self.item]
+            self.view.canvas.solver.request_resolve_constraint(constraint)
+
+    def stop_move(self):
+        super(GuidedStateInMotion, self).stop_move()
+        self.item.moving = False
 
 
 @InMotion.when_type(NameView)
