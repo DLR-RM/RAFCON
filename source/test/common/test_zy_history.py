@@ -28,7 +28,7 @@ from rafcon.statemachine.config import global_config
 
 # test environment elements
 import testing_utils
-from testing_utils import test_multithrading_lock, call_gui_callback, get_unique_temp_path
+from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
 from test_z_gui_state_type_change import store_state_elements, check_state_elements, \
      check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
      check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
@@ -1192,7 +1192,7 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
-        test_multithrading_lock.release()
+        test_multithreading_lock.release()
 
     thread.join()
     testing_utils.reload_config()
@@ -1232,7 +1232,7 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
         if with_gui:
             gtk.main()
             logger.debug("Gtk main loop exited!")
-            test_multithrading_lock.release()
+            test_multithreading_lock.release()
 
         thread.join()
     else:

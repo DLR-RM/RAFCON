@@ -104,7 +104,7 @@ def create_execution_state_library_state_machine():
 
 
 def test_execution_state_library(caplog):
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
     library_container_state_sm = create_execution_state_library_state_machine()
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
@@ -115,7 +115,7 @@ def test_execution_state_library(caplog):
     # print output_data["data_output_port1"]
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -144,7 +144,7 @@ def create_hierarchy_state_library_state_machine():
 
 
 def test_hierarchy_state_library(caplog):
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
     library_container_state_sm = create_hierarchy_state_library_state_machine()
 
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(library_container_state_sm)
@@ -155,7 +155,7 @@ def test_hierarchy_state_library(caplog):
     # print output_data["data_output_port1"]
     assert library_container_state_sm.root_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(library_container_state_sm.state_machine_id)
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -168,7 +168,7 @@ def test_save_nested_library_state(caplog):
 
 
 def test_nested_library_state_machine(caplog):
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
     # TODO: the library_manager is initialized a second time here
     rafcon.statemachine.singleton.library_manager.initialize()
     nested_library_state = LibraryState("temporary_libraries", "library_with_nested_library", "0.1",
@@ -183,7 +183,7 @@ def test_nested_library_state_machine(caplog):
     # print output_data["data_output_port1"]
     assert nested_library_state.output_data["data_output_port1"] == 42.0
     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 

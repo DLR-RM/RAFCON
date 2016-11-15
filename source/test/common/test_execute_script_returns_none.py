@@ -10,7 +10,7 @@ import testing_utils
 def test_execute_script_returns_none(caplog):
     testing_utils.remove_all_libraries()
 
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
     signal.signal(signal.SIGINT, rafcon.statemachine.start.signal_handler)
 
@@ -31,7 +31,7 @@ def test_execute_script_returns_none(caplog):
     assert state_machine.root_state.final_outcome.outcome_id == 0
 
     testing_utils.reload_config()
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
 
 

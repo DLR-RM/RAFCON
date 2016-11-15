@@ -393,7 +393,7 @@ def test_simple(caplog):
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
     testing_utils.reload_config(config=True, gui_config=False)
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
 
 
 @pytest.mark.parametrize("with_gui", [False])
@@ -446,7 +446,7 @@ def test_complex(with_gui, caplog):
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
     testing_utils.reload_config(config=True, gui_config=False)
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     # import conftest
     # import shutil
     # for elem in os.listdir(testing_utils.constants.RAFCON_TEMP_PATH_BASE):

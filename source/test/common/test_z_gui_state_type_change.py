@@ -28,7 +28,7 @@ from rafcon.mvc.config import global_gui_config
 
 # test environment elements
 import testing_utils
-from testing_utils import test_multithrading_lock, call_gui_callback, get_unique_temp_path
+from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
 import pytest
 
 store_elements_ignores = []
@@ -699,7 +699,7 @@ def test_state_type_change_test(caplog):
     thread.join()
 
     testing_utils.reload_config()
-    test_multithrading_lock.release()
+    test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
