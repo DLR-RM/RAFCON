@@ -53,7 +53,7 @@ class PerpLine(Line):
     def waypoints(self):
         waypoints = []
         for handle in self.handles():
-            if handle not in self.end_handles_perp():
+            if handle not in self.end_handles(include_waypoints=True):
                 waypoints.append(handle)
         return waypoints
 
@@ -99,24 +99,14 @@ class PerpLine(Line):
             self._view = self.canvas.get_first_view()
         return self._view
 
-    def end_handles_perp(self):
+    def end_handles(self, include_waypoints=False):
         end_handles = [self.from_handle(), self.to_handle()]
-        if self._from_waypoint:
-            end_handles.append(self._from_waypoint)
-        if self._to_waypoint:
-            end_handles.append(self._to_waypoint)
+        if include_waypoints:
+            if self._from_waypoint:
+                end_handles.insert(1, self._from_waypoint)
+            if self._to_waypoint:
+                end_handles.insert(-1, self._to_waypoint)
         return end_handles
-
-    def end_handles(self):
-        return [self.from_handle(), self.to_handle()]
-
-    def perp_waypoint_handles(self):
-        waypoint_handles = []
-        if self._from_waypoint:
-            waypoint_handles.append(self._from_waypoint)
-        if self._to_waypoint:
-            waypoint_handles.append(self._to_waypoint)
-        return waypoint_handles
 
     def reset_from_port(self):
         self._from_port = None
@@ -144,12 +134,13 @@ class PerpLine(Line):
         self.remove_all_waypoints()
 
     def get_parent_state_v(self):
-        if not self.from_port:
-            return None
         if not self._parent_state_v:
+            if not self.from_port:
+                return None
             if isinstance(self.from_port, (IncomeView, InputPortView, ScopedVariablePortView)):
-                return self.from_port.parent
-            self._parent_state_v = self.from_port.parent.parent
+                self._parent_state_v = self.from_port.parent
+            else:
+                self._parent_state_v = self.from_port.parent.parent
         return self._parent_state_v
 
     def draw_head(self, context, port):
@@ -185,11 +176,25 @@ class PerpLine(Line):
         self.line_width = self._calc_line_width()
         cr = context.cairo
         cr.set_line_width(self.line_width)
-        draw_line_end(self._handles[0].pos, self._head_angle, self.from_port, self.draw_tail)
-        for h in self._handles[1:-1]:
+
+        # Draw connection tail (line perpendicular to from_port)
+        start_segment_index = 0
+        if self.from_port:
+            draw_line_end(self._handles[0].pos, self._head_angle, self.from_port, self.draw_tail)
+            start_segment_index = 1
+
+        # Draw connection head (line perpendicular to to_port)
+        end_segment_index = len(self._handles)
+        if self.to_port:
+            draw_line_end(self._handles[-1].pos, self._tail_angle, self.to_port, self.draw_head)
+            end_segment_index -= 1
+
+        # Draw connection line from waypoint to waypoint
+        cr.move_to(*self._handles[start_segment_index].pos)
+        for h in self._handles[start_segment_index+1:end_segment_index]:
             cr.line_to(*h.pos)
         cr.set_source_rgba(*self._line_color)
-        draw_line_end(self._handles[-1].pos, self._tail_angle, self.to_port, self.draw_head)
+        cr.stroke()
 
         if self.name and (isinstance(self.from_port, LogicPortView) or
                           global_gui_config.get_config_value("SHOW_NAMES_ON_DATA_FLOWS", default=True)):

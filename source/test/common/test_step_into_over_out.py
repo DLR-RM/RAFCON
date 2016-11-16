@@ -21,7 +21,7 @@ def wait_and_join(state_machine, state_id):
 
 def test_custom_entry_point(caplog):
 
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
 
     testing_utils.remove_all_libraries()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
@@ -74,7 +74,7 @@ def test_custom_entry_point(caplog):
 
     assert rafcon.statemachine.singleton.global_variable_manager.get_variable("bottles") == 95
 
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 

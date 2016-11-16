@@ -89,17 +89,16 @@ class DataFlow(StateElement):
     @lock_state_machine
     @Observable.observed
     def modify_origin(self, from_state, from_key):
-        """ Set from_state and from_outcome at ones to support fully valid transition modifications.
+        """Set both from_state and from_key at the same time to modify data flow origin
 
-        :param str from_state: valid origin state
-        :param int from_key: valid origin outcome
-        :raises exceptions.ValueError: if one the parameters if of wrong type
-        :raises exceptions.RuntimeError: if the data flow could not be changed
+        :param str from_state: State id of the origin state
+        :param int from_key: Data port id of the origin port
+        :raises exceptions.ValueError: If parameters have wrong types or the new data flow is not valid
         """
         if not isinstance(from_state, basestring):
-            raise ValueError("from_state must be of type str")
+            raise ValueError("Invalid data flow origin port: from_state must be of type str")
         if not isinstance(from_key, int):
-            raise ValueError("from_key must be of type int")
+            raise ValueError("Invalid data flow origin port: from_key must be of type int")
 
         old_from_state = self.from_state
         old_from_key = self.from_key
@@ -145,18 +144,16 @@ class DataFlow(StateElement):
     @lock_state_machine
     @Observable.observed
     def modify_target(self, to_state, to_key):
-        """ Set to_state and to_key (Data Port) at ones to support fully valid transition modifications.
+        """Set both to_state and to_key at the same time to modify data flow target
 
-        :param str to_state: valid target state
-        :param int to_key: valid target data port
-        :raises exceptions.ValueError: if one the parameters if of wrong type
-        :raises exceptions.RuntimeError: if the data flow could not be changed
-        :return:
+        :param str to_state: State id of the target state
+        :param int to_key: Data port id of the target port
+        :raises exceptions.ValueError: If parameters have wrong types or the new data flow is not valid
         """
         if not isinstance(to_state, basestring):
-            raise ValueError("from_state must be of type str")
+            raise ValueError("Invalid data flow target port: from_state must be of type str")
         if not isinstance(to_key, int):
-            raise ValueError("from_outcome must be of type int")
+            raise ValueError("Invalid data flow target port: from_outcome must be of type int")
 
         old_to_state = self.to_state
         old_to_key = self.to_key

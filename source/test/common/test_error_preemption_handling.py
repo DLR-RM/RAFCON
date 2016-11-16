@@ -27,7 +27,7 @@ class TestErrorPreemptionHandling():
     @classmethod
     def setup_class(cls):
         # This methods runs on class creation and creates the state machine
-        testing_utils.test_multithrading_lock.acquire()
+        testing_utils.test_multithreading_lock.acquire()
         state_machine = global_storage.load_state_machine_from_path(
             rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/action_block_execution_test")
         cls.state_machine = state_machine
@@ -36,7 +36,7 @@ class TestErrorPreemptionHandling():
 
     @classmethod
     def teardown_class(cls):
-        testing_utils.test_multithrading_lock.release()
+        testing_utils.test_multithreading_lock.release()
         pass
 
     def setup(self):

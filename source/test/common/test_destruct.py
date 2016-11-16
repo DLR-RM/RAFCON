@@ -113,7 +113,7 @@ def un_patch_core_classes_from_log():
 
 def test_core_destruct(caplog):
 
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
     remove_log_files()
 
     patch_core_classes_with_log()
@@ -140,7 +140,7 @@ def test_core_destruct(caplog):
     assert 0 == diff
     un_patch_core_classes_from_log()
     remove_log_files()
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
 
 
 def _test_model_and_core_destruct(caplog):

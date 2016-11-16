@@ -170,7 +170,7 @@ def test_window_positions(caplog):
 
     gtk.main()
     thread.join()
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=warnings)
 
 
@@ -189,7 +189,7 @@ def test_pane_positions(caplog):
 
     gtk.main()
     thread.join()
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=warnings)
 
 

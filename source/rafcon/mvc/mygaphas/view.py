@@ -11,7 +11,7 @@ class ExtendedGtkView(GtkView):
         super(ExtendedGtkView, self).__init__(*args)
         self._bounding_box_painter = RAFCONBoundingBoxPainter(self)
 
-    def get_port_at_point(self, vpos, distance=10, exclude=None):
+    def get_port_at_point(self, vpos, distance=10, exclude=None, exclude_port_fun=None):
         """
         Find item with port closest to specified position.
 
@@ -45,10 +45,12 @@ class ExtendedGtkView(GtkView):
         rect = (vx - distance, vy - distance, distance * 2, distance * 2)
         items = self.get_items_in_rectangle(rect, reverse=True)
         for i in items:
-            if i in exclude:
+            if exclude and i in exclude:
                 continue
             for p in i.ports():
                 if not p.connectable:
+                    continue
+                if exclude_port_fun and exclude_port_fun(p):
                     continue
 
                 ix, iy = v2i(i).transform_point(vx, vy)

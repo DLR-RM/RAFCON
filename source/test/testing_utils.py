@@ -9,7 +9,7 @@ from rafcon.utils import log, constants
 from rafcon.statemachine.config import global_config
 
 
-test_multithrading_lock = Lock()
+test_multithreading_lock = Lock()
 
 RAFCON_TEMP_PATH_TEST_BASE = join(constants.RAFCON_TEMP_PATH_BASE, 'unit_tests')
 if not exists(RAFCON_TEMP_PATH_TEST_BASE):
@@ -106,7 +106,7 @@ def start_rafcon():
     # import mvc modules only if necessary
     from rafcon.mvc.config import global_gui_config
     from rafcon.mvc.start import signal_handler
-    test_multithrading_lock.acquire()
+    test_multithreading_lock.acquire()
     signal.signal(signal.SIGINT, signal_handler)
     global_config.load()
     global_gui_config.load()

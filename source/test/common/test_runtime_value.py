@@ -25,14 +25,14 @@ def setup_module(module=None):
 
 def test_runtime_values(caplog):
     state_machine_manager.delete_all_state_machines()
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
 
     sm = state_machine_execution_engine.execute_state_machine_from_path(
         path=testing_utils.get_test_sm_path("unit_test_state_machines/library_runtime_value_test"))
     state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert sm.root_state.output_data["data_output_port1"] == 114
 
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
 
 

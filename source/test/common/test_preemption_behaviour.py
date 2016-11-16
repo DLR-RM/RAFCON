@@ -22,7 +22,7 @@ import pytest
 def test_preemption_behaviour_in_preemption_state(caplog):
     testing_utils.remove_all_libraries()
 
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
 
     sm = state_machine_execution_engine.execute_state_machine_from_path(
@@ -33,7 +33,7 @@ def test_preemption_behaviour_in_preemption_state(caplog):
     assert not global_variable_manager.variable_exist("s3")
 
     testing_utils.reload_config()
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -46,7 +46,7 @@ def trigger_stop(sm, execution_engine):
 def test_preemption_behaviour_during_stop(caplog):
     testing_utils.remove_all_libraries()
 
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
 
     state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path(
@@ -66,7 +66,7 @@ def test_preemption_behaviour_during_stop(caplog):
     assert not global_variable_manager.variable_exist("s3")
 
     testing_utils.reload_config()
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
