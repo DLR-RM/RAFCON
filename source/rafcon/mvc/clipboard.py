@@ -125,7 +125,7 @@ class Clipboard(Observable):
         assert isinstance(target_state_m, StateModel) # in future Execution states can be used, too
 
         # update meta data of clipboard elements to adapt for new parent state
-        logger.info("PASTE -> meta data adaptation has to be implemented")
+        logger.info("PASTE -> meta data adaptation has to be implemented {0}".format(self.clipboard_type))
 
         oc_m_copy_list = self.outcome_model_copies
         ip_m_copy_list = self.input_data_port_model_copies
@@ -142,12 +142,10 @@ class Clipboard(Observable):
         def insert_elements_from_model_copies_list(model_list, element_str):
             new_and_copy_models = []
             for orig_m_copy in model_list:
-                if 'state' == element_str:
-                    state_id = orig_m_copy.state.state_id
+                try:
                     new_and_copy_models.append(getattr(self, 'insert_{0}'.format(element_str))(target_state_m, orig_m_copy))
-                    self.state_id_mapping_dict[state_id] = new_and_copy_models[-1][0].state.state_id
-                else:
-                    new_and_copy_models.append(getattr(self, 'insert_{0}'.format(element_str))(target_state_m, orig_m_copy))
+                except (ValueError, AttributeError, TypeError) as e:
+                    logger.warning("While inserting a {0} a failure was detected, exception: {1}.".format(element_str, e))
 
             return new_and_copy_models
 
@@ -161,7 +159,6 @@ class Clipboard(Observable):
         insert_dict['input_data_ports'] = insert_elements_from_model_copies_list(ip_m_copy_list, 'input_data_port')
         insert_dict['output_data_ports'] = insert_elements_from_model_copies_list(op_m_copy_list, 'output_data_port')
         if isinstance(target_state_m.state, ContainerState):
-            print len(sv_m_copy_list)
             insert_dict['scoped_variables'] = insert_elements_from_model_copies_list(sv_m_copy_list, 'scoped_variable')
             insert_dict['states'] = insert_elements_from_model_copies_list(state_m_copy_list, 'state')
             insert_dict['transitions'] = insert_elements_from_model_copies_list(t_m_copy_list, 'transition')
@@ -225,6 +222,7 @@ class Clipboard(Observable):
         new_state_copy_m = target_state_m.states[orig_state_copy.state_id]
 
         new_state_copy_m.copy_meta_data_from_state_m(orig_state_copy_m)
+        self.state_id_mapping_dict[old_state_id] = new_state_id
         return new_state_copy_m, orig_state_copy_m
 
     def insert_transition(self, target_state_m, orig_transition_copy_m):
@@ -246,7 +244,7 @@ class Clipboard(Observable):
         return target_state_m.get_data_flow_m(df_id), orig_data_flow_copy_m
 
     def insert_outcome(self, target_state_m, orig_outcome_copy_m):
-        oc = orig_outcome_copy_m.data_port
+        oc = orig_outcome_copy_m.outcome
         oc_id = target_state_m.state.add_outcome(oc.name)
         target_state_m.get_outcome_m(oc_id).meta = orig_outcome_copy_m.meta
         return target_state_m.get_outcome_m(oc_id), orig_outcome_copy_m
@@ -254,7 +252,7 @@ class Clipboard(Observable):
     def insert_input_data_port(self, target_state_m, orig_input_data_port_copy_m):
         ip = orig_input_data_port_copy_m.data_port
         old_port_tuple = (self.copy_parent_state_id, ip.data_port_id)
-        data_port_id = target_state_m.state.add_input_data_port(ip.name, ip.data_type, ip.default_value, ip.data_port_id)
+        data_port_id = target_state_m.state.add_input_data_port(ip.name, ip.data_type, ip.default_value)
         self.port_id_mapping_dict[old_port_tuple] = data_port_id
         target_state_m.get_data_port_m(data_port_id).meta = orig_input_data_port_copy_m.meta
         return target_state_m.get_data_port_m(data_port_id), orig_input_data_port_copy_m
@@ -262,7 +260,7 @@ class Clipboard(Observable):
     def insert_output_data_port(self, target_state_m, orig_output_data_port_copy_m):
         op = orig_output_data_port_copy_m.data_port
         old_port_tuple = (self.copy_parent_state_id, op.data_port_id)
-        data_port_id = target_state_m.state.add_output_data_port(op.name, op.data_type, op.default_value, op.data_port_id)
+        data_port_id = target_state_m.state.add_output_data_port(op.name, op.data_type, op.default_value)
         self.port_id_mapping_dict[old_port_tuple] = data_port_id
         target_state_m.get_data_port_m(data_port_id).meta = orig_output_data_port_copy_m.meta
         return target_state_m.get_data_port_m(data_port_id), orig_output_data_port_copy_m
@@ -270,7 +268,7 @@ class Clipboard(Observable):
     def insert_scoped_variable(self, target_state_m, orig_scoped_variable_copy_m):
         sv = orig_scoped_variable_copy_m.scoped_variable
         old_port_tuple = (self.copy_parent_state_id, sv.data_port_id)
-        data_port_id = target_state_m.state.add_scoped_variable(sv.name, sv.data_type, sv.default_value, sv.data_port_id)
+        data_port_id = target_state_m.state.add_scoped_variable(sv.name, sv.data_type, sv.default_value)
         self.port_id_mapping_dict[old_port_tuple] = data_port_id
         target_state_m.get_data_port_m(data_port_id).meta = orig_scoped_variable_copy_m.meta
         return target_state_m.get_data_port_m(data_port_id), orig_scoped_variable_copy_m
@@ -379,7 +377,7 @@ class Clipboard(Observable):
                 selection.remove(transition_m)
         # extend linkage selection by fully by selection covered linkage
         # logger.info("COPY/CUT -> extend linkage has to be implemented")
-        if parent_m:
+        if parent_m and isinstance(parent_m.state, ContainerState):
             state_ids = [state.state_id for state in possible_states]
             port_ids = [sv_m.scoped_variable.data_port_id for sv_m in selection.scoped_variables] + \
                 [ip_m.data_port.data_port_id for ip_m in selection.input_data_ports] + \
@@ -422,9 +420,10 @@ class Clipboard(Observable):
                 model_copy = copy(model)
                 getattr(self, '{0}_model_copies'.format(element_str)).append(model_copy)
 
-        copy_list_of_elements_of_type('state')
+        copy_list_of_elements_of_type('outcome')
         copy_list_of_elements_of_type('input_data_port')
         copy_list_of_elements_of_type('output_data_port')
+        copy_list_of_elements_of_type('state')
         copy_list_of_elements_of_type('scoped_variable')
         copy_list_of_elements_of_type('transition')
         copy_list_of_elements_of_type('data_flow')
