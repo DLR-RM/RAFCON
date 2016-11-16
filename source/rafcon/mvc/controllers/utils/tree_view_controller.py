@@ -5,6 +5,7 @@ from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.gui_helper import react_to_event, is_event_of_key_string
+from rafcon.mvc.selection import Selection
 
 from rafcon.utils import log
 module_logger = log.get_logger(__name__)
@@ -294,7 +295,7 @@ class ListViewController(ExtendedController):
             return
         self._do_selection_update = True
         tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        if tree_selection:
+        if tree_selection is not None:
             for path, row in enumerate(self.list_store):
                 model = row[self.MODEL_STORAGE_ID]
                 if model not in sm_selected_model_list and model in selected_model_list:
@@ -310,7 +311,7 @@ class ListViewController(ExtendedController):
             return
         self._do_selection_update = True
         tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        if sm_selection:
+        if isinstance(sm_selection, Selection):
             for row in self.list_store:
                 model = row[self.MODEL_STORAGE_ID]
                 if model in sm_selected_model_list and model not in selected_model_list:
@@ -321,7 +322,7 @@ class ListViewController(ExtendedController):
 
     def selection_changed(self, widget, event=None):
         """Notify tree view about state machine selection"""
-        # print type(self).__name__, "select changed", widget, event, self
+        # print type(self).__name__, self._do_selection_update, "select changed", widget, event, self
         self.update_selection_self_prior()
 
     def select_entry(self, core_element_id, by_cursor=True):
