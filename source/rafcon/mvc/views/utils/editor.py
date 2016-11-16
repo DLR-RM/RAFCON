@@ -41,23 +41,14 @@ class EditorView(View):
 
         # create textview
         self.textview = None
+        self.style_scheme = None
+        self.language = language
+        self.editor_style = editor_style
         try:
-            language_manager = gtksourceview2.LanguageManager()
-            style_scheme_manager = gtksourceview2.StyleSchemeManager()
-            if language in language_manager.get_language_ids():
-                self.textview = gtksourceview2.View(gtksourceview2.Buffer())
-                b = self.textview.get_buffer()
-                b.set_language(language_manager.get_language(language))
-                b.set_highlight_syntax(True)
+            self.language_manager = gtksourceview2.LanguageManager()
+            if language in self.language_manager.get_language_ids():
 
-                user_editor_style = global_gui_config.get_config_value(editor_style, "classic")
-                scheme = style_scheme_manager.get_scheme(user_editor_style)
-                if scheme:
-                    b.set_style_scheme(scheme)
-                else:
-                    logger.debug("The editor style '{}' is not supported. Using the default 'classic'".format(
-                        user_editor_style))
-                    b.set_style_scheme(style_scheme_manager.get_scheme('classic'))
+                self.textview = gtksourceview2.View(self.new_buffer())
                 self.textview.set_mark_category_pixbuf('INSTRUCTION',
                                                        editor_frame.render_icon(gtk.STOCK_GO_FORWARD,
                                                                                 gtk.ICON_SIZE_MENU))
@@ -70,9 +61,7 @@ class EditorView(View):
             self.textview = gtk.TextView()
             self.using_source_view = False
 
-        self.textview.get_buffer().create_tag("deactivated", foreground="gray")
-        self.textview.get_buffer().create_tag("default", font="Monospace 10")
-        self.textview.get_buffer().connect('changed', self.code_changed)
+        self.register()
 
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -81,6 +70,28 @@ class EditorView(View):
         self.scrollable = scrollable
 
         self['editor_frame'] = vbox
+
+    def new_buffer(self):
+        style_scheme_manager = gtksourceview2.StyleSchemeManager()
+        b = gtksourceview2.Buffer()
+        b.set_language(self.language_manager.get_language(self.language))
+        b.set_highlight_syntax(True)
+
+        user_editor_style = global_gui_config.get_config_value(self.editor_style, "classic")
+        scheme = style_scheme_manager.get_scheme(user_editor_style)
+        if scheme:
+            self.style_scheme = scheme
+        else:
+            logger.debug("The editor style '{}' is not supported. Using the default 'classic'".format(
+                user_editor_style))
+            self.style_scheme = style_scheme_manager.get_scheme('classic')
+        b.set_style_scheme(self.style_scheme)
+        return b
+
+    def register(self):
+        self.textview.get_buffer().create_tag("deactivated", foreground="gray")
+        self.textview.get_buffer().create_tag("default", font="Monospace 10")
+        self.textview.get_buffer().connect('changed', self.code_changed)
 
     def apply_tag(self, name):
         text_buffer = self.get_buffer()
@@ -104,6 +115,20 @@ class EditorView(View):
 
     def set_enabled(self, on):
         if on:
+            self.textview.set_property('editable', True)
+            line_number, line_offset = self.get_cursor_position()
+            tbuffer = self.get_buffer()
+            current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
+            try:
+                b = self.new_buffer()
+            except NameError:
+                b = gtk.TextBuffer()
+            b.begin_not_undoable_action()
+            b.set_text(current_text)
+            b.end_not_undoable_action()
+            self.textview.set_buffer(b)
+            self.register()
+            self.set_cursor_position(line_number, line_offset)
             self.apply_tag('default')
         else:
             self.apply_tag('deactivated')

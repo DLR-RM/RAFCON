@@ -80,8 +80,8 @@ class SourceEditorController(EditorController):
         def lock():
             # change the button label to suggest to the user that the text now is not editable
             button.set_label('Unlock')
-            # Disable the textinput events to the source editor widget
-            self.view.textview.set_sensitive(False)
+            # Disable the text input events to the source editor widget
+            self.view.set_enabled(False)
 
         def unlock():
             button.set_label('Open externally   ')
@@ -89,7 +89,7 @@ class SourceEditorController(EditorController):
             # while locked to highlight the reason why one cannot edit the text
             button.set_active(False)
             # Enable text input
-            self.view.textview.set_sensitive(True)
+            self.view.set_enabled(True)
 
         if button.get_active():
 
