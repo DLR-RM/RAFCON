@@ -15,9 +15,10 @@ import gobject
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
+from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController, react_to_event
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.state_machine_helper import insert_self_transition_meta_data
+from rafcon.mvc.clipboard import global_clipboard
 
 from rafcon.utils import log
 
@@ -350,3 +351,17 @@ class StateOutcomesEditorController(ExtendedController):
         if not isinstance(self.model.state, LibraryState):
             shortcut_manager.add_callback_for_action("delete", self.oc_list_ctrl.remove_action_callback)
             shortcut_manager.add_callback_for_action("add", self.oc_list_ctrl.add_action_callback)
+            shortcut_manager.add_callback_for_action("copy", self.oc_list_ctrl.copy_action_callback)
+            shortcut_manager.add_callback_for_action("cut", self.oc_list_ctrl.cut_action_callback)
+            shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
+
+    def paste_action_callback(self, *event):
+        """Callback method for paste action"""
+        if react_to_event(self.view, self.oc_list_ctrl.tree_view, event):
+            copied_list_of_models = global_clipboard.outcome_model_copies
+            selected_list_of_models = global_clipboard.selected_outcome_models
+            global_clipboard.reset_clipboard()
+            global_clipboard.outcome_model_copies = copied_list_of_models
+            global_clipboard.selected_outcome_models = selected_list_of_models
+            global_clipboard.paste(self.model)
+            return True

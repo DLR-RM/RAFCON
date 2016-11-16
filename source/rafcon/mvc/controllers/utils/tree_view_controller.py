@@ -6,6 +6,7 @@ from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.gui_helper import react_to_event, is_event_of_key_string
 from rafcon.mvc.selection import Selection
+from rafcon.mvc.clipboard import global_clipboard
 
 from rafcon.utils import log
 module_logger = log.get_logger(__name__)
@@ -129,6 +130,26 @@ class ListViewController(ExtendedController):
 
         renderer.connect('editing-started', on_editing_started)
         renderer.connect('edited', on_edited)
+
+    def copy_action_callback(self, *event):
+        """Callback method for copy action"""
+        if react_to_event(self.view, self.tree_view, event):
+            sm_selection, sm_selected_model_list = self.get_state_machine_selection()
+            # only list specific elements are copied by widget
+            if sm_selection is not None:
+                sm_selection.set(sm_selected_model_list)
+                global_clipboard.copy(sm_selection)
+                return True
+
+    def cut_action_callback(self, *event):
+        """Callback method for copy action"""
+        if react_to_event(self.view, self.tree_view, event):
+            sm_selection, sm_selected_model_list = self.get_state_machine_selection()
+            # only list specific elements are cut by widget
+            if sm_selection is not None:
+                sm_selection.set(sm_selected_model_list)
+                global_clipboard.cut(sm_selection)
+                return True
 
     def add_action_callback(self, *event):
         """Callback method for add action"""

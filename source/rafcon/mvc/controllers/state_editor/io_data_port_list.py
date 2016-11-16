@@ -15,8 +15,9 @@ from gtk import TreeViewColumn, CellRendererToggle
 
 from rafcon.statemachine.states.library_state import LibraryState
 
-from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController
+from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController, react_to_event
 from rafcon.mvc.models.abstract_state import AbstractStateModel
+from rafcon.mvc.clipboard import global_clipboard
 
 from rafcon.mvc.utils.comparison import compare_variables
 from rafcon.utils import log
@@ -127,6 +128,20 @@ class DataPortListController(ListViewController):
         if not isinstance(self.model.state, LibraryState):
             shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)
             shortcut_manager.add_callback_for_action("add", self.add_action_callback)
+            shortcut_manager.add_callback_for_action("copy", self.copy_action_callback)
+            shortcut_manager.add_callback_for_action("cut", self.cut_action_callback)
+            shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
+
+    def paste_action_callback(self, *event):
+        """Callback method for paste action"""
+        if react_to_event(self.view, self.tree_view, event):
+            copied_list_of_models = getattr(global_clipboard, "{0}_data_port_model_copies".format(self.type))
+            selected_list_of_models = getattr(global_clipboard, "selected_{0}_data_port_models".format(self.type))
+            global_clipboard.reset_clipboard()
+            setattr(global_clipboard, "{0}_data_port_model_copies".format(self.type), copied_list_of_models)
+            setattr(global_clipboard, "selected_{0}_data_port_models".format(self.type), selected_list_of_models)
+            global_clipboard.paste(self.model)
+            return True
 
     def get_state_machine_selection(self):
         # print type(self).__name__, "get state machine selection"
