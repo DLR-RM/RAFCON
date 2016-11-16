@@ -124,6 +124,8 @@ class Selection(Observable):
             self.input_data_ports = self.get_input_data_ports()
         if not self._output_data_ports == self.get_output_data_ports():
             self.output_data_ports = self.get_output_data_ports()
+        if not self._scoped_variables == self.get_scoped_variables():
+            self.scoped_variables = self.get_scoped_variables()
         if not self._outcomes == self.get_outcomes():
             self.outcomes = self.get_outcomes()
 
