@@ -6,12 +6,18 @@ Patch releases 0.7.\*
 
 - Features:
 
+  - Use external source editor: A button next to the source editor allows to open your code in an external editor, which you can configure
+  - Gaphas: When resizing states, grid lines are shown helping states to bea aligned to each other (as when moving states)
+
 - Improvements:
 
   - Gaphas: Change drawing order of state elements. Transitions are now drawn above states, Names of states are drawn
     beneath everything. This should ease the manipulation of transitions.
+  - Gaphas: States are easier to resize, as the corresponding handle is easier to grab
 
 - API:
+
+  - library paths can now be defined relative to the config file (this was possible before, but only if the path was prepended with "./"
 
 - Documentation:
 
@@ -20,13 +26,21 @@ Patch releases 0.7.\*
 
 - Fixes:
 
-  - `#202 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/202>`_: RAFCON crash
+  - `#5 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/5>`_: Fix connection bug
+  - `#120 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/120>`_: Make state machines thread safe using RLocks
+  - `#154 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/154>`_: Multi-Selection problems
   - `#159 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/159>`_: Transitions cannot be selected
+  - `#179 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/179>`_: Allow external source editor
+  - `#202 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/202>`_: RAFCON crash
+  - `#221 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/221>`_: issue when dragging data flows
+  - `#222 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/222>`_: Cannot remove transition of root state in TransitionController
+  - `#223 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/223>`_: rafcon library config relative path undefined behaviour
+  - `#224 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/224>`_: Switch to respective state when trying to open a state which is already open.
 
 - Refactoring:
 
-  - Widgets have TreeViews not have a common base class. This allowed to get rid of a lot of duplicate code and made
-    some implementations more robust
+  - Widgets have TreeViews not have a common base class. This allowed to get rid of a lot of duplicate code and made some implementations more robust
+  - the code behind connection creation and modification in the Gaphas editor has been completely rewritten and made more robust
 
 
 0.7.13
