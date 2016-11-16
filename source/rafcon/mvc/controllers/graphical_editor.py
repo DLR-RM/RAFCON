@@ -2216,37 +2216,30 @@ class GraphicalEditorController(ExtendedController):
             if len(selection) != 1 or len(selected_states) < 1:
                 logger.error("Please select a single container state for pasting the clipboard")
                 return
-            if not isinstance(selected_states[0], ContainerStateModel):
-                # the default behaviour of the copy paste is that the state is copied into the parent state
-                parent_of_old_state = selected_states[0].parent
-                if isinstance(parent_of_old_state, AbstractStateModel):
-                    selection.clear()
-                    selection.add(parent_of_old_state)
-                else:
-                    logger.error("Only container state can have child states")
-                    return
 
             # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
             target_state_m = selection.get_states()[0]
-            state_copy_m, state_orig_m = global_clipboard.paste(target_state_m)
+            insert_dict = global_clipboard.paste(target_state_m)
 
-            if state_copy_m is None:  # An error occurred while pasting
+            if 'states' not in insert_dict:  # An error occurred while pasting
                 return
 
-            # Adjust size of new state
-            old_size = state_orig_m.meta['gui']['editor_opengl']['size']
-            target_size = target_state_m.meta['gui']['editor_opengl']['size']
+            for new_state_m_copy, orig_state_m_copy in insert_dict['states']:
 
-            new_size = calculate_size(old_size, (target_size[0] / 5., target_size[1] / 5.))
+                # Adjust size of new state
+                old_size = orig_state_m_copy.meta['gui']['editor_opengl']['size']
+                target_size = target_state_m.meta['gui']['editor_opengl']['size']
 
-            rel_pos_x, rel_pos_y = state_copy_m.meta['gui']['editor_opengl']['rel_pos']
-            rel_pos_x = target_size[0] * 4 / 5. if rel_pos_x > target_size[0] * 4 / 5. else rel_pos_x
-            rel_pos_y = -target_size[1] * 4 / 5. if rel_pos_y < -target_size[1] * 4 / 5. else rel_pos_y
-            pos = self._get_absolute_position(state_copy_m.parent, (rel_pos_x, rel_pos_y))
-            state_copy_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos_x, rel_pos_y)
-            state_copy_m.temp['gui']['editor']['pos'] = pos
-            new_corner_pos = add_pos(state_copy_m.temp['gui']['editor']['pos'], new_size)
-            self._resize_state(state_copy_m, new_corner_pos, keep_ratio=True, resize_content=True, publish_changes=True)
+                new_size = calculate_size(old_size, (target_size[0] / 5., target_size[1] / 5.))
+
+                rel_pos_x, rel_pos_y = new_state_m_copy.meta['gui']['editor_opengl']['rel_pos']
+                rel_pos_x = target_size[0] * 4 / 5. if rel_pos_x > target_size[0] * 4 / 5. else rel_pos_x
+                rel_pos_y = -target_size[1] * 4 / 5. if rel_pos_y < -target_size[1] * 4 / 5. else rel_pos_y
+                pos = self._get_absolute_position(new_state_m_copy.parent, (rel_pos_x, rel_pos_y))
+                new_state_m_copy.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos_x, rel_pos_y)
+                new_state_m_copy.temp['gui']['editor']['pos'] = pos
+                new_corner_pos = add_pos(new_state_m_copy.temp['gui']['editor']['pos'], new_size)
+                self._resize_state(new_state_m_copy, new_corner_pos, keep_ratio=True, resize_content=True, publish_changes=True)
 
             self._redraw()
             return True

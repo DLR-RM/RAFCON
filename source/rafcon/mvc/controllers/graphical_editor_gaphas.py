@@ -209,46 +209,40 @@ class GraphicalEditorController(ExtendedController):
             if len(selection) != 1 or len(selected_states) < 1:
                 logger.error("Please select a single container state for pasting the clipboard")
                 return
-            if not isinstance(selected_states[0], ContainerStateModel):
-                # the default behaviour of the copy paste is that the state is copied into the parent state
-                parent_of_old_state = selected_states[0].parent
-                if isinstance(parent_of_old_state, AbstractStateModel):
-                    selection.clear()
-                    selection.add(parent_of_old_state)
-                else:
-                    logger.error("Only container state can have child states")
-                    return
 
             # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
             target_state_m = selection.get_states()[0]
-            state_copy_m, state_orig_m = global_clipboard.paste(target_state_m)
+            insert_dict = global_clipboard.paste(target_state_m)
 
-            if state_copy_m is None:  # An error occurred while pasting
+            if 'states' not in insert_dict:
                 return
 
-            # Adjust size of new state
-            old_size = state_orig_m.meta['gui']['editor_gaphas']['size']
-            target_size = target_state_m.meta['gui']['editor_gaphas']['size']
+            for new_state_m_copy, orig_state_m_copy in insert_dict['states']:
 
-            # Use the old size, if it is smaller than the target state
-            if old_size[0] < target_size[0] and old_size[1] < target_size[1]:
-                new_size = old_size
-            # Resize to 1/3 of the target state, but keep the size ratio
-            else:
-                new_size = (target_size[0] / 3., target_size[1] / 3.)
-                old_size_ratio = old_size[0] / old_size[1]
-                if old_size_ratio < new_size[0] / new_size[1]:
-                    new_size = (new_size[1] * old_size_ratio, new_size[1])
+
+                # Adjust size of new state
+                old_size = orig_state_m_copy.meta['gui']['editor_gaphas']['size']
+                target_size = target_state_m.meta['gui']['editor_gaphas']['size']
+
+                # Use the old size, if it is smaller than the target state
+                if old_size[0]*2 < target_size[0] and old_size[1]*2 < target_size[1]:
+                    new_size = old_size
+                # Resize to 1/3 of the target state, but keep the size ratio
                 else:
-                    new_size = (new_size[0], new_size[0] / old_size_ratio)
+                    new_size = (target_size[0] / 4., target_size[1] / 4.)
+                    old_size_ratio = old_size[0] / old_size[1]
+                    if old_size_ratio < new_size[0] / new_size[1]:
+                        new_size = (new_size[1] * old_size_ratio, new_size[1])
+                    else:
+                        new_size = (new_size[0], new_size[0] / old_size_ratio)
 
-            new_state_v = self.canvas.get_view_for_model(state_copy_m)
-            new_state_v.width = new_size[0]
-            new_state_v.height = new_size[1]
-            state_copy_m.meta['gui']['editor_gaphas']['size'] = (new_state_v.width, new_state_v.height)
+                new_state_v = self.canvas.get_view_for_model(new_state_m_copy)
+                new_state_v.width = new_size[0]
+                new_state_v.height = new_size[1]
+                new_state_m_copy.meta['gui']['editor_gaphas']['size'] = (new_state_v.width, new_state_v.height)
 
-            new_state_v.resize_all_children(old_size, True)
-            self._meta_data_changed(new_state_v, state_copy_m, 'all', True)
+                new_state_v.resize_all_children(old_size, True)
+            self._meta_data_changed(new_state_v, new_state_m_copy, 'all', True)
             return True
 
     def _update_selection_from_gaphas(self, view, selected_items):
