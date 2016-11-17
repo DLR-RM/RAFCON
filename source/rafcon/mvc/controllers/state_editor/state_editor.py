@@ -52,9 +52,12 @@ class StateEditorController(ExtendedController):
 
         self.add_controller('properties_ctrl', StateOverviewController(model, view['properties_view']))
 
-        self.add_controller('inputs_ctrl', DataPortListController(model, view['inputs_view'], "input"))
-        self.add_controller('outputs_ctrl', DataPortListController(model, view['outputs_view'], "output"))
-        self.add_controller('scoped_ctrl', ScopedVariableListController(model, view['scopes_view']))
+        self.inputs_ctrl = DataPortListController(model, view['inputs_view'], "input")
+        self.add_controller('inputs_ctrl', self.inputs_ctrl)
+        self.outputs_ctrl = DataPortListController(model, view['outputs_view'], "output")
+        self.add_controller('outputs_ctrl', self.outputs_ctrl)
+        self.scopes_ctrl = ScopedVariableListController(model, view['scopes_view'])
+        self.add_controller('scopes_ctrl', self.scopes_ctrl)
         self.add_controller('outcomes_ctrl', StateOutcomesEditorController(model, view['outcomes_view']))
 
         self.add_controller('transitions_ctrl', StateTransitionsEditorController(model, view['transitions_view']))
@@ -103,20 +106,20 @@ class StateEditorController(ExtendedController):
             view.bring_tab_to_the_top('Linkage Overview')
 
         if isinstance(model, ContainerStateModel):
-            self.get_controller('scoped_ctrl').reload_scoped_variables_list_store()
+            self.scopes_ctrl.reload_scoped_variables_list_store()
 
     def register_view(self, view):
         """Called when the View was registered
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-        view['new_input_port_button'].connect('clicked', self.get_controller('inputs_ctrl').on_add)
-        view['new_output_port_button'].connect('clicked', self.get_controller('outputs_ctrl').on_add)
-        view['new_scoped_variable_button'].connect('clicked', self.get_controller('scoped_ctrl').on_add)
+        view['new_input_port_button'].connect('clicked', self.inputs_ctrl.on_add)
+        view['new_output_port_button'].connect('clicked', self.outputs_ctrl.on_add)
+        view['new_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_add)
 
-        view['delete_input_port_button'].connect('clicked', self.get_controller('inputs_ctrl').on_remove)
-        view['delete_output_port_button'].connect('clicked', self.get_controller('outputs_ctrl').on_remove)
-        view['delete_scoped_variable_button'].connect('clicked', self.get_controller('scoped_ctrl').on_remove)
+        view['delete_input_port_button'].connect('clicked', self.inputs_ctrl.on_remove)
+        view['delete_output_port_button'].connect('clicked', self.outputs_ctrl.on_remove)
+        view['delete_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_remove)
 
         if isinstance(self.model.state, LibraryState):
             view['new_input_port_button'].set_sensitive(False)

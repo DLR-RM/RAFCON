@@ -651,6 +651,12 @@ class StateTransitionsEditorController(ExtendedController):
     def __init__(self, model, view):
         ExtendedController.__init__(self, model, view)
         self.trans_list_ctrl = StateTransitionsListController(model, view.transitions_listView)
+        # self.add_controller('trans_list_ctrl', self.trans_list_ctrl)
+
+    def destroy(self):
+        # TODO fix destroy order or refactor widget to possibly use ExtendedController destruct method
+        # self.trans_list_ctrl.relieve_all_models()
+        super(StateTransitionsEditorController, self).destroy()
 
     def register_view(self, view):
         """Called when the View was registered

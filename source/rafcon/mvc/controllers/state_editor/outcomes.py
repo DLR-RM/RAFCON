@@ -297,7 +297,7 @@ class StateOutcomesListController(ListViewController):
         self.update_list_store()
 
     def get_state_machine_selection(self):
-        # print type(self).__name__, "get state machine selection"
+        # print type(self).__name__, "get state machine selection", self.model.state.get_path(), self
         sm_selection = self.model.get_sm_m_for_state_m().selection if self.model.get_sm_m_for_state_m() else None
         return sm_selection, sm_selection.outcomes if sm_selection else []
 
@@ -320,6 +320,12 @@ class StateOutcomesEditorController(ExtendedController):
         """
         ExtendedController.__init__(self, model, view)
         self.oc_list_ctrl = StateOutcomesListController(model, view.treeView)
+        # self.add_controller('oc_list_ctrl', self.oc_list_ctrl)
+
+    def destroy(self):
+        # TODO maybe refactor widget to use ExtendedController destruct method
+        self.oc_list_ctrl.relieve_all_models()
+        super(StateOutcomesEditorController, self).destroy()
 
     def register_view(self, view):
         """Called when the View was registered
