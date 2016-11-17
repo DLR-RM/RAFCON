@@ -45,3 +45,7 @@ class StateMachineExecutionEngineModel(ModelMT, Observable):
         #     import os
         #     os._exit(0)
 
+    @property
+    def core_element(self):
+        return self.execution_engine
+

@@ -103,6 +103,10 @@ class StateMachineModel(ModelMT, Hashable):
     def __del__(self):
         self.destroy()
 
+    @property
+    def core_element(self):
+        return self.state_machine
+
     def __destroy__(self):
         self.destroy()
 
