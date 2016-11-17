@@ -51,9 +51,6 @@ class StateEditorView(View):
         self['description_text_view'] = self['description_view'].textview
         self['description_scroller'] = self['description_view'].scrollable
 
-        self['data_vpaned'].set_position(190)
-        self['logic_vpaned'].set_position(190)
-
         self['main_notebook_1'].set_tab_hborder(constants.BORDER_WIDTH * 2)
         self['main_notebook_1'].set_tab_vborder(constants.BORDER_WIDTH * 3)
         self['main_notebook_2'].set_tab_hborder(constants.BORDER_WIDTH * 2)
@@ -66,14 +63,14 @@ class StateEditorView(View):
         self['main_notebook_1'].set_current_page(self['main_notebook_1'].page_num(self.page_dict["Source"]))
         self['main_notebook_2'].set_current_page(self['main_notebook_2'].page_num(self.page_dict["Description"]))
 
-        self['vpaned'].set_position(450)
-
         self['new_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['new_output_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_output_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['new_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+
+        self.set_default_paned_positions()
 
     def bring_tab_to_the_top(self, tab_label):
         """Find tab with label tab_label in list of notebook's and set it to the current page.
@@ -86,3 +83,9 @@ class StateEditorView(View):
             if not page_num == -1:
                 self[notebook].set_current_page(page_num)
                 break
+
+    def set_default_paned_positions(self):
+        self['vpaned'].set_position(575)
+        self['logic_vpaned'].set_position(300)
+        self['data_vpaned'].set_position(300)
+
