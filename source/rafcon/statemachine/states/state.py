@@ -575,6 +575,22 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return outcome_id
 
     @lock_state_machine
+    def remove(self, state_element, force=False):
+        """Remove item from state
+
+        :param StateElement state_element: State element to be removed
+        :param bool force: if the removal should be forced without checking constraints
+        """
+        if isinstance(state_element, Outcome):
+            self.remove_outcome(state_element.outcome_id, force)
+        elif isinstance(state_element, InputDataPort):
+            self.remove_input_data_port(state_element.data_port_id, force)
+        elif isinstance(state_element, OutputDataPort):
+            self.remove_output_data_port(state_element.data_port_id, force)
+        else:
+            raise ValueError("Cannot remove state_element with invalid type")
+
+    @lock_state_machine
     @Observable.observed
     def remove_outcome(self, outcome_id, force=False):
         """Remove an outcome from the state
