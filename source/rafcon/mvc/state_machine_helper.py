@@ -27,78 +27,30 @@ def delete_model(model, raise_exceptions=False):
     data from the corresponding state machine.
 
     :param model: The model to delete
+    :param bool raise_exceptions: Whether to raise exceptions or only print error logs in case of failures
     :return: True if successful, False else
     """
-    container_m = model.parent
-    if container_m is None:
+    state_m = model.parent
+    if state_m is None:
+        msg = "Model has no parent from which it could be deleted from"
+        if raise_exceptions:
+            raise ValueError(msg)
+        logger.error(msg)
         return False
-    assert isinstance(container_m, ContainerStateModel)
-    container_state = container_m.state
+    assert isinstance(state_m, StateModel)
+    state = state_m.state
+    core_element = model.core_element
 
-    if isinstance(model, AbstractStateModel):
-        state_id = model.state.state_id
-        try:
-            if state_id in container_state.states:
-                container_state.remove_state(state_id)
-                return True
-        except AttributeError as e:
-            if not raise_exceptions:
-                logger.error("The state with the ID {0} and the name {1} could not be deleted: {2}".format(
-                    state_id, model.state.name, e.message))
-            else:
-                raise
-    # State element
-    else:
-        state_element_id = model.core_element.state_element_id
-        if isinstance(model, TransitionModel):
-            try:
-                if state_element_id in container_state.transitions:
-                    container_state.remove_transition(state_element_id)
-                    return True
-            except AttributeError as e:
-                if not raise_exceptions:
-                    logger.error("The transition with the ID {0} could not be deleted: {1}".format(state_element_id, e))
-                else:
-                    raise
-
-        elif isinstance(model, DataFlowModel):
-            try:
-                if state_element_id in container_state.data_flows:
-                    container_state.remove_data_flow(state_element_id)
-                    return True
-            except AttributeError as e:
-                if not raise_exceptions:
-                    logger.error("The data flow with the ID {0} could not be deleted: {1}".format(state_element_id, e))
-                else:
-                    raise
-
-        elif isinstance(model, ScopedVariableModel):
-            try:
-                if state_element_id in container_state.scoped_variables:
-                    container_state.remove_scoped_variable(state_element_id)
-                    return True
-            except AttributeError as e:
-                if not raise_exceptions:
-                    logger.error("The scoped variable with the ID {0} could not be deleted: {1}".format(
-                        state_element_id, e))
-                else:
-                    raise
-
-        elif isinstance(model, DataPortModel):
-            try:
-                if state_element_id in container_state.input_data_ports:
-                    container_state.remove_input_data_port(state_element_id)
-                    return True
-                elif state_element_id in container_state.output_data_ports:
-                    container_state.remove_output_data_port(state_element_id)
-                    return True
-            except AttributeError as e:
-                if not raise_exceptions:
-                    logger.error("The data port with the ID {0} could not be deleted: {1}".format(state_element_id, e))
-                else:
-                    raise
-
-    return False
+    try:
+        if core_element in state:
+            state.remove(core_element)
+            return True
+        return False
+    except (AttributeError, ValueError) as e:
+        if raise_exceptions:
+            raise
+        logger.error("The model '{}' for core element '{}' could not be deleted: {}".format(model, core_element, e))
+        return False
 
 
 def delete_models(models, raise_exceptions=False):
