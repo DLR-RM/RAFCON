@@ -46,6 +46,10 @@ class DataPortModel(StateElementModel):
 
     __deepcopy__ = __copy__
 
+    @property
+    def core_element(self):
+        return self.data_port
+
     @ModelMT.observe("data_port", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(DataPortModel, self).model_changed(model, prop_name, info)

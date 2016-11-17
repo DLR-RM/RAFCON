@@ -45,6 +45,10 @@ class TransitionModel(StateElementModel):
 
     __deepcopy__ = __copy__
 
+    @property
+    def core_element(self):
+        return self.transition
+
     @ModelMT.observe("transition", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(TransitionModel, self).model_changed(model, prop_name, info)

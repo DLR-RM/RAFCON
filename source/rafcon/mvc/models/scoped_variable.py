@@ -46,6 +46,10 @@ class ScopedVariableModel(StateElementModel):
 
     __deepcopy__ = __copy__
 
+    @property
+    def core_element(self):
+        return self.scoped_variable
+
     @ModelMT.observe("scoped_variable", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(ScopedVariableModel, self).model_changed(model, prop_name, info)

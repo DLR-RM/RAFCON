@@ -45,6 +45,10 @@ class DataFlowModel(StateElementModel):
 
     __deepcopy__ = __copy__
 
+    @property
+    def core_element(self):
+        return self.data_flow
+
     @ModelMT.observe("data_flow", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(DataFlowModel, self).model_changed(model, prop_name, info)
