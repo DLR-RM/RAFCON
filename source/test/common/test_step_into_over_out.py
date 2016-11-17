@@ -1,12 +1,11 @@
 import time
 
 # core elements
+from rafcon.statemachine.storage import storage
+import rafcon.statemachine.singleton
 from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
-
-from rafcon.statemachine.storage import storage
-import rafcon.statemachine.singleton
 
 # test environment elements
 import testing_utils

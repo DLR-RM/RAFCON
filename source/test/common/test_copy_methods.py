@@ -4,7 +4,12 @@ import copy
 import time
 import threading
 
+# mvc
+import rafcon.mvc.singleton as mvc_singleton
+from rafcon.mvc.models.state_machine import StateMachineModel
+
 # core elements
+import rafcon.statemachine.singleton
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
@@ -13,13 +18,6 @@ from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveCo
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
-
-# mvc
-from rafcon.mvc.models.state_machine import StateMachineModel
-
-# singleton elements
-import rafcon.statemachine.singleton
-import rafcon.mvc.singleton as mvc_singleton
 
 import testing_utils
 import pytest

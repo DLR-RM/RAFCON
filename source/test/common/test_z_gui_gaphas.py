@@ -5,21 +5,21 @@ import threading
 import os
 from os.path import dirname, join
 
-# general tool elements
-from rafcon.utils import log
+# mvc elements
+import rafcon.mvc.config as gui_config
+import rafcon.mvc.singleton
+import rafcon.mvc
+from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.main_window import MainWindowView
+import rafcon.mvc.controllers.graphical_editor_gaphas as graphical_editor_gaphas
 
 # core elements
 import rafcon.statemachine.config
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton
 
-# mvc elements
-import rafcon.mvc.singleton
-import rafcon.mvc
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-import rafcon.mvc.controllers.graphical_editor_gaphas as graphical_editor_gaphas
-import rafcon.mvc.config as gui_config
+# general tool elements
+from rafcon.utils import log
 
 # test environment elements
 import testing_utils

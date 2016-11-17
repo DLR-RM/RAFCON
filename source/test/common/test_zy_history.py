@@ -4,10 +4,16 @@ import threading
 import time
 import signal
 
-# general tool elements
-from rafcon.utils import log
+
+# mvc elements
+from rafcon.mvc.config import global_gui_config
+import rafcon.mvc.singleton
+from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.main_window import MainWindowView
 
 # core elements
+import rafcon.statemachine.singleton
+from rafcon.statemachine.config import global_config
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
@@ -16,15 +22,8 @@ from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveCo
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.storage import storage
 
-# mvc elements
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-
-# singleton elements
-import rafcon.statemachine.singleton
-import rafcon.mvc.singleton
-from rafcon.mvc.config import global_gui_config
-from rafcon.statemachine.config import global_config
+# general tool elements
+from rafcon.utils import log
 
 # test environment elements
 import testing_utils

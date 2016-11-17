@@ -19,15 +19,15 @@ DataFlow's DataFlowModel is in.
 
 from gtkmvc.observer import Observer
 
+# mvc
+import rafcon.mvc.singleton
+
 # core elements
+import rafcon.statemachine.singleton
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
-
-# singleton elements
-import rafcon.statemachine.singleton
-import rafcon.mvc.singleton
 
 from rafcon.statemachine.enums import StateExecutionState
 

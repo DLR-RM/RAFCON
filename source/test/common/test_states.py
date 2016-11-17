@@ -1,5 +1,7 @@
 import pytest
 from pytest import raises
+
+# state machine
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.state import InputDataPort

@@ -1,16 +1,17 @@
-# test environment elements
-import testing_utils
 import pytest
+
 import rafcon
 
 # core elements
+from rafcon.statemachine.singleton import state_machine_manager
+from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.library_state import LibraryState
 
-# singleton elements
-from rafcon.statemachine.singleton import state_machine_manager
-from rafcon.statemachine.singleton import state_machine_execution_engine
+import testing_utils
+
+# utils
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

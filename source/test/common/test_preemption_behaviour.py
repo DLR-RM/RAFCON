@@ -1,18 +1,17 @@
 import threading
 import time
 
+# mvc
+import rafcon.mvc.singleton
+
 # core elements
+import rafcon.statemachine.singleton
+from rafcon.statemachine.storage import storage
+from rafcon.statemachine.singleton import global_variable_manager
+from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-# import to make reload_config() working
-import rafcon.mvc.singleton
-from rafcon.statemachine.singleton import global_variable_manager
-from rafcon.statemachine.singleton import state_machine_execution_engine
-
-# singleton elements
-import rafcon.statemachine.singleton
-from rafcon.statemachine.storage import storage
 
 # test environment elements
 import testing_utils

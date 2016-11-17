@@ -4,8 +4,6 @@ import time
 
 # core elements
 from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
-
-# singleton elements
 from rafcon.statemachine.singleton import state_machine_manager
 from rafcon.statemachine.singleton import global_variable_manager
 from rafcon.statemachine.singleton import state_machine_execution_engine

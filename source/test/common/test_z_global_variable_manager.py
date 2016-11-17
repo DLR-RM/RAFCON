@@ -2,20 +2,18 @@ import gtk
 import threading
 import pytest
 
-# general tool elements
-from rafcon.utils import log
+# mvc elements
+import rafcon.mvc.config as gui_config
+import rafcon.mvc.singleton
+from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.main_window import MainWindowView
 
 # core elements
 import rafcon.statemachine.config
 import rafcon.statemachine.singleton
 
-# mvc elements
-import rafcon.mvc.singleton
-
-import rafcon.mvc.config as gui_config
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-
+# general tool elements
+from rafcon.utils import log
 import testing_utils
 from testing_utils import call_gui_callback
 

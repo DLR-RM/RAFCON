@@ -1,5 +1,8 @@
 import pytest
 
+# mvc
+import rafcon.mvc.singleton
+
 # core elements
 from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.statemachine.states.execution_state import ExecutionState
@@ -8,8 +11,6 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 # singleton elements
 from rafcon.statemachine.singleton import state_machine_manager
 
-# test environment elements
-import rafcon.mvc.singleton
 import testing_utils
 
 def test_error_propagation(caplog):

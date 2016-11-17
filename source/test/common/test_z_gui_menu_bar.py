@@ -3,8 +3,14 @@ import logging
 import gtk
 import threading
 
-# general tool elements
-from rafcon.utils import log
+# mvc elements
+import rafcon.mvc.config as gui_config
+import rafcon.mvc.singleton
+from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.main_window import MainWindowView
+from rafcon.mvc.views.graphical_editor import GraphicalEditor as OpenGLEditor
+from rafcon.mvc.mygaphas.view import ExtendedGtkView as GaphasEditor
+import rafcon.mvc.state_machine_helper as state_machine_helper
 
 # core elements
 import rafcon.statemachine.config
@@ -14,14 +20,8 @@ from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.state_machine import StateMachine
 import rafcon.statemachine.singleton
 
-# mvc elements
-import rafcon.mvc.singleton
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-import rafcon.mvc.config as gui_config
-from rafcon.mvc.views.graphical_editor import GraphicalEditor as OpenGLEditor
-from rafcon.mvc.mygaphas.view import ExtendedGtkView as GaphasEditor
-import rafcon.mvc.state_machine_helper as state_machine_helper
+# general tool elements
+from rafcon.utils import log
 
 # test environment elements
 import testing_utils

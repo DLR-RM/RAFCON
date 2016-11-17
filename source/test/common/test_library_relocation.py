@@ -7,7 +7,6 @@ import signal
 
 import rafcon
 from rafcon.statemachine import interface, start
-
 from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.storage import storage

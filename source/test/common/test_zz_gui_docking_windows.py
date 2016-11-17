@@ -2,16 +2,15 @@ import os
 import gtk
 import threading
 import shutil
-import time
 
-from rafcon.utils import log
-
+# mvc
+from rafcon.mvc.runtime_config import global_runtime_config
+import rafcon.mvc.singleton
+from rafcon.mvc.utils import constants
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
-import rafcon.mvc.singleton
-from rafcon.mvc.runtime_config import global_runtime_config
-from rafcon.mvc.utils import constants
+from rafcon.utils import log
 
 import testing_utils
 from testing_utils import call_gui_callback

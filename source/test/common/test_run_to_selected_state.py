@@ -1,16 +1,17 @@
-# singleton elements
+import time
+import pytest
+
+# state machine
 import rafcon.statemachine.singleton
 from rafcon.statemachine.storage import storage
-
-
-# test environment elements
-import testing_utils
 from rafcon.statemachine.enums import StateExecutionState
+
+# utils
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
 
-import time
-import pytest
+# test environment elements
+import testing_utils
 
 logger = log.get_logger(__name__)
 
