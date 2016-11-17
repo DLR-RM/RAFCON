@@ -27,7 +27,7 @@ def delete_model(model, raise_exceptions=False):
     data from the corresponding state machine.
 
     :param model: The model to delete
-    :param bool raise_exceptions: Whether to raise exceptions or only print error logs in case of failures
+    :param bool raise_exceptions: Whether to raise exceptions or only log errors in case of failures
     :return: True if successful, False else
     """
     state_m = model.parent
