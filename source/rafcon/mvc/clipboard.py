@@ -1,4 +1,4 @@
-from copy import copy
+from copy import deepcopy
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -7,10 +7,17 @@ from enum import Enum
 from gtkmvc import Observable
 from rafcon.mvc.selection import Selection
 from rafcon.mvc.models.state import StateModel
+from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 from rafcon.statemachine.id_generator import state_id_generator
 from rafcon.statemachine.states.container_state import ContainerState
 
 ClipboardType = Enum('CLIPBOARD_TYPE', 'CUT COPY')
+
+def get_port_m_core_element(port_m):
+    if isinstance(port_m, ScopedVariableModel):
+        return port_m.scoped_variable
+    else:
+        return port_m.data_port
 
 
 class Clipboard(Observable):
@@ -97,18 +104,15 @@ class Clipboard(Observable):
         self.__create_core_object_copies(selection)
 
     def prepare_new_copy(self):
-        self.outcome_model_copies = [copy(model) for model in self.outcome_model_copies]
-        self.input_data_port_model_copies = [copy(model) for model in self.input_data_port_model_copies]
-        self.output_data_port_model_copies = [copy(model) for model in self.output_data_port_model_copies]
-        self.scoped_variable_model_copies = [copy(model) for model in self.scoped_variable_model_copies]
-        self.state_model_copies = [copy(model) for model in self.state_model_copies]
-        self.transition_model_copies = [copy(model) for model in self.transition_model_copies]
-        self.data_flow_model_copies = [copy(model) for model in self.data_flow_model_copies]
+        self.outcome_model_copies = [deepcopy(model) for model in self.outcome_model_copies]
+        self.input_data_port_model_copies = [deepcopy(model) for model in self.input_data_port_model_copies]
+        self.output_data_port_model_copies = [deepcopy(model) for model in self.output_data_port_model_copies]
+        self.scoped_variable_model_copies = [deepcopy(model) for model in self.scoped_variable_model_copies]
+        self.state_model_copies = [deepcopy(model) for model in self.state_model_copies]
+        self.transition_model_copies = [deepcopy(model) for model in self.transition_model_copies]
+        self.data_flow_model_copies = [deepcopy(model) for model in self.data_flow_model_copies]
 
-        # assert not id(old) == id(self.state_core_object_copies[0])
-        # assert old == self.state_core_object_copies[0]
-
-    def paste(self, target_state_m, cursor_position=None, limited=None):
+    def paste(self, target_state_m, cursor_position=None, limited=None, convert=False):
         """Paste objects to target state
 
         The method checks whether the target state is a execution state or a container state and inserts respective
@@ -135,7 +139,7 @@ class Clipboard(Observable):
         t_m_copy_list = self.transition_model_copies
         df_m_copy_list = self.data_flow_model_copies
 
-        self.prepare_new_copy()  # threaded in future
+        self.prepare_new_copy()  # threaded in future -> important that the copy is prepared here!!!
 
         self.state_id_mapping_dict[self.copy_parent_state_id] = target_state_m.state.state_id
 
@@ -149,20 +153,33 @@ class Clipboard(Observable):
 
             return new_and_copy_models
 
-        # TODO use of limited or paste of converted objects
-        # if limited:
-        #     logger.warning("Do nothing")
-        #     pass
-        # else:
-        insert_dict = dict()
-        insert_dict['outcomes'] = insert_elements_from_model_copies_list(oc_m_copy_list, 'outcome')
-        insert_dict['input_data_ports'] = insert_elements_from_model_copies_list(ip_m_copy_list, 'input_data_port')
-        insert_dict['output_data_ports'] = insert_elements_from_model_copies_list(op_m_copy_list, 'output_data_port')
+        # prepare list of lists to copy for limited or converted paste of objects
+        execution_state_unlimited = ['outcomes', 'input_data_ports', 'output_data_ports']
+        container_state_unlimited = execution_state_unlimited + ['scoped_variables', 'states', 'transitions', 'data_flows']
         if isinstance(target_state_m.state, ContainerState):
-            insert_dict['scoped_variables'] = insert_elements_from_model_copies_list(sv_m_copy_list, 'scoped_variable')
-            insert_dict['states'] = insert_elements_from_model_copies_list(state_m_copy_list, 'state')
-            insert_dict['transitions'] = insert_elements_from_model_copies_list(t_m_copy_list, 'transition')
-            insert_dict['data_flows'] = insert_elements_from_model_copies_list(df_m_copy_list, 'data_flow')
+            tolerated_lists = container_state_unlimited
+        else:
+            tolerated_lists = execution_state_unlimited
+        if limited and all([list_name in tolerated_lists for list_name in limited]):
+            if len(limited) == 1 and limited[0] in ['input_data_ports', 'output_data_ports', 'scoped_variables'] and convert:
+                ip_m_copy_list = op_m_copy_list = sv_m_copy_list = ip_m_copy_list + op_m_copy_list + sv_m_copy_list
+            lists_to_insert = limited
+        else:
+            lists_to_insert = tolerated_lists
+
+        # check list order and put transitions and data flows to the end
+        for list_name in ['transitions', 'data_flows']:
+            if list_name in lists_to_insert:
+                lists_to_insert.remove(list_name)
+                lists_to_insert.append(list_name)
+
+        # insert all lists and there elements into target state
+        insert_dict = dict()
+        lists = {'outcomes': oc_m_copy_list, 'input_data_ports': ip_m_copy_list, 'output_data_ports': op_m_copy_list,
+                 'scoped_variables': sv_m_copy_list, 'states': state_m_copy_list, 'transitions': t_m_copy_list,
+                 'data_flows': df_m_copy_list}
+        for list_name in lists_to_insert:
+            insert_dict[list_name] = insert_elements_from_model_copies_list(lists[list_name], list_name[:-1])
 
         if self.clipboard_type is ClipboardType.CUT:
             # delete original elements
@@ -250,7 +267,7 @@ class Clipboard(Observable):
         return target_state_m.get_outcome_m(oc_id), orig_outcome_copy_m
 
     def insert_input_data_port(self, target_state_m, orig_input_data_port_copy_m):
-        ip = orig_input_data_port_copy_m.data_port
+        ip = get_port_m_core_element(orig_input_data_port_copy_m)
         old_port_tuple = (self.copy_parent_state_id, ip.data_port_id)
         data_port_id = target_state_m.state.add_input_data_port(ip.name, ip.data_type, ip.default_value)
         self.port_id_mapping_dict[old_port_tuple] = data_port_id
@@ -258,7 +275,7 @@ class Clipboard(Observable):
         return target_state_m.get_data_port_m(data_port_id), orig_input_data_port_copy_m
 
     def insert_output_data_port(self, target_state_m, orig_output_data_port_copy_m):
-        op = orig_output_data_port_copy_m.data_port
+        op = get_port_m_core_element(orig_output_data_port_copy_m)
         old_port_tuple = (self.copy_parent_state_id, op.data_port_id)
         data_port_id = target_state_m.state.add_output_data_port(op.name, op.data_type, op.default_value)
         self.port_id_mapping_dict[old_port_tuple] = data_port_id
@@ -266,7 +283,7 @@ class Clipboard(Observable):
         return target_state_m.get_data_port_m(data_port_id), orig_output_data_port_copy_m
 
     def insert_scoped_variable(self, target_state_m, orig_scoped_variable_copy_m):
-        sv = orig_scoped_variable_copy_m.scoped_variable
+        sv = get_port_m_core_element(orig_scoped_variable_copy_m)
         old_port_tuple = (self.copy_parent_state_id, sv.data_port_id)
         data_port_id = target_state_m.state.add_scoped_variable(sv.name, sv.data_type, sv.default_value)
         self.port_id_mapping_dict[old_port_tuple] = data_port_id
@@ -417,7 +434,7 @@ class Clipboard(Observable):
             # create state copies
             for model in getattr(self, 'selected_{0}_models'.format(element_str)):
                 # direct model copy -> copy meta data and core object
-                model_copy = copy(model)
+                model_copy = deepcopy(model)
                 getattr(self, '{0}_model_copies'.format(element_str)).append(model_copy)
 
         copy_list_of_elements_of_type('outcome')

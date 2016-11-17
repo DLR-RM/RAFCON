@@ -358,10 +358,5 @@ class StateOutcomesEditorController(ExtendedController):
     def paste_action_callback(self, *event):
         """Callback method for paste action"""
         if react_to_event(self.view, self.oc_list_ctrl.tree_view, event):
-            copied_list_of_models = global_clipboard.outcome_model_copies
-            selected_list_of_models = global_clipboard.selected_outcome_models
-            global_clipboard.reset_clipboard()
-            global_clipboard.outcome_model_copies = copied_list_of_models
-            global_clipboard.selected_outcome_models = selected_list_of_models
-            global_clipboard.paste(self.model)
+            global_clipboard.paste(self.model, limited=['outcomes'])
             return True

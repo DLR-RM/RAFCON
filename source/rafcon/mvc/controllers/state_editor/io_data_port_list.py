@@ -133,14 +133,21 @@ class DataPortListController(ListViewController):
             shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
 
     def paste_action_callback(self, *event):
-        """Callback method for paste action"""
+        """Callback method for paste action
+
+         The method trigger the clipboard paste of the list of self.type or in case this list is empty and there are
+         scoped variables or other port types selected it will trigger the paste with convert flag.
+         The convert flag will cause the insertion of self.type ports with the same names, data types and default values
+         the objects of differing port type (in the clipboard) have.
+        """
         if react_to_event(self.view, self.tree_view, event):
-            copied_list_of_models = getattr(global_clipboard, "{0}_data_port_model_copies".format(self.type))
-            selected_list_of_models = getattr(global_clipboard, "selected_{0}_data_port_models".format(self.type))
-            global_clipboard.reset_clipboard()
-            setattr(global_clipboard, "{0}_data_port_model_copies".format(self.type), copied_list_of_models)
-            setattr(global_clipboard, "selected_{0}_data_port_models".format(self.type), selected_list_of_models)
-            global_clipboard.paste(self.model)
+            other_type = 'input' if self.type is 'output' else 'output'
+            if not getattr(global_clipboard, "{0}_data_port_model_copies".format(self.type)) and \
+                    (getattr(global_clipboard, "{0}_data_port_model_copies".format(other_type)) or
+                     global_clipboard.scoped_variable_model_copies):
+                global_clipboard.paste(self.model, limited=['{0}_data_ports'.format(self.type)], convert=True)
+            else:
+                global_clipboard.paste(self.model, limited=['{0}_data_ports'.format(self.type)])
             return True
 
     def get_state_machine_selection(self):
