@@ -22,6 +22,7 @@ from yaml import YAMLObject
 
 from rafcon.statemachine.enums import DataPortType, StateExecutionState
 from rafcon.statemachine.id_generator import *
+from rafcon.statemachine.state_elements.state_element import StateElement
 from rafcon.statemachine.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.storage import storage
@@ -126,10 +127,23 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self
 
     def __eq__(self, other):
-        # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}".format(self, other))
         if not isinstance(other, self.__class__):
             return False
         return str(self) == str(other)
+
+    def __contains__(self, item):
+        """Checks whether `item` is an element of the state
+
+        Following child items are checked: outcomes, input data ports, output data ports
+
+        :param item: State or state element
+        :return: Whether item is a direct child of this state
+        :rtype: bool
+        """
+        if not isinstance(item, StateElement):
+            return False
+        return item in self.outcomes.values() or item in self.input_data_ports.values() \
+               or item in self.output_data_ports.values()
 
     def to_dict(self):
         return self.state_to_dict(self)

@@ -9,13 +9,13 @@
 """
 from copy import copy, deepcopy
 from threading import Condition
-
 from gtkmvc import Observable
-from rafcon.statemachine.state_elements.scope import ScopedData, ScopedVariable
 
 from rafcon.statemachine.enums import DataPortType, StateExecutionState, StateMachineExecutionStatus
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.singleton import state_machine_execution_engine
+from rafcon.statemachine.state_elements.state_element import StateElement
+from rafcon.statemachine.state_elements.scope import ScopedData, ScopedVariable
 from rafcon.statemachine.state_elements.data_flow import DataFlow
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.state_elements.transition import Transition
@@ -31,11 +31,11 @@ except ImportError:
     OrderedDict = dict
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
 class ContainerState(State):
-
     """A class for representing a state in the state machine
 
     Only the variables are listed that are not already contained in the state base class
@@ -160,6 +160,22 @@ class ContainerState(State):
         return state
 
     __deepcopy__ = __copy__
+
+    def __contains__(self, item):
+        """Checks whether `item` is an element of the container state
+
+        Following child items are checked: outcomes, input data ports, output data ports, scoped variables, states,
+        transitions, data flows
+
+        :param item: State or state element
+        :return: Whether item is a direct child of this state
+        :rtype: bool
+        """
+        if not isinstance(item, (State, StateElement)):
+            return False
+        return super(ContainerState, self).__contains__(item) or item in self.states.values() \
+               or item in self.transitions.values() or item in self.data_flows.values() \
+               or item in self.scoped_variables.values()
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- execution functions -------------------------------------
@@ -505,7 +521,7 @@ class ContainerState(State):
             name = outcomes_outgoing_transitions[(t.to_state, t.to_outcome)]
             s.add_transition(t.from_state, t.from_outcome, s.state_id, new_outcome_ids[name])
 
-        new_state_ids={self.state_id: s.state_id}
+        new_state_ids = {self.state_id: s.state_id}
         ############## REBUILD INGOING DATA LINKAGE ################
         full_linkage = copy(ingoing_data_linkage_for_port['from'])
         full_linkage.update(ingoing_data_linkage_for_port['to'])
@@ -611,7 +627,8 @@ class ContainerState(State):
         if related_transitions['internal']['ingoing']:
             ingoing_t = related_transitions['internal']['ingoing'][0]
             for t in related_transitions['external']['ingoing']:
-                self.add_transition(t.from_state, t.from_outcome, state_id_dict[ingoing_t.to_state], ingoing_t.to_outcome)
+                self.add_transition(t.from_state, t.from_outcome, state_id_dict[ingoing_t.to_state],
+                                    ingoing_t.to_outcome)
         for ext_t in related_transitions['external']['outgoing']:
             for t in related_transitions['internal']['outgoing']:
                 if (t.to_state, t.to_outcome) == (ext_t.from_state, ext_t.from_outcome):
@@ -742,13 +759,17 @@ class ContainerState(State):
         related_data_flows = {'external': {'ingoing': [], 'outgoing': []},
                               'internal': {'enclosed': [], 'ingoing': [], 'outgoing': []}}
         # ingoing logical linkage to rebuild
-        related_transitions['external']['ingoing'] = [t for t in self.transitions.itervalues() if t.to_state == state_id]
+        related_transitions['external']['ingoing'] = [t for t in self.transitions.itervalues() if
+                                                      t.to_state == state_id]
         # outgoing logical linkage to rebuild
-        related_transitions['external']['outgoing'] = [t for t in self.transitions.itervalues() if t.from_state == state_id]
+        related_transitions['external']['outgoing'] = [t for t in self.transitions.itervalues() if
+                                                       t.from_state == state_id]
         # ingoing data linkage to rebuild
-        related_data_flows['external']['ingoing'] = [df for df in self.data_flows.itervalues() if df.to_state == state_id]
+        related_data_flows['external']['ingoing'] = [df for df in self.data_flows.itervalues() if
+                                                     df.to_state == state_id]
         # outgoing outgoing linkage to rebuild
-        related_data_flows['external']['outgoing'] = [df for df in self.data_flows.itervalues() if df.from_state == state_id]
+        related_data_flows['external']['outgoing'] = [df for df in self.data_flows.itervalues() if
+                                                      df.from_state == state_id]
 
         state = self.states[state_id]
         if not isinstance(state, ContainerState):
@@ -806,14 +827,14 @@ class ContainerState(State):
         for df in self.data_flows.itervalues():
             # check if internal of new hierarchy state
             if df.from_state in state_ids and df.to_state in state_ids or \
-                    df.from_state in state_ids and self.state_id == df.to_state and df.to_key in scoped_variables or \
-                    self.state_id == df.from_state and df.from_key in scoped_variables and df.to_state in state_ids:
+                                            df.from_state in state_ids and self.state_id == df.to_state and df.to_key in scoped_variables or \
+                                            self.state_id == df.from_state and df.from_key in scoped_variables and df.to_state in state_ids:
                 related_data_flows['enclosed'].append(df)
             elif df.to_state in state_ids or \
-                    self.state_id == df.to_state and df.to_key in scoped_variables:
+                                    self.state_id == df.to_state and df.to_key in scoped_variables:
                 related_data_flows['ingoing'].append(df)
             elif df.from_state in state_ids or \
-                    self.state_id == df.from_state and df.from_key in scoped_variables:
+                                    self.state_id == df.from_state and df.from_key in scoped_variables:
                 related_data_flows['outgoing'].append(df)
 
         return related_transitions, related_data_flows
@@ -861,10 +882,13 @@ class ContainerState(State):
             ip = act_input_data_port_by_name.get(old_input_data_ports[old_ip.data_port_id].name, None)
             if ip is not None and ip.data_type == old_input_data_ports[old_ip.data_port_id].data_type:
                 if isinstance(state, LibraryState) and old_state_was_library:
-                    state.input_data_port_runtime_values[ip.data_port_id] = old_input_data_port_runtime_values[old_ip.data_port_id]
-                    state.use_runtime_value_input_data_ports[ip.data_port_id] = old_use_runtime_value_input_data_ports[old_ip.data_port_id]
+                    state.input_data_port_runtime_values[ip.data_port_id] = old_input_data_port_runtime_values[
+                        old_ip.data_port_id]
+                    state.use_runtime_value_input_data_ports[ip.data_port_id] = old_use_runtime_value_input_data_ports[
+                        old_ip.data_port_id]
                 elif isinstance(state, LibraryState) and not old_state_was_library:
-                    state.input_data_port_runtime_values[ip.data_port_id] = old_input_data_ports[old_ip.data_port_id].default_value
+                    state.input_data_port_runtime_values[ip.data_port_id] = old_input_data_ports[
+                        old_ip.data_port_id].default_value
                     state.use_runtime_value_input_data_ports[ip.data_port_id] = True
                 elif not isinstance(state, LibraryState) and old_state_was_library:
                     if old_use_runtime_value_input_data_ports[old_ip.data_port_id]:
@@ -882,10 +906,13 @@ class ContainerState(State):
             op = act_output_data_port_by_name.get(old_output_data_ports[old_op.data_port_id].name, None)
             if op is not None and op.data_type == old_output_data_ports[old_op.data_port_id].data_type:
                 if isinstance(state, LibraryState) and old_state_was_library:
-                    state.output_data_port_runtime_values[op.data_port_id] = old_output_data_port_runtime_values[old_op.data_port_id]
-                    state.use_runtime_value_output_data_ports[op.data_port_id] = old_use_runtime_value_output_data_ports[old_op.data_port_id]
+                    state.output_data_port_runtime_values[op.data_port_id] = old_output_data_port_runtime_values[
+                        old_op.data_port_id]
+                    state.use_runtime_value_output_data_ports[op.data_port_id] = \
+                    old_use_runtime_value_output_data_ports[old_op.data_port_id]
                 elif isinstance(state, LibraryState) and not old_state_was_library:
-                    state.output_data_port_runtime_values[op.data_port_id] = old_output_data_ports[old_op.data_port_id].default_value
+                    state.output_data_port_runtime_values[op.data_port_id] = old_output_data_ports[
+                        old_op.data_port_id].default_value
                     state.use_runtime_value_output_data_ports[op.data_port_id] = True
                 elif not isinstance(state, LibraryState) and old_state_was_library:
                     if old_use_runtime_value_output_data_ports[old_op.data_port_id]:
@@ -1147,7 +1174,7 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    #Primary key is data_flow_id.
+    # Primary key is data_flow_id.
     def add_data_flow(self, from_state_id, from_data_port_id, to_state_id, to_data_port_id, data_flow_id=None):
         """Adds a data_flow to the container state
 
@@ -1191,7 +1218,7 @@ class ContainerState(State):
             data_flow_ids_to_remove = []
             for data_flow_id, data_flow in self.parent.data_flows.iteritems():
                 if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
-                        data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
+                                        data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
                     data_flow_ids_to_remove.append(data_flow_id)
 
             for data_flow_id in data_flow_ids_to_remove:
@@ -1201,7 +1228,7 @@ class ContainerState(State):
         data_flow_ids_to_remove = []
         for data_flow_id, data_flow in self.data_flows.iteritems():
             if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
-                    data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
+                                    data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
                 data_flow_ids_to_remove.append(data_flow_id)
 
         for data_flow_id in data_flow_ids_to_remove:
@@ -1342,7 +1369,7 @@ class ContainerState(State):
                 if data_flow.to_key == input_port_key:
                     if data_flow.to_state == state.state_id:
                         # fetch data from the scoped_data list: the key is the data_port_key + the state_id
-                        key = str(data_flow.from_key)+data_flow.from_state
+                        key = str(data_flow.from_key) + data_flow.from_state
                         if key in self.scoped_data:
                             if actual_value is None or actual_value_time < self.scoped_data[key].timestamp:
                                 actual_value = deepcopy(self.scoped_data[key].value)
@@ -1370,14 +1397,14 @@ class ContainerState(State):
         for dict_key, value in dictionary.iteritems():
             for input_data_port_key, data_port in self.input_data_ports.iteritems():
                 if dict_key == data_port.name:
-                    self.scoped_data[str(input_data_port_key)+self.state_id] = \
+                    self.scoped_data[str(input_data_port_key) + self.state_id] = \
                         ScopedData(data_port.name, value, type(value), self.state_id, DataPortType.INPUT)
                     # forward the data to scoped variables
                     for data_flow_key, data_flow in self.data_flows.iteritems():
                         if data_flow.from_key == input_data_port_key and data_flow.from_state == self.state_id:
                             if data_flow.to_state == self.state_id and data_flow.to_key in self.scoped_variables:
                                 current_scoped_variable = self.scoped_variables[data_flow.to_key]
-                                self.scoped_data[str(data_flow.to_key)+self.state_id] = \
+                                self.scoped_data[str(data_flow.to_key) + self.state_id] = \
                                     ScopedData(current_scoped_variable.name, value, type(value), self.state_id,
                                                DataPortType.SCOPED)
 
@@ -1391,7 +1418,7 @@ class ContainerState(State):
         for output_name, value in dictionary.iteritems():
             for output_data_port_key, data_port in state.output_data_ports.iteritems():
                 if output_name == data_port.name:
-                    self.scoped_data[str(output_data_port_key)+state.state_id] = \
+                    self.scoped_data[str(output_data_port_key) + state.state_id] = \
                         ScopedData(data_port.name, value, type(value), state.state_id, DataPortType.OUTPUT)
 
     @lock_state_machine
@@ -1400,7 +1427,7 @@ class ContainerState(State):
 
         """
         for key, scoped_var in self.scoped_variables.iteritems():
-            self.scoped_data[str(scoped_var.data_port_id)+self.state_id] = \
+            self.scoped_data[str(scoped_var.data_port_id) + self.state_id] = \
                 ScopedData(scoped_var.name, scoped_var.default_value, scoped_var.data_type, self.state_id,
                            DataPortType.SCOPED)
 
@@ -1486,7 +1513,7 @@ class ContainerState(State):
             for data_flow_id, data_flow in self.data_flows.iteritems():
                 if data_flow.to_state == self.state_id:
                     if data_flow.to_key == output_port_id:
-                        scoped_data_key = str(data_flow.from_key)+data_flow.from_state
+                        scoped_data_key = str(data_flow.from_key) + data_flow.from_state
                         if scoped_data_key in self.scoped_data:
                             # if self.scoped_data[scoped_data_key].timestamp > actual_value_time is True
                             # the data of a previous execution of the same state is overwritten
@@ -2097,7 +2124,7 @@ class ContainerState(State):
 
     @scoped_data.setter
     @lock_state_machine
-    #@Observable.observed
+    # @Observable.observed
     def scoped_data(self, scoped_data):
         if not isinstance(scoped_data, dict):
             raise TypeError("scoped_results must be of type dict")
@@ -2115,7 +2142,7 @@ class ContainerState(State):
 
     @v_checker.setter
     @lock_state_machine
-    #@Observable.observed
+    # @Observable.observed
     def v_checker(self, v_checker):
         if not isinstance(v_checker, ValidityChecker):
             raise TypeError("validity_check must be of type ValidityChecker")
