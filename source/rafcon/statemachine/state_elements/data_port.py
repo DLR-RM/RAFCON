@@ -75,6 +75,10 @@ class DataPort(StateElement):
 
     __deepcopy__ = __copy__
 
+    @property
+    def state_element_id(self):
+        return self._data_port_id
+
     @classmethod
     def from_dict(cls, dictionary):
         data_port_id = dictionary['data_port_id']

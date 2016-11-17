@@ -58,6 +58,10 @@ class Outcome(StateElement):
 
     __deepcopy__ = __copy__
 
+    @property
+    def state_element_id(self):
+        return self._outcome_id
+
     @classmethod
     def from_dict(cls, dictionary):
         return Outcome(dictionary['outcome_id'], dictionary['name'])

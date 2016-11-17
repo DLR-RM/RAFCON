@@ -71,6 +71,10 @@ class Transition(StateElement):
 
     __deepcopy__ = __copy__
 
+    @property
+    def state_element_id(self):
+        return self._transition_id
+
     @classmethod
     def from_dict(cls, dictionary):
         transition_id = dictionary['transition_id']

@@ -63,6 +63,10 @@ class DataFlow(StateElement):
 
     __deepcopy__ = __copy__
 
+    @property
+    def state_element_id(self):
+        return self._data_flow_id
+
     @classmethod
     def from_dict(cls, dictionary):
         from_state = dictionary['from_state']
