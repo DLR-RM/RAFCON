@@ -1,5 +1,4 @@
 from weakref import ref
-from abc import ABCMeta
 from gtkmvc import ModelMT, Signal
 
 from rafcon.mvc.models.signals import Notification
@@ -19,7 +18,6 @@ class StateElementModel(ModelMT, Hashable):
     :param rafcon.mvc.models.abstract_state.AbstractStateModel parent: The state model of the state element
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state element model
     """
-    __metaclass__ = ABCMeta
 
     _parent = None
     meta = None

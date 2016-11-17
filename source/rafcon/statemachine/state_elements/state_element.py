@@ -9,9 +9,7 @@
 """
 
 from weakref import ref
-from abc import ABCMeta
 from yaml import YAMLObject
-
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 
@@ -32,8 +30,6 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
 
     :ivar rafcon.statemachine.states.state.State parent: Parent state of the state element
     """
-    __metaclass__ = ABCMeta
-
     _parent = None
 
     yaml_tag = u'!StateElement'
