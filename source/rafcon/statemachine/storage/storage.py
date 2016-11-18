@@ -79,9 +79,17 @@ def remove_state_machine_paths(state_machine_id):
     :param int state_machine_id: ID of the state machine whos paths are to be deleted
     """
     if state_machine_id in _paths_to_remove_before_sm_save:
+        removed_paths = []
         for path in _paths_to_remove_before_sm_save[state_machine_id]:
             if os.path.exists(path):
                 shutil.rmtree(path)
+                removed_paths.append(path)
+        for path in removed_paths:
+            _paths_to_remove_before_sm_save[state_machine_id].remove(path)
+        if len(_paths_to_remove_before_sm_save[state_machine_id]) > 0:
+            logger.debug("There are still elements in _paths_to_remove_before_sm_save for state machine {1}: {0}"
+                        "-> After remove state machine paths is called it should be empty."
+                        "".format(_paths_to_remove_before_sm_save[state_machine_id], state_machine_id))
 
 
 def clean_state_machine_paths(state_machine_id):
