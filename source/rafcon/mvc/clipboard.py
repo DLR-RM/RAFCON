@@ -245,8 +245,10 @@ class Clipboard(Observable):
     def insert_transition(self, target_state_m, orig_transition_copy_m):
         t = orig_transition_copy_m.transition
         from_state = self.state_id_mapping_dict[t.from_state]
+        from_outcome = self.outcome_id_mapping_dict.get((t.from_state, t.from_outcome), t.from_outcome)
         to_state = self.state_id_mapping_dict[t.to_state]
-        t_id = target_state_m.state.add_transition(from_state, t.from_outcome, to_state, t.to_outcome)
+        to_outcome = self.outcome_id_mapping_dict.get((t.to_state, t.to_outcome), t.to_outcome)
+        t_id = target_state_m.state.add_transition(from_state, from_outcome, to_state, to_outcome)
         target_state_m.get_transition_m(t_id).meta = orig_transition_copy_m.meta
         return target_state_m.get_transition_m(t_id), orig_transition_copy_m
 
@@ -262,7 +264,9 @@ class Clipboard(Observable):
 
     def insert_outcome(self, target_state_m, orig_outcome_copy_m):
         oc = orig_outcome_copy_m.outcome
+        old_oc_tuple = (self.copy_parent_state_id, oc.outcome_id)
         oc_id = target_state_m.state.add_outcome(oc.name)
+        self.outcome_id_mapping_dict[old_oc_tuple] = oc_id
         target_state_m.get_outcome_m(oc_id).meta = orig_outcome_copy_m.meta
         return target_state_m.get_outcome_m(oc_id), orig_outcome_copy_m
 
@@ -354,7 +358,11 @@ class Clipboard(Observable):
                 to_state = transition.parent
             else:
                 to_state = transition.parent.states[transition.to_state]
-            return from_state, to_state
+            if transition.to_outcome in transition.parent.outcomes:
+                to_outcome = transition.parent.outcomes[transition.to_outcome]
+            else:
+                to_outcome = transition.to_outcome
+            return from_state, to_state, to_outcome
 
         all_models_selected = selection.get_all()
         if not all_models_selected:
@@ -384,13 +392,14 @@ class Clipboard(Observable):
         # reduce linkage selection by not fully by selection covered linkage
         # logger.info("COPY/CUT -> reduce linkage has to be implemented")
         possible_states = [state_m.state for state_m in selection.states]
+        possible_outcomes = [outcome_m.outcome for outcome_m in selection.outcomes]
         for data_flow_m in selection.data_flows:
             from_port, to_port = get_ports_related_to_data_flow(data_flow_m.data_flow)
             if from_port.parent not in possible_states or to_port not in possible_states:
                 selection.remove(data_flow_m)
         for transition_m in selection.transitions:
-            from_state, to_state = get_states_related_to_transition(transition_m.transition)
-            if from_state not in possible_states or to_state not in possible_states:
+            from_state, to_state, to_oc = get_states_related_to_transition(transition_m.transition)
+            if from_state not in possible_states or (to_state not in possible_states and to_oc not in possible_outcomes):
                 selection.remove(transition_m)
         # extend linkage selection by fully by selection covered linkage
         # logger.info("COPY/CUT -> extend linkage has to be implemented")
@@ -419,6 +428,12 @@ class Clipboard(Observable):
                 transition_m = parent_m.get_transition_m(transition.transition_id)
                 if transition_m not in selection.transitions:
                     selection.add(transition_m)
+            # extend by selected state and outcome enclosed transitions
+            for transition_id, transition in parent_m.state.transitions.iteritems():
+                from_state, to_state, to_oc = get_states_related_to_transition(transition)
+                if from_state in possible_states and to_oc in possible_outcomes:
+                    selection.add(parent_m.get_transition_m(transition_id))
+
             # TODO extend by selected state and parent outcome enclosed transitions
 
         self.selected_state_models = selection.states
