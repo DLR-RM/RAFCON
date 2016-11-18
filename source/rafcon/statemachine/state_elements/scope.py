@@ -66,7 +66,8 @@ class ScopedVariable(DataPort):
     def __copy__(self):
         return self.__class__(self._name, self._data_type, self._default_value, self._data_port_id, None)
 
-    __deepcopy__ = __copy__
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
 
     @classmethod
     def from_dict(cls, dictionary):

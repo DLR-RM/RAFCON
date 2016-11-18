@@ -43,7 +43,8 @@ class OutcomeModel(StateElementModel):
         outcome_m.meta = deepcopy(self.meta)
         return outcome_m
 
-    __deepcopy__ = __copy__
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
 
     @ModelMT.observe("outcome", before=True, after=True)
     def model_changed(self, model, prop_name, info):

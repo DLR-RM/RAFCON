@@ -43,7 +43,8 @@ class DataFlowModel(StateElementModel):
         data_flow_m.meta = deepcopy(self.meta)
         return data_flow_m
 
-    __deepcopy__ = __copy__
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
 
     @ModelMT.observe("data_flow", before=True, after=True)
     def model_changed(self, model, prop_name, info):

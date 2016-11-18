@@ -159,7 +159,8 @@ class ContainerState(State):
         state.description = deepcopy(self.description)
         return state
 
-    __deepcopy__ = __copy__
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- execution functions -------------------------------------

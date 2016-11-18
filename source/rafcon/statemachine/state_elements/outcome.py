@@ -56,7 +56,8 @@ class Outcome(StateElement):
     def __copy__(self):
         return self.__class__(self._outcome_id, self._name, None)
 
-    __deepcopy__ = __copy__
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
 
     @classmethod
     def from_dict(cls, dictionary):

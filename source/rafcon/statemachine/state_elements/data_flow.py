@@ -61,7 +61,8 @@ class DataFlow(StateElement):
     def __copy__(self):
         return self.__class__(self._from_state, self._from_key, self._to_state, self._to_key, self._data_flow_id, None)
 
-    __deepcopy__ = __copy__
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
 
     @classmethod
     def from_dict(cls, dictionary):

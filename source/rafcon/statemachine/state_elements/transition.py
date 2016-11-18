@@ -69,7 +69,8 @@ class Transition(StateElement):
         return self.__class__(self._from_state, self._from_outcome, self._to_state, self._to_outcome,
                               self._transition_id, None)
 
-    __deepcopy__ = __copy__
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
 
     @classmethod
     def from_dict(cls, dictionary):

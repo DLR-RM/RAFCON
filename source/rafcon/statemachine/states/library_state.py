@@ -145,6 +145,9 @@ class LibraryState(State):
         state.use_runtime_value_output_data_ports = copy(self.use_runtime_value_output_data_ports)
         return state
 
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
+
     def run(self):
         """ This defines the sequence of actions that are taken when the library state is executed
 

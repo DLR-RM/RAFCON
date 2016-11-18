@@ -98,7 +98,8 @@ class StateMachineModel(ModelMT, Hashable):
         sm_m.meta = deepcopy(self.meta)
         return sm_m
 
-    __deepcopy__ = __copy__
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
 
     def __del__(self):
         self.destroy()

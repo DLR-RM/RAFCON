@@ -127,7 +127,8 @@ class AbstractStateModel(ModelMT, Hashable):
         state_m.copy_meta_data_from_state_m(self)
         return state_m
 
-    __deepcopy__ = __copy__
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
 
     def prepare_destruction(self):
         """Prepares the model for destruction

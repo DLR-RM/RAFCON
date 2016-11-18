@@ -76,7 +76,8 @@ class StateMachine(Observable, JSONObject, Hashable):
         sm._marked_dirty = self._marked_dirty
         return sm
 
-    __deepcopy__ = __copy__
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
 
     @classmethod
     def from_dict(cls, dictionary):

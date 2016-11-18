@@ -58,7 +58,8 @@ class ExecutionState(State):
         state.description = deepcopy(self.description)
         return state
 
-    __deepcopy__ = __copy__
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
 
     @lock_state_machine
     def update_hash(self, obj_hash):

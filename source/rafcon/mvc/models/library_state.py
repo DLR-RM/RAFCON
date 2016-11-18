@@ -51,7 +51,8 @@ class LibraryStateModel(AbstractStateModel):
         state_m.state_copy.copy_meta_data_from_state_m(self.state_copy)
         return state_m
 
-    __deepcopy__ = __copy__
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
 
     def _load_input_data_port_models(self):
         """Reloads the input data port models directly from the the state"""
