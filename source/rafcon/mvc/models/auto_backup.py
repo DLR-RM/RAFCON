@@ -37,7 +37,7 @@ def check_for_crashed_rafcon_instances():
 
     def on_message_dialog_response_signal(widget, response_id, found_backups):
         if response_id == 42:
-            for path, pid, lock_file, m_time in found_backups:
+            for path, pid, lock_file, m_time, full_path_dirty_lock in found_backups:
                 if path is not None:
                     state_machine = storage.load_state_machine_from_path(path)
                     mvc_singleton.state_machine_manager.add_state_machine(state_machine)
@@ -53,12 +53,22 @@ def check_for_crashed_rafcon_instances():
                         state_machine._file_system_path = None
                     sm_m.storage_lock.release()
 
+                    with open(full_path_dirty_lock) as f:
+                        lines = f.readlines()
+                        lines.pop(0) # ignore backup path -> first line
+                        lines.pop(0) # remove comment line "marked for removal:"
+                        if len(lines) > 0:
+                            storage._paths_to_remove_before_sm_save[state_machine.state_machine_id] = []
+                            for path in lines:
+                                path = path.replace('\n', '')
+                                if os.path.isdir(path):
+                                    storage.mark_path_for_removal_for_sm_id(state_machine.state_machine_id, path)
                     # force backup re-initialization
                     state_machine.marked_dirty = True
                     sm_m.auto_backup.check_for_auto_backup(force=True)
 
         if response_id in [42, 44]:
-            for path, pid, lock_file, m_time in found_backups:
+            for path, pid, lock_file, m_time, full_path_dirty_lock in found_backups:
                 if path is None:
                     logger.debug("Clean up lock of RAFCON instance with pid {}".format(pid))
                 else:
@@ -79,7 +89,7 @@ def check_for_crashed_rafcon_instances():
             if os.path.isdir(rafcon_instance_path_to_check) and 'lock' in os.listdir(rafcon_instance_path_to_check):
                 logger.info("There is tmp-data of a crashed/killed or badly closed state-machines of a RAFCON instance "
                             "in path: {}".format(rafcon_instance_path_to_check))
-                restorable_sm.append((None, folder, None, None))
+                restorable_sm.append((None, folder, None, None, None))
 
             runtime_backup_path_of_rafcon_instance = os.path.join(MY_RAFCON_TEMP_PATH, folder, 'runtime_backup')
             if os.path.exists(runtime_backup_path_of_rafcon_instance):
@@ -87,13 +97,13 @@ def check_for_crashed_rafcon_instances():
                     full_path = os.path.join(runtime_backup_path_of_rafcon_instance, elem)
                     if not os.path.isdir(full_path) and 'dirty_lock_' in elem:
                         with open(full_path) as f:
-                            path = f.readline()
+                            path = f.readline().replace('\n', '')
                             # logger.info("{0} \n{1}".format(path, os.path.join(path, storage.STATEMACHINE_FILE)))
                             if os.path.isdir(path) and os.path.exists(os.path.join(path, storage.STATEMACHINE_FILE)):
                                 logger.debug("Found restorable state machine from crashed instance {0} in path: {1}"
                                              "".format(folder, path))
                                 modification_time = time.ctime(os.path.getmtime(os.path.join(MY_RAFCON_TEMP_PATH, folder)))
-                                restorable_sm.append((path, folder, elem, modification_time))
+                                restorable_sm.append((path, folder, elem, modification_time, full_path))
                             else:
                                 logger.warning("dirty_lock file without consistent state machine path {}!".format(full_path))
                                 os.remove(full_path)
@@ -101,7 +111,7 @@ def check_for_crashed_rafcon_instances():
     # if restorable_sm:
     #     print "Restorable state machines: \n" + '\n'.join([elem[0] for elem in restorable_sm if elem[0] is not None])
 
-    if restorable_sm and any([path is not None for path, pid, lock_file, m_time in restorable_sm]):
+    if restorable_sm and any([path is not None for path, pid, lock_file, m_time, full_path_dirty_lock in restorable_sm]):
         dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=mvc_singleton.main_window_controller.view.get_top_widget())
         message_string = "There have been found state machines of not correctly closed rafcon instances?\n\n" \
                          "The following state machines have been modified and not saved: \n" + \
@@ -210,7 +220,11 @@ class AutoBackupModel(ModelMT):
             self.lock_file_lock.acquire()
             # logger.info('create lock {0} -> path {1}'.format(sm.state_machine_id, self.tmp_storage_folder()))
             self.lock_file = open(RAFCON_RUNTIME_BACKUP_PATH + '/dirty_lock_' + str(sm.state_machine_id), 'a+')
-            self.lock_file.write(self.tmp_storage_folder())
+            mark_4_removal = []
+            if self.state_machine_model.state_machine.state_machine_id in storage._paths_to_remove_before_sm_save:
+                for path in storage._paths_to_remove_before_sm_save[self.state_machine_model.state_machine.state_machine_id]:
+                    mark_4_removal.append("\n" + path)
+            self.lock_file.writelines([self.tmp_storage_folder() + "\n# marked for removal: "] + mark_4_removal)
             self.lock_file.close()
             self.last_lock_file_name = self.lock_file.name
             self.lock_file_lock.release()
