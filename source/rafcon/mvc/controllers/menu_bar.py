@@ -354,7 +354,7 @@ class MenuBarController(ExtendedController):
         except (AttributeError, ValueError, IOError) as e:
             logger.error('Error while trying to open state machine: {0}'.format(e))
 
-    def on_save_activate(self, widget, data=None, save_as=False):
+    def on_save_activate(self, widget, data=None, save_as=False, delete_old_state_machine=False):
         def on_message_dialog_response_signal(widget, response_id, source_editor_ctrl):
             state = source_editor_ctrl.model.state
             if response_id == ButtonDialog.OPTION_1.value:
@@ -396,7 +396,7 @@ class MenuBarController(ExtendedController):
 
         state_machine = self.model.get_selected_state_machine_model().state_machine
         storage.save_state_machine_to_path(state_machine, state_machine.file_system_path,
-                                           delete_old_state_machine=False, save_as=save_as)
+                                           delete_old_state_machine=delete_old_state_machine, save_as=save_as)
 
         self.model.get_selected_state_machine_model().store_meta_data()
         logger.debug("Successfully saved state machine and its meta data.")
@@ -411,7 +411,7 @@ class MenuBarController(ExtendedController):
             if path is None:
                 return False
         self.model.get_selected_state_machine_model().state_machine.file_system_path = path
-        return self.on_save_activate(widget, data, save_as=True)
+        return self.on_save_activate(widget, data, save_as=True, delete_old_state_machine=True)
 
     def on_substitute_selected_state_activate(self, widget=None, data=None, path=None):
         selected_states = self.model.get_selected_state_machine_model().selection.get_states()
