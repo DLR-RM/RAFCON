@@ -5,7 +5,7 @@ from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.gui_helper import react_to_event, is_event_of_key_string
-from rafcon.mvc.selection import Selection
+from rafcon.mvc.selection import Selection, reduce_to_parent_states
 from rafcon.mvc.clipboard import global_clipboard
 
 from rafcon.utils import log
@@ -570,6 +570,7 @@ class TreeViewController(ExtendedController):
 
     def check_selection_consistency(self, sm_check=True, tree_check=True):
         tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
+        selected_model_list = reduce_to_parent_states(selected_model_list)
         if not ((all([model in selected_model_list for model in sm_selected_model_list]) or not sm_check) and
                 (all([model in sm_selected_model_list for model in selected_model_list]) or not tree_check)):
             self._logger.warning("Elements of sm and tree selection are not identical: \ntree: {0}\nsm:   {1}"
