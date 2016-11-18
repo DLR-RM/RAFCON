@@ -2,11 +2,13 @@ import logging
 import gtk
 import threading
 import time
-import os
-import signal
 
-# general tool elements
-from rafcon.utils import log
+# mvc elements
+from rafcon.mvc.config import global_gui_config
+import rafcon.mvc.singleton
+from rafcon.mvc.models import ContainerStateModel
+from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.main_window import MainWindowView
 
 # core elements
 from rafcon.statemachine.states.execution_state import ExecutionState
@@ -14,12 +16,8 @@ from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.config import global_config
 
-# mvc elements
-import rafcon.mvc.singleton
-from rafcon.mvc.models import ContainerStateModel
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.config import global_gui_config
+# general tool elements
+from rafcon.utils import log
 
 # test environment elements
 import testing_utils

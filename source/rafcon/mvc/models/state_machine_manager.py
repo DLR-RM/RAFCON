@@ -63,6 +63,10 @@ class StateMachineManagerModel(ModelMT, Observable):
             import os
             os._exit(0)
 
+    @property
+    def core_element(self):
+        return self.state_machine_manager
+
     def delete_state_machine_models(self):
         for sm_id_to_delete in self.state_machines.keys():
             sm_m = self.state_machines[sm_id_to_delete]

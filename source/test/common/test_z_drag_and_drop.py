@@ -5,19 +5,17 @@ import time
 import os
 import signal
 
-# general tool elements
-from rafcon.utils import log
+# mvc elements
+import rafcon.mvc.singleton
+from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.main_window import MainWindowView
 
 # core elements
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
 
-# mvc elements
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-
-# singleton elements
-import rafcon.mvc.singleton
+# general tool elements
+from rafcon.utils import log
 
 # test environment elements
 import testing_utils

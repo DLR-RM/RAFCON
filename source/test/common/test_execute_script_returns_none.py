@@ -1,9 +1,13 @@
 import pytest
 import signal
 
+# mvc
+import rafcon.mvc.singleton
+
+# statemachine
 import rafcon.statemachine.start
 from rafcon.statemachine.storage import storage
-import rafcon.mvc.singleton
+
 import testing_utils
 
 

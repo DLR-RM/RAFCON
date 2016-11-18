@@ -1,5 +1,7 @@
 import pytest
 from pytest import raises
+
+# state machine
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.decorators import global_lock_counter, lock_state_machine
 from rafcon.statemachine.states.execution_state import ExecutionState

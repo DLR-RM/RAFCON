@@ -46,6 +46,10 @@ class OutcomeModel(StateElementModel):
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
 
+    @property
+    def core_element(self):
+        return self.outcome
+
     @ModelMT.observe("outcome", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(OutcomeModel, self).model_changed(model, prop_name, info)

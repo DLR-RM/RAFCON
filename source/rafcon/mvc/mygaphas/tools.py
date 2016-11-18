@@ -591,28 +591,20 @@ class ConnectionModificationTool(ConnectionTool):
         if not self._current_sink:  # Reset connection to original status, as it was not released above a port
             self._reset_connection()
         else:  # Modify the source/target of the connection
-            if self._is_transition:
-                try:
-                    port = self._current_sink.port.port_v.model.outcome
-                    port_id = port.outcome_id
-                except AttributeError:  # Port is an income
-                    port = None
-                    port_id = None
-                connection = self._connection_v.model.transition
-            else:
-                try:
-                    port = self._current_sink.port.port_v.model.data_port
-                except AttributeError:  # Port is a scoped variable
-                    port = self._current_sink.port.port_v.model.scoped_variable
-                port_id = port.data_port_id
-                connection = self._connection_v.model.data_flow
-            port_state_id = port.parent.state_id if port else None
+            connection_core_element = self._connection_v.model.core_element
+            try:
+                port_core_element = self._current_sink.port.port_v.model.core_element
+                port_id = port_core_element.state_element_id
+                port_state_id = port_core_element.parent.state_id
+            except AttributeError:  # Port is an income
+                port_id = None
+                port_state_id = self._current_sink.port.port_v.parent.model.state.state_id if modify_target else None
 
             try:
                 if modify_target:
-                    connection.modify_target(port_state_id, port_id)
+                    connection_core_element.modify_target(port_state_id, port_id)
                 else:
-                    connection.modify_origin(port_state_id, port_id)
+                    connection_core_element.modify_origin(port_state_id, port_id)
             except ValueError as e:
                 self._reset_connection()
                 logger.error(e)

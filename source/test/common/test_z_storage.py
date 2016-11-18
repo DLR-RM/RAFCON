@@ -1,25 +1,22 @@
 import os
 import gtk
-import signal
-import time
 import logging
 
-# general tool elements
-from rafcon.utils import log
+# mvc
+import rafcon.mvc.singleton
+from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.main_window import MainWindowView
 
 # core elements
+import rafcon.statemachine.singleton
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.storage import storage
 
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-
-# singleton elements
-import rafcon.statemachine.singleton
-import rafcon.mvc.singleton
+# general tool elements
+from rafcon.utils import log
 
 # test environment elements
 import testing_utils

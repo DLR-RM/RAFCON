@@ -151,7 +151,7 @@ class DataPortListController(ListViewController):
             return True
 
     def get_state_machine_selection(self):
-        # print type(self).__name__, "get state machine selection"
+        # print type(self).__name__, "get state machine selection", self.model.state.get_path()
         sm_selection = self.model.get_sm_m_for_state_m().selection if self.model.get_sm_m_for_state_m() else None
         sm_selected_model_list = None
         if self.type == 'input':

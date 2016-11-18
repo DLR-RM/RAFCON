@@ -130,6 +130,10 @@ class AbstractStateModel(ModelMT, Hashable):
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
 
+    @property
+    def core_element(self):
+        return self.state
+
     def prepare_destruction(self):
         """Prepares the model for destruction
 

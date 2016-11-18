@@ -9,9 +9,7 @@
 """
 
 from weakref import ref
-
 from yaml import YAMLObject
-
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 
@@ -32,7 +30,6 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
 
     :ivar rafcon.statemachine.states.state.State parent: Parent state of the state element
     """
-
     _parent = None
 
     yaml_tag = u'!StateElement'
@@ -92,6 +89,12 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
                 class_name = self.__class__.__name__
                 raise ValueError("{0} invalid within state {1} (id {2}): {3}".format(class_name, parent.name,
                                                                                      parent.state_id, message))
+
+    @property
+    def state_element_id(self):
+        """Returns the id of the state element
+        """
+        raise NotImplementedError()
 
     def to_dict(self):
         return self.state_element_to_dict(self)

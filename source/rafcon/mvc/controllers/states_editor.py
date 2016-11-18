@@ -322,10 +322,12 @@ class StatesEditorController(ExtendedController):
         """
         # logger.info("destroy page %s" % tab_dict['controller'].model.state.get_path())
         if tab_dict['source_code_changed_handler_id'] is not None:
-            tab_dict['controller'].view['source_view'].get_buffer().disconnect(
-                tab_dict['source_code_changed_handler_id'])
+            handler_id = tab_dict['source_code_changed_handler_id']
+            if tab_dict['controller'].view['source_view'].get_buffer().handler_is_connected(handler_id):
+                tab_dict['controller'].view['source_view'].get_buffer().disconnect(handler_id)
+            else:
+                logger.warning("Source code changed handler of state {0} was already removed.".format(tab_dict['model']))
         self.remove_controller(tab_dict['controller'])
-        # tab_dict['controller'].view.get_top_widget().destroy()
 
     def close_page(self, state_identifier, delete=True):
         """Closes the desired page

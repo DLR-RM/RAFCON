@@ -27,81 +27,30 @@ def delete_model(model, raise_exceptions=False):
     data from the corresponding state machine.
 
     :param model: The model to delete
+    :param bool raise_exceptions: Whether to raise exceptions or only log errors in case of failures
     :return: True if successful, False else
     """
-    container_m = model.parent
-    if container_m is None:
+    state_m = model.parent
+    if state_m is None:
+        msg = "Model has no parent from which it could be deleted from"
+        if raise_exceptions:
+            raise ValueError(msg)
+        logger.error(msg)
         return False
-    assert isinstance(container_m, ContainerStateModel)
-    if isinstance(model, AbstractStateModel):
-        state_id = model.state.state_id
-        try:
-            if state_id in container_m.state.states:
-                container_m.state.remove_state(state_id)
-                return True
-        except AttributeError as e:
-            if not raise_exceptions:
-                logger.error("The state with the ID {0} and the name {1} could not be deleted: {2}".format(
-                    state_id, model.state.name, e.message))
-            else:
-                raise
+    assert isinstance(state_m, StateModel)
+    state = state_m.state
+    core_element = model.core_element
 
-    elif isinstance(model, TransitionModel):
-        transition_id = model.transition.transition_id
-        try:
-            if transition_id in container_m.state.transitions:
-                container_m.state.remove_transition(transition_id)
-                return True
-        except AttributeError as e:
-            if not raise_exceptions:
-                logger.error("The transition with the ID {0} could not be deleted: {1}".format(
-                    transition_id, e.message))
-            else:
-                raise
-
-    elif isinstance(model, DataFlowModel):
-        data_flow_id = model.data_flow.data_flow_id
-        try:
-            if data_flow_id in container_m.state.data_flows:
-                container_m.state.remove_data_flow(data_flow_id)
-                return True
-        except AttributeError as e:
-            if not raise_exceptions:
-                logger.error("The data flow with the ID {0} could not be deleted: {1}".format(
-                    data_flow_id, e.message))
-            else:
-                raise
-
-    elif isinstance(model, ScopedVariableModel):
-        scoped_variable_id = model.scoped_variable.data_port_id
-        try:
-            if scoped_variable_id in container_m.state.scoped_variables:
-                container_m.state.remove_scoped_variable(scoped_variable_id)
-                return True
-        except AttributeError as e:
-            if not raise_exceptions:
-                logger.error("The scoped variable with the ID {0} could not be deleted: {1}".format(
-                    scoped_variable_id, e.message))
-            else:
-                raise
-
-    elif isinstance(model, DataPortModel):
-        port_id = model.data_port.data_port_id
-        try:
-            if port_id in container_m.state.input_data_ports:
-                container_m.state.remove_input_data_port(port_id)
-                return True
-            elif port_id in container_m.state.output_data_ports:
-                container_m.state.remove_output_data_port(port_id)
-                return True
-        except AttributeError as e:
-            if not raise_exceptions:
-                logger.error("The data port with the ID {0} could not be deleted: {1}".format(
-                    port_id, e.message))
-            else:
-                raise
-
-    return False
+    try:
+        if core_element in state:
+            state.remove(core_element)
+            return True
+        return False
+    except (AttributeError, ValueError) as e:
+        if raise_exceptions:
+            raise
+        logger.error("The model '{}' for core element '{}' could not be deleted: {}".format(model, core_element, e))
+        return False
 
 
 def delete_models(models, raise_exceptions=False):

@@ -7,6 +7,13 @@ import time
 import os
 import datetime
 
+# mvc elements
+import rafcon.mvc.config as gui_config
+import rafcon.mvc.singleton
+from rafcon.mvc.models.global_variable_manager import GlobalVariableManagerModel
+from rafcon.mvc.controllers.main_window import MainWindowController
+from rafcon.mvc.views.main_window import MainWindowView
+
 # statemachine elements
 from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.storage import storage
@@ -14,13 +21,6 @@ from rafcon.statemachine.execution.state_machine_status import StateMachineExecu
 
 # general tool elements
 from rafcon.utils import log
-
-# mvc elements
-import rafcon.mvc.singleton
-from rafcon.mvc.models.global_variable_manager import GlobalVariableManagerModel
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-import rafcon.mvc.config as gui_config
 
 # test environment elements
 import testing_utils

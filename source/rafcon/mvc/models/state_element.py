@@ -70,6 +70,15 @@ class StateElementModel(ModelMT, Hashable):
         else:
             self._parent = None
 
+    @property
+    def core_element(self):
+        """Return the core element represented by this model
+
+        :return: core element of the model
+        :rtype: rafcon.statemachine.state_elements.state_element.StateElement
+        """
+        raise NotImplementedError()
+
     def prepare_destruction(self):
         """Prepares the model for destruction
 
