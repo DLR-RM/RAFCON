@@ -90,7 +90,7 @@ class RAFCONButtonInputDialog(RAFCONButtonDialog):
 
         # Setup new text entry line
         self.entry = gtk.Entry()
-        self.entry.set_max_length(60)
+        self.entry.set_max_length(120)
         self.entry.set_editable(1)
         self.entry.set_activates_default(True)
         self.entry.set_width_chars(10)
