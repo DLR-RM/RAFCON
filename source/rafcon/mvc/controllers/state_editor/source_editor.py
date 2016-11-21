@@ -74,7 +74,27 @@ class SourceEditorController(EditorController):
     # ===============================================================
     def code_changed(self, source):
         self.view.apply_tag('default')
-        
+
+    def append_shell_command_to_path(self, command, file_path):
+
+        logger.debug("Opening path with command: {}".format(command))
+
+        # This splits the command in a matter so that the editor gets called in a separate shell and thus
+        # doesnt lock the window.
+        args = shlex.split(command + ' "' + file_path + os.path.sep + 'script.py"')
+
+        try:
+            subprocess.Popen(args)
+            return True
+        except OSError as e:
+
+            # This catches most of the errors being returned from the shell, destroys the old textfield and
+            # opens the dialog again, so the user can specify a new command. Its a bit dirty...
+            # The if is required to catch the case that a OSerror occurs due to other reasons than
+            # the specified command
+            logger.error('The operating system raised an error: {}'.format(e))
+        return False
+
     def open_external_clicked(self, button):
 
         def lock():
@@ -84,7 +104,7 @@ class SourceEditorController(EditorController):
             self.view.set_enabled(False)
 
         def unlock():
-            button.set_label('Open externally   ')
+            button.set_label('Open externally')
             # When hitting the Open external button, set_active(False) is not called, thus the button stays blue
             # while locked to highlight the reason why one cannot edit the text
             button.set_active(False)
@@ -102,29 +122,23 @@ class SourceEditorController(EditorController):
 
                 logger.debug("File opened with command: {}".format(command))
 
-                # This splits the command in a matter so that the editor gets called in a separate shell and thus
-                # doesnt lock the window.
-                args = shlex.split(command + ' "' + file_path + os.path.sep + 'script.py"')
                 self.apply_clicked(button)
 
                 try:
-                    filesystem.write_file(file_path + os.path.sep + 'script.py', self.source_text, True)
+                    # Save the file before opening it to update the applied changes. Use option create_full_path=True
+                    # to assure that temporary state_machines' script files are saved to
+                    # (their path doesnt exist when not saved)
+                    filesystem.write_file(file_path + os.path.sep + 'script.py',
+                                          self.source_text, create_full_path=True)
                 except IOError as e:
                     # Only happens if the file doesnt exist yet and would be written to the temp folder.
                     # The method write_file doesnt create the path
                     logger.error('The operating system raised an error: {}'.format(e))
 
-                try:
-                    subprocess.Popen(args)
-                except OSError as e:
-
-                    # This catches most of the errors being returned from the shell, destroys the old textfield and
-                    # opens the dialog again, so the user can specify a new command. Its a bit dirty...
-                    # The if is required to catch the case that a OSerror occurs due to other reasons than
-                    # the specified command
-                    logger.error('The operating system raised an error: {}'.format(e))
-                    if text_field:
-                        text_field.destroy()
+                if not self.append_shell_command_to_path(command, file_path) and text_field:
+                    # If a text field exists destroy it. Errors can occur with a specified editor as well
+                    # e.g Permission changes or sth.
+                    text_field.destroy()
                     global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', None)
                     global_gui_config.save_configuration()
 

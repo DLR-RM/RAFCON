@@ -97,7 +97,6 @@ class EditorController(ExtendedController):
     def _open_external_editor(self, *event):
         if react_to_event(self.view, self.view.textview, event):
             self.view['open_external_button'].set_active(True)
-            self.open_external_clicked(self.view['open_external_button'])
             return True
         return False
 
