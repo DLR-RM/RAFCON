@@ -114,6 +114,12 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
 
     state_machine.acquire_modification_lock()
     try:
+
+        # if the state machine was formatted in the old style, it has to be deleted
+        remove_deprecated_formatted_state_machine = False
+        if not state_machine.supports_saving_state_names:
+            remove_deprecated_formatted_state_machine = True
+
         state_machine.supports_saving_state_names = True
 
         if not temporary_storage:
@@ -129,7 +135,7 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
         root_state = state_machine.root_state
 
         # clean old path first
-        if delete_old_state_machine:
+        if delete_old_state_machine or remove_deprecated_formatted_state_machine:
             if os.path.exists(base_path):
                 shutil.rmtree(base_path)
 
@@ -226,6 +232,7 @@ def load_state_machine_from_path(base_path):
     state_machine_file_path = os.path.join(base_path, STATEMACHINE_FILE)
     state_machine_file_path_old = os.path.join(base_path, STATEMACHINE_FILE_OLD)
 
+    # was the root state specified as state machine base_path to load from?
     if not os.path.exists(state_machine_file_path) and not os.path.exists(state_machine_file_path_old):
         base_path = os.path.dirname(base_path)
         state_machine_file_path = os.path.join(base_path, STATEMACHINE_FILE)
