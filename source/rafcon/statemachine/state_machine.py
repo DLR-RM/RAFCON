@@ -69,7 +69,7 @@ class StateMachine(Observable, JSONObject, Hashable):
         self._execution_histories = []
 
         # specifies if this state machine supports saving states with state_id + state_name
-        self._support_saving_state_names = True
+        self._supports_saving_state_names = True
 
     def __copy__(self):
         sm = self.__class__(copy(self._root_state), self.version, self.creation_time, self.last_update)
@@ -240,10 +240,10 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     @property
     def supports_saving_state_names(self):
-        return self._support_saving_state_names
+        return self._supports_saving_state_names
 
     @supports_saving_state_names.setter
     def supports_saving_state_names(self, supports_saving_state_names):
         if not isinstance(supports_saving_state_names, bool):
             raise AttributeError("supports_saving_state_names has to be of type bool")
-        self._support_saving_state_names = supports_saving_state_names
+        self._supports_saving_state_names = supports_saving_state_names
