@@ -7,18 +7,18 @@
 
 
 """
-from rafcon.statemachine.singleton import state_machine_manager,\
-    global_variable_manager, state_machine_execution_engine, library_manager
-from rafcon.statemachine import interface
-
+from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.models.library_manager import LibraryManagerModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
 from rafcon.mvc.models.global_variable_manager import GlobalVariableManagerModel
 from rafcon.mvc.models.state_machine_execution_engine import StateMachineExecutionEngineModel
 from rafcon.mvc.models.config_model import ConfigModel
 from rafcon.statemachine.config import global_config
-from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
+
+from rafcon.statemachine.singleton import state_machine_manager,\
+    global_variable_manager, state_machine_execution_engine, library_manager
+from rafcon.statemachine import interface
 
 
 global_focus = None
