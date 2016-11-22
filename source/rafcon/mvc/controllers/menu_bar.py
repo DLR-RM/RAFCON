@@ -641,8 +641,8 @@ class MenuBarController(ExtendedController):
         # reload state machines from file system
         state_machine_manager.open_state_machines(sm_keys, state_machine_path_by_sm_id)
 
-    def on_quit_activate(self, widget, data=None):
-        avoid_shutdown = self.on_delete_event(self, widget, None)
+    def on_quit_activate(self, widget, data=None, force=False):
+        avoid_shutdown = self.on_delete_event(self, widget, None, force=force)
         if not avoid_shutdown:
             self.on_destroy(None)
 
