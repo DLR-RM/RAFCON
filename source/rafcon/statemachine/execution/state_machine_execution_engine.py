@@ -31,17 +31,12 @@ class StateMachineExecutionEngine(Observable):
 
     """
 
-    execution_engine = None
-
     __wait_for_finishing_thread = None
     __running_state_machine = None
-
-    __observables__ = ("execution_engine",)
 
     def __init__(self, state_machine_manager):
         Observable.__init__(self)
         self.state_machine_manager = state_machine_manager
-        self.execution_engine = self
         self._status = None
         self.status = StateMachineStatus(StateMachineExecutionStatus.STOPPED)
         # TODO: write validity checker of the state machine
