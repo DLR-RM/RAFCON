@@ -18,7 +18,7 @@ def measure_time(func):
         start = timer()
         return_value = func(*args, **kwargs)
         end = timer()
-        print func.__name__ + ": " + str((end - start))
+        print "{0} (args: {1}; kwargs: {2}): {3}".format(func.__name__, str(args), str(kwargs), str((end - start)))
         return return_value
     return func_wrapper
 
@@ -115,9 +115,9 @@ def test_preemption_concurrency_state_execution(number_child_states=10, number_c
 
 if __name__ == '__main__':
     # test_hierarchy_state_execution(10)
-    # test_hierarchy_state_execution(100)
+    test_hierarchy_state_execution(100)
     # TODO: state creation takes too long (> 100 seconds) => investigate
     # test_hierarchy_state_execution(1000)
     # test_barrier_concurrency_state_execution(10, 10)
     # test_barrier_concurrency_state_execution(100, 100)
-    test_preemption_concurrency_state_execution(50, 20, 3)
+    # test_preemption_concurrency_state_execution(50, 20, 3)
