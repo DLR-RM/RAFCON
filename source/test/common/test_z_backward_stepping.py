@@ -14,7 +14,7 @@ from rafcon.mvc.models.global_variable_manager import GlobalVariableManagerModel
 from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
-# statemachine elements
+# state machine elements
 from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.storage import storage
 from rafcon.statemachine.execution.state_machine_status import StateMachineExecutionStatus
@@ -101,8 +101,7 @@ def trigger_gui_signals_library_state(*args):
             assert sd.value == 100
 
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
-    call_gui_callback(menubar_ctrl.on_quit_activate, None)
+    call_gui_callback(menubar_ctrl.prepare_destruction)
 
 
 def test_backward_stepping_library_state(caplog):
@@ -194,8 +193,7 @@ def trigger_gui_signals_preemptive_state(*args):
     assert whiskey == 0
 
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
-    call_gui_callback(menubar_ctrl.on_quit_activate, None)
+    call_gui_callback(menubar_ctrl.prepare_destruction)
 
 
 def test_backward_stepping_preemptive_state(caplog):
@@ -278,8 +276,7 @@ def trigger_gui_signals_barrier_state(*args):
             assert sd.value == 20
 
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
-    call_gui_callback(menubar_ctrl.on_quit_activate, None)
+    call_gui_callback(menubar_ctrl.prepare_destruction)
 
 
 def test_backward_stepping_barrier_state(caplog):

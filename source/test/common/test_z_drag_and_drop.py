@@ -1,9 +1,5 @@
-import logging
 import gtk
 import threading
-import time
-import os
-import signal
 
 # mvc elements
 import rafcon.mvc.singleton
@@ -11,6 +7,7 @@ from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # core elements
+import rafcon.statemachine.singleton
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
 
@@ -21,6 +18,8 @@ from rafcon.utils import log
 import testing_utils
 from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
 import pytest
+
+logger = log.get_logger(__name__)
 
 
 class StructHelper:
@@ -37,10 +36,6 @@ class StructHelper:
 
 
 def create_models(*args, **kargs):
-    logger = log.get_logger(__name__)
-    logger.setLevel(logging.DEBUG)
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
 
     state1 = HierarchyState('State1', state_id="State1")
 
@@ -48,26 +43,18 @@ def create_models(*args, **kargs):
     ctr_state.add_state(state1)
     ctr_state.name = "Container"
 
-    state_dict = {'Container': ctr_state, 'State1': state1}
     sm = StateMachine(ctr_state)
 
     # add new state machine
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
     # select state machine
     rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
-    # get state machine model
-    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
-
-    global_var_manager_model = rafcon.mvc.singleton.global_variable_manager_model
-
-    return logger, ctr_state, global_var_manager_model, sm_m, state_dict
 
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_drag_and_drop_tests(*args):
     sm_manager_model = args[0]
     main_window_controller = args[1]
-    logger = args[2]
 
     rafcon.statemachine.singleton.library_manager.initialize()
 
@@ -128,16 +115,13 @@ def trigger_drag_and_drop_tests(*args):
 
     print "quitting"
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    call_gui_callback(menubar_ctrl.on_stop_activate, None)
-    menubar_ctrl.model.get_selected_state_machine_model().state_machine.file_system_path = get_unique_temp_path()
-    call_gui_callback(menubar_ctrl.on_save_activate, None)
-    call_gui_callback(menubar_ctrl.on_quit_activate, None)
+    call_gui_callback(menubar_ctrl.prepare_destruction)
 
 
 def test_drag_and_drop_test(caplog):
     testing_utils.start_rafcon()
 
-    logger, state, gvm_model, sm_m, state_dict = create_models()
+    create_models()
 
     testing_utils.remove_all_libraries()
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
@@ -158,7 +142,7 @@ def test_drag_and_drop_test(caplog):
     while gtk.events_pending():
         gtk.main_iteration(False)
     thread = threading.Thread(target=trigger_drag_and_drop_tests,
-                              args=[testing_utils.sm_manager_model, main_window_controller, logger])
+                              args=[testing_utils.sm_manager_model, main_window_controller])
     thread.start()
 
     gtk.main()

@@ -4,6 +4,7 @@ import threading
 import time
 
 # mvc elements
+import testing_utils
 from rafcon.mvc.config import global_gui_config
 import rafcon.mvc.singleton
 from rafcon.mvc.models import ContainerStateModel
@@ -14,24 +15,20 @@ from rafcon.mvc.views.main_window import MainWindowView
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.config import global_config
 
 # general tool elements
 from rafcon.utils import log
 
 # test environment elements
-import testing_utils
+
 from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
 from test_z_gui_state_type_change import get_state_editor_ctrl_and_store_id_dict
 import pytest
 
+logger = log.get_logger(__name__)
+
 
 def create_models(*args, **kargs):
-
-    logger = log.get_logger(__name__)
-    logger.setLevel(logging.DEBUG)
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
 
     state1 = ExecutionState('State1', state_id="State1")
     output_state1 = state1.add_output_data_port("output", "int")
@@ -101,11 +98,7 @@ def create_models(*args, **kargs):
     # get state machine model
     sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
-    global_var_manager_model = rafcon.mvc.singleton.global_variable_manager_model
-    global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
-    global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
-
-    return logger, ctr_state, global_var_manager_model, sm_m, state_dict
+    return sm_m, state_dict
 
 
 def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
@@ -222,17 +215,14 @@ def trigger_state_type_change_tests(*args):
 
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        call_gui_callback(menubar_ctrl.on_stop_activate, None)
-        menubar_ctrl.model.get_selected_state_machine_model().state_machine.file_system_path = get_unique_temp_path()
-        call_gui_callback(menubar_ctrl.on_save_activate, None)
-        call_gui_callback(menubar_ctrl.on_quit_activate, None)
+        call_gui_callback(menubar_ctrl.prepare_destruction)
 
 
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_type_change_test(with_gui, caplog):
     testing_utils.start_rafcon()
 
-    logger, state, gvm_model, sm_m, state_dict = create_models()
+    sm_m, state_dict = create_models()
 
     testing_utils.remove_all_libraries()
     #rafcon.statemachine.singleton.library_manager.initialize()

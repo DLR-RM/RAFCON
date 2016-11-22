@@ -84,9 +84,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
 def save_and_quit(sm_model, path, menubar_ctrl, with_gui):
     if with_gui:
         sm_model.state_machine.file_system_path = path
-        call_gui_callback(menubar_ctrl.on_save_activate, None)
-        call_gui_callback(menubar_ctrl.on_stop_activate, None)
-        call_gui_callback(menubar_ctrl.on_quit_activate, None)
+        call_gui_callback(menubar_ctrl.prepare_destruction)
 
 
 def create_models(*args, **kargs):
@@ -1866,16 +1864,9 @@ def trigger_state_type_change_typical_bug_tests(*args):
         sm_m.history.redo()
     logger.info("REDO finished")
 
-    # remove all state-machines
-    for state_machine_id in sm_manager_model.state_machine_manager.state_machines.keys():
-        if with_gui:
-            call_gui_callback(sm_manager_model.state_machine_manager.remove_state_machine, state_machine_id)
-        else:
-            sm_manager_model.state_machine_manager.remove_state_machine(state_machine_id)
-
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        call_gui_callback(menubar_ctrl.on_quit_activate, None)
+        call_gui_callback(menubar_ctrl.prepare_destruction)
 
     check_elements_ignores.remove("internal_transitions")
     print check_elements_ignores

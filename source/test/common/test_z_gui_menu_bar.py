@@ -2,6 +2,7 @@ import sys
 import logging
 import gtk
 import threading
+from os.path import join
 
 # mvc elements
 import rafcon.mvc.config as gui_config
@@ -26,29 +27,13 @@ from rafcon.utils import log
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
+
 import pytest
 
-
-def setup_module(module):
-    # set the test_libraries path temporarily to the correct value
-    testing_utils.remove_all_libraries()
-    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["ros"] = rafcon.__path__[0] + "/../test_scripts/ros_libraries"
-    library_paths["turtle_libraries"] = rafcon.__path__[0] + "/../test_scripts/turtle_libraries"
-    library_paths["generic"] = rafcon.__path__[0] + "/../libraries/generic"
+logger = log.get_logger(__name__)
 
 
 def create_models(*args, **kargs):
-    logger = log.get_logger(__name__)
-    logger.setLevel(logging.DEBUG)
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
-    stdout = logging.StreamHandler(sys.stdout)
-    stdout.setFormatter(logging.Formatter("%(asctime)s: %(levelname)-8s - %(name)s:  %(message)s"))
-    stdout.setLevel(logging.DEBUG)
-    logging.getLogger('gtkmvc').addHandler(stdout)
-    logging.getLogger('statemachine.state').setLevel(logging.DEBUG)
-    logging.getLogger('controllers.state_properties').setLevel(logging.DEBUG)
 
     state1 = ExecutionState('State1')
     state2 = ExecutionState('State2')
@@ -75,7 +60,7 @@ def create_models(*args, **kargs):
     ctr_state.add_transition(state3.state_id, 0, ctr_state.state_id, 0)
     ctr_state.name = "Container"
 
-    return logger, ctr_state
+    return ctr_state
 
 
 def focus_graphical_editor_in_page(page):
@@ -151,8 +136,8 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_new_activate, None)
 
     assert len(sm_manager_model.state_machines) == current_sm_length + 1
-    call_gui_callback(menubar_ctrl.on_open_activate, None, None, rafcon.__path__[0] + "/../test_scripts/tutorials/"
-                                                                                      "basic_turtle_demo_sm")
+    call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(rafcon.__path__[0],
+                                                                      "../test_scripts/tutorials/basic_turtle_demo_sm"))
     assert len(sm_manager_model.state_machines) == current_sm_length + 2
 
     sm_m = sm_manager_model.state_machines[first_sm_id + 2]
@@ -311,14 +296,15 @@ def test_gui(caplog):
     library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    library_paths["ros"] = rafcon.__path__[0] + "/../test_scripts/ros_libraries"
-    library_paths["turtle_libraries"] = rafcon.__path__[0] + "/../test_scripts/turtle_libraries"
-    library_paths["generic"] = rafcon.__path__[0] + "/../libraries/generic"
+    library_paths["ros"] = join(rafcon.__path__[0], "../test_scripts/ros_libraries")
+    library_paths["turtle_libraries"] = join(rafcon.__path__[0], "../test_scripts/turtle_libraries")
+    library_paths["generic"] = join(rafcon.__path__[0], "../libraries/generic")
     rafcon.statemachine.singleton.library_manager.refresh_libraries()
 
-    [logger, ctr_state] = create_models()
+    ctr_state = create_models()
     state_machine = StateMachine(ctr_state)
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)

@@ -32,14 +32,9 @@ import pytest
 store_elements_ignores = []
 check_elements_ignores = []
 
+logger = log.get_logger(__name__)
 
 def create_models(*args, **kargs):
-
-    logger = log.get_logger(__name__)
-    logger.setLevel(logging.DEBUG)
-    #logging.getLogger('gtkmvc').setLevel(logging.DEBUG)
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
 
     state1 = ExecutionState('State1', state_id="State1")
     output_state1 = state1.add_output_data_port("output", "int")
@@ -115,12 +110,7 @@ def create_models(*args, **kargs):
     # get state machine model
     sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
-    global_var_manager_model = GlobalVariableManagerModel()
-    global_var_manager_model = rafcon.mvc.singleton.global_variable_manager_model
-    global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
-    global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
-
-    return logger, ctr_state, global_var_manager_model, sm_m, state_dict
+    return sm_m, state_dict
 
 
 def store_state_elements(state, state_m):
@@ -584,12 +574,11 @@ def trigger_state_type_change_tests(*args):
 
     :param args:
     """
-    sm_manager_model = args[0]
-    main_window_controller = args[1]
-    sm_m = args[2]
-    state_dict = args[3]
-    with_gui = args[4]
-    logger = args[5]
+    main_window_controller = args[0]
+    sm_m = args[1]
+    state_dict = args[2]
+    with_gui = args[3]
+    logger = args[4]
     sleep_time_max = 5.0
 
     # General Type Change inside of a state machine (NO ROOT STATE) ############
@@ -663,17 +652,14 @@ def trigger_state_type_change_tests(*args):
 
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        call_gui_callback(menubar_ctrl.on_stop_activate, None)
-        menubar_ctrl.model.get_selected_state_machine_model().state_machine.file_system_path = get_unique_temp_path()
-        call_gui_callback(menubar_ctrl.on_save_activate, None)
-        call_gui_callback(menubar_ctrl.on_quit_activate, None)
+        call_gui_callback(menubar_ctrl.prepare_destruction)
 
 
 def test_state_type_change_test(caplog):
     with_gui = True
     testing_utils.start_rafcon()
 
-    logger, state, gvm_model, sm_m, state_dict = create_models()
+    sm_m, state_dict = create_models()
     testing_utils.remove_all_libraries()
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_controller = None
@@ -687,8 +673,7 @@ def test_state_type_change_test(caplog):
         while gtk.events_pending():
             gtk.main_iteration(False)
     thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[testing_utils.sm_manager_model, main_window_controller, sm_m, state_dict, with_gui,
-                                    logger])
+                              args=[main_window_controller, sm_m, state_dict, with_gui, logger])
     thread.start()
     if with_gui:
         gtk.main()
