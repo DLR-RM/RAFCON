@@ -646,14 +646,14 @@ class MenuBarController(ExtendedController):
         if not avoid_shutdown:
             self.on_destroy(None)
 
-    def on_delete_event(self, widget, event, data=None):
+    def on_delete_event(self, widget, event, data=None, force=False):
         logger.debug("Delete event received")
 
         # State machine was modified, callback method handles closing operation
-        if self.check_sm_modified():
+        if not force and self.check_sm_modified():
             return True  # prevents closing operation
         # State machine is running, callback method handles closing operation
-        if self.check_sm_running():
+        if not force and self.check_sm_running():
             return True  # prevents closing operation
 
         self.prepare_destruction()
