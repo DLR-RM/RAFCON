@@ -37,8 +37,7 @@ class StateMachineExecutionEngine(Observable):
     def __init__(self, state_machine_manager):
         Observable.__init__(self)
         self.state_machine_manager = state_machine_manager
-        self._status = None
-        self.status = StateMachineStatus(StateMachineExecutionStatus.STOPPED)
+        self._status = StateMachineStatus(StateMachineExecutionStatus.STOPPED)
         # TODO: write validity checker of the state machine
         self._validity_checker = None
         logger.debug("State machine execution engine initialized")
@@ -392,13 +391,6 @@ class StateMachineExecutionEngine(Observable):
 
         """
         return self._status
-
-    @status.setter
-    @Observable.observed
-    def status(self, status):
-        if not isinstance(status, StateMachineStatus):
-            raise TypeError("status must be of type StateMachineStatus")
-        self._status = status
 
     @property
     def run_to_states(self):
