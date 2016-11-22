@@ -175,16 +175,21 @@ class AutoBackupModel(ModelMT):
         self.__perform_storage = False
         self._timer_request_time = None
         self.timer_request_lock = threading.Lock()
-        self.check_for_auto_backup(force=True)
         self.tmp_storage_timed_thread = None
-
-        # register observer at the end after controller is fully initialized
-        self.observe_model(self.state_machine_model)
 
         logger.debug("The auto-backup for state-machine {2} is {0} and set to '{1}'"
                      "".format('ENABLED' if self.timed_temp_storage_enabled else 'DISABLED',
                                'fix interval mode' if self.only_fix_interval else 'dynamic interval mode',
                                self.state_machine_model.state_machine.state_machine_id))
+
+        # register observer before initializing check loop
+        self.observe_model(self.state_machine_model)
+        # initializing check loop to fully initialize the model
+        if not self.only_fix_interval:
+            self.perform_temp_storage()
+        else:
+            self.check_for_auto_backup(force=True)
+
 
     def __destroy__(self):
         self.destroy()
