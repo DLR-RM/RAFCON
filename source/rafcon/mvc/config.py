@@ -62,8 +62,11 @@ class GuiConfig(ObservableConfig):
 
     def configure_gtk(self):
         import gtk
+        theme_path = os.path.join(self.path_to_tool, "themes")
+        logo_path = os.path.join(theme_path, "icons")
         theme = self.get_config_value('THEME', 'dark')
-        gtkrc_file_path = os.path.join(self.path_to_tool, 'themes', theme, 'gtk-2.0', 'gtkrc')
+        gtkrc_file_path = os.path.join(theme_path, theme, 'gtk-2.0', 'gtkrc')
+        gtk.window_set_default_icon_from_file(os.path.join(logo_path, "RAFCON_figurative_mark_negative.svg"))
         if not os.path.exists(gtkrc_file_path):
             raise ValueError("GTK theme '{0}' does not exist".format(theme))
         # TODO: this is a hack, but decreases the chance that RAFCON does not start up as rc_parse does not return
