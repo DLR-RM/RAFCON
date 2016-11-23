@@ -80,7 +80,7 @@ def trigger_source_editor_signals(main_window_controller):
     source_editor_controller = tab_list[state_identifier]['controller'].get_controller('source_ctrl')
 
     # ---check if the default text equals the default_script.py
-    default_content = fs.read_file('source/rafcon/statemachine/', 'default_script.py')
+    default_content = fs.read_file(os.path.join(rafcon.__path__[0], 'statemachine', 'default_script.py'))
     content = source_editor_controller.source_text
     assert content == default_content
 
@@ -148,6 +148,7 @@ def test_gui(caplog):
     t_u.remove_all_libraries()
     gui_config.global_gui_config.set_config_value('GAPHAS_EDITOR', True)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    gui_config.global_gui_config.set_config_value('CHECK_PYTHON_FILES_WITH_PYLINT', False)
 
     # Wait for GUI to initialize
     t_u.wait_for_gui()
