@@ -96,6 +96,12 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
         """
         raise NotImplementedError()
 
+    @property
+    def core_element_id(self):
+        """Returns the id of the state element
+        """
+        return self.state_element_id
+
     def to_dict(self):
         return self.state_element_to_dict(self)
 
