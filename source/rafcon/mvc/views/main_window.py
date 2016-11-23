@@ -56,7 +56,7 @@ class MainWindowView(View):
         ######################################################
         self.state_machine_tree = StateMachineTreeView()
         self.state_machine_tree.show()
-        self['state_tree_alignment'].add(self.state_machine_tree)
+        self['states_tree_alignment'].add(self.state_machine_tree)
 
         ######################################################
         # Global Variable Manager
@@ -220,7 +220,7 @@ class MainWindowView(View):
 
         :param notebook: GTK Notebook container, whose tab labels are to be rotated and made detachable
         """
-        icons = {'libraries': constants.SIGN_LIB, 'state_tree': constants.ICON_TREE,
+        icons = {'libraries': constants.SIGN_LIB, 'states_tree': constants.ICON_TREE,
                  'global_variables': constants.ICON_GLOB, 'history': constants.ICON_HIST,
                  'execution_history': constants.ICON_EHIST, 'network': constants.ICON_NET}
         for notebook in self.left_bar_notebooks:

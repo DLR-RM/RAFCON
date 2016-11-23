@@ -11,7 +11,7 @@ def create_tab_header_label(tab_name, icons):
     """Create the tab header labels for notebook tabs. If USE_ICONS_AS_TAB_LABELS is set to True in the gui_config,
     icons are used as headers. Otherwise, the titles of the tabs are rotated by 90 degrees.
 
-    :param tab_name: The label text of the tab, written in small letters and seperated by underscores, e.g. state_tree
+    :param tab_name: The label text of the tab, written in small letters and separated by underscores, e.g. states_tree
     :param icons: A dict mapping each tab_name to its corresponding icon
     :return: The GTK Eventbox holding the tab label
     """
