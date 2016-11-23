@@ -21,6 +21,7 @@ from gtk.gdk import ACTION_COPY, ModifierType
 from gtk import DEST_DEFAULT_ALL
 import gobject
 
+import rafcon.statemachine.id_generator as idgen
 from rafcon.statemachine.enums import StateType, StateExecutionState
 from rafcon.statemachine.decorators import lock_state_machine
 
@@ -165,6 +166,11 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))
         shortcut_manager.add_callback_for_action("add2", partial(self._add_new_state, state_type=StateType.HIERARCHY))
         shortcut_manager.add_callback_for_action("abort", self._abort)
+
+        shortcut_manager.add_callback_for_action("add_output", self._add_output_port_to_selected_state())
+        shortcut_manager.add_callback_for_action("add_input", self._add_input_port_to_selected_state)
+        shortcut_manager.add_callback_for_action("add_scoped_variable", self._add_scoped_variable_to_selected_state)
+        shortcut_manager.add_callback_for_action("add_outcome", self._add_outcome_to_selected_state)
 
         shortcut_manager.add_callback_for_action("copy", self._copy_selection)
         shortcut_manager.add_callback_for_action("paste", self._paste_clipboard)
@@ -2243,3 +2249,56 @@ class GraphicalEditorController(ExtendedController):
 
             self._redraw()
             return True
+
+    @lock_state_machine
+    def _add_output_port_to_selected_state(self, *event):
+        if not len(self.model.selection.get_all()) > 0:
+            return
+        if not react_to_event(self.view, self.view.editor, event):
+            return
+        for model in self.model.selection.get_all():
+            name = "output_" + str(idgen.generate_data_port_id(model.state.get_data_port_ids()))
+            model.state.add_output_data_port(name=name, data_type=None)
+        return
+
+    @lock_state_machine
+    def _add_input_port_to_selected_state(self, *event):
+        if not len(self.model.selection.get_all()) > 0:
+            return
+        if not react_to_event(self.view, self.view.editor, event):
+            return
+        for model in self.model.selection.get_all():
+            name = "input_" + str(idgen.generate_data_port_id(model.state.get_data_port_ids()))
+            model.state.add_input_data_port(name=name, data_type=None)
+        return
+
+    @lock_state_machine
+    def _add_scoped_variable_to_selected_state(self, *event):
+        if not len(self.model.selection.get_all()) > 0:
+            return
+        if not react_to_event(self.view, self.view.editor, event):
+            return
+        for single_model in self.model.selection.get_all():
+            if not isinstance(single_model, ContainerStateModel):
+                continue
+            num_data_ports = len(single_model.state.scoped_variables)
+            for run_id in range(num_data_ports + 1, 0, -1):
+                try:
+                    single_model.state.add_scoped_variable("scoped_%s" % run_id, "int", 0)
+                    break
+                except ValueError as e:
+                    if run_id == num_data_ports:
+                        logger.warn("The scoped variable couldn't be added: {0}".format(e))
+                        return
+        return
+
+    @lock_state_machine
+    def _add_outcome_to_selected_state(self, *event):
+        if not len(self.model.selection.get_all()) > 0:
+            return
+        if not react_to_event(self.view, self.view.editor, event):
+            return
+        for model in self.model.selection.get_all():
+            name = "outcome_" + str(idgen.generate_outcome_id(model.state.outcomes.keys()))
+            model.state.add_outcome(name=name)
+        return
