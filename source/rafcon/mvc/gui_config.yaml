@@ -2,7 +2,7 @@ TYPE: GUI_CONFIG
 
 SOURCE_EDITOR_STYLE: rafcon-dark
 
-GAPHAS_EDITOR: False
+GAPHAS_EDITOR: True
 ENABLE_CACHING: True    # Affects only Gaphas editor
 
 WAYPOINT_SNAP_ANGLE: 45
@@ -46,6 +46,10 @@ SHORTCUTS:
     abort: Escape
     add: <Control>A             # In graphical editor: add execution state
     add2: <Control><Shift>A     # In graphical editor: add hierarchy state
+    add_output: <Shift>E
+    add_input: <Shift>D
+    add_outcome: <Shift>C
+    add_scoped_variable: <Shift>S
     apply: <Control><Shift>E
     backward_step: F9
     close: <Control>W
