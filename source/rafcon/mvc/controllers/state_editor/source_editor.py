@@ -111,11 +111,6 @@ class SourceEditorController(EditorController):
             # Enable text input
             self.view.set_enabled(True)
 
-            # Update the source text to color it
-            tbuffer = self.view.get_buffer()
-            current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
-            self.source_text = current_text
-
         if button.get_active():
 
             # Get the specified "Editor" as in shell command from the gui config yaml

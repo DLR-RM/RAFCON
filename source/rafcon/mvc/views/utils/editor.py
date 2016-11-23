@@ -114,21 +114,13 @@ class EditorView(View):
         self.set_cursor_position(line_number, line_offset)
 
     def set_enabled(self, on):
+        # Apply color scheme by set text 'workaround' (with current buffer source)
+        tbuffer = self.get_buffer()
+        current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
+        self.set_text(current_text)
+
         if on:
             self.textview.set_property('editable', True)
-            line_number, line_offset = self.get_cursor_position()
-            tbuffer = self.get_buffer()
-            current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
-            try:
-                b = self.new_buffer()
-            except NameError:
-                b = gtk.TextBuffer()
-            b.begin_not_undoable_action()
-            b.set_text(current_text)
-            b.end_not_undoable_action()
-            self.textview.set_buffer(b)
-            self.register()
-            self.set_cursor_position(line_number, line_offset)
             self.apply_tag('default')
         else:
             self.apply_tag('deactivated')
