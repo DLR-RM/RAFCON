@@ -103,6 +103,9 @@ class EditorView(View):
     def get_buffer(self):
         return self.textview.get_buffer()
 
+    def get_text(self):
+        return self.get_buffer().get_text(self.get_buffer().get_start_iter(), self.get_buffer().get_end_iter())
+
     def set_text(self, text):
         """ The method insert text into the text buffer of the text view and preserves the cursor location.
 
@@ -115,9 +118,7 @@ class EditorView(View):
 
     def set_enabled(self, on):
         # Apply color scheme by set text 'workaround' (with current buffer source)
-        tbuffer = self.get_buffer()
-        current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
-        self.set_text(current_text)
+        self.set_text(self.get_text())
 
         if on:
             self.textview.set_property('editable', True)

@@ -303,8 +303,7 @@ class StatesEditorController(ExtendedController):
         if tab_list[state_identifier]['controller'].get_controller('source_ctrl') is None:
             logger.warning('It was tried to check a source script of a state with no source-editor')
             return
-        tbuffer = tab_list[state_identifier]['controller'].get_controller('source_ctrl').view.get_buffer()
-        current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
+        current_text = tab_list[state_identifier]['controller'].get_controller('source_ctrl').view.get_text()
         old_is_dirty = tab_list[state_identifier]['source_code_view_is_dirty']
         if state_m.state.script_text == current_text:
             tab_list[state_identifier]['source_code_view_is_dirty'] = False
