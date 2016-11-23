@@ -142,9 +142,9 @@ class DataPortListController(ListViewController):
         """
         if react_to_event(self.view, self.tree_view, event):
             other_type = 'input' if self.type is 'output' else 'output'
-            if not getattr(global_clipboard, "{0}_data_port_model_copies".format(self.type)) and \
-                    (getattr(global_clipboard, "{0}_data_port_model_copies".format(other_type)) or
-                     global_clipboard.scoped_variable_model_copies):
+            if not global_clipboard.model_copies["{0}_data_ports".format(self.type)] and \
+                    (global_clipboard.model_copies["{0}_data_ports".format(other_type)] or
+                     global_clipboard.model_copies["scoped_variables"]):
                 global_clipboard.paste(self.model, limited=['{0}_data_ports'.format(self.type)], convert=True)
             else:
                 global_clipboard.paste(self.model, limited=['{0}_data_ports'.format(self.type)])

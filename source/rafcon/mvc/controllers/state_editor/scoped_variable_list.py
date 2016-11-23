@@ -98,8 +98,9 @@ class ScopedVariableListController(ListViewController):
          the objects of differing port type (in the clipboard) have.
         """
         if react_to_event(self.view, self.tree_view, event):
-            if not getattr(global_clipboard, "scoped_variable_model_copies".format(self.type)) and \
-                    (global_clipboard.input_data_port_model_copies or global_clipboard.output_data_port_model_copies):
+            if not global_clipboard.model_copies["scoped_variables"] and \
+                    (global_clipboard.model_copies["input_data_ports"] or
+                     global_clipboard.model_copies["output_data_ports"]):
                 global_clipboard.paste(self.model, limited=['scoped_variables'], convert=True)
             else:
                 global_clipboard.paste(self.model, limited=['scoped_variables'])
