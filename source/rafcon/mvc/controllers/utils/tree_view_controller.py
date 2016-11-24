@@ -1,14 +1,14 @@
-import gtk
 import glib
+import gtk
 from gtk.gdk import CONTROL_MASK, SHIFT_MASK
 from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 
+from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.gui_helper import react_to_event, is_event_of_key_string
-from rafcon.mvc.selection import Selection, reduce_to_parent_states
-from rafcon.mvc.clipboard import global_clipboard
-
+from rafcon.mvc.models.selection import Selection, reduce_to_parent_states
 from rafcon.utils import log
+
 module_logger = log.get_logger(__name__)
 
 
@@ -29,6 +29,7 @@ class ListViewController(ExtendedController):
     CORE_STORAGE_ID = None
     MODEL_STORAGE_ID = None
     _logger = None
+    CORE_ELEMENT_CLASS = None
 
     def __init__(self, model, view, tree_view, list_store, logger=None):
         super(ListViewController, self).__init__(model, view)
@@ -225,7 +226,9 @@ class ListViewController(ExtendedController):
         :return: selection
         :rtype: rafcon.mvc.selection.Selection
         """
-        return None, None
+        # print type(self).__name__, "get state machine selection", self.model
+        sm_selection = self.model.get_sm_m_for_state_m().selection if self.model.get_sm_m_for_state_m() else None
+        return sm_selection, sm_selection.get_selection_of_core_element_type(self.CORE_ELEMENT_CLASS) if sm_selection else []
 
     def get_selections(self):
         """Get actual model selection status in state machine selection and tree selection of the widget"""
@@ -340,6 +343,11 @@ class ListViewController(ExtendedController):
                 if model not in sm_selected_model_list and model in selected_model_list:
                     sm_selection.add(model)
         self._do_selection_update = False
+
+    @ExtendedController.observe("sm_selection_changed_signal", signal=True)
+    def state_machine_selection_changed(self, model, prop_name, signal_msg):
+        if self.CORE_ELEMENT_CLASS in signal_msg.arg.core_element_types:
+            self.update_selection_sm_prior()
 
     def selection_changed(self, widget, event=None):
         """Notify tree view about state machine selection"""

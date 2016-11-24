@@ -13,6 +13,7 @@ import gtk
 import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.statemachine.state_elements.transition import Transition
 
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
@@ -44,6 +45,7 @@ class StateTransitionsListController(LinkageListController):
     TO_OUTCOME_STORAGE_ID = 4
     IS_EXTERNAL_STORAGE_ID = 5
     MODEL_STORAGE_ID = 9
+    CORE_ELEMENT_CLASS = Transition
 
     def __init__(self, model, view):
         # ListStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
@@ -567,16 +569,6 @@ class StateTransitionsListController(LinkageListController):
         self._update_internal_data_base()
         self._update_tree_store()
         self.update_selection_sm_prior()
-
-    def get_state_machine_selection(self):
-        # print type(self).__name__, "get state machine selection"
-        sm_selection = self.model.get_sm_m_for_state_m().selection if self.model.get_sm_m_for_state_m() else None
-        return sm_selection, sm_selection.transitions if sm_selection else []
-
-    @LinkageListController.observe("selection", after=True)
-    def state_machine_selection_changed(self, model, prop_name, info):
-        if "transitions" == info['method_name']:
-            self.update_selection_sm_prior()
 
     @LinkageListController.observe("state", before=True)
     def before_notification_of_parent_or_state(self, model, prop_name, info):

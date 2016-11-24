@@ -14,6 +14,7 @@ import gtk
 import gobject
 
 from rafcon.statemachine.enums import StateType
+from rafcon.statemachine.states.state import State
 
 from rafcon.mvc.controllers.utils.tree_view_controller import TreeViewController
 from rafcon.mvc.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
@@ -47,6 +48,7 @@ class StateMachineTreeController(TreeViewController):
     TYPE_NAME_STORAGE_ID = 2
     MODEL_STORAGE_ID = 3
     STATE_PATH_STORAGE_ID = 4
+    CORE_ELEMENT_CLASS = State
 
     def __init__(self, model, view):
         assert isinstance(model, StateMachineManagerModel)
@@ -310,9 +312,10 @@ class StateMachineTreeController(TreeViewController):
 
             return True
 
-    @TreeViewController.observe("selection", after=True)
+    @TreeViewController.observe("sm_selection_changed_signal", signal=True)
     def assign_notification_selection(self, model, prop_name, info):
-        if info is None and self._selected_sm_model and self._selected_sm_model.selection.get_selected_state() or \
-                info and self.tree_store.get_iter_root() and info['method_name'] == 'states':
+        if model is None and self._selected_sm_model and self._selected_sm_model.selection.get_selected_state() or \
+                info and self.tree_store.get_iter_root() and self.CORE_ELEMENT_CLASS in info.arg.core_element_types:
+            assert self._selected_sm_model is model or model is None
             # logger.info("selection state {0}".format(info))
             self.update_selection_sm_prior()

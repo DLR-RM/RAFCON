@@ -5,7 +5,7 @@ logger = log.get_logger(__name__)
 
 from enum import Enum
 from gtkmvc import Observable
-from rafcon.mvc.selection import Selection
+from rafcon.mvc.models.selection import Selection
 from rafcon.mvc.models.state import StateModel
 from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.statemachine.state_elements.scope import ScopedVariable

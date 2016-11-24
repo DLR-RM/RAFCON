@@ -13,6 +13,7 @@ import gtk
 import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.statemachine.state_elements.outcome import Outcome
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController, react_to_event
@@ -42,6 +43,7 @@ class StateOutcomesListController(ListViewController):
     CORE_STORAGE_ID = 4
     CORE_PARENT_STORAGE_ID = 5
     MODEL_STORAGE_ID = 6
+    CORE_ELEMENT_CLASS = Outcome
 
     def __init__(self, model, view):
         # initiate data base and tree
@@ -296,16 +298,6 @@ class StateOutcomesListController(ListViewController):
     def update(self):
         self.update_internal_data_base()
         self.update_list_store()
-
-    def get_state_machine_selection(self):
-        # print type(self).__name__, "get state machine selection", self.model.state.get_path(), self
-        sm_selection = self.model.get_sm_m_for_state_m().selection if self.model.get_sm_m_for_state_m() else None
-        return sm_selection, sm_selection.outcomes if sm_selection else []
-
-    @ListViewController.observe("selection", after=True)
-    def state_machine_selection_changed(self, model, prop_name, info):
-        if "outcomes" == info['method_name']:
-            self.update_selection_sm_prior()
 
     @ListViewController.observe("parent", after=True)
     @ListViewController.observe("outcomes", after=True)

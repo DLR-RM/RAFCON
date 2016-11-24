@@ -1,9 +1,17 @@
-from gtkmvc import Observable
+from gtkmvc import ModelMT, Signal
+
+from rafcon.statemachine.states.state import State
+from rafcon.statemachine.state_elements.outcome import Outcome
+from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
+from rafcon.statemachine.state_elements.scope import ScopedVariable
+from rafcon.statemachine.state_elements.transition import Transition
+from rafcon.statemachine.state_elements.data_flow import DataFlow
+
 from rafcon.mvc.models import AbstractStateModel, TransitionModel, DataFlowModel, DataPortModel, OutcomeModel, \
     ScopedVariableModel
-from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
-from rafcon.utils import log
+from rafcon.mvc.models.signals import SelectionChangedSignalMsg
 
+from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -34,7 +42,7 @@ def reduce_to_parent_states(models):
     return models
 
 
-class Selection(Observable):
+class Selection(ModelMT):
     """This class contains the selected item (States, Transitions and Data Flows) of a state_machine
 
     :param set __selected: The state machine elements selected
@@ -47,18 +55,23 @@ class Selection(Observable):
     _data_flows = None
     _transitions = None
     _states = None
+    selection_changed_signal = Signal()
 
-    def __init__(self):
-        Observable.__init__(self)
+    __observables__ = ("selection_changed_signal", )
+
+    def __init__(self, parent_signal=None):
+        ModelMT.__init__(self)
 
         self.__selected = set()
-        self.input_data_ports = []
-        self.output_data_ports = []
-        self.outcomes = []
-        self.data_flows = []
-        self.transitions = []
-        self.states = []
-        self.scoped_variables = []
+        self._input_data_ports = []
+        self._output_data_ports = []
+        self._outcomes = []
+        self._data_flows = []
+        self._transitions = []
+        self._states = []
+        self._scoped_variables = []
+        self.selection_changed_signal = Signal()
+        self.parent_signal = parent_signal
         # flag to enable new method to use list updates -> cause additional but unique notifications -> support for better code
         self.__with_updates = True
 
@@ -68,27 +81,23 @@ class Selection(Observable):
             return_string = "%s, %s" % (return_string, str(item))
         return return_string
 
-    @Observable.observed
     def add(self, item):
         self.__selected.add(item)
         self.__selected = reduce_to_parent_states(self.__selected)
-        if self.__with_updates: self.__update()
+        self.__update(method_name='add')
 
-    @Observable.observed
     def remove(self, item):
         if item in self.__selected:
             self.__selected.remove(item)
-            if self.__with_updates: self.__update()
+            self.__update(method_name='remove')
         # else:
         #     logger.warning("Can not remove item not in selection: {0}".format(item))
 
-    @Observable.observed
     def append(self, selection):
         self.__selected.update(selection)
         self.__selected = reduce_to_parent_states(self.__selected)
-        if self.__with_updates: self.__update()
+        self.__update(method_name='append')
 
-    @Observable.observed
     def set(self, selection):
         self.__selected.clear()
         # Do not add None values to selection
@@ -99,7 +108,7 @@ class Selection(Observable):
         else:
             selection = reduce_to_parent_states(selection)
         self.__selected.update(selection)
-        if self.__with_updates: self.__update()
+        self.__update(method_name='set')
 
     def __iter__(self):
         return self.__selected.__iter__()
@@ -113,99 +122,82 @@ class Selection(Observable):
     def __getitem__(self, key):
         return [s for s in self.__selected][key]
 
-    def __update(self):
+    def __update(self, method_name):
+        core_element_types_of_changed_lists = set()
         if not self._states == self.get_states():
-            self.states = self.get_states()
+            self._states = self.get_states()
+            core_element_types_of_changed_lists.add(State)
         if not self._transitions == self.get_transitions():
-            self.transitions = self.get_transitions()
+            self._transitions = self.get_transitions()
+            core_element_types_of_changed_lists.add(Transition)
         if not self._data_flows == self.get_data_flows():
-            self.data_flows = self.get_data_flows()
+            self._data_flows = self.get_data_flows()
+            core_element_types_of_changed_lists.add(DataFlow)
         if not self._input_data_ports == self.get_input_data_ports():
-            self.input_data_ports = self.get_input_data_ports()
+            self._input_data_ports = self.get_input_data_ports()
+            core_element_types_of_changed_lists.add(InputDataPort)
         if not self._output_data_ports == self.get_output_data_ports():
-            self.output_data_ports = self.get_output_data_ports()
+            self._output_data_ports = self.get_output_data_ports()
+            core_element_types_of_changed_lists.add(OutputDataPort)
         if not self._scoped_variables == self.get_scoped_variables():
-            self.scoped_variables = self.get_scoped_variables()
+            self._scoped_variables = self.get_scoped_variables()
+            core_element_types_of_changed_lists.add(ScopedVariable)
         if not self._outcomes == self.get_outcomes():
-            self.outcomes = self.get_outcomes()
+            self._outcomes = self.get_outcomes()
+            core_element_types_of_changed_lists.add(Outcome)
+
+        if core_element_types_of_changed_lists:
+            # emit selection changed signal
+            msg_namedtuple = SelectionChangedSignalMsg(method_name, core_element_types_of_changed_lists)
+            self.selection_changed_signal.emit(msg_namedtuple)
+            if self.parent_signal is not None:
+                self.parent_signal.emit(msg_namedtuple)
 
     @property
     def states(self):
         return self._states
 
-    @states.setter
-    @Observable.observed
-    def states(self, model_list):
-        assert all([isinstance(m, AbstractStateModel) for m in model_list])
-        assert self.get_states() == model_list
-        self._states = model_list
-
     @property
     def transitions(self):
         return self._transitions
-
-    @transitions.setter
-    @Observable.observed
-    def transitions(self, model_list):
-        assert all([isinstance(m, TransitionModel) for m in model_list])
-        assert self.get_transitions() == model_list
-        self._transitions = model_list
 
     @property
     def data_flows(self):
         return self._data_flows
 
-    @data_flows.setter
-    @Observable.observed
-    def data_flows(self, model_list):
-        assert all([isinstance(m, DataFlowModel) for m in model_list])
-        assert self.get_data_flows() == model_list
-        self._data_flows = model_list
-
     @property
     def outcomes(self):
         return self._outcomes
-
-    @outcomes.setter
-    @Observable.observed
-    def outcomes(self, model_list):
-        assert all([isinstance(m, OutcomeModel) for m in model_list])
-        assert self.get_outcomes() == model_list
-        self._outcomes = model_list
 
     @property
     def input_data_ports(self):
         return self._input_data_ports
 
-    @input_data_ports.setter
-    @Observable.observed
-    def input_data_ports(self, model_list):
-        assert all([isinstance(m, DataPortModel) and isinstance(m.data_port, InputDataPort) for m in model_list])
-        assert self.get_input_data_ports() == model_list
-        self._input_data_ports = model_list
-
     @property
     def output_data_ports(self):
         return self._output_data_ports
-
-    @output_data_ports.setter
-    @Observable.observed
-    def output_data_ports(self, model_list):
-        assert all([isinstance(m, DataPortModel) and isinstance(m.data_port, OutputDataPort)  for m in model_list])
-        assert self.get_output_data_ports() == model_list
-        self._output_data_ports = model_list
 
     @property
     def scoped_variables(self):
         return self._scoped_variables
 
-    @scoped_variables.setter
-    @Observable.observed
-    def scoped_variables(self, model_list):
-        """Observable selected scoped variable setter that is only usable by the class it self."""
-        assert all([isinstance(m, ScopedVariableModel) for m in model_list])
-        assert self.get_scoped_variables() == model_list
-        self._scoped_variables = model_list
+    def get_selection_of_core_element_type(self, core_element_type):
+        if core_element_type is Outcome:
+            return self.outcomes
+        elif core_element_type is InputDataPort:
+            return self.input_data_ports
+        elif core_element_type is OutputDataPort:
+            return self.output_data_ports
+        elif core_element_type is ScopedVariable:
+            return self.scoped_variables
+        elif core_element_type is Transition:
+            return self.transitions
+        elif core_element_type is DataFlow:
+            return self.data_flows
+        elif core_element_type is State:
+            return self.states
+        else:
+            logger.warning("There is no core element type '{0}' which selection could be requested".format(core_element_type))
 
     def is_selected(self, item):
         if item is None:
@@ -257,10 +249,9 @@ class Selection(Observable):
     def get_num_scoped_variables(self):
         return sum((1 for s in self.__selected if isinstance(s, ScopedVariableModel)))
 
-    @Observable.observed
     def clear(self):
         self.set([])
-        if self.__with_updates: self.__update()
+        self.__update(method_name='clear')
 
     def get_selected_state(self):
         selected_states = self.get_states()

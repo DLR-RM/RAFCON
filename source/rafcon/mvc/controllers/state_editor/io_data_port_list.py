@@ -14,6 +14,7 @@ from gtk import ListStore
 from gtk import TreeViewColumn, CellRendererToggle
 
 from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
 
 from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController, react_to_event
 from rafcon.mvc.models.abstract_state import AbstractStateModel
@@ -45,9 +46,11 @@ class DataPortListController(ListViewController):
         if self.type == "input":
             self.state_data_port_dict = self.model.state.input_data_ports
             self.data_port_model_list = self.model.input_data_ports
+            self.CORE_ELEMENT_CLASS = InputDataPort
         elif self.type == "output":
             self.state_data_port_dict = self.model.state.output_data_ports
             self.data_port_model_list = self.model.output_data_ports
+            self.CORE_ELEMENT_CLASS = OutputDataPort
 
         if self.model.get_sm_m_for_state_m() is not None:
             self.observe_model(self.model.get_sm_m_for_state_m())
@@ -149,21 +152,6 @@ class DataPortListController(ListViewController):
             else:
                 global_clipboard.paste(self.model, limited=['{0}_data_ports'.format(self.type)])
             return True
-
-    def get_state_machine_selection(self):
-        # print type(self).__name__, "get state machine selection", self.model.state.get_path()
-        sm_selection = self.model.get_sm_m_for_state_m().selection if self.model.get_sm_m_for_state_m() else None
-        sm_selected_model_list = None
-        if self.type == 'input':
-            sm_selected_model_list = sm_selection.input_data_ports if sm_selection else []
-        elif self.type == 'output':
-            sm_selected_model_list = sm_selection.output_data_ports if sm_selection else []
-        return sm_selection, sm_selected_model_list
-
-    @ListViewController.observe("selection", after=True)
-    def state_machine_selection_changed(self, model, prop_name, info):
-        if "{}_data_ports".format(self.type) == info['method_name']:
-            self.update_selection_sm_prior()
 
     @ListViewController.observe("input_data_ports", after=True)
     @ListViewController.observe("output_data_ports", after=True)

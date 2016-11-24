@@ -11,19 +11,18 @@
 
 import gtk
 
-from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.mvc.controllers.state_editor.state_editor import StateEditorController
-from rafcon.mvc.views.state_editor.state_editor import StateEditorView
-from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-from rafcon.mvc.models.container_state import ContainerStateModel
-from rafcon.mvc.models.abstract_state import AbstractStateModel
-from rafcon.mvc.selection import Selection
-from rafcon.mvc.singleton import gui_config_model
-
 from rafcon.mvc.config import global_gui_config
+from rafcon.mvc.controllers.state_editor.state_editor import StateEditorController
+from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
+from rafcon.mvc.models.abstract_state import AbstractStateModel
+from rafcon.mvc.models.container_state import ContainerStateModel
+from rafcon.mvc.models.selection import Selection
+from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
+from rafcon.mvc.singleton import gui_config_model
+from rafcon.mvc.utils import constants, helpers
 from rafcon.mvc.utils.notification_overview import NotificationOverview, \
     is_execution_status_update_notification_from_state_machine_model
-from rafcon.mvc.utils import constants, helpers
+from rafcon.mvc.views.state_editor.state_editor import StateEditorView
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -466,15 +465,15 @@ class StatesEditorController(ExtendedController):
         for state_identifier in states_to_be_closed:
             self.close_page(state_identifier, delete=False)
 
-    @ExtendedController.observe("selection", after=True)
+    @ExtendedController.observe("sm_selection_changed_signal", signal=True)
     def selection_notification(self, model, property, info):
         """If a single state is selected, open the corresponding tab"""
         if model != self.current_state_machine_m:
             return
-        selection = info.instance
-        assert isinstance(selection, Selection)
-        if selection.get_num_states() == 1 and len(selection) == 1:
-            self.activate_state_tab(selection.get_states()[0])
+        state_machine_m = model
+        assert isinstance(state_machine_m.selection, Selection)
+        if state_machine_m.selection.get_num_states() == 1 and len(state_machine_m.selection) == 1:
+            self.activate_state_tab(state_machine_m.selection.get_states()[0])
 
     @ExtendedController.observe("state_machine", after=True)
     def notify_state_removal(self, model, prop_name, info):

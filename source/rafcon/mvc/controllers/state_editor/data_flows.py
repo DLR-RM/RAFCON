@@ -14,6 +14,7 @@ from gtk import ListStore
 
 from rafcon.statemachine.state_elements.scope import ScopedVariable
 from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
+from rafcon.statemachine.state_elements.data_flow import DataFlow
 from rafcon.statemachine.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
@@ -35,6 +36,7 @@ class LinkageListController(ListViewController):
     no_update_state_destruction = True
     no_update_self_or_parent_state_destruction = True
     _model_observed = []
+    CORE_ELEMENT_CLASS = DataFlow
 
     def __init__(self, model, view, tree_view, list_store, logger):
         self.no_update = False  # used to reduce the update cost of the widget (e.g while no focus or complex changes)
@@ -490,16 +492,6 @@ class StateDataFlowsListController(LinkageListController):
         self._update_internal_data_base()
         self._update_tree_store()
         self.update_selection_sm_prior()
-
-    def get_state_machine_selection(self):
-        # print type(self).__name__, "get state machine selection", self.model
-        sm_selection = self.model.get_sm_m_for_state_m().selection if self.model.get_sm_m_for_state_m() else None
-        return sm_selection, sm_selection.data_flows if sm_selection else []
-
-    @LinkageListController.observe("selection", after=True)
-    def state_machine_selection_changed(self, model, prop_name, info):
-        if "data_flows" == info['method_name']:
-            self.update_selection_sm_prior()
 
     @LinkageListController.observe("state", before=True)
     def before_notification_of_parent_or_state(self, model, prop_name, info):
