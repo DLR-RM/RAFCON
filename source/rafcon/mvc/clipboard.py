@@ -29,7 +29,6 @@ class Clipboard(Observable):
         self.model_copies = {list_name: [] for list_name in self._container_state_unlimited}
 
         self.copy_parent_state_id = None
-        # TODO check if there can be a problem because of changing outcome ids
         self.outcome_id_mapping_dict = {}
         self.port_id_mapping_dict = {}
         # TODO check if it is secure that new state ids don't interfere with old state ids
@@ -42,9 +41,7 @@ class Clipboard(Observable):
 
     @property
     def clipboard_type(self):
-        """Property for the _clipboard_type field
-
-        """
+        """ Property for the _clipboard_type field """
         return self._clipboard_type
 
     @clipboard_type.setter
@@ -54,29 +51,29 @@ class Clipboard(Observable):
             raise TypeError("clipboard_type must be of type ClipBoardType")
         self._clipboard_type = clipboard_type
 
-    def copy(self, selection):
-        """
-        Copies all selected items to the clipboard.
-        Note: Multi selection is not implemented yet. Only one item allowe right now.
+    def copy(self, selection, smart_selection_adaption=True):
+        """ Copy all selected items to the clipboard using smart selection adaptation by default
+        
         :param selection: the current selection
+        .param bool smart_selection_adaption: flag to enable smart selection adaptation mode
         :return:
         """
         assert isinstance(selection, Selection)
         self.reset_clipboard()
         self.clipboard_type = ClipboardType.COPY
-        self.__create_core_object_copies(selection)
+        self.__create_core_object_copies(selection, smart_selection_adaption)
 
-    def cut(self, selection):
-        """
-        Cuts all selected items and copy them to the clipboard.
-        Note: Multi selection is not implemented yet. Only one item allowed right now.
+    def cut(self, selection, smart_selection_adaption=True):
+        """Cuts all selected items and copy them to the clipboard using smart selection adaptation by default
+
         :param selection: the current selection
+        .param bool smart_selection_adaption: flag to enable smart selection adaptation mode
         :return:
         """
         assert isinstance(selection, Selection)
         self.reset_clipboard()
         self.clipboard_type = ClipboardType.CUT
-        self.__create_core_object_copies(selection)
+        self.__create_core_object_copies(selection, smart_selection_adaption)
 
     def prepare_new_copy(self):
         self.model_copies = deepcopy(self.model_copies)
@@ -86,7 +83,7 @@ class Clipboard(Observable):
 
         The method checks whether the target state is a execution state or a container state and inserts respective
         elements and notifies the user if the parts can not be insert to the target state.
-        - for ExecutionStates outcomes, input- and output-data ports can be insert (outcomes outcome_id > 0 are ignored)
+        - for ExecutionStates outcomes, input- and output-data ports can be insert
         - for ContainerState additional states, scoped variables and data flows and/or transitions (if related) can be insert
 
         Related data flows and transitions are determined by origin and target keys and respective objects which has to
@@ -258,44 +255,17 @@ class Clipboard(Observable):
         self.port_id_mapping_dict = {}
         self.state_id_mapping_dict = {}
 
-    def __create_core_object_copies(self, selection):
-        """Copy all elements of a selection.
+    @staticmethod
+    def do_selection_reduction_to_one_parent(selection):
+        """ Find and reduce selection to one parent state.
 
-         The method copies all objects and checks and ignores directly data flows and transitions which are selected
-         without related origin or targets. Additional the method copies elements linkage (data flows and transitions)
-         if those origins and targets are covered by the selected elements. Therefore the selection it self is manipulated
-         to provide direct feedback to the user.
-
-        :param selection: an arbitrary selection, whose elements should be copied
-        :return:
+        :param selection:
+        :return: state model which is parent of selection or None if root state
         """
 
-        def get_ports_related_to_data_flow(data_flow):
-            from_port = data_flow.parent.get_data_port(data_flow.from_state, data_flow.from_key)
-            to_port = data_flow.parent.get_data_port(data_flow.to_state, data_flow.to_key)
-            return from_port, to_port
-
-        def get_states_related_to_transition(transition):
-            if transition.from_state == transition.parent.state_id or transition.from_state is None:
-                from_state = transition.parent
-            else:
-                from_state = transition.parent.states[transition.from_state]
-            if transition.to_state == transition.parent.state_id:
-                to_state = transition.parent
-            else:
-                to_state = transition.parent.states[transition.to_state]
-            if transition.to_outcome in transition.parent.outcomes:
-                to_outcome = transition.parent.outcomes[transition.to_outcome]
-            else:
-                to_outcome = transition.to_outcome
-            return from_state, to_state, to_outcome
-
         all_models_selected = selection.get_all()
-        if not all_models_selected:
-            logger.warning("Nothing to copy because state machine selection is empty.")
-            return
-
-        # check if all elements that are copied are on one hierarchy level -> TODO or in future are parts of sibling
+        # check if all elements selected are on one hierarchy level -> TODO or in future are parts of sibling?!
+        # if not take the state with the most siblings as the copy root
         parent_m_count_dict = {}
         for model in all_models_selected:
             parent_m_count_dict[model.parent] = parent_m_count_dict[model.parent] + 1 if model.parent in parent_m_count_dict else 1
@@ -314,7 +284,43 @@ class Clipboard(Observable):
             for model in all_models_selected:
                 if model.parent is not parent_m:
                     selection.remove(model)
-            self.copy_parent_state_id = parent_m.state.state_id
+
+        return parent_m
+
+    @staticmethod
+    def do_smart_selection_adaption(selection, parent_m):
+        """ Reduce and extend transition and data flow element selection if already enclosed by selection
+
+         The smart selection adaptation checks and ignores directly data flows and transitions which are selected
+         without selected related origin or targets elements. Additional the linkage (data flows and transitions)
+         if those origins and targets are covered by the selected elements is added to the selection.
+         Thereby the selection it self is manipulated to provide direct feedback to the user.
+
+        :param selection:
+        :param parent_m:
+        :return:
+        """
+
+        def get_ports_related_to_data_flow(data_flow):
+            from_port = data_flow.parent.get_data_port(data_flow.from_state, data_flow.from_key)
+            to_port = data_flow.parent.get_data_port(data_flow.to_state, data_flow.to_key)
+            return from_port, to_port
+
+
+        def get_states_related_to_transition(transition):
+            if transition.from_state == transition.parent.state_id or transition.from_state is None:
+                from_state = transition.parent
+            else:
+                from_state = transition.parent.states[transition.from_state]
+            if transition.to_state == transition.parent.state_id:
+                to_state = transition.parent
+            else:
+                to_state = transition.parent.states[transition.to_state]
+            if transition.to_outcome in transition.parent.outcomes:
+                to_outcome = transition.parent.outcomes[transition.to_outcome]
+            else:
+                to_outcome = transition.to_outcome
+            return from_state, to_state, to_outcome
 
         # reduce linkage selection by not fully by selection covered linkage
         possible_states = [state_m.state for state_m in selection.states]
@@ -359,6 +365,29 @@ class Clipboard(Observable):
                 from_state, to_state, to_oc = get_states_related_to_transition(transition)
                 if from_state in possible_states and to_oc in possible_outcomes:
                     selection.add(parent_m.get_transition_m(transition_id))
+
+    def __create_core_object_copies(self, selection, smart_selection_adaption):
+        """Copy all elements of a selection.
+
+         The method copies all objects and modifies the selection before copying the elements if the smart flag is true.
+         The smart selection adaption is by default enabled. In any case the selection is reduced to have one parent
+         state that is used as the root of copy, except a root state it self is selected.
+
+        :param Selection selection: an arbitrary selection, whose elements should be copied
+        .param bool smart_selection_adaption: flag to enable smart selection adaptation mode
+        :return:
+        """
+
+        all_models_selected = selection.get_all()
+        if not all_models_selected:
+            logger.warning("Nothing to copy because state machine selection is empty.")
+            return
+
+        parent_m = self.do_selection_reduction_to_one_parent(selection)
+        self.copy_parent_state_id = parent_m.state.state_id if parent_m else None
+
+        if smart_selection_adaption:
+            self.do_smart_selection_adaption(selection, parent_m)
 
         # store all lists of selection
         for list_name in self._container_state_unlimited:
