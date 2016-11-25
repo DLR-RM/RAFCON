@@ -496,6 +496,26 @@ class TreeViewController(ExtendedController):
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         self.update_selection_sm_prior()
 
+    def copy_action_callback(self, *event):
+        """Callback method for copy action"""
+        if react_to_event(self.view, self.tree_view, event):
+            sm_selection, sm_selected_model_list = self.get_state_machine_selection()
+            # only list specific elements are copied by widget
+            if sm_selection is not None:
+                sm_selection.set(sm_selected_model_list)
+                global_clipboard.copy(sm_selection)
+                return True
+
+    def cut_action_callback(self, *event):
+        """Callback method for copy action"""
+        if react_to_event(self.view, self.tree_view, event):
+            sm_selection, sm_selected_model_list = self.get_state_machine_selection()
+            # only list specific elements are cut by widget
+            if sm_selection is not None:
+                sm_selection.set(sm_selected_model_list)
+                global_clipboard.cut(sm_selection)
+                return True
+
     def _setup_tree_view(self, tree_view, tree_store):
         self.tree_view = tree_view
         self.tree_view.set_model(tree_store)
@@ -519,7 +539,6 @@ class TreeViewController(ExtendedController):
         :return: selection
         :rtype: rafcon.mvc.selection.Selection
         """
-        self._logger.info(self.__class__.__name__)
         raise NotImplementedError
 
     def get_selections(self):
