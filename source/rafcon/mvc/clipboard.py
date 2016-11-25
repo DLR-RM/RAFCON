@@ -1,16 +1,18 @@
 from copy import deepcopy
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
 
 from enum import Enum
 from gtkmvc import Observable
-from rafcon.mvc.models.selection import Selection
-from rafcon.mvc.models.state import StateModel
+
 from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.statemachine.state_elements.scope import ScopedVariable
 from rafcon.statemachine.id_generator import state_id_generator
 from rafcon.statemachine.states.container_state import ContainerState
+
+from rafcon.mvc.models.selection import Selection
+from rafcon.mvc.models.state import StateModel
+
+from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 ClipboardType = Enum('CLIPBOARD_TYPE', 'CUT COPY')
 
@@ -92,7 +94,7 @@ class Clipboard(Observable):
         :param cursor_position: cursor position used to adapt meta data positioning of elements e.g states and via points
         :return:
         """
-        assert isinstance(target_state_m, StateModel) # in future Execution states can be used, too
+        assert isinstance(target_state_m, StateModel)
 
         # update meta data of clipboard elements to adapt for new parent state
         logger.info("PASTE -> meta data adaptation has to be implemented {0}".format(self.clipboard_type))
@@ -152,7 +154,7 @@ class Clipboard(Observable):
             for model in self.selected_models[list_name]:
                 # remove model from selection to avoid conflicts
                 # -> selection is not observing state machine changes and state machine model is not updating it
-                if model.parent is None and isinstance(model.state, StateModel) and model.state.is_root_state:
+                if model.parent is None and isinstance(model, StateModel) and model.state.is_root_state:
                     selection = model.get_sm_m_for_state_m().selection if model.get_sm_m_for_state_m() else None
                 else:
                     selection = model.parent.get_sm_m_for_state_m().selection if model.parent.get_sm_m_for_state_m() else None
