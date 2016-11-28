@@ -696,6 +696,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if not self.is_root_state:
             # Call the check in the parent state, where the data flows are stored
             return self.parent.check_data_port_connection(check_data_port)
+        else:
+            from rafcon.statemachine.states.container_state import ContainerState
+            if isinstance(self, ContainerState):
+                return self.check_data_port_connection(check_data_port)
 
         return True, "valid"
 

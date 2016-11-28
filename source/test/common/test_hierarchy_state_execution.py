@@ -25,8 +25,8 @@ def create_hierarchy_state():
     state2.set_start_state(state1.state_id)
     state2.add_outcome("Container_Outcome", 6)
     transition_id = state2.add_transition(state1.state_id, 3, state2.state_id, 6)
-    print state2.transitions[transition_id]
-    state2.add_input_data_port("input1", "float", 42.0)
+    # print state2.transitions[transition_id]
+    input_data_port_id = state2.add_input_data_port("input1", "float", 42.0, data_port_id=42)
     state2.add_output_data_port("output1", "float")
     state2.add_data_flow(state2.state_id,
                          state2.get_io_data_port_id_from_name_and_type("input1", DataPortType.INPUT),
@@ -43,6 +43,12 @@ def test_hierarchy_state_execution(caplog):
     hierarchy_state = create_hierarchy_state()
 
     state_machine = StateMachine(hierarchy_state)
+
+    try:
+        # Changing the data type has to fail, as the data port is already connected to a data flow
+        state_machine.root_state.input_data_ports[42].data_type = str
+    except Exception, e:
+        assert isinstance(e, ValueError)
 
     testing_utils.test_multithreading_lock.acquire()
     rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)

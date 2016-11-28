@@ -1748,8 +1748,12 @@ class ContainerState(State):
         from_data_port = self.get_data_port(check_data_flow.from_state, check_data_flow.from_key)
         to_data_port = self.get_data_port(check_data_flow.to_state, check_data_flow.to_key)
         if not type_inherits_of_type(from_data_port.data_type, to_data_port.data_type):
-            return False, "Data flow origin and target do not have matching data types (from '{0}' to '{1}')".format(
-                from_data_port.data_type, to_data_port.data_type)
+            return False, "Data flow (id: {0}) origin ({1}) and target ({2}) do not have matching data types " \
+                          "(from '{3}' to '{4}')".format(check_data_flow.data_flow_id,
+                                                         from_data_port.parent.name,
+                                                         to_data_port.parent.name,
+                                                         from_data_port.data_type,
+                                                         to_data_port.data_type)
         return True, "valid"
 
     def _check_transition_validity(self, check_transition):
