@@ -41,10 +41,10 @@ class GraphicalEditorView(View, gobject.GObject):
             append(ConnectionModificationTool()). \
             append(tool.PanTool()). \
             append(tool.ZoomTool()). \
-            append(MoveItemTool(self)). \
-            append(MultiSelectionTool(self)). \
-            append(RemoveItemTool(self)). \
-            append(RightClickTool(self))
+            append(MoveItemTool()). \
+            append(MultiSelectionTool()). \
+            append(RemoveItemTool()). \
+            append(RightClickTool())
         self.editor.painter = painter.PainterChain(). \
             append(painter.ItemPainter()). \
             append(StateCornerHandlePainter()). \
