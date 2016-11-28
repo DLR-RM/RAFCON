@@ -13,7 +13,7 @@ import time
 
 from gtkmvc import Observable
 
-from rafcon.statemachine.enums import DataPortType
+from rafcon.statemachine.state_elements.data_port import DataPortType
 from rafcon.statemachine.state_elements.data_port import DataPort
 from rafcon.statemachine.decorators import lock_state_machine
 from rafcon.utils import type_helpers

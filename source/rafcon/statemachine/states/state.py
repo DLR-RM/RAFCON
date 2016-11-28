@@ -20,7 +20,8 @@ from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
-from rafcon.statemachine.enums import DataPortType, StateExecutionStatus
+from rafcon.statemachine.enums import StateExecutionStatus
+from rafcon.statemachine.state_elements.data_port import DataPortType
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.state_elements.state_element import StateElement
 from rafcon.statemachine.state_elements.data_port import DataPort, InputDataPort, OutputDataPort

@@ -7,7 +7,7 @@
 
 
 """
-
+from enum import Enum
 from gtkmvc import Observable
 
 from rafcon.statemachine.id_generator import generate_data_port_id
@@ -228,3 +228,6 @@ class InputDataPort(DataPort):
 class OutputDataPort(DataPort):
 
     yaml_tag = u'!OutputDataPort'
+
+
+DataPortType = Enum('DATA_PORT_TYPE', 'INPUT OUTPUT SCOPED')
