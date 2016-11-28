@@ -3,6 +3,7 @@ import os
 import gtk
 import threading
 import Queue
+import psutil
 
 # mvc elements
 import rafcon.mvc.singleton
@@ -24,31 +25,25 @@ import testing_utils as t_u
 logger = log.get_logger(__name__)
 
 
+def grep_process_ids(process_name):
+    gedit_instances = []
+    for process in psutil.process_iter():
+        if process_name in process.name():
+            # print process_name, process.name(), process.pid
+            gedit_instances.append(process.pid)
+    return gedit_instances
+
+
 def find_running_process(process_name):
-
-    popen_return_string = str(os.popen("ps cax | grep " + process_name).read())
-
-    if not popen_return_string:
-        logger.debug("popen | grep <process_name> didn't returned None")
-        return False
-    running = popen_return_string.split(' ')
-
-    for entry in running:
-        if (process_name + '\n') in entry:
-            return True
-    return False
+    return len(grep_process_ids(process_name)) > 0
 
 
 def kill_running_processes(process_name):
-    popen_return_string = str(os.popen("ps cax | grep " + process_name).read())
 
-    if not popen_return_string:
-        return
-    running = popen_return_string.split('\n')
-    running.pop()
-    for entry in running:
-        parts = entry.split(' ')
-        os.system('kill ' + parts[0])
+    instances = grep_process_ids(process_name)
+
+    for pid in instances:
+        os.system('kill ' + str(pid))
 
 
 def check_for_editor(editor):
