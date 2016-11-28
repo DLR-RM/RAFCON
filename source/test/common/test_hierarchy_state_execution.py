@@ -17,6 +17,7 @@ def create_hierarchy_state():
     state1 = ExecutionState("MyFirstState", path=rafcon.__path__[0] + "/../test_scripts", filename="first_execution_state.py")
     state1.add_outcome("MyFirstOutcome", 3)
     state1.add_input_data_port("data_input_port1", "float")
+    state1.add_output_data_port("faulty_output_port", "float")
     state1.add_output_data_port("data_output_port1", "float")
 
     state2 = HierarchyState("MyFirstHierarchyState")
@@ -52,7 +53,7 @@ def test_hierarchy_state_execution(caplog):
     testing_utils.test_multithreading_lock.release()
 
     assert hierarchy_state.output_data["output1"] == 52.0
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors=1)
 
 
 def test_hierarchy_save_load_test(caplog):
@@ -75,7 +76,9 @@ def test_hierarchy_save_load_test(caplog):
     testing_utils.test_multithreading_lock.release()
 
     assert state_machine.root_state.output_data["output1"] == 52.0
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors=1)
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    test_hierarchy_state_execution(None)
+    test_hierarchy_save_load_test(None)
+    # pytest.main([__file__])
