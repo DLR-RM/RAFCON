@@ -69,9 +69,9 @@ class GuiConfig(ObservableConfig):
         gtk.window_set_default_icon_from_file(os.path.join(logo_path, "RAFCON_figurative_mark_negative.svg"))
         if not os.path.exists(gtkrc_file_path):
             raise ValueError("GTK theme '{0}' does not exist".format(theme))
-        # TODO: this is a hack, but decreases the chance that RAFCON does not start up as rc_parse does not return
-        import time
-        time.sleep(0.3)
+        # wait for all gtk events being processed before parsing the gtkrc file
+        while gtk.events_pending():
+            gtk.main_iteration(False)
         gtk.rc_parse(gtkrc_file_path)
 
     def configure_fonts(self):
