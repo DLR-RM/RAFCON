@@ -145,6 +145,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return item in self.outcomes.values() or item in self.input_data_ports.values() \
                or item in self.output_data_ports.values()
 
+    @property
+    def core_element_id(self):
+        return self._state_id
+
     def to_dict(self):
         return self.state_to_dict(self)
 

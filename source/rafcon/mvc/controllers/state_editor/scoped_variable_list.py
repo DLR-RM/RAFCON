@@ -12,6 +12,7 @@ import gtk
 import gobject
 
 from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.statemachine.state_elements.scope import ScopedVariable
 
 from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController, react_to_event
 from rafcon.mvc.models.container_state import ContainerStateModel
@@ -35,6 +36,7 @@ class ScopedVariableListController(ListViewController):
     DEFAULT_VALUE_STORAGE_ID = 2
     ID_STORAGE_ID = 3
     MODEL_STORAGE_ID = 4
+    CORE_ELEMENT_CLASS = ScopedVariable
 
     def __init__(self, model, view):
         """Constructor"""
@@ -98,22 +100,13 @@ class ScopedVariableListController(ListViewController):
          the objects of differing port type (in the clipboard) have.
         """
         if react_to_event(self.view, self.tree_view, event):
-            if not getattr(global_clipboard, "scoped_variable_model_copies".format(self.type)) and \
-                    (global_clipboard.input_data_port_model_copies or global_clipboard.output_data_port_model_copies):
+            if not global_clipboard.model_copies["scoped_variables"] and \
+                    (global_clipboard.model_copies["input_data_ports"] or
+                     global_clipboard.model_copies["output_data_ports"]):
                 global_clipboard.paste(self.model, limited=['scoped_variables'], convert=True)
             else:
                 global_clipboard.paste(self.model, limited=['scoped_variables'])
             return True
-
-    def get_state_machine_selection(self):
-        # print type(self).__name__, "get state machine selection"
-        sm_selection = self.model.get_sm_m_for_state_m().selection if self.model.get_sm_m_for_state_m() else None
-        return sm_selection, sm_selection.scoped_variables if sm_selection else []
-
-    @ListViewController.observe("selection", after=True)
-    def state_machine_selection_changed(self, model, prop_name, info):
-        if "scoped_variables" == info['method_name']:
-            self.update_selection_sm_prior()
 
     @ListViewController.observe("scoped_variables", after=True)
     def scoped_variables_changed(self, model, prop_name, info):

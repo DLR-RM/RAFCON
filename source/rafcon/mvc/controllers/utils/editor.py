@@ -85,9 +85,7 @@ class EditorController(ExtendedController):
 
         if react_to_event(self.view, self.view.textview, event):
             logger.debug("Apply short-cut pressed {}".format(self.__class__.__name__))
-            tbuffer = self.view.get_buffer()
-            current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
-            if self.source_text == current_text:
+            if self.source_text == self.view.get_text():
                 logger.debug("Nothing to apply {}".format(self.__class__.__name__))
             else:
                 self.apply_clicked(None)
@@ -120,10 +118,7 @@ class EditorController(ExtendedController):
         if isinstance(self.model.state, LibraryState):
             return
 
-        tbuffer = self.view.get_buffer()
-        current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
-
-        self.set_script_text(current_text)
+        self.set_script_text(self.view.get_text())
 
     def set_script_text(self, text):
         if not self.source_text == text:

@@ -1,22 +1,22 @@
 import os
 import threading
 from copy import copy, deepcopy
+
 from gtkmvc import ModelMT, Signal
 
+from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.models import ContainerStateModel, StateModel
+from rafcon.mvc.models.selection import Selection
 from rafcon.mvc.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg
-from rafcon.mvc.selection import Selection
-
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.storage import storage
 
-from rafcon.mvc.config import global_gui_config
+from rafcon.utils import log
+from rafcon.utils import storage_utils
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
-from rafcon.utils import storage_utils
-from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
@@ -34,10 +34,11 @@ class StateMachineModel(ModelMT, Hashable):
     root_state = None
     meta_signal = Signal()
     state_meta_signal = Signal()
+    sm_selection_changed_signal = Signal()
 
     suppress_new_root_state_model_one_time = False
 
-    __observables__ = ("state_machine", "root_state", "selection", "meta_signal", "state_meta_signal")
+    __observables__ = ("state_machine", "root_state", "meta_signal", "state_meta_signal", "sm_selection_changed_signal")
 
     def __init__(self, state_machine, sm_manager_model, meta=None, load_meta_data=True):
         """Constructor
@@ -62,13 +63,14 @@ class StateMachineModel(ModelMT, Hashable):
             self.meta = Vividict()
         self.meta_signal = Signal()
         self.state_meta_signal = Signal()
+        self.sm_selection_changed_signal = Signal()
 
         self.temp = Vividict()
 
         if load_meta_data:
             self.load_meta_data(recursively=False)
 
-        self.selection = Selection()
+        self.selection = Selection(self.sm_selection_changed_signal)
 
         self.storage_lock = threading.Lock()
 

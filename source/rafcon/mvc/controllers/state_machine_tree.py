@@ -14,12 +14,13 @@ import gtk
 import gobject
 
 from rafcon.statemachine.enums import StateType
+from rafcon.statemachine.states.state import State
 
 from rafcon.mvc.controllers.utils.tree_view_controller import TreeViewController
 from rafcon.mvc.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
 from rafcon.mvc.models import ContainerStateModel
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
-
+from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc import state_machine_helper
 from rafcon.mvc.gui_helper import react_to_event
 from rafcon.mvc.utils.notification_overview import NotificationOverview, \
@@ -27,9 +28,6 @@ from rafcon.mvc.utils.notification_overview import NotificationOverview, \
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
-
-
-# TODO Comment
 
 
 class StateMachineTreeController(TreeViewController):
@@ -47,6 +45,7 @@ class StateMachineTreeController(TreeViewController):
     TYPE_NAME_STORAGE_ID = 2
     MODEL_STORAGE_ID = 3
     STATE_PATH_STORAGE_ID = 4
+    CORE_ELEMENT_CLASS = State
 
     def __init__(self, model, view):
         assert isinstance(model, StateMachineManagerModel)
@@ -73,9 +72,6 @@ class StateMachineTreeController(TreeViewController):
         self.update(with_expand=True)
         super(StateMachineTreeController, self).register_view(view)
 
-    def register_adapters(self):
-        pass
-
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
@@ -85,6 +81,9 @@ class StateMachineTreeController(TreeViewController):
         shortcut_manager.add_callback_for_action("delete", self._delete_selection)
         shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))
         shortcut_manager.add_callback_for_action("add2", partial(self._add_new_state, state_type=StateType.HIERARCHY))
+        shortcut_manager.add_callback_for_action("copy", self.copy_action_callback)
+        shortcut_manager.add_callback_for_action("cut", self.cut_action_callback)
+        shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
 
     def register(self):
         """Change the state machine that is observed for new selected states to the selected state machine."""
@@ -101,6 +100,17 @@ class StateMachineTreeController(TreeViewController):
         else:
             self._selected_sm_model = None
             self.tree_store.clear()
+
+    def paste_action_callback(self, *event):
+        """Callback method for paste action"""
+        if react_to_event(self.view, self.tree_view, event):
+            sm_selection, sm_selected_model_list = self.get_state_machine_selection()
+            # only list specific elements are cut by widget
+            if len(sm_selection.states) == 1:
+                global_clipboard.paste(sm_selection.get_selected_state(), limited=['states', 'transitions', 'data_flows'])
+            else:
+                logger.warning("Please select only one state to paste.")
+            return True
 
     def _add_new_state(self, *event, **kwargs):
         """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
@@ -202,10 +212,10 @@ class StateMachineTreeController(TreeViewController):
                     "expansion state of state machine {0} could not be re-done".format(self.__my_selected_sm_id))
 
     def update(self, changed_state_model=None, with_expand=False):
-        """
-        Function checks if all states are in tree and if tree has states which were deleted
+        """Checks if all states are in tree and if tree has states which were deleted
 
-        :param changed_state_model:
+        :param changed_state_model: Model that row has to be updated
+        :param with_expand: The expand flag for the tree
         """
         if not self.view_is_registered:
             return
@@ -231,7 +241,6 @@ class StateMachineTreeController(TreeViewController):
 
     def update_tree_store_row(self, state_model):
         state_row_iter = self.state_row_iter_dict_by_state_path[state_model.state.get_path()]
-        # print "\n\n####### 1 ######## {0}".format(state_row_iter)
         # print "check for update row of state: ", state_model.state.get_path()
         state_row_path = self.tree_store.get_path(state_row_iter)
 
@@ -291,7 +300,7 @@ class StateMachineTreeController(TreeViewController):
         if self._selected_sm_model:
             return self._selected_sm_model.selection, self._selected_sm_model.selection.states
         else:
-            return None, None
+            return None, []
 
     def mouse_click(self, widget, event=None):
         # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}"
@@ -310,9 +319,10 @@ class StateMachineTreeController(TreeViewController):
 
             return True
 
-    @TreeViewController.observe("selection", after=True)
+    @TreeViewController.observe("sm_selection_changed_signal", signal=True)
     def assign_notification_selection(self, model, prop_name, info):
-        if info is None and self._selected_sm_model and self._selected_sm_model.selection.get_selected_state() or \
-                info and self.tree_store.get_iter_root() and info['method_name'] == 'states':
+        if model is None and self._selected_sm_model and self._selected_sm_model.selection.get_selected_state() or \
+                info and self.tree_store.get_iter_root() and self.CORE_ELEMENT_CLASS in info.arg.core_element_types:
+            assert self._selected_sm_model is model or model is None
             # logger.info("selection state {0}".format(info))
             self.update_selection_sm_prior()

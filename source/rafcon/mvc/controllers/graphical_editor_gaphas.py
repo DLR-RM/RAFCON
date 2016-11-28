@@ -593,7 +593,7 @@ class GraphicalEditorController(ExtendedController):
         except Exception as e:
             logger.error('Error while trying to emit meta data signal {}'.format(e))
 
-    @ExtendedController.observe("selection", after=True)
+    @ExtendedController.observe("sm_selection_changed_signal", signal=True)
     def selection_change(self, model, prop_name, info):
         """Called when the selection was changed externally
 

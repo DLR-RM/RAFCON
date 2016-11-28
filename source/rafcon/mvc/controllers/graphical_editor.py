@@ -232,7 +232,7 @@ class GraphicalEditorController(ExtendedController):
             self.root_state_m = model.root_state
             self._redraw()
 
-    @ExtendedController.observe("selection", after=True)
+    @ExtendedController.observe("sm_selection_changed_signal", signal=True)
     @lock_state_machine
     def selection_change(self, model, prop_name, info):
         """Called when the selection was changed externally

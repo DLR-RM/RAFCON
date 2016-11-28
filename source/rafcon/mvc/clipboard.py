@@ -1,75 +1,49 @@
 from copy import deepcopy
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
 
 from enum import Enum
 from gtkmvc import Observable
-from rafcon.mvc.selection import Selection
-from rafcon.mvc.models.state import StateModel
-from rafcon.mvc.models.scoped_variable import ScopedVariableModel
+
+from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
+from rafcon.statemachine.state_elements.scope import ScopedVariable
 from rafcon.statemachine.id_generator import state_id_generator
 from rafcon.statemachine.states.container_state import ContainerState
 
-ClipboardType = Enum('CLIPBOARD_TYPE', 'CUT COPY')
+from rafcon.mvc.models.selection import Selection
+from rafcon.mvc.models.state import StateModel
 
-def get_port_m_core_element(port_m):
-    if isinstance(port_m, ScopedVariableModel):
-        return port_m.scoped_variable
-    else:
-        return port_m.data_port
+from rafcon.utils import log
+logger = log.get_logger(__name__)
+
+ClipboardType = Enum('CLIPBOARD_TYPE', 'CUT COPY')
 
 
 class Clipboard(Observable):
     """A class to hold models and selection for later usage in cut/paste or copy/paste actions.
     In cut/paste action the selection stored is used while later paste. In a copy/paste actions
     """
+    _execution_state_unlimited = ['outcomes', 'input_data_ports', 'output_data_ports']
+    _container_state_unlimited = _execution_state_unlimited + ['scoped_variables', 'states', 'transitions', 'data_flows']
 
     def __init__(self):
         Observable.__init__(self)
-        self._selection = None
 
-        self.selected_outcome_models = []
-        self.outcome_model_copies = []
-
-        self.selected_input_data_port_models = []
-        self.input_data_port_model_copies = []
-
-        self.selected_output_data_port_models = []
-        self.output_data_port_model_copies = []
-
-        self.selected_scoped_variable_models = []
-        self.scoped_variable_model_copies = []
-
-        self.selected_state_models = []
-        self.state_model_copies = []
-
-        self.selected_transition_models = []
-        self.transition_model_copies = []
-
-        self.selected_data_flow_models = []
-        self.data_flow_model_copies = []
+        self.selected_models = {list_name: [] for list_name in self._container_state_unlimited}
+        self.model_copies = {list_name: [] for list_name in self._container_state_unlimited}
 
         self.copy_parent_state_id = None
-        # TODO finish implementation of outcome id mapping
         self.outcome_id_mapping_dict = {}
         self.port_id_mapping_dict = {}
         # TODO check if it is secure that new state ids don't interfere with old state ids
         self.state_id_mapping_dict = {}
 
-        # self._state_machine_id = None
         self._clipboard_type = None
 
     def __str__(self):
-        return "Clipboard:\nselection: %s\nstate_machine_id: %s\nclipboard_type: %s" % (str(self.selection),
-                                                                                        str(self.state_machine_id),
-                                                                                        str(self.clipboard_type))
+        return "Clipboard:\nselection: {0}\nclipboard_type: {1}".format(self.selected_models,self.clipboard_type)
 
     @property
     def clipboard_type(self):
-        """Property for the _clipboard_type field
-
-        """
+        """ Property for the _clipboard_type field """
         return self._clipboard_type
 
     @clipboard_type.setter
@@ -79,45 +53,39 @@ class Clipboard(Observable):
             raise TypeError("clipboard_type must be of type ClipBoardType")
         self._clipboard_type = clipboard_type
 
-    def copy(self, selection):
-        """
-        Copies all selected items to the clipboard.
-        Note: Multi selection is not implemented yet. Only one item allowe right now.
+    def copy(self, selection, smart_selection_adaption=True):
+        """ Copy all selected items to the clipboard using smart selection adaptation by default
+        
         :param selection: the current selection
+        .param bool smart_selection_adaption: flag to enable smart selection adaptation mode
         :return:
         """
         assert isinstance(selection, Selection)
         self.reset_clipboard()
         self.clipboard_type = ClipboardType.COPY
-        self.__create_core_object_copies(selection)
+        self.__create_core_object_copies(selection, smart_selection_adaption)
 
-    def cut(self, selection):
-        """
-        Cuts all selected items and copy them to the clipboard.
-        Note: Multi selection is not implemented yet. Only one item allowed right now.
+    def cut(self, selection, smart_selection_adaption=True):
+        """Cuts all selected items and copy them to the clipboard using smart selection adaptation by default
+
         :param selection: the current selection
+        .param bool smart_selection_adaption: flag to enable smart selection adaptation mode
         :return:
         """
         assert isinstance(selection, Selection)
         self.reset_clipboard()
         self.clipboard_type = ClipboardType.CUT
-        self.__create_core_object_copies(selection)
+        self.__create_core_object_copies(selection, smart_selection_adaption)
 
     def prepare_new_copy(self):
-        self.outcome_model_copies = [deepcopy(model) for model in self.outcome_model_copies]
-        self.input_data_port_model_copies = [deepcopy(model) for model in self.input_data_port_model_copies]
-        self.output_data_port_model_copies = [deepcopy(model) for model in self.output_data_port_model_copies]
-        self.scoped_variable_model_copies = [deepcopy(model) for model in self.scoped_variable_model_copies]
-        self.state_model_copies = [deepcopy(model) for model in self.state_model_copies]
-        self.transition_model_copies = [deepcopy(model) for model in self.transition_model_copies]
-        self.data_flow_model_copies = [deepcopy(model) for model in self.data_flow_model_copies]
+        self.model_copies = deepcopy(self.model_copies)
 
     def paste(self, target_state_m, cursor_position=None, limited=None, convert=False):
         """Paste objects to target state
 
         The method checks whether the target state is a execution state or a container state and inserts respective
         elements and notifies the user if the parts can not be insert to the target state.
-        - for ExecutionStates outcomes, input- and output-data ports can be insert (outcomes outcome_id > 0 are ignored)
+        - for ExecutionStates outcomes, input- and output-data ports can be insert
         - for ContainerState additional states, scoped variables and data flows and/or transitions (if related) can be insert
 
         Related data flows and transitions are determined by origin and target keys and respective objects which has to
@@ -126,22 +94,36 @@ class Clipboard(Observable):
         :param cursor_position: cursor position used to adapt meta data positioning of elements e.g states and via points
         :return:
         """
-        assert isinstance(target_state_m, StateModel) # in future Execution states can be used, too
+        assert isinstance(target_state_m, StateModel)
 
         # update meta data of clipboard elements to adapt for new parent state
         logger.info("PASTE -> meta data adaptation has to be implemented {0}".format(self.clipboard_type))
 
-        oc_m_copy_list = self.outcome_model_copies
-        ip_m_copy_list = self.input_data_port_model_copies
-        op_m_copy_list = self.output_data_port_model_copies
-        sv_m_copy_list = self.scoped_variable_model_copies
-        state_m_copy_list = self.state_model_copies
-        t_m_copy_list = self.transition_model_copies
-        df_m_copy_list = self.data_flow_model_copies
-
+        element_m_copy_lists = self.model_copies
         self.prepare_new_copy()  # threaded in future -> important that the copy is prepared here!!!
 
         self.state_id_mapping_dict[self.copy_parent_state_id] = target_state_m.state.state_id
+
+        # prepare list of lists to copy for limited or converted paste of objects
+        if isinstance(target_state_m.state, ContainerState):
+            tolerated_lists = self._container_state_unlimited
+        else:
+            tolerated_lists = self._execution_state_unlimited
+        if limited and all([list_name in tolerated_lists for list_name in limited]):
+            if len(limited) == 1 and limited[0] in ['input_data_ports', 'output_data_ports', 'scoped_variables'] and convert:
+                combined_list = element_m_copy_lists['input_data_ports'] + element_m_copy_lists['output_data_ports'] + \
+                                element_m_copy_lists['scoped_variables']
+                for list_name in ['input_data_ports', 'output_data_ports', 'scoped_variables']:
+                    element_m_copy_lists[list_name] = combined_list
+            lists_to_insert = limited
+        else:
+            lists_to_insert = tolerated_lists
+
+        # check list order and put transitions and data flows to the end
+        for list_name in ['transitions', 'data_flows']:
+            if list_name in lists_to_insert:
+                lists_to_insert.remove(list_name)
+                lists_to_insert.append(list_name)
 
         def insert_elements_from_model_copies_list(model_list, element_str):
             new_and_copy_models = []
@@ -153,68 +135,33 @@ class Clipboard(Observable):
 
             return new_and_copy_models
 
-        # prepare list of lists to copy for limited or converted paste of objects
-        execution_state_unlimited = ['outcomes', 'input_data_ports', 'output_data_ports']
-        container_state_unlimited = execution_state_unlimited + ['scoped_variables', 'states', 'transitions', 'data_flows']
-        if isinstance(target_state_m.state, ContainerState):
-            tolerated_lists = container_state_unlimited
-        else:
-            tolerated_lists = execution_state_unlimited
-        if limited and all([list_name in tolerated_lists for list_name in limited]):
-            if len(limited) == 1 and limited[0] in ['input_data_ports', 'output_data_ports', 'scoped_variables'] and convert:
-                ip_m_copy_list = op_m_copy_list = sv_m_copy_list = ip_m_copy_list + op_m_copy_list + sv_m_copy_list
-            lists_to_insert = limited
-        else:
-            lists_to_insert = tolerated_lists
-
-        # check list order and put transitions and data flows to the end
-        for list_name in ['transitions', 'data_flows']:
-            if list_name in lists_to_insert:
-                lists_to_insert.remove(list_name)
-                lists_to_insert.append(list_name)
-
         # insert all lists and there elements into target state
         insert_dict = dict()
-        lists = {'outcomes': oc_m_copy_list, 'input_data_ports': ip_m_copy_list, 'output_data_ports': op_m_copy_list,
-                 'scoped_variables': sv_m_copy_list, 'states': state_m_copy_list, 'transitions': t_m_copy_list,
-                 'data_flows': df_m_copy_list}
         for list_name in lists_to_insert:
-            insert_dict[list_name] = insert_elements_from_model_copies_list(lists[list_name], list_name[:-1])
+            insert_dict[list_name] = insert_elements_from_model_copies_list(element_m_copy_lists[list_name],
+                                                                            list_name[:-1])
 
         if self.clipboard_type is ClipboardType.CUT:
             # delete original elements
             # TODO cut now can be realized directly after the copy has been generated -> check which one is appropriate
             self.do_cut_removal()
 
-        self.reset_clipboard()
-
         return insert_dict
 
     def do_cut_removal(self):
-        def remove_selected_elements_of_type(element_str, model_attr_str=None, id_attr_str=None):
-            model_attr_str = element_str if model_attr_str is None else model_attr_str
-            id_attr_str = element_str + '_id' if id_attr_str is None else id_attr_str
-            for model in getattr(self, 'selected_{0}_models'.format(element_str)):
+        for list_name in self._container_state_unlimited:
+            element_str = list_name[:-1]
+            for model in self.selected_models[list_name]:
                 # remove model from selection to avoid conflicts
                 # -> selection is not observing state machine changes and state machine model is not updating it
-                if model.parent is None and isinstance(model.state, StateModel) and model.state.is_root_state:
+                if model.parent is None and isinstance(model, StateModel) and model.state.is_root_state:
                     selection = model.get_sm_m_for_state_m().selection if model.get_sm_m_for_state_m() else None
                 else:
                     selection = model.parent.get_sm_m_for_state_m().selection if model.parent.get_sm_m_for_state_m() else None
-                if selection and model in getattr(selection, element_str + 's'):
+                if selection and model in getattr(selection, list_name):
                     selection.remove(model)
                 # remove element
-                element_id = getattr(getattr(model, model_attr_str), id_attr_str)
-                parent_of_source_state = getattr(getattr(model, model_attr_str), 'parent')
-                getattr(parent_of_source_state, 'remove_{0}'.format(element_str))(element_id)
-
-        remove_selected_elements_of_type('data_flow')
-        remove_selected_elements_of_type('input_data_port', 'data_port', 'data_port_id')
-        remove_selected_elements_of_type('output_data_port', 'data_port', 'data_port_id')
-        remove_selected_elements_of_type('scoped_variable', 'scoped_variable', 'data_port_id')
-        remove_selected_elements_of_type('transition')
-        remove_selected_elements_of_type('outcome')
-        remove_selected_elements_of_type('state')
+                getattr(model.core_element.parent, 'remove_{0}'.format(element_str))(model.core_element.core_element_id)
 
     def insert_state(self, target_state_m, orig_state_copy_m):
         target_state = target_state_m.state
@@ -270,108 +217,59 @@ class Clipboard(Observable):
         target_state_m.get_outcome_m(oc_id).meta = orig_outcome_copy_m.meta
         return target_state_m.get_outcome_m(oc_id), orig_outcome_copy_m
 
-    def insert_input_data_port(self, target_state_m, orig_input_data_port_copy_m):
-        ip = get_port_m_core_element(orig_input_data_port_copy_m)
-        old_port_tuple = (self.copy_parent_state_id, ip.data_port_id)
-        data_port_id = target_state_m.state.add_input_data_port(ip.name, ip.data_type, ip.default_value)
+    def insert_data_port(self, target_state_m, add_data_port_method, orig_data_port_copy_m, instance_to_check_for):
+        data_port = orig_data_port_copy_m.core_element
+        old_port_tuple = (self.copy_parent_state_id, data_port.data_port_id)
+        data_port_id = add_data_port_method(data_port.name, data_port.data_type, data_port.default_value)
         self.port_id_mapping_dict[old_port_tuple] = data_port_id
-        target_state_m.get_data_port_m(data_port_id).meta = orig_input_data_port_copy_m.meta
-        return target_state_m.get_data_port_m(data_port_id), orig_input_data_port_copy_m
+        if isinstance(orig_data_port_copy_m.core_element, instance_to_check_for):
+            target_state_m.get_data_port_m(data_port_id).meta = orig_data_port_copy_m.meta
+        return target_state_m.get_data_port_m(data_port_id), orig_data_port_copy_m
 
-    def insert_output_data_port(self, target_state_m, orig_output_data_port_copy_m):
-        op = get_port_m_core_element(orig_output_data_port_copy_m)
-        old_port_tuple = (self.copy_parent_state_id, op.data_port_id)
-        data_port_id = target_state_m.state.add_output_data_port(op.name, op.data_type, op.default_value)
-        self.port_id_mapping_dict[old_port_tuple] = data_port_id
-        target_state_m.get_data_port_m(data_port_id).meta = orig_output_data_port_copy_m.meta
-        return target_state_m.get_data_port_m(data_port_id), orig_output_data_port_copy_m
+    def insert_input_data_port(self, target_state_m, orig_data_port_copy_m):
+        return self.insert_data_port(target_state_m, target_state_m.state.add_input_data_port,
+                                     orig_data_port_copy_m, InputDataPort)
 
-    def insert_scoped_variable(self, target_state_m, orig_scoped_variable_copy_m):
-        sv = get_port_m_core_element(orig_scoped_variable_copy_m)
-        old_port_tuple = (self.copy_parent_state_id, sv.data_port_id)
-        data_port_id = target_state_m.state.add_scoped_variable(sv.name, sv.data_type, sv.default_value)
-        self.port_id_mapping_dict[old_port_tuple] = data_port_id
-        target_state_m.get_data_port_m(data_port_id).meta = orig_scoped_variable_copy_m.meta
-        return target_state_m.get_data_port_m(data_port_id), orig_scoped_variable_copy_m
+    def insert_output_data_port(self, target_state_m, orig_data_port_copy_m):
+        return self.insert_data_port(target_state_m, target_state_m.state.add_output_data_port,
+                                     orig_data_port_copy_m, OutputDataPort)
+
+    def insert_scoped_variable(self, target_state_m, orig_data_port_copy_m):
+        return self.insert_data_port(target_state_m, target_state_m.state.add_scoped_variable,
+                                     orig_data_port_copy_m, ScopedVariable)
 
     def reset_clipboard(self):
         """ Resets the clipboard, so that old elements do not pollute the new selection that is copied into the clipboard.
         :return:
         """
-        # reset outcomes
-        self.selected_outcome_models = []
-        self.outcome_model_copies = []
+        # reset selections
+        for list_name in self._container_state_unlimited:
+            self.selected_models[list_name] = []
 
-        # reset input data ports
-        self.selected_input_data_port_models = []
-        self.input_data_port_model_copies = []
+        for list_name in self._container_state_unlimited:
+            self.model_copies[list_name] = []
 
-        # reset output data ports
-        self.selected_output_data_port_models = []
-        self.output_data_port_model_copies = []
-
-        # reset scoped variables
-        self.selected_scoped_variable_models = []
-        self.scoped_variable_model_copies = []
-
-        # reset states
-        self.selected_state_models = []
-        self.state_model_copies = []
-
-        # reset transitions
-        self.selected_transition_models = []
-        self.transition_model_copies = []
-
-        # reset data flows
-        self.selected_data_flow_models = []
-        self.data_flow_model_copies = []
+        # reset parent state_id the copied elements are taken from
+        self.copy_parent_state_id = None
 
         # reset mapping dictionaries
         self.outcome_id_mapping_dict = {}
         self.port_id_mapping_dict = {}
         self.state_id_mapping_dict = {}
 
-    def __create_core_object_copies(self, selection):
-        """Copy all elements of a selection.
+    @staticmethod
+    def do_selection_reduction_to_one_parent(selection):
+        """ Find and reduce selection to one parent state.
 
-         The method copies all objects and checks and ignores directly data flows and transitions which are selected
-         without related origin or targets. Additional the method copies elements linkage (data flows and transitions)
-         if those origins and targets are covered by the selected elements. Therefore the selection it self is manipulated
-         to provide direct feedback to the user.
-
-        :param selection: an arbitrary selection, whose elements should be copied
-        :return:
+        :param selection:
+        :return: state model which is parent of selection or None if root state
         """
-        self.copy_parent_state_id = None
-
-        def get_ports_related_to_data_flow(data_flow):
-            from_port = data_flow.parent.get_data_port(data_flow.from_state, data_flow.from_key)
-            to_port = data_flow.parent.get_data_port(data_flow.to_state, data_flow.to_key)
-            return from_port, to_port
-
-        def get_states_related_to_transition(transition):
-            if transition.from_state == transition.parent.state_id or transition.from_state is None:
-                from_state = transition.parent
-            else:
-                from_state = transition.parent.states[transition.from_state]
-            if transition.to_state == transition.parent.state_id:
-                to_state = transition.parent
-            else:
-                to_state = transition.parent.states[transition.to_state]
-            if transition.to_outcome in transition.parent.outcomes:
-                to_outcome = transition.parent.outcomes[transition.to_outcome]
-            else:
-                to_outcome = transition.to_outcome
-            return from_state, to_state, to_outcome
 
         all_models_selected = selection.get_all()
-        if not all_models_selected:
-            # print "no selection"
-            return
-        # check if all elements that are copied are on one hierarchy level -> TODO or in future are parts of sibling
-        # logger.info("COPY/CUT -> hierarchy level for copy has to be implemented")
+        # check if all elements selected are on one hierarchy level -> TODO or in future are parts of sibling?!
+        # if not take the state with the most siblings as the copy root
         parent_m_count_dict = {}
-        for model in selection.get_all():
+        for model in all_models_selected:
             parent_m_count_dict[model.parent] = parent_m_count_dict[model.parent] + 1 if model.parent in parent_m_count_dict else 1
         parent_m = None
         current_count_parent = 0
@@ -388,9 +286,45 @@ class Clipboard(Observable):
             for model in all_models_selected:
                 if model.parent is not parent_m:
                     selection.remove(model)
-            self.copy_parent_state_id = parent_m.state.state_id
+
+        return parent_m
+
+    @staticmethod
+    def do_smart_selection_adaption(selection, parent_m):
+        """ Reduce and extend transition and data flow element selection if already enclosed by selection
+
+         The smart selection adaptation checks and ignores directly data flows and transitions which are selected
+         without selected related origin or targets elements. Additional the linkage (data flows and transitions)
+         if those origins and targets are covered by the selected elements is added to the selection.
+         Thereby the selection it self is manipulated to provide direct feedback to the user.
+
+        :param selection:
+        :param parent_m:
+        :return:
+        """
+
+        def get_ports_related_to_data_flow(data_flow):
+            from_port = data_flow.parent.get_data_port(data_flow.from_state, data_flow.from_key)
+            to_port = data_flow.parent.get_data_port(data_flow.to_state, data_flow.to_key)
+            return from_port, to_port
+
+
+        def get_states_related_to_transition(transition):
+            if transition.from_state == transition.parent.state_id or transition.from_state is None:
+                from_state = transition.parent
+            else:
+                from_state = transition.parent.states[transition.from_state]
+            if transition.to_state == transition.parent.state_id:
+                to_state = transition.parent
+            else:
+                to_state = transition.parent.states[transition.to_state]
+            if transition.to_outcome in transition.parent.outcomes:
+                to_outcome = transition.parent.outcomes[transition.to_outcome]
+            else:
+                to_outcome = transition.to_outcome
+            return from_state, to_state, to_outcome
+
         # reduce linkage selection by not fully by selection covered linkage
-        # logger.info("COPY/CUT -> reduce linkage has to be implemented")
         possible_states = [state_m.state for state_m in selection.states]
         possible_outcomes = [outcome_m.outcome for outcome_m in selection.outcomes]
         for data_flow_m in selection.data_flows:
@@ -401,8 +335,8 @@ class Clipboard(Observable):
             from_state, to_state, to_oc = get_states_related_to_transition(transition_m.transition)
             if from_state not in possible_states or (to_state not in possible_states and to_oc not in possible_outcomes):
                 selection.remove(transition_m)
-        # extend linkage selection by fully by selection covered linkage
-        # logger.info("COPY/CUT -> extend linkage has to be implemented")
+
+        # extend linkage selection by fully by selected element enclosed linkage
         if parent_m and isinstance(parent_m.state, ContainerState):
             state_ids = [state.state_id for state in possible_states]
             port_ids = [sv_m.scoped_variable.data_port_id for sv_m in selection.scoped_variables] + \
@@ -434,31 +368,37 @@ class Clipboard(Observable):
                 if from_state in possible_states and to_oc in possible_outcomes:
                     selection.add(parent_m.get_transition_m(transition_id))
 
-            # TODO extend by selected state and parent outcome enclosed transitions
+    def __create_core_object_copies(self, selection, smart_selection_adaption):
+        """Copy all elements of a selection.
 
-        self.selected_state_models = selection.states
-        self.selected_outcome_models = selection.outcomes
-        self.selected_input_data_port_models = selection.input_data_ports
-        self.selected_output_data_port_models = selection.output_data_ports
-        self.selected_transition_models = selection.transitions
-        self.selected_data_flow_models = selection.data_flows
-        self.selected_scoped_variable_models = selection.scoped_variables
+         The method copies all objects and modifies the selection before copying the elements if the smart flag is true.
+         The smart selection adaption is by default enabled. In any case the selection is reduced to have one parent
+         state that is used as the root of copy, except a root state it self is selected.
 
-        def copy_list_of_elements_of_type(element_str):
-            # print element_str, ": ", getattr(self, 'selected_{0}_models'.format(element_str))
-            # create state copies
-            for model in getattr(self, 'selected_{0}_models'.format(element_str)):
-                # direct model copy -> copy meta data and core object
-                model_copy = deepcopy(model)
-                getattr(self, '{0}_model_copies'.format(element_str)).append(model_copy)
+        :param Selection selection: an arbitrary selection, whose elements should be copied
+        .param bool smart_selection_adaption: flag to enable smart selection adaptation mode
+        :return:
+        """
 
-        copy_list_of_elements_of_type('outcome')
-        copy_list_of_elements_of_type('input_data_port')
-        copy_list_of_elements_of_type('output_data_port')
-        copy_list_of_elements_of_type('state')
-        copy_list_of_elements_of_type('scoped_variable')
-        copy_list_of_elements_of_type('transition')
-        copy_list_of_elements_of_type('data_flow')
+        all_models_selected = selection.get_all()
+        if not all_models_selected:
+            logger.warning("Nothing to copy because state machine selection is empty.")
+            return
+
+        parent_m = self.do_selection_reduction_to_one_parent(selection)
+        self.copy_parent_state_id = parent_m.state.state_id if parent_m else None
+
+        if smart_selection_adaption:
+            self.do_smart_selection_adaption(selection, parent_m)
+
+        # store all lists of selection
+        for list_name in self._container_state_unlimited:
+            self.selected_models[list_name] = getattr(selection, list_name)
+
+        # copy all selected elements
+        self.model_copies = deepcopy(self.selected_models)
+        # for list_name in self._container_state_unlimited:
+        #     print list_name, ": ", self.selected_models[list_name]
 
 
 # To enable copy, cut and paste between state machines a global clipboard is used

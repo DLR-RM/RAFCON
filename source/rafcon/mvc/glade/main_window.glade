@@ -180,16 +180,16 @@
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkScrolledWindow" id="state_tree_scrolledwindow">
+                                  <object class="GtkScrolledWindow" id="states_tree_scrolledwindow">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="hscrollbar_policy">automatic</property>
                                     <property name="vscrollbar_policy">automatic</property>
                                     <child>
-                                      <object class="GtkViewport" id="state_tree_viewport">
+                                      <object class="GtkViewport" id="states_tree_viewport">
                                         <property name="visible">True</property>
                                         <child>
-                                          <object class="GtkAlignment" id="state_tree_alignment">
+                                          <object class="GtkAlignment" id="states_tree_alignment">
                                             <property name="visible">True</property>
                                             <property name="xalign">0</property>
                                             <property name="yalign">0</property>
@@ -208,7 +208,7 @@
                                 <child type="tab">
                                   <object class="GtkLabel" id="state_machine_tree_tab">
                                     <property name="visible">True</property>
-                                    <property name="label">state_tree</property>
+                                    <property name="label">states_tree</property>
                                     <property name="angle">90</property>
                                   </object>
                                   <packing>

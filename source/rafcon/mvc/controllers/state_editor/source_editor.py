@@ -111,11 +111,6 @@ class SourceEditorController(EditorController):
             # Enable text input
             self.view.set_enabled(True)
 
-            # Update the source text to color it
-            tbuffer = self.view.get_buffer()
-            current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
-            self.source_text = current_text
-
         if button.get_active():
 
             # Get the specified "Editor" as in shell command from the gui config yaml
@@ -127,14 +122,12 @@ class SourceEditorController(EditorController):
 
                 logger.debug("File opened with command: {}".format(command))
 
-                self.apply_clicked(button)
-
                 try:
                     # Save the file before opening it to update the applied changes. Use option create_full_path=True
                     # to assure that temporary state_machines' script files are saved to
                     # (their path doesnt exist when not saved)
                     filesystem.write_file(file_path + os.path.sep + 'script.py',
-                                          self.source_text, create_full_path=True)
+                                          self.view.get_text(), create_full_path=True)
                 except IOError as e:
                     # Only happens if the file doesnt exist yet and would be written to the temp folder.
                     # The method write_file doesnt create the path
@@ -217,8 +210,7 @@ class SourceEditorController(EditorController):
             gtk.main_iteration_do()
 
         # get script
-        tbuffer = self.view.get_buffer()
-        current_text = tbuffer.get_text(tbuffer.get_start_iter(), tbuffer.get_end_iter())
+        current_text = self.view.get_text()
         if not self.view['pylint_check_button'].get_active():
             self.set_script_text(current_text)
             return
