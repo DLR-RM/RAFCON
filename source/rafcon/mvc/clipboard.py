@@ -1,6 +1,5 @@
 from copy import deepcopy
 
-from enum import Enum
 from gtkmvc import Observable
 
 from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
@@ -13,8 +12,6 @@ from rafcon.mvc.models.state import StateModel
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-
-ClipboardType = Enum('CLIPBOARD_TYPE', 'CUT COPY')
 
 
 class Clipboard(Observable):
@@ -36,22 +33,9 @@ class Clipboard(Observable):
         # TODO check if it is secure that new state ids don't interfere with old state ids
         self.state_id_mapping_dict = {}
 
-        self._clipboard_type = None
-
     def __str__(self):
-        return "Clipboard:\nselection: {0}\nclipboard_type: {1}".format(self.selected_models,self.clipboard_type)
-
-    @property
-    def clipboard_type(self):
-        """ Property for the _clipboard_type field """
-        return self._clipboard_type
-
-    @clipboard_type.setter
-    @Observable.observed
-    def clipboard_type(self, clipboard_type):
-        if not isinstance(clipboard_type, ClipboardType):
-            raise TypeError("clipboard_type must be of type ClipBoardType")
-        self._clipboard_type = clipboard_type
+        return "Clipboard: parent of copy is state with state_id {0} and selection is {1}" \
+               "".format(self.copy_parent_state_id, self.selected_models)
 
     def copy(self, selection, smart_selection_adaption=True):
         """ Copy all selected items to the clipboard using smart selection adaptation by default
@@ -62,7 +46,6 @@ class Clipboard(Observable):
         """
         assert isinstance(selection, Selection)
         self.reset_clipboard()
-        self.clipboard_type = ClipboardType.COPY
         self.__create_core_object_copies(selection, smart_selection_adaption)
 
     def cut(self, selection, smart_selection_adaption=True):
@@ -74,8 +57,8 @@ class Clipboard(Observable):
         """
         assert isinstance(selection, Selection)
         self.reset_clipboard()
-        self.clipboard_type = ClipboardType.CUT
         self.__create_core_object_copies(selection, smart_selection_adaption)
+        self.do_cut_removal()
 
     def prepare_new_copy(self):
         self.model_copies = deepcopy(self.model_copies)
@@ -96,8 +79,9 @@ class Clipboard(Observable):
         """
         assert isinstance(target_state_m, StateModel)
 
-        # update meta data of clipboard elements to adapt for new parent state
-        logger.info("PASTE -> meta data adaptation has to be implemented {0}".format(self.clipboard_type))
+        # update meta data of clipboard elements to adapt for new parent state, integration here?
+        # TODO -> it is maybe not the best solution to do so in the graphical editor after insertion of models
+        # logger.info("PASTE -> meta data adaptation has to be implemented")
 
         element_m_copy_lists = self.model_copies
         self.prepare_new_copy()  # threaded in future -> important that the copy is prepared here!!!
@@ -140,11 +124,6 @@ class Clipboard(Observable):
         for list_name in lists_to_insert:
             insert_dict[list_name] = insert_elements_from_model_copies_list(element_m_copy_lists[list_name],
                                                                             list_name[:-1])
-
-        if self.clipboard_type is ClipboardType.CUT:
-            # delete original elements
-            # TODO cut now can be realized directly after the copy has been generated -> check which one is appropriate
-            self.do_cut_removal()
 
         return insert_dict
 
