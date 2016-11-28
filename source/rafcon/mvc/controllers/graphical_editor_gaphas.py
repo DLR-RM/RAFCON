@@ -16,6 +16,7 @@ from gaphas.aspect import InMotion, ItemFinder
 
 from rafcon.statemachine.enums import StateType
 from rafcon.statemachine.decorators import lock_state_machine
+import rafcon.statemachine.id_generator as idgen
 
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc import state_machine_helper
@@ -90,6 +91,13 @@ class GraphicalEditorController(ExtendedController):
         """
         shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))
         shortcut_manager.add_callback_for_action("add2", partial(self._add_new_state, state_type=StateType.HIERARCHY))
+
+        shortcut_manager.add_callback_for_action("add_output", partial(self._add_data_port_to_selected_state,
+                                                                       data_port_type='OUTPUT'))
+        shortcut_manager.add_callback_for_action("add_input", partial(self._add_data_port_to_selected_state,
+                                                                      data_port_type='INPUT'))
+        shortcut_manager.add_callback_for_action("add_scoped_variable", self._add_scoped_variable_to_selected_state)
+        shortcut_manager.add_callback_for_action("add_outcome", self._add_outcome_to_selected_state)
 
         shortcut_manager.add_callback_for_action("copy", self._copy_selection)
         shortcut_manager.add_callback_for_action("paste", self._paste_clipboard)
@@ -982,3 +990,56 @@ class GraphicalEditorController(ExtendedController):
             to_state_v.connect_to_output_port(to_key, data_flow_v, data_flow_v.to_handle())
         elif to_port_m in to_state_m.input_data_ports:
             to_state_v.connect_to_input_port(to_key, data_flow_v, data_flow_v.to_handle())
+
+    @lock_state_machine
+    def _add_data_port_to_selected_state(self, *event, **kwargs):
+        if not len(self.model.selection.get_states()) > 0:
+            return
+        if not react_to_event(self.view, self.view.editor, event):
+            return
+
+        data_port_type = None if 'data_port_type' not in kwargs else kwargs['data_port_type']
+        data_type = None if 'data_type' not in kwargs else kwargs['data_type']
+
+        for model in self.model.selection.get_states():
+            name = str(idgen.generate_data_port_id(model.state.get_data_port_ids()))
+            if data_port_type == 'INPUT':
+                name = 'input_' + name
+                model.state.add_input_data_port(name=name, data_type=data_type)
+            elif data_port_type == 'OUTPUT':
+                name = 'output_' + name
+                model.state.add_output_data_port(name=name, data_type=data_type)
+            else:
+                return
+        return
+
+    @lock_state_machine
+    def _add_scoped_variable_to_selected_state(self, *event):
+        if not len(self.model.selection.get_states()) > 0:
+            return
+        if not react_to_event(self.view, self.view.editor, event):
+            return
+        for single_model in self.model.selection.get_states():
+            if not isinstance(single_model, ContainerStateModel):
+                continue
+            num_data_ports = len(single_model.state.scoped_variables)
+            for run_id in range(num_data_ports + 1, 0, -1):
+                try:
+                    single_model.state.add_scoped_variable("scoped_%s" % run_id, "int", 0)
+                    break
+                except ValueError as e:
+                    if run_id == num_data_ports:
+                        logger.warn("The scoped variable couldn't be added: {0}".format(e))
+                        return
+        return
+
+    @lock_state_machine
+    def _add_outcome_to_selected_state(self, *event):
+        if not len(self.model.selection.get_states()) > 0:
+            return
+        if not react_to_event(self.view, self.view.editor, event):
+            return
+        for model in self.model.selection.get_states():
+            name = "outcome_" + str(idgen.generate_outcome_id(model.state.outcomes.keys()))
+            model.state.add_outcome(name=name)
+        return
