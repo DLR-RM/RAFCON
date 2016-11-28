@@ -46,10 +46,10 @@ SHORTCUTS:
     abort: Escape
     add: <Control>A             # In graphical editor: add execution state
     add2: <Control><Shift>A     # In graphical editor: add hierarchy state
-    add_output: O
-    add_input: I
-    add_outcome: T
-    add_scoped_variable: V
+    add_output: <Control>O
+    add_input: <Control>I
+    add_outcome: <Control>T
+    add_scoped_variable: <Control><Shift>V
     apply: <Control><Shift>E
     backward_step: F9
     close: <Control>W
