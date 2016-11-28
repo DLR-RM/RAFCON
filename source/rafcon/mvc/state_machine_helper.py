@@ -5,7 +5,8 @@ from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.enums import StateType, UNIQUE_DECIDER_STATE_ID
+from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
+from rafcon.statemachine.states.state import StateType
 from rafcon.mvc.models import StateModel, AbstractStateModel, ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel

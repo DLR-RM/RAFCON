@@ -16,6 +16,7 @@ import threading
 from __builtin__ import staticmethod
 from weakref import ref
 
+from enum import Enum
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
@@ -1254,3 +1255,4 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self._run_id
 
 
+StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY LIBRARY DECIDER_STATE')

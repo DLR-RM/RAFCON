@@ -14,7 +14,7 @@ import gtk
 from gtk.gdk import ACTION_COPY
 from gaphas.aspect import InMotion, ItemFinder
 
-from rafcon.statemachine.enums import StateType
+from rafcon.statemachine.states.state import StateType
 from rafcon.statemachine.decorators import lock_state_machine
 import rafcon.statemachine.id_generator as idgen
 

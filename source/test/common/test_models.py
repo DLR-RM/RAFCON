@@ -7,7 +7,7 @@ import rafcon.mvc.singleton
 # core elements
 import rafcon.statemachine.singleton
 from rafcon.statemachine.script import Script
-from rafcon.statemachine.enums import StateType
+from rafcon.statemachine.states.state import StateType
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.states.execution_state import ExecutionState

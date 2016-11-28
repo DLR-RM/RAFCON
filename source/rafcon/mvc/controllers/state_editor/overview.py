@@ -14,7 +14,7 @@ from gtk.gdk import keyval_name
 from gtkmvc import Model
 import glib
 
-from rafcon.statemachine.enums import StateType
+from rafcon.statemachine.states.state import StateType
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState

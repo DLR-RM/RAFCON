@@ -13,7 +13,7 @@ from functools import partial
 import gtk
 import gobject
 
-from rafcon.statemachine.enums import StateType
+from rafcon.statemachine.states.state import StateType
 from rafcon.statemachine.states.state import State
 
 from rafcon.mvc.controllers.utils.tree_view_controller import TreeViewController

@@ -22,7 +22,8 @@ from gtk import DEST_DEFAULT_ALL
 import gobject
 
 import rafcon.statemachine.id_generator as idgen
-from rafcon.statemachine.enums import StateType, StateExecutionStatus
+from rafcon.statemachine.enums import StateExecutionStatus
+from rafcon.statemachine.states.state import StateType
 from rafcon.statemachine.decorators import lock_state_machine
 
 from rafcon.mvc.config import global_gui_config
