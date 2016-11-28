@@ -348,6 +348,21 @@ class MoveHandleTool(HandleTool):
 
             return True
 
+    def on_button_release(self, event):
+        item = self.grabbed_item
+        graphical_editor = self.view.graphical_editor
+        if isinstance(item, NameView):
+            gap_helper.update_meta_data_for_name_view(graphical_editor, item, publish=True)
+        elif isinstance(item, ConnectionView):
+            gap_helper.update_meta_data_for_transition_waypoints(graphical_editor, item, None)
+        else:  # StateView
+            if self.grabbed_handle in [port.handle for port in item.get_all_ports()]:
+                gap_helper.update_meta_data_for_port(graphical_editor, item, self.grabbed_handle)
+            else:
+                gap_helper.update_meta_data_for_state_view(graphical_editor, item, affects_children=True,
+                                                           publish=True)
+        super(MoveHandleTool, self).on_button_release(event)
+
 
 class ConnectionTool(ConnectHandleTool):
 
