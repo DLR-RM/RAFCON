@@ -167,8 +167,10 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("add2", partial(self._add_new_state, state_type=StateType.HIERARCHY))
         shortcut_manager.add_callback_for_action("abort", self._abort)
 
-        shortcut_manager.add_callback_for_action("add_output", self._add_output_port_to_selected_state())
-        shortcut_manager.add_callback_for_action("add_input", self._add_input_port_to_selected_state)
+        shortcut_manager.add_callback_for_action("add_output", partial(self._add_data_port_to_selected_state,
+                                                                       data_port_type='OUTPUT'))
+        shortcut_manager.add_callback_for_action("add_input", partial(self._add_data_port_to_selected_state,
+                                                                      data_port_type='INPUT'))
         shortcut_manager.add_callback_for_action("add_scoped_variable", self._add_scoped_variable_to_selected_state)
         shortcut_manager.add_callback_for_action("add_outcome", self._add_outcome_to_selected_state)
 
@@ -2251,34 +2253,34 @@ class GraphicalEditorController(ExtendedController):
             return True
 
     @lock_state_machine
-    def _add_output_port_to_selected_state(self, *event):
-        if not len(self.model.selection.get_all()) > 0:
+    def _add_data_port_to_selected_state(self, *event, **kwargs):
+        if not len(self.model.selection.get_states()) > 0:
             return
         if not react_to_event(self.view, self.view.editor, event):
             return
-        for model in self.model.selection.get_all():
-            name = "output_" + str(idgen.generate_data_port_id(model.state.get_data_port_ids()))
-            model.state.add_output_data_port(name=name, data_type=None)
-        return
 
-    @lock_state_machine
-    def _add_input_port_to_selected_state(self, *event):
-        if not len(self.model.selection.get_all()) > 0:
-            return
-        if not react_to_event(self.view, self.view.editor, event):
-            return
-        for model in self.model.selection.get_all():
-            name = "input_" + str(idgen.generate_data_port_id(model.state.get_data_port_ids()))
-            model.state.add_input_data_port(name=name, data_type=None)
+        data_port_type = None if 'data_port_type' not in kwargs else kwargs['data_port_type']
+        data_type = None if 'data_type' not in kwargs else kwargs['data_type']
+
+        for model in self.model.selection.get_states():
+            name = str(idgen.generate_data_port_id(model.state.get_data_port_ids()))
+            if data_port_type == 'INPUT':
+                name = 'input_' + name
+                model.state.add_input_data_port(name=name, data_type=data_type)
+            elif data_port_type == 'OUTPUT':
+                name = 'output_' + name
+                model.state.add_output_data_port(name=name, data_type=data_type)
+            else:
+                return
         return
 
     @lock_state_machine
     def _add_scoped_variable_to_selected_state(self, *event):
-        if not len(self.model.selection.get_all()) > 0:
+        if not len(self.model.selection.get_states()) > 0:
             return
         if not react_to_event(self.view, self.view.editor, event):
             return
-        for single_model in self.model.selection.get_all():
+        for single_model in self.model.selection.get_states():
             if not isinstance(single_model, ContainerStateModel):
                 continue
             num_data_ports = len(single_model.state.scoped_variables)
@@ -2294,11 +2296,11 @@ class GraphicalEditorController(ExtendedController):
 
     @lock_state_machine
     def _add_outcome_to_selected_state(self, *event):
-        if not len(self.model.selection.get_all()) > 0:
+        if not len(self.model.selection.get_states()) > 0:
             return
         if not react_to_event(self.view, self.view.editor, event):
             return
-        for model in self.model.selection.get_all():
+        for model in self.model.selection.get_states():
             name = "outcome_" + str(idgen.generate_outcome_id(model.state.outcomes.keys()))
             model.state.add_outcome(name=name)
         return
