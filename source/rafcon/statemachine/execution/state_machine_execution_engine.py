@@ -122,7 +122,6 @@ class StateMachineExecutionEngine(Observable):
         else:
             logger.warn("Cannot join as state machine was not started yet.")
 
-    @Observable.observed
     def set_execution_mode_to_stopped(self):
         """Stop and reset execution engine"""
         self.run_to_states = []
