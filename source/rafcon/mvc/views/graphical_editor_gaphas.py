@@ -32,7 +32,7 @@ class GraphicalEditorView(View, gobject.GObject):
         self.v_box = gtk.VBox()
         self.scroller = gtk.ScrolledWindow()
         self.scroller.set_name('graphical_editor_scroller')
-        self.editor = ExtendedGtkView()
+        self.editor = ExtendedGtkView(self)
         self.editor.modify_bg(gtk.STATE_NORMAL, global_gui_config.gtk_colors['INPUT_BACKGROUND'])
         self.editor.tool = tool.ToolChain(self.editor). \
             append(HoverItemTool()). \
