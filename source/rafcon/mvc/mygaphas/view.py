@@ -7,9 +7,10 @@ class ExtendedGtkView(GtkView):
 
     hovered_handle = None
 
-    def __init__(self, *args):
+    def __init__(self, graphical_editor_v, *args):
         super(ExtendedGtkView, self).__init__(*args)
         self._bounding_box_painter = RAFCONBoundingBoxPainter(self)
+        self.graphical_editor = graphical_editor_v
 
     def get_port_at_point(self, vpos, distance=10, exclude=None, exclude_port_fun=None):
         """

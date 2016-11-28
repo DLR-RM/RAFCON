@@ -277,7 +277,7 @@ def update_meta_data_for_transition_waypoints(graphical_editor_view, transition_
     waypoint_list = get_relative_positions_of_waypoints(transition_v)
     if waypoint_list != last_waypoint_list:
         transition_meta_gaphas['waypoints'] = waypoint_list
-        graphical_editor_view.emit('meta_data_changed', transition_m, "Move waypoint", True)
+        graphical_editor_view.emit('meta_data_changed', transition_m, "waypoints", True)
 
 
 def update_meta_data_for_port(graphical_editor_view, item, handle):
@@ -307,7 +307,7 @@ def update_meta_data_for_port(graphical_editor_view, item, handle):
                 port_meta['rel_pos'] = rel_pos
                 if handle:
                     if isinstance(port, IncomeView):
-                        graphical_editor_view.emit('meta_data_changed', port_m, "income_position", True)
+                        graphical_editor_view.emit('meta_data_changed', port_m, "income position", True)
                     else:
                         graphical_editor_view.emit('meta_data_changed', port_m, "position", True)
 

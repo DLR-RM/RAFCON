@@ -32,7 +32,7 @@ class GraphicalEditorView(View, gobject.GObject):
         self.v_box = gtk.VBox()
         self.scroller = gtk.ScrolledWindow()
         self.scroller.set_name('graphical_editor_scroller')
-        self.editor = ExtendedGtkView()
+        self.editor = ExtendedGtkView(self)
         self.editor.modify_bg(gtk.STATE_NORMAL, global_gui_config.gtk_colors['INPUT_BACKGROUND'])
         self.editor.tool = tool.ToolChain(self.editor). \
             append(HoverItemTool()). \
@@ -41,10 +41,10 @@ class GraphicalEditorView(View, gobject.GObject):
             append(ConnectionModificationTool()). \
             append(tool.PanTool()). \
             append(tool.ZoomTool()). \
-            append(MoveItemTool(self)). \
-            append(MultiSelectionTool(self)). \
-            append(RemoveItemTool(self)). \
-            append(RightClickTool(self))
+            append(MoveItemTool()). \
+            append(MultiSelectionTool()). \
+            append(RemoveItemTool()). \
+            append(RightClickTool())
         self.editor.painter = painter.PainterChain(). \
             append(painter.ItemPainter()). \
             append(StateCornerHandlePainter()). \

@@ -32,10 +32,6 @@ class RemoveItemTool(Tool):
     """This tool is responsible of deleting the selected item
     """
 
-    def __init__(self, graphical_editor_view, view=None):
-        super(RemoveItemTool, self).__init__(view)
-        self._graphical_editor_view = graphical_editor_view
-
     def on_key_release(self, event):
         if gtk.gdk.keyval_name(event.keyval) == "Delete":
             # Delete Transition from state machine
@@ -49,7 +45,7 @@ class RemoveItemTool(Tool):
             # Delete selected state(s) from state machine
             if isinstance(self.view.focused_item, StateView):
                 if react_to_event(self.view, self.view, event):
-                    self._graphical_editor_view.emit('remove_state_from_state_machine')
+                    self.view.graphical_editor.emit('remove_state_from_state_machine')
                     return True
 
 
@@ -57,9 +53,8 @@ class MoveItemTool(ItemTool):
     """This class is responsible of moving states, names, connections, etc.
     """
 
-    def __init__(self, graphical_editor_view, view=None, buttons=(1,)):
+    def __init__(self, view=None, buttons=(1,)):
         super(MoveItemTool, self).__init__(view, buttons)
-        self._graphical_editor_view = graphical_editor_view
         self._move_name_v = False
 
         self._item = None
@@ -126,11 +121,11 @@ class MoveItemTool(ItemTool):
         if isinstance(self._item, StateView):
             self.view.canvas.request_update(self._item)
             if position_changed:
-                self._graphical_editor_view.emit('meta_data_changed', self._item.model, "position", True)
+                self.view.graphical_editor.emit('meta_data_changed', self._item.model, "position", True)
 
         if isinstance(self.view.focused_item, NameView):
             if position_changed:
-                self._graphical_editor_view.emit('meta_data_changed', self.view.focused_item.parent.model,
+                self.view.graphical_editor.emit('meta_data_changed', self.view.focused_item.parent.model,
                                                  "name_position", False)
 
         if not position_changed:
@@ -223,10 +218,6 @@ class HoverItemTool(HoverTool):
 
 
 class MultiSelectionTool(RubberbandTool):
-    def __init__(self, graphical_editor_view, view=None):
-        super(MultiSelectionTool, self).__init__(view)
-
-        self._graphical_editor_view = graphical_editor_view
 
     def on_button_press(self, event):
         # print "on_button_press: ", self.__class__.__name__
@@ -261,7 +252,7 @@ class MultiSelectionTool(RubberbandTool):
         self.view.select_in_rectangle((min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0)))
 
         old_items_in_new_selection = [item in self.view.selected_items for item in old_items_selected]
-        current_items_which_are_old_selection  = [item in old_items_selected for item in self.view.selected_items]
+        current_items_which_are_old_selection = [item in old_items_selected for item in self.view.selected_items]
         rubber_band_selection = list(self.view.selected_items)
         new_selection = old_items_selected
         if any(old_items_in_new_selection) and not all(current_items_which_are_old_selection): # reselect elements
@@ -347,6 +338,22 @@ class MoveHandleTool(HandleTool):
             self.grab_handle(item, handle)
 
             return True
+
+    def on_button_release(self, event):
+        if self.grabbed_item:
+            item = self.grabbed_item
+            graphical_editor = self.view.graphical_editor
+            if isinstance(item, NameView):
+                gap_helper.update_meta_data_for_name_view(graphical_editor, item, publish=True)
+            elif isinstance(item, ConnectionView):
+                gap_helper.update_meta_data_for_transition_waypoints(graphical_editor, item, None)
+            else:  # StateView
+                if self.grabbed_handle in [port.handle for port in item.get_all_ports()]:
+                    gap_helper.update_meta_data_for_port(graphical_editor, item, self.grabbed_handle)
+                else:
+                    gap_helper.update_meta_data_for_state_view(graphical_editor, item, affects_children=True,
+                                                               publish=True)
+        super(MoveHandleTool, self).on_button_release(event)
 
 
 class ConnectionTool(ConnectHandleTool):
