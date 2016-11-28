@@ -10,7 +10,7 @@
 from copy import copy
 
 from gtkmvc import Observable
-from rafcon.statemachine.enums import StateExecutionState
+from rafcon.statemachine.enums import StateExecutionStatus
 from rafcon.statemachine.singleton import library_manager
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.decorators import lock_state_machine
@@ -154,7 +154,7 @@ class LibraryState(State):
         It basically just calls the run method of the container state
         :return:
         """
-        self.state_execution_status = StateExecutionState.ACTIVE
+        self.state_execution_status = StateExecutionStatus.ACTIVE
         logger.debug("Entering library state '{0}' with name '{1}'".format(self.library_name, self.name))
         # self.state_copy.parent = self.parent
         self.state_copy.input_data = self.input_data
@@ -163,7 +163,7 @@ class LibraryState(State):
         self.state_copy.backward_execution = self.backward_execution
         self.state_copy.run()
         logger.debug("Exiting library state '{0}' with name '{1}'".format(self.library_name, self.name))
-        self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+        self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
         self.finalize(self.state_copy.final_outcome)
 
     def recursively_preempt_states(self):
@@ -503,7 +503,7 @@ class LibraryState(State):
     def child_execution(self):
         """Property for the _child_execution field
         """
-        if self.state_execution_status is StateExecutionState.EXECUTE_CHILDREN:
+        if self.state_execution_status is StateExecutionStatus.EXECUTE_CHILDREN:
             return True
         else:
             return False

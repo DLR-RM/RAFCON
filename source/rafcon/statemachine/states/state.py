@@ -20,7 +20,7 @@ from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
-from rafcon.statemachine.enums import DataPortType, StateExecutionState
+from rafcon.statemachine.enums import DataPortType, StateExecutionStatus
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.state_elements.state_element import StateElement
 from rafcon.statemachine.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
@@ -105,7 +105,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.output_data_ports = output_data_ports if output_data_ports is not None else {}
 
         self.outcomes = outcomes if outcomes is not None else {0: Outcome(outcome_id=0, name="success")}
-        self.state_execution_status = StateExecutionState.INACTIVE
+        self.state_execution_status = StateExecutionStatus.INACTIVE
 
         self.edited_since_last_execution = False
         self.execution_history = None
@@ -219,7 +219,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         :raises exceptions.TypeError: if the input or output data are not of type dict
         """
-        self.state_execution_status = StateExecutionState.ACTIVE
+        self.state_execution_status = StateExecutionStatus.ACTIVE
         self.preempted = False
         if not isinstance(self.input_data, dict):
             raise TypeError("states must be of type dict")
@@ -228,7 +228,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.check_input_data_type(self.input_data)
 
     def setup_backward_run(self):
-        self.state_execution_status = StateExecutionState.ACTIVE
+        self.state_execution_status = StateExecutionStatus.ACTIVE
         self.preempted = False
 
     def run(self, *args, **kwargs):
@@ -1183,7 +1183,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """Property for the _active field
 
         """
-        if self.state_execution_status is StateExecutionState.INACTIVE:
+        if self.state_execution_status is StateExecutionStatus.INACTIVE:
             return False
         else:
             return True
@@ -1199,8 +1199,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     @lock_state_machine
     @Observable.observed
     def state_execution_status(self, state_execution_status):
-        if not isinstance(state_execution_status, StateExecutionState):
-            raise TypeError("state_execution_status must be of type StateExecutionState")
+        if not isinstance(state_execution_status, StateExecutionStatus):
+            raise TypeError("state_execution_status must be of type StateExecutionStatus")
 
         self._state_execution_status = state_execution_status
 

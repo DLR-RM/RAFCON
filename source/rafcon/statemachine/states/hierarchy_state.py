@@ -15,7 +15,7 @@ from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.state_elements.outcome import Outcome
 import rafcon.statemachine.singleton as singleton
 from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem
-from rafcon.statemachine.enums import StateExecutionState, CallType, StateMachineExecutionStatus
+from rafcon.statemachine.enums import StateExecutionStatus, CallType, StateMachineExecutionStatus
 
 logger = log.get_logger(__name__)
 
@@ -59,7 +59,7 @@ class HierarchyState(ContainerState):
         else:  # forward_execution
             self.setup_run()
 
-        self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+        self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
         if self.backward_execution:
             last_history_item = self.execution_history.pop_last_item()
             assert isinstance(last_history_item, ReturnItem)
@@ -85,8 +85,8 @@ class HierarchyState(ContainerState):
                 self.handling_execution_mode = True
                 execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, self.child_state)
                 self.handling_execution_mode = False
-                if self.state_execution_status is not StateExecutionState.EXECUTE_CHILDREN:
-                    self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
+                if self.state_execution_status is not StateExecutionStatus.EXECUTE_CHILDREN:
+                    self.state_execution_status = StateExecutionStatus.EXECUTE_CHILDREN
 
                 self.backward_execution = False
                 if self.preempted:
@@ -118,7 +118,7 @@ class HierarchyState(ContainerState):
         except Exception, e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
-            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+            self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
             return self.finalize(Outcome(-1, "aborted"))
 
     def _handle_backward_execution_before_child_execution(self):
@@ -131,7 +131,7 @@ class HierarchyState(ContainerState):
             # if the the next child_state in the history is self exit this hierarchy-state
             if self.child_state:
                 # do not set the last state to inactive before executing the new one
-                self.child_state.state_execution_status = StateExecutionState.INACTIVE
+                self.child_state.state_execution_status = StateExecutionStatus.INACTIVE
             return True
         assert isinstance(last_history_item, ReturnItem)
         self.scoped_data = last_history_item.scoped_data
@@ -152,7 +152,7 @@ class HierarchyState(ContainerState):
         self.last_error = None
         if self.last_child:
             # do not set the last state to inactive before executing the new one
-            self.last_child.state_execution_status = StateExecutionState.INACTIVE
+            self.last_child.state_execution_status = StateExecutionStatus.INACTIVE
 
         if not self.backward_execution:  # only add history item if it is not a backward execution
             self.execution_history.push_call_history_item(
@@ -182,7 +182,7 @@ class HierarchyState(ContainerState):
         execution case.
         :return: a flag to indicate if normal child state execution should abort
         """
-        self.child_state.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+        self.child_state.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
         # the item popped now from the history will be a CallItem and will contain the scoped data,
         # that was valid before executing the child_state
         last_history_item = self.execution_history.pop_last_item()
@@ -198,7 +198,7 @@ class HierarchyState(ContainerState):
             last_history_item = self.execution_history.pop_last_item()
             assert isinstance(last_history_item, CallItem)
             self.scoped_data = last_history_item.scoped_data
-            self.child_state.state_execution_status = StateExecutionState.INACTIVE
+            self.child_state.state_execution_status = StateExecutionStatus.INACTIVE
             return True
         return False
 
@@ -236,7 +236,7 @@ class HierarchyState(ContainerState):
         :return:
         """
         if self.last_child:
-            self.last_child.state_execution_status = StateExecutionState.INACTIVE
+            self.last_child.state_execution_status = StateExecutionStatus.INACTIVE
 
         if not self.backward_execution:
             if self.last_error:
@@ -246,7 +246,7 @@ class HierarchyState(ContainerState):
             self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
             # add error message from child_state to own output_data
 
-        self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+        self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
 
         if self.preempted:
             self.final_outcome = Outcome(-2, "preempted")

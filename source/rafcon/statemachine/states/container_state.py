@@ -11,7 +11,7 @@ from copy import copy, deepcopy
 from threading import Condition
 from gtkmvc import Observable
 
-from rafcon.statemachine.enums import DataPortType, StateExecutionState, StateMachineExecutionStatus
+from rafcon.statemachine.enums import DataPortType, StateExecutionStatus, StateMachineExecutionStatus
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.state_elements.state_element import StateElement
@@ -242,7 +242,7 @@ class ContainerState(State):
             if self.preempted or state.final_outcome.outcome_id in [-2, -1]:
                 if self.concurrency_queue:
                     self.concurrency_queue.put(self.state_id)
-                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+                self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
 
                 if state.final_outcome.outcome_id == -1:
                     self.final_outcome = Outcome(-1, "aborted")
@@ -2181,7 +2181,7 @@ class ContainerState(State):
     def child_execution(self):
         """Property for the _child_execution field
         """
-        if self.state_execution_status is StateExecutionState.EXECUTE_CHILDREN:
+        if self.state_execution_status is StateExecutionStatus.EXECUTE_CHILDREN:
             return True
         else:
             return False

@@ -14,7 +14,7 @@ from gtkmvc import Observable
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.enums import CallType
 from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
-from rafcon.statemachine.enums import StateExecutionState
+from rafcon.statemachine.enums import StateExecutionStatus
 from rafcon.statemachine.state_elements.outcome import Outcome
 
 
@@ -75,7 +75,7 @@ class ConcurrencyState(ContainerState):
                                     case of the barrier concurrency state the decider state)
         :return:
         """
-        self.state_execution_status = StateExecutionState.EXECUTE_CHILDREN
+        self.state_execution_status = StateExecutionStatus.EXECUTE_CHILDREN
         # actually the queue is not needed in the barrier concurrency case
         # to avoid code duplication both concurrency states have the same start child function
         concurrency_queue = Queue.Queue(maxsize=0)  # infinite Queue size
@@ -111,7 +111,7 @@ class ConcurrencyState(ContainerState):
         :return:
         """
         state.join()
-        state.state_execution_status = StateExecutionState.INACTIVE
+        state.state_execution_status = StateExecutionStatus.INACTIVE
         # care for the history items
         if not self.backward_execution:
             state.concurrency_queue = None
@@ -136,7 +136,7 @@ class ConcurrencyState(ContainerState):
         assert isinstance(last_history_item, CallItem)
         # this copy is convenience and not required here
         self.scoped_data = last_history_item.scoped_data
-        self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+        self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
         return self.finalize()
 
     def finalize_concurrency_state(self, outcome):
@@ -149,7 +149,7 @@ class ConcurrencyState(ContainerState):
         self.write_output_data()
         self.check_output_data_type()
         self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
-        self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+        self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
 
         if self.preempted:
             final_outcome = Outcome(-2, "preempted")

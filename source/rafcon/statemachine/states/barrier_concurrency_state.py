@@ -15,7 +15,7 @@ from gtkmvc import Observable
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.decorators import lock_state_machine
 from rafcon.statemachine.states.concurrency_state import ConcurrencyState
-from rafcon.statemachine.enums import StateExecutionState
+from rafcon.statemachine.enums import StateExecutionStatus
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
@@ -136,7 +136,7 @@ class BarrierConcurrencyState(ConcurrencyState):
                 # final outcome is set here
                 transition = self.handle_no_transition(decider_state)
             # if the transition is still None, then the child_state was preempted or aborted, in this case return
-            decider_state.state_execution_status = StateExecutionState.INACTIVE
+            decider_state.state_execution_status = StateExecutionStatus.INACTIVE
 
             if transition is None:
                 self.output_data["error"] = RuntimeError("state aborted")
@@ -150,7 +150,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         except Exception, e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
-            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+            self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
             return self.finalize(Outcome(-1, "aborted"))
 
     def run_decider_state(self, decider_state, child_errors, final_outcomes_dict):
@@ -162,7 +162,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         :param final_outcomes_dict: dictionary of all outcomes of the concurrent branches
         :return:
         """
-        decider_state.state_execution_status = StateExecutionState.ACTIVE
+        decider_state.state_execution_status = StateExecutionStatus.ACTIVE
         # forward the decider specific data
         decider_state.child_errors = child_errors
         decider_state.final_outcomes_dict = final_outcomes_dict

@@ -8,7 +8,7 @@ from gaphas.connector import Position
 from gaphas.matrix import Matrix
 from gaphas.solver import Variable
 
-from rafcon.statemachine.enums import StateExecutionState
+from rafcon.statemachine.enums import StateExecutionStatus
 
 from rafcon.mvc.mygaphas.canvas import ItemProjection
 from rafcon.mvc.mygaphas.constraint import KeepRectangleWithinConstraint, PortRectConstraint, BorderWidthConstraint
@@ -388,7 +388,7 @@ class StateView(Element):
             state_border_color = gui_config.gtk_colors['STATE_BORDER']
             state_border_outline_color = gui_config.gtk_colors['STATE_BORDER_OUTLINE']
 
-            if self.model.state.state_execution_status == StateExecutionState.WAIT_FOR_NEXT_STATE:
+            if self.model.state.state_execution_status == StateExecutionStatus.WAIT_FOR_NEXT_STATE:
                 state_border_color = gui_config.gtk_colors['STATE_WAITING_BORDER']
                 state_border_outline_color = gui_config.gtk_colors['STATE_WAITING_BORDER_OUTLINE']
             elif self.model.state.active:

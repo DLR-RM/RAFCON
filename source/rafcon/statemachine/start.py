@@ -26,7 +26,7 @@ import rafcon.utils.filesystem as filesystem
 from rafcon.statemachine.config import global_config
 import rafcon.statemachine.singleton as sm_singletons
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.enums import StateExecutionState
+from rafcon.statemachine.enums import StateExecutionStatus
 
 from rafcon.utils import profiler
 from rafcon.utils import plugins
@@ -160,7 +160,7 @@ def wait_for_state_machine_finished(state_machine):
     else:
         time.sleep(0.5)
 
-    while state_machine.root_state.state_execution_status is not StateExecutionState.INACTIVE:
+    while state_machine.root_state.state_execution_status is not StateExecutionStatus.INACTIVE:
         try:
             state_machine.root_state.concurrency_queue.get(timeout=1)
             # this check triggers if the state machine could not be stopped in the signal handler

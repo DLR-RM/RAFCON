@@ -19,7 +19,7 @@ from rafcon.statemachine.states.state import State
 from rafcon.statemachine.decorators import lock_state_machine
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.script import Script
-from rafcon.statemachine.enums import StateExecutionState
+from rafcon.statemachine.enums import StateExecutionStatus
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -125,13 +125,13 @@ class ExecutionState(State):
             if self.backward_execution:
                 self._execute(self.input_data, self.output_data, backward_execution=True)
                 # outcome handling is not required as we are in backward mode and the execution order is fixed
-                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+                self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
                 return self.finalize()
 
             else:
                 outcome = self._execute(self.input_data, self.output_data)
 
-                self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+                self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
                 # check output data
                 self.check_output_data_type()
 
@@ -148,7 +148,7 @@ class ExecutionState(State):
                                                                            ''.join(truncated_exc)))
             # write error to the output_data of the state
             self.output_data["error"] = e
-            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+            self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
             return self.finalize(Outcome(-1, "aborted"))
 
 #########################################################################

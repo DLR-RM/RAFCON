@@ -368,13 +368,13 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         fill_color = self.state_color
         border_color = self.border_color
 
-        from rafcon.statemachine.enums import StateExecutionState
+        from rafcon.statemachine.enums import StateExecutionStatus
         border_width = min(size) / 10.
-        if active is StateExecutionState.ACTIVE:
+        if active is StateExecutionStatus.ACTIVE:
             fill_color = self.state_active_color
-        elif active is StateExecutionState.EXECUTE_CHILDREN:
+        elif active is StateExecutionStatus.EXECUTE_CHILDREN:
             fill_color = self.state_child_active_color
-        elif active is StateExecutionState.WAIT_FOR_NEXT_STATE:
+        elif active is StateExecutionStatus.WAIT_FOR_NEXT_STATE:
             fill_color = self.state_waiting_for_next_state_color
 
         if selected:

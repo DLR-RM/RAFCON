@@ -12,7 +12,7 @@ import traceback
 
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.states.concurrency_state import ConcurrencyState
-from rafcon.statemachine.enums import StateExecutionState
+from rafcon.statemachine.enums import StateExecutionStatus
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -91,7 +91,7 @@ class PreemptiveConcurrencyState(ConcurrencyState):
         except Exception, e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
-            self.state_execution_status = StateExecutionState.WAIT_FOR_NEXT_STATE
+            self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
             return self.finalize(Outcome(-1, "aborted"))
 
     def _check_transition_validity(self, check_transition):

@@ -16,7 +16,7 @@ from jsonconversion.jsonobject import JSONObject
 
 from rafcon.statemachine.id_generator import generate_state_machine_id
 from rafcon.statemachine.execution.execution_history import ExecutionHistory
-from rafcon.statemachine.enums import StateExecutionState
+from rafcon.statemachine.enums import StateExecutionStatus
 
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.storage_utils import get_current_time_string
@@ -115,7 +115,7 @@ class StateMachine(Observable, JSONObject, Hashable):
     def join(self):
         """Wait for root state to finish execution"""
         self._root_state.join()
-        self._root_state.state_execution_status = StateExecutionState.INACTIVE
+        self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
     @Observable.observed
     def acquire_modification_lock(self, blocking=True):
