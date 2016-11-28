@@ -18,7 +18,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateMachineStatus(Observable):
+class ExecutionStatus(Observable):
     """A class for representing the state machine status
 
     It inherits from Observable to make a change of its fields observable.

@@ -13,7 +13,7 @@ import argparse
 
 from rafcon.statemachine.global_variable_manager import GlobalVariableManager
 from rafcon.statemachine.library_manager import LibraryManager
-from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
+from rafcon.statemachine.execution.execution_engine import ExecutionEngine
 from rafcon.statemachine.state_machine_manager import StateMachineManager
 
 
@@ -27,7 +27,7 @@ library_manager = LibraryManager()
 state_machine_manager = StateMachineManager()
 
 # This variable holds the execution engine singleton
-state_machine_execution_engine = StateMachineExecutionEngine(state_machine_manager)
+state_machine_execution_engine = ExecutionEngine(state_machine_manager)
 
 # signal that cause shut down
 shut_down_signal = None

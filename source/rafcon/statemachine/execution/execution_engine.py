@@ -14,14 +14,14 @@ import Queue
 from threading import Lock
 
 from gtkmvc import Observable
-from rafcon.statemachine.execution.state_machine_status import StateMachineStatus
+from rafcon.statemachine.execution.execution_status import ExecutionStatus
 from rafcon.statemachine.enums import StateMachineExecutionStatus
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
 
-class StateMachineExecutionEngine(Observable):
+class ExecutionEngine(Observable):
     """A class that cares for the execution of the state machine
 
     :ivar state_machine_manager: holds the state machine manager of all states that can be executed
@@ -37,7 +37,7 @@ class StateMachineExecutionEngine(Observable):
     def __init__(self, state_machine_manager):
         Observable.__init__(self)
         self.state_machine_manager = state_machine_manager
-        self._status = StateMachineStatus(StateMachineExecutionStatus.STOPPED)
+        self._status = ExecutionStatus(StateMachineExecutionStatus.STOPPED)
         # TODO: write validity checker of the state machine
         self._validity_checker = None
         logger.debug("State machine execution engine initialized")

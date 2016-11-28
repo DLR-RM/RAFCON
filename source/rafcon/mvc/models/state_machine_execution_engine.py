@@ -3,7 +3,7 @@ from gtkmvc import Observable
 
 from rafcon.statemachine.state_machine_manager import StateMachineManager
 from rafcon.statemachine.singleton import state_machine_execution_engine
-from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
+from rafcon.statemachine.execution.execution_engine import ExecutionEngine
 
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
@@ -27,7 +27,7 @@ class StateMachineExecutionEngineModel(ModelMT, Observable):
         Observable.__init__(self)
         self.register_observer(self)
 
-        assert isinstance(execution_engine, StateMachineExecutionEngine)
+        assert isinstance(execution_engine, ExecutionEngine)
         self.execution_engine = execution_engine
 
         if isinstance(meta, Vividict):
