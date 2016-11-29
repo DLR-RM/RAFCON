@@ -20,7 +20,7 @@ DataFlow's DataFlowModel is in.
 from gtkmvc.observer import Observer
 
 # mvc
-import rafcon.mvc.singleton
+import rafcon.gui.singleton
 
 # core elements
 import rafcon.core.singleton
@@ -365,7 +365,7 @@ def create_models(*args, **kargs):
     sm = StateMachine(ctr_state)
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
 
-    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     return ctr_state, sm_m, state_dict
 
@@ -426,7 +426,7 @@ def full_observer_dict_reset(observer_dict):
 
 
 def test_outcome_add_remove_notification(caplog):
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
     states_observer_dict = setup_observer_dict_for_state_model(sm_model.root_state, with_print=with_print)
     state_name = 'Nested2'
@@ -466,7 +466,7 @@ def test_outcome_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -477,7 +477,7 @@ def test_outcome_modify_notification(caplog):
     """
 
     # create testbed
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     # create observer
@@ -546,13 +546,13 @@ def test_outcome_modify_notification(caplog):
         assert outcome_model_observer.get_number_of_notifications() == 2  # before + after notification
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_input_port_add_remove_notification(caplog):
     # create testbed
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     #create observer
@@ -593,7 +593,7 @@ def test_input_port_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -625,7 +625,7 @@ def test_input_port_modify_notification(caplog):
         assert input_observer.get_number_of_notifications() == 2*forecast
 
     # create testbed
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
     new_input_data_port_id = state_dict['Nested2'].add_input_data_port(name='new_input', data_type='str')
 
@@ -661,13 +661,13 @@ def test_input_port_modify_notification(caplog):
     check_input_notifications(input_port_observer, states_m_observer_dict, state_dict, forecast=5)
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_output_port_add_remove_notification(caplog):
     # create testbed
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     #create observer
@@ -708,7 +708,7 @@ def test_output_port_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -741,7 +741,7 @@ def test_output_port_modify_notification(caplog):
         assert output_observer.get_number_of_notifications() == 2*forecast
 
     # create testbed
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
     new_output_data_port_id = state_dict['Nested2'].add_output_data_port(name='new_output', data_type='str')
 
@@ -778,13 +778,13 @@ def test_output_port_modify_notification(caplog):
     check_output_notifications(output_port_observer, states_m_observer_dict, state_dict, forecast=5)
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_scoped_variable_add_remove_notification(caplog):
     # create testbed
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     # create observer
@@ -825,7 +825,7 @@ def test_scoped_variable_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -858,7 +858,7 @@ def test_scoped_variable_modify_notification(caplog):
         assert output_observer.get_number_of_notifications() == 2*forecast
 
     # create testbed
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
     new_scoped_variable_id = state_dict['Nested'].add_scoped_variable(name='new_output', data_type='str')
 
@@ -895,7 +895,7 @@ def test_scoped_variable_modify_notification(caplog):
     check_output_notifications(scoped_variable_observer, states_m_observer_dict, state_dict, forecast=5)
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 # add state
@@ -936,7 +936,7 @@ def test_scoped_variable_modify_notification(caplog):
 
 def test_data_flow_add_remove_notification(caplog):
     # create testbed
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -988,7 +988,7 @@ def test_data_flow_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1020,7 +1020,7 @@ def test_data_flow_modify_notification(caplog):
         assert data_flow_m_observer.get_number_of_notifications() == 2*forecast
 
     # create testbed
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -1104,13 +1104,13 @@ def test_data_flow_modify_notification(caplog):
     check_data_flow_notifications(data_flow_m_observer, states_m_observer_dict, state_dict, forecast=4)
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_transition_add_remove_notification(caplog):
     # create testbed
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -1161,7 +1161,7 @@ def test_transition_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 1})
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1195,7 +1195,7 @@ def test_transition_modify_notification(caplog):
         assert transition_m_observer.get_number_of_notifications() == 2*forecast
 
     # create testbed
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -1279,13 +1279,13 @@ def test_transition_modify_notification(caplog):
     check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=5)
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_state_add_remove_notification(caplog):
     # create testbed
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -1332,7 +1332,7 @@ def test_state_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 3})
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 # TODO do the notification checks for the LibraryState
@@ -1410,7 +1410,7 @@ def test_state_property_modify_notification(caplog):
         check_count_of_model_notifications(state_model_observer, check_dict)
 
     # create testbed
-    rafcon.mvc.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -1596,7 +1596,7 @@ def test_state_property_modify_notification(caplog):
     check_states_notifications(states_observer_dict, sub_state_name='Nested2', forecast=forecast)
 
     sm_model.destroy()
-    rafcon.mvc.singleton.global_gui_config.load()
+    rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 ###################

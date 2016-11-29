@@ -1,10 +1,10 @@
 import gtk
 import threading
 
-# mvc elements
-import rafcon.mvc.singleton
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
+# gui elements
+import rafcon.gui.singleton
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
 
 # core elements
 import rafcon.core.singleton
@@ -48,7 +48,7 @@ def create_models(*args, **kargs):
     # add new state machine
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     # select state machine
-    rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
 
 @log.log_exceptions(None, gtk_quit=True)
@@ -129,7 +129,7 @@ def test_drag_and_drop_test(caplog):
     rafcon.core.singleton.library_manager.initialize()
 
     if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     main_window_view = MainWindowView()
 

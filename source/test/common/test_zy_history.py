@@ -5,11 +5,11 @@ import time
 import signal
 
 
-# mvc elements
-from rafcon.mvc.config import global_gui_config
-import rafcon.mvc.singleton
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
+# gui elements
+from rafcon.gui.config import global_gui_config
+import rafcon.gui.singleton
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
 
 # core elements
 import rafcon.core.singleton
@@ -153,9 +153,9 @@ def create_models(*args, **kargs):
                   'Nested2': state5}
     sm = StateMachine(ctr_state)
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-    rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
-    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
     sm_m.history.fake = False
     print "with_prints is: ", sm_m.history.with_prints
     sm_m.history.with_prints = False
@@ -1154,7 +1154,7 @@ def test_type_modifications_without_gui(caplog):
     print "init libs"
     testing_utils.remove_all_libraries()
     rafcon.core.singleton.library_manager.initialize()
-    sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
     sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
@@ -1173,7 +1173,7 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     print "init libs"
     testing_utils.remove_all_libraries()
     if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     print "initialize MainWindow"
     main_window_view = MainWindowView()
@@ -1209,7 +1209,7 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     rafcon.core.singleton.library_manager.initialize()
 
     if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
     if with_gui:

@@ -2,7 +2,7 @@ import threading
 import time
 
 # mvc
-import rafcon.mvc.singleton
+import rafcon.gui.singleton
 
 # core elements
 import rafcon.core.singleton

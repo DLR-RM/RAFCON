@@ -1,8 +1,8 @@
 from gtkmvc.observer import Observer
 
 # mvc
-from rafcon.mvc.config import global_gui_config
-import rafcon.mvc.singleton
+from rafcon.gui.config import global_gui_config
+import rafcon.gui.singleton
 
 # core elements
 import rafcon.core.singleton
@@ -147,7 +147,7 @@ class StateNotificationLogObserver(NotificationLogObserver):
                 set_dict(info, elem)
             else:
                 print info
-                from rafcon.mvc.utils.notification_overview import NotificationOverview
+                from rafcon.gui.utils.notification_overview import NotificationOverview
                 print 'NotificationLogger ---> assert !!! Type of notification not known'#\n{0}'.format(NotificationOverview(info))
                 assert True
             return elem
@@ -244,9 +244,9 @@ def create_models(*args, **kargs):
     #     rafcon.core.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
 
-    rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
-    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
     # sm_m.history.fake = True
 
     return ctr_state, sm_m, state_dict

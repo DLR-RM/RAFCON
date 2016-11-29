@@ -3,12 +3,12 @@ import gtk
 import threading
 import time
 
-# mvc elements
-from rafcon.mvc.config import global_gui_config
-import rafcon.mvc.singleton
-from rafcon.mvc.models import GlobalVariableManagerModel
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
+# gui elements
+from rafcon.gui.config import global_gui_config
+import rafcon.gui.singleton
+from rafcon.gui.models import GlobalVariableManagerModel
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
 
 # core elements
 from rafcon.core.states.state import State
@@ -106,9 +106,9 @@ def create_models(*args, **kargs):
     # add new state machine
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     # select state machine
-    rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
     # get state machine model
-    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     return sm_m, state_dict
 
@@ -661,7 +661,7 @@ def test_state_type_change_test(caplog):
 
     sm_m, state_dict = create_models()
     testing_utils.remove_all_libraries()
-    testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_controller = None
     if with_gui:
         main_window_view = MainWindowView()

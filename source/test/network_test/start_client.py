@@ -44,14 +44,14 @@ def start_client(interacting_function, queue_dict):
     from rafcon.core.states.hierarchy_state import HierarchyState
     import rafcon.core.singleton as sm_singletons
 
-    from rafcon.mvc.controllers.main_window import MainWindowController
-    from rafcon.mvc.views.main_window import MainWindowView
-    import rafcon.mvc.singleton as mvc_singletons
-    from rafcon.mvc.config import global_gui_config
-    from rafcon.mvc.runtime_config import global_runtime_config
+    from rafcon.gui.controllers.main_window import MainWindowController
+    from rafcon.gui.views.main_window import MainWindowView
+    import rafcon.gui.singleton as mvc_singletons
+    from rafcon.gui.config import global_gui_config
+    from rafcon.gui.runtime_config import global_runtime_config
 
     from rafcon.core.start import setup_environment
-    from rafcon.mvc.start import signal_handler
+    from rafcon.gui.start import signal_handler
 
     from rafcon.utils import plugins
     # load all plugins specified in the RAFCON_PLUGIN_PATH

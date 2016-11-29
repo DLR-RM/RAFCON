@@ -3,8 +3,8 @@ from os.path import join, dirname, realpath
 import pytest
 
 import rafcon
-import rafcon.mvc.singleton
-import rafcon.mvc.resave_state_machines as resave
+import rafcon.gui.singleton
+import rafcon.gui.resave_state_machines as resave
 import testing_utils
 
 

@@ -2,13 +2,13 @@ import gtk
 import threading
 from os.path import join
 
-# mvc elements
-import rafcon.mvc.config as gui_config
-import rafcon.mvc.singleton
-import rafcon.mvc
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-import rafcon.mvc.controllers.graphical_editor_gaphas as graphical_editor_gaphas
+# gui elements
+import rafcon.gui.config as gui_config
+import rafcon.gui.singleton
+import rafcon.gui
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
+import rafcon.gui.controllers.graphical_editor_gaphas as graphical_editor_gaphas
 
 # core elements
 import rafcon.core.config
@@ -102,7 +102,7 @@ def test_copy_delete_bug(caplog):
     library_paths["generic"] = join(rafcon.__path__[0], "../libraries/generic")
     rafcon.core.singleton.library_manager.refresh_libraries()
 
-    testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 

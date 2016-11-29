@@ -1,4 +1,4 @@
-MVC Models (rafcon.mvc.models)
+MVC Models (rafcon.gui.models)
 ==============================
 
 This package contains all models of the MVC architecture.
@@ -14,95 +14,95 @@ the changed model property.
 AbstractStateModel (in abstract_state)
 --------------------------------------
 
-.. automodule:: rafcon.mvc.models.abstract_state
+.. automodule:: rafcon.gui.models.abstract_state
 
 StateModel (in state)
 ---------------------
 
-.. automodule:: rafcon.mvc.models.state
+.. automodule:: rafcon.gui.models.state
 
 
 ContainerStateModel (in container_state)
 ----------------------------------------
 
-.. automodule:: rafcon.mvc.models.container_state
+.. automodule:: rafcon.gui.models.container_state
 
 
 LibraryStateModel (in library_state)
 ------------------------------------
 
-.. automodule:: rafcon.mvc.models.library_state
+.. automodule:: rafcon.gui.models.library_state
 
 
 StateElementModel (in state_element)
 ------------------------------------
 
-.. automodule:: rafcon.mvc.models.state_element
+.. automodule:: rafcon.gui.models.state_element
 
 
 TransitionModel (in transition)
 -------------------------------
 
-.. automodule:: rafcon.mvc.models.transition
+.. automodule:: rafcon.gui.models.transition
 
 
 DataFlowModel (in data_flow)
 ----------------------------
 
-.. automodule:: rafcon.mvc.models.data_flow
+.. automodule:: rafcon.gui.models.data_flow
 
 
 DataPortModel (in data_port)
 ----------------------------
 
-.. automodule:: rafcon.mvc.models.data_port
+.. automodule:: rafcon.gui.models.data_port
 
 
 ScopedVariableModel (in scoped_variable)
 ----------------------------------------
 
-.. automodule:: rafcon.mvc.models.scoped_variable
+.. automodule:: rafcon.gui.models.scoped_variable
 
 
 OutcomeModel (in outcome)
 -------------------------
 
-.. automodule:: rafcon.mvc.models.outcome
+.. automodule:: rafcon.gui.models.outcome
 
 
 StateMachineModel (in state_machine)
 ------------------------------------
 
-.. automodule:: rafcon.mvc.models.state_machine
+.. automodule:: rafcon.gui.models.state_machine
 
 ModificationsHistoryModel (in modification_history)
 ---------------------------------------------------
 
-.. automodule:: rafcon.mvc.models.modification_history
+.. automodule:: rafcon.gui.models.modification_history
 
 AutoBackupModel (in auto_backup)
 --------------------------------
 
-.. automodule:: rafcon.mvc.models.auto_backup
+.. automodule:: rafcon.gui.models.auto_backup
 
 StateMachineManagerModel (in state_machine_manager)
 ---------------------------------------------------
 
-.. automodule:: rafcon.mvc.models.state_machine_manager
+.. automodule:: rafcon.gui.models.state_machine_manager
 
 
 GlobalVariableManagerModel (in global_variable_manager)
 -------------------------------------------------------
 
-.. automodule:: rafcon.mvc.models.global_variable_manager
+.. automodule:: rafcon.gui.models.global_variable_manager
 
 
 LibraryManagerModel (in library_manager)
 ----------------------------------------
 
-.. automodule:: rafcon.mvc.models.library_manager
+.. automodule:: rafcon.gui.models.library_manager
 
 StateMachineExecutionEngineModel (in state_machine_execution_engine)
 --------------------------------------------------------------------
 
-.. automodule:: rafcon.mvc.models.state_machine_execution_engine
+.. automodule:: rafcon.gui.models.state_machine_execution_engine

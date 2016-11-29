@@ -18,14 +18,14 @@ Views are derived from :py:class:`gaphas.item` and are the visual representation
 Perpendicular Line
 ^^^^^^^^^^^^^^^^^^
 
-The base class for the :py:class:`rafcon.mvc.mygaphas.items.connection.ConnectionView`.
+The base class for the :py:class:`rafcon.gui.mygaphas.items.connection.ConnectionView`.
 
-.. automodule:: rafcon.mvc.mygaphas.items.line
+.. automodule:: rafcon.gui.mygaphas.items.line
 
 ConnectionViews
 ^^^^^^^^^^^^^^^
 
-.. automodule:: rafcon.mvc.mygaphas.items.connection
+.. automodule:: rafcon.gui.mygaphas.items.connection
 
 
 PortViews
@@ -33,17 +33,17 @@ PortViews
 
 Each port (income, outcome, data ports) are represented as a view element.
 
-.. automodule:: rafcon.mvc.mygaphas.items.ports
+.. automodule:: rafcon.gui.mygaphas.items.ports
 
 
 StateView and NameView
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Each :py:class:`rafcon.mvc.mygaphas.items.state.StateView` holds a child item
-:py:class:`rafcon.mvc.mygaphas.items.state.NameView`, as the name of a state can be resized and
+Each :py:class:`rafcon.gui.mygaphas.items.state.StateView` holds a child item
+:py:class:`rafcon.gui.mygaphas.items.state.NameView`, as the name of a state can be resized and
 repositioned.
 
-.. automodule:: rafcon.mvc.mygaphas.items.state
+.. automodule:: rafcon.gui.mygaphas.items.state
 
 
 
@@ -54,79 +54,79 @@ Utility functions
 Enumerations
 ^^^^^^^^^^^^
 
-.. automodule:: rafcon.mvc.mygaphas.utils.enums
+.. automodule:: rafcon.gui.mygaphas.utils.enums
 
 
 Helper methods for drawing operations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: rafcon.mvc.mygaphas.utils.gap_draw_helper
+.. automodule:: rafcon.gui.mygaphas.utils.gap_draw_helper
 
 
 General helper methods
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: rafcon.mvc.mygaphas.utils.gap_helper
+.. automodule:: rafcon.gui.mygaphas.utils.gap_helper
 
 
 
 aspect
 ------
 
-.. automodule:: rafcon.mvc.mygaphas.aspect
+.. automodule:: rafcon.gui.mygaphas.aspect
 
 
 
 canvas
 ------
 
-.. automodule:: rafcon.mvc.mygaphas.canvas
+.. automodule:: rafcon.gui.mygaphas.canvas
 
 
 
 connector
 ---------
 
-.. automodule:: rafcon.mvc.mygaphas.connector
+.. automodule:: rafcon.gui.mygaphas.connector
 
 
 
 constraint
 ----------
 
-.. automodule:: rafcon.mvc.mygaphas.constraint
+.. automodule:: rafcon.gui.mygaphas.constraint
 
 
 
 guide
 -----
 
-.. automodule:: rafcon.mvc.mygaphas.guide
+.. automodule:: rafcon.gui.mygaphas.guide
 
 
 
 painter
 -------
 
-.. automodule:: rafcon.mvc.mygaphas.painter
+.. automodule:: rafcon.gui.mygaphas.painter
 
 
 
 segment
 -------
 
-.. automodule:: rafcon.mvc.mygaphas.segment
+.. automodule:: rafcon.gui.mygaphas.segment
 
 
 
 tools
 -----
 
-.. automodule:: rafcon.mvc.mygaphas.tools
+.. automodule:: rafcon.gui.mygaphas.tools
 
 
 
 view
 ----
 
-.. automodule:: rafcon.mvc.mygaphas.view
+.. automodule:: rafcon.gui.mygaphas.view

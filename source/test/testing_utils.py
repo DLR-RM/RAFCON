@@ -37,8 +37,8 @@ def reload_config(config=True, gui_config=True):
     if config:
         rafcon.core.config.global_config.load()
     if gui_config:
-        import rafcon.mvc.config
-        rafcon.mvc.config.global_gui_config.load()
+        import rafcon.gui.config
+        rafcon.gui.config.global_gui_config.load()
 
 
 def remove_all_libraries():
@@ -103,9 +103,9 @@ def call_gui_callback(callback, *args):
 
 
 def start_rafcon():
-    # import mvc modules only if necessary
-    from rafcon.mvc.config import global_gui_config
-    from rafcon.mvc.start import signal_handler
+    # import gui modules only if necessary
+    from rafcon.gui.config import global_gui_config
+    from rafcon.gui.start import signal_handler
     test_multithreading_lock.acquire()
     signal.signal(signal.SIGINT, signal_handler)
     global_config.load()

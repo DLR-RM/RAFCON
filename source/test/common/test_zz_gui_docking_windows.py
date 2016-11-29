@@ -4,11 +4,11 @@ import threading
 import shutil
 
 # mvc
-from rafcon.mvc.runtime_config import global_runtime_config
-import rafcon.mvc.singleton
-from rafcon.mvc.utils import constants
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
+from rafcon.gui.runtime_config import global_runtime_config
+import rafcon.gui.singleton
+from rafcon.gui.utils import constants
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
 
 from rafcon.utils import log
 
@@ -158,7 +158,7 @@ def test_window_positions(caplog):
     testing_utils.start_rafcon()
     mirror_runtime_config_file()
     global_runtime_config.load(config_file='runtime_config.yaml', path=DOCKING_TEST_FOLDER)
-    testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
     # Wait for GUI to initialize
@@ -177,7 +177,7 @@ def test_pane_positions(caplog):
     testing_utils.start_rafcon()
     mirror_runtime_config_file()
     global_runtime_config.load(config_file='runtime_config.yaml', path=DOCKING_TEST_FOLDER)
-    testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
     # Wait for GUI to initialize

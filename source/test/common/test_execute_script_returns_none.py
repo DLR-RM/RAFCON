@@ -2,7 +2,7 @@ import pytest
 import signal
 
 # mvc
-import rafcon.mvc.singleton
+import rafcon.gui.singleton
 
 # statemachine
 import rafcon.core.start
@@ -24,7 +24,7 @@ def test_execute_script_returns_none(caplog):
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
     if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
     testing_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()

@@ -4,14 +4,14 @@ import gtk
 import threading
 from os.path import join
 
-# mvc elements
-import rafcon.mvc.config as gui_config
-import rafcon.mvc.singleton
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-from rafcon.mvc.views.graphical_editor import GraphicalEditor as OpenGLEditor
-from rafcon.mvc.mygaphas.view import ExtendedGtkView as GaphasEditor
-import rafcon.mvc.state_machine_helper as state_machine_helper
+# gui elements
+import rafcon.gui.config as gui_config
+import rafcon.gui.singleton
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
+from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
+from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
+import rafcon.gui.state_machine_helper as state_machine_helper
 
 # core elements
 import rafcon.core.config
@@ -205,7 +205,7 @@ def trigger_gui_signals(*args):
 
     ##########################################################
     # substitute state with template
-    lib_state = rafcon.mvc.singleton.library_manager.get_library_instance('generic', 'wait')
+    lib_state = rafcon.gui.singleton.library_manager.get_library_instance('generic', 'wait')
     old_keys = state_m_parent.state.states.keys()
     transitions_before, data_flows_before = state_m_parent.state.related_linkage_state('RQXPAI')
     call_gui_callback(state_m_parent.state.substitute_state, 'RQXPAI', lib_state.state_copy)
@@ -232,7 +232,7 @@ def trigger_gui_signals(*args):
 
     old_keys = state_m_parent.state.states.keys()
     transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
-    lib_state = rafcon.mvc.singleton.library_manager.get_library_instance('generic', 'wait')
+    lib_state = rafcon.gui.singleton.library_manager.get_library_instance('generic', 'wait')
     call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state)
     new_state_id = None
     for state_id in state_m_parent.state.states.keys():
@@ -265,7 +265,7 @@ def trigger_gui_signals(*args):
 
     old_keys = state_m_parent.state.states.keys()
     transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
-    lib_state = rafcon.mvc.singleton.library_manager.get_library_instance('generic', 'wait')
+    lib_state = rafcon.gui.singleton.library_manager.get_library_instance('generic', 'wait')
     call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state.state_copy)
     new_state_id = None
     for state_id in state_m_parent.state.states.keys():
@@ -305,7 +305,7 @@ def test_gui(caplog):
     state_machine = StateMachine(ctr_state)
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
-    testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 

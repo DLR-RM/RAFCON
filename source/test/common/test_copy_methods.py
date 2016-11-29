@@ -5,8 +5,8 @@ import time
 import threading
 
 # mvc
-import rafcon.mvc.singleton as mvc_singleton
-from rafcon.mvc.models.state_machine import StateMachineModel
+import rafcon.gui.singleton as mvc_singleton
+from rafcon.gui.models.state_machine import StateMachineModel
 
 # core elements
 import rafcon.core.singleton
@@ -86,7 +86,7 @@ def create_models(*args, **kargs):
     sm = StateMachine(ctr_state)
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
 
-    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     return ctr_state, sm_m, state_dict
 
@@ -117,7 +117,7 @@ def create_models_lib():
     # # state_machine = StateMachine(root_state)
     #
     # rafcon.core.singleton.state_machine_manager.add_state_machine(sm_loaded)
-    # sm_model = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm_loaded.state_machine_id]
+    # sm_model = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm_loaded.state_machine_id]
     #
     # return sm_loaded.root_state, sm_model, {}
 
@@ -409,11 +409,11 @@ def test_complex(with_gui, caplog):
     rafcon.core.singleton.library_manager.refresh_libraries()
 
     if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     if with_gui:
-        from rafcon.mvc.controllers.main_window import MainWindowController
-        from rafcon.mvc.views.main_window import MainWindowView
+        from rafcon.gui.controllers.main_window import MainWindowController
+        from rafcon.gui.views.main_window import MainWindowView
         main_window_view = MainWindowView()
         main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 

@@ -15,7 +15,7 @@ def search_for_print_statements(path):
 
 
 def test_number_of_whitespaces():
-    mvc_print_lines = search_for_print_statements("/mvc")
+    mvc_print_lines = search_for_print_statements("/gui")
     state_machine_print_lines = search_for_print_statements("/core")
     utils_print_lines = search_for_print_statements("/utils")
     print len(mvc_print_lines)

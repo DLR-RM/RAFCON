@@ -5,11 +5,11 @@ import threading
 import Queue
 import psutil
 
-# mvc elements
-import rafcon.mvc.singleton
-import rafcon.mvc.config as gui_config
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
+# gui elements
+import rafcon.gui.singleton
+import rafcon.gui.config as gui_config
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
 
 # core elements
 import rafcon.core.config
@@ -147,7 +147,7 @@ def test_gui(caplog):
 
     # Wait for GUI to initialize
     t_u.wait_for_gui()
-    t_u.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    t_u.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(t_u.sm_manager_model, main_window_view)
 

@@ -1,7 +1,7 @@
 import pytest
 
 # mvc
-import rafcon.mvc.singleton
+import rafcon.gui.singleton
 
 # core elements
 from rafcon.core.execution.state_machine_execution_engine import StateMachineExecutionEngine

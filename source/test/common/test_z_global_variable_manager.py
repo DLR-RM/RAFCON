@@ -2,11 +2,11 @@ import gtk
 import threading
 import pytest
 
-# mvc elements
-import rafcon.mvc.config as gui_config
-import rafcon.mvc.singleton
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
+# gui elements
+import rafcon.gui.config as gui_config
+import rafcon.gui.singleton
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
 
 # core elements
 import rafcon.core.config
@@ -63,7 +63,7 @@ def test_gui(caplog):
     testing_utils.remove_all_libraries()
     testing_utils.remove_all_gvm_variables()
 
-    testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)

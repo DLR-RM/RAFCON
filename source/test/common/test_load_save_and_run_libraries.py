@@ -2,7 +2,7 @@ import os
 from os.path import dirname, join, realpath
 
 # mvc
-import rafcon.mvc.singleton
+import rafcon.gui.singleton
 
 # core elements
 import rafcon.core.singleton

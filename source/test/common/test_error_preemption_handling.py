@@ -1,5 +1,5 @@
 import pytest
-import rafcon.mvc.singleton
+import rafcon.gui.singleton
 import testing_utils
 
 import rafcon.core.states.execution_state

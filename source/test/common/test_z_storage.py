@@ -3,9 +3,9 @@ import gtk
 import logging
 
 # mvc
-import rafcon.mvc.singleton
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
+import rafcon.gui.singleton
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
 
 # core elements
 import rafcon.core.singleton
@@ -95,9 +95,9 @@ def create_models(*args, **kargs):
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-    rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
-    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     # return ctr_state, sm_m, state_dict
     return ctr_state, sm_m, state_dict
@@ -259,7 +259,7 @@ def test_storage_with_gui(caplog):
     logger.debug("init libs")
 
     if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     logger.debug("initialize MainWindow")
     main_window_view = MainWindowView()
 

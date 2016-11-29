@@ -7,12 +7,12 @@ import time
 import os
 import datetime
 
-# mvc elements
-import rafcon.mvc.config as gui_config
-import rafcon.mvc.singleton
-from rafcon.mvc.models.global_variable_manager import GlobalVariableManagerModel
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
+# gui elements
+import rafcon.gui.config as gui_config
+import rafcon.gui.singleton
+from rafcon.gui.models.global_variable_manager import GlobalVariableManagerModel
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
 
 # state machine elements
 from rafcon.core.singleton import state_machine_execution_engine
@@ -122,7 +122,7 @@ def test_backward_stepping_library_state(caplog):
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
     if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 
@@ -208,7 +208,7 @@ def test_backward_stepping_preemptive_state(caplog):
     main_window_view = MainWindowView()
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
     if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 
@@ -291,7 +291,7 @@ def test_backward_stepping_barrier_state(caplog):
     main_window_view = MainWindowView()
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
     if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 

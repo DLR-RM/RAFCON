@@ -1,4 +1,4 @@
-from rafcon.mvc.mygaphas.utils.cache.value_cache import ValueCache
+from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
 
 
 def test_value_retrieval():
