@@ -19,7 +19,7 @@ from rafcon.statemachine.states.state import State
 from rafcon.statemachine.decorators import lock_state_machine
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.script import Script
-from rafcon.statemachine.enums import StateExecutionStatus
+from rafcon.statemachine.states.state import StateExecutionStatus
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)

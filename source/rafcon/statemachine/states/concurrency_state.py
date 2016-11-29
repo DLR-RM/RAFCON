@@ -14,7 +14,7 @@ from gtkmvc import Observable
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.execution.execution_history import CallType
 from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
-from rafcon.statemachine.enums import StateExecutionStatus
+from rafcon.statemachine.states.state import StateExecutionStatus
 from rafcon.statemachine.state_elements.outcome import Outcome
 
 

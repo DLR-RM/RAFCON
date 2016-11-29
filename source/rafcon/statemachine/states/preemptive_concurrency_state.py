@@ -12,7 +12,7 @@ import traceback
 
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.states.concurrency_state import ConcurrencyState
-from rafcon.statemachine.enums import StateExecutionStatus
+from rafcon.statemachine.states.state import StateExecutionStatus
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

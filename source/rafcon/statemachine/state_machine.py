@@ -16,7 +16,6 @@ from jsonconversion.jsonobject import JSONObject
 
 from rafcon.statemachine.id_generator import generate_state_machine_id
 from rafcon.statemachine.execution.execution_history import ExecutionHistory
-from rafcon.statemachine.enums import StateExecutionStatus
 
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.storage_utils import get_current_time_string
@@ -115,6 +114,7 @@ class StateMachine(Observable, JSONObject, Hashable):
     def join(self):
         """Wait for root state to finish execution"""
         self._root_state.join()
+        from rafcon.statemachine.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
     @Observable.observed

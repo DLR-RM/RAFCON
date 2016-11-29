@@ -26,7 +26,7 @@ import rafcon.utils.filesystem as filesystem
 from rafcon.statemachine.config import global_config
 import rafcon.statemachine.singleton as sm_singletons
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.enums import StateExecutionStatus
+from rafcon.statemachine.states.state import StateExecutionStatus
 
 from rafcon.utils import profiler
 from rafcon.utils import plugins

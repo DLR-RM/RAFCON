@@ -21,7 +21,6 @@ from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
-from rafcon.statemachine.enums import StateExecutionStatus
 from rafcon.statemachine.state_elements.data_port import DataPortType
 from rafcon.statemachine.id_generator import *
 from rafcon.statemachine.state_elements.state_element import StateElement
@@ -1256,3 +1255,4 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
 
 StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY LIBRARY DECIDER_STATE')
+StateExecutionStatus = Enum('STATE_EXECUTION_STATE', 'INACTIVE ACTIVE EXECUTE_CHILDREN WAIT_FOR_NEXT_STATE')

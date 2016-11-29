@@ -10,7 +10,7 @@
 from copy import copy
 
 from gtkmvc import Observable
-from rafcon.statemachine.enums import StateExecutionStatus
+from rafcon.statemachine.states.state import StateExecutionStatus
 from rafcon.statemachine.singleton import library_manager
 from rafcon.statemachine.states.state import State
 from rafcon.statemachine.decorators import lock_state_machine

@@ -15,7 +15,7 @@ from gtkmvc import Observable
 from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.decorators import lock_state_machine
 from rafcon.statemachine.states.concurrency_state import ConcurrencyState
-from rafcon.statemachine.enums import StateExecutionStatus
+from rafcon.statemachine.states.state import StateExecutionStatus
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
