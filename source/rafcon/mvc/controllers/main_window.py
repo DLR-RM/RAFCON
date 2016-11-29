@@ -26,7 +26,7 @@ from rafcon.mvc.controllers.tool_bar import ToolBarController
 from rafcon.mvc.controllers.top_tool_bar import TopToolBarMainWindowController
 from rafcon.mvc.controllers.execution_history import ExecutionHistoryTreeController
 from rafcon.mvc.controllers.undocked_window import UndockedWindowController
-from rafcon.statemachine.enums import StateMachineExecutionStatus
+from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
 import rafcon.mvc.singleton as mvc_singleton
 import rafcon.statemachine.singleton
 import rafcon.statemachine.config

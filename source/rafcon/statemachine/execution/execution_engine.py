@@ -15,7 +15,7 @@ from threading import Lock
 
 from gtkmvc import Observable
 from rafcon.statemachine.execution.execution_status import ExecutionStatus
-from rafcon.statemachine.enums import StateMachineExecutionStatus
+from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

@@ -193,7 +193,7 @@ def reactor_required():
 def signal_handler(signal, frame):
     global _user_abort
 
-    from rafcon.statemachine.enums import StateMachineExecutionStatus
+    from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
     state_machine_execution_engine = sm_singletons.state_machine_execution_engine
     sm_singletons.shut_down_signal = signal
 

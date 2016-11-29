@@ -281,7 +281,7 @@ class StateMachinesEditorController(ExtendedController):
 
         :param state_machine_m: The selected state machine model.
         """
-        from rafcon.statemachine.enums import StateMachineExecutionStatus
+        from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
         from rafcon.statemachine.singleton import state_machine_execution_engine, state_machine_manager
 
         def push_sm_running_dialog():

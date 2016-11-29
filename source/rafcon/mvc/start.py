@@ -23,7 +23,7 @@ from rafcon.statemachine.storage import storage
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
 import rafcon.statemachine.singleton as sm_singletons
-from rafcon.statemachine.enums import StateMachineExecutionStatus
+from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
 from rafcon.statemachine.config import global_config
 
 # utils

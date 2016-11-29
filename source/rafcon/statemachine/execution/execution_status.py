@@ -7,11 +7,10 @@
 
 
 """
-
+from enum import Enum
 from gtkmvc import Observable
 from threading import Condition
 
-from rafcon.statemachine.enums import StateMachineExecutionStatus
 from execution_history import ExecutionHistory
 from rafcon.utils import log
 
@@ -58,3 +57,8 @@ class ExecutionStatus(Observable):
                 raise TypeError("execution_mode must be of type StateMachineExecutionStatus")
 
         self._execution_mode = execution_mode
+
+
+StateMachineExecutionStatus = Enum('STATE_MACHINE_EXECUTION_STATUS', 'STARTED STOPPED PAUSED '
+                                                                     'FORWARD_INTO FORWARD_OVER FORWARD_OUT '
+                                                                     'BACKWARD RUN_TO_SELECTED_STATE')

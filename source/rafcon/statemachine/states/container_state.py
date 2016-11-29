@@ -11,7 +11,7 @@ from copy import copy, deepcopy
 from threading import Condition
 from gtkmvc import Observable
 
-from rafcon.statemachine.enums import StateMachineExecutionStatus
+from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
 from rafcon.statemachine.states.state import StateExecutionStatus
 from rafcon.statemachine.state_elements.data_port import DataPortType
 from rafcon.statemachine.id_generator import *

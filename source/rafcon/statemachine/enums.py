@@ -8,13 +8,7 @@
 
 """
 
-from enum import Enum
-
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
-
-StateMachineExecutionStatus = Enum('STATE_MACHINE_EXECUTION_STATUS', 'STARTED STOPPED PAUSED '
-                                                                     'FORWARD_INTO FORWARD_OVER FORWARD_OUT '
-                                                                     'BACKWARD RUN_TO_SELECTED_STATE')
 
 # Constants
 UNIQUE_DECIDER_STATE_ID = "unique_decider_state_id"

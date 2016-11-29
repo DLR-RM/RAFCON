@@ -14,7 +14,7 @@ import gtk
 import glib
 
 from rafcon.statemachine import interface
-from rafcon.statemachine.enums import StateMachineExecutionStatus
+from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
 from rafcon.statemachine.state_machine import StateMachine
 from rafcon.statemachine.states.library_state import LibraryState
 from rafcon.statemachine.states.hierarchy_state import HierarchyState
