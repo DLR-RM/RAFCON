@@ -52,15 +52,13 @@ class ContainerState(State):
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None,
-                 scoped_variables=None, v_checker=None):
+                 scoped_variables=None):
 
         self._states = OrderedDict()
         self._transitions = {}
         self._data_flows = {}
         self._scoped_variables = {}
         self._scoped_data = {}
-        # reference to an object that checks the validity of this container state
-        self._v_checker = v_checker
         self._current_state = None
         # condition variable to wait for not connected states
         self._transitions_cv = Condition()
@@ -113,8 +111,7 @@ class ContainerState(State):
                     states=None,
                     transitions=transitions if states else None,
                     data_flows=data_flows if states else None,
-                    scoped_variables=dictionary['scoped_variables'],
-                    v_checker=None)
+                    scoped_variables=dictionary['scoped_variables'])
         try:
             state.description = dictionary['description']
         except (TypeError, KeyError):  # (Very) old state machines do not have a description field
@@ -157,7 +154,7 @@ class ContainerState(State):
         transitions = {elem_id: copy(elem) for elem_id, elem in self._transitions.iteritems()}
 
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, outcomes, states,
-                               transitions, data_flows, None, scoped_variables, None)
+                               transitions, data_flows, None, scoped_variables)
         state.description = deepcopy(self.description)
         return state
 
@@ -2163,21 +2160,6 @@ class ContainerState(State):
             if not isinstance(s, ScopedData):
                 raise TypeError("element of scoped_data must be of type ScopedData")
         self._scoped_data = scoped_data
-
-    @property
-    def v_checker(self):
-        """Property for the _v_checker field
-
-        """
-        return self._v_checker
-
-    @v_checker.setter
-    @lock_state_machine
-    # @Observable.observed
-    def v_checker(self, v_checker):
-        if not isinstance(v_checker, ValidityChecker):
-            raise TypeError("validity_check must be of type ValidityChecker")
-        self._v_checker = v_checker
 
     @property
     def child_execution(self):

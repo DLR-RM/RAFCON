@@ -32,11 +32,10 @@ class HierarchyState(ContainerState):
     yaml_tag = u'!HierarchyState'
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None,
-                 v_checker=None):
+                 states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None):
 
         ContainerState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, states,
-                                transitions, data_flows, start_state_id, scoped_variables, v_checker)
+                                transitions, data_flows, start_state_id, scoped_variables)
         self.handling_execution_mode = False
 
         self.child_state = None

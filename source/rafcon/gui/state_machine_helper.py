@@ -195,8 +195,7 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
                                        outcomes=source_state.outcomes, states=source_state.states,
                                        transitions=state_transitions, data_flows=source_state.data_flows,
                                        start_state_id=state_start_state_id,
-                                       scoped_variables=source_state.scoped_variables,
-                                       v_checker=source_state.v_checker)
+                                       scoped_variables=source_state.scoped_variables)
 
     else:  # TRANSFORM from EXECUTION- TO CONTAINER-STATE or FROM CONTAINER- TO EXECUTION-STATE
 
