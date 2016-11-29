@@ -60,25 +60,29 @@ class StateMachineRightClickMenu(object):
         if global_gui_config.get_config_value('EXTENDED_RIGHT_CLICK_MENU'):
             menu.append(gtk.SeparatorMenuItem())
 
-            menu.append(create_image_menu_item("Add Execution State", constants.BUTTON_ADD, self.on_add_execution_state_activate,
+            menu.append(create_image_menu_item("Add Execution State", constants.BUTTON_ADD,
+                                               self.on_add_execution_state_activate,
                                                accel_code=shortcuts_dict['add'][0], accel_group=accel_group))
-            menu.append(create_image_menu_item("Add Hierarchy State", constants.BUTTON_ADD, self.on_add_hierarchy_state_activate,
+            menu.append(create_image_menu_item("Add Hierarchy State", constants.BUTTON_ADD,
+                                               self.on_add_hierarchy_state_activate,
                                                accel_code=shortcuts_dict['add2'][0], accel_group=accel_group))
-            menu.append(create_image_menu_item("Add Preemptive State", constants.BUTTON_ADD, self.on_add_preemptive_state_activate,
+            menu.append(create_image_menu_item("Add Preemptive State", constants.BUTTON_ADD,
+                                               self.on_add_preemptive_state_activate,
                                                accel_code=shortcuts_dict['add3'][0], accel_group=accel_group))
-            menu.append(create_image_menu_item("Add Barrier State", constants.BUTTON_ADD, self.on_add_barrier_state_activate,
+            menu.append(create_image_menu_item("Add Barrier State", constants.BUTTON_ADD,
+                                               self.on_add_barrier_state_activate,
                                                accel_code=shortcuts_dict['add4'][0], accel_group=accel_group))
 
             menu.append(gtk.SeparatorMenuItem())
 
             menu.append(create_image_menu_item("Add Outcome", constants.BUTTON_ADD, self.on_add_outcome,
-                                               accel_code=shortcuts_dict['add'][0], accel_group=accel_group))
+                                               accel_code=shortcuts_dict['add_outcome'][0], accel_group=accel_group))
             menu.append(create_image_menu_item("Add Output Port", constants.BUTTON_ADD, self.on_add_output,
-                                               accel_code=shortcuts_dict['add2'][0], accel_group=accel_group))
+                                               accel_code=shortcuts_dict['add_output'][0], accel_group=accel_group))
             menu.append(create_image_menu_item("Add Input Port", constants.BUTTON_ADD, self.on_add_input,
-                                               accel_code=shortcuts_dict['add3'][0], accel_group=accel_group))
+                                               accel_code=shortcuts_dict['add_input'][0], accel_group=accel_group))
             menu.append(create_image_menu_item("Add Scoped Variable", constants.BUTTON_ADD, self.on_add_scoped_variable,
-                                               accel_code=shortcuts_dict['add4'][0], accel_group=accel_group))
+                                               accel_code=shortcuts_dict['add_scoped_variable'][0], accel_group=accel_group))
 
         menu.append(gtk.SeparatorMenuItem())
 
