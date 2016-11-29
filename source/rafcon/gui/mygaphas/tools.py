@@ -352,7 +352,8 @@ class MoveHandleTool(HandleTool):
 
         if resize_recursive:
             item.resize_all_children(old_size)
-        item.update_minimum_size_of_children()
+        if isinstance(item, StateView):
+            item.update_minimum_size_of_children()
 
         return True
 
