@@ -126,7 +126,7 @@ class MoveItemTool(ItemTool):
         if isinstance(self.view.focused_item, NameView):
             if position_changed:
                 self.view.graphical_editor.emit('meta_data_changed', self.view.focused_item.parent.model,
-                                                 "name_position", False)
+                                                "name_position", False)
 
         if not position_changed:
             if self._item in self.view.selected_items and event.state & gtk.gdk.CONTROL_MASK:
@@ -218,7 +218,6 @@ class HoverItemTool(HoverTool):
 
 
 class MultiSelectionTool(RubberbandTool):
-
     def on_button_press(self, event):
         # print "on_button_press: ", self.__class__.__name__
         if event.state & gtk.gdk.SHIFT_MASK:
@@ -255,7 +254,7 @@ class MultiSelectionTool(RubberbandTool):
         current_items_which_are_old_selection = [item in old_items_selected for item in self.view.selected_items]
         rubber_band_selection = list(self.view.selected_items)
         new_selection = old_items_selected
-        if any(old_items_in_new_selection) and not all(current_items_which_are_old_selection): # reselect elements
+        if any(old_items_in_new_selection) and not all(current_items_which_are_old_selection):  # reselect elements
             # add new  rubber band selection by preserving old state selection
             for item in rubber_band_selection:
                 if item not in old_items_selected:
@@ -339,6 +338,24 @@ class MoveHandleTool(HandleTool):
 
             return True
 
+    def on_motion_notify(self, event):
+        if not self.grabbed_handle or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
+            return
+        item = self.grabbed_item
+        resize_recursive = isinstance(item, StateView) and self.grabbed_handle in item.corner_handles and \
+                           event.state & constants.RECURSIVE_RESIZE_MODIFIER
+
+        if resize_recursive:
+            old_size = (item.width, item.height)
+
+        super(MoveHandleTool, self).on_motion_notify(event)
+
+        if resize_recursive:
+            item.resize_all_children(old_size)
+        item.update_minimum_size_of_children()
+
+        return True
+
     def on_button_release(self, event):
         if self.grabbed_item:
             item = self.grabbed_item
@@ -408,6 +425,7 @@ class ConnectionTool(ConnectHandleTool):
         :param bool of_target: Whether the origin or target will be reconnected
         :return:
         """
+
         def sink_set_and_differs(sink_a, sink_b):
             if not sink_a:
                 return False
@@ -462,7 +480,6 @@ class ConnectionTool(ConnectHandleTool):
 
 
 class ConnectionCreationTool(ConnectionTool):
-
     def __init__(self):
         super(ConnectionCreationTool, self).__init__()
 
@@ -507,7 +524,8 @@ class ConnectionCreationTool(ConnectionTool):
         if not self._connection_v:
             # Create new temporary connection, with origin at the start port and target at the cursor
             self._create_temporary_connection()
-            self._start_port_v.parent.connect_connection_to_port(self._connection_v, self._start_port_v, as_target=False)
+            self._start_port_v.parent.connect_connection_to_port(self._connection_v, self._start_port_v,
+                                                                 as_target=False)
             self.grab_handle(self._connection_v, self._connection_v.to_handle())
             self._set_motion_handle(event)
 
@@ -537,7 +555,6 @@ class ConnectionCreationTool(ConnectionTool):
 
 
 class ConnectionModificationTool(ConnectionTool):
-
     def __init__(self):
         super(ConnectionModificationTool, self).__init__()
         self._end_handle = None
@@ -627,7 +644,6 @@ class ConnectionModificationTool(ConnectionTool):
 
 
 class RightClickTool(ItemTool):
-
     def __init__(self, view=None, buttons=(3,)):
         super(RightClickTool, self).__init__(view, buttons)
         self.sm_right_click_menu = StateRightClickMenuGaphas()
