@@ -29,7 +29,7 @@ from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.state_machine import StateMachine
 
-from rafcon.core.enums import StateExecutionState
+from rafcon.core.states.state import StateExecutionStatus
 
 import testing_utils
 import pytest
@@ -1591,7 +1591,7 @@ def test_state_property_modify_notification(caplog):
     forecast = 0
 
     # state_execution_status(self, child_execution) enum
-    state_dict['Nested2'].state_execution_status = StateExecutionState.INACTIVE
+    state_dict['Nested2'].state_execution_status = StateExecutionStatus.INACTIVE
     forecast += 1
     check_states_notifications(states_observer_dict, sub_state_name='Nested2', forecast=forecast)
 

@@ -59,6 +59,6 @@ class ExecutionStatus(Observable):
         self._execution_mode = execution_mode
 
 
-StateMachineExecutionStatus = Enum('STATE_MACHINE_EXECUTION_STATUS', 'STARTED STOPPED PAUSED '
+StateMachineExecutionStatus = Enum('STATE_MACHINE_EXECUTION_STATUS', 'STARTED STOPPED PAUSED FINISHED '
                                                                      'FORWARD_INTO FORWARD_OVER FORWARD_OUT '
                                                                      'BACKWARD RUN_TO_SELECTED_STATE')

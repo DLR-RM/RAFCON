@@ -306,7 +306,7 @@ class StateMachinesEditorController(ExtendedController):
             def on_message_dialog_response_signal(widget, response_id, state_machine_m):
                 widget.destroy()
                 if response_id == ButtonDialog.OPTION_1.value:
-                    if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED \
+                    if not state_machine_execution_engine.finished_or_stopped() \
                             and state_machine_manager.active_state_machine_id == \
                                     state_machine_m.state_machine.state_machine_id:
                         push_sm_running_dialog()
@@ -323,7 +323,7 @@ class StateMachinesEditorController(ExtendedController):
                                [state_machine_m], type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
 
         # sm running
-        elif state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED and \
+        elif not state_machine_execution_engine.finished_or_stopped() and \
                         state_machine_manager.active_state_machine_id == state_machine_m.state_machine.state_machine_id:
             push_sm_running_dialog()
         else:

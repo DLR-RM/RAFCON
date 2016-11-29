@@ -551,7 +551,7 @@ class MenuBarController(ExtendedController):
         else:
 
             # check if a state machine is still running
-            if self.state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+            if not self.state_machine_execution_engine.finished_or_stopped:
                 if self.stopped_state_machine_to_proceed():
                     pass  # state machine was stopped, proceeding reloading library
                 else:
@@ -672,8 +672,7 @@ class MenuBarController(ExtendedController):
             def on_message_dialog_response_signal(widget, response_id):
                 if response_id == ButtonDialog.OPTION_1.value:
                     widget.destroy()
-                    if self.state_machine_execution_engine.status.execution_mode \
-                            is not StateMachineExecutionStatus.STOPPED:
+                    if not self.state_machine_execution_engine.finished_or_stopped():
                         self.check_sm_running()
                     else:
                         self.prepare_destruction()
@@ -694,7 +693,7 @@ class MenuBarController(ExtendedController):
         return False
 
     def check_sm_running(self):
-        if self.state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+        if not self.state_machine_execution_engine.finished_or_stopped():
 
             def on_message_dialog_response_signal(widget, response_id):
                 if response_id == ButtonDialog.OPTION_1.value:

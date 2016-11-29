@@ -1,4 +1,5 @@
-import pytest
+import rafcon.gui.config as gui_config
+
 import sys
 import logging
 import gtk
@@ -8,16 +9,15 @@ import os
 import datetime
 
 # gui elements
-import rafcon.gui.config as gui_config
 import rafcon.gui.singleton
 from rafcon.gui.models.global_variable_manager import GlobalVariableManagerModel
 from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
+from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 
 # state machine elements
 from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.storage import storage
-from rafcon.core.execution.state_machine_status import StateMachineExecutionStatus
 
 # general tool elements
 from rafcon.utils import log
@@ -94,7 +94,7 @@ def trigger_gui_signals_library_state(*args):
     call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
     sm = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
-    while state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+    while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
     for key, sd in sm.root_state.scoped_data.iteritems():
         if sd.name == "beer_count":
@@ -185,7 +185,7 @@ def trigger_gui_signals_preemptive_state(*args):
 
     sm = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
 
-    while state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+    while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
     beers = gvm.global_variable_manager.get_variable('beers')
     whiskey = gvm.global_variable_manager.get_variable('whiskey')
@@ -265,7 +265,7 @@ def trigger_gui_signals_barrier_state(*args):
     call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
     sm = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
-    while state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+    while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
     for key, sd in sm.root_state.scoped_data.iteritems():
         if sd.name == "beer_number":

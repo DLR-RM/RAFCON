@@ -3,7 +3,6 @@ import time
 # core elements
 from rafcon.core.storage import storage
 import rafcon.core.singleton
-from rafcon.core.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
 
@@ -78,5 +77,5 @@ def test_custom_entry_point(caplog):
 
 
 if __name__ == '__main__':
-    # test_custom_entry_point(None)
-    pytest.main([__file__])
+    test_custom_entry_point(None)
+    # pytest.main([__file__])

@@ -342,7 +342,7 @@ class MainWindowController(ExtendedController):
             self.get_controller('state_machines_editor_ctrl').highlight_execution_of_currently_active_sm(True)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_pause_shortcut')
-        elif rafcon.core.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED:
+        elif rafcon.core.singleton.state_machine_execution_engine.finished_or_stopped():
             self.get_controller('state_machines_editor_ctrl').highlight_execution_of_currently_active_sm(False)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_stop_shortcut')

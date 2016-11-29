@@ -4,7 +4,7 @@ import pytest
 # state machine
 import rafcon.core.singleton
 from rafcon.core.storage import storage
-from rafcon.core.enums import StateExecutionState
+from rafcon.core.states.state import StateExecutionStatus
 
 # utils
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
@@ -29,7 +29,7 @@ def test_run_to_selected_state(caplog):
                                                                                        sm.state_machine_id)
     # run the statemachine to the state before AOYXRY, this is an asynchronous task
     timeout = time.time()
-    while not sm.get_state_by_path("VVBPOY/ABNQFK").state_execution_status is StateExecutionState.WAIT_FOR_NEXT_STATE:
+    while not sm.get_state_by_path("VVBPOY/ABNQFK").state_execution_status is StateExecutionStatus.WAIT_FOR_NEXT_STATE:
         time.sleep(.05)
         if time.time()-timeout > 2:
             raise RuntimeError("execution_state ABNQFK not reached --> timeout")
@@ -51,5 +51,5 @@ def test_run_to_selected_state(caplog):
 
 
 if __name__ == '__main__':
-    # test_run_to_selected_state(None)
-    pytest.main([__file__])
+    test_run_to_selected_state(None)
+    # pytest.main([__file__])

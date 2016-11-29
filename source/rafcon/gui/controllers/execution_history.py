@@ -177,7 +177,8 @@ class ExecutionHistoryTreeController(ExtendedController):
         and resets the boolean of modification_history_was_focused to False each time this notification are observed.
         """
         if state_machine_execution_engine.status.execution_mode in \
-                [StateMachineExecutionStatus.STARTED, StateMachineExecutionStatus.STOPPED]:
+                [StateMachineExecutionStatus.STARTED, StateMachineExecutionStatus.STOPPED,
+                 StateMachineExecutionStatus.FINISHED]:
             if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):
                 # request focus -> which has not have to be satisfied
                 self.parent.focus_notebook_page_of_controller(self)

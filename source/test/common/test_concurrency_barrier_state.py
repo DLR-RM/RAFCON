@@ -11,7 +11,7 @@ import rafcon.core.singleton
 # test environment elements
 import pytest
 import testing_utils
-from rafcon.core.enums import UNIQUE_DECIDER_STATE_ID
+from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 
 
 def create_concurrency_barrier_state():

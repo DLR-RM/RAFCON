@@ -3,7 +3,6 @@ import threading
 import time
 
 # core elements
-from rafcon.core.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.core.singleton import state_machine_manager
 from rafcon.core.singleton import global_variable_manager
 from rafcon.core.singleton import state_machine_execution_engine

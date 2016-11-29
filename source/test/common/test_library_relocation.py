@@ -16,8 +16,6 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.core.execution.state_machine_execution_engine import StateMachineExecutionEngine
-from rafcon.core.enums import StateExecutionState
 
 from rafcon.utils import log
 logger = log.get_logger("start-no-gui")

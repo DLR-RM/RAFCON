@@ -39,20 +39,15 @@ substitute_modules = {
     # states
     'rafcon.statemachine.states.barrier_concurrency_state.BarrierConcurrencyState':
         'rafcon.core.states.barrier_concurrency_state.BarrierConcurrencyState',
-    'rafcon.statemachine.states.concurrency_state.ConcurrencyState':
-        'rafcon.core.states.concurrency_state.ConcurrencyState',
-    'rafcon.statemachine.states.container_state.ContainerState':
-        'rafcon.core.states.container_state.ContainerState',
-    'rafcon.statemachine.states.execution_state.ExecutionState':
-        'rafcon.core.states.execution_state.ExecutionState',
-    'rafcon.statemachine.states.hierarchy_state.HierarchyState':
-        'rafcon.core.states.hierarchy_state.HierarchyState',
-    'rafcon.statemachine.states.library_state.LibraryState':
-        'rafcon.core.states.library_state.LibraryState',
-    'rafcon.statemachine.states.preemptive_concurrency_state.PreemptiveConcurrencyState':
-        'rafcon.core.states.preemptive_concurrency_state.PreemptiveConcurrencyState',
-    'rafcon.statemachine.states.state.State':
-        'rafcon.core.states.state.State'
+    'rafcon.statemachine.states.barrier_concurrency_state.DeciderState':
+        'rafcon.core.states.barrier_concurrency_state.DeciderState',
+    'rafcon.statemachine.states.concurrency_state.ConcurrencyState': 'rafcon.core.states.concurrency_state.ConcurrencyState',
+    'rafcon.statemachine.states.container_state.ContainerState': 'rafcon.core.states.container_state.ContainerState',
+    'rafcon.statemachine.states.execution_state.ExecutionState': 'rafcon.core.states.execution_state.ExecutionState',
+    'rafcon.statemachine.states.hierarchy_state.HierarchyState': 'rafcon.core.states.hierarchy_state.HierarchyState',
+    'rafcon.statemachine.states.library_state.LibraryState': 'rafcon.core.states.library_state.LibraryState',
+    'rafcon.statemachine.states.preemptive_concurrency_state.PreemptiveConcurrencyState': 'rafcon.core.states.preemptive_concurrency_state.PreemptiveConcurrencyState',
+    'rafcon.statemachine.states.state.State': 'rafcon.core.states.state.State'
 }
 
 

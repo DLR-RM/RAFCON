@@ -166,7 +166,7 @@ SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n) for n in dir(signal) if n.s
 
 
 def signal_handler(signal, frame):
-    from rafcon.core.constants import StateMachineExecutionStatus
+    from rafcon.core.execution.execution_status import StateMachineExecutionStatus
     state_machine_execution_engine = sm_singletons.state_machine_execution_engine
     sm_singletons.shut_down_signal = signal
 
@@ -174,7 +174,7 @@ def signal_handler(signal, frame):
         # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
         print _("Signal '{}' received.\nExecution engine will be stopped and program will be shutdown!").format(
             SIGNALS_TO_NAMES_DICT.get(signal, "[unknown]"))
-        if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+        if not state_machine_execution_engine.finished_or_stopped():
             state_machine_execution_engine.stop()
             state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
     except Exception as e:

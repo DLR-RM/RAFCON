@@ -200,7 +200,7 @@ def signal_handler(signal, frame):
     logger.info("Shutting down ...")
 
     try:
-        if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+        if not state_machine_execution_engine.finished_or_stopped():
             state_machine_execution_engine.stop()
             state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
     except Exception:

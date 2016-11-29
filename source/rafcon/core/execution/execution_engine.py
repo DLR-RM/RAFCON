@@ -58,6 +58,10 @@ class ExecutionEngine(Observable):
         logger.debug("Pause execution ...")
         self.set_execution_mode(StateMachineExecutionStatus.PAUSED)
 
+    def finished_or_stopped(self):
+        return (self._status.execution_mode is StateMachineExecutionStatus.STOPPED) or \
+               (self._status.execution_mode is StateMachineExecutionStatus.FINISHED)
+
     @Observable.observed
     def start(self, state_machine_id=None, start_state_path=None):
         """
@@ -70,7 +74,7 @@ class ExecutionEngine(Observable):
         :return:
         """
 
-        if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+        if not self.finished_or_stopped():
             logger.debug("Resume execution engine ...")
             self.run_to_states = []
             if self.state_machine_manager.get_active_state_machine() is not None:
@@ -124,13 +128,18 @@ class ExecutionEngine(Observable):
         self.run_to_states = []
         self.set_execution_mode(StateMachineExecutionStatus.STOPPED)
 
+    def __set_execution_mode_to_finished(self):
+        """Stop and reset execution engine"""
+        self.run_to_states = []
+        self.set_execution_mode(StateMachineExecutionStatus.FINISHED)
+
     @Observable.observed
     def step_mode(self):
         """Set the execution mode to stepping mode. Transitions are only triggered if a new step is triggered
         """
         logger.debug("Activate step mode")
         self.run_to_states = []
-        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
+        if self.finished_or_stopped():
             self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
             self._run_active_state_machine()
         else:
@@ -157,7 +166,8 @@ class ExecutionEngine(Observable):
         """Observe running state machine and stop engine if execution has finished"""
         self.state_machine_running = True
         self.__running_state_machine.join()
-        self.__set_execution_mode_to_stopped()
+        self.__set_execution_mode_to_finished()
+        # self.__set_execution_mode_to_stopped()
         self.state_machine_running = False
 
     def backward_step(self):
@@ -172,7 +182,7 @@ class ExecutionEngine(Observable):
         """
         logger.debug("Execution step into ...")
         self.run_to_states = []
-        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
+        if self.finished_or_stopped():
             self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
             self._run_active_state_machine()
         else:
@@ -183,7 +193,7 @@ class ExecutionEngine(Observable):
         """
         logger.debug("Execution step over ...")
         self.run_to_states = []
-        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
+        if self.finished_or_stopped():
             self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OVER)
             self._run_active_state_machine()
         else:
@@ -194,7 +204,7 @@ class ExecutionEngine(Observable):
         """
         logger.debug("Execution step out ...")
         self.run_to_states = []
-        if self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
+        if self.finished_or_stopped():
             self.set_execution_mode(StateMachineExecutionStatus.FORWARD_OUT)
             self._run_active_state_machine()
         else:
@@ -207,7 +217,7 @@ class ExecutionEngine(Observable):
         if self.state_machine_manager.get_active_state_machine() is not None:
             self.state_machine_manager.get_active_state_machine().root_state.recursively_resume_states()
 
-        if self._status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+        if not self.finished_or_stopped():
             logger.debug("Resume execution engine and run to selected state!")
             self.run_to_states = []
             self.run_to_states.append(path)
@@ -252,6 +262,10 @@ class ExecutionEngine(Observable):
                     self._status.execution_condition_variable.wait()
                 finally:
                     self._status.execution_condition_variable.release()
+
+        elif self._status.execution_mode is StateMachineExecutionStatus.FINISHED:
+            # this must never happen during execution of the execution engine
+            raise Exception
 
         else:  # all other step modes
             logger.debug("Stepping mode: waiting for next step!")

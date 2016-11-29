@@ -4,7 +4,6 @@ import pytest
 import rafcon.gui.singleton
 
 # core elements
-from rafcon.core.execution.state_machine_execution_engine import StateMachineExecutionEngine
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
 
