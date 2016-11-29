@@ -8,7 +8,7 @@ from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.core.enums import UNIQUE_DECIDER_STATE_ID
+from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.core.states.state import DataPortType
 from rafcon.core.state_machine import StateMachine
 
