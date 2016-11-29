@@ -45,14 +45,16 @@ EXTENDED_RIGHT_CLICK_MENU: False
 
 SHORTCUTS:
     abort: Escape
-    add: <Control>A             # In graphical editor: add execution state
-    add2: <Control><Shift>A
-    add3: <Control><Shift>S
-    add4: <Control><Shift>X
-    add_output: <Control>O
-    add_input: <Control>I
-    add_outcome: <Control>T
-    add_scoped_variable: <Control><Shift>V
+    add:
+    - <Control>A
+    - <Alt>E
+    add2: <Alt>H
+    add3: <Alt>B
+    add4: <Alt>C
+    add_output: <Alt>U
+    add_input: <Alt>N
+    add_outcome: <Alt>T
+    add_scoped_variable: <Alt>V
     apply: <Control><Shift>E
     backward_step: F9
     close: <Control>W
