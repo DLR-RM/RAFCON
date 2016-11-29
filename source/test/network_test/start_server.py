@@ -15,8 +15,8 @@ import threading
 
 
 def check_for_sm_finished(sm, monitoring_manager=None):
-    from rafcon.statemachine.enums import StateExecutionState
-    while sm.root_state.state_execution_status is not StateExecutionState.INACTIVE:
+    from rafcon.core.states.state import StateExecutionStatus
+    while sm.root_state.state_execution_status is not StateExecutionStatus.INACTIVE:
         try:
             sm.root_state.concurrency_queue.get(timeout=10.0)
         except Empty, e:
@@ -32,34 +32,38 @@ def check_for_sm_finished(sm, monitoring_manager=None):
         reactor.callFromThread(reactor.stop)
 
 
+def register_signal_handlers(callback):
+    signal.signal(signal.SIGINT, callback)
+    signal.signal(signal.SIGHUP, callback)
+    signal.signal(signal.SIGQUIT, callback)
+    signal.signal(signal.SIGTERM, callback)
+
+
 def start_server(interacting_function, queue_dict):
     import sys
     import os
-    from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
+
     import rafcon
-    from yaml_configuration.config import config_path
-    import rafcon.utils.filesystem as filesystem
-
-    from rafcon.statemachine.config import global_config
-    import rafcon.statemachine.singleton as sm_singletons
-    from rafcon.statemachine.storage import storage as global_storage
-    # needed for yaml parsing
-    from rafcon.statemachine.states.hierarchy_state import HierarchyState
-    from rafcon.statemachine.states.execution_state import ExecutionState
-    from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-    from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-    from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
-
     from rafcon.utils import log
     from rafcon.utils import plugins
+
+    from rafcon.core.config import global_config
+    import rafcon.core.singleton as sm_singletons
+    from rafcon.core.storage import storage as global_storage
+    # needed for yaml parsing
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+    from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+
     logger = log.get_logger("start-no-gui")
     logger.info("initialize RAFCON ... ")
 
     plugins.load_plugins()
     plugins.run_pre_inits()
 
-    from rafcon.mvc.start import signal_handler
-    signal.signal(signal.SIGINT, signal_handler)
+    from rafcon.core.start import signal_handler
+    register_signal_handlers(signal_handler)
 
     global_config.load(path=os.path.dirname(os.path.abspath(__file__)))
 
@@ -68,7 +72,7 @@ def start_server(interacting_function, queue_dict):
 
     state_machine = global_storage.load_state_machine_from_path(
             rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/99_bottles_of_beer_monitoring")
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
     sm_thread = threading.Thread(target=check_for_sm_finished, args=[state_machine, ])
     sm_thread.start()
@@ -91,7 +95,7 @@ def start_server(interacting_function, queue_dict):
 
     state_machine.root_state.join()
 
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.core.singleton.state_machine_execution_engine.stop()
     logger.info("State machine execution finished!")
 
 

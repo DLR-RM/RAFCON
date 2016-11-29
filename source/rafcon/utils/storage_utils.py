@@ -16,15 +16,38 @@ from jsonconversion.decoder import JSONObjectDecoder
 from jsonconversion.encoder import JSONObjectEncoder
 
 substitute_modules = {
-    'rafcon.statemachine.data_flow.DataFlow': 'rafcon.statemachine.state_elements.data_flow.DataFlow',
-    'rafcon.statemachine.data_port.DataPort': 'rafcon.statemachine.state_elements.data_port.DataPort',
-    'rafcon.statemachine.data_port.InputDataPort': 'rafcon.statemachine.state_elements.data_port.InputDataPort',
-    'rafcon.statemachine.data_port.OutputDataPort': 'rafcon.statemachine.state_elements.data_port.OutputDataPort',
-    'rafcon.statemachine.scope.ScopedData': 'rafcon.statemachine.state_elements.scope.ScopedData',
-    'rafcon.statemachine.scope.ScopedVariable': 'rafcon.statemachine.state_elements.scope.ScopedVariable',
-    'rafcon.statemachine.state_element.StateElement': 'rafcon.statemachine.state_elements.state_element.StateElement',
-    'rafcon.statemachine.transition.Transition': 'rafcon.statemachine.state_elements.transition.Transition',
-    'rafcon.statemachine.outcome.Outcome': 'rafcon.statemachine.state_elements.outcome.Outcome',
+    # backward compatibiliy (remove in next minor release): state elements
+    'rafcon.statemachine.data_flow.DataFlow': 'rafcon.core.state_elements.data_flow.DataFlow',
+    'rafcon.statemachine.data_port.DataPort': 'rafcon.core.state_elements.data_port.DataPort',
+    'rafcon.statemachine.data_port.InputDataPort': 'rafcon.core.state_elements.data_port.InputDataPort',
+    'rafcon.statemachine.data_port.OutputDataPort': 'rafcon.core.state_elements.data_port.OutputDataPort',
+    'rafcon.statemachine.scope.ScopedData': 'rafcon.core.state_elements.scope.ScopedData',
+    'rafcon.statemachine.scope.ScopedVariable': 'rafcon.core.state_elements.scope.ScopedVariable',
+    'rafcon.statemachine.state_element.StateElement': 'rafcon.core.state_elements.state_element.StateElement',
+    'rafcon.statemachine.transition.Transition': 'rafcon.core.state_elements.transition.Transition',
+    'rafcon.statemachine.outcome.Outcome': 'rafcon.core.state_elements.outcome.Outcome',
+    # state elements
+    'rafcon.statemachine.state_elements.data_flow.DataFlow': 'rafcon.core.state_elements.data_flow.DataFlow',
+    'rafcon.statemachine.state_elements.data_port.DataPort': 'rafcon.core.state_elements.data_port.DataPort',
+    'rafcon.statemachine.state_elements.data_port.InputDataPort': 'rafcon.core.state_elements.data_port.InputDataPort',
+    'rafcon.statemachine.state_elements.data_port.OutputDataPort': 'rafcon.core.state_elements.data_port.OutputDataPort',
+    'rafcon.statemachine.state_elements.scope.ScopedData': 'rafcon.core.state_elements.scope.ScopedData',
+    'rafcon.statemachine.state_elements.scope.ScopedVariable': 'rafcon.core.state_elements.scope.ScopedVariable',
+    'rafcon.statemachine.state_elements.state_element.StateElement': 'rafcon.core.state_elements.state_element.StateElement',
+    'rafcon.statemachine.state_elements.transition.Transition': 'rafcon.core.state_elements.transition.Transition',
+    'rafcon.statemachine.state_elements.outcome.Outcome': 'rafcon.core.state_elements.outcome.Outcome',
+    # states
+    'rafcon.statemachine.states.barrier_concurrency_state.BarrierConcurrencyState':
+        'rafcon.core.states.barrier_concurrency_state.BarrierConcurrencyState',
+    'rafcon.statemachine.states.barrier_concurrency_state.DeciderState':
+        'rafcon.core.states.barrier_concurrency_state.DeciderState',
+    'rafcon.statemachine.states.concurrency_state.ConcurrencyState': 'rafcon.core.states.concurrency_state.ConcurrencyState',
+    'rafcon.statemachine.states.container_state.ContainerState': 'rafcon.core.states.container_state.ContainerState',
+    'rafcon.statemachine.states.execution_state.ExecutionState': 'rafcon.core.states.execution_state.ExecutionState',
+    'rafcon.statemachine.states.hierarchy_state.HierarchyState': 'rafcon.core.states.hierarchy_state.HierarchyState',
+    'rafcon.statemachine.states.library_state.LibraryState': 'rafcon.core.states.library_state.LibraryState',
+    'rafcon.statemachine.states.preemptive_concurrency_state.PreemptiveConcurrencyState': 'rafcon.core.states.preemptive_concurrency_state.PreemptiveConcurrencyState',
+    'rafcon.statemachine.states.state.State': 'rafcon.core.states.state.State'
 }
 
 

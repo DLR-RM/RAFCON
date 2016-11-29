@@ -33,7 +33,7 @@ def load_plugins():
         if not os.path.exists(plugin_path):
             logger.error("The specified plugin path does not exist: {}".format(plugin_path))
             continue
-        dir_name, plugin_name = os.path.split(plugin_path)
+        dir_name, plugin_name = os.path.split(plugin_path.rstrip('/'))
         logger.info("Found plugin '{}' at {}".format(plugin_name, plugin_path))
         sys.path.insert(0, dir_name)
         try:

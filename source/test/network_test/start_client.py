@@ -29,32 +29,29 @@ def setup_logger():
 
 
 def start_client(interacting_function, queue_dict):
-
+    from rafcon.gui.config import global_gui_config
     import os
+
+    from rafcon.gui.controllers.main_window import MainWindowController
+    from rafcon.gui.views.main_window import MainWindowView
+    import rafcon.gui.singleton as mvc_singletons
+    from rafcon.gui.runtime_config import global_runtime_config
+    from rafcon.gui.start import signal_handler
+
     import rafcon
-    from yaml_configuration.config import config_path
     from rafcon.utils import log
-    from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
-    import rafcon.utils.filesystem as filesystem
-
-    from rafcon.statemachine.config import global_config
-    from rafcon.statemachine.storage import storage as global_storage
-    from rafcon.statemachine.state_machine import StateMachine
-    from rafcon.statemachine.states.hierarchy_state import HierarchyState
-    import rafcon.statemachine.singleton as sm_singletons
-
-    from rafcon.mvc.controllers.main_window import MainWindowController
-    from rafcon.mvc.views.main_window import MainWindowView
-    import rafcon.mvc.singleton as mvc_singletons
-    from rafcon.mvc.config import global_gui_config
-    from rafcon.mvc.runtime_config import global_runtime_config
-
-    from rafcon.statemachine.start import setup_environment
-    from rafcon.mvc.start import signal_handler
-
     from rafcon.utils import plugins
+
+    from rafcon.core.config import global_config
+    from rafcon.core.storage import storage as global_storage
+    from rafcon.core.state_machine import StateMachine
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    import rafcon.core.singleton as sm_singletons
+    from rafcon.core.start import setup_environment
+
     # load all plugins specified in the RAFCON_PLUGIN_PATH
     plugins.load_plugins()
+    import testing_utils
 
     # check if twisted is imported
     if "twisted" in sys.modules.keys():
@@ -105,6 +102,7 @@ def start_client(interacting_function, queue_dict):
     interacting_thread = threading.Thread(target=interacting_function, args=[main_window_controller,
                                                                              global_monitoring_manager,
                                                                              queue_dict])
+    testing_utils.wait_for_gui()
     interacting_thread.start()
 
     # check if twisted is imported

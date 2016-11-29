@@ -1,14 +1,14 @@
 import pytest
-import rafcon.mvc.singleton
+import rafcon.gui.singleton
 import testing_utils
 
-import rafcon.statemachine.states.execution_state
-import rafcon.statemachine.states.hierarchy_state
-import rafcon.statemachine.states.preemptive_concurrency_state
-from rafcon.statemachine.storage import storage as global_storage
+import rafcon.core.states.execution_state
+import rafcon.core.states.hierarchy_state
+import rafcon.core.states.preemptive_concurrency_state
+from rafcon.core.storage import storage as global_storage
 
-from rafcon.statemachine.singleton import global_variable_manager as gvm
-from rafcon.statemachine.singleton import state_machine_manager, state_machine_execution_engine
+from rafcon.core.singleton import global_variable_manager as gvm
+from rafcon.core.singleton import state_machine_manager, state_machine_execution_engine
 
 
 def assert_gvm(key, value=True):
@@ -27,7 +27,7 @@ class TestErrorPreemptionHandling():
     @classmethod
     def setup_class(cls):
         # This methods runs on class creation and creates the state machine
-        testing_utils.test_multithrading_lock.acquire()
+        testing_utils.test_multithreading_lock.acquire()
         state_machine = global_storage.load_state_machine_from_path(
             rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/action_block_execution_test")
         cls.state_machine = state_machine
@@ -36,7 +36,7 @@ class TestErrorPreemptionHandling():
 
     @classmethod
     def teardown_class(cls):
-        testing_utils.test_multithrading_lock.release()
+        testing_utils.test_multithreading_lock.release()
         pass
 
     def setup(self):

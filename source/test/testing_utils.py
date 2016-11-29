@@ -6,10 +6,10 @@ from threading import Lock, Condition
 
 import rafcon
 from rafcon.utils import log, constants
-from rafcon.statemachine.config import global_config
+from rafcon.core.config import global_config
 
 
-test_multithrading_lock = Lock()
+test_multithreading_lock = Lock()
 
 RAFCON_TEMP_PATH_TEST_BASE = join(constants.RAFCON_TEMP_PATH_BASE, 'unit_tests')
 if not exists(RAFCON_TEMP_PATH_TEST_BASE):
@@ -35,19 +35,25 @@ def get_test_sm_path(state_machine_name):
 def reload_config(config=True, gui_config=True):
     import rafcon
     if config:
-        rafcon.statemachine.config.global_config.load()
+        rafcon.core.config.global_config.load()
     if gui_config:
-        import rafcon.mvc.config
-        rafcon.mvc.config.global_gui_config.load()
+        import rafcon.gui.config
+        rafcon.gui.config.global_gui_config.load()
 
 
 def remove_all_libraries():
-    from rafcon.statemachine.config import global_config
+    from rafcon.core.config import global_config
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
     libs = [lib for lib in library_paths]
     for lib in libs:
         del library_paths[lib]
-    rafcon.statemachine.singleton.library_manager.initialize()
+    rafcon.core.singleton.library_manager.initialize()
+
+
+def remove_all_gvm_variables():
+    from rafcon.core.singleton import global_variable_manager
+    for gv_name in global_variable_manager.get_all_keys():
+        global_variable_manager.delete_variable(gv_name)
 
 
 def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_errors=0):
@@ -97,17 +103,16 @@ def call_gui_callback(callback, *args):
 
 
 def start_rafcon():
-    # import mvc modules only if necessary
-    from rafcon.mvc.config import global_gui_config
-    from rafcon.mvc.start import signal_handler
-    test_multithrading_lock.acquire()
+    # import gui modules only if necessary
+    from rafcon.gui.config import global_gui_config
+    from rafcon.gui.start import signal_handler
+    test_multithreading_lock.acquire()
     signal.signal(signal.SIGINT, signal_handler)
     global_config.load()
     global_gui_config.load()
     environ['RAFCON_LIB_PATH'] = join(dirname(RAFCON_PATH), 'libraries')
-    rafcon.statemachine.singleton.library_manager.initialize()
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-
+    rafcon.core.singleton.library_manager.initialize()
+    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
 
 def wait_for_gui():
     import gtk

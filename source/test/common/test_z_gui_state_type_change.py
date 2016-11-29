@@ -2,48 +2,39 @@ import logging
 import gtk
 import threading
 import time
-import os
-import signal
+
+# gui elements
+from rafcon.gui.config import global_gui_config
+import rafcon.gui.singleton
+from rafcon.gui.models import GlobalVariableManagerModel
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
+
+# core elements
+from rafcon.core.states.state import State
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.config import global_config
 
 # general tool elements
 from rafcon.utils import log
 
-# core elements
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
-from rafcon.statemachine.state_machine import StateMachine
-
-# mvc elements
-from rafcon.mvc.models import GlobalVariableManagerModel
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-
-# singleton elements
-import rafcon.mvc.singleton
-from rafcon.mvc.config import global_gui_config
-from rafcon.statemachine.config import global_config
-
 # test environment elements
 import testing_utils
-from testing_utils import test_multithrading_lock, call_gui_callback, get_unique_temp_path
+from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
 import pytest
 
 store_elements_ignores = []
 check_elements_ignores = []
 
+logger = log.get_logger(__name__)
 
 def create_models(*args, **kargs):
-
-    logger = log.get_logger(__name__)
-    logger.setLevel(logging.DEBUG)
-    #logging.getLogger('gtkmvc').setLevel(logging.DEBUG)
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
 
     state1 = ExecutionState('State1', state_id="State1")
     output_state1 = state1.add_output_data_port("output", "int")
@@ -113,18 +104,13 @@ def create_models(*args, **kargs):
     sm = StateMachine(ctr_state)
 
     # add new state machine
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     # select state machine
-    rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
     # get state machine model
-    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
-    global_var_manager_model = GlobalVariableManagerModel()
-    global_var_manager_model = rafcon.mvc.singleton.global_variable_manager_model
-    global_var_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
-    global_var_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
-
-    return logger, ctr_state, global_var_manager_model, sm_m, state_dict
+    return sm_m, state_dict
 
 
 def store_state_elements(state, state_m):
@@ -588,12 +574,11 @@ def trigger_state_type_change_tests(*args):
 
     :param args:
     """
-    sm_manager_model = args[0]
-    main_window_controller = args[1]
-    sm_m = args[2]
-    state_dict = args[3]
-    with_gui = args[4]
-    logger = args[5]
+    main_window_controller = args[0]
+    sm_m = args[1]
+    state_dict = args[2]
+    with_gui = args[3]
+    logger = args[4]
     sleep_time_max = 5.0
 
     # General Type Change inside of a state machine (NO ROOT STATE) ############
@@ -667,19 +652,16 @@ def trigger_state_type_change_tests(*args):
 
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        call_gui_callback(menubar_ctrl.on_stop_activate, None)
-        menubar_ctrl.model.get_selected_state_machine_model().state_machine.file_system_path = get_unique_temp_path()
-        call_gui_callback(menubar_ctrl.on_save_activate, None)
-        call_gui_callback(menubar_ctrl.on_quit_activate, None)
+        call_gui_callback(menubar_ctrl.prepare_destruction)
 
 
 def test_state_type_change_test(caplog):
     with_gui = True
     testing_utils.start_rafcon()
 
-    logger, state, gvm_model, sm_m, state_dict = create_models()
+    sm_m, state_dict = create_models()
     testing_utils.remove_all_libraries()
-    testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_controller = None
     if with_gui:
         main_window_view = MainWindowView()
@@ -691,8 +673,7 @@ def test_state_type_change_test(caplog):
         while gtk.events_pending():
             gtk.main_iteration(False)
     thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[testing_utils.sm_manager_model, main_window_controller, sm_m, state_dict, with_gui,
-                                    logger])
+                              args=[main_window_controller, sm_m, state_dict, with_gui, logger])
     thread.start()
     if with_gui:
         gtk.main()
@@ -701,7 +682,7 @@ def test_state_type_change_test(caplog):
     thread.join()
 
     testing_utils.reload_config()
-    test_multithrading_lock.release()
+    test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 

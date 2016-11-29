@@ -12,7 +12,7 @@ if os.path.exists(FILE_MODIFIED_BY_STATE_MACHINE):
 
 
 def test_start_script_open():
-    script = dirname(realpath(rafcon.__file__)) + "/statemachine/start.py"
+    script = dirname(realpath(rafcon.__file__)) + "/core/start.py"
     start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
     cmd = sys.executable + " %s -o %s" % (script, start_path)
     cmd_res = subprocess.call(cmd, shell=True)
@@ -25,7 +25,7 @@ def test_start_script_open():
 
 
 def test_start_script_state():
-    script = dirname(realpath(rafcon.__file__)) + "/statemachine/start.py"
+    script = dirname(realpath(rafcon.__file__)) + "/core/start.py"
     start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
     state_path = "UTUOSC/AHWBOG"
     print start_path
@@ -41,7 +41,7 @@ def test_start_script_state():
 
 def test_start_script_valid_config():
     # valid config
-    script = dirname(realpath(rafcon.__file__)) + "/statemachine/start.py"
+    script = dirname(realpath(rafcon.__file__)) + "/core/start.py"
     start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
     config = rafcon.__path__[0] + "/../test/common/configs_for_start_script_test/valid_config/config.yaml"
     cmd = sys.executable + " %s -o %s -c %s" % (script, start_path, config)
@@ -56,7 +56,7 @@ def test_start_script_valid_config():
 '''
 def test_start_script_invalid_config(caplog):
     # invalid config
-    script = dirname(realpath(rafcon.__file__)) + "/statemachine/start.py"
+    script = dirname(realpath(rafcon.__file__)) + "/core/start.py"
     start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
     config = rafcon.__path__[0] + "/../test/common/configs_for_start_script_test/invalid_config"
     cmd = "python %s -o %s -c %s" % (script, start_path, config)

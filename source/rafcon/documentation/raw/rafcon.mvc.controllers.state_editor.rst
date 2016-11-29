@@ -1,4 +1,4 @@
-MVC State Editor Controllers (rafcon.mvc.controllers.state_editor)
+MVC State Editor Controllers (rafcon.gui.controllers.state_editor)
 ==================================================================
 
 .. contents::
@@ -8,44 +8,44 @@ MVC State Editor Controllers (rafcon.mvc.controllers.state_editor)
 LinkageOverviewController (in linkage_overview)
 -----------------------------------------------
 
-.. automodule:: rafcon.mvc.controllers.state_editor.linkage_overview
+.. automodule:: rafcon.gui.controllers.state_editor.linkage_overview
 
 ScopedVariableListController (in scoped_variable_list)
 ------------------------------------------------------
 
-.. automodule:: rafcon.mvc.controllers.state_editor.scoped_variable_list
+.. automodule:: rafcon.gui.controllers.state_editor.scoped_variable_list
 
 SourceEditorController (in source_editor)
 -----------------------------------------
 
-.. automodule:: rafcon.mvc.controllers.state_editor.source_editor
+.. automodule:: rafcon.gui.controllers.state_editor.source_editor
 
 StateDataFlowsListController (in data_flows)
 --------------------------------------------
 
-.. automodule:: rafcon.mvc.controllers.state_editor.data_flows
+.. automodule:: rafcon.gui.controllers.state_editor.data_flows
 
 DescriptionEditorController (in description_editor)
 ---------------------------------------------------
 
-.. automodule:: rafcon.mvc.controllers.state_editor.description_editor
+.. automodule:: rafcon.gui.controllers.state_editor.description_editor
 
 StateEditorController (in state_editor)
 ---------------------------------------
 
-.. automodule:: rafcon.mvc.controllers.state_editor.state_editor
+.. automodule:: rafcon.gui.controllers.state_editor.state_editor
 
 StateOutcomesListController (in outcomes)
 -----------------------------------------
 
-.. automodule:: rafcon.mvc.controllers.state_editor.outcomes
+.. automodule:: rafcon.gui.controllers.state_editor.outcomes
 
 StateOverviewController (in overview)
 -------------------------------------
 
-.. automodule:: rafcon.mvc.controllers.state_editor.overview
+.. automodule:: rafcon.gui.controllers.state_editor.overview
 
 StateTransitionsListController (in transitions)
 -----------------------------------------------
 
-.. automodule:: rafcon.mvc.controllers.state_editor.transitions
+.. automodule:: rafcon.gui.controllers.state_editor.transitions

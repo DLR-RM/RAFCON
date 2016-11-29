@@ -43,15 +43,19 @@ def reset_global_variable_manager(global_variable_manager):
 
 
 def synchronize_with_clients_threads(queue_dict, execution_engine):
-    from rafcon.statemachine.singleton import global_variable_manager as gvm
-    from rafcon.statemachine.enums import StateMachineExecutionStatus
-    from rafcon.statemachine.singleton import state_machine_manager
+    from rafcon.core.singleton import global_variable_manager as gvm
+    from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+    from rafcon.core.singleton import state_machine_manager
     active_sm = state_machine_manager.get_active_state_machine()
     root_state = active_sm.root_state
+    sleep_time = 0.01
 
     # check when run to is finished
     while gvm.get_variable("sing_counter") < 1:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
+
+    # wait for the client to start
+    queue_dict[CLIENT1_QUEUE].get()
 
     queue_dict[CLIENT1_QUEUE].put("start stepping")
     print "starting tests\n\n"
@@ -59,42 +63,42 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     print "server: cp0"
     # step test
     while gvm.get_variable("decimate_counter") < 1 and not root_state.handling_execution_mode:
-        time.sleep(0.01)  # sleep just to prevent busy loop
+        time.sleep(sleep_time)  # sleep just to prevent busy loop
     queue_dict[CLIENT1_QUEUE].put("step mode and thus a step into received")
 
     print "server: cp1"
     while gvm.get_variable("count_counter") < 1 and not root_state.handling_execution_mode:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
     queue_dict[CLIENT1_QUEUE].put("step_received2")
 
     print "server: cp2"
     while gvm.get_variable("sing_counter") < 2 and not root_state.handling_execution_mode:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
     queue_dict[CLIENT1_QUEUE].put("step_received3")
 
     print "server: cp3"
     while gvm.get_variable("decimate_counter") < 2 and not root_state.handling_execution_mode:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
     queue_dict[CLIENT1_QUEUE].put("step_received3")
 
     print "server: cp4"
     while gvm.get_variable("decimate_counter") > 1 and not root_state.handling_execution_mode:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
     queue_dict[CLIENT1_QUEUE].put("backward_step_received")
     reset_global_variable_manager(gvm)
     print "server: step test successful\n\n"
 
     # stop start test
-    while execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
-        time.sleep(0.01)
+    while not execution_engine.finished_or_stopped():
+        time.sleep(sleep_time)
 
     queue_dict[CLIENT1_QUEUE].put("stop received")
     # wait until state machine started
     while execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
-    while execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
-        time.sleep(0.01)
+    while not execution_engine.finished_or_stopped():
+        time.sleep(sleep_time)
 
     reset_global_variable_manager(gvm)
     execution_engine.stop()  # reset state machine before the next test
@@ -103,7 +107,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
 
     # run-until test
     while gvm.get_variable("decimate_counter") < 1 and not root_state.handling_execution_mode:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
     assert gvm.get_variable("count_counter") == 0
 
@@ -114,10 +118,10 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
 
     # start from test
     while execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
-    while execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
-        time.sleep(0.01)
+    while not execution_engine.finished_or_stopped():
+        time.sleep(sleep_time)
     assert gvm.get_variable("sing_counter") == 2
     assert gvm.get_variable("decimate_counter") == 3
 
@@ -131,10 +135,10 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
 
     # wait until execution engine is started
     while execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
     # wait until execution is finished
-    while execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
-        time.sleep(0.01)
+    while not execution_engine.finished_or_stopped():
+        time.sleep(sleep_time)
 
     queue_dict[CLIENT1_QUEUE].put("state machine executed successfully")  # synchronize with client1
     queue_dict[CLIENT2_QUEUE].put("state machine executed successfully")  # synchronize with client2
@@ -152,7 +156,7 @@ def interacting_function_server(queue_dict):
     for id, queue in queue_dict.iteritems():
         assert isinstance(queue, multiprocessing.queues.Queue)
 
-    import rafcon.statemachine.singleton as core_singletons
+    import rafcon.core.singleton as core_singletons
     execution_engine = core_singletons.state_machine_execution_engine
 
     sm_thread = threading.Thread(target=synchronize_with_clients_threads, args=[queue_dict, execution_engine])
@@ -181,9 +185,11 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
         logger.warn("global_monitoring_manager not initialized yet!")
         time.sleep(0.01)
 
-    import rafcon.statemachine.singleton as core_singletons
+    import rafcon.core.singleton as core_singletons
     remote_execution_engine = core_singletons.state_machine_execution_engine
 
+    # tell the server that client 1 is ready
+    queue_dict[CLIENT1_QUEUE].put("ready")
     queue_dict[CLIENT1_QUEUE].get()  # synchronize, when to start stepping
 
     # test stepping
@@ -255,7 +261,7 @@ def interacting_function_client2(main_window_controller, global_monitoring_manag
         assert isinstance(queue, multiprocessing.queues.Queue)
     while not global_monitoring_manager.endpoint_initialized:
         time.sleep(0.01)
-    import rafcon.statemachine.singleton as core_singletons
+    import rafcon.core.singleton as core_singletons
     remote_execution_engine = core_singletons.state_machine_execution_engine
 
     queue_dict[CLIENT1_TO_CLIENT2].get()
@@ -273,7 +279,7 @@ def launch_client(interacting_function_client, multiprocessing_queue_dict):
     # explicitly add the monitoring plugin to the RAFCON_PLUGIN_PATH
     if os.environ.get('RAFCON_PLUGIN_PATH', False):
         del os.environ['RAFCON_PLUGIN_PATH']
-    os.environ['RAFCON_PLUGIN_PATH'] =\
+    os.environ['RAFCON_PLUGIN_PATH'] = \
         "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
 
     import test.network_test.start_client
@@ -287,7 +293,7 @@ def launch_server(interacting_function_handle_server_, multiprocessing_queue_dic
     # explicitly add the monitoring plugin to the RAFCON_PLUGIN_PATH
     if os.environ.get('RAFCON_PLUGIN_PATH', False):
         del os.environ['RAFCON_PLUGIN_PATH']
-    os.environ['RAFCON_PLUGIN_PATH'] =\
+    os.environ['RAFCON_PLUGIN_PATH'] = \
         "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
 
     import test.network_test.start_server
@@ -323,18 +329,23 @@ def test_multi_clients():
     client2.start()
 
     data = queue_dict[MAIN_QUEUE].get(timeout=30)
+    # print "===========================================", data
     assert data == STEPPING_SUCCESSFUL
 
     data = queue_dict[MAIN_QUEUE].get(timeout=30)
+    # print "===========================================", data
     assert data == STOP_START_SUCCESSFUL
 
     data = queue_dict[MAIN_QUEUE].get(timeout=30)
+    # print "===========================================", data
     assert data == RUN_UNTIL_SUCCESSFUL
 
     data = queue_dict[MAIN_QUEUE].get(timeout=30)
+    # print "===========================================", data
     assert data == START_FROM_SUCCESSFUL
 
     data = queue_dict[MAIN_QUEUE].get(timeout=30)
+    # print "===========================================", data
     try:
         assert data == START_PAUSE_RESUME_SUCCESSFUL
         print "Test successful"

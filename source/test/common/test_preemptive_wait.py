@@ -1,15 +1,14 @@
-# core elements
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.singleton import global_variable_manager as gvm
-from rafcon.statemachine.state_machine import StateMachine
+import pytest
 
-# singleton elements
-import rafcon.statemachine.singleton
+# core elements
+import rafcon.core.singleton
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.singleton import global_variable_manager as gvm
+from rafcon.core.state_machine import StateMachine
 
 # test environment elements
 import testing_utils
-import pytest
 
 
 def create_preemptive_wait_state_machine():
@@ -30,7 +29,7 @@ def create_preemptive_wait_state_machine():
 
 
 def test_preemptive_wait_daemon(caplog):
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
 
     gvm.set_variable('state_1_wait', 0.5)
     gvm.set_variable('state_2_wait', None)
@@ -43,22 +42,22 @@ def test_preemptive_wait_daemon(caplog):
     assert not gvm.get_variable('state_1_preempted')
     assert gvm.get_variable('state_2_preempted')
 
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def run_state_machine():
 
     preemption_state_sm = create_preemptive_wait_state_machine()
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
-    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
-    rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    rafcon.statemachine.singleton.state_machine_execution_engine.join()
-    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
+    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.join()
+    rafcon.core.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
 
 
 def test_preemptive_wait_timeout(caplog):
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
 
     gvm.set_variable('state_1_wait', 0.5)
     gvm.set_variable('state_2_wait', 1.)
@@ -69,12 +68,12 @@ def test_preemptive_wait_timeout(caplog):
     assert not gvm.get_variable('state_1_preempted')
     assert gvm.get_variable('state_2_preempted')
 
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_preemptive_wait2_timeout(caplog):
-    testing_utils.test_multithrading_lock.acquire()
+    testing_utils.test_multithreading_lock.acquire()
 
     gvm.set_variable('state_2_wait', 0.5)
     gvm.set_variable('state_1_wait', 1.)
@@ -85,7 +84,7 @@ def test_preemptive_wait2_timeout(caplog):
     assert gvm.get_variable('state_1_preempted')
     assert not gvm.get_variable('state_2_preempted')
 
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 if __name__ == '__main__':

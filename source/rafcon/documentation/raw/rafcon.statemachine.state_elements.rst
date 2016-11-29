@@ -6,24 +6,24 @@ State Elements
 
 data_flow
 ---------
-.. automodule:: rafcon.statemachine.state_elements.data_flow
+.. automodule:: rafcon.core.state_elements.data_flow
 
 data_port
 ---------
-.. automodule:: rafcon.statemachine.state_elements.data_port
+.. automodule:: rafcon.core.state_elements.data_port
 
 outcome
 -------
-.. automodule:: rafcon.statemachine.state_elements.outcome
+.. automodule:: rafcon.core.state_elements.outcome
 
 scope
 -----
-.. automodule:: rafcon.statemachine.state_elements.scope
+.. automodule:: rafcon.core.state_elements.scope
 
 transition
 ----------
-.. automodule:: rafcon.statemachine.state_elements.transition
+.. automodule:: rafcon.core.state_elements.transition
 
 state_element
 -------------
-.. automodule:: rafcon.statemachine.state_elements.state_element
+.. automodule:: rafcon.core.state_elements.state_element

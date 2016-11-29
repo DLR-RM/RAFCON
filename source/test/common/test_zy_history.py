@@ -4,31 +4,30 @@ import threading
 import time
 import signal
 
+
+# gui elements
+from rafcon.gui.config import global_gui_config
+import rafcon.gui.singleton
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
+
+# core elements
+import rafcon.core.singleton
+from rafcon.core.config import global_config
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.storage import storage
+
 # general tool elements
 from rafcon.utils import log
 
-# core elements
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.storage import storage
-
-# mvc elements
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-
-# singleton elements
-import rafcon.statemachine.singleton
-import rafcon.mvc.singleton
-from rafcon.mvc.config import global_gui_config
-from rafcon.statemachine.config import global_config
-
 # test environment elements
 import testing_utils
-from testing_utils import test_multithrading_lock, call_gui_callback, get_unique_temp_path
+from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
 from test_z_gui_state_type_change import store_state_elements, check_state_elements, \
      check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
      check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
@@ -85,9 +84,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
 def save_and_quit(sm_model, path, menubar_ctrl, with_gui):
     if with_gui:
         sm_model.state_machine.file_system_path = path
-        call_gui_callback(menubar_ctrl.on_save_activate, None)
-        call_gui_callback(menubar_ctrl.on_stop_activate, None)
-        call_gui_callback(menubar_ctrl.on_quit_activate, None)
+        call_gui_callback(menubar_ctrl.prepare_destruction)
 
 
 def create_models(*args, **kargs):
@@ -155,10 +152,10 @@ def create_models(*args, **kargs):
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
                   'Nested2': state5}
     sm = StateMachine(ctr_state)
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
-    rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
-    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
     sm_m.history.fake = False
     print "with_prints is: ", sm_m.history.with_prints
     sm_m.history.with_prints = False
@@ -215,6 +212,7 @@ def test_add_remove_history(caplog):
     # remove data_flow
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [logger, sm_model, state_dict] = create_models()
 
     state_machine_path = TEST_PATH + '_test_add_remove'
@@ -562,6 +560,7 @@ def test_state_property_modifications_history(caplog):
     # change child_execution
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [logger, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -703,6 +702,7 @@ def test_outcome_property_modifications_history(caplog):
     # change name
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [logger, sm_model, state_dict] = create_models()
 
     def do_check_for_state(state_dict, state_name='Nested'):
@@ -777,6 +777,7 @@ def test_transition_property_modifications_history(caplog):
     # modify_transition_to_state
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [logger, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -877,6 +878,7 @@ def test_input_port_modify_notification(caplog):
     # change datatype
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [logger, sm_model, state_dict] = create_models()
     new_input_data_port_id = state_dict['Nested2'].add_input_data_port(name='new_input', data_type='str')
     sm_model.history.undo()
@@ -926,6 +928,7 @@ def test_output_port_modify_notification(caplog):
     # change datatype
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [logger, sm_model, state_dict] = create_models()
     new_output_data_port_id = state_dict['Nested2'].add_output_data_port(name='new_output', data_type='str')
 
@@ -972,6 +975,7 @@ def test_scoped_variable_modify_notification(caplog):
     # change datatype
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [logger, sm_model, state_dict] = create_models()
     new_scoped_variable_id = state_dict['Nested'].add_scoped_variable(name='new_output', data_type='str')
 
@@ -1033,6 +1037,7 @@ def test_data_flow_property_modifications_history(caplog):
     # modify_transition_to_state
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [logger, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -1137,18 +1142,19 @@ def test_data_flow_property_modifications_history(caplog):
 
 
 def test_type_modifications_without_gui(caplog):
-    import rafcon.statemachine.start
+    import rafcon.core.start
     with_gui = False
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    signal.signal(signal.SIGINT, rafcon.statemachine.start.signal_handler)
+    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+    signal.signal(signal.SIGINT, rafcon.core.start.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
     print "create model"
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [logger, sm_m, state_dict] = create_models()
     print "init libs"
     testing_utils.remove_all_libraries()
-    rafcon.statemachine.singleton.library_manager.initialize()
-    sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    rafcon.core.singleton.library_manager.initialize()
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
     sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
@@ -1167,7 +1173,7 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     print "init libs"
     testing_utils.remove_all_libraries()
     if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     print "initialize MainWindow"
     main_window_view = MainWindowView()
@@ -1183,7 +1189,7 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
-        test_multithrading_lock.release()
+        test_multithreading_lock.release()
 
     thread.join()
     testing_utils.reload_config()
@@ -1196,13 +1202,14 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     print "NEW BUG TEST"
     testing_utils.start_rafcon()
     print "create model"
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [logger, sm_m, state_dict] = create_models()
     print "init libs"
     testing_utils.remove_all_libraries()
-    rafcon.statemachine.singleton.library_manager.initialize()
+    rafcon.core.singleton.library_manager.initialize()
 
     if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
     if with_gui:
@@ -1222,7 +1229,7 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
         if with_gui:
             gtk.main()
             logger.debug("Gtk main loop exited!")
-            test_multithrading_lock.release()
+            test_multithreading_lock.release()
 
         thread.join()
     else:
@@ -1857,16 +1864,9 @@ def trigger_state_type_change_typical_bug_tests(*args):
         sm_m.history.redo()
     logger.info("REDO finished")
 
-    # remove all state-machines
-    for state_machine_id in sm_manager_model.state_machine_manager.state_machines.keys():
-        if with_gui:
-            call_gui_callback(sm_manager_model.state_machine_manager.remove_state_machine, state_machine_id)
-        else:
-            sm_manager_model.state_machine_manager.remove_state_machine(state_machine_id)
-
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        call_gui_callback(menubar_ctrl.on_quit_activate, None)
+        call_gui_callback(menubar_ctrl.prepare_destruction)
 
     check_elements_ignores.remove("internal_transitions")
     print check_elements_ignores

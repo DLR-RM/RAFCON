@@ -1,4 +1,4 @@
-MVC Controller Utils  (rafcon.mvc.controllers.utils)
+MVC Controller Utils  (rafcon.gui.controllers.utils)
 ====================================================
 
 .. contents::
@@ -7,19 +7,24 @@ MVC Controller Utils  (rafcon.mvc.controllers.utils)
 EditorController (in editor)
 ----------------------------
 
-.. automodule:: rafcon.mvc.controllers.utils.editor
+.. automodule:: rafcon.gui.controllers.utils.editor
 
 ExtendedController (in extended_controller)
 -------------------------------------------
 
-.. automodule:: rafcon.mvc.controllers.utils.extended_controller
+.. automodule:: rafcon.gui.controllers.utils.extended_controller
+
+SelectionFeatureControllers (in selection)
+------------------------------------------
+
+.. automodule:: rafcon.gui.controllers.utils.selection
 
 SingleWidgetWindowController (in single_widget_window)
 ------------------------------------------------------
 
-.. automodule:: rafcon.mvc.controllers.utils.single_widget_window
+.. automodule:: rafcon.gui.controllers.utils.single_widget_window
 
 MoveAndEditWithTabKeyListFeatureController (in tab_key)
 -------------------------------------------------------
 
-.. automodule:: rafcon.mvc.controllers.utils.tab_key
+.. automodule:: rafcon.gui.controllers.utils.tab_key

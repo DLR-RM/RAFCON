@@ -1,29 +1,26 @@
 import os
 import gtk
-import signal
-import time
 import logging
+
+# mvc
+import rafcon.gui.singleton
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
+
+# core elements
+import rafcon.core.singleton
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.storage import storage
 
 # general tool elements
 from rafcon.utils import log
 
-# core elements
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.storage import storage
-
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
-
-# singleton elements
-import rafcon.statemachine.singleton
-import rafcon.mvc.singleton
-
 # test environment elements
 import testing_utils
-from testing_utils import test_multithrading_lock, call_gui_callback, get_unique_temp_path
+from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
 import pytest
 
 logger = log.get_logger(__name__)
@@ -91,16 +88,16 @@ def create_models(*args, **kargs):
 
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
 
-    for sm_in in rafcon.statemachine.singleton.state_machine_manager.state_machines.values():
-        rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    for sm_in in rafcon.core.singleton.state_machine_manager.state_machines.values():
+        rafcon.core.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
 
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
-    rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
-    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     # return ctr_state, sm_m, state_dict
     return ctr_state, sm_m, state_dict
@@ -181,7 +178,7 @@ def check_state_machine_storage(state_machine, path, missing_elements, existing_
 
 
 def check_state_storage(state, parent_path, missing_elements, existing_elements=None, check_meta_data=False):
-    from rafcon.statemachine.storage.storage import get_storage_id_for_state
+    from rafcon.core.storage.storage import get_storage_id_for_state
     # check state folder exists
     folder_path = os.path.join(parent_path, get_storage_id_for_state(state))
     check_folder(folder_path, "state_path", missing_elements, existing_elements)
@@ -243,7 +240,7 @@ def test_storage_without_gui(caplog):
     [state, sm_m, state_dict] = create_models()
     logger.debug("init libs")
     testing_utils.remove_all_libraries()
-    rafcon.statemachine.singleton.library_manager.initialize()
+    rafcon.core.singleton.library_manager.initialize()
     save_state_machine(sm_model=sm_m, path=get_unique_temp_path(), logger=logger, with_gui=with_gui,
                        menubar_ctrl=None)
 
@@ -262,7 +259,7 @@ def test_storage_with_gui(caplog):
     logger.debug("init libs")
 
     if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     logger.debug("initialize MainWindow")
     main_window_view = MainWindowView()
 
@@ -281,7 +278,7 @@ def test_storage_with_gui(caplog):
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
-        test_multithrading_lock.release()
+        test_multithreading_lock.release()
 
     thread.join()
 

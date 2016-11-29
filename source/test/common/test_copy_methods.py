@@ -4,22 +4,20 @@ import copy
 import time
 import threading
 
-# core elements
-from rafcon.statemachine.storage import storage
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.state_machine import StateMachine
-
 # mvc
-from rafcon.mvc.models.state_machine import StateMachineModel
+import rafcon.gui.singleton as mvc_singleton
+from rafcon.gui.models.state_machine import StateMachineModel
 
-# singleton elements
-import rafcon.statemachine.singleton
-import rafcon.mvc.singleton as mvc_singleton
+# core elements
+import rafcon.core.singleton
+from rafcon.core.storage import storage
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.state_machine import StateMachine
 
 import testing_utils
 import pytest
@@ -86,9 +84,9 @@ def create_models(*args, **kargs):
 
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
 
-    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     return ctr_state, sm_m, state_dict
 
@@ -118,8 +116,8 @@ def create_models_lib():
     # #
     # # state_machine = StateMachine(root_state)
     #
-    # rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm_loaded)
-    # sm_model = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm_loaded.state_machine_id]
+    # rafcon.core.singleton.state_machine_manager.add_state_machine(sm_loaded)
+    # sm_model = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm_loaded.state_machine_id]
     #
     # return sm_loaded.root_state, sm_model, {}
 
@@ -383,17 +381,17 @@ def test_simple(caplog):
     run_copy_test(sm_model)
     run_copy_performance_test_and_check_storage_copy(sm_model)
     sm_model.destroy()
-    # rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    # rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
 
     [state, sm_model, state_dict] = create_models_concurrency()
     run_copy_test(sm_model)
     run_copy_performance_test_and_check_storage_copy(sm_model)
     sm_model.destroy()
-    # rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    # rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
     testing_utils.reload_config(config=True, gui_config=False)
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
 
 
 @pytest.mark.parametrize("with_gui", [False])
@@ -405,17 +403,17 @@ def test_complex(with_gui, caplog):
     """
     # create testbed
     testing_utils.start_rafcon()
-    from rafcon.statemachine.config import global_config
+    from rafcon.core.config import global_config
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
     library_paths["unit_test_state_machines"] = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines"
-    rafcon.statemachine.singleton.library_manager.refresh_libraries()
+    rafcon.core.singleton.library_manager.refresh_libraries()
 
     if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     if with_gui:
-        from rafcon.mvc.controllers.main_window import MainWindowController
-        from rafcon.mvc.views.main_window import MainWindowView
+        from rafcon.gui.controllers.main_window import MainWindowController
+        from rafcon.gui.views.main_window import MainWindowView
         main_window_view = MainWindowView()
         main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
 
@@ -440,13 +438,13 @@ def test_complex(with_gui, caplog):
     run_copy_performance_test_and_check_storage_copy(sm_model)
     sm_model.destroy()
 
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
     while gtk.events_pending():
         gtk.main_iteration(False)
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
     testing_utils.reload_config(config=True, gui_config=False)
-    testing_utils.test_multithrading_lock.release()
+    testing_utils.test_multithreading_lock.release()
     # import conftest
     # import shutil
     # for elem in os.listdir(testing_utils.constants.RAFCON_TEMP_PATH_BASE):

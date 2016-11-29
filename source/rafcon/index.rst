@@ -16,6 +16,7 @@ without inheriting their drawbacks.
    :caption: Table of Contents
 
    documentation/raw/rafcon.rst
+   documentation/raw/developers.rst
 
 
 

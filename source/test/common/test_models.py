@@ -1,18 +1,19 @@
 from gtkmvc.observer import Observer
 
-# core elements
-from rafcon.statemachine.script import Script
-from rafcon.statemachine.enums import StateType
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.storage import storage
+# mvc
+from rafcon.gui.config import global_gui_config
+import rafcon.gui.singleton
 
-# singleton elements
-import rafcon.statemachine.singleton
-import rafcon.mvc.singleton
+# core elements
+import rafcon.core.singleton
+from rafcon.core.script import Script
+from rafcon.core.states.state import StateType
+from rafcon.core.states.state import State
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.storage import storage
 
 import pytest
 import testing_utils
@@ -146,7 +147,7 @@ class StateNotificationLogObserver(NotificationLogObserver):
                 set_dict(info, elem)
             else:
                 print info
-                from rafcon.mvc.utils.notification_overview import NotificationOverview
+                from rafcon.gui.utils.notification_overview import NotificationOverview
                 print 'NotificationLogger ---> assert !!! Type of notification not known'#\n{0}'.format(NotificationOverview(info))
                 assert True
             return elem
@@ -239,13 +240,13 @@ def create_models(*args, **kargs):
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
 
-    # for sm_in in rafcon.statemachine.singleton.state_machine_manager.state_machines.values():
-    #     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    # for sm_in in rafcon.core.singleton.state_machine_manager.state_machines.values():
+    #     rafcon.core.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
 
-    rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
-    sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
     # sm_m.history.fake = True
 
     return ctr_state, sm_m, state_dict
@@ -756,6 +757,7 @@ def test_add_remove_models(caplog):
     # remove data_flow
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     import rafcon
@@ -789,7 +791,7 @@ def test_add_remove_models(caplog):
         if isinstance(state.parent, State):
             print "parent is: ", state.parent.state_id, state.parent.name
 
-        from rafcon.statemachine.states.container_state import ContainerState
+        from rafcon.core.states.container_state import ContainerState
         if isinstance(state, ContainerState):
             script = Script(parent=None)
         else:
@@ -1016,6 +1018,7 @@ def test_add_remove_models(caplog):
     # # assert check_if_all_states_there(state_dict['Container'], state_check_dict2)
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1055,6 +1058,7 @@ def test_state_property_modifications_history(caplog):
     # change child_execution
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -1174,6 +1178,7 @@ def test_state_property_modifications_history(caplog):
     check_state_for_all_models(state, state_m)
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1184,6 +1189,7 @@ def test_outcome_property_modifications_history(caplog):
     # change name
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     def do_check_for_state(state_dict, state_name='Nested'):
@@ -1216,6 +1222,7 @@ def test_outcome_property_modifications_history(caplog):
     do_check_for_state(state_dict, state_name='Container')
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1240,6 +1247,7 @@ def test_transition_property_modifications_history(caplog):
     # modify_transition_to_state
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -1304,6 +1312,7 @@ def test_transition_property_modifications_history(caplog):
     state_dict['Nested'].transitions[new_df_id].to_outcome = oc_great_nested
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1320,6 +1329,7 @@ def test_input_port_modify_notification(caplog):
     # change datatype
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
     new_input_data_port_id = state_dict['Nested2'].add_input_data_port(name='new_input', data_type='str')
 
@@ -1341,6 +1351,7 @@ def test_input_port_modify_notification(caplog):
                                                                                     default_value='awesome_tool')
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1358,6 +1369,7 @@ def test_output_port_modify_notification(caplog):
     # change datatype
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
     new_output_data_port_id = state_dict['Nested2'].add_output_data_port(name='new_output', data_type='str')
 
@@ -1379,6 +1391,7 @@ def test_output_port_modify_notification(caplog):
                                                                                       default_value='awesome_tool')
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1395,6 +1408,7 @@ def test_scoped_variable_modify_notification(caplog):
     # change datatype
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
     new_scoped_variable_id = state_dict['Nested'].add_scoped_variable(name='new_output', data_type='str')
 
@@ -1422,6 +1436,7 @@ def test_scoped_variable_modify_notification(caplog):
                                                                                    default_value='awesome_tool')
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1448,6 +1463,7 @@ def test_data_flow_property_modifications_history(caplog):
     # modify_transition_to_state
 
     # create testbed
+    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
 
     state1 = ExecutionState('State1')
@@ -1529,6 +1545,7 @@ def test_data_flow_property_modifications_history(caplog):
     state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
 
     sm_model.destroy()
+    global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
