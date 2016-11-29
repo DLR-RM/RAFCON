@@ -166,7 +166,7 @@ SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n) for n in dir(signal) if n.s
 
 
 def signal_handler(signal, frame):
-    from rafcon.statemachine.enums import StateMachineExecutionStatus
+    from rafcon.statemachine.constants import StateMachineExecutionStatus
     state_machine_execution_engine = sm_singletons.state_machine_execution_engine
     sm_singletons.shut_down_signal = signal
 

@@ -29,7 +29,7 @@ from rafcon.statemachine.state_elements.outcome import Outcome
 from rafcon.statemachine.state_elements.scope import ScopedData, ScopedVariable
 from rafcon.statemachine.state_elements.transition import Transition
 from rafcon.statemachine.storage import storage
-from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
+from rafcon.statemachine.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.statemachine.global_variable_manager import GlobalVariableManager
 from rafcon.statemachine.library_manager import LibraryManager
 from rafcon.statemachine.script import Script

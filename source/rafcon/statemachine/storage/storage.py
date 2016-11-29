@@ -17,7 +17,7 @@ from rafcon.utils import storage_utils
 from rafcon.utils import log
 
 from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
-from rafcon.statemachine.enums import DEFAULT_SCRIPT_PATH
+from rafcon.statemachine.constants import DEFAULT_SCRIPT_PATH
 from rafcon.statemachine.state_machine import StateMachine
 
 logger = log.get_logger(__name__)

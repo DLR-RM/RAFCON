@@ -18,7 +18,7 @@ from rafcon.statemachine.states.concurrency_state import ConcurrencyState
 from rafcon.statemachine.states.state import StateExecutionStatus
 from rafcon.statemachine.states.execution_state import ExecutionState
 from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
+from rafcon.statemachine.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
