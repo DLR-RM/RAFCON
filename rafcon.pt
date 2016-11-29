@@ -27,7 +27,7 @@ source/test_scripts/ros_libraries => share/examples/libraries/ros_libraries
 source/test_scripts/turtle_libraries => share/examples/libraries/turtle_libraries
 source/test_scripts/tutorials => share/examples/tutorials
 source/rafcon/documentation => docs
-bin/ | !rafcon_start | !rafcon_start_gui | !*.pyc => bin # Symlinks are recreated in post_install step
+bin/ | !rafcon_start | !rafcon_start_gui | !resave_state_machines  | !*.pyc => bin # Symlinks are recreated in post_install step
 
 [post-install]
 cd ${RMPM_INSTALL_DIR}/bin && ln -s ../lib/python2.7/rafcon/core/start.py rafcon_start && ln -s ../lib/python2.7/rafcon/gui/start.py rafcon_start_gui && ln -s ../lib/python2.7/rafcon/gui/resave_state_machines.py resave_state_machines
