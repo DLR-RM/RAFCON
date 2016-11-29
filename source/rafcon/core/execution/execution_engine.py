@@ -1,5 +1,5 @@
 """
-.. module:: state_machine_execution_engine
+.. module:: execution_engine
    :platform: Unix, Windows
    :synopsis: A module that cares for the execution of the state machine
 

@@ -40,29 +40,31 @@ def reset_global_variable_manager(global_variable_manager):
 
 def synchronize_with_clients_threads(queue_dict, execution_engine):
     from rafcon.core.singleton import global_variable_manager as gvm
-    from rafcon.core.enums import StateMachineExecutionStatus
+    from rafcon.core.execution.execution_status import StateMachineExecutionStatus
     from rafcon.core.singleton import state_machine_manager
     active_sm = state_machine_manager.get_active_state_machine()
     root_state = active_sm.root_state
 
+    sleep_time = 0.01
+
     # check when run to is finished
     while gvm.get_variable("sing_counter") < 1:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
     queue_dict[CLIENT1_QUEUE].put("start")
     print "starting tests\n\n"
 
     # stop start test
-    while execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
-        time.sleep(0.01)
+    while not execution_engine.finished_or_stopped():
+        time.sleep(sleep_time)
 
     queue_dict[CLIENT1_QUEUE].put("stop received")
     # wait until state machine started
     while execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
-    while execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
-        time.sleep(0.01)
+    while not execution_engine.finished_or_stopped():
+        time.sleep(sleep_time)
 
     reset_global_variable_manager(gvm)
     execution_engine.stop()  # reset state machine before the next test
@@ -86,7 +88,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     assert gvm.get_variable("decimate_counter") == 0
     queue_dict[CLIENT1_QUEUE].put("reconnect_me_and_run")
     queue_dict[CLIENT1_TO_SERVER].get()
-    if execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+    if not execution_engine.finished_or_stopped():
         execution_engine.join()
     print "server sm finished"
     assert gvm.get_variable("count_counter") == 3
@@ -94,7 +96,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     assert gvm.get_variable("decimate_counter") == 3
     queue_dict[CLIENT1_QUEUE].put("succeeded")
     execution_engine.stop()
-    if execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+    if not execution_engine.finished_or_stopped():
         execution_engine.join()
     reset_global_variable_manager(gvm)
     print "server: disconnect/connect by client test successful\n\n"
@@ -119,7 +121,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
         global_monitoring_manager.disable(address)
     queue_dict[CLIENT1_QUEUE].put("you are enabled")
     queue_dict[CLIENT1_TO_SERVER].get()
-    if execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+    if not execution_engine.finished_or_stopped():
         execution_engine.join()
     print "server sm finished"
     assert gvm.get_variable("count_counter") == 3
@@ -127,7 +129,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     assert gvm.get_variable("decimate_counter") == 3
     queue_dict[CLIENT1_QUEUE].put("succeeded")
     execution_engine.stop()
-    if execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+    if not execution_engine.finished_or_stopped():
         execution_engine.join()
     reset_global_variable_manager(gvm)
 
@@ -180,6 +182,8 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     from rafcon.utils import log
     logger = log.get_logger("Interacting client1")
 
+    sleep_time = 0.01
+
     logger.info("Start interacting with server\n\n")
 
     for id, queue in queue_dict.iteritems():
@@ -187,7 +191,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
 
     while not global_monitoring_manager.endpoint_initialized:
         logger.warn("global_monitoring_manager not initialized yet!")
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
     import rafcon.core.singleton as core_singletons  # be careful, could be replaced before
     remote_execution_engine = core_singletons.state_machine_execution_engine
@@ -201,8 +205,8 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     queue_dict[MAIN_QUEUE].put(STOP_START_SUCCESSFUL)
 
     from monitoring.controllers import client_controller
-    from rafcon.core.enums import StateMachineExecutionStatus
-    from rafcon.core.execution.state_machine_execution_engine import StateMachineExecutionEngine
+    from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+    from rafcon.core.execution.execution_engine import ExecutionEngine
     from monitoring.monitoring_execution_engine import MonitoringExecutionEngine
     from monitoring.model.network_model import network_manager_model
 
@@ -213,17 +217,17 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
         global_monitoring_manager.disconnect(address)
 
     while global_monitoring_manager.endpoint.registered_to_server:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
     # import rafcon.core.singleton as core_singletons
     # remote_execution_engine = core_singletons.state_machine_execution_engine
-    while not isinstance(remote_execution_engine, StateMachineExecutionEngine):
+    while not isinstance(remote_execution_engine, ExecutionEngine):
         remote_execution_engine = core_singletons.state_machine_execution_engine
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
     remote_execution_engine.start()
     while remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
     remote_execution_engine.join()
     # while remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
@@ -231,35 +235,35 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     queue_dict[CLIENT1_TO_SERVER].put("disconnected_and_executed")
 
     remote_execution_engine.stop()
-    if remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+    if not remote_execution_engine.finished_or_stopped():
         remote_execution_engine.join()
 
     queue_dict[CLIENT1_QUEUE].get()
     global_monitoring_manager.reconnect(address)
 
     while not global_monitoring_manager.endpoint.registered_to_server:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
     while not network_manager_model.get_connected_status(address) == "connected":
-        time.sleep(0.01)
+        time.sleep(sleep_time)
     print "status connected"
 
     # import rafcon.core.singleton as core_singletons
     while not isinstance(remote_execution_engine, MonitoringExecutionEngine):
         remote_execution_engine = core_singletons.state_machine_execution_engine
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
     print "sm monitoring"
     remote_execution_engine.start()
     while remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
     print "sm started"
 
     queue_dict[CLIENT1_TO_SERVER].put("reconnected_and_executed")
     queue_dict[CLIENT1_QUEUE].get()
 
     remote_execution_engine.stop()
-    if remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+    if not remote_execution_engine.finished_or_stopped():
         remote_execution_engine.join()
 
     queue_dict[MAIN_QUEUE].put(DISCONNECTED_RUN_SUCCESSFUL)
@@ -270,24 +274,24 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     print "client disabled test begin"
     for address in network_manager_model.connected_ip_port:
         while not network_manager_model.get_connected_status(address) == "disabled":
-            time.sleep(0.01)
+            time.sleep(sleep_time)
 
     # since the engine changed to local after disabling, we need to import it again
     # import rafcon.core.singleton as core_singletons
     remote_execution_engine = core_singletons.state_machine_execution_engine
-    while not isinstance(remote_execution_engine, StateMachineExecutionEngine):
-        time.sleep(0.01)
+    while not isinstance(remote_execution_engine, ExecutionEngine):
+        time.sleep(sleep_time)
 
     remote_execution_engine.start()
 
     while remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
-    while remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
-        time.sleep(0.01)
+    while not remote_execution_engine.finished_or_stopped():
+        time.sleep(sleep_time)
 
     remote_execution_engine.stop()
-    if remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+    if not remote_execution_engine.finished_or_stopped():
         remote_execution_engine.join()
 
     print "disabled run stopped"
@@ -302,18 +306,18 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
 
     while not isinstance(remote_execution_engine, MonitoringExecutionEngine):
         remote_execution_engine = core_singletons.state_machine_execution_engine
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
     remote_execution_engine.start()
     print "started enabled sm"
     while remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
     print "start enabled run"
     queue_dict[CLIENT1_TO_SERVER].put("started execution")
     queue_dict[CLIENT1_QUEUE].get()
 
     remote_execution_engine.stop()
-    if remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
+    if not remote_execution_engine.finished_or_stopped():
         remote_execution_engine.join()
 
     queue_dict[MAIN_QUEUE].put(DISABLED_RUN_SUCCESSFUL)
@@ -323,18 +327,19 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     queue_dict[CLIENT1_QUEUE].get()
     network_manager_model.set_config_value('CLIENT_ID', 'apply_test_client_id')
     while not client_controller.global_network_config.get_config_value('CLIENT_ID') == 'apply_test_client_id':
-        time.sleep(0.01)
+        time.sleep(sleep_time)
     global_monitoring_manager.endpoint.registered_to_server = False
     global_monitoring_manager.reinitialize(network_manager_model.connected_ip_port)
 
     while not global_monitoring_manager.endpoint_initialized:
         logger.warn("global_monitoring_manager not initialized yet!")
-        time.sleep(0.01)
+        time.sleep(sleep_time)
 
-    # while not global_monitoring_manager.endpoint:
-    #     time.sleep(0.01)
+    logger.info("Wait until registered to server")
+    while not global_monitoring_manager.endpoint:
+        time.sleep(sleep_time)
     while not global_monitoring_manager.endpoint.registered_to_server:
-        time.sleep(0.01)
+        time.sleep(sleep_time)
     # here is a function needed which ensures that the client is disconnected and reconnected again
     queue_dict[CLIENT1_TO_SERVER].put("on_apply_button clicked")
     queue_dict[CLIENT1_QUEUE].get()
@@ -342,7 +347,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     while not isinstance(remote_execution_engine, MonitoringExecutionEngine):
         # import rafcon.core.singleton as core_singletons
         remote_execution_engine = core_singletons.state_machine_execution_engine
-        time.sleep(0.01)
+        time.sleep(sleep_time)
     queue_dict[MAIN_QUEUE].put(APPLY_CONFIG_SUCCESSFUL)
 
     queue_dict[KILL_CLIENT1_QUEUE].get()  # synchronize to main process

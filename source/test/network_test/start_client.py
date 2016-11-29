@@ -29,31 +29,26 @@ def setup_logger():
 
 
 def start_client(interacting_function, queue_dict):
-
+    from rafcon.gui.config import global_gui_config
     import os
 
+    from rafcon.gui.controllers.main_window import MainWindowController
+    from rafcon.gui.views.main_window import MainWindowView
+    import rafcon.gui.singleton as mvc_singletons
+    from rafcon.gui.runtime_config import global_runtime_config
+    from rafcon.gui.start import signal_handler
+
     import rafcon
-    from yaml_configuration.config import config_path
     from rafcon.utils import log
-    from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
-    import rafcon.utils.filesystem as filesystem
+    from rafcon.utils import plugins
 
     from rafcon.core.config import global_config
     from rafcon.core.storage import storage as global_storage
     from rafcon.core.state_machine import StateMachine
     from rafcon.core.states.hierarchy_state import HierarchyState
     import rafcon.core.singleton as sm_singletons
-
-    from rafcon.gui.controllers.main_window import MainWindowController
-    from rafcon.gui.views.main_window import MainWindowView
-    import rafcon.gui.singleton as mvc_singletons
-    from rafcon.gui.config import global_gui_config
-    from rafcon.gui.runtime_config import global_runtime_config
-
     from rafcon.core.start import setup_environment
-    from rafcon.gui.start import signal_handler
 
-    from rafcon.utils import plugins
     # load all plugins specified in the RAFCON_PLUGIN_PATH
     plugins.load_plugins()
     import testing_utils
