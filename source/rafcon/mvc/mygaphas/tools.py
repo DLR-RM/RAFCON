@@ -75,7 +75,7 @@ class MoveItemTool(ItemTool):
         if event.button not in self._buttons:
             return False  # Only handle events for registered buttons (left mouse clicks)
 
-        if event.state & gtk.gdk.SHIFT_MASK:
+        if event.state & constants.RUBBERBAND_MODIFIER:
             return False  # Mouse clicks with pressed shift key are handled in another tool
 
         self._item = self.get_item()
@@ -87,7 +87,7 @@ class MoveItemTool(ItemTool):
             # self.view.unselect_item(self._item)
             pass
         else:
-            if not event.state & gtk.gdk.CONTROL_MASK and self._item not in self.view.selected_items:
+            if not event.state & constants.EXTEND_SELECTION_MODIFIER and self._item not in self.view.selected_items:
                 del self.view.selected_items
             if self._item not in self.view.selected_items:
                 # remember items that should not be unselected and maybe focused if movement occur
@@ -129,11 +129,11 @@ class MoveItemTool(ItemTool):
                                                 "name_position", False)
 
         if not position_changed:
-            if self._item in self.view.selected_items and event.state & gtk.gdk.CONTROL_MASK:
-                if not self._do_not_unselect is self._item:
+            if self._item in self.view.selected_items and event.state & constants.EXTEND_SELECTION_MODIFIER:
+                if self._do_not_unselect is not self._item:
                     self.view.unselect_item(self._item)
             else:
-                if not event.state & gtk.gdk.CONTROL_MASK:
+                if not event.state & constants.EXTEND_SELECTION_MODIFIER:
                     del self.view.selected_items
                 self.view.focused_item = self._item
         self._do_not_unselect = None
@@ -172,7 +172,7 @@ class HoverItemTool(HoverTool):
                 view.hovered_handle = hovered_handle
                 port_v = state_v.get_port_for_handle(hovered_handle)
                 view.queue_draw_area(*port_v.get_port_area(view))
-                if event.state & gtk.gdk.CONTROL_MASK:
+                if event.state & constants.MOVE_PORT_MODIFIER:
                     self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
                 else:
                     self.view.window.set_cursor(gtk.gdk.Cursor(constants.CREATION_CURSOR))
@@ -220,12 +220,12 @@ class HoverItemTool(HoverTool):
 class MultiSelectionTool(RubberbandTool):
     def on_button_press(self, event):
         # print "on_button_press: ", self.__class__.__name__
-        if event.state & gtk.gdk.SHIFT_MASK:
+        if event.state & constants.RUBBERBAND_MODIFIER:
             return super(MultiSelectionTool, self).on_button_press(event)
         return False
 
     def on_motion_notify(self, event):
-        if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & gtk.gdk.SHIFT_MASK:
+        if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & constants.RUBBERBAND_MODIFIER:
             view = self.view
             self.queue_draw(view)
             self.x1, self.y1 = event.x, event.y
@@ -241,7 +241,7 @@ class MultiSelectionTool(RubberbandTool):
         self.queue_draw(self.view)
         x0, y0, x1, y1 = self.x0, self.y0, self.x1, self.y1
         # Hold down Ctrl-key to add selection to current selection
-        if event.state & gtk.gdk.CONTROL_MASK:
+        if event.state & constants.EXTEND_SELECTION_MODIFIER:
             old_items_selected = []
         else:
             old_items_selected = list(self.view.selected_items)
