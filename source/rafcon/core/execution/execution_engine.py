@@ -26,7 +26,6 @@ class ExecutionEngine(Observable):
 
     :ivar state_machine_manager: holds the state machine manager of all states that can be executed
     :ivar status: holds the current execution status of the state machine
-    :ivar _validity_checker: holds a class instance that assures the validity of the state machine
     :ivar execution_history: the history of the execution TODO: should be an list
 
     """
@@ -38,8 +37,6 @@ class ExecutionEngine(Observable):
         Observable.__init__(self)
         self.state_machine_manager = state_machine_manager
         self._status = ExecutionStatus(StateMachineExecutionStatus.STOPPED)
-        # TODO: write validity checker of the state machine
-        self._validity_checker = None
         logger.debug("State machine execution engine initialized")
         self.start_state_paths = []
 
