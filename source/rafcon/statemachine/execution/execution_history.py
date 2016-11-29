@@ -10,6 +10,8 @@
 import time
 import copy
 from collections import Iterable, Sized
+
+from enum import Enum
 from gtkmvc import Observable
 
 from rafcon.utils import log
@@ -200,3 +202,6 @@ class ConcurrencyItem(HistoryItem):
 
     def __str__(self):
         return "ConcurrencyItem %s" % (HistoryItem.__str__(self))
+
+
+CallType = Enum('METHOD_NAME', 'EXECUTE CONTAINER')

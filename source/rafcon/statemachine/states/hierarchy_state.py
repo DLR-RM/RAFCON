@@ -15,7 +15,8 @@ from rafcon.statemachine.states.container_state import ContainerState
 from rafcon.statemachine.state_elements.outcome import Outcome
 import rafcon.statemachine.singleton as singleton
 from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem
-from rafcon.statemachine.enums import StateExecutionStatus, CallType, StateMachineExecutionStatus
+from rafcon.statemachine.enums import StateExecutionStatus, StateMachineExecutionStatus
+from rafcon.statemachine.execution.execution_history import CallType
 
 logger = log.get_logger(__name__)
 

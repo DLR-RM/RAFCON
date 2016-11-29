@@ -12,7 +12,6 @@ from enum import Enum
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 
-CallType = Enum('METHOD_NAME', 'EXECUTE CONTAINER')
 StateExecutionStatus = Enum('STATE_EXECUTION_STATE', 'INACTIVE ACTIVE EXECUTE_CHILDREN WAIT_FOR_NEXT_STATE')
 StateMachineExecutionStatus = Enum('STATE_MACHINE_EXECUTION_STATUS', 'STARTED STOPPED PAUSED '
                                                                      'FORWARD_INTO FORWARD_OVER FORWARD_OUT '

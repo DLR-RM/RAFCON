@@ -19,7 +19,7 @@ from rafcon.statemachine.state_machine_manager import StateMachineManager
 from rafcon.statemachine.execution.execution_history import ConcurrencyItem, CallItem, ScopedDataItem
 from rafcon.statemachine.singleton import state_machine_execution_engine
 from rafcon.statemachine.enums import StateMachineExecutionStatus
-from rafcon.statemachine.enums import CallType
+from rafcon.statemachine.execution.execution_history import CallType
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
