@@ -45,12 +45,11 @@ EXTENDED_RIGHT_CLICK_MENU: False
 
 SHORTCUTS:
     abort: Escape
-    add:
-    - <Control>A
-    - <Alt>E
-    add2: <Alt>H
-    add3: <Alt>B
-    add4: <Alt>C
+    add: <Control>A
+    add_execution_state: <Alt>E
+    add_hierarchy_state: <Alt>H
+    add_preemptive_state: <Alt>C
+    add_barrier_state: <Alt>B
     add_output: <Alt>U
     add_input: <Alt>N
     add_outcome: <Alt>T

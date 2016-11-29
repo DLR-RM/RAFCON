@@ -62,16 +62,20 @@ class StateMachineRightClickMenu(object):
 
             menu.append(create_image_menu_item("Add Execution State", constants.BUTTON_ADD,
                                                self.on_add_execution_state_activate,
-                                               accel_code=shortcuts_dict['add'][0], accel_group=accel_group))
+                                               accel_code=shortcuts_dict['add_execution_state'][0],
+                                               accel_group=accel_group))
             menu.append(create_image_menu_item("Add Hierarchy State", constants.BUTTON_ADD,
                                                self.on_add_hierarchy_state_activate,
-                                               accel_code=shortcuts_dict['add2'][0], accel_group=accel_group))
+                                               accel_code=shortcuts_dict['add_hierarchy_state'][0],
+                                               accel_group=accel_group))
             menu.append(create_image_menu_item("Add Preemptive State", constants.BUTTON_ADD,
                                                self.on_add_preemptive_state_activate,
-                                               accel_code=shortcuts_dict['add3'][0], accel_group=accel_group))
+                                               accel_code=shortcuts_dict['add_preemptive_state'][0],
+                                               accel_group=accel_group))
             menu.append(create_image_menu_item("Add Barrier State", constants.BUTTON_ADD,
                                                self.on_add_barrier_state_activate,
-                                               accel_code=shortcuts_dict['add4'][0], accel_group=accel_group))
+                                               accel_code=shortcuts_dict['add_barrier_state'][0],
+                                               accel_group=accel_group))
 
             menu.append(gtk.SeparatorMenuItem())
 
@@ -140,16 +144,16 @@ class StateMachineRightClickMenu(object):
         self.shortcut_manager.trigger_action("is_start_state", None, None)
 
     def on_add_execution_state_activate(self, widget=None, data=None):
-        self.shortcut_manager.trigger_action('add', None, None)
+        self.shortcut_manager.trigger_action('add_execution_state', None, None)
 
     def on_add_hierarchy_state_activate(self, widget=None, data=None):
-        self.shortcut_manager.trigger_action('add2', None, None)
+        self.shortcut_manager.trigger_action('add_hierarchy_state', None, None)
 
     def on_add_preemptive_state_activate(self, widget=None, data=None):
-        self.shortcut_manager.trigger_action('add3', None, None)
+        self.shortcut_manager.trigger_action('add_preemptive_state', None, None)
 
     def on_add_barrier_state_activate(self, widget=None, data=None):
-        self.shortcut_manager.trigger_action('add4', None, None)
+        self.shortcut_manager.trigger_action('add_barrier_state', None, None)
 
     def on_add_outcome(self, widget=None, data=None):
         self.shortcut_manager.trigger_action('add_outcome', None, None)
