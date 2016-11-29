@@ -109,7 +109,7 @@ class ExecutionEngine(Observable):
         logger.debug("Stop the state machine execution ...")
         if self.state_machine_manager.get_active_state_machine() is not None:
             self.state_machine_manager.get_active_state_machine().root_state.recursively_preempt_states()
-        self.set_execution_mode_to_stopped()
+        self.__set_execution_mode_to_stopped()
 
         # Notifies states waiting in step mode or those that are paused about execution stop
         self._status.execution_condition_variable.acquire()
@@ -122,7 +122,7 @@ class ExecutionEngine(Observable):
         else:
             logger.warn("Cannot join as state machine was not started yet.")
 
-    def set_execution_mode_to_stopped(self):
+    def __set_execution_mode_to_stopped(self):
         """Stop and reset execution engine"""
         self.run_to_states = []
         self.set_execution_mode(StateMachineExecutionStatus.STOPPED)
@@ -160,7 +160,7 @@ class ExecutionEngine(Observable):
         """Observe running state machine and stop engine if execution has finished"""
         self.state_machine_running = True
         self.__running_state_machine.join()
-        self.set_execution_mode_to_stopped()
+        self.__set_execution_mode_to_stopped()
         self.state_machine_running = False
 
     def backward_step(self):
