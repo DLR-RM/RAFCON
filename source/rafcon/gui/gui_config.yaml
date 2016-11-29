@@ -41,11 +41,14 @@ AUTO_APPLY_SOURCE_CODE_CHANGES: True
 CHECK_PYTHON_FILES_WITH_PYLINT: False
 
 DEFAULT_EXTERNAL_EDITOR:
+EXTENDED_RIGHT_CLICK_MENU: False
 
 SHORTCUTS:
     abort: Escape
     add: <Control>A             # In graphical editor: add execution state
-    add2: <Control><Shift>A     # In graphical editor: add hierarchy state
+    add2: <Control><Shift>A
+    add3: <Control><Shift>S
+    add4: <Control><Shift>X
     add_output: <Control>O
     add_input: <Control>I
     add_outcome: <Control>T

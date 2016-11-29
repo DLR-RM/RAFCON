@@ -56,6 +56,32 @@ class StateMachineRightClickMenu(object):
                                            accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
         menu.append(create_image_menu_item("Ungroup states", constants.BUTTON_UNGR, self.on_ungroup_state_activate,
                                            accel_code=shortcuts_dict['ungroup'][0], accel_group=accel_group))
+
+        if global_gui_config.get_config_value('EXTENDED_RIGHT_CLICK_MENU'):
+            menu.append(gtk.SeparatorMenuItem())
+
+            menu.append(create_image_menu_item("Add Execution State", constants.BUTTON_ADD, self.on_add_execution_state_activate,
+                                               accel_code=shortcuts_dict['add'][0], accel_group=accel_group))
+            menu.append(create_image_menu_item("Add Hierarchy State", constants.BUTTON_ADD, self.on_add_hierarchy_state_activate,
+                                               accel_code=shortcuts_dict['add2'][0], accel_group=accel_group))
+            menu.append(create_image_menu_item("Add Preemptive State", constants.BUTTON_ADD, self.on_add_preemptive_state_activate,
+                                               accel_code=shortcuts_dict['add3'][0], accel_group=accel_group))
+            menu.append(create_image_menu_item("Add Barrier State", constants.BUTTON_ADD, self.on_add_barrier_state_activate,
+                                               accel_code=shortcuts_dict['add4'][0], accel_group=accel_group))
+
+            menu.append(gtk.SeparatorMenuItem())
+
+            menu.append(create_image_menu_item("Add Outcome", constants.BUTTON_ADD, self.on_add_outcome,
+                                               accel_code=shortcuts_dict['add'][0], accel_group=accel_group))
+            menu.append(create_image_menu_item("Add Output Port", constants.BUTTON_ADD, self.on_add_output,
+                                               accel_code=shortcuts_dict['add2'][0], accel_group=accel_group))
+            menu.append(create_image_menu_item("Add Input Port", constants.BUTTON_ADD, self.on_add_input,
+                                               accel_code=shortcuts_dict['add3'][0], accel_group=accel_group))
+            menu.append(create_image_menu_item("Add Scoped Variable", constants.BUTTON_ADD, self.on_add_scoped_variable,
+                                               accel_code=shortcuts_dict['add4'][0], accel_group=accel_group))
+
+        menu.append(gtk.SeparatorMenuItem())
+
         menu.append(create_image_menu_item("Run from here", constants.BUTTON_START_FROM_SELECTED_STATE,
                                            self.on_run_from_selected_state_activate,
                                            accel_code=shortcuts_dict['start_from_selected'][0], accel_group=accel_group))
@@ -108,6 +134,30 @@ class StateMachineRightClickMenu(object):
 
     def on_toggle_is_start_state(self, widget, data=None):
         self.shortcut_manager.trigger_action("is_start_state", None, None)
+
+    def on_add_execution_state_activate(self, widget=None, data=None):
+        self.shortcut_manager.trigger_action('add', None, None)
+
+    def on_add_hierarchy_state_activate(self, widget=None, data=None):
+        self.shortcut_manager.trigger_action('add2', None, None)
+
+    def on_add_preemptive_state_activate(self, widget=None, data=None):
+        self.shortcut_manager.trigger_action('add3', None, None)
+
+    def on_add_barrier_state_activate(self, widget=None, data=None):
+        self.shortcut_manager.trigger_action('add4', None, None)
+
+    def on_add_outcome(self, widget=None, data=None):
+        self.shortcut_manager.trigger_action('add_outcome', None, None)
+
+    def on_add_output(self, widget=None, data=None):
+        self.shortcut_manager.trigger_action('add_output', None, None)
+
+    def on_add_input(self, widget=None, data=None):
+        self.shortcut_manager.trigger_action('add_input', None, None)
+
+    def on_add_scoped_variable(self, widget=None, data=None):
+        self.shortcut_manager.trigger_action('add_scoped_variable', None, None)
 
     def on_copy_activate(self, widget, data=None):
         # logger.info("trigger default copy")

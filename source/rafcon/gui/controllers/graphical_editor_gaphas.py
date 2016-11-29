@@ -91,6 +91,8 @@ class GraphicalEditorController(ExtendedController):
         """
         shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))
         shortcut_manager.add_callback_for_action("add2", partial(self._add_new_state, state_type=StateType.HIERARCHY))
+        shortcut_manager.add_callback_for_action("add3", partial(self._add_new_state, state_type=StateType.BARRIER_CONCURRENCY))
+        shortcut_manager.add_callback_for_action("add4", partial(self._add_new_state, state_type=StateType.PREEMPTION_CONCURRENCY))
 
         shortcut_manager.add_callback_for_action("add_output", partial(self._add_data_port_to_selected_state,
                                                                        data_port_type='OUTPUT'))
