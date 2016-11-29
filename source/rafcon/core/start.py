@@ -78,9 +78,6 @@ def parse_state_machine_path(path):
     if exists(sm_root_file):
         return path
     else:
-        sm_root_file = join(path, storage.STATEMACHINE_FILE_OLD)
-        if exists(sm_root_file):
-            return path
         raise argparse.ArgumentTypeError("Failed to open {0}: {1} not found in path".format(path,
                                                                                             storage.STATEMACHINE_FILE))
 

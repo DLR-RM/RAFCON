@@ -124,8 +124,7 @@ class LibraryManager(Observable):
         for library_name in os.listdir(library_path):
             full_library_path = os.path.join(library_path, library_name)
             if os.path.isdir(full_library_path) and library_name[0] != '.':
-                if os.path.exists(os.path.join(full_library_path, storage.STATEMACHINE_FILE)) \
-                        or os.path.exists(os.path.join(full_library_path, storage.STATEMACHINE_FILE_OLD)):
+                if os.path.exists(os.path.join(full_library_path, storage.STATEMACHINE_FILE)):
                     target_dict[library_name] = full_library_path
                 else:
                     target_dict[library_name] = {}
