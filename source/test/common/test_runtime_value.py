@@ -3,11 +3,11 @@ import pytest
 import rafcon
 
 # core elements
-from rafcon.statemachine.singleton import state_machine_manager
-from rafcon.statemachine.singleton import state_machine_execution_engine
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.core.singleton import state_machine_manager
+from rafcon.core.singleton import state_machine_execution_engine
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.library_state import LibraryState
 
 import testing_utils
 
@@ -19,7 +19,7 @@ logger = log.get_logger(__name__)
 def setup_module(module=None):
     # set the test_libraries path temporarily to the correct value
     testing_utils.remove_all_libraries()
-    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
+    library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
     library_paths["unit_test_state_machines"] = testing_utils.get_test_sm_path("unit_test_state_machines")
     logger.debug(library_paths["unit_test_state_machines"])
 

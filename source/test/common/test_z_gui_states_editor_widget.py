@@ -12,9 +12,9 @@ from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # core elements
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.state_machine import StateMachine
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.state_machine import StateMachine
 
 # general tool elements
 from rafcon.utils import log
@@ -89,10 +89,10 @@ def create_models(*args, **kargs):
     sm = StateMachine(ctr_state)
 
     # remove existing state machines
-    for sm_id in rafcon.statemachine.singleton.state_machine_manager.state_machines.keys():
-        rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_id)
+    for sm_id in rafcon.core.singleton.state_machine_manager.state_machines.keys():
+        rafcon.core.singleton.state_machine_manager.remove_state_machine(sm_id)
     # add new state machine
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     # select state machine
     rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
     # get state machine model
@@ -225,7 +225,7 @@ def test_state_type_change_test(with_gui, caplog):
     sm_m, state_dict = create_models()
 
     testing_utils.remove_all_libraries()
-    #rafcon.statemachine.singleton.library_manager.initialize()
+    #rafcon.core.singleton.library_manager.initialize()
 
     if testing_utils.sm_manager_model is None:
             testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model

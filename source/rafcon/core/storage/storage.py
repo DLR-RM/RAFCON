@@ -16,9 +16,9 @@ from rafcon.utils.filesystem import read_file, write_file
 from rafcon.utils import storage_utils
 from rafcon.utils import log
 
-from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
-from rafcon.statemachine.constants import DEFAULT_SCRIPT_PATH
-from rafcon.statemachine.state_machine import StateMachine
+from rafcon.core.custom_exceptions import LibraryNotFoundException
+from rafcon.core.constants import DEFAULT_SCRIPT_PATH
+from rafcon.core.state_machine import StateMachine
 
 logger = log.get_logger(__name__)
 
@@ -105,7 +105,7 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
                                temporary_storage=False):
     """Saves a state machine recursively to the file system
 
-    :param rafcon.statemachine.state_machine.StateMachine state_machine: the state_machine to be saved
+    :param rafcon.core.state_machine.StateMachine state_machine: the state_machine to be saved
     :param str base_path: base_path to which all further relative paths refers to
     :param bool delete_old_state_machine: Whether to delete any state machine existing at the given path
     :param bool save_as: Whether to create a copy of the state machine
@@ -175,7 +175,7 @@ def save_script_file_for_state_and_source_path(state, state_path_full, temporary
     :param str base_path: The path to the state machone
     :param str state_path: The path of the state meta file
     """
-    from rafcon.statemachine.states.execution_state import ExecutionState
+    from rafcon.core.states.execution_state import ExecutionState
     if isinstance(state, ExecutionState):
         source_script_file = os.path.join(state.script.path, state.script.filename)
         destination_script_file = os.path.join(state_path_full, SCRIPT_FILE)
@@ -202,8 +202,8 @@ def save_state_recursively(state, base_path, parent_path, temporary_storage=Fals
     :param parent_path: Path to the parent state
     :return:
     """
-    from rafcon.statemachine.states.execution_state import ExecutionState
-    from rafcon.statemachine.states.container_state import ContainerState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.container_state import ContainerState
 
     state_path = os.path.join(parent_path, get_storage_id_for_state(state))
     state_path_full = os.path.join(base_path, state_path)
@@ -302,9 +302,9 @@ def load_state_recursively(parent, state_path=None):
     :param state_path: the path on the filesystem where to find the meta file for the state
     :return:
     """
-    from rafcon.statemachine.states.state import State
-    from rafcon.statemachine.states.container_state import ContainerState
-    from rafcon.statemachine.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.state import State
+    from rafcon.core.states.container_state import ContainerState
+    from rafcon.core.states.hierarchy_state import HierarchyState
 
     path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA)
 
@@ -351,7 +351,7 @@ def load_state_recursively(parent, state_path=None):
         # as the parent is None the state cannot calculate its path, therefore the path is cached for it
         state.set_file_system_path(state_path)
 
-    from rafcon.statemachine.states.execution_state import ExecutionState
+    from rafcon.core.states.execution_state import ExecutionState
     if isinstance(state, ExecutionState):
         script = read_file(state.script.path, state.script.filename)
         state.script_text = script

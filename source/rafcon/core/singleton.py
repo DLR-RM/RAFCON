@@ -11,10 +11,10 @@
 import sys
 import argparse
 
-from rafcon.statemachine.global_variable_manager import GlobalVariableManager
-from rafcon.statemachine.library_manager import LibraryManager
-from rafcon.statemachine.execution.execution_engine import ExecutionEngine
-from rafcon.statemachine.state_machine_manager import StateMachineManager
+from rafcon.core.global_variable_manager import GlobalVariableManager
+from rafcon.core.library_manager import LibraryManager
+from rafcon.core.execution.execution_engine import ExecutionEngine
+from rafcon.core.state_machine_manager import StateMachineManager
 
 
 # This variable holds the global variable manager singleton

@@ -7,9 +7,9 @@ from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # core elements
-import rafcon.statemachine.singleton
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.state_machine import StateMachine
+import rafcon.core.singleton
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.state_machine import StateMachine
 
 # general tool elements
 from rafcon.utils import log
@@ -46,7 +46,7 @@ def create_models(*args, **kargs):
     sm = StateMachine(ctr_state)
 
     # add new state machine
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     # select state machine
     rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
@@ -56,7 +56,7 @@ def trigger_drag_and_drop_tests(*args):
     sm_manager_model = args[0]
     main_window_controller = args[1]
 
-    rafcon.statemachine.singleton.library_manager.initialize()
+    rafcon.core.singleton.library_manager.initialize()
 
     states_machines_editor_controller = main_window_controller.get_controller('state_machines_editor_ctrl')
     library_tree_controller = main_window_controller.get_controller('library_controller')
@@ -124,9 +124,9 @@ def test_drag_and_drop_test(caplog):
     create_models()
 
     testing_utils.remove_all_libraries()
-    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
+    library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
     library_paths["unit_test_state_machines"] = testing_utils.get_test_sm_path("unit_test_state_machines")
-    rafcon.statemachine.singleton.library_manager.initialize()
+    rafcon.core.singleton.library_manager.initialize()
 
     if testing_utils.sm_manager_model is None:
         testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
@@ -147,7 +147,7 @@ def test_drag_and_drop_test(caplog):
 
     gtk.main()
     logger.debug("Gtk main loop exited!")
-    sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
+    sm = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
     if sm:
         sm.root_state.join()
         logger.debug("Joined currently executing state machine!")

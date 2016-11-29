@@ -26,10 +26,10 @@ from rafcon.mvc.controllers.tool_bar import ToolBarController
 from rafcon.mvc.controllers.top_tool_bar import TopToolBarMainWindowController
 from rafcon.mvc.controllers.execution_history import ExecutionHistoryTreeController
 from rafcon.mvc.controllers.undocked_window import UndockedWindowController
-from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 import rafcon.mvc.singleton as mvc_singleton
-import rafcon.statemachine.singleton
-import rafcon.statemachine.config
+import rafcon.core.singleton
+import rafcon.core.config
 from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.mvc.utils import constants
@@ -125,7 +125,7 @@ class MainWindowController(ExtendedController):
         # menu bar
         ######################################################
         menu_bar_controller = MenuBarController(state_machine_manager_model, view, self.shortcut_manager,
-                                                rafcon.statemachine.singleton.state_machine_execution_engine)
+                                                rafcon.core.singleton.state_machine_execution_engine)
         self.add_controller('menu_bar_controller', menu_bar_controller)
 
         ######################################################
@@ -330,19 +330,19 @@ class MainWindowController(ExtendedController):
         """ Highlight buttons according actual execution status. Furthermore it triggers the label redraw of the active
         state machine.
         """
-        label_string = str(rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode)
+        label_string = str(rafcon.core.singleton.state_machine_execution_engine.status.execution_mode)
         label_string = label_string.replace("STATE_MACHINE_EXECUTION_STATUS.", "")
         self.view['execution_status_label'].set_text(label_string)
 
-        if rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STARTED:
+        if rafcon.core.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STARTED:
             self.get_controller('state_machines_editor_ctrl').highlight_execution_of_currently_active_sm(True)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_start_shortcut')
-        elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.PAUSED:
+        elif rafcon.core.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.PAUSED:
             self.get_controller('state_machines_editor_ctrl').highlight_execution_of_currently_active_sm(True)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_pause_shortcut')
-        elif rafcon.statemachine.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED:
+        elif rafcon.core.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STOPPED:
             self.get_controller('state_machines_editor_ctrl').highlight_execution_of_currently_active_sm(False)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_stop_shortcut')

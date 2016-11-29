@@ -3,10 +3,10 @@ import threading
 import time
 
 # core elements
-from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
-from rafcon.statemachine.singleton import state_machine_manager
-from rafcon.statemachine.singleton import global_variable_manager
-from rafcon.statemachine.singleton import state_machine_execution_engine
+from rafcon.core.execution.state_machine_execution_engine import StateMachineExecutionEngine
+from rafcon.core.singleton import state_machine_manager
+from rafcon.core.singleton import global_variable_manager
+from rafcon.core.singleton import state_machine_execution_engine
 
 # test environment elements
 import testing_utils

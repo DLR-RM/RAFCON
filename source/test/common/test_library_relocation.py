@@ -6,18 +6,18 @@ import testing_utils
 import signal
 
 import rafcon
-from rafcon.statemachine import interface, start
-from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.storage import storage
-import rafcon.statemachine.singleton as sm_singletons
+from rafcon.core import interface, start
+from rafcon.core.custom_exceptions import LibraryNotFoundException
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.storage import storage
+import rafcon.core.singleton as sm_singletons
 # needed for yaml parsing
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.execution.state_machine_execution_engine import StateMachineExecutionEngine
-from rafcon.statemachine.enums import StateExecutionState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.execution.state_machine_execution_engine import StateMachineExecutionEngine
+from rafcon.core.enums import StateExecutionState
 
 from rafcon.utils import log
 logger = log.get_logger("start-no-gui")
@@ -42,7 +42,7 @@ def test_library_relocation(caplog):
 
     testing_utils.remove_all_libraries()
 
-    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
+    library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
     library_paths["test_scripts"] = testing_utils.TEST_SM_PATH
 
     # logger.debug(library_paths["test_scripts"])
@@ -52,7 +52,7 @@ def test_library_relocation(caplog):
 
     interface.show_notice_func = show_notice
 
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
 
     # Initialize libraries
     sm_singletons.library_manager.initialize()
@@ -60,11 +60,11 @@ def test_library_relocation(caplog):
     state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path(
         "unit_test_state_machines/library_relocation_test"))
 
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
-    rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    rafcon.statemachine.singleton.state_machine_execution_engine.join()
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
+    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.join()
+    rafcon.core.singleton.state_machine_execution_engine.stop()
 
     assert state_machine.root_state.output_data["output_0"] == 27
 

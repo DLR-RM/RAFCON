@@ -8,10 +8,10 @@ from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.models import ContainerStateModel, StateModel
 from rafcon.mvc.models.selection import Selection
 from rafcon.mvc.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.storage import storage
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.storage import storage
 
 from rafcon.utils import log
 from rafcon.utils import storage_utils
@@ -22,7 +22,7 @@ logger = log.get_logger(__name__)
 
 
 class StateMachineModel(ModelMT, Hashable):
-    """This model class manages a :class:`rafcon.statemachine.state_machine.StateMachine`
+    """This model class manages a :class:`rafcon.core.state_machine.StateMachine`
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state machine).
 

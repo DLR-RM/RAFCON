@@ -13,8 +13,8 @@ global_lock_counter = 0
 
 def lock_state_machine(func):
     def func_wrapper(*args, **kwargs):
-        from rafcon.statemachine.state_elements.state_element import StateElement
-        from rafcon.statemachine.states.state import State
+        from rafcon.core.state_elements.state_element import StateElement
+        from rafcon.core.states.state import State
         global global_lock_counter
         self_reference = args[0]
         target_state_machine = None

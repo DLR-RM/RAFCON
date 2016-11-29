@@ -15,24 +15,24 @@ from gtkmvc import ModelMT
 from jsonconversion.decoder import JSONObjectDecoder
 from jsonconversion.encoder import JSONObjectEncoder
 
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.state_elements.data_flow import DataFlow
-from rafcon.statemachine.state_elements.data_port import DataPort
-from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
-from rafcon.statemachine.state_elements.outcome import Outcome
-from rafcon.statemachine.state_elements.scope import ScopedData, ScopedVariable
-from rafcon.statemachine.state_elements.transition import Transition
-from rafcon.statemachine.storage import storage
-from rafcon.statemachine.constants import UNIQUE_DECIDER_STATE_ID
-from rafcon.statemachine.global_variable_manager import GlobalVariableManager
-from rafcon.statemachine.library_manager import LibraryManager
-from rafcon.statemachine.script import Script
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.states.state import State
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.state_elements.data_flow import DataFlow
+from rafcon.core.state_elements.data_port import DataPort
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
+from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.scope import ScopedData, ScopedVariable
+from rafcon.core.state_elements.transition import Transition
+from rafcon.core.storage import storage
+from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
+from rafcon.core.global_variable_manager import GlobalVariableManager
+from rafcon.core.library_manager import LibraryManager
+from rafcon.core.script import Script
 
 import rafcon.mvc.singleton as mvc_singleton
 import rafcon.mvc.config as gui_config
@@ -66,7 +66,7 @@ def get_state_tuple(state, state_m=None):
     [5] script_text
     #   states-meta - [state-, transitions-, data_flows-, outcomes-, inputs-, outputs-, scopes, states-meta]
 
-    :param rafcon.statemachine.states.state.State state: The state that should be stored
+    :param rafcon.core.states.state.State state: The state that should be stored
     :return: state_tuple tuple
     """
     # state_str = yaml.dump(state)

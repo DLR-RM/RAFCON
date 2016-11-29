@@ -8,7 +8,7 @@ from gaphas.connector import Position
 from gaphas.matrix import Matrix
 from gaphas.solver import Variable
 
-from rafcon.statemachine.states.state import StateExecutionStatus
+from rafcon.core.states.state import StateExecutionStatus
 
 from rafcon.mvc.mygaphas.canvas import ItemProjection
 from rafcon.mvc.mygaphas.constraint import KeepRectangleWithinConstraint, PortRectConstraint, BorderWidthConstraint

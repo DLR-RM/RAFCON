@@ -5,7 +5,7 @@ import gtk
 import yaml
 from yaml_configuration.config import ConfigError
 
-from rafcon.statemachine.config import ObservableConfig
+from rafcon.core.config import ObservableConfig
 from rafcon.utils import filesystem
 from rafcon.utils import storage_utils
 from rafcon.mvc.utils import constants

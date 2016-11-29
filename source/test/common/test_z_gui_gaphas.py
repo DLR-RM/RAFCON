@@ -11,9 +11,9 @@ from rafcon.mvc.views.main_window import MainWindowView
 import rafcon.mvc.controllers.graphical_editor_gaphas as graphical_editor_gaphas
 
 # core elements
-import rafcon.statemachine.config
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-import rafcon.statemachine.singleton
+import rafcon.core.config
+from rafcon.core.states.hierarchy_state import HierarchyState
+import rafcon.core.singleton
 
 # general tool elements
 from rafcon.utils import log
@@ -93,14 +93,14 @@ def trigger_copy_delete_bug_signals(*args):
 def test_copy_delete_bug(caplog):
     testing_utils.start_rafcon()
     testing_utils.remove_all_libraries()
-    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
+    library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
     gui_config.global_gui_config.set_config_value('GAPHAS_EDITOR', True)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     library_paths["ros"] = join(rafcon.__path__[0], "../test_scripts/ros_libraries")
     library_paths["turtle_libraries"] = join(rafcon.__path__[0], "../test_scripts/turtle_libraries")
     library_paths["generic"] = join(rafcon.__path__[0], "../libraries/generic")
-    rafcon.statemachine.singleton.library_manager.refresh_libraries()
+    rafcon.core.singleton.library_manager.refresh_libraries()
 
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView()

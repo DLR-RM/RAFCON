@@ -12,14 +12,14 @@ FILES = [RAFCON_TEMP_PATH_BASE + '/state_generation_log_file.txt',
          RAFCON_TEMP_PATH_BASE + '/state_element_generation_log_file.txt',
          RAFCON_TEMP_PATH_BASE + '/state_element_del_log_file.txt']
 
-old_state_init = rafcon.statemachine.states.state.State.__init__
+old_state_init = rafcon.core.states.state.State.__init__
 old_state_del = None
-if hasattr(rafcon.statemachine.states.state.State, '__del__'):
-    old_state_del = rafcon.statemachine.states.state.State.__del__
-old_state_element_init = rafcon.statemachine.state_elements.state_element.StateElement.__init__
+if hasattr(rafcon.core.states.state.State, '__del__'):
+    old_state_del = rafcon.core.states.state.State.__del__
+old_state_element_init = rafcon.core.state_elements.state_element.StateElement.__init__
 old_state_element_del = None
-if hasattr(rafcon.statemachine.state_elements.state_element.StateElement, '__del__'):
-        old_state_element_del = rafcon.statemachine.state_elements.state_element.StateElement.__del__
+if hasattr(rafcon.core.state_elements.state_element.StateElement, '__del__'):
+        old_state_element_del = rafcon.core.state_elements.state_element.StateElement.__del__
 
 
 def get_log_elements(with_prints=False):
@@ -71,7 +71,7 @@ def patch_core_classes_with_log():
         self._patch = None
         self._name = name
         if state_id is None:
-            self._state_id = rafcon.statemachine.states.state.state_id_generator()
+            self._state_id = rafcon.core.states.state.state_id_generator()
         else:
             self._state_id = state_id
         with open(RAFCON_TEMP_PATH_BASE + '/state_generation_log_file.txt', 'a+') as f:
@@ -98,17 +98,17 @@ def patch_core_classes_with_log():
             with open(RAFCON_TEMP_PATH_BASE + '/state_element_del_log_file.txt', 'a+') as f:
                 f.write("RUN STATE-ELEMENT of {0} {1}\n".format(self, id(self)))
 
-    rafcon.statemachine.states.state.State.__init__ = state_init
-    rafcon.statemachine.states.state.State.__del__ = state_del
-    rafcon.statemachine.state_elements.state_element.StateElement.__init__ = state_element_init
-    rafcon.statemachine.state_elements.state_element.StateElement.__del__ = state_element_del
+    rafcon.core.states.state.State.__init__ = state_init
+    rafcon.core.states.state.State.__del__ = state_del
+    rafcon.core.state_elements.state_element.StateElement.__init__ = state_element_init
+    rafcon.core.state_elements.state_element.StateElement.__del__ = state_element_del
 
 
 def un_patch_core_classes_from_log():
-    rafcon.statemachine.states.state.State.__init__ = old_state_init
-    rafcon.statemachine.states.state.State.__del__ = old_state_del
-    rafcon.statemachine.state_elements.state_element.StateElement.__init__ = old_state_element_init
-    rafcon.statemachine.state_elements.state_element.StateElement.__del__ = old_state_element_del
+    rafcon.core.states.state.State.__init__ = old_state_init
+    rafcon.core.states.state.State.__del__ = old_state_del
+    rafcon.core.state_elements.state_element.StateElement.__init__ = old_state_element_init
+    rafcon.core.state_elements.state_element.StateElement.__del__ = old_state_element_del
 
 
 def test_core_destruct(caplog):

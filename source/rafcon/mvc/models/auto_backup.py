@@ -6,8 +6,8 @@ from sys import platform as _platform
 import gtk
 from gtkmvc import ModelMT
 
-from rafcon.statemachine.storage import storage
-import rafcon.statemachine.singleton as sm_singleton
+from rafcon.core.storage import storage
+import rafcon.core.singleton as sm_singleton
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.models.state_machine import StateMachineModel

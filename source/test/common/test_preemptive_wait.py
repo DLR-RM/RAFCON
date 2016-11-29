@@ -1,11 +1,11 @@
 import pytest
 
 # core elements
-import rafcon.statemachine.singleton
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.singleton import global_variable_manager as gvm
-from rafcon.statemachine.state_machine import StateMachine
+import rafcon.core.singleton
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.singleton import global_variable_manager as gvm
+from rafcon.core.state_machine import StateMachine
 
 # test environment elements
 import testing_utils
@@ -49,11 +49,11 @@ def test_preemptive_wait_daemon(caplog):
 def run_state_machine():
 
     preemption_state_sm = create_preemptive_wait_state_machine()
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
-    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
-    rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    rafcon.statemachine.singleton.state_machine_execution_engine.join()
-    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
+    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.join()
+    rafcon.core.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
 
 
 def test_preemptive_wait_timeout(caplog):

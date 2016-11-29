@@ -14,12 +14,12 @@ from rafcon.mvc.mygaphas.view import ExtendedGtkView as GaphasEditor
 import rafcon.mvc.state_machine_helper as state_machine_helper
 
 # core elements
-import rafcon.statemachine.config
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.state_machine import StateMachine
-import rafcon.statemachine.singleton
+import rafcon.core.config
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.state_machine import StateMachine
+import rafcon.core.singleton
 
 # general tool elements
 from rafcon.utils import log
@@ -293,17 +293,17 @@ def trigger_gui_signals(*args):
 def test_gui(caplog):
     testing_utils.start_rafcon()
     testing_utils.remove_all_libraries()
-    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
+    library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     library_paths["ros"] = join(rafcon.__path__[0], "../test_scripts/ros_libraries")
     library_paths["turtle_libraries"] = join(rafcon.__path__[0], "../test_scripts/turtle_libraries")
     library_paths["generic"] = join(rafcon.__path__[0], "../libraries/generic")
-    rafcon.statemachine.singleton.library_manager.refresh_libraries()
+    rafcon.core.singleton.library_manager.refresh_libraries()
 
     ctr_state = create_models()
     state_machine = StateMachine(ctr_state)
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
     testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
     main_window_view = MainWindowView()

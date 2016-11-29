@@ -10,8 +10,8 @@
 
 from gtkmvc import Observable
 
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.storage import storage
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.storage import storage
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -44,7 +44,7 @@ class StateMachineManager(Observable):
             self.remove_state_machine(sm_id)
 
     def open_state_machines(self, sm_ids, state_machine_path_by_sm_id):
-        from rafcon.statemachine.storage import storage
+        from rafcon.core.storage import storage
         for sm_idx in range(len(state_machine_path_by_sm_id)):
             state_machine = storage.load_state_machine_from_path(state_machine_path_by_sm_id[sm_ids[sm_idx]])
             self.add_state_machine(state_machine)

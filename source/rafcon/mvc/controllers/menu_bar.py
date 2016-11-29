@@ -13,17 +13,17 @@ from functools import partial
 import gtk
 import glib
 
-from rafcon.statemachine import interface
-from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.storage import storage
-from rafcon.statemachine.singleton import state_machine_manager, library_manager
+from rafcon.core import interface
+from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.storage import storage
+from rafcon.core.singleton import state_machine_manager, library_manager
 
-import rafcon.statemachine.singleton as core_singletons
+import rafcon.core.singleton as core_singletons
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 from rafcon.mvc.models.state import StateModel
 from rafcon.mvc.models.container_state import ContainerStateModel
@@ -442,7 +442,7 @@ class MenuBarController(ExtendedController):
             from rafcon.mvc.models.state_machine import StateMachineModel
             sm_m = StateMachineModel(StateMachine(root_state=state_m.state), self.model)
             sm_m.root_state = state_m
-            from rafcon.statemachine.storage.storage import save_state_machine_to_path
+            from rafcon.core.storage.storage import save_state_machine_to_path
             path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
             if path:
                 save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
@@ -712,7 +712,7 @@ class MenuBarController(ExtendedController):
         return False
 
     def on_destroy(self, widget, data=None):
-        from rafcon.statemachine.start import reactor_required
+        from rafcon.core.start import reactor_required
 
         logger.debug("The GUI is being closed now")
         self.main_window_view.hide()

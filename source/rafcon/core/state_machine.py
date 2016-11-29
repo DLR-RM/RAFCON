@@ -14,8 +14,8 @@ from threading import RLock
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 
-from rafcon.statemachine.id_generator import generate_state_machine_id
-from rafcon.statemachine.execution.execution_history import ExecutionHistory
+from rafcon.core.id_generator import generate_state_machine_id
+from rafcon.core.execution.execution_history import ExecutionHistory
 
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.storage_utils import get_current_time_string
@@ -93,7 +93,7 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     @staticmethod
     def state_machine_to_dict(state_machine):
-        from rafcon.statemachine.storage.storage import get_storage_id_for_state
+        from rafcon.core.storage.storage import get_storage_id_for_state
         dict_representation = {
             'root_state_storage_id': get_storage_id_for_state(state_machine.root_state),
             'version': state_machine.version,
@@ -114,7 +114,7 @@ class StateMachine(Observable, JSONObject, Hashable):
     def join(self):
         """Wait for root state to finish execution"""
         self._root_state.join()
-        from rafcon.statemachine.states.state import StateExecutionStatus
+        from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
     @Observable.observed
@@ -148,7 +148,7 @@ class StateMachine(Observable, JSONObject, Hashable):
         # if not isinstance(root_state, State):
         #     raise AttributeError("root_state has to be of type State")
         if root_state is not None:
-            from rafcon.statemachine.states.state import State
+            from rafcon.core.states.state import State
             if not isinstance(root_state, State):
                 raise AttributeError("root_state has to be of type State")
             root_state.parent = self
@@ -197,8 +197,8 @@ class StateMachine(Observable, JSONObject, Hashable):
         self._marked_dirty = marked_dirty
 
     def get_state_by_path(self, path, as_check=False):
-        from rafcon.statemachine.states.library_state import LibraryState
-        from rafcon.statemachine.states.execution_state import ExecutionState
+        from rafcon.core.states.library_state import LibraryState
+        from rafcon.core.states.execution_state import ExecutionState
         path_item_list = path.split('/')
         prev_state_id = path_item_list.pop(0)
         if not prev_state_id == self.root_state.state_id:

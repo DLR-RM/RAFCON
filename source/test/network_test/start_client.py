@@ -38,11 +38,11 @@ def start_client(interacting_function, queue_dict):
     from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
     import rafcon.utils.filesystem as filesystem
 
-    from rafcon.statemachine.config import global_config
-    from rafcon.statemachine.storage import storage as global_storage
-    from rafcon.statemachine.state_machine import StateMachine
-    from rafcon.statemachine.states.hierarchy_state import HierarchyState
-    import rafcon.statemachine.singleton as sm_singletons
+    from rafcon.core.config import global_config
+    from rafcon.core.storage import storage as global_storage
+    from rafcon.core.state_machine import StateMachine
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    import rafcon.core.singleton as sm_singletons
 
     from rafcon.mvc.controllers.main_window import MainWindowController
     from rafcon.mvc.views.main_window import MainWindowView
@@ -50,7 +50,7 @@ def start_client(interacting_function, queue_dict):
     from rafcon.mvc.config import global_gui_config
     from rafcon.mvc.runtime_config import global_runtime_config
 
-    from rafcon.statemachine.start import setup_environment
+    from rafcon.core.start import setup_environment
     from rafcon.mvc.start import signal_handler
 
     from rafcon.utils import plugins

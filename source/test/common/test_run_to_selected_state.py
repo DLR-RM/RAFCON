@@ -2,9 +2,9 @@ import time
 import pytest
 
 # state machine
-import rafcon.statemachine.singleton
-from rafcon.statemachine.storage import storage
-from rafcon.statemachine.enums import StateExecutionState
+import rafcon.core.singleton
+from rafcon.core.storage import storage
+from rafcon.core.enums import StateExecutionState
 
 # utils
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
@@ -18,14 +18,14 @@ logger = log.get_logger(__name__)
 
 def test_run_to_selected_state(caplog):
 
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
     testing_utils.test_multithreading_lock.acquire()
 
     sm = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/"
                                                                              "run_to_selected_state_test"))
     # select state machine for this purpose
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
-    rafcon.statemachine.singleton.state_machine_execution_engine.run_to_selected_state("VVBPOY/AOZXRY",
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.core.singleton.state_machine_execution_engine.run_to_selected_state("VVBPOY/AOZXRY",
                                                                                        sm.state_machine_id)
     # run the statemachine to the state before AOYXRY, this is an asynchronous task
     timeout = time.time()
@@ -40,8 +40,8 @@ def test_run_to_selected_state(caplog):
         lines = test_file.readlines()
 
     # the state machines waits at ABNQFK with state WAIT_FOR_NEXT_STATE, so it needs to be stopped manually
-    rafcon.statemachine.singleton.state_machine_execution_engine.stop()
-    rafcon.statemachine.singleton.state_machine_execution_engine.join()
+    rafcon.core.singleton.state_machine_execution_engine.stop()
+    rafcon.core.singleton.state_machine_execution_engine.join()
 
     assert len(lines) < 3
 

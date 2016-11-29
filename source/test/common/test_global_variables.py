@@ -1,10 +1,10 @@
 import pytest
 
 # state machine
-import rafcon.statemachine.singleton
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.state_machine import StateMachine
+import rafcon.core.singleton
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.state_machine import StateMachine
 
 # test environment elements
 import testing_utils
@@ -36,11 +36,11 @@ def test_concurrency_barrier_state_execution(caplog):
     sm = create_state_machine()
     root_state = sm.root_state
     state_machine = StateMachine(root_state)
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    rafcon.statemachine.singleton.state_machine_execution_engine.join()
-    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.join()
+    rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     testing_utils.test_multithreading_lock.release()
 
     assert root_state.output_data["output_data_port1"] == 42

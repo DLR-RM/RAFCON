@@ -2,7 +2,7 @@ from copy import copy, deepcopy
 from gtkmvc import ModelMT
 
 from rafcon.mvc.models.state_element import StateElementModel
-from rafcon.statemachine.state_elements.scope import ScopedVariable
+from rafcon.core.state_elements.scope import ScopedVariable
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -11,7 +11,7 @@ logger = log.get_logger(__name__)
 class ScopedVariableModel(StateElementModel):
     """This model class manages a ScopedVariable
 
-    :param rafcon.statemachine.scoped_variable.ScopedVariable scoped_variable: The scoped variable to be wrapped
+    :param rafcon.core.scoped_variable.ScopedVariable scoped_variable: The scoped variable to be wrapped
     :param rafcon.mvc.models.abstract_state.AbstractStateModel parent: The state model of the state element
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state element model
      """

@@ -11,11 +11,11 @@ import Queue
 
 from gtkmvc import Observable
 
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.execution.execution_history import CallType
-from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
-from rafcon.statemachine.states.state import StateExecutionStatus
-from rafcon.statemachine.state_elements.outcome import Outcome
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.execution.execution_history import CallType
+from rafcon.core.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
+from rafcon.core.states.state import StateExecutionStatus
+from rafcon.core.state_elements.outcome import Outcome
 
 
 class ConcurrencyState(ContainerState):

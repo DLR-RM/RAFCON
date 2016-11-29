@@ -15,13 +15,13 @@ from rafcon.mvc.action import ActionDummy, Action, StateMachineAction, StateActi
     ScopedVariableAction, OutcomeAction, TransitionAction, DataFlowAction, AddObjectAction, RemoveObjectAction, \
     MetaAction, get_state_element_meta
 
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.state_elements.data_flow import DataFlow
-from rafcon.statemachine.state_elements.data_port import DataPort, InputDataPort
-from rafcon.statemachine.state_elements.outcome import Outcome
-from rafcon.statemachine.state_elements.scope import ScopedVariable
-from rafcon.statemachine.state_elements.transition import Transition
+from rafcon.core.states.state import State
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.state_elements.data_flow import DataFlow
+from rafcon.core.state_elements.data_port import DataPort, InputDataPort
+from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.scope import ScopedVariable
+from rafcon.core.state_elements.transition import Transition
 
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 from rafcon.mvc.models.state_machine import StateMachineModel

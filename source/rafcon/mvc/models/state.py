@@ -3,7 +3,7 @@ from gtkmvc import ModelMT
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel
-from rafcon.statemachine.state_elements.outcome import Outcome
+from rafcon.core.state_elements.outcome import Outcome
 from rafcon.utils import log
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 
@@ -15,7 +15,7 @@ class StateModel(AbstractStateModel):
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state).
 
-    :param rafcon.statemachine.states.state.State state: The state to be managed
+    :param rafcon.core.states.state.State state: The state to be managed
     :param AbstractStateModel parent: The state to be managed
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state
     """
@@ -161,7 +161,7 @@ class StateModel(AbstractStateModel):
         The method re-initiate a handed list or dictionary of models with the new dictionary of core-objects.
 
         :param model_list_or_dict: could be a list or dictionary of one model type
-        :param core_objects_dict: new dictionary of one type of core-elements (rafcon.statemachine)
+        :param core_objects_dict: new dictionary of one type of core-elements (rafcon.core)
         :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
         :param model_class: model-class of the elements that should be insert
         :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element (e.g. 'state_id')
@@ -183,7 +183,7 @@ class StateModel(AbstractStateModel):
         core_object_dict.
 
         :param model_list_or_dict: could be a list or dictionary of one model type
-        :param core_objects_dict: dictionary of one type of core-elements (rafcon.statemachine)
+        :param core_objects_dict: dictionary of one type of core-elements (rafcon.core)
         :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
         :param model_class: model-class of the elements that should be insert
         :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element (e.g. 'state_id')
@@ -211,7 +211,7 @@ class StateModel(AbstractStateModel):
         remove it and return without continue to search for more model-objects which maybe are unnecessary, too.
 
         :param model_list_or_dict: could be a list or dictionary of one model type
-        :param core_objects_dict: dictionary of one type of core-elements (rafcon.statemachine)
+        :param core_objects_dict: dictionary of one type of core-elements (rafcon.core)
         :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
         :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element (e.g. 'state_id')
         :return:

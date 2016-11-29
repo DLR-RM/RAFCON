@@ -15,8 +15,8 @@ from rafcon.mvc.gui_helper import create_image_menu_item, create_check_menu_item
 from rafcon.mvc.clipboard import global_clipboard
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.models.abstract_state import AbstractStateModel
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 import rafcon.mvc.singleton as mvc_singleton
 from rafcon.mvc.config import global_gui_config
 

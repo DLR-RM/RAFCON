@@ -1,10 +1,10 @@
 from copy import copy, deepcopy
 from os.path import join
 
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.singleton import library_manager
-from rafcon.statemachine.storage.storage import get_storage_id_for_state
+from rafcon.core.states.state import State
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.singleton import library_manager
+from rafcon.core.storage.storage import get_storage_id_for_state
 
 from rafcon.mvc.models.abstract_state import AbstractStateModel
 from rafcon.mvc.models.data_port import DataPortModel

@@ -1,9 +1,9 @@
 from gtkmvc import ModelMT
 from gtkmvc import Observable
 
-from rafcon.statemachine.state_machine_manager import StateMachineManager
-from rafcon.statemachine.singleton import state_machine_execution_engine
-from rafcon.statemachine.execution.execution_engine import ExecutionEngine
+from rafcon.core.state_machine_manager import StateMachineManager
+from rafcon.core.singleton import state_machine_execution_engine
+from rafcon.core.execution.execution_engine import ExecutionEngine
 
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log

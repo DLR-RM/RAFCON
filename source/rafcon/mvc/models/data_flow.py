@@ -2,7 +2,7 @@ from copy import copy, deepcopy
 from gtkmvc import ModelMT
 
 from rafcon.mvc.models.state_element import StateElementModel
-from rafcon.statemachine.state_elements.data_flow import DataFlow
+from rafcon.core.state_elements.data_flow import DataFlow
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -10,7 +10,7 @@ logger = log.get_logger(__name__)
 class DataFlowModel(StateElementModel):
     """This model class manages a DataFlow
 
-    :param rafcon.statemachine.data_flow.DataFlow data_flow: The data flow to be wrapped
+    :param rafcon.core.data_flow.DataFlow data_flow: The data flow to be wrapped
     :param rafcon.mvc.models.abstract_state.AbstractStateModel parent: The state model of the state element
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state element model
      """

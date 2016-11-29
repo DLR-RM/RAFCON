@@ -13,7 +13,7 @@ from yaml import YAMLObject
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 
-from rafcon.statemachine.decorators import lock_state_machine
+from rafcon.core.decorators import lock_state_machine
 from rafcon.utils import log
 from rafcon.utils.hashable import Hashable
 
@@ -28,7 +28,7 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
 
     It raises an exceptions.NotImplementedError if the type of the class instance is type(self).
 
-    :ivar rafcon.statemachine.states.state.State parent: Parent state of the state element
+    :ivar rafcon.core.states.state.State parent: Parent state of the state element
     """
     _parent = None
 
@@ -56,7 +56,7 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
         """Getter for the parent state of the state element
 
         :return: None if parent is not defined, else the parent state
-        :rtype: rafcon.statemachine.states.state.State
+        :rtype: rafcon.core.states.state.State
         """
         if not self._parent:
             return None
@@ -68,12 +68,12 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
     def parent(self, parent):
         """Setter for the parent state of the state element
 
-        :param rafcon.statemachine.states.state.State parent: Parent state or None
+        :param rafcon.core.states.state.State parent: Parent state or None
         """
         if parent is None:
             self._parent = None
         else:
-            from rafcon.statemachine.states.state import State
+            from rafcon.core.states.state import State
             assert isinstance(parent, State)
 
             old_parent = self.parent
@@ -155,7 +155,7 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
         :return: validity and messages
         :rtype: bool, str
         """
-        from rafcon.statemachine.states.state import State
+        from rafcon.core.states.state import State
 
         if not self.parent:
             return True, "no parent"

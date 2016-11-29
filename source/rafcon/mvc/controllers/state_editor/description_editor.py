@@ -8,7 +8,7 @@
 
 """
 
-from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.core.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.editor import EditorController
 

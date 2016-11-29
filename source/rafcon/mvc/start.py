@@ -17,14 +17,14 @@ from rafcon.mvc.runtime_config import global_runtime_config
 from rafcon.mvc.utils import constants
 
 # state machine
-from rafcon.statemachine.start import parse_state_machine_path, setup_environment, reactor_required, \
+from rafcon.core.start import parse_state_machine_path, setup_environment, reactor_required, \
     setup_configuration, post_setup_plugins, register_signal_handlers
-from rafcon.statemachine.storage import storage
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-import rafcon.statemachine.singleton as sm_singletons
-from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
-from rafcon.statemachine.config import global_config
+from rafcon.core.storage import storage
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.states.hierarchy_state import HierarchyState
+import rafcon.core.singleton as sm_singletons
+from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.config import global_config
 
 # utils
 import rafcon.utils.filesystem as filesystem
@@ -166,7 +166,7 @@ SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n) for n in dir(signal) if n.s
 
 
 def signal_handler(signal, frame):
-    from rafcon.statemachine.constants import StateMachineExecutionStatus
+    from rafcon.core.constants import StateMachineExecutionStatus
     state_machine_execution_engine = sm_singletons.state_machine_execution_engine
     sm_singletons.shut_down_signal = signal
 

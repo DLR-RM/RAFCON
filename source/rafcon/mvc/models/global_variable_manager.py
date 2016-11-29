@@ -1,6 +1,6 @@
 from gtkmvc import ModelMT
 
-from rafcon.statemachine.singleton import global_variable_manager
+from rafcon.core.singleton import global_variable_manager
 
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log

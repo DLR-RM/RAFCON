@@ -2,13 +2,13 @@ import pytest
 import rafcon.mvc.singleton
 import testing_utils
 
-import rafcon.statemachine.states.execution_state
-import rafcon.statemachine.states.hierarchy_state
-import rafcon.statemachine.states.preemptive_concurrency_state
-from rafcon.statemachine.storage import storage as global_storage
+import rafcon.core.states.execution_state
+import rafcon.core.states.hierarchy_state
+import rafcon.core.states.preemptive_concurrency_state
+from rafcon.core.storage import storage as global_storage
 
-from rafcon.statemachine.singleton import global_variable_manager as gvm
-from rafcon.statemachine.singleton import state_machine_manager, state_machine_execution_engine
+from rafcon.core.singleton import global_variable_manager as gvm
+from rafcon.core.singleton import state_machine_manager, state_machine_execution_engine
 
 
 def assert_gvm(key, value=True):

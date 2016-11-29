@@ -15,9 +15,9 @@ from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # state machine elements
-from rafcon.statemachine.singleton import state_machine_execution_engine
-from rafcon.statemachine.storage import storage
-from rafcon.statemachine.execution.state_machine_status import StateMachineExecutionStatus
+from rafcon.core.singleton import state_machine_execution_engine
+from rafcon.core.storage import storage
+from rafcon.core.execution.state_machine_status import StateMachineExecutionStatus
 
 # general tool elements
 from rafcon.utils import log
@@ -93,7 +93,7 @@ def trigger_gui_signals_library_state(*args):
 
     call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
-    sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
+    sm = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
     while state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
         time.sleep(0.1)
     for key, sd in sm.root_state.scoped_data.iteritems():
@@ -111,7 +111,7 @@ def test_backward_stepping_library_state(caplog):
     # Load test library
     config_path = rafcon.__path__[0] + "/../test/common/configs_for_start_script_test/valid_config/"
     testing_utils.global_config.load('config.yaml', config_path)
-    rafcon.statemachine.singleton.library_manager.initialize()
+    rafcon.core.singleton.library_manager.initialize()
 
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
@@ -120,7 +120,7 @@ def test_backward_stepping_library_state(caplog):
                                                                                        "/backward_step_library_execution_test"))
     main_window_view = MainWindowView()
 
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
     if testing_utils.sm_manager_model is None:
         testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
@@ -183,7 +183,7 @@ def trigger_gui_signals_preemptive_state(*args):
 
     call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
-    sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
+    sm = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
 
     while state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
         time.sleep(0.1)
@@ -206,7 +206,7 @@ def test_backward_stepping_preemptive_state(caplog):
     state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines"
                                                                                        "/backward_step_preemtive_test"))
     main_window_view = MainWindowView()
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
     if testing_utils.sm_manager_model is None:
         testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
@@ -264,7 +264,7 @@ def trigger_gui_signals_barrier_state(*args):
 
     call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
-    sm = rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
+    sm = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
     while state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
         time.sleep(0.1)
     for key, sd in sm.root_state.scoped_data.iteritems():
@@ -289,7 +289,7 @@ def test_backward_stepping_barrier_state(caplog):
     state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines"
                                                                                        "/backward_step_barrier_test"))
     main_window_view = MainWindowView()
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
     if testing_utils.sm_manager_model is None:
         testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 

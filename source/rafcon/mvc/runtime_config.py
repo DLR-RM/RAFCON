@@ -9,7 +9,7 @@
 """
 import gtk
 
-from rafcon.statemachine.config import ObservableConfig
+from rafcon.core.config import ObservableConfig
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

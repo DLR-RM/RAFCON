@@ -23,10 +23,10 @@ import rafcon
 from yaml_configuration.config import config_path
 import rafcon.utils.filesystem as filesystem
 
-from rafcon.statemachine.config import global_config
-import rafcon.statemachine.singleton as sm_singletons
-from rafcon.statemachine.storage import storage
-from rafcon.statemachine.states.state import StateExecutionStatus
+from rafcon.core.config import global_config
+import rafcon.core.singleton as sm_singletons
+from rafcon.core.storage import storage
+from rafcon.core.states.state import StateExecutionStatus
 
 from rafcon.utils import profiler
 from rafcon.utils import plugins
@@ -153,7 +153,7 @@ def wait_for_state_machine_finished(state_machine):
     """
     global _user_abort
 
-    from rafcon.statemachine.states.execution_state import ExecutionState
+    from rafcon.core.states.execution_state import ExecutionState
     if not isinstance(state_machine.root_state, ExecutionState):
         while len(state_machine.execution_histories[0]) < 1:
             time.sleep(0.1)
@@ -193,7 +193,7 @@ def reactor_required():
 def signal_handler(signal, frame):
     global _user_abort
 
-    from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
+    from rafcon.core.execution.execution_status import StateMachineExecutionStatus
     state_machine_execution_engine = sm_singletons.state_machine_execution_engine
     sm_singletons.shut_down_signal = signal
 

@@ -1,1 +1,0 @@
-import rafcon.statemachine.config

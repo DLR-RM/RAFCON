@@ -21,18 +21,18 @@ from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
-from rafcon.statemachine.state_elements.data_port import DataPortType
-from rafcon.statemachine.id_generator import *
-from rafcon.statemachine.state_elements.state_element import StateElement
-from rafcon.statemachine.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
-from rafcon.statemachine.state_elements.outcome import Outcome
-from rafcon.statemachine.storage import storage
-from rafcon.statemachine.storage.storage import get_storage_id_for_state
+from rafcon.core.state_elements.data_port import DataPortType
+from rafcon.core.id_generator import *
+from rafcon.core.state_elements.state_element import StateElement
+from rafcon.core.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
+from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.storage import storage
+from rafcon.core.storage.storage import get_storage_id_for_state
 from rafcon.utils import log
 from rafcon.utils import multi_event
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils.hashable import Hashable
-from rafcon.statemachine.decorators import lock_state_machine
+from rafcon.core.decorators import lock_state_machine
 
 logger = log.get_logger(__name__)
 PATH_SEPARATOR = '/'
@@ -275,7 +275,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param state: the state to get the default input values for
 
         """
-        from rafcon.statemachine.states.library_state import LibraryState
+        from rafcon.core.states.library_state import LibraryState
         result_dict = {}
         for input_port_key, value in state.input_data_ports.iteritems():
             if isinstance(state, LibraryState):
@@ -288,7 +288,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             # if the user sets the default value to a string starting with $, try to retrieve the value
             # from the global variable manager
             if isinstance(default, basestring) and len(default) > 0 and default[0] == '$':
-                from rafcon.statemachine.singleton import global_variable_manager as gvm
+                from rafcon.core.singleton import global_variable_manager as gvm
                 var_name = default[1:]
                 if not gvm.variable_exist(var_name):
                     logger.error("The global variable '{0}' does not exist".format(var_name))
@@ -308,7 +308,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param state: the state of which the output data is determined
         :return: the output data of the target state
         """
-        from rafcon.statemachine.states.library_state import LibraryState
+        from rafcon.core.states.library_state import LibraryState
         result_dict = {}
         for key, data_port in state.output_data_ports.iteritems():
             if isinstance(state, LibraryState) and state.use_runtime_value_output_data_ports[key]:
@@ -515,7 +515,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def get_sm_for_state(self):
         """Get a reference of the state_machine the state belongs to
 
-        :rtype rafcon.statemachine.state_machine.StateMachine
+        :rtype rafcon.core.state_machine.StateMachine
         :return: respective state machine
         """
         if self.parent:
@@ -698,7 +698,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             # Call the check in the parent state, where the data flows are stored
             return self.parent.check_data_port_connection(check_data_port)
         else:
-            from rafcon.statemachine.states.container_state import ContainerState
+            from rafcon.core.states.container_state import ContainerState
             if isinstance(self, ContainerState):
                 return self.check_data_port_connection(check_data_port)
 
@@ -710,7 +710,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         Checks whether the id of the given data port is already used by anther data port (input, output) within the
         state.
 
-        :param rafcon.statemachine.data_port.DataPort data_port: The data port to be checked
+        :param rafcon.core.data_port.DataPort data_port: The data port to be checked
         :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
             more information especially if the data port is not valid
         """
@@ -728,7 +728,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         Checks whether the name of the given data port is already used by anther data port within the state. Names
         must be unique with input data ports and output data ports.
 
-        :param rafcon.statemachine.data_port.DataPort data_port: The data port to be checked
+        :param rafcon.core.data_port.DataPort data_port: The data port to be checked
         :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
             more information especially if the data port is not valid
         """
@@ -874,7 +874,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if parent is None:
             self._parent = None
         else:
-            from rafcon.statemachine.state_machine import StateMachine
+            from rafcon.core.state_machine import StateMachine
             if not isinstance(parent, (State, StateMachine)):
                 raise TypeError("parent must be of type State or StateMachine")
 
@@ -889,7 +889,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         The method does check validity of the elements by calling the parent-setter and in case of failure cancel
         the operation and recover old _input_data_ports.
 
-        :return: Dictionary input_data_ports[data_port_id] of :class:`rafcon.statemachine.state_elements.data_port.InputDataPort`
+        :return: Dictionary input_data_ports[data_port_id] of :class:`rafcon.core.state_elements.data_port.InputDataPort`
         :rtype: dict
         """
         return self._input_data_ports
@@ -902,7 +902,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         See Property.
 
-        :param dict input_data_ports: Dictionary of :class:`rafcon.statemachine.state_elements.data_port.InputDataPort`
+        :param dict input_data_ports: Dictionary of :class:`rafcon.core.state_elements.data_port.InputDataPort`
         :raises exceptions.TypeError: if the input_data_ports parameter has the wrong type
         :raises exceptions.AttributeError: if the key of the input dictionary and the id of the data port do not match
         """
@@ -939,7 +939,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         validity of the elements by calling the parent-setter and in case of failure cancel the operation and recover
         old _output_data_ports.
 
-        :return: Dictionary output_data_ports[data_port_id] of :class:`rafcon.statemachine.state_elements.data_port.OutputDataPort`
+        :return: Dictionary output_data_ports[data_port_id] of :class:`rafcon.core.state_elements.data_port.OutputDataPort`
         :rtype: dict
         """
         return self._output_data_ports
@@ -952,7 +952,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         See property
 
-        :param Dictionary output_data_ports[data_port_id] of :class:`rafcon.statemachine.state_elements.data_port.OutputDataPort`
+        :param Dictionary output_data_ports[data_port_id] of :class:`rafcon.core.state_elements.data_port.OutputDataPort`
         :raises exceptions.TypeError: if the output_data_ports parameter has the wrong type
         :raises exceptions.AttributeError: if the key of the output dictionary and the id of the data port do not match
         """
@@ -989,7 +989,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         The method does check validity of the elements by calling the parent-setter and in case of failure cancel
         the operation and recover old outcomes.
 
-        :return: Dictionary outcomes[outcome_id] of :class:`rafcon.statemachine.state_elements.outcome.Outcome`
+        :return: Dictionary outcomes[outcome_id] of :class:`rafcon.core.state_elements.outcome.Outcome`
         :rtype: dict
         """
         return self._outcomes
@@ -1002,7 +1002,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         See property.
 
-        :param dict outcomes: Dictionary outcomes[outcome_id] of :class:`rafcon.statemachine.state_elements.outcome.Outcome`
+        :param dict outcomes: Dictionary outcomes[outcome_id] of :class:`rafcon.core.state_elements.outcome.Outcome`
         :raises exceptions.TypeError: if outcomes parameter has the wrong type
         :raises exceptions.AttributeError: if the key of the outcome dictionary and the id of the outcome do not match
         """
@@ -1211,7 +1211,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @property
     def is_root_state_of_library(self):
-        from rafcon.statemachine.states.library_state import LibraryState
+        from rafcon.core.states.library_state import LibraryState
         return isinstance(self.parent, LibraryState)
 
     def finalize(self, outcome=None):
@@ -1219,7 +1219,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         This method is called when the run method finishes
 
-        :param rafcon.statemachine.outcome.Outcome outcome: final outcome of the state
+        :param rafcon.core.outcome.Outcome outcome: final outcome of the state
         :return: Nothing for the moment
         """
 

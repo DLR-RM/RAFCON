@@ -11,20 +11,20 @@ from copy import copy, deepcopy
 from threading import Condition
 from gtkmvc import Observable
 
-from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
-from rafcon.statemachine.states.state import StateExecutionStatus
-from rafcon.statemachine.state_elements.data_port import DataPortType
-from rafcon.statemachine.id_generator import *
-from rafcon.statemachine.singleton import state_machine_execution_engine
-from rafcon.statemachine.state_elements.state_element import StateElement
-from rafcon.statemachine.state_elements.scope import ScopedData, ScopedVariable
-from rafcon.statemachine.state_elements.data_flow import DataFlow
-from rafcon.statemachine.state_elements.outcome import Outcome
-from rafcon.statemachine.state_elements.transition import Transition
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.decorators import lock_state_machine
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.storage import storage
+from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.states.state import StateExecutionStatus
+from rafcon.core.state_elements.data_port import DataPortType
+from rafcon.core.id_generator import *
+from rafcon.core.singleton import state_machine_execution_engine
+from rafcon.core.state_elements.state_element import StateElement
+from rafcon.core.state_elements.scope import ScopedData, ScopedVariable
+from rafcon.core.state_elements.data_flow import DataFlow
+from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.transition import Transition
+from rafcon.core.states.state import State
+from rafcon.core.decorators import lock_state_machine
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.storage import storage
 from rafcon.utils.type_helpers import type_inherits_of_type
 
 try:
@@ -449,7 +449,7 @@ class ContainerState(State):
         [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
         [self.remove_scoped_variable(sv_id) for sv_id in scoped_variables]
         # TODO if the version is final create the ingoing and outgoing internal linkage before and hand it while state creation
-        from rafcon.statemachine.states.hierarchy_state import HierarchyState
+        from rafcon.core.states.hierarchy_state import HierarchyState
         s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
                            scoped_variables=scoped_variables_to_group, state_id=self.state_id)
         state_id = self.add_state(s)
@@ -945,7 +945,7 @@ class ContainerState(State):
         :param state: the state to be changed
         :param new_state_class: the new type of the state
         :return: the new state having the new state type
-        :rtype: :py:class:`rafcon.statemachine.states.state.State`
+        :rtype: :py:class:`rafcon.core.states.state.State`
         :raises exceptions.ValueError: if the state does not exist in the container state
         """
         from rafcon.mvc.state_machine_helper import create_new_state_from_state_with_type
@@ -1592,7 +1592,7 @@ class ContainerState(State):
         If the data port is connected to a data flow, the method checks, whether these connect consistent data types
         of ports.
 
-        :param rafcon.statemachine.data_port.DataPort check_data_port: The port to check
+        :param rafcon.core.data_port.DataPort check_data_port: The port to check
         :return: valid, message
         """
         for data_flow in self.data_flows.itervalues():
@@ -1610,7 +1610,7 @@ class ContainerState(State):
         Checks whether the id of the given data port is already used by anther data port (input, output, scoped vars)
         within the state.
 
-        :param rafcon.statemachine.data_port.DataPort data_port: The data port to be checked
+        :param rafcon.core.data_port.DataPort data_port: The data port to be checked
         :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
             more information especially if the data port is not valid
         """
@@ -1630,7 +1630,7 @@ class ContainerState(State):
         Checks whether the name of the given data port is already used by anther data port within the state. Names
         must be unique with input data ports, output data ports and scoped variables.
 
-        :param rafcon.statemachine.data_port.DataPort data_port: The data port to be checked
+        :param rafcon.core.data_port.DataPort data_port: The data port to be checked
         :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
             more information especially if the data port is not valid
         """
@@ -1651,7 +1651,7 @@ class ContainerState(State):
 
         Calls further checks to inspect the id, ports and data types.
 
-        :param rafcon.statemachine.data_flow.DataFlow check_data_flow: The data flow to be checked
+        :param rafcon.core.data_flow.DataFlow check_data_flow: The data flow to be checked
         :return bool validity, str message: validity is True, when the data flow is valid, False else. message gives
             more information especially if the data flow is not valid
         """
@@ -1670,7 +1670,7 @@ class ContainerState(State):
 
         Checks whether the id of the given data flow is already by anther data flow used within the state.
 
-        :param rafcon.statemachine.data_flow.DataFlow data_flow: The data flow to be checked
+        :param rafcon.core.data_flow.DataFlow data_flow: The data flow to be checked
         :return bool validity, str message: validity is True, when the data flow is valid, False else. message gives
             more information especially if the data flow is not valid
         """
@@ -1684,7 +1684,7 @@ class ContainerState(State):
 
         Checks whether the ports of a data flow are existing and whether it is allowed to connect these ports.
 
-        :param rafcon.statemachine.data_flow.DataFlow data_flow: The data flow to be checked
+        :param rafcon.core.data_flow.DataFlow data_flow: The data flow to be checked
         :return bool validity, str message: validity is True, when the data flow is valid, False else. message gives
             more information especially if the data flow is not valid
         """
@@ -1742,7 +1742,7 @@ class ContainerState(State):
 
         Checks whether the ports of a data flow have matching data types.
 
-        :param rafcon.statemachine.data_flow.DataFlow check_data_flow: The data flow to be checked
+        :param rafcon.core.data_flow.DataFlow check_data_flow: The data flow to be checked
         :return bool validity, str message: validity is True, when the data flow is valid, False else. message gives
             more information especially if the data flow is not valid
         """
@@ -1763,7 +1763,7 @@ class ContainerState(State):
 
         Calls further checks to inspect the id, origin, target and connection of the transition.
 
-        :param rafcon.statemachine.transition.Transition check_transition: The transition to be checked
+        :param rafcon.core.transition.Transition check_transition: The transition to be checked
         :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
             more information especially if the transition is not valid
         """
@@ -1790,7 +1790,7 @@ class ContainerState(State):
 
         Checks whether the transition id is already used by another transition within the state
 
-        :param rafcon.statemachine.transition.Transition transition: The transition to be checked
+        :param rafcon.core.transition.Transition transition: The transition to be checked
         :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
             more information especially if the transition is not valid
         """
@@ -1804,7 +1804,7 @@ class ContainerState(State):
 
         Checks whether the given transition is a start transition a whether it is the only one within the state.
 
-        :param rafcon.statemachine.transition.Transition start_transition: The transition to be checked
+        :param rafcon.core.transition.Transition start_transition: The transition to be checked
         :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
             more information especially if the transition is not valid
         """
@@ -1823,7 +1823,7 @@ class ContainerState(State):
 
         Checks whether the transition target is valid.
 
-        :param rafcon.statemachine.transition.Transition transition: The transition to be checked
+        :param rafcon.core.transition.Transition transition: The transition to be checked
         :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
             more information especially if the transition is not valid
         """
@@ -1847,7 +1847,7 @@ class ContainerState(State):
 
         Checks whether the transition origin is valid.
 
-        :param rafcon.statemachine.transition.Transition transition: The transition to be checked
+        :param rafcon.core.transition.Transition transition: The transition to be checked
         :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
             more information especially if the transition is not valid
         """
@@ -1872,7 +1872,7 @@ class ContainerState(State):
 
         Checks whether the transition is allowed to connect the origin with the target.
 
-        :param rafcon.statemachine.transition.Transition check_transition: The transition to be checked
+        :param rafcon.core.transition.Transition check_transition: The transition to be checked
         :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
             more information especially if the transition is not valid
         """
@@ -1975,7 +1975,7 @@ class ContainerState(State):
         validity of the elements by calling the parent-setter and in case of failure cancel the operation and
         recover old _transitions dictionary.
 
-        :return: Dictionary transitions[transition_id] of :class:`rafcon.statemachine.transition.Transition`
+        :return: Dictionary transitions[transition_id] of :class:`rafcon.core.transition.Transition`
         :rtype: dict
         """
         return self._transitions
@@ -1988,7 +1988,7 @@ class ContainerState(State):
 
         See property
 
-        :param: transitions: Dictionary transitions[transition_id] of :class:`rafcon.statemachine.transition.Transition`
+        :param: transitions: Dictionary transitions[transition_id] of :class:`rafcon.core.transition.Transition`
         :raises exceptions.TypeError: if the transitions parameter has the wrong type
         :raises exceptions.AttributeError: if the keys of the transitions dictionary and the transition_ids of the
                                             transitions in the dictionary do not match
@@ -2018,7 +2018,7 @@ class ContainerState(State):
         validity of the elements by calling the parent-setter and in case of failure cancel the operation and
         recover old _data_flows dictionary.
 
-        :return: Dictionary data_flows[data_flow_id] of :class:`rafcon.statemachine.data_flow.DataFlow`
+        :return: Dictionary data_flows[data_flow_id] of :class:`rafcon.core.data_flow.DataFlow`
         :rtype: dict
         """
         return self._data_flows
@@ -2031,7 +2031,7 @@ class ContainerState(State):
 
         See property
 
-        :param dict data_flows: Dictionary data_flows[data_flow_id] of :class:`rafcon.statemachine.data_flow.DataFlow`
+        :param dict data_flows: Dictionary data_flows[data_flow_id] of :class:`rafcon.core.data_flow.DataFlow`
         :raises exceptions.TypeError: if the data_flows parameter has the wrong type
         :raises exceptions.AttributeError: if the keys of the data_flows dictionary and the data_flow_ids of the
                                             data flows in the dictionary do not match
@@ -2080,7 +2080,7 @@ class ContainerState(State):
 
         :param start_state_id: The state id of the state which should be executed first in the Container state
         :raises exceptions.ValueError: if the start_state_id does not exist in
-                                    :py:attr:`rafcon.statemachine.states.container_state.ContainerState.states`
+                                    :py:attr:`rafcon.core.states.container_state.ContainerState.states`
         """
         if start_state_id is not None and start_state_id not in self.states:
             raise ValueError("start_state_id does not exist")
@@ -2111,7 +2111,7 @@ class ContainerState(State):
         of the elements by calling the parent-setter and in case of failure cancel the operation and recover old
         _scoped_variables dictionary.
 
-        :return: Dictionary scoped_variables[data_port_id] of :class:`rafcon.statemachine.scope.ScopedVariable`
+        :return: Dictionary scoped_variables[data_port_id] of :class:`rafcon.core.scope.ScopedVariable`
         :rtype: dict
         """
         return self._scoped_variables
@@ -2124,7 +2124,7 @@ class ContainerState(State):
 
         See property
 
-        :param dict scoped_variables: Dictionary scoped_variables[data_port_id] of :class:`rafcon.statemachine.scope.ScopedVariable`
+        :param dict scoped_variables: Dictionary scoped_variables[data_port_id] of :class:`rafcon.core.scope.ScopedVariable`
         :raises exceptions.TypeError: if the scoped_variables parameter has the wrong type
         :raises exceptions.AttributeError: if the keys of the scoped_variables dictionary and the ids
                                             of the scoped variables in the dictionary do not match

@@ -1,7 +1,7 @@
 from gtkmvc import ModelMT
 from gtkmvc import Observable
 
-from rafcon.statemachine.state_machine_manager import StateMachineManager
+from rafcon.core.state_machine_manager import StateMachineManager
 
 from rafcon.mvc.models.state_machine import StateMachineModel
 

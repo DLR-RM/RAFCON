@@ -13,8 +13,8 @@ import gobject
 from gtk import ListStore
 from gtk import TreeViewColumn, CellRendererToggle
 
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 
 from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController, react_to_event
 from rafcon.mvc.models.abstract_state import AbstractStateModel

@@ -8,7 +8,7 @@ import cairo
 from rafcon.mvc.utils import constants
 from rafcon.utils.geometry import deg2rad
 
-from rafcon.statemachine.states.container_state import ContainerState
+from rafcon.core.states.container_state import ContainerState
 
 from rafcon.mvc.config import global_gui_config as gui_config
 from rafcon.mvc.runtime_config import global_runtime_config

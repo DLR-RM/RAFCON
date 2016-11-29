@@ -10,7 +10,7 @@
 import copy
 from gtkmvc import Observable
 from threading import Lock
-from rafcon.statemachine.id_generator import *
+from rafcon.core.id_generator import *
 
 from rafcon.utils import log
 from rafcon.utils import type_helpers

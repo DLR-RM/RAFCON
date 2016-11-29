@@ -10,9 +10,9 @@
 
 from gtkmvc import Observable
 
-from rafcon.statemachine.id_generator import generate_data_flow_id
-from rafcon.statemachine.state_elements.state_element import StateElement
-from rafcon.statemachine.decorators import lock_state_machine
+from rafcon.core.id_generator import generate_data_flow_id
+from rafcon.core.state_elements.state_element import StateElement
+from rafcon.core.decorators import lock_state_machine
 
 
 class DataFlow(StateElement):
@@ -25,7 +25,7 @@ class DataFlow(StateElement):
     :ivar int from_key: the id of the data port / scoped variable of the source state
     :ivar int to_key: the id of the data port /scoped variable of the target state
     :ivar int data_flow_id: the id of the data port, must be unique for the parent state
-    :ivar rafcon.statemachine.states.container_state.ContainerState parent: reference to the parent state
+    :ivar rafcon.core.states.container_state.ContainerState parent: reference to the parent state
     """
 
     yaml_tag = u'!DataFlow'

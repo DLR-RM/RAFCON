@@ -10,8 +10,8 @@
 
 from gtkmvc import Observable
 
-from rafcon.statemachine.state_elements.state_element import StateElement
-from rafcon.statemachine.decorators import lock_state_machine
+from rafcon.core.state_elements.state_element import StateElement
+from rafcon.core.decorators import lock_state_machine
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -28,7 +28,7 @@ class Outcome(StateElement):
 
     :ivar int outcome_id: the id of the outcome, must be unique on one hierarchy level
     :ivar str name: the human readable name of the outcome
-    :ivar rafcon.statemachine.states.state.State parent: reference to the parent state
+    :ivar rafcon.core.states.state.State parent: reference to the parent state
     """
 
     yaml_tag = u'!Outcome'

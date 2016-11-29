@@ -12,8 +12,8 @@
 import gtk
 import gobject
 
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.state_elements.transition import Transition
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.state_elements.transition import Transition
 
 from rafcon.mvc.models.container_state import ContainerStateModel
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController

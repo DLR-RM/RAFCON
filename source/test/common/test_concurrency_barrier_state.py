@@ -1,17 +1,17 @@
 # core elements
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.storage import storage
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.script import Script
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.storage import storage
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.script import Script
 
 # singleton elements
-import rafcon.statemachine.singleton
+import rafcon.core.singleton
 
 # test environment elements
 import pytest
 import testing_utils
-from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
+from rafcon.core.enums import UNIQUE_DECIDER_STATE_ID
 
 
 def create_concurrency_barrier_state():
@@ -70,16 +70,16 @@ def test_concurrency_barrier_save_load(caplog):
 
     state_machine = StateMachine(root_state)
     testing_utils.test_multithreading_lock.acquire()
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    rafcon.statemachine.singleton.state_machine_execution_engine.join()
+    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.join()
 
-    assert rafcon.statemachine.singleton.global_variable_manager.get_variable("var_x") == 10
-    assert rafcon.statemachine.singleton.global_variable_manager.get_variable("var_y") == 20
+    assert rafcon.core.singleton.global_variable_manager.get_variable("var_x") == 10
+    assert rafcon.core.singleton.global_variable_manager.get_variable("var_y") == 20
     assert root_state.final_outcome.outcome_id == 4
 
-    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
 

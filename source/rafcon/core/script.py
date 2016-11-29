@@ -11,11 +11,11 @@ import imp
 import yaml
 from gtkmvc import Observable
 
-from rafcon.statemachine.id_generator import generate_script_id
-import rafcon.statemachine.singleton
+from rafcon.core.id_generator import generate_script_id
+import rafcon.core.singleton
 
 from rafcon.utils import filesystem
-from rafcon.statemachine.storage.storage import SCRIPT_FILE
+from rafcon.core.storage.storage import SCRIPT_FILE
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -72,14 +72,14 @@ class Script(Observable, yaml.YAMLObject):
         if backward_execution:
             if hasattr(self._compiled_module, "backward_execute"):
                 return self._compiled_module.backward_execute(
-                    state, inputs, outputs, rafcon.statemachine.singleton.global_variable_manager
+                    state, inputs, outputs, rafcon.core.singleton.global_variable_manager
                 )
             else:
                 logger.debug("No backward execution method found for state %s" % state.name)
                 return None
         else:
             return self._compiled_module.execute(state, inputs, outputs,
-                                                 rafcon.statemachine.singleton.global_variable_manager)
+                                                 rafcon.core.singleton.global_variable_manager)
 
     def _load_script(self):
         """Loads the script from the filesystem
@@ -139,7 +139,7 @@ class Script(Observable, yaml.YAMLObject):
     @parent.setter
     def parent(self, value):
         from weakref import ref
-        from rafcon.statemachine.states.execution_state import ExecutionState
+        from rafcon.core.states.execution_state import ExecutionState
         if value is not None and not isinstance(value, ExecutionState):
             raise TypeError("The parent of a script has to be a ExecutionState or None.")
         self._parent = ref(value) if value is not None else None

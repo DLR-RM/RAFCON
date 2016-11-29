@@ -14,7 +14,7 @@ import gtk
 import shlex
 from pylint import epylint as lint
 
-from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.core.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.editor import EditorController
 from rafcon.mvc.singleton import state_machine_manager_model

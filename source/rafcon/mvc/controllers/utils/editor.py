@@ -9,7 +9,7 @@
 """
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
-from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.core.states.library_state import LibraryState
 
 from rafcon.mvc.gui_helper import react_to_event
 from rafcon.utils import log

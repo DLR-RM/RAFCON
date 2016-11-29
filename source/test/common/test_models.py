@@ -5,15 +5,15 @@ from rafcon.mvc.config import global_gui_config
 import rafcon.mvc.singleton
 
 # core elements
-import rafcon.statemachine.singleton
-from rafcon.statemachine.script import Script
-from rafcon.statemachine.states.state import StateType
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.storage import storage
+import rafcon.core.singleton
+from rafcon.core.script import Script
+from rafcon.core.states.state import StateType
+from rafcon.core.states.state import State
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.storage import storage
 
 import pytest
 import testing_utils
@@ -240,9 +240,9 @@ def create_models(*args, **kargs):
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
 
-    # for sm_in in rafcon.statemachine.singleton.state_machine_manager.state_machines.values():
-    #     rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    # for sm_in in rafcon.core.singleton.state_machine_manager.state_machines.values():
+    #     rafcon.core.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
 
     rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
@@ -791,7 +791,7 @@ def test_add_remove_models(caplog):
         if isinstance(state.parent, State):
             print "parent is: ", state.parent.state_id, state.parent.name
 
-        from rafcon.statemachine.states.container_state import ContainerState
+        from rafcon.core.states.container_state import ContainerState
         if isinstance(state, ContainerState):
             script = Script(parent=None)
         else:

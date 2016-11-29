@@ -1,11 +1,11 @@
 from gtkmvc import ModelMT, Signal
 
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.state_elements.outcome import Outcome
-from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
-from rafcon.statemachine.state_elements.scope import ScopedVariable
-from rafcon.statemachine.state_elements.transition import Transition
-from rafcon.statemachine.state_elements.data_flow import DataFlow
+from rafcon.core.states.state import State
+from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
+from rafcon.core.state_elements.scope import ScopedVariable
+from rafcon.core.state_elements.transition import Transition
+from rafcon.core.state_elements.data_flow import DataFlow
 
 from rafcon.mvc.models import AbstractStateModel, TransitionModel, DataFlowModel, DataPortModel, OutcomeModel, \
     ScopedVariableModel

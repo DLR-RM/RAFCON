@@ -1,11 +1,11 @@
 import os
 
 # core elements
-import rafcon.statemachine.singleton
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.storage import storage
-from rafcon.statemachine.state_machine import StateMachine
+import rafcon.core.singleton
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.storage import storage
+from rafcon.core.state_machine import StateMachine
 
 # test environment elements
 import testing_utils
@@ -39,14 +39,14 @@ def test_concurrency_preemption_state_execution(caplog):
     preemption_state_sm = create_preemption_state_machine()
 
     testing_utils.test_multithreading_lock.acquire()
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
-    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
-    rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    rafcon.statemachine.singleton.state_machine_execution_engine.join()
+    rafcon.core.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
+    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.join()
 
-    assert rafcon.statemachine.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
+    assert rafcon.core.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
     assert preemption_state_sm.root_state.final_outcome.outcome_id == 3
-    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
+    rafcon.core.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
     testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
@@ -61,13 +61,13 @@ def test_concurrency_preemption_save_load(caplog):
     storage.save_state_machine_to_path(preemption_state_sm, storage_path)
     storage.load_state_machine_from_path(storage_path)
 
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
-    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
-    rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    rafcon.statemachine.singleton.state_machine_execution_engine.join()
+    rafcon.core.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
+    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.join()
 
-    assert rafcon.statemachine.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
-    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
+    assert rafcon.core.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
+    rafcon.core.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
     testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 

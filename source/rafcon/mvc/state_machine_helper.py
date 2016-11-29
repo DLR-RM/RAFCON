@@ -1,12 +1,12 @@
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.constants import UNIQUE_DECIDER_STATE_ID
-from rafcon.statemachine.states.state import StateType
+from rafcon.core.states.state import State
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
+from rafcon.core.states.state import StateType
 from rafcon.mvc.models import StateModel, AbstractStateModel, ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.mvc.models.data_port import DataPortModel
 from rafcon.mvc.models.outcome import OutcomeModel
@@ -14,7 +14,7 @@ from rafcon.mvc.models.state_machine import StateMachineModel
 from rafcon.mvc.models.scoped_variable import ScopedVariableModel
 
 from rafcon.mvc.config import global_gui_config
-from rafcon.statemachine.singleton import library_manager
+from rafcon.core.singleton import library_manager
 import rafcon.mvc.singleton
 
 from rafcon.utils import log
@@ -109,7 +109,7 @@ def add_state(container_state_m, state_type):
 
     :param rafcon.mvc.models.container_state.ContainerState container_state_m: A model of a container state to add
       the new state to
-    :param rafcon.statemachine.enums.StateType state_type: The type of state that should be added
+    :param rafcon.core.enums.StateType state_type: The type of state that should be added
     :return: True if successful, False else
     """
     if container_state_m is None:

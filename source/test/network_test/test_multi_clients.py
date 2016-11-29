@@ -43,9 +43,9 @@ def reset_global_variable_manager(global_variable_manager):
 
 
 def synchronize_with_clients_threads(queue_dict, execution_engine):
-    from rafcon.statemachine.singleton import global_variable_manager as gvm
-    from rafcon.statemachine.enums import StateMachineExecutionStatus
-    from rafcon.statemachine.singleton import state_machine_manager
+    from rafcon.core.singleton import global_variable_manager as gvm
+    from rafcon.core.enums import StateMachineExecutionStatus
+    from rafcon.core.singleton import state_machine_manager
     active_sm = state_machine_manager.get_active_state_machine()
     root_state = active_sm.root_state
 
@@ -152,7 +152,7 @@ def interacting_function_server(queue_dict):
     for id, queue in queue_dict.iteritems():
         assert isinstance(queue, multiprocessing.queues.Queue)
 
-    import rafcon.statemachine.singleton as core_singletons
+    import rafcon.core.singleton as core_singletons
     execution_engine = core_singletons.state_machine_execution_engine
 
     sm_thread = threading.Thread(target=synchronize_with_clients_threads, args=[queue_dict, execution_engine])
@@ -181,7 +181,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
         logger.warn("global_monitoring_manager not initialized yet!")
         time.sleep(0.01)
 
-    import rafcon.statemachine.singleton as core_singletons
+    import rafcon.core.singleton as core_singletons
     remote_execution_engine = core_singletons.state_machine_execution_engine
 
     queue_dict[CLIENT1_QUEUE].get()  # synchronize, when to start stepping
@@ -255,7 +255,7 @@ def interacting_function_client2(main_window_controller, global_monitoring_manag
         assert isinstance(queue, multiprocessing.queues.Queue)
     while not global_monitoring_manager.endpoint_initialized:
         time.sleep(0.01)
-    import rafcon.statemachine.singleton as core_singletons
+    import rafcon.core.singleton as core_singletons
     remote_execution_engine = core_singletons.state_machine_execution_engine
 
     queue_dict[CLIENT1_TO_CLIENT2].get()

@@ -13,9 +13,9 @@ import time
 
 from gtkmvc import Observable
 
-from rafcon.statemachine.state_elements.data_port import DataPortType
-from rafcon.statemachine.state_elements.data_port import DataPort
-from rafcon.statemachine.decorators import lock_state_machine
+from rafcon.core.state_elements.data_port import DataPortType
+from rafcon.core.state_elements.data_port import DataPort
+from rafcon.core.decorators import lock_state_machine
 from rafcon.utils import type_helpers
 
 
@@ -47,7 +47,7 @@ class ScopedVariable(DataPort):
                 assignments that satisfies the type constraint
     :ivar default_value: specifies the default value of the scoped variable (data port)
     :ivar int data_port_id: the id of the scoped variable (data port), must be unique for the parent state
-    :ivar rafcon.statemachine.states.container_state.ContainerState parent: reference to the parent state
+    :ivar rafcon.core.states.container_state.ContainerState parent: reference to the parent state
 
     """
 

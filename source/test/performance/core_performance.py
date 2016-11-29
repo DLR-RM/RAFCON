@@ -3,14 +3,14 @@ from timeit import default_timer as timer
 
 
 # core elements
-import rafcon.statemachine.singleton
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
-from rafcon.statemachine.states.state import DataPortType
-from rafcon.statemachine.state_machine import StateMachine
+import rafcon.core.singleton
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.enums import UNIQUE_DECIDER_STATE_ID
+from rafcon.core.states.state import DataPortType
+from rafcon.core.state_machine import StateMachine
 
 
 def measure_time(func):
@@ -68,11 +68,11 @@ def create_hierarchy_state(number_child_states=10):
 
 def execute_state(root_state):
     state_machine = StateMachine(root_state)
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.statemachine.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    rafcon.statemachine.singleton.state_machine_execution_engine.start()
-    rafcon.statemachine.singleton.state_machine_execution_engine.join()
-    rafcon.statemachine.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.join()
+    rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
 
 
 @measure_time

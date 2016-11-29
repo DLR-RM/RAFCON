@@ -9,8 +9,8 @@ from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # core elements
-import rafcon.statemachine.config
-import rafcon.statemachine.singleton
+import rafcon.core.config
+import rafcon.core.singleton
 
 # general tool elements
 from rafcon.utils import log
@@ -22,7 +22,7 @@ logger = log.get_logger(__name__)
 
 def trigger_gvm_signals(main_window_controller):
 
-    gvm = rafcon.statemachine.singleton.global_variable_manager
+    gvm = rafcon.core.singleton.global_variable_manager
     gvm_controller = main_window_controller.get_controller('global_variable_manager_ctrl')
 
     view = gvm_controller.view['global_variable_tree_view']

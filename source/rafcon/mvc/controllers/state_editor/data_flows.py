@@ -12,10 +12,10 @@
 import gobject
 from gtk import ListStore
 
-from rafcon.statemachine.state_elements.scope import ScopedVariable
-from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
-from rafcon.statemachine.state_elements.data_flow import DataFlow
-from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.core.state_elements.scope import ScopedVariable
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
+from rafcon.core.state_elements.data_flow import DataFlow
+from rafcon.core.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController

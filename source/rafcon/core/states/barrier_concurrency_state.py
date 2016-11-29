@@ -12,13 +12,13 @@ import traceback
 
 from gtkmvc import Observable
 
-from rafcon.statemachine.state_elements.outcome import Outcome
-from rafcon.statemachine.decorators import lock_state_machine
-from rafcon.statemachine.states.concurrency_state import ConcurrencyState
-from rafcon.statemachine.states.state import StateExecutionStatus
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.constants import UNIQUE_DECIDER_STATE_ID
+from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.decorators import lock_state_machine
+from rafcon.core.states.concurrency_state import ConcurrencyState
+from rafcon.core.states.state import StateExecutionStatus
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

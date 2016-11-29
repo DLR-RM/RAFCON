@@ -10,8 +10,8 @@
 
 from gtkmvc import Model
 
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.library_state import LibraryState
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.controllers.state_editor.io_data_port_list import DataPortListController

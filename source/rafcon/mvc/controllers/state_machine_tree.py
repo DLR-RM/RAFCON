@@ -13,8 +13,8 @@ from functools import partial
 import gtk
 import gobject
 
-from rafcon.statemachine.states.state import StateType
-from rafcon.statemachine.states.state import State
+from rafcon.core.states.state import StateType
+from rafcon.core.states.state import State
 
 from rafcon.mvc.controllers.utils.tree_view_controller import TreeViewController
 from rafcon.mvc.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController

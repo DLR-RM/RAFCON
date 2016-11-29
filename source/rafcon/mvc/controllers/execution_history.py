@@ -15,11 +15,11 @@ import sys
 
 import rafcon
 
-from rafcon.statemachine.state_machine_manager import StateMachineManager
-from rafcon.statemachine.execution.execution_history import ConcurrencyItem, CallItem, ScopedDataItem
-from rafcon.statemachine.singleton import state_machine_execution_engine
-from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
-from rafcon.statemachine.execution.execution_history import CallType
+from rafcon.core.state_machine_manager import StateMachineManager
+from rafcon.core.execution.execution_history import ConcurrencyItem, CallItem, ScopedDataItem
+from rafcon.core.singleton import state_machine_execution_engine
+from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.execution.execution_history import CallType
 
 from rafcon.mvc.controllers.utils.extended_controller import ExtendedController
 from rafcon.mvc.models.state_machine_manager import StateMachineManagerModel
@@ -37,7 +37,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         holding data regarding state machines.
     :param rafcon.mvc.views.execution_history.ExecutionHistoryTreeView view: The GTK View showing the execution history
         tree.
-    :param rafcon.statemachine.state_machine_manager.StateMachineManager state_machine_manager:
+    :param rafcon.core.state_machine_manager.StateMachineManager state_machine_manager:
     """
 
     def __init__(self, model=None, view=None, state_machine_manager=None):

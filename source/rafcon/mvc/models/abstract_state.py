@@ -3,10 +3,10 @@ from copy import copy, deepcopy
 from weakref import ref
 
 from rafcon.mvc.models.signals import MetaSignalMsg, Notification
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.storage import storage
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.states.state import State
+from rafcon.core.storage import storage
 from rafcon.utils import log
 from rafcon.utils import storage_utils
 from rafcon.utils.hashable import Hashable
@@ -54,7 +54,7 @@ class AbstractStateModel(ModelMT, Hashable):
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state).
 
-    :param rafcon.statemachine.states.state.State state: The state to be managed
+    :param rafcon.core.states.state.State state: The state to be managed
     :param AbstractStateModel parent: The state to be managed
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state
      """
@@ -281,7 +281,7 @@ class AbstractStateModel(ModelMT, Hashable):
         state_machine = self.state.get_sm_for_state()
         if state_machine:
             state_machine_id = state_machine.state_machine_id
-            from rafcon.statemachine.singleton import state_machine_manager
+            from rafcon.core.singleton import state_machine_manager
             if state_machine_id is not None and state_machine_id in state_machine_manager.state_machines:
                 state_machine_manager.state_machines[state_machine_id].marked_dirty = True
 

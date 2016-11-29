@@ -2,7 +2,7 @@ from copy import copy, deepcopy
 from gtkmvc import ModelMT
 
 from rafcon.mvc.models.state_element import StateElementModel
-from rafcon.statemachine.state_elements.data_port import DataPort
+from rafcon.core.state_elements.data_port import DataPort
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -11,7 +11,7 @@ logger = log.get_logger(__name__)
 class DataPortModel(StateElementModel):
     """This model class manages a DataPort
 
-    :param rafcon.statemachine.data_port.DataPort data_port: The input/output data port to be wrapped
+    :param rafcon.core.data_port.DataPort data_port: The input/output data port to be wrapped
     :param rafcon.mvc.models.abstract_state.AbstractStateModel parent: The state model of the state element
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state element model
      """

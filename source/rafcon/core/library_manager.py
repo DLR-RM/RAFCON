@@ -11,10 +11,10 @@ import shutil
 from gtkmvc import Observable
 
 import rafcon
-from rafcon.statemachine import interface
-from rafcon.statemachine.storage import storage
-from rafcon.statemachine.custom_exceptions import LibraryNotFoundException
-import rafcon.statemachine.config as config
+from rafcon.core import interface
+from rafcon.core.storage import storage
+from rafcon.core.custom_exceptions import LibraryNotFoundException
+import rafcon.core.config as config
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -173,7 +173,7 @@ class LibraryManager(Observable):
         :param allow_user_interaction: Whether the user may be asked to specify library location
         :return: library path within filesystem, path within library, library name
         :rtype: str, str, str
-        :raises rafcon.statemachine.custom_exceptions.LibraryNotFoundException: if the cannot be found
+        :raises rafcon.core.custom_exceptions.LibraryNotFoundException: if the cannot be found
         """
         path_list = library_path.split(os.sep)
         target_lib_dict = self.libraries
@@ -308,7 +308,7 @@ class LibraryManager(Observable):
 
     def get_library_instance(self, library_path, library_name):
         if self.is_library_in_libraries(library_path, library_name):
-            from rafcon.statemachine.states.library_state import LibraryState
+            from rafcon.core.states.library_state import LibraryState
             return LibraryState(library_path, library_name, "0.1")
         else:
             logger.warning("Library manager will not create a library instance which is not in the mounted libraries.")

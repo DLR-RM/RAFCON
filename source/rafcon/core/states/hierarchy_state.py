@@ -11,13 +11,13 @@ import traceback
 import copy
 
 from rafcon.utils import log
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.state_elements.outcome import Outcome
-import rafcon.statemachine.singleton as singleton
-from rafcon.statemachine.execution.execution_history import CallItem, ReturnItem
-from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
-from rafcon.statemachine.states.state import StateExecutionStatus
-from rafcon.statemachine.execution.execution_history import CallType
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.state_elements.outcome import Outcome
+import rafcon.core.singleton as singleton
+from rafcon.core.execution.execution_history import CallItem, ReturnItem
+from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.states.state import StateExecutionStatus
+from rafcon.core.execution.execution_history import CallType
 
 logger = log.get_logger(__name__)
 

@@ -21,10 +21,10 @@ from gtk.gdk import ACTION_COPY, ModifierType
 from gtk import DEST_DEFAULT_ALL
 import gobject
 
-import rafcon.statemachine.id_generator as idgen
-from rafcon.statemachine.states.state import StateExecutionStatus
-from rafcon.statemachine.states.state import StateType
-from rafcon.statemachine.decorators import lock_state_machine
+import rafcon.core.id_generator as idgen
+from rafcon.core.states.state import StateExecutionStatus
+from rafcon.core.states.state import StateType
+from rafcon.core.decorators import lock_state_machine
 
 from rafcon.mvc.config import global_gui_config
 from rafcon.mvc.runtime_config import global_runtime_config

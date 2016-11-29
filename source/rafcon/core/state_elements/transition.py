@@ -10,12 +10,12 @@
 
 from gtkmvc import Observable
 
-from rafcon.statemachine.state_elements.state_element import StateElement
-from rafcon.statemachine.decorators import lock_state_machine
+from rafcon.core.state_elements.state_element import StateElement
+from rafcon.core.decorators import lock_state_machine
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
-from rafcon.statemachine.id_generator import *
+from rafcon.core.id_generator import *
 
 
 class Transition(StateElement):
@@ -30,7 +30,7 @@ class Transition(StateElement):
     :ivar _from_outcome: the outcome of the source state
     :ivar _to_state: the target state of the transition
     :ivar _to_outcome: the outcome of the target state
-    :ivar rafcon.statemachine.states.container_state.ContainerState parent: reference to the parent state
+    :ivar rafcon.core.states.container_state.ContainerState parent: reference to the parent state
 
 
     """

@@ -2,10 +2,10 @@ import pytest
 from pytest import raises
 
 # state machine
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.decorators import global_lock_counter, lock_state_machine
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.state_machine import StateMachine
+from rafcon.core.states.state import State
+from rafcon.core.decorators import global_lock_counter, lock_state_machine
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.state_machine import StateMachine
 
 from testing_utils import assert_logger_warnings_and_errors
 from rafcon.utils import log

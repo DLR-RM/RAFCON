@@ -2,10 +2,10 @@ from copy import deepcopy
 
 from gtkmvc import Observable
 
-from rafcon.statemachine.state_elements.data_port import InputDataPort, OutputDataPort
-from rafcon.statemachine.state_elements.scope import ScopedVariable
-from rafcon.statemachine.id_generator import state_id_generator
-from rafcon.statemachine.states.container_state import ContainerState
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
+from rafcon.core.state_elements.scope import ScopedVariable
+from rafcon.core.id_generator import state_id_generator
+from rafcon.core.states.container_state import ContainerState
 
 from rafcon.mvc.models.selection import Selection
 from rafcon.mvc.models.state import StateModel

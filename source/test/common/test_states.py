@@ -2,9 +2,9 @@ import pytest
 from pytest import raises
 
 # state machine
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.state import InputDataPort
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.state import InputDataPort
 from testing_utils import assert_logger_warnings_and_errors
 from rafcon.utils import log
 logger = log.get_logger(__name__)

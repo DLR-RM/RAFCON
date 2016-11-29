@@ -14,8 +14,8 @@ import Queue
 from threading import Lock
 
 from gtkmvc import Observable
-from rafcon.statemachine.execution.execution_status import ExecutionStatus
-from rafcon.statemachine.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.execution.execution_status import ExecutionStatus
+from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -299,7 +299,7 @@ class ExecutionEngine(Observable):
                 # very state will execute its next state; only then we will wait on the condition variable
                 self.run_to_states.append(state.get_path())
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OUT:
-                from rafcon.statemachine.states.state import State
+                from rafcon.core.states.state import State
                 if isinstance(state.parent, State):
                     parent_path = state.parent.get_path()
                     self.run_to_states.append(parent_path)
@@ -337,7 +337,7 @@ class ExecutionEngine(Observable):
                     step_over_to_step_out_transform_found = True
                     logger.debug("Step_over is transformed to a step out for state %s!", state.name)
             if step_over_to_step_out_transform_found:
-                from rafcon.statemachine.states.state import State
+                from rafcon.core.states.state import State
                 if isinstance(state.parent, State):
                     parent_path = state.parent.get_path()
                     self.run_to_states.append(parent_path)
@@ -350,19 +350,19 @@ class ExecutionEngine(Observable):
         :return: a reference to the created state machine
         """
 
-        import rafcon.statemachine.singleton
-        from rafcon.statemachine.storage import storage
-        rafcon.statemachine.singleton.library_manager.initialize()
+        import rafcon.core.singleton
+        from rafcon.core.storage import storage
+        rafcon.core.singleton.library_manager.initialize()
         if not state_machine:
             state_machine = storage.load_state_machine_from_path(path)
-            rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
+            rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
-        rafcon.statemachine.singleton.state_machine_execution_engine.start(start_state_path=start_state_path)
+        rafcon.core.singleton.state_machine_execution_engine.start(start_state_path=start_state_path)
 
         if wait_for_execution_finished:
             self.join()
             self.stop()
-        return rafcon.statemachine.singleton.state_machine_manager.get_active_state_machine()
+        return rafcon.core.singleton.state_machine_manager.get_active_state_machine()
 
     @Observable.observed
     def set_execution_mode(self, execution_mode, notify=True):

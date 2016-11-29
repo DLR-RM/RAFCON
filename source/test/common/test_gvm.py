@@ -1,4 +1,4 @@
-from rafcon.statemachine.global_variable_manager import GlobalVariableManager
+from rafcon.core.global_variable_manager import GlobalVariableManager
 import pytest
 import testing_utils
 from pytest import raises

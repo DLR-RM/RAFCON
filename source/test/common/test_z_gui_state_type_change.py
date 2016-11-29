@@ -11,15 +11,15 @@ from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # core elements
-from rafcon.statemachine.states.state import State
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.enums import UNIQUE_DECIDER_STATE_ID
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.config import global_config
+from rafcon.core.states.state import State
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.config import global_config
 
 # general tool elements
 from rafcon.utils import log
@@ -104,7 +104,7 @@ def create_models(*args, **kargs):
     sm = StateMachine(ctr_state)
 
     # add new state machine
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     # select state machine
     rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
     # get state machine model

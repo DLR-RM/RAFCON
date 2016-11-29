@@ -75,7 +75,7 @@ class StateElementModel(ModelMT, Hashable):
         """Return the core element represented by this model
 
         :return: core element of the model
-        :rtype: rafcon.statemachine.state_elements.state_element.StateElement
+        :rtype: rafcon.core.state_elements.state_element.StateElement
         """
         raise NotImplementedError()
 

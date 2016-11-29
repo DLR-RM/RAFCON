@@ -24,7 +24,7 @@ class ExecutionHistory(Observable, Iterable, Sized):
     It stores all history elements in a stack wise fashion.
 
     :ivar _history_items: a doubly linked list holding all history items of the
-        type :class:`rafcon.statemachine.execution.execution_history.HistoryItem`
+        type :class:`rafcon.core.execution.execution_history.HistoryItem`
     """
 
     def __init__(self):

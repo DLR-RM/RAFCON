@@ -12,15 +12,15 @@ from rafcon.mvc.controllers.main_window import MainWindowController
 from rafcon.mvc.views.main_window import MainWindowView
 
 # core elements
-import rafcon.statemachine.singleton
-from rafcon.statemachine.config import global_config
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.statemachine.storage import storage
+import rafcon.core.singleton
+from rafcon.core.config import global_config
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.storage import storage
 
 # general tool elements
 from rafcon.utils import log
@@ -152,7 +152,7 @@ def create_models(*args, **kargs):
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
                   'Nested2': state5}
     sm = StateMachine(ctr_state)
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     rafcon.mvc.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
     sm_m = rafcon.mvc.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
@@ -1142,10 +1142,10 @@ def test_data_flow_property_modifications_history(caplog):
 
 
 def test_type_modifications_without_gui(caplog):
-    import rafcon.statemachine.start
+    import rafcon.core.start
     with_gui = False
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
-    signal.signal(signal.SIGINT, rafcon.statemachine.start.signal_handler)
+    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+    signal.signal(signal.SIGINT, rafcon.core.start.signal_handler)
     global_config.load()  # load the default config
     global_gui_config.load()  # load the default config
     print "create model"
@@ -1153,7 +1153,7 @@ def test_type_modifications_without_gui(caplog):
     [logger, sm_m, state_dict] = create_models()
     print "init libs"
     testing_utils.remove_all_libraries()
-    rafcon.statemachine.singleton.library_manager.initialize()
+    rafcon.core.singleton.library_manager.initialize()
     sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
@@ -1206,7 +1206,7 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     [logger, sm_m, state_dict] = create_models()
     print "init libs"
     testing_utils.remove_all_libraries()
-    rafcon.statemachine.singleton.library_manager.initialize()
+    rafcon.core.singleton.library_manager.initialize()
 
     if testing_utils.sm_manager_model is None:
         testing_utils.sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model

@@ -10,9 +10,9 @@
 from enum import Enum
 from gtkmvc import Observable
 
-from rafcon.statemachine.id_generator import generate_data_port_id
-from rafcon.statemachine.state_elements.state_element import StateElement
-from rafcon.statemachine.decorators import lock_state_machine
+from rafcon.core.id_generator import generate_data_port_id
+from rafcon.core.state_elements.state_element import StateElement
+from rafcon.core.decorators import lock_state_machine
 from rafcon.utils import log
 from rafcon.utils import type_helpers
 logger = log.get_logger(__name__)
@@ -25,7 +25,7 @@ class DataPort(StateElement):
     :ivar data_type: the value type of the data port
     :ivar default_value: the default value of the data port
     :ivar int data_port_id: the id of the data port, must be unique for the parent state
-    :ivar rafcon.statemachine.states.state.State parent: reference to the parent state
+    :ivar rafcon.core.states.state.State parent: reference to the parent state
     """
 
     # Define all parameters and set their default values

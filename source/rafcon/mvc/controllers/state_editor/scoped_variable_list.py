@@ -11,8 +11,8 @@
 import gtk
 import gobject
 
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.state_elements.scope import ScopedVariable
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.state_elements.scope import ScopedVariable
 
 from rafcon.mvc.controllers.utils.tree_view_controller import ListViewController, react_to_event
 from rafcon.mvc.models.container_state import ContainerStateModel

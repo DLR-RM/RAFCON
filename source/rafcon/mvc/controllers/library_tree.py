@@ -15,7 +15,7 @@ from functools import partial
 import gtk
 import gobject
 
-from rafcon.statemachine.states.library_state import LibraryState
+from rafcon.core.states.library_state import LibraryState
 
 from rafcon.mvc.utils import constants
 from rafcon.mvc.utils.dialog import RAFCONButtonDialog, ButtonDialog
@@ -221,12 +221,12 @@ class LibraryTreeController(ExtendedController):
                 logger.error("Could not open library: {0}".format(e))
 
     def open_run_button_clicked(self, widget):
-        from rafcon.statemachine.singleton import state_machine_execution_engine
+        from rafcon.core.singleton import state_machine_execution_engine
         state_machine = self.open_library_as_state_machine()
         state_machine_execution_engine.start(state_machine.state_machine_id)
 
     def open_library_as_state_machine(self):
-        from rafcon.statemachine.storage import storage
+        from rafcon.core.storage import storage
         smm_m = self.state_machine_manager_model
         (model, row) = self.view.get_selection().get_selected()
         physical_library_path = model[row][self.ITEM_STORAGE_ID]
