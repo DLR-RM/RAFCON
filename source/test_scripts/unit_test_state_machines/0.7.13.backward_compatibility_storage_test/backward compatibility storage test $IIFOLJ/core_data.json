@@ -1,0 +1,69 @@
+{
+    "__jsonqualname__": "rafcon.statemachine.states.hierarchy_state.HierarchyState", 
+    "data_flows": {}, 
+    "description": null, 
+    "input_data_ports": {}, 
+    "name": "backward compatibility storage test ", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.outcome.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {}, 
+    "scoped_variables": {}, 
+    "state_id": "IIFOLJ", 
+    "transitions": {
+        "3": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "LHKPGV", 
+            "to_outcome": null, 
+            "to_state": "BNPYBI", 
+            "transition_id": 3
+        }, 
+        "4": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "OCJDUE", 
+            "to_outcome": null, 
+            "to_state": "LHKPGV", 
+            "transition_id": 4
+        }, 
+        "5": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
+            "from_outcome": null, 
+            "from_state": null, 
+            "to_outcome": null, 
+            "to_state": "XZRQEK", 
+            "transition_id": 5
+        }, 
+        "6": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "XZRQEK", 
+            "to_outcome": null, 
+            "to_state": "OCJDUE", 
+            "transition_id": 6
+        }, 
+        "7": {
+            "__jsonqualname__": "rafcon.statemachine.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "BNPYBI", 
+            "to_outcome": 0, 
+            "to_state": "IIFOLJ", 
+            "transition_id": 7
+        }
+    }
+}
