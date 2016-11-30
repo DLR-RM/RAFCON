@@ -1,17 +1,6 @@
 Patch releases 0.8.\*
 =====================
 
-0.8.0
------
-- new storage format of state machines: names are now encoded into the folder names to be able to easily navigate inside the saved state machine
-- renaming of module paths: core instead of statemchine; gui instead of mvc
-- writing wrong data types into the outputs of the "execute" function produces an error now
-- handles to resize states are bigger
-- transitions are drawn in front of states, data flows behind 
-
-
-=====================
-
 0.8.2
 -----
 
