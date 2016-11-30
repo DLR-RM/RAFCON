@@ -32,6 +32,7 @@ FILE_NAME_CORE_DATA = 'core_data.json'
 FILE_NAME_CORE_DATA_OLD = 'meta.json'
 SCRIPT_FILE = 'script.py'
 STATEMACHINE_FILE = 'statemachine.json'
+STATEMACHINE_FILE_OLD = 'statemachine.yaml'
 ID_NAME_DELIMITER = "_"
 
 
@@ -146,6 +147,7 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
         state_machine.last_update = storage_utils.get_current_time_string()
         state_machine_dict = state_machine.to_dict()
         storage_utils.write_dict_to_json(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE))
+        storage_utils.write_dict_to_yaml(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE_OLD))
 
         # set the file_system_path of the state machine
         if not temporary_storage:
@@ -228,22 +230,44 @@ def load_state_machine_from_path(base_path):
     logger.debug("Loading state machine from path {0}...".format(base_path))
 
     state_machine_file_path = os.path.join(base_path, STATEMACHINE_FILE)
+    state_machine_file_path_old = os.path.join(base_path, STATEMACHINE_FILE_OLD)
 
     # was the root state specified as state machine base_path to load from?
-    if not os.path.exists(state_machine_file_path):
+    if not os.path.exists(state_machine_file_path) and not os.path.exists(state_machine_file_path_old):
         base_path = os.path.dirname(base_path)
         state_machine_file_path = os.path.join(base_path, STATEMACHINE_FILE)
+        state_machine_file_path_old = os.path.join(base_path, STATEMACHINE_FILE_OLD)
 
-        if not os.path.exists(state_machine_file_path):
+        if not os.path.exists(state_machine_file_path) and not os.path.exists(state_machine_file_path_old):
             raise ValueError("Provided path doesn't contain a valid state machine: {0}".format(base_path))
 
-    state_machine_dict = storage_utils.load_objects_from_json(state_machine_file_path)
-    state_machine = StateMachine.from_dict(state_machine_dict)
-    if "root_state_storage_id" not in state_machine_dict:
-        root_state_storage_id = state_machine_dict['root_state_id']
-        state_machine.supports_saving_state_names = False
+    if os.path.exists(state_machine_file_path):
+        state_machine_dict = storage_utils.load_objects_from_json(state_machine_file_path)
+        state_machine = StateMachine.from_dict(state_machine_dict)
+        if "root_state_storage_id" not in state_machine_dict:
+            root_state_storage_id = state_machine_dict['root_state_id']
+            state_machine.supports_saving_state_names = False
+        else:
+            root_state_storage_id = state_machine_dict['root_state_storage_id']
+
+    # TODO: Remove this with next minor release
     else:
-        root_state_storage_id = state_machine_dict['root_state_storage_id']
+        stream = file(state_machine_file_path_old, 'r')
+        tmp_dict = yaml.load(stream)
+        root_state_storage_id = None
+        if "root_state" in tmp_dict:
+            root_state_storage_id = tmp_dict['root_state']
+        else:
+            root_state_storage_id = tmp_dict['root_state_id']
+        version = tmp_dict['version']
+        # Prevents storage as datetime object
+        creation_time = str(tmp_dict['creation_time'])
+        if 'last_update' not in tmp_dict:
+            last_update = creation_time
+        else:
+            last_update = tmp_dict['last_update']
+        state_machine = StateMachine(version=version, creation_time=creation_time, last_update=last_update)
+        state_machine.supports_saving_state_names = False
 
     root_state_path = os.path.join(base_path, root_state_storage_id)
     state_machine.file_system_path = base_path
