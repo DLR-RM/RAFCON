@@ -778,7 +778,7 @@ class MenuBarController(ExtendedController):
         self.shortcut_manager.trigger_action("delete", None, None)
 
     def on_add_state_activate(self, widget, method=None, *arg):
-        self.shortcut_manager.trigger_action("add", None, None)
+        self.shortcut_manager.trigger_action("add_execution_state", None, None)
 
     def on_group_states_activate(self, widget, data=None):
         logger.debug("try to group")
