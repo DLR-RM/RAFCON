@@ -302,6 +302,10 @@ class AbstractStateModel(ModelMT, Hashable):
 
         path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA)
 
+        # TODO: Should be removed with next minor release
+        if not os.path.exists(path_meta_data):
+            path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA_OLD)
+
         try:
             tmp_meta = storage.load_data_file(path_meta_data)
         except ValueError:

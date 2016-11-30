@@ -27,7 +27,9 @@ LIBRARY_NOT_FOUND_DUMMY_STATE_NAME = "LIBRARY NOT FOUND DUMMY STATE"
 
 #: File names for various purposes
 FILE_NAME_META_DATA = 'meta_data.json'
+FILE_NAME_META_DATA_OLD = 'gui_gtk.json'
 FILE_NAME_CORE_DATA = 'core_data.json'
+FILE_NAME_CORE_DATA_OLD = 'meta.json'
 SCRIPT_FILE = 'script.py'
 STATEMACHINE_FILE = 'statemachine.json'
 ID_NAME_DELIMITER = "_"
@@ -283,6 +285,10 @@ def load_state_recursively(parent, state_path=None):
     path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA)
 
     logger.debug("Load state recursively: {0}".format(str(state_path)))
+
+    # TODO: Should be removed with next minor release
+    if not os.path.exists(path_core_data):
+        path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA_OLD)
 
     try:
         state_info = load_data_file(path_core_data)
