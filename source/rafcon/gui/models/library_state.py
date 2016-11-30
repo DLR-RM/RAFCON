@@ -84,7 +84,14 @@ class LibraryStateModel(AbstractStateModel):
                                                                    self.state.library_name)
 
         if self.state.get_sm_for_state().supports_saving_state_names:
+            # TODO: needs to be tested
             root_state_path = join(lib_os_path, get_storage_id_for_state(self.state_copy.state))
+            # print "LibraryStateModel: ", root_state_path
+            import os
+            if not os.path.exists(root_state_path):
+                root_state_path = join(lib_os_path, get_storage_id_for_state(self.state_copy.state, old_delimiter=True))
+            # was:
+            # root_state_path = join(lib_os_path, get_storage_id_for_state(self.state_copy.state))
         else:
             root_state_path = join(lib_os_path, self.state_copy.state.state_id)
         self.state_copy.load_meta_data(root_state_path)

@@ -34,7 +34,8 @@ SCRIPT_FILE = 'script.py'
 STATEMACHINE_FILE = 'statemachine.json'
 STATEMACHINE_FILE_OLD = 'statemachine.yaml'
 ID_NAME_DELIMITER = "_"
-
+# only for backward compatibiliy
+OLD_ID_NAME_DELIMITER = "$"
 
 # clean the DEFAULT_SCRIPT_PATH folder at each program start
 if os.path.exists(DEFAULT_SCRIPT_PATH):
@@ -353,8 +354,8 @@ def load_state_recursively(parent, state_path=None):
 
     from rafcon.core.states.execution_state import ExecutionState
     if isinstance(state, ExecutionState):
-        script = read_file(state.script.path, state.script.filename)
-        state.script_text = script
+        script_text = read_file(state.script.path, state.script.filename)
+        state.script_text = script_text
 
     one_of_my_child_states_not_found = False
 
@@ -390,8 +391,11 @@ def load_data_file(filename):
     raise ValueError("Data file not found: {0}".format(filename))
 
 
-def get_storage_id_for_state(state):
+def get_storage_id_for_state(state, old_delimiter=False):
     """ Calculates the storage id of a state. This ID can be used for generating the file path for a state.
     """
-    return state.name + ID_NAME_DELIMITER + state.state_id
+    if old_delimiter:
+        return state.name + OLD_ID_NAME_DELIMITER + state.state_id
+    else:
+        return state.name + ID_NAME_DELIMITER + state.state_id
 

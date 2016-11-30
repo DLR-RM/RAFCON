@@ -159,7 +159,10 @@ class Script(Observable, yaml.YAMLObject):
 
     @property
     def path(self):
-        return self._path if self._path is not None or self.parent is None else self.parent.get_file_system_path()
+        if self._path is not None or self.parent is None:
+            return self._path
+        else:
+            return self.parent.get_file_system_path()
 
     @path.setter
     def path(self, value):

@@ -3,6 +3,7 @@ LIBRARY_PATHS:
     ros: ../../../test_scripts/ros_libraries
     turtle_libraries: ../../../test_scripts/turtle_libraries
     tutorials: ../../../test_scripts/tutorials
+    unit_test_state_machines: ../../../test_scripts/unit_test_state_machines
 TYPE: SM_CONFIG
 ENABLE_NETWORK_MONITORING: false
 USE_JSON: true
