@@ -488,24 +488,24 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             else:
                 return state_identifier + PATH_SEPARATOR + appendix
 
-    def get_storage_path(self, appendix=None):
+    def get_storage_path(self, appendix=None, old_delimiter=False):
         """ Recursively create the storage path of the state.
 
         The path is generated in bottom up method i.e. from the nested child states to the root state. The method
         concatenates the concatentation of (State.state_id and State.name) as state identifier for the path.
 
         :param str appendix: the part of the path that was already calculated by previous function calls
-        :param bool by_name: The boolean enables name usage to generate the path
+        :param bool old_delimiter: A flag to indicate the deprecated storage id
         :rtype: str
         :return: the full path to the root state
         """
-        state_identifier = get_storage_id_for_state(self)
+        state_identifier = get_storage_id_for_state(self, old_delimiter)
 
         if not self.is_root_state:
             if appendix is None:
-                return self.parent.get_storage_path(state_identifier)
+                return self.parent.get_storage_path(state_identifier, old_delimiter)
             else:
-                return self.parent.get_storage_path(state_identifier + PATH_SEPARATOR + appendix)
+                return self.parent.get_storage_path(state_identifier + PATH_SEPARATOR + appendix, old_delimiter)
         else:
             if appendix is None:
                 return state_identifier
@@ -542,18 +542,38 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         if not self.get_sm_for_state() or self.get_sm_for_state().file_system_path is None:
             if self._file_system_path:
+                # print "State_get_file_system_path 0: "
                 return self._file_system_path
             elif self.get_sm_for_state():
                 if self.get_sm_for_state().supports_saving_state_names:
-                    return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
+                    # print "State_get_file_system_path 11: ",
+                    # os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
+                    path = os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
+                    if os.path.exists(path):
+                        return path
+                    else:
+                        path = os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path(old_delimiter=True)))
+                        return path
                 else:
+                    # print "State_get_file_system_path 12: "
                     return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
             else:
                 return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
         else:
             if self.get_sm_for_state().supports_saving_state_names:
-                return os.path.join(self.get_sm_for_state().file_system_path, self.get_storage_path())
+                # print "State_get_file_system_path 21: ",
+                # os.path.join(self.get_sm_for_state().file_system_path, str(self.get_storage_path()))
+                path = os.path.join(self.get_sm_for_state().file_system_path, str(self.get_storage_path()))
+                if os.path.exists(path):
+                    return path
+                else:
+                    path = os.path.join(self.get_sm_for_state().file_system_path, str(self.get_storage_path(
+                        old_delimiter=True)))
+                    # print "State_get_file_system_path 22: ", path
+                    return path
             else:
+                # the default case for ID-formatted state machines when using a GUI
+                # print "State_get_file_system_path 23: "
                 return os.path.join(self.get_sm_for_state().file_system_path, self.get_path())
 
     @lock_state_machine

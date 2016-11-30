@@ -294,18 +294,30 @@ class AbstractStateModel(ModelMT, Hashable):
         Existing meta data is removed. Also the meta data of all state elements (data ports, outcomes,
         etc) are loaded, as it is stored in the same file as the meta data of the state.
 
-        :param str path: Optional path to the meta data file. If not given, the path will be derived from the state's
-            path on the filesystem
+        This is either called on the __init__ of a new state model or if a state model for a container state is created,
+        which then calls load_meta_data for all its children.
+
+        TODO: for a Execution state this is called for each hierarchy level again and again
+
+        :param str path: Optional file system path to the meta data file. If not given, the path will be derived from
+            the state's path on the filesystem
         """
+        # print "AbstractState_load_meta_data: ", path
         if not path:
             path = self.state.get_file_system_path()
+        # print "AbstractState_load_meta_data: ", path
 
         path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA)
+
+        # TODO: Should be removed with next minor release
+        if not os.path.exists(path_meta_data):
+            path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA_OLD)
 
         try:
             tmp_meta = storage.load_data_file(path_meta_data)
         except ValueError:
             # raise
+            # print "AbstractState_load_meta_data: skipped meta data for library state"
             tmp_meta = {}
 
         # JSON returns a dict, which must be converted to a Vividict

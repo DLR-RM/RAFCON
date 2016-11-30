@@ -27,11 +27,15 @@ LIBRARY_NOT_FOUND_DUMMY_STATE_NAME = "LIBRARY NOT FOUND DUMMY STATE"
 
 #: File names for various purposes
 FILE_NAME_META_DATA = 'meta_data.json'
+FILE_NAME_META_DATA_OLD = 'gui_gtk.json'
 FILE_NAME_CORE_DATA = 'core_data.json'
+FILE_NAME_CORE_DATA_OLD = 'meta.json'
 SCRIPT_FILE = 'script.py'
 STATEMACHINE_FILE = 'statemachine.json'
+STATEMACHINE_FILE_OLD = 'statemachine.yaml'
 ID_NAME_DELIMITER = "_"
-
+# only for backward compatibiliy
+OLD_ID_NAME_DELIMITER = "$"
 
 # clean the DEFAULT_SCRIPT_PATH folder at each program start
 if os.path.exists(DEFAULT_SCRIPT_PATH):
@@ -144,6 +148,7 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
         state_machine.last_update = storage_utils.get_current_time_string()
         state_machine_dict = state_machine.to_dict()
         storage_utils.write_dict_to_json(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE))
+        storage_utils.write_dict_to_yaml(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE_OLD))
 
         # set the file_system_path of the state machine
         if not temporary_storage:
@@ -226,22 +231,44 @@ def load_state_machine_from_path(base_path):
     logger.debug("Loading state machine from path {0}...".format(base_path))
 
     state_machine_file_path = os.path.join(base_path, STATEMACHINE_FILE)
+    state_machine_file_path_old = os.path.join(base_path, STATEMACHINE_FILE_OLD)
 
     # was the root state specified as state machine base_path to load from?
-    if not os.path.exists(state_machine_file_path):
+    if not os.path.exists(state_machine_file_path) and not os.path.exists(state_machine_file_path_old):
         base_path = os.path.dirname(base_path)
         state_machine_file_path = os.path.join(base_path, STATEMACHINE_FILE)
+        state_machine_file_path_old = os.path.join(base_path, STATEMACHINE_FILE_OLD)
 
-        if not os.path.exists(state_machine_file_path):
+        if not os.path.exists(state_machine_file_path) and not os.path.exists(state_machine_file_path_old):
             raise ValueError("Provided path doesn't contain a valid state machine: {0}".format(base_path))
 
-    state_machine_dict = storage_utils.load_objects_from_json(state_machine_file_path)
-    state_machine = StateMachine.from_dict(state_machine_dict)
-    if "root_state_storage_id" not in state_machine_dict:
-        root_state_storage_id = state_machine_dict['root_state_id']
-        state_machine.supports_saving_state_names = False
+    if os.path.exists(state_machine_file_path):
+        state_machine_dict = storage_utils.load_objects_from_json(state_machine_file_path)
+        state_machine = StateMachine.from_dict(state_machine_dict)
+        if "root_state_storage_id" not in state_machine_dict:
+            root_state_storage_id = state_machine_dict['root_state_id']
+            state_machine.supports_saving_state_names = False
+        else:
+            root_state_storage_id = state_machine_dict['root_state_storage_id']
+
+    # TODO: Remove this with next minor release
     else:
-        root_state_storage_id = state_machine_dict['root_state_storage_id']
+        stream = file(state_machine_file_path_old, 'r')
+        tmp_dict = yaml.load(stream)
+        root_state_storage_id = None
+        if "root_state" in tmp_dict:
+            root_state_storage_id = tmp_dict['root_state']
+        else:
+            root_state_storage_id = tmp_dict['root_state_id']
+        version = tmp_dict['version']
+        # Prevents storage as datetime object
+        creation_time = str(tmp_dict['creation_time'])
+        if 'last_update' not in tmp_dict:
+            last_update = creation_time
+        else:
+            last_update = tmp_dict['last_update']
+        state_machine = StateMachine(version=version, creation_time=creation_time, last_update=last_update)
+        state_machine.supports_saving_state_names = False
 
     root_state_path = os.path.join(base_path, root_state_storage_id)
     state_machine.file_system_path = base_path
@@ -284,6 +311,10 @@ def load_state_recursively(parent, state_path=None):
 
     logger.debug("Load state recursively: {0}".format(str(state_path)))
 
+    # TODO: Should be removed with next minor release
+    if not os.path.exists(path_core_data):
+        path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA_OLD)
+
     try:
         state_info = load_data_file(path_core_data)
     except ValueError, e:
@@ -323,8 +354,8 @@ def load_state_recursively(parent, state_path=None):
 
     from rafcon.core.states.execution_state import ExecutionState
     if isinstance(state, ExecutionState):
-        script = read_file(state.script.path, state.script.filename)
-        state.script_text = script
+        script_text = read_file(state.script.path, state.script.filename)
+        state.script_text = script_text
 
     one_of_my_child_states_not_found = False
 
@@ -360,8 +391,11 @@ def load_data_file(filename):
     raise ValueError("Data file not found: {0}".format(filename))
 
 
-def get_storage_id_for_state(state):
+def get_storage_id_for_state(state, old_delimiter=False):
     """ Calculates the storage id of a state. This ID can be used for generating the file path for a state.
     """
-    return state.name + ID_NAME_DELIMITER + state.state_id
+    if old_delimiter:
+        return state.name + OLD_ID_NAME_DELIMITER + state.state_id
+    else:
+        return state.name + ID_NAME_DELIMITER + state.state_id
 
