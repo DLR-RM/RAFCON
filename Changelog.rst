@@ -1,23 +1,13 @@
 Patch releases 0.8.\*
 =====================
 
-0.8.0
+0.8.1
 -----
-- new storage format of state machines: names are now encoded into the folder names to be able to easily navigate inside the saved state machine
-- renaming of module paths: core instead of statemchine; gui instead of mvc
-- writing wrong data types into the outputs of the "execute" function produces an error now
-- handles to resize states are bigger
-- transitions are drawn in front of states, data flows behind 
-
-
-Patch releases 0.7.\*
-=====================
-
-0.7.14
-------
-
+  
 - Features:
 
+  - renaming of module paths: core instead of statemchine; gui instead of mvc
+  - writing wrong data types into the outputs of the "execute" function produces an error now
   - Use external source editor: A button next to the source editor allows to open your code in an external editor, which you can configure
   - Gaphas: When resizing states, grid lines are shown helping states to bea aligned to each other (as when moving states)
 
@@ -26,6 +16,7 @@ Patch releases 0.7.\*
   - Gaphas: Change drawing order of state elements. Transitions are now drawn above states, Names of states are drawn
     beneath everything. This should ease the manipulation of transitions.
   - Gaphas: States are easier to resize, as the corresponding handle is easier to grab
+  - states are now saved in forlder that are named after: state.name + $ + state.state_id 
 
 - API:
 
@@ -55,9 +46,19 @@ Patch releases 0.7.\*
   - the code behind connection creation and modification in the Gaphas editor has been completely rewritten and made more robust
 
 
+0.8.0
+-----
+
+- deactivated as not compatible with 0.7.13
+
+Patch releases 0.7.\*
+=====================
+
+
 0.7.13
 ------
 
+- states are now saved in forlder that are named after: state.name + $ + state.state_id
 - Hotfix:
     - fix unmovable windows for sled11 64bit
 
