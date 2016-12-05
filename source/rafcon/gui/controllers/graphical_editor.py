@@ -164,8 +164,15 @@ class GraphicalEditorController(ExtendedController):
             between shortcuts and actions.
         """
         shortcut_manager.add_callback_for_action("delete", self._delete_selection)
-        shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))
-        shortcut_manager.add_callback_for_action("add2", partial(self._add_new_state, state_type=StateType.HIERARCHY))
+        shortcut_manager.add_callback_for_action("add_execution_state", partial(self._add_new_state,
+                                                                                state_type=StateType.EXECUTION))
+        shortcut_manager.add_callback_for_action("add_hierarchy_state", partial(self._add_new_state,
+                                                                                state_type=StateType.HIERARCHY))
+        shortcut_manager.add_callback_for_action("add_barrier_state:", partial(self._add_new_state,
+                                                                               state_type=StateType.BARRIER_CONCURRENCY))
+        shortcut_manager.add_callback_for_action("add_preemptive_state:", partial(self._add_new_state,
+                                                                                  state_type=StateType.PREEMPTION_CONCURRENCY))
+
         shortcut_manager.add_callback_for_action("abort", self._abort)
 
         shortcut_manager.add_callback_for_action("add_output", partial(self._add_data_port_to_selected_state,

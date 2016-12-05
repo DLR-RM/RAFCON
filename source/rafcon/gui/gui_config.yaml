@@ -41,15 +41,19 @@ AUTO_APPLY_SOURCE_CODE_CHANGES: True
 CHECK_PYTHON_FILES_WITH_PYLINT: False
 
 DEFAULT_EXTERNAL_EDITOR:
+EXTENDED_RIGHT_CLICK_MENU: False
 
 SHORTCUTS:
     abort: Escape
-    add: <Control>A             # In graphical editor: add execution state
-    add2: <Control><Shift>A     # In graphical editor: add hierarchy state
-    add_output: <Control>O
-    add_input: <Control>I
-    add_outcome: <Control>T
-    add_scoped_variable: <Control><Shift>V
+    add: <Control>A
+    add_execution_state: <Alt>E
+    add_hierarchy_state: <Alt>H
+    add_preemptive_state: <Alt>C
+    add_barrier_state: <Alt>B
+    add_output: <Alt>U
+    add_input: <Alt>N
+    add_outcome: <Alt>T
+    add_scoped_variable: <Alt>V
     apply: <Control><Shift>E
     backward_step: F9
     close: <Control>W
