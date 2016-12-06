@@ -15,3 +15,9 @@ GIT commit Guidelines
 ---------------------
 
 .. include:: commit_guidelines.rst
+
+
+Steps for releasing
+-------------------
+
+.. include:: release_steps.rst
