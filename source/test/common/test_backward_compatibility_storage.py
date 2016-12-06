@@ -44,7 +44,7 @@ def trigger_gvm_signals(main_window_controller):
     assert gvm.get_variable("e1") == 1
     assert gvm.get_variable("l1") == 1
 
-    call_gui_callback(menubar_ctrl.on_quit_activate, None)
+    call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
 
 def test_backward_compatibility_storage(caplog):
