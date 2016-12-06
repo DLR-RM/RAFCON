@@ -1,6 +1,13 @@
 Patch releases 0.8.\*
 =====================
 
+0.8.2
+-----
+
+- Bug Fixes:
+  - fix copy and paste for ports
+  - fix backward compatibility test
+
 0.8.1
 -----
   
