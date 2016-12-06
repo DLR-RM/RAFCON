@@ -520,22 +520,25 @@ class ContainerStateModel(StateModel):
         super(ContainerStateModel, self).load_meta_data(path)
 
         for state_key, state_m in self.states.iteritems():
-            if self.state.get_sm_for_state().supports_saving_state_names:
-                # if path:
-                #     debug_path = join(path, get_storage_id_for_state(self.states[state_key].state))
-                #     print "ContainerStateModel_load_meta_data: ", debug_path
-                # else:
-                #     print "ContainerStateModel_load_meta_data: "
-                child_path = None
-                if path:
-                    child_path = join(path, get_storage_id_for_state(self.states[state_key].state))
-                    import os
-                    if not os.path.exists(child_path):
-                        child_path = join(path, get_storage_id_for_state(self.states[state_key].state,
-                                                                         old_delimiter=True))
+            if self.state.get_sm_for_state():
+                if self.state.get_sm_for_state().supports_saving_state_names:
+                    # if path:
+                    #     debug_path = join(path, get_storage_id_for_state(self.states[state_key].state))
+                    #     print "ContainerStateModel_load_meta_data: ", debug_path
+                    # else:
+                    #     print "ContainerStateModel_load_meta_data: "
+                    child_path = None
+                    if path:
+                        child_path = join(path, get_storage_id_for_state(self.states[state_key].state))
+                        import os
+                        if not os.path.exists(child_path):
+                            child_path = join(path, get_storage_id_for_state(self.states[state_key].state,
+                                                                             old_delimiter=True))
+                else:
+                    child_path = None if not path else join(path, state_key)
+                    # print "ContainerStateModel_load_meta_data: ", child_path
             else:
                 child_path = None if not path else join(path, state_key)
-                # print "ContainerStateModel_load_meta_data: ", child_path
             state_m.load_meta_data(child_path)
 
     def store_meta_data(self, temp_path=None):
