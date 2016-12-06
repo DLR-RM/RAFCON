@@ -1,6 +1,3 @@
-GIT commit Guidelines
-~~~~~~~~~~~~~~~~~~~~~
-
 General GIT commit conventions
 """"""""""""""""""""""""""""""
 
@@ -12,6 +9,7 @@ General GIT commit conventions
 -  each functional/logical change gets its own commit (e.g. one change of a feature or a bug fix)
 -  no excessive use of ``logger.debug`` outputs (in commits) and never commit ``print`` commands
 -  try to use ``git pull ––rebase`` instead of ``git pull`` to keep the history clean from automatic merge logs
+
 
 GIT commit messages: What to do
 """""""""""""""""""""""""""""""

@@ -11,7 +11,7 @@ Code style
 #TODO: add ``condingconvPycharm.odt`` here
 
 
-Commit Guidelines
------------------
+GIT commit Guidelines
+---------------------
 
 .. include:: commit_guidelines.rst
