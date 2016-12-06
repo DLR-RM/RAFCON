@@ -36,11 +36,15 @@ def load_plugins():
         dir_name, plugin_name = os.path.split(plugin_path.rstrip('/'))
         logger.info("Found plugin '{}' at {}".format(plugin_name, plugin_path))
         sys.path.insert(0, dir_name)
-        try:
-            module = importlib.import_module(plugin_name)
-            plugin_dict[plugin_name] = module
-        except ImportError as e:
-            logger.error("Could not import plugin '{}': {}".format(plugin_name, e))
+        if plugin_name in plugin_dict:
+            logger.error("Plugin '{}' already loaded".format(plugin_name))
+        else:
+            try:
+                module = importlib.import_module(plugin_name)
+                plugin_dict[plugin_name] = module
+                logger.info("Successfully loaded plugin '{}'".format(plugin_name))
+            except ImportError as e:
+                logger.error("Could not import plugin '{}': {}".format(plugin_name, e))
 
 
 def run_hook(hook_name, *args, **kwargs):
