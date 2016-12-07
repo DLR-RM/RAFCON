@@ -31,7 +31,7 @@ def trigger_gvm_signals(main_window_controller):
 
     # TODO: replace these at some point with released state machines
     call_gui_callback(menubar_ctrl.on_open_activate, None, None, os.path.join(
-        testing_utils.RAFCON_PATH, "../test_scripts/unit_test_state_machines/0.7.13.backward_compatibility_storage_test"))
+        testing_utils.RAFCON_PATH, "../test_scripts/unit_test_state_machines/backwards_compatibility/0.8.3"))
 
     state_machine_execution_engine.start()
 
