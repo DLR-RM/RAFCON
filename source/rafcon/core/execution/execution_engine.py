@@ -118,10 +118,18 @@ class ExecutionEngine(Observable):
         self._status.execution_condition_variable.release()
 
     def join(self, timeout=None):
+        """Blocking wait for the execution to finish
+
+        :param float timeout: Maximum time to wait or None for infinitely
+        :return: True if the execution finished, False if no state machine was started or a timeout occurred
+        :rtype: bool
+        """
         if self.__wait_for_finishing_thread:
             self.__wait_for_finishing_thread.join(timeout)
+            return not self.__wait_for_finishing_thread.is_alive()
         else:
             logger.warn("Cannot join as state machine was not started yet.")
+            return False
 
     def __set_execution_mode_to_stopped(self):
         """Stop and reset execution engine"""
