@@ -25,6 +25,8 @@ def run_state_machines(state_machines_path):
 
     for state_machine_folder in os.listdir(state_machines_path):
         state_machine_path = os.path.join(state_machines_path, state_machine_folder)
+        if not os.path.isdir(state_machine_path):
+            continue
 
         if not execution_engine.finished_or_stopped():
             raise RuntimeError("The execution engine is not stopped")
