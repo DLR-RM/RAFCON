@@ -2,7 +2,7 @@ import signal
 import tempfile
 from os import mkdir, environ, path
 from os.path import join, dirname, realpath, exists
-from threading import Lock, Condition
+from threading import Lock, Condition, Event, Thread
 
 import rafcon
 from rafcon.utils import log, constants
@@ -10,6 +10,11 @@ from rafcon.core.config import global_config
 
 
 test_multithreading_lock = Lock()
+
+gui_thread = None
+gui_ready = None
+
+sm_manager_model = None
 
 RAFCON_TEMP_PATH_TEST_BASE = join(constants.RAFCON_TEMP_PATH_BASE, 'unit_tests')
 if not exists(RAFCON_TEMP_PATH_TEST_BASE):
@@ -123,7 +128,7 @@ def initialize_rafcon(core_config=None, gui_config=None, libraries=None):
     remove_all_libraries()
     if not isinstance(libraries, dict):
         libraries = {}
-    if not "generic" in libraries:
+    if "generic" not in libraries:
         libraries["generic"] = join(rafcon_library_path, 'generic')
     global_config.set_config_value("LIBRARY_PATHS", libraries)
     environ['RAFCON_LIB_PATH'] = rafcon_library_path
@@ -138,4 +143,35 @@ def wait_for_gui():
     while gtk.events_pending():
         gtk.main_iteration(False)
 
-sm_manager_model = None
+
+def run_gui_thread():
+    global gui_ready
+    import gtk
+    from rafcon.gui.controllers.main_window import MainWindowController
+    from rafcon.gui.views.main_window import MainWindowView
+    from rafcon.gui.singleton import state_machine_manager_model
+
+    MainWindowController(state_machine_manager_model, MainWindowView())
+
+    # Wait for GUI to initialize
+    wait_for_gui()
+    gtk.idle_add(gui_ready.set)
+    gtk.main()
+
+
+def run_gui(core_config=None, gui_config=None, libraries=None, timeout=5):
+    global gui_ready, gui_thread
+    initialize_rafcon(core_config, gui_config, libraries)
+    gui_ready = Event()
+    gui_thread = Thread(target=run_gui_thread)
+    gui_thread.start()
+    if not gui_ready.wait(timeout):
+        import gtk
+        gtk.idle_add(gtk.main_quit)
+        raise RuntimeError("Could not start GUI")
+
+
+def wait_for_gui_quit(timeout=5):
+    global gui_thread
+    gui_thread.join(timeout)
+    return not gui_thread.is_alive()
