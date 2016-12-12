@@ -70,9 +70,10 @@ class StateMachineManagerModel(ModelMT, Observable):
     def delete_state_machine_models(self):
         for sm_id_to_delete in self.state_machines.keys():
             sm_m = self.state_machines[sm_id_to_delete]
-            sm_m.prepare_destruction()
-            del self.state_machines[sm_id_to_delete]
-            sm_m.destroy()
+            with sm_m.state_machine.modification_lock():
+                sm_m.prepare_destruction()
+                del self.state_machines[sm_id_to_delete]
+                sm_m.destroy()
 
     @ModelMT.observe("state_machine_manager", after=True)
     def model_changed(self, model, prop_name, info):
@@ -81,8 +82,10 @@ class StateMachineManagerModel(ModelMT, Observable):
             for sm_id, sm in self.state_machine_manager.state_machines.iteritems():
                 if sm_id not in self.state_machines:
                     logger.debug("Create new state machine model for state machine with id %s", sm.state_machine_id)
-                    self.state_machines[sm_id] = StateMachineModel(sm, self)
-                    self.selected_state_machine_id = sm_id
+                    with sm.modification_lock():
+                        self.state_machines[sm_id] = StateMachineModel(sm, self)
+                        self.selected_state_machine_id = sm_id
+            print "=> state machine model added"
         elif info["method_name"] == "remove_state_machine":
             sm_id_to_delete = None
             for sm_id, sm_m in self.state_machines.iteritems():
@@ -94,11 +97,13 @@ class StateMachineManagerModel(ModelMT, Observable):
 
             if sm_id_to_delete is not None:
                 logger.debug("Delete state machine model for state machine with id %s", sm_id_to_delete)
-                sm_m.selection.clear()
                 sm_m = self.state_machines[sm_id_to_delete]
-                sm_m.prepare_destruction()
-                del self.state_machines[sm_id_to_delete]
-                sm_m.destroy()
+                sm = sm_m.state_machine
+                with sm.modification_lock():
+                    sm_m.selection.clear()
+                    sm_m.prepare_destruction()
+                    del self.state_machines[sm_id_to_delete]
+                    sm_m.destroy()
 
     def get_sm_m_for_state_model(self, state_m):
         return self.state_machines[state_m.state.get_sm_for_state().state_machine_id]
