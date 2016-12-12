@@ -215,17 +215,19 @@ class StatesEditorController(ExtendedController):
             self.close_page(state_identifier, delete=True)
 
     @ExtendedController.observe("state_machines", before=True)
-    def state_machines_notification(self, model, prop_name, info):
-        """Check for closed state machine and close according states
+    def state_machines_set_notification(self, model, prop_name, info):
+        """Observe all open state machines and their root states
         """
-        # Observe all open state machines and their root states
         if info['method_name'] == '__setitem__':
             state_machine_m = info.args[1]
             self.observe_model(state_machine_m)
-        # Relive models of closed state machine
-        elif info['method_name'] == '__delitem__':
-            state_machine_id = info.args[0]
-            state_machine_m = self.model.state_machines[state_machine_id]
+
+    @ExtendedController.observe("state_machines", after=True)
+    def state_machines_del_notification(self, model, prop_name, info):
+        """Relive models of closed state machine
+        """
+        if info['method_name'] == '__delitem__':
+            state_machine_m = info["result"]
             try:
                 self.relieve_model(state_machine_m)
             except KeyError:
