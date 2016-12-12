@@ -291,7 +291,7 @@ def trigger_gui_signals(*args):
 
 
 def test_gui(caplog):
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
     testing_utils.remove_all_libraries()
     library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)

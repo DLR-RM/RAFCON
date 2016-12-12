@@ -119,7 +119,7 @@ def trigger_drag_and_drop_tests(*args):
 
 
 def test_drag_and_drop_test(caplog):
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
 
     create_models()
 

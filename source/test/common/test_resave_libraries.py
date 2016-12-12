@@ -9,7 +9,7 @@ import testing_utils
 
 
 def test_resave(caplog):
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
     testing_utils.remove_all_libraries()
     RAFCON_PATH = realpath(rafcon.__path__[0])
     TEST_SM_PATH = join(dirname(RAFCON_PATH), 'test_scripts')

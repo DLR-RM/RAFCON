@@ -155,7 +155,7 @@ def trigger_pane_signals(*args):
 
 
 def test_window_positions(caplog):
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
     mirror_runtime_config_file()
     global_runtime_config.load(config_file='runtime_config.yaml', path=DOCKING_TEST_FOLDER)
     testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
@@ -174,7 +174,7 @@ def test_window_positions(caplog):
 
 
 def test_pane_positions(caplog):
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
     mirror_runtime_config_file()
     global_runtime_config.load(config_file='runtime_config.yaml', path=DOCKING_TEST_FOLDER)
     testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model

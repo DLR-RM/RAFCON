@@ -657,7 +657,7 @@ def trigger_state_type_change_tests(*args):
 
 def test_state_type_change_test(caplog):
     with_gui = True
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
 
     sm_m, state_dict = create_models()
     testing_utils.remove_all_libraries()

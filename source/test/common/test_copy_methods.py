@@ -375,7 +375,7 @@ def test_simple(caplog):
     :return:
     """
     # create testbed
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
 
     [state, sm_model, state_dict] = create_models()
     run_copy_test(sm_model)
@@ -402,7 +402,7 @@ def test_complex(with_gui, caplog):
     :return:
     """
     # create testbed
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
     from rafcon.core.config import global_config
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
     library_paths["unit_test_state_machines"] = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines"

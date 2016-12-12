@@ -138,7 +138,7 @@ def trigger_source_editor_signals(main_window_controller):
 
 
 def test_gui(caplog):
-    t_u.start_rafcon()
+    t_u.initialize_rafcon()
 
     t_u.remove_all_libraries()
     gui_config.global_gui_config.set_config_value('GAPHAS_EDITOR', True)

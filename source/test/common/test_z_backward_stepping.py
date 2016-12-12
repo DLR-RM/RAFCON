@@ -106,7 +106,7 @@ def trigger_gui_signals_library_state(*args):
 
 def test_backward_stepping_library_state(caplog):
     sys.setrecursionlimit(3000)
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
     testing_utils.remove_all_libraries()
     # Load test library
     config_path = rafcon.__path__[0] + "/../test/common/configs_for_start_script_test/valid_config/"
@@ -198,7 +198,7 @@ def trigger_gui_signals_preemptive_state(*args):
 
 def test_backward_stepping_preemptive_state(caplog):
     sys.setrecursionlimit(3000)
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
     #testing_utils.remove_all_libraries()
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
@@ -281,7 +281,7 @@ def trigger_gui_signals_barrier_state(*args):
 
 def test_backward_stepping_barrier_state(caplog):
     sys.setrecursionlimit(3000)
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
     testing_utils.remove_all_libraries()
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)

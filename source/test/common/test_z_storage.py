@@ -253,7 +253,7 @@ def test_storage_without_gui(caplog):
 
 def test_storage_with_gui(caplog):
     with_gui = True
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
     logger.debug("create model")
     [state, sm_m, state_dict] = create_models()
     logger.debug("init libs")

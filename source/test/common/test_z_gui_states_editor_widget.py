@@ -220,7 +220,7 @@ def trigger_state_type_change_tests(*args):
 
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_type_change_test(with_gui, caplog):
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
 
     sm_m, state_dict = create_models()
 

@@ -55,7 +55,7 @@ def trigger_gvm_signals(main_window_controller):
 
 
 def test_gui(caplog):
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
 
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)

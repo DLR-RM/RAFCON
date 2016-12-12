@@ -1167,7 +1167,7 @@ def test_type_modifications_without_gui(caplog):
 
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_machine_modifications_with_gui(with_gui, caplog):
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
     print "create model"
     [logger, sm_m, state_dict] = create_models()
     print "init libs"
@@ -1200,7 +1200,7 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_type_change_bugs_with_gui(with_gui, caplog):
     print "NEW BUG TEST"
-    testing_utils.start_rafcon()
+    testing_utils.initialize_rafcon()
     print "create model"
     global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [logger, sm_m, state_dict] = create_models()
