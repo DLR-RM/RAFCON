@@ -10,6 +10,7 @@
 
 from copy import copy
 from threading import RLock
+from contextlib import contextmanager
 
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
@@ -117,18 +118,32 @@ class StateMachine(Observable, JSONObject, Hashable):
         from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
+    @contextmanager
+    def modification_lock(self, blocking=True):
+        """Get modification lock in with() statement
+
+        :param bool blocking: When True, block until the lock is unlocked, then set it to locked
+        """
+        try:
+            yield self.acquire_modification_lock(blocking)
+        finally:
+            self.release_modification_lock()
+
     @Observable.observed
     def acquire_modification_lock(self, blocking=True):
-        """Acquires the modifiction lock of the state machine.
+        """Acquires the modification lock of the state machine
 
         This must be used for all methods, that perform any modifications on the state machine
+
+        :param bool blocking: When True, block until the lock is unlocked, then set it to locked
+        :return: True if lock was acquired, False else
+        :rtype: bool
         """
         return self._modification_lock.acquire(blocking)
 
     @Observable.observed
     def release_modification_lock(self):
         """Releases the acquired state machine modification lock.
-
         """
         self._modification_lock.release()
 
