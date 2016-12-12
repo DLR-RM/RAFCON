@@ -1,0 +1,7 @@
+
+#
+# Explicitly add meta data of test state machines
+#
+
+!**/meta_data.json
+
