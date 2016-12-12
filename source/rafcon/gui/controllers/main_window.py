@@ -330,24 +330,29 @@ class MainWindowController(ExtendedController):
         """ Highlight buttons according actual execution status. Furthermore it triggers the label redraw of the active
         state machine.
         """
-        label_string = str(rafcon.core.singleton.state_machine_execution_engine.status.execution_mode)
+        execution_engine = rafcon.core.singleton.state_machine_execution_engine
+        label_string = str(execution_engine.status.execution_mode)
         label_string = label_string.replace("STATE_MACHINE_EXECUTION_STATUS.", "")
         self.view['execution_status_label'].set_text(label_string)
 
-        if rafcon.core.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.STARTED:
-            self.get_controller('state_machines_editor_ctrl').highlight_execution_of_currently_active_sm(True)
+        state_machines_editor = self.get_controller('state_machines_editor_ctrl')
+        if not state_machines_editor:
+            return
+        current_execution_mode = execution_engine.status.execution_mode
+        if current_execution_mode is StateMachineExecutionStatus.STARTED:
+            state_machines_editor.highlight_execution_of_currently_active_sm(True)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_start_shortcut')
-        elif rafcon.core.singleton.state_machine_execution_engine.status.execution_mode is StateMachineExecutionStatus.PAUSED:
-            self.get_controller('state_machines_editor_ctrl').highlight_execution_of_currently_active_sm(True)
+        elif current_execution_mode is StateMachineExecutionStatus.PAUSED:
+            state_machines_editor.highlight_execution_of_currently_active_sm(True)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_pause_shortcut')
-        elif rafcon.core.singleton.state_machine_execution_engine.finished_or_stopped():
-            self.get_controller('state_machines_editor_ctrl').highlight_execution_of_currently_active_sm(False)
+        elif execution_engine.finished_or_stopped():
+            state_machines_editor.highlight_execution_of_currently_active_sm(False)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_stop_shortcut')
         else:  # all step modes
-            self.get_controller('state_machines_editor_ctrl').highlight_execution_of_currently_active_sm(True)
+            state_machines_editor.highlight_execution_of_currently_active_sm(True)
             self.view['step_buttons'].show()
             self._set_single_button_active('button_step_mode_shortcut')
 
