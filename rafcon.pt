@@ -19,13 +19,17 @@ PYTHON_PATHS        = ${PKGROOT}/lib/python2.7
 ADDITIONAL_ENV.osl* = RAFCON_PATH=${PKGROOT}/lib/python2.7/rafcon, RAFCON_LIB_PATH=${PKGROOT}/share/libraries, PATH=${PKGROOT}/bin:$${PATH}
 ADDITIONAL_ENV.sled11* = RAFCON_PATH=${PKGROOT}/lib/python2.7/rafcon, RAFCON_LIB_PATH=${PKGROOT}/share/libraries, PATH=${PKGROOT}/bin:/opt/python/python2.7/bin:$${PATH}
 
+[pre-install]
+python -m compileall -fq ./source/rafcon
+python -m compileall -fq ./source/libraries
+
 [install]
-source/rafcon | !*.pyc => lib/python2.7/rafcon
-source/libraries | !*.pyc => share/libraries
+source/rafcon  => lib/python2.7/rafcon
+source/libraries |  => share/libraries
 share | !*.pyc | !.gitignore => share
-source/test_scripts/ros_libraries => share/examples/libraries/ros_libraries
-source/test_scripts/turtle_libraries => share/examples/libraries/turtle_libraries
-source/test_scripts/tutorials => share/examples/tutorials
+source/test_scripts/ros_libraries | !*.pyc | => share/examples/libraries/ros_libraries
+source/test_scripts/turtle_libraries | !*.pyc | => share/examples/libraries/turtle_libraries
+source/test_scripts/tutorials | !*.pyc | => share/examples/tutorials
 source/rafcon/documentation => docs
 bin/ | !rafcon_start | !rafcon_start_gui | !resave_state_machines  | !*.pyc => bin # Symlinks are recreated in post_install step
 
