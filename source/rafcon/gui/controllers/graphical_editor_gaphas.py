@@ -767,13 +767,14 @@ class GraphicalEditorController(ExtendedController):
         return state_machine_helper.delete_selected_elements(self.model)
 
     def setup_canvas(self):
-        hash_before = self.model.mutable_hash().digest()
-        self.setup_state(self.root_state_m, rel_pos=(10, 10))
-        hash_after = self.model.mutable_hash().digest()
-        if hash_before != hash_after:
-            self._meta_data_changed(None, self.root_state_m, 'append_initial_change', True)
-            logger.info("Opening the state machine caused some meta data to be generated, which will be stored if the"
-                        "state machine is saved.")
+        with self.model.state_machine.modification_lock():
+            hash_before = self.model.mutable_hash().digest()
+            self.setup_state(self.root_state_m, rel_pos=(10, 10))
+            hash_after = self.model.mutable_hash().digest()
+            if hash_before != hash_after:
+                self._meta_data_changed(None, self.root_state_m, 'append_initial_change', True)
+                logger.info("Opening the state machine caused some meta data to be generated, which will be stored if the"
+                            "state machine is saved.")
 
     @lock_state_machine
     def setup_state(self, state_m, parent=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
