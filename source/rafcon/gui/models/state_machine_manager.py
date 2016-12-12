@@ -85,7 +85,6 @@ class StateMachineManagerModel(ModelMT, Observable):
                     with sm.modification_lock():
                         self.state_machines[sm_id] = StateMachineModel(sm, self)
                         self.selected_state_machine_id = sm_id
-            print "=> state machine model added"
         elif info["method_name"] == "remove_state_machine":
             sm_id_to_delete = None
             for sm_id, sm_m in self.state_machines.iteritems():
