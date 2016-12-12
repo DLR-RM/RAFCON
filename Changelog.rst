@@ -1,6 +1,13 @@
 Patch releases 0.8.\*
 =====================
 
+0.8.3
+-----
+
+-Bug Fixes:
+  - fix copy paste of library states, consisting of containers
+  - fix error output of not matching output data types
+
 0.8.2
 -----
 
