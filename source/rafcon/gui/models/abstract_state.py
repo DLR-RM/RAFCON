@@ -316,8 +316,6 @@ class AbstractStateModel(ModelMT, Hashable):
         try:
             tmp_meta = storage.load_data_file(path_meta_data)
         except ValueError:
-            # raise
-            # print "AbstractState_load_meta_data: skipped meta data for library state"
             tmp_meta = {}
 
         # JSON returns a dict, which must be converted to a Vividict
