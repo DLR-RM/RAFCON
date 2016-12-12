@@ -102,17 +102,36 @@ def call_gui_callback(callback, *args):
     condition.release()
 
 
-def start_rafcon():
-    # import gui modules only if necessary
+def initialize_rafcon(core_config=None, gui_config=None, libraries=None):
+    from rafcon.core.config import global_config
+    from rafcon.core.singleton import library_manager, state_machine_manager
     from rafcon.gui.config import global_gui_config
     from rafcon.gui.start import signal_handler
+
     test_multithreading_lock.acquire()
-    signal.signal(signal.SIGINT, signal_handler)
+
     global_config.load()
     global_gui_config.load()
-    environ['RAFCON_LIB_PATH'] = join(dirname(RAFCON_PATH), 'libraries')
-    rafcon.core.singleton.library_manager.initialize()
-    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+    if isinstance(core_config, dict):
+        for key, value in core_config.iteritems():
+            global_config.set_config_value(key, value)
+    if isinstance(gui_config, dict):
+        for key, value in gui_config.iteritems():
+            global_gui_config.set_config_value(key, value)
+
+    rafcon_library_path = join(dirname(RAFCON_PATH), 'libraries')
+    remove_all_libraries()
+    if not isinstance(libraries, dict):
+        libraries = {}
+    if not "generic" in libraries:
+        libraries["generic"] = join(rafcon_library_path, 'generic')
+    global_config.set_config_value("LIBRARY_PATHS", libraries)
+    environ['RAFCON_LIB_PATH'] = rafcon_library_path
+    library_manager.initialize()
+    state_machine_manager.delete_all_state_machines()
+
+    signal.signal(signal.SIGINT, signal_handler)
+
 
 def wait_for_gui():
     import gtk
