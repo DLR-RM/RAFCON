@@ -1,10 +1,11 @@
 
 On this page, we collect Frequently Ask Questions (FAQ) about
 `RAFCON <home.rst>`__. At the moment, there are three categories of
-questions concerning `#Core <#Core>`__, `#API <#API>`__ or
-`#GUI <#GUI>`__. If you have a new question, please feel free to add
-those to the section `#New Questions <#New_Questions>`__.
+questions concerning `#Core <CoreAnchor_>`__, `#API <APIAnchor_>`__ or
+`#GUI <GUIAnchor_>`__. If you have a new question, please feel free to add
+those to the section `#New Questions <NewQuestionsAnchor?>`__.
 
+.. _CoreAnchor:
 Core
 ====
 
@@ -249,6 +250,7 @@ cannot be used. **Tipp:** If you want to navigate within the file
 system, open the `state machine tree <RAFCON/GUI_Guide#State_Machine_Tree>`__ of the according state
 machine in the GUI. There you will find the ids of the states.
 
+.. _APIAnchor:
 API
 ===
 
@@ -263,6 +265,7 @@ see ``$RAFCON_GIT_REPO_PATH/share/examples/api``. Many more examples of
 how to create a state machine using the python API can be found in
 ``$RAFCON_GIT_REPO_PATH/source/test/common``.
 
+.. _GUIAnchor:
 GUI
 ===
 
@@ -289,6 +292,7 @@ into which you want to move your copied state. Make sure the target
 state is of type Hierarchy or Concurrency. With Ctrl+V or Edit => Paste,
 the original state is moved into the target state.
 
+.. _NewQuestionsAnchor:
 New Questions
 =============
 
