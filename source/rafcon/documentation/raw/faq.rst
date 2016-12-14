@@ -50,14 +50,18 @@ How does execution control – including stepping mode – work?
 In the execution widget below the graphical editor, the execution of a
 state machine can be controlled.
 
-.. figure:: rafcon_execution_buttons.png
+.. figure:: Rafcon_execution_buttons.png
    :alt: Screenshot of RAFCON with an example state machine
+   :scale: 50 %
+   :align: center
 
 Here the user can start, pause and stop the state machine. Furthermore,
 a step mode can be activated.
 
-.. figure:: rafcon_execution_buttons_broad.png
+.. figure:: Rafcon_execution_buttons_broad.png
    :alt: Screenshot of RAFCON with an example state machine
+   :scale: 50 %
+   :align: center
 
 In the step mode, the use now can trigger four kinds of step: "Step
 Into", "Step Over", "Step Out", "Backward Step".
