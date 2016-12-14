@@ -7,11 +7,9 @@
 
 
 """
-
-
 import os
 import shutil
-from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
+from os.path import realpath, dirname, join, expanduser
 
 
 def create_path(path):
@@ -93,3 +91,16 @@ def get_home_path():
         home_path = join(home_path, ".config", "rafcon")
     else:
         home_path = 'None'
+
+
+def read_version_from_pt_file():
+    import rafcon
+    pt_file_name = 'rafcon.pt'
+    pt_file_path = join(dirname(dirname(dirname(realpath(rafcon.__file__)))), pt_file_name)
+    with open(pt_file_path) as pt_file:
+        for line in pt_file:
+            if line.strip().startswith('VERSION'):
+                parts = line.split('=')
+                version = parts[1].strip()
+                return version
+    return 0

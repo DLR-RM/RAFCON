@@ -5,18 +5,7 @@ from setuptools.command.test import test as TestCommand
 from os import path
 import os
 import sys
-
-
-def read_version_from_pt_file():
-    pt_file_name = 'rafcon.pt'
-    pt_file_path = path.join(path.dirname(path.realpath(__file__)), pt_file_name)
-    with open(pt_file_path) as pt_file:
-        for line in pt_file:
-            if line.strip().startswith('VERSION'):
-                parts = line.split('=')
-                version = parts[1].strip()
-                return version
-    return 0
+from rafcon.utils.filesystem import read_version_from_pt_file
 
 
 class PyTest(TestCommand):
