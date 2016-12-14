@@ -2,7 +2,7 @@
 On this page, we collect Frequently Ask Questions (FAQ) about
 `RAFCON <home.rst>`__. At the moment, there are three categories of
 questions concerning `#Core <CoreAnchor_>`__, `#API <APIAnchor_>`__ or
-`#GUI <GUIAnchor_>`__. If you have a new question, please feel free to add
+`GUI`_. If you have a new question, please feel free to add
 those to the section `#New Questions <NewQuestionsAnchor?>`__.
 
 .. _CoreAnchor:
