@@ -231,7 +231,10 @@ class SourceEditorController(EditorController):
         args = ["--rcfile={}".format(lint_config_file)]  # put your own here
         with contextlib.closing(StringIO()) as dummy_buffer:
             json_report = JSONReporter(dummy_buffer)
-            lint.Run([self.tmp_file] + args, reporter=json_report, exit=False)
+            try:
+                lint.Run([self.tmp_file] + args, reporter=json_report, exit=False)
+            except:
+                logger.exception("Could not run linter to check script")
         os.remove(self.tmp_file)
 
         if json_report.messages:
