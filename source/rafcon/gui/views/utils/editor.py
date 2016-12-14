@@ -135,7 +135,7 @@ class EditorView(View):
     def set_cursor_position(self, line_number, line_offset):
         text_buffer = self.get_buffer()
         new_p_iter = text_buffer.get_iter_at_line(line_number)
-        if new_p_iter.get_chars_in_line() > line_offset or line_offset == 0 and new_p_iter.get_chars_in_line() == 0:
+        if new_p_iter.get_chars_in_line() >= line_offset:
             new_p_iter = text_buffer.get_iter_at_line_offset(line_number, line_offset)
         else:
             logger.debug("Line has not enough chars {0} {1}".format((line_number, line_offset), new_p_iter.get_chars_in_line()))
