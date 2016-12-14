@@ -344,8 +344,6 @@ page, too).
 Upcoming features
 =================
 
-**Actual**
-
 -  Corporate Design with DLR look and feel (started by
    `Matthias <User:Buet_ma>`__, reached intermediate goal and continued
    by `Franz <User:Stei_fn>`__)
@@ -355,26 +353,7 @@ Upcoming features
 -  Differentiation between soft (controlled shutdown of the statemachine
    with possibly execution of clean up states) and hard stops (state
    machine has to stop as fast as possible to prevent damage)
-
-**Suspended**
-
--  Workspace (SUSPENDED -> at the moment of no interest)
-
-**Former**
-
--  [STRIKEOUT:Modification History Tree (with branches) in the Graphical
-   View] (`Rico <User:Beld_rc>`__) see -> `GUI
-   Guide <RAFCON/GUI_Guide>`__
--  [STRIKEOUT:Support for data flows and transitions to snap to 45°
-   directions] Done! (`Franz <User:Stei_fn>`__)
--  [STRIKEOUT:Multiselection] Done! (`Franz <User:Stei_fn>`__)
--  [STRIKEOUT:Different logging levels selectable in console + colors]
-   (`Matthias <User:Buet_ma>`__)
--  [STRIKEOUT:Descriptions fields for libraries] Done!
-   (`Franz <User:Stei_fn>`__)
--  [STRIKEOUT:Execution History] Done! (`Sebastian <User:Brun_sb>`__)
--  [STRIKEOUT:Drag'n'Drop] Done! (`Annika <User:woll_an>`__)
--  [STRIKEOUT:(Un-)dockable sidebars] Done! (`Mahmoud <User:akl_ma>`__)
+-  See the `RAFCON issues on github <https://rmc-github.robotic.dlr.de/common/rafcon/issues>`__ for further features
 
 GIT repository
 ==============
