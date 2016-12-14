@@ -272,7 +272,7 @@ Configuration
 
 RAFCON can be configured using the config file in your home directory
 (``~/.config/rafcon/[gui_]config.yaml``). For more information, see the
-`configuration page <RAFCON/Configuration>`__.
+`configuration page <configuration.rst>`__.
 
 API
 ===
