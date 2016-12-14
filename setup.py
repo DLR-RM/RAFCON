@@ -75,6 +75,6 @@ setup(
 
     tests_require=['pytest'],
 
-    cmdclass={'test': PyTest},
+    cmdclass={'test': PyTest}, install_requires=['astroid', 'pylint', 'yaml']
 )
 
