@@ -12,7 +12,7 @@ simple state-machine printing the lyrics of "99 Bottles of Beer", a
 `slightly advanced version of a Hello World
 program <http://en.wikipedia.org/wiki/99_Bottles_of_Beer#References_in_science>`__.
 The purpose is to give a first impression of how to create programs with
-`RAFCON <RAFCON>`__, how to create loops and illustrate different ways
+`RAFCON <home.rst>`__, how to create loops and illustrate different ways
 of achieving things in RAFCON.
 
 #. Start with a new state machine (first button in the tool bar or File
@@ -255,7 +255,7 @@ We edit the ``LIBRARY_PATH`` to take into account the library with name
 
 RAFCON assumes the path to be existing, so make sure it is.
 
-Now, we can `start RAFCON <RAFCON/Getting_Started>`__. On the left side
+Now, we can `start RAFCON <getting_started.rst>`__. On the left side
 in the Library Tree, you can now see the new entry ``lib_tutorial``,
 which is currently empty (see Figure above).
 
@@ -325,7 +325,7 @@ machines, e. g. ``~/Desktop/rafcon_tutorial_library``. These libraries
 will also be loaded. The name of these libraries is equivalent to the
 name of the folder, thus in this case ``rafcon_tutorial_library``. This
 approach is especially useful if you release your libraries using
-`RMPM <RMPM>`__. In the PT-file, you can append the path of the library
+`RMPM <https://rmintra01.robotic.dlr.de/wiki/Rmpm>`__. In the PT-file, you can append the path of the library
 to ``RAFCON_LIBRARY_PATH`` and do not have to modify the config file of
 the user.
 
@@ -412,8 +412,8 @@ environment:
 By running RAFCON after sourcing the environment, the
 ``network_config.yaml`` is automatically generated in our home folder:
 ``~.config/rafcon/`` if it does not already exist. This file contains
-all settings for the communication. More details can be found at
-`RAFCON/Configuration <RAFCON/Configuration>`__. The path of the
+all settings for the communication. More details can be found at the
+`configuration page <configuration.rst>`__. The path of the
 ``network_config.yaml`` can be changed by running the ``start.py``
 script with argument "-nc", which will be neccessary when we want to
 connect server and client running on a single system as like in this
@@ -453,4 +453,4 @@ be adjusted within the ``network_config.yaml`` files.
 How to use the Edit History
 ===========================
 
-Moved to `RAFCON/GUI Guide <RAFCON/GUI_Guide>`__.
+Moved to `GUI Guide <gui_guide.rst>`__.
