@@ -2,7 +2,7 @@
 `RAFCON <home.rst>`__ is getting closer to a "public" release version.
 Therefore, we now try to create beta release versions regularly. The
 versions can be found both on
-[GitHub](https://rmc-github.robotic.dlr.de/common/rafcon/releases) and
+`GitHub <https://rmc-github.robotic.dlr.de/common/rafcon/releases>`__ and
 on `RMPM <https://rmintra01.robotic.dlr.de/wiki/Rmpm>`__ (software.common.rafcon).
 
 Information about changes in each release will be published here. More
