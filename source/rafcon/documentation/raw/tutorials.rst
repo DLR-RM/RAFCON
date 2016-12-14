@@ -2,7 +2,12 @@
 99 Bottles of Beer. Or: How to create a simple state-machine containing a loop
 ==============================================================================
 
-|Screenshot of the finished tutorial| In this tutorial we create a
+.. figure:: Tutorial_99_Bottles_of_Beer.png
+   :alt: Screenshot of the finished tutorial
+   :scale: 30 %
+   :align: right
+
+In this tutorial we create a
 simple state-machine printing the lyrics of "99 Bottles of Beer", a
 `slightly advanced version of a Hello World
 program <http://en.wikipedia.org/wiki/99_Bottles_of_Beer#References_in_science>`__.
@@ -186,8 +191,8 @@ A screenshot of how the state machine how it looks like is shown here.
 
 .. figure:: BasicTurtleDemoScreenshot.png
    :alt: Screenshot of RAFCON with an example state machine
-
-   Screenshot of RAFCON with an example state machine
+   :scale: 30 %
+   :align: right
 
 Next start a roscore in another console:
 
@@ -220,9 +225,13 @@ Option 1
 --------
 
 This can be done in the `configuration of the
-core <RAFCON/Configuration#Core_configuration>`__.
+core <https://rmintra01.robotic.dlr.de/wiki/RAFCON/Configuration#Core_configuration>`__.
 
-|Screenshot of a empty library path and created 'Wait' state machine.|
+.. figure:: EmptyLibraryPath_and_NewLibrary.jpg
+   :alt: Screenshot of a empty library path and created 'Wait' state machine.
+   :scale: 30 %
+   :align: right
+
 Let's add a new library path to our config file, which by default looks
 like this:
 
@@ -284,6 +293,8 @@ to test there functionality.
 
 .. figure:: ReCombinedLibraries.jpg
    :alt: Screenshot of the finished tutorial
+   :scale: 30 %
+   :align: right
 
    Screenshot of the finished tutorial
 
@@ -326,8 +337,8 @@ state is explained.
 
 .. figure:: BarrierConcurrencyState.png 
    :alt: Screenshot of RAFCON with an example state machine
-
-   Screenshot of RAFCON with an example state machine
+   :scale: 30 %
+   :align: right
 
 At first create the state and transition structure shown in the above
 image. The State called "Barrier Concurrency" is a barrier concurrency
@@ -443,6 +454,3 @@ How to use the Edit History
 ===========================
 
 Moved to `RAFCON/GUI Guide <RAFCON/GUI_Guide>`__.
-
-.. |Screenshot of the finished tutorial| image:: Tutorial 99 Bottles of Beer.png
-.. |Screenshot of a empty library path and created 'Wait' state machine.| image:: EmptyLibraryPath_and_NewLibrary.jpg
