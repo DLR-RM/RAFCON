@@ -71,29 +71,3 @@ class LibraryStateModel(AbstractStateModel):
         self.outcomes = []
         for outcome in self.state.outcomes.itervalues():
             self.outcomes.append(OutcomeModel(outcome, self))
-
-    # ---------------------------------------- meta data methods ---------------------------------------------
-
-    def load_meta_data(self, path=None):
-        """Load meta data of container states from filesystem
-
-        Recursively loads meta data of child states.
-        """
-        super(LibraryStateModel, self).load_meta_data(path)
-        lib_os_path, _, _ = library_manager.get_os_path_to_library(self.state.library_path,
-                                                                   self.state.library_name)
-        if self.state.get_sm_for_state():
-            # TODO: needs to be tested
-            if self.state.get_sm_for_state().supports_saving_state_names:
-                root_state_path = join(lib_os_path, get_storage_id_for_state(self.state_copy.state))
-                # print "LibraryStateModel: ", root_state_path
-                import os
-                if not os.path.exists(root_state_path):
-                    root_state_path = join(lib_os_path, get_storage_id_for_state(self.state_copy.state, old_delimiter=True))
-                # was:
-                # root_state_path = join(lib_os_path, get_storage_id_for_state(self.state_copy.state))
-            else:
-                root_state_path = join(lib_os_path, self.state_copy.state.state_id)
-        else:
-            root_state_path = join(lib_os_path, self.state_copy.state.state_id)
-        self.state_copy.load_meta_data(root_state_path)
