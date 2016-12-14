@@ -6,10 +6,10 @@
 RAFCON (**R**\ MC **a**\ wesome [or advanced] **F**\ low **Con**\ trol,
 new name, aka Awesome tool) is an effort of DLR RMC to create a new flow
 control tool, based on existing ones. On the wiki page
-`Ablaufsteuerung <Ablaufsteuerung>`__, you can follow the previous
+`Ablaufsteuerung <https://rmintra01.robotic.dlr.de/wiki/Ablaufsteuerung>`__, you can follow the previous
 discussions that led to this tool. Summing up, the target of this
 software is to combine the advantages and features of flow control tools
-like `Bubbles <Bubbles>`__ or `SMACH <http://wiki.ros.org/smach>`__
+like `Bubbles <https://rmintra01.robotic.dlr.de/wiki/Bubbles>`__ or `SMACH <http://wiki.ros.org/smach>`__
 without inheriting their drawbacks.
 
 RAFCON is designed and coded from scratch. The architecture was
@@ -19,7 +19,7 @@ g. allowing the core flow control part from being executed independently
 from any GUI.
 
 RAFCON is actively being used, for example for the `SBC <SBC>`__, for
-`SMErobotics <SMErobotics>`__ or in the context of `HCR <HCR>`__. You
+`SMErobotics <https://rmintra01.robotic.dlr.de/wiki/SMErobotics>`__ or in the context of `HCR <https://rmintra01.robotic.dlr.de/wiki/HCR>`__. You
 can use it as a kind of mission control center, for autonomous mobile
 robots, for skill programming and many more things.
 
