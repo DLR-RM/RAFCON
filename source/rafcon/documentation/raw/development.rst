@@ -1,6 +1,6 @@
 
 This page is intended as a public discussion for the development of new
-features in `RAFCON <RAFCON>`__.
+features in `RAFCON <home.rst>`__.
 
 Run core on a different host than the GUI host
 ==============================================
@@ -54,7 +54,7 @@ Messaging Libraries
 
 Minimum requirements:
 
--  Support for at least `C(++) <C++>`__ and `Python <Python>`__
+-  Support for at least `C(++) <http://www.cplusplus.com/>`__ and `Python <https://www.python.org/>`__
 -  lightweight
 -  Open Source
 
