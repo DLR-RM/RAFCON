@@ -63,6 +63,10 @@ ScopedVariableModel (in scoped_variable)
 
 .. automodule:: rafcon.gui.models.scoped_variable
 
+Selection (in selection)
+------------------------
+.. automodule:: rafcon.gui.models.selection
+
 
 OutcomeModel (in outcome)
 -------------------------

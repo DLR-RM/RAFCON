@@ -41,7 +41,7 @@ class Clipboard(Observable):
         """ Copy all selected items to the clipboard using smart selection adaptation by default
         
         :param selection: the current selection
-        .param bool smart_selection_adaption: flag to enable smart selection adaptation mode
+        :param bool smart_selection_adaption: flag to enable smart selection adaptation mode
         :return:
         """
         assert isinstance(selection, Selection)
@@ -52,7 +52,7 @@ class Clipboard(Observable):
         """Cuts all selected items and copy them to the clipboard using smart selection adaptation by default
 
         :param selection: the current selection
-        .param bool smart_selection_adaption: flag to enable smart selection adaptation mode
+        :param bool smart_selection_adaption: flag to enable smart selection adaptation mode
         :return:
         """
         assert isinstance(selection, Selection)

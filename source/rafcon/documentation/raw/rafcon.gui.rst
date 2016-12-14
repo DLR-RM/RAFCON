@@ -28,13 +28,6 @@ clipboard
     :undoc-members:
     :show-inheritance:
 
-selection
----------
-.. automodule:: rafcon.gui.selection
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 shortcut_manager
 ----------------
 .. automodule:: rafcon.gui.shortcut_manager

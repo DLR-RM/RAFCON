@@ -45,7 +45,6 @@ def reduce_to_parent_states(models):
 class Selection(ModelMT):
     """This class contains the selected item (States, Transitions and Data Flows) of a state_machine
 
-    :param set __selected: The state machine elements selected
     """
     __selected = None
     _input_data_ports = None

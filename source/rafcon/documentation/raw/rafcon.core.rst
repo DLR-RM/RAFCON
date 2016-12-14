@@ -22,9 +22,9 @@ custom_exceptions
 -----------------
 .. automodule:: rafcon.core.custom_exceptions
 
-enums
------
-.. automodule:: rafcon.core.enums
+constants
+---------
+.. automodule:: rafcon.core.constants
 
 global_variable_manager
 -----------------------

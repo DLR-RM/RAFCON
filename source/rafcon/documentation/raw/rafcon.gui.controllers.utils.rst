@@ -14,10 +14,6 @@ ExtendedController (in extended_controller)
 
 .. automodule:: rafcon.gui.controllers.utils.extended_controller
 
-SelectionFeatureControllers (in selection)
-------------------------------------------
-
-.. automodule:: rafcon.gui.controllers.utils.selection
 
 SingleWidgetWindowController (in single_widget_window)
 ------------------------------------------------------
