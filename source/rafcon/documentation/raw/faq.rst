@@ -41,8 +41,7 @@ concurrency state is not possible in RAFCON, except by using global
 variables (please use them with care, as heavily using them quickly
 leads to a bad state machine design).
 
-See also `How does preemption work? How do I implement preemptable states correctly? 
-<RAFCON/FAQ#How_does_preemption_work.3F_How_do_I_implement_preemptable_states_correctly.3F>`__
+See also `How does preemption work? How do I implement preemptable states correctly?`_
 
 How does execution control – including stepping mode – work?
 ------------------------------------------------------------
@@ -108,8 +107,7 @@ state does not stop the thread of the state itself. It only triggers a
 preempted-event of each state.
 
 For information on how to correctly listen to pause or preempted events
-inside a state, see `the questions further
-down <RAFCON/FAQ#What_happens_if_the_state_machine_is_paused.3F_How_can_I_pause_running_services.2C_e._g._the_robot.3F>`__.
+inside a state, see `What happens if the state machine is paused? How can I pause running services, e. g. the robot?`_.
 
 How does preemption work? How do I implement preemptable states correctly?
 --------------------------------------------------------------------------
@@ -250,7 +248,7 @@ The name of a folder within a state machine folder or child state folder
 agrees with the id of the state it represents. We agree that this is not
 very human readable, but the name of a state is not unique, so this
 cannot be used. **Tipp:** If you want to navigate within the file
-system, open the `state machine tree <RAFCON/GUI_Guide#State_Machine_Tree>`__ of the according state
+system, open the `state machine tree <gui_guide.rst#state-machine-tree>`__ of the according state
 machine in the GUI. There you will find the ids of the states.
 
 API
