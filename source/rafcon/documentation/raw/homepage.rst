@@ -12,8 +12,10 @@ German
 Teaser
 ------
 
-.. figure:: Preview RAFCON for website.png
+.. figure:: Preview_RAFCON_for_website.png
    :alt: Preview RAFCON for website
+   :scale: 30 %
+   :align: left
 
 \ **RAFCON: visuelle Programmierung von Zustandsmaschinen**\ 
 
@@ -31,8 +33,10 @@ Abläufen.
 Single page
 -----------
 
-.. figure:: Preview RAFCON for website.png
+.. figure:: Preview_RAFCON_for_website.png
    :alt: Screenshot einer beispielhaften RAFCON Zustandsmaschine
+   :scale: 30 %
+   :align: left
 
 \ **RAFCON**\ 
 
@@ -86,10 +90,10 @@ Wir planen RAFCON unter einer Open Source Lizenz auf GitHub zu
 veröffentlichen. Zurzeit beheben wir noch kritische Fehler, verbessern
 die Dokumentation und diskutieren ein geeignetes Lizenzmodell.
 
-.. figure:: Complex RAFCON state machine.png
+.. figure:: Complex_RAFCON_state_machine.png
    :alt: Screenshot einer relativen komplexen Zustandsmaschine, aus der komplett herausgezoomt wurde
-
-.. raw:: mediawiki
+   :scale: 60 %
+   :align: left
 
    {{clear}}
 
@@ -99,8 +103,10 @@ English
 Teaser
 ------
 
-.. figure:: Preview RAFCON for website.png
+.. figure:: Preview_RAFCON_for_website.png
    :alt: Preview RAFCON for website
+   :scale: 30 %
+   :align: left
 
 \ **RAFCON: visual state machine programming**\ 
 
@@ -117,8 +123,10 @@ task development.
 Single page
 -----------
 
-.. figure:: Preview RAFCON for website.png
+.. figure:: Preview_RAFCON_for_website.png
    :alt: Screenshot of RAFCON with an example state machine
+   :scale: 30 %
+   :align: left
 
 \ **RAFCON**\ 
 
@@ -164,5 +172,7 @@ We plan to release RAFCON as open source software on GitHub. Currently,
 we are trying to fix the most critical issues, improve the documentation
 and think about the right license.
 
-.. figure:: Complex RAFCON state machine.png
+.. figure:: Complex_RAFCON_state_machine.png
    :alt: Screenshot of a rather complex RAFCON state machine, fully zoomed out
+   :scale: 60 %
+   :align: left
