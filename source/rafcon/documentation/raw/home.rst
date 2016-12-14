@@ -1,6 +1,8 @@
-.. figure:: Awesome tool.png
+.. figure:: RAFCON_GUI_screenshot.png
+   :scale: 30 %
    :alt: Screenshot of RAFCON with an example state machine
-
+   :align: right
+   
 RAFCON (**R**\ MC **a**\ wesome [or advanced] **F**\ low **Con**\ trol,
 new name, aka Awesome tool) is an effort of DLR RMC to create a new flow
 control tool, based on existing ones. On the wiki page
