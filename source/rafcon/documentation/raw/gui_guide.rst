@@ -1,5 +1,5 @@
 
-At this point a common guide for the `RAFCON <RAFCON>`__-GUI will be
+At this point a common guide for the `RAFCON <home.rst>`__-GUI will be
 generated. The page contains advises of how to use the widgets
 effectively and will be updated with new features of widgets and their
 usage.
@@ -12,7 +12,7 @@ Library Tree
 
 The Library tree shows all library mounted by the LIBRARY\_PATH defined
 in your configuration file, see
-`RAFCON/Configuration <RAFCON/Configuration>`__.Sub-library paths unfold
+`RAFCON/Configuration <configuration.rst>`__.Sub-library paths unfold
 and fold by double-click and a library directly is open by double-click
 it. A right-click on the row of a library element opens a menu with the
 options "Add as Library", "Add as template", "Open" and "Open and run".
@@ -31,7 +31,7 @@ state. A state is selected if respective row becomes selected and the
 row of a state becomes selected if the state becomes selected by another
 widget. A selected state can be removed by pressing the delete-shortcut
 or a state can be added into a selected state/row by pressing the
-add-shortcut. See `RAFCON/Configuration <RAFCON/Configuration>`__ to
+add-shortcut. See `RAFCON/Configuration <configuration.rst>`__ to
 define those shortcuts.
 
 Global Variable Manager
@@ -45,7 +45,7 @@ move by using "shift-tab" or "tab" to confirm a change of a specific
 element. A selected global variable can be removed by pressing the
 delete-shortcut or a state can be added into a selected variable/row by
 pressing the add-shortcut. See
-`RAFCON/Configuration <RAFCON/Configuration>`__ to define those
+`RAFCON/Configuration <configuration.rst>`__ to define those
 shortcuts.
 
 Modification History
@@ -104,7 +104,7 @@ There are two different graphical editors for editing a state machine.
 Originally, the editor used OpenGL and was rather ugly. This is still
 the default editor. It is currently being replaced by an editor using
 the Python library "Gaphas". The `configuration
-documentation <RAFCON/Configuration#GUI_configuration>`__ explains how
+documentation <configuration.rst>`__ explains how
 to switch between the two editors.
 
 The Gaphas graphical editor is more advanced than the OpenGL one and
