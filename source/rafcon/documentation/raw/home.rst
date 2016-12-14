@@ -1,3 +1,20 @@
+
+.. figure:: RAFCON_Logo_Farbe_RGB.png
+   :alt: Official RAFCON logo
+
+-  `RAFCON <home.rst>`__
+
+   -  `Getting Started <getting_started.rst>`__
+   -  `Changelog <changelog.rst>`__
+   -  `Tutorials <tutorials.rst>`__
+   -  `Configuration <configuration.rst>`__
+   -  `Plugins <plugins.rst>`__
+   -  `GUI Guide <gui_guide.rst>`__
+   -  `FAQ <faq.rst>`__
+   -  `Development <development.rst>`__
+   -  `Homepage <homepage.rst>`__
+   -  `Meetings <meetings.rst>`_
+
 .. figure:: RAFCON_GUI_screenshot.png
    :scale: 30 %
    :alt: Screenshot of RAFCON with an example state machine
