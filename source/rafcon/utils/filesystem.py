@@ -88,9 +88,8 @@ def write_file(file_path, content, create_full_path=False):
 def get_home_path():
     home_path = expanduser('~')
     if home_path:
-        home_path = join(home_path, ".config", "rafcon")
-    else:
-        home_path = 'None'
+        return join(home_path, ".config", "rafcon")
+    return None
 
 
 def read_version_from_pt_file():
