@@ -12,13 +12,18 @@ import os
 import subprocess
 import gtk
 import shlex
-from pylint import epylint as lint
+import contextlib
+from pylint import lint
+from pylint.reporters.json import JSONReporter
+from cStringIO import StringIO
+from astroid import MANAGER
 
 from rafcon.core.states.library_state import LibraryState
 
 from rafcon.gui.controllers.utils.editor import EditorController
 from rafcon.gui.singleton import state_machine_manager_model
 from rafcon.gui.config import global_gui_config
+from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
 from rafcon.utils import filesystem
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
@@ -41,7 +46,6 @@ class SourceEditorController(EditorController):
     def __init__(self, model, view):
         """Constructor"""
         super(SourceEditorController, self).__init__(model, view, observed_method="script_text")
-        self.not_pylint_compatible_modules = ["links_and_nodes"]
 
     def register_view(self, view):
         super(SourceEditorController, self).register_view(view)
@@ -211,51 +215,39 @@ class SourceEditorController(EditorController):
 
         # get script
         current_text = self.view.get_text()
+
+        # Directly apply script if linter was deactivated
         if not self.view['pylint_check_button'].get_active():
             self.set_script_text(current_text)
             return
 
         logger.debug("Parsing execute script...")
+        with open(self.tmp_file, "w") as text_file:
+            text_file.write(current_text)
 
-        # do syntax-check on script
-        text_file = open(self.tmp_file, "w")
-        text_file.write(current_text)
-        text_file.close()
-
-        (pylint_stdout, pylint_stderr) = lint.py_run(
-            self.tmp_file + " --errors-only --disable=print-statement ",
-            True, script="epylint")
-        # the extension-pkg-whitelist= parameter does not work for the no-member errors of links_and_nodes
+        # clear astroid module cache, see http://stackoverflow.com/questions/22241435/pylint-discard-cached-file-state
+        MANAGER.astroid_cache.clear()
+        lint_config_file = os.path.join(os.environ['RAFCON_PATH'], "pylintrc")
+        args = ["--rcfile={}".format(lint_config_file)]  # put your own here
+        with contextlib.closing(StringIO()) as dummy_buffer:
+            json_report = JSONReporter(dummy_buffer)
+            lint.Run([self.tmp_file] + args, reporter=json_report, exit=False)
         os.remove(self.tmp_file)
 
-        pylint_stdout_data = pylint_stdout.readlines()
-        pylint_stderr_data = pylint_stderr.readlines()
-
-        invalid_sytax = False
-        for elem in pylint_stdout_data:
-            if "error" in elem:
-                if self.filter_out_not_compatible_modules(elem):
-                    invalid_sytax = True
-
-        if invalid_sytax:
-
-            def on_message_dialog_response_signal(widget, response_id, current_text):
-                if response_id == 42:
+        if json_report.messages:
+            def on_message_dialog_response_signal(widget, response_id):
+                if response_id == ButtonDialog.OPTION_1.value:
                     self.set_script_text(current_text)
                 else:
                     logger.debug("The script was not saved")
                 widget.destroy()
 
-            from rafcon.gui.utils.dialog import RAFCONDialog
-            dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             message_string = "Are you sure that you want to save this file?\n\nThe following errors were found:"
 
             line = None
-            for elem in pylint_stdout_data:
-                if "error" in elem:
-                    if self.filter_out_not_compatible_modules(elem):
-                        (error_string, line, error) = self.format_error_string(str(elem))
-                        message_string += "\n\n" + error_string
+            for message in json_report.messages:
+                (error_string, line) = self.format_error_string(message)
+                message_string += "\n\n" + error_string
 
             # focus line of error
             if line:
@@ -270,29 +262,12 @@ class SourceEditorController(EditorController):
             if sm_m.selection.get_selected_state() is not self.model:
                 sm_m.selection.set(self.model)
 
-            dialog.set_markup(message_string)
-            dialog.add_button("Save with errors", 42)
-            dialog.add_button("Do not save", 43)
-            dialog.finalize(on_message_dialog_response_signal, current_text)
+            RAFCONButtonDialog(message_string, ["Save with errors", "Do not save"],
+                               on_message_dialog_response_signal,
+                               type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
         else:
             self.set_script_text(current_text)
 
-    def filter_out_not_compatible_modules(self, pylint_msg):
-        """This method filters out every pylint message that addresses an error of a module that is explicitly ignored
-        and added to  self.not_pylint_compatible_modules.
-
-        :param pylint_msg: the pylint message to be filtered
-        :return:
-        """
-        for elem in self.not_pylint_compatible_modules:
-            if elem in pylint_msg:
-                return False
-        return True
-
-    def format_error_string(self, error_string):
-        error_string = error_string.replace(self.tmp_file, '', 1)
-        error_parts = error_string.split(':')
-        line = error_parts[1]
-        error_parts = error_parts[2].split(')')
-        error = error_parts[1]
-        return "Line " + line + ": " + error, line, error
+    @staticmethod
+    def format_error_string(message):
+        return "Line {}: {} ({})".format(message["line"], message["message"], message["symbol"]), message["line"]
