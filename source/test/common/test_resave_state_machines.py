@@ -11,7 +11,8 @@ def test_library_resave():
     config_path = join(rafcon.__path__[0], "..", "test", "common", "configs_for_start_script_test", "valid_config")
     library_folder = join(rafcon.__path__[0], "..", "libraries", "generic")
     target_folder = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "resave_test", "test_library_resave")
-    cmd = sys.executable + " %s %s %s %s" % (script, config_path, library_folder, target_folder)
+    cmd = "PYTHONPATH={}:$PYTHONPATH".format(dirname(rafcon.__path__[0]))
+    cmd += " && " + sys.executable + " %s %s %s %s" % (script, config_path, library_folder, target_folder)
     cmd_res = subprocess.call(cmd, shell=True)
     assert cmd_res == 0
     import os.path

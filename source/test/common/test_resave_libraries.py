@@ -1,9 +1,7 @@
 import os
-from os.path import join, dirname, realpath
+from os.path import join
 import pytest
 
-import rafcon
-import rafcon.gui.singleton
 import rafcon.gui.resave_state_machines as resave
 import testing_utils
 
@@ -11,10 +9,7 @@ import testing_utils
 def test_resave(caplog):
     testing_utils.initialize_rafcon()
     testing_utils.remove_all_libraries()
-    RAFCON_PATH = realpath(rafcon.__path__[0])
-    TEST_SM_PATH = join(dirname(RAFCON_PATH), 'test_scripts')
-
-    folder_to_convert = join(TEST_SM_PATH, "tutorials")
+    folder_to_convert = testing_utils.get_test_sm_path("tutorials")
     target_folder = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "resave_test")
     config_path = join(os.path.dirname(os.path.abspath(__file__)), "config_path")
     print "folder to convert: " + folder_to_convert
