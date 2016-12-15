@@ -7,9 +7,10 @@ questions/problems/requests regarding RAFCON, you are welcome to join.
 2017-01-09
 ==========
 
--  discuss: `How to save state machines. Or: is
+- discuss: `How to save state machines. Or: is
    \_paths\_to\_remove\_before\_sm\_save
    required? <https://rmc-github.robotic.dlr.de/common/rafcon/issues/235>`__
+- discuss performance test; create issues for good architecture, coverage and automatic execution 
 
 2016-12-14
 ==========
