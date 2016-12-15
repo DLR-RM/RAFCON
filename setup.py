@@ -47,8 +47,6 @@ class PyTest(TestCommand):
         os.environ["PYTHONPATH"] = rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
         error_number = pytest.main(self.pytest_args + ['source/test/all'])
         sys.exit(error_number)
-
-
 setup(
     name='RAFCON',
     version=read_version_from_pt_file(),
@@ -74,7 +72,10 @@ setup(
     #                   'pyyaml'],
 
     tests_require=['pytest'],
+    install_requires=['astroid', 'pylint', 'pyyaml'],
 
-    cmdclass={'test': PyTest}, install_requires=['astroid', 'pylint', 'yaml']
+    cmdclass={'test': PyTest}
 )
+
+
 
