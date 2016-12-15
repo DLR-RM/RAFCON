@@ -33,7 +33,7 @@ import pytest
 logger = log.get_logger(__name__)
 
 
-def create_models(*args, **kargs):
+def create_state_machine(*args, **kargs):
 
     state1 = ExecutionState('State1')
     state2 = ExecutionState('State2')
@@ -60,7 +60,7 @@ def create_models(*args, **kargs):
     ctr_state.add_transition(state3.state_id, 0, ctr_state.state_id, 0)
     ctr_state.name = "Container"
 
-    return ctr_state
+    return StateMachine(ctr_state)
 
 
 def focus_graphical_editor_in_page(page):
@@ -301,8 +301,7 @@ def test_gui(caplog):
     library_paths["generic"] = join(rafcon.__path__[0], "../libraries/generic")
     rafcon.core.singleton.library_manager.refresh_libraries()
 
-    ctr_state = create_models()
-    state_machine = StateMachine(ctr_state)
+    state_machine = create_state_machine()
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
     testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model

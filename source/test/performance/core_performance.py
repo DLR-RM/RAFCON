@@ -24,7 +24,7 @@ def measure_time(func):
 
 
 @measure_time
-def create_hierarchy_state(number_child_states=10):
+def create_hierarchy_state(number_child_states=10, sleep=False):
     hierarchy = HierarchyState("hierarchy1")
     hierarchy.add_outcome("hierarchy_outcome", 1)
     hierarchy.add_input_data_port("hierarchy_input_port1", "float", 42.0)
@@ -32,7 +32,11 @@ def create_hierarchy_state(number_child_states=10):
     last_state = None
 
     for i in range(number_child_states):
-        state = ExecutionState("state" + str(i))
+        if sleep:
+            state = ExecutionState("state" + str(i), path=rafcon.__path__[0] + "/../test_scripts",
+                                   filename="hello_world_sleep.py")
+        else:
+            state = ExecutionState("state" + str(i))
         hierarchy.add_state(state)
         state.add_input_data_port("input1", "float")
         state.add_output_data_port("output1", "float")
@@ -66,6 +70,18 @@ def create_hierarchy_state(number_child_states=10):
     return hierarchy
 
 
+@measure_time
+def create_barrier_concurrency_state(number_child_states=10, number_childs_per_child=10):
+    barrier_state = BarrierConcurrencyState("barrier_concurrency")
+
+    for i in range(number_child_states):
+        hierarchy_state = create_hierarchy_state(number_childs_per_child)
+        barrier_state.add_state(hierarchy_state)
+
+    barrier_state.add_transition(barrier_state.states[UNIQUE_DECIDER_STATE_ID].state_id, 0, barrier_state.state_id, 0)
+    return barrier_state
+
+
 def execute_state(root_state):
     state_machine = StateMachine(root_state)
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
@@ -83,14 +99,7 @@ def test_hierarchy_state_execution(number_child_states):
 
 @measure_time
 def test_barrier_concurrency_state_execution(number_child_states=10, number_childs_per_child=10):
-
-    barrier_state = BarrierConcurrencyState("barrier_concurrency")
-
-    for i in range(number_child_states):
-        hierarchy_state = create_hierarchy_state(number_childs_per_child)
-        barrier_state.add_state(hierarchy_state)
-
-    barrier_state.add_transition(barrier_state.states[UNIQUE_DECIDER_STATE_ID].state_id, 0, barrier_state.state_id, 0)
+    barrier_state = create_barrier_concurrency_state(number_child_states, number_childs_per_child)
     execute_state(barrier_state)
 
 
