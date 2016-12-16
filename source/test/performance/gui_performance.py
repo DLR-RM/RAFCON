@@ -71,7 +71,7 @@ if __name__ == '__main__':
     # test_gui(10, execute=True)  # around 1.5 seconds
     # test_gui(100)  # around 10 seconds
     # TODO: executing states to fast without sleep or too less sleep leads to a recursion error
-    test_gui(13, execute=True, sleep=False)  # smallest state machine leading to recursion error
+    test_gui(100, execute=True, sleep=False)  # smallest state machine leading to recursion error
     # test_gui(50, execute=True, sleep=False)  # leads to recursion error
     # test_gui(100, execute=True, sleep=False)  # leads to recursion error
     # test_gui(80, execute=True, sleep=True)  # around 23.5 seconds
