@@ -1,8 +1,10 @@
+Getting started
+===============
 
 This guide will help you getting started with RAFCON.
 
 Start RAFCON with GUI
-=====================
+---------------------
 
 To run RAFCON (with GUI), just enter the following lines into your
 shell:
@@ -43,7 +45,7 @@ The output is:
                             use the default configuration. Default: None
 
 Run RAFCON state machine without GUI
-====================================
+------------------------------------
 
 You can also run RAFCON state machine without the GUI. For this, use the
 following commands:
@@ -80,7 +82,7 @@ The output is:
                             path of to the state that should be launched
 
 Get the latest version
-======================
+----------------------
 
 You also can checkout the source code and use the latest RAFCON version.
 
@@ -128,8 +130,8 @@ above. Hereby, ``rafcon_start`` just links to the file
 ``~/any/existing/path/rafcon/source/rafco/nmvc/start.py``, so you could
 also call these files directly.
 
-Use LN-Manager
-==============
+Using the LN-Manager
+--------------------
 
 Append the following code to your LN manager startup script.
 

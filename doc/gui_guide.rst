@@ -1,3 +1,5 @@
+GUI Guide
+=========
 
 At this point a common guide for the `RAFCON <home.rst>`__-GUI will be
 generated. The page contains advises of how to use the widgets
@@ -5,10 +7,10 @@ effectively and will be updated with new features of widgets and their
 usage.
 
 Left Bar
-========
+--------
 
 Library Tree
-------------
+""""""""""""
 
 The Library tree shows all library mounted by the LIBRARY\_PATH defined
 in your configuration file, see
@@ -23,7 +25,7 @@ The Library Tree can be reloaded by pressing the "Refresh"- or the
 "Refresh Libraries"-Button in the Menu-Bar or Tool-Bar, above.
 
 State Machine Tree
-------------------
+""""""""""""""""""
 
 The State Machine Tree (or "State Tree") shows all states that are in
 the actual selected state-machine, its state\_id and the type of the
@@ -35,7 +37,7 @@ add-shortcut. See `RAFCON/Configuration <configuration.rst>`__ to
 define those shortcuts.
 
 Global Variable Manager
------------------------
+"""""""""""""""""""""""
 
 The Global Varaible Widget shows all existing global variables, their
 names, values and if they are locked. The name and value can be edited
@@ -49,7 +51,7 @@ pressing the add-shortcut. See
 shortcuts.
 
 Modification History
---------------------
+""""""""""""""""""""
 
 .. figure:: assets/EditHistory.jpg
    :scale: 30 %
@@ -90,15 +92,15 @@ element 0 which is labeled by action "None".
 -  history that is stored to be used after re-opening a state machine
 
 Execution History
------------------
+"""""""""""""""""
 
 Description in progress ...
 
-Center
-======
+Center Pane
+-----------
 
 Graphical State Machine Editor
-------------------------------
+""""""""""""""""""""""""""""""
 
 There are two different graphical editors for editing a state machine.
 Originally, the editor used OpenGL and was rather ugly. This is still
@@ -128,7 +130,7 @@ You can also drag'n'drop states into the editor. This is possible from
 the four "+ \*S" buttons below the editor and from the libraries widget.
 
 Debug Console
--------------
+"""""""""""""
 
 The Debug Console can be found below the Grafical Editor. All messages
 will be displayed in it, whereas the type of the displayed messages can
@@ -138,8 +140,8 @@ the upper right corner. A right-click into the console opens a menu
 providing the options to ``"Copy"`` selected output, ``"Select All"``
 output or ``"Clear Logging View"``.
 
-Right Bar - States Editor
-=========================
+Right Bar (States Editor)
+-------------------------
 
 The right sidebar shows the "States Editor". It can show several tabs,
 but by default, only the selected state is shown. However, you can
@@ -154,7 +156,7 @@ State Overview, State content (with widgets for the Source Editor, Ports
 and Connection) and State Description/Summary.
 
 State Overview
---------------
+""""""""""""""
 
 The State Overview can be found directly under the "STATE EDITOR"
 headline. It provides the name of the selected state, which can be
@@ -166,14 +168,14 @@ on the pin symbol next to the blue highlighted state name, which allows
 an userfriendly switching between states.)
 
 Source Editor
--------------
+"""""""""""""
 
 The Source Editor is the first tab of the notebook in the middle. It is
 a numbered editor with the buttons "Apply" to store and "Cancel" to
 discard changes.
 
 Outcomes and Transitions
-------------------------
+""""""""""""""""""""""""
 
 By clicking the middle tab of the center notebook, the sub-widgets
 Outcomes and Transitions can be reached. In the Outcomes widget the
@@ -191,7 +193,7 @@ State" with "Target Outcome". Todo: Internal/External With the buttons
 ones can be deleted.
 
 Data Ports and Data Flows
--------------------------
+"""""""""""""""""""""""""
 
 Data Ports and Data Flows sub-widgets can be shown by clicking the last
 tab of the middle notebook. Within the Data Ports sub-widget it is
@@ -208,22 +210,22 @@ the targets of the output ports. With the buttons "Add" and "Remove",
 additional rows can be inserted and edited as like selected ones removed
 
 Data Linkage
-------------
+""""""""""""
 
 Description in progress ...
 
 Logical Linkage
----------------
+"""""""""""""""
 
 Description in progress ...
 
 Linkage Overview
-----------------
+""""""""""""""""
 
 Description in progress ...
 
 State Description
------------------
+"""""""""""""""""
 
 The State Description sub-widget can be reached by clicking the second
 tab of the lower notebook. It is an editor, where comments or a

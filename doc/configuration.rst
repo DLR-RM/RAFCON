@@ -1,4 +1,7 @@
-`RAFCON <home.rst>`__ can be configured using two config files, one for
+Configuration
+=============
+
+`RAFCON <index.rst>`__ can be configured using two config files, one for
 the core and one for the GUI. The config files are automatically
 generated (if not existing) on the first run of RAFCON. It is stored in
 your home folder: ``~/.config/rafcon/`` with name ``config.yaml`` and
@@ -7,10 +10,10 @@ the ``start.py`` script with argument "-c". The syntax used is
 `YAML <wp:YAML>`__.
 
 Core configuration
-==================
+------------------
 
 Example
--------
+"""""""
 
 A typical config file looks like this:
 
@@ -28,7 +31,7 @@ A typical config file looks like this:
     PROFILER_RESULT_PATH: "/tmp/rafcon_profiler_result.prf"
 
 Documentation
--------------
+"""""""""""""
 
 In the following, all possible parameters are described, together with
 their default value:
@@ -70,10 +73,10 @@ PROFILER\_RESULT\_PATH
     in the path can be used for later evaluation.
 
 GUI configuration
-=================
+-----------------
 
 Example
--------
+"""""""
 
 A typical config file looks like this:
 
@@ -163,7 +166,7 @@ A typical config file looks like this:
         apply: <Control><Shift>E
 
 Documentation
--------------
+"""""""""""""
 
 TYPE
     Type: String-constant
@@ -329,7 +332,7 @@ SHORTCUTS
     (such as 'save'), some are widget dependent (such as 'add').
 
 Monitoring plugin configuration
-===============================
+-------------------------------
 
 The config file of the monitoring plugin contains all parameters and
 settings for communication. It is additionally needed next to the
@@ -340,7 +343,7 @@ the ``start.py`` and stored at `` ~/.config/rafcon`` as
 by launching the ``start.py`` script with argument "-nc".
 
 Example
--------
+"""""""
 
 The default ``network_config.file`` looks like:
 
@@ -361,7 +364,7 @@ The default ``network_config.file`` looks like:
     TYPE: NETWORK_CONFIG
 
 Documentation
--------------
+"""""""""""""
 
 BURST\_NUMBER
     Type: int

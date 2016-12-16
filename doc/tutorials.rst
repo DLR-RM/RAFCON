@@ -1,6 +1,8 @@
+Tutorials
+=========
 
-99 Bottles of Beer. Or: How to create a simple state-machine containing a loop
-==============================================================================
+99 Bottles of Beer. Or: How to create a simple state machine containing a loop
+------------------------------------------------------------------------------
 
 .. figure:: assets/Tutorial_99_Bottles_of_Beer.png
    :alt: Screenshot of the finished tutorial
@@ -170,8 +172,8 @@ of achieving things in RAFCON.
             return 1
         return 0
 
-Starting the basic turtle demo statemachine using ros
-=====================================================
+Starting the basic turtle demo statemachine using ROS
+-----------------------------------------------------
 
 The basic turtle demo is a demo to demonstrate the use of libraries and
 to show the easy integration of `ROS <ROS>`__ into the RAFCON. To start
@@ -215,14 +217,14 @@ some basic services of the turtlesim in a sequence. As this sequence
 will change in the future they are not listed yet.
 
 How to create and re-use a library state machine
-================================================
+------------------------------------------------
 
 State machines can easily be reused in form of library states. All you
 have to do for this is telling RAFCON the path to your state machine and
 give this path a name.
 
 Option 1
---------
+""""""""
 
 This can be done in the `configuration of the
 core <https://rmintra01.robotic.dlr.de/wiki/RAFCON/Configuration#Core_configuration>`__.
@@ -316,7 +318,7 @@ values can be modified to generate the same console info prints while a
 run of the state machine.
 
 Option 2
---------
+""""""""
 
 Instead of specifying the path of the library in he config file, there
 is an alternative solution. You can also set an environmental variable
@@ -330,7 +332,7 @@ to ``RAFCON_LIBRARY_PATH`` and do not have to modify the config file of
 the user.
 
 How to use concurrency barrier states
-=====================================
+-------------------------------------
 
 In the following a short example on how to create a barrier concurrency
 state is explained.
@@ -398,7 +400,7 @@ Decider:
             return 0
 
 Using the monitoring plugin
-===========================
+---------------------------
 
 This tutorial will show us how to use the monitoring plugin, to connect
 and monitor two systems running RAFCON. First, we need to setup our
@@ -449,8 +451,3 @@ After the connection we open the same statemachine on server and client.
 Now we are able to remote control the server by the client as like
 reverse. To connect two seperated systems, the ``<SERVER_IP:>`` has to
 be adjusted within the ``network_config.yaml`` files.
-
-How to use the Edit History
-===========================
-
-Moved to `GUI Guide <gui_guide.rst>`__.

@@ -1,3 +1,5 @@
+FAQ
+===
 
 On this page, we collect Frequently Ask Questions (FAQ) about
 `RAFCON <home.rst>`__. At the moment, there are three categories of
@@ -6,12 +8,12 @@ questions concerning `Core`_, `API`_ or
 those to the section `New Questions`_.
 
 Core
-====
+----
 
 Questions that concern the core functionality/execution.
 
 Where I can configure the RAFCON core?
---------------------------------------
+""""""""""""""""""""""""""""""""""""""
 
 The core RAFCON configuration file is generally situated here
 ``~/.config/rafcon/config.yaml`` but also can be handed using a path as
@@ -19,7 +21,7 @@ the config-folder parameter ``-c`` in the command line. For further
 explanation see `RAFCON/Configuration <configuration.rst>`__
 
 Where can instances of global classes be initialized (e.g. a LN-client)?
-------------------------------------------------------------------------
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 Global classes can be initialized at any point. You can e. g. create a
 state at the beginning of the state machine with name "Init LN-client",
@@ -28,7 +30,7 @@ is imported in another state, it can use the initialized client, as the
 Python shell didn't change.
 
 How does concurrency work?
---------------------------
+""""""""""""""""""""""""""
 
 A concurrency state executes all child states concurrently. A barrier
 concurrency state waits for all its children to finish their execution.
@@ -44,7 +46,7 @@ leads to a bad state machine design).
 See also `How does preemption work? How do I implement preemptable states correctly?`_
 
 How does execution control – including stepping mode – work?
-------------------------------------------------------------
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 In the execution widget below the graphical editor, the execution of a
 state machine can be controlled.
@@ -93,7 +95,7 @@ all. For example backward-stepping state machines, have a look at the
 ``[path_to_git_repo]/source/test_scripts/functionality_examples``.
 
 What does pause and stop do?
-----------------------------
+""""""""""""""""""""""""""""
 
 Pausing a state machine prevents the current state to "take" the next
 transition. Furthermore a paused-event of each state is triggered.
@@ -110,7 +112,7 @@ For information on how to correctly listen to pause or preempted events
 inside a state, see `What happens if the state machine is paused? How can I pause running services, e. g. the robot?`_.
 
 How does preemption work? How do I implement preemptable states correctly?
---------------------------------------------------------------------------
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 Preemption is achieved in *preemptive concurrency states*. All direct
 children of these states are executed in parallel in separate threads.
@@ -160,7 +162,7 @@ machine example in source/test\_scripts/tutorials/simple\_preemption\_example in
 project folder.
 
 What happens if the state machine is paused? How can I pause running services, e. g. the robot?
------------------------------------------------------------------------------------------------
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 The basic behavior is simple: If a state machine is paused, no more
 transition is being followed. I. e., if a state returns an outcome, the
@@ -216,7 +218,7 @@ events to that service. This requires the external service to be written
 in Python.
 
 How to handle a state abortion correctly?
------------------------------------------
+"""""""""""""""""""""""""""""""""""""""""
 
 As arbitrary python code is allowed in a state, the execution of a state
 can raise arbitrary python errors. If an error is raised the state if
@@ -234,15 +236,15 @@ port must be manually forwarded to the first child state i.e. a
 input\_data port for the hierarchy and the child state has to created
 and connected.
 
-How does python-jsonconversion handles string types?
-----------------------------------------------------
+How does python-jsonconversion handle string types?
+"""""""""""""""""""""""""""""""""""""""""""""""""""
 
 Serialized strings are stored in a file in ASCII encoding, but they are
 read from a file as unicode. Thus explicit conversions to ASCII has to
 done if the type of the string matters.
 
 Why do the folders on the file system of a state machine have cryptic names?
-----------------------------------------------------------------------------
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 The name of a folder within a state machine folder or child state folder
 agrees with the id of the state it represents. We agree that this is not
@@ -252,12 +254,12 @@ system, open the `state machine tree <gui_guide.rst#state-machine-tree>`__ of th
 machine in the GUI. There you will find the ids of the states.
 
 API
-===
+---
 
 Questions that concern the core programming interface.
 
-Are there examples for use of your API?
----------------------------------------
+Are there examples how to use the API?
+""""""""""""""""""""""""""""""""""""""
 
 Some examples can be found in the folder
 ``$RMPM_RAFCON_ROOT_PATH/share/examples/api`` or if you use our git-repo
@@ -266,21 +268,20 @@ how to create a state machine using the python API can be found in
 ``$RAFCON_GIT_REPO_PATH/source/test/common``.
 
 GUI
-===
+---
 
 Questions that concern the graphical user interface.
 
-Where I can configure the RAFCON GUI?
--------------------------------------
+Where can I configure the RAFCON GUI?
+"""""""""""""""""""""""""""""""""""""
 
-The GUI does not have a property editor, yet, but the RAFCON GUI
-configuration file is by default situated in
-``~/.config/rafcon/gui_config.yaml``. The location can also be specified
+You can either use File => Settings or manually edit
+``~/.config/rafcon/gui_config.yaml``. This location can also be specified
 by the parameter ``-c`` in the command line. For further explanation see
 `RAFCON/Configuration <configuration.rst>`__
 
 How can the hierarchy level of a state be changed in the graphical editor after it was created?
------------------------------------------------------------------------------------------------
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 Moving a state into another state currently only works using cut and
 paste. As the copied state won't change its size, it is preferable to
@@ -292,7 +293,7 @@ state is of type Hierarchy or Concurrency. With Ctrl+V or Edit => Paste,
 the original state is moved into the target state.
 
 New Questions
-=============
+-------------
 
 Ask your question here:
 
