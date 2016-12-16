@@ -133,7 +133,8 @@ class StateMachineModel(ModelMT, Hashable):
             self.root_state.register_observer(self)
         except KeyError:  # Might happen if the observer was already unregistered
             pass
-        self.root_state.prepare_destruction()
+        with self.state_machine.modification_lock():
+            self.root_state.prepare_destruction()
 
     def update_hash(self, obj_hash):
         self.root_state.update_hash(obj_hash)
