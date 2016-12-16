@@ -98,11 +98,11 @@ class StateMachineManagerModel(ModelMT, Observable):
                 logger.debug("Delete state machine model for state machine with id %s", sm_id_to_delete)
                 sm_m = self.state_machines[sm_id_to_delete]
                 sm = sm_m.state_machine
+                sm_m.prepare_destruction()
                 with sm.modification_lock():
-                    sm_m.selection.clear()
-                    sm_m.prepare_destruction()
                     del self.state_machines[sm_id_to_delete]
                     sm_m.destroy()
+                sm_m.selection.clear()
 
     def get_sm_m_for_state_model(self, state_m):
         return self.state_machines[state_m.state.get_sm_for_state().state_machine_id]
