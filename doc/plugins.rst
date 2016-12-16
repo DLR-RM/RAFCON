@@ -117,7 +117,7 @@ can connect as many clients as you wish.
 When you start RAFCON in client mode and open a state machine you will
 notice a new information bar at the bottom:
 
-.. figure:: Rafcon_dds_monitoring_client.png
+.. figure:: assets/Rafcon_dds_monitoring_client.png
    :alt: A screenshot of the dds monitoring rafcon feature
 
 This bar shows the status of the state machine on the remote server.

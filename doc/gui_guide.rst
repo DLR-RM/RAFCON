@@ -51,7 +51,7 @@ shortcuts.
 Modification History
 --------------------
 
-.. figure:: EditHistory.jpg
+.. figure:: assets/EditHistory.jpg
    :scale: 30 %
    :alt: Screenshot showing the branching modification history
    :align: right

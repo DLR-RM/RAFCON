@@ -1,5 +1,5 @@
 
-.. figure:: RAFCON_Logo_Farbe_RGB.png
+.. figure:: assets/RAFCON_Logo_Farbe_RGB.png
    :alt: Official RAFCON logo
 
 -  `RAFCON <home.rst>`__
@@ -15,7 +15,7 @@
    -  `Homepage <homepage.rst>`__
    -  `Meetings <meetings.rst>`_
 
-.. figure:: RAFCON_GUI_screenshot.png
+.. figure:: assets/RAFCON_GUI_screenshot.png
    :scale: 30 %
    :alt: Screenshot of RAFCON with an example state machine
    :align: right
