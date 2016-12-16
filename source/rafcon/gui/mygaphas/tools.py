@@ -202,16 +202,10 @@ class HoverItemTool(HoverTool):
             if isinstance(state_v, StateView):
                 distance = state_v.border_width / 2. * view.get_zoom_factor()
                 connection_v, hovered_handle = StateHandleFinder(state_v, view).get_handle_at_point(pos, distance)
-            else:
-                # Temporarily unset focused item to prevent segments from being split
-                focus = view.focused_item
-                view.focused_item = None
-                connection_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos)
-                view.focused_item = focus
-            if hovered_handle:
-                self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
-            else:
-                self.view.window.set_cursor(gtk.gdk.Cursor(constants.SELECT_CURSOR))
+                if hovered_handle:
+                    self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
+                else:
+                    self.view.window.set_cursor(gtk.gdk.Cursor(constants.SELECT_CURSOR))
 
         if isinstance(self.view.hovered_item, StateView):
             self._prev_hovered_item = self.view.hovered_item
