@@ -280,7 +280,7 @@ class GraphicalEditorController(ExtendedController):
         # Prepare the drawing process
         self.view.editor.expose_init(args)
         # The whole logic of drawing is triggered by calling the root state to be drawn
-        with self.model.modification_lock():
+        with self.model.state_machine.modification_lock():
             redraw = self.draw_state(self.root_state_m)
             self.draw_state_machine()
         # Finish the drawing process (e.g. swap buffers)
