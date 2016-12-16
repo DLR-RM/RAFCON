@@ -5,5 +5,7 @@ arch:
 arch_ignore_failure:
   - 'sled11-x86-gcc4.x'
 
+doc_dir: 'build_doc'
+
 test:
   - python setup.py -v test
