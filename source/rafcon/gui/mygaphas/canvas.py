@@ -99,6 +99,25 @@ class MyCanvas(Canvas):
                 return item
         return None
 
+    def perform_update(self):
+        """Update canvas and handle all events in the gtk queue
+        """
+        self.update_now()
+
+        import gtk
+        import gobject
+        from threading import Event
+        event = Event()
+
+        # Handle all events from gaphas, but not from gtkmvc
+        # Make use of the priority, which is higher for gaphas then for gtkmvc
+        def priority_handled(event):
+            event.set()
+        priority = (gobject.PRIORITY_HIGH_IDLE + gobject.PRIORITY_DEFAULT_IDLE) / 2
+        gobject.idle_add(priority_handled, event, priority=priority)
+        while not event.is_set():
+            gtk.main_iteration(False)
+
 
 class ItemProjection(object):
     """Project a point of item A into the coordinate system of item B.
