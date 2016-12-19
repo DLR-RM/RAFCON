@@ -2,6 +2,52 @@ from gaphas.canvas import Canvas, VariableProjection
 
 
 class MyCanvas(Canvas):
+
+    _core_view_map = None
+    _model_view_map = None
+
+    def __init__(self):
+        super(MyCanvas, self).__init__()
+        self._core_view_map = {}
+        self._model_view_map = {}
+
+    def add(self, item, parent=None, index=None):
+        from rafcon.gui.mygaphas.items.state import StateView
+        from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
+        if isinstance(item, (StateView, DataFlowView, TransitionView)):
+            model = item.model
+            self._core_view_map[model.core_element] = item
+            self._model_view_map[model] = item
+        super(MyCanvas, self).add(item, parent, index)
+
+    def remove(self, item):
+        from rafcon.gui.mygaphas.items.state import StateView
+        from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
+
+        def delete_model_from_maps(model):
+            del self._core_view_map[model.core_element]
+            del self._model_view_map[model]
+        if isinstance(item, StateView):
+            delete_model_from_maps(item.model)
+            map(delete_model_from_maps, [outcome.model for outcome in item.outcomes])
+            map(delete_model_from_maps, [input.model for input in item.inputs])
+            map(delete_model_from_maps, [output.model for output in item.outputs])
+        elif isinstance(item, (DataFlowView, TransitionView)):
+            delete_model_from_maps(item.model)
+        super(MyCanvas, self).remove(item)
+
+    def add_port(self, port_v):
+        port_m = port_v.model
+        self._core_view_map[port_m.core_element] = port_v
+        self._model_view_map[port_m] = port_v
+
+    def exchange_model(self, old_model, new_model):
+        view = self._core_view_map[old_model.core_element]
+        del self._core_view_map[old_model.core_element]
+        del self._model_view_map[old_model]
+        self._core_view_map[new_model.core_element] = view
+        self._model_view_map[new_model] = view
+
     def update_root_items(self):
         for root_item in self.get_root_items():
             self.request_update(root_item)
@@ -17,16 +63,7 @@ class MyCanvas(Canvas):
         :param gtkmvc.ModelMT model: The model of the searched view
         :return: The view for the given model or None if not found
         """
-        from rafcon.gui.mygaphas.items.state import StateView
-        from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
-        from rafcon.gui.mygaphas.items.ports import OutcomeView
-        from rafcon.gui.mygaphas.items.ports import ScopedVariablePortView, DataPortView
-
-        for item in self.get_all_items():
-            if isinstance(item, (StateView, TransitionView, DataFlowView, OutcomeView, DataPortView,
-                                 ScopedVariablePortView)) and item.model is model:
-                return item
-        return None
+        return self._model_view_map.get(model)
 
     def get_view_for_core_element(self, core_element, parent_item=None):
         """Searches and returns the View for the given core element
@@ -35,20 +72,7 @@ class MyCanvas(Canvas):
         :param gaphas.item.Item parent_item: Restrict the search to this parent item
         :return: The view for the given core element or None if not found
         """
-        from rafcon.gui.mygaphas.items.state import StateView
-        from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
-        if parent_item is None:
-            items = self.get_all_items()
-        else:
-            items = self.get_children(parent_item)
-        for item in items:
-            if isinstance(item, StateView) and item.model.state is core_element:
-                return item
-            if isinstance(item, TransitionView) and item.model.transition is core_element:
-                return item
-            if isinstance(item, DataFlowView) and item.model.data_flow is core_element:
-                return item
-        return None
+        return self._core_view_map.get(core_element)
 
     def get_view_for_id(self, view_class, element_id, parent_item=None):
         """Searches and returns the View for the given id and type
