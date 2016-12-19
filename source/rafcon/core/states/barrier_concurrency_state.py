@@ -12,6 +12,7 @@ import traceback
 
 from gtkmvc import Observable
 
+from rafcon.core.custom_exceptions import RecoveryModeException
 from rafcon.core.state_elements.outcome import Outcome
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.concurrency_state import ConcurrencyState
@@ -77,7 +78,7 @@ class BarrierConcurrencyState(ConcurrencyState):
                         try:
                             self.add_transition(from_state_id=state_id, from_outcome=outcome.outcome_id,
                                                 to_state_id=UNIQUE_DECIDER_STATE_ID, to_outcome=None)
-                        except ValueError as e:
+                        except (ValueError, RecoveryModeException) as e:
                             if "transition origin already connected to another transition" not in str(e):
                                 logger.error("default decider state transition could not be added: {}".format(e))
                                 raise

@@ -89,7 +89,7 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
                     self._parent = ref(old_parent)
 
                 class_name = self.__class__.__name__
-                if global_config.get_config_value("LIBRARY_RECOVERY_MODE"):
+                if global_config.get_config_value("LIBRARY_RECOVERY_MODE") is True:
                     do_delete_item = True
                     # In case of just the data type is wrong raise an Exception but keep the data flow
                     if "not have matching data types" in message:

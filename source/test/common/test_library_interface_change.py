@@ -1,5 +1,5 @@
 import os
-from os.path import dirname, join, realpath
+from os.path import dirname, join, abspath
 
 # core elements
 import rafcon.core.singleton

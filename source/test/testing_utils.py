@@ -1,13 +1,13 @@
 import signal
 import tempfile
-from os import mkdir, environ, path
-from os.path import join, dirname, realpath, exists
+from os import mkdir, environ
+from os.path import join, dirname, realpath, exists, abspath
 from threading import Lock, Condition, Event, Thread
 
 import rafcon
 from rafcon.utils import log, constants
 from rafcon.core.config import global_config
-
+global_config.load(path=join(join(dirname(abspath(__file__)), "common"), "config_path"))
 
 test_multithreading_lock = Lock()
 
