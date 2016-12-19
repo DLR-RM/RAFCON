@@ -256,6 +256,8 @@ class StateView(Element):
 
     @model.setter
     def model(self, state_m):
+        if self.model:
+            self.canvas.exchange_model(self.model, state_m)
         self._state_m = ref(state_m)
 
     @property
@@ -590,6 +592,7 @@ class StateView(Element):
 
     def add_outcome(self, outcome_m):
         outcome_v = OutcomeView(outcome_m, self)
+        self.canvas.add_port(outcome_v)
         self._outcomes.append(outcome_v)
         self._ports.append(outcome_v.port)
         self._handles.append(outcome_v.handle)
@@ -623,6 +626,7 @@ class StateView(Element):
 
     def add_input_port(self, port_m):
         input_port_v = InputPortView(self, port_m)
+        self.canvas.add_port(input_port_v)
         self._inputs.append(input_port_v)
         self._ports.append(input_port_v.port)
         self._handles.append(input_port_v.handle)
@@ -650,6 +654,7 @@ class StateView(Element):
 
     def add_output_port(self, port_m):
         output_port_v = OutputPortView(self, port_m)
+        self.canvas.add_port(output_port_v)
         self._outputs.append(output_port_v)
         self._ports.append(output_port_v.port)
         self._handles.append(output_port_v.handle)
@@ -677,6 +682,7 @@ class StateView(Element):
 
     def add_scoped_variable(self, scoped_variable_m):
         scoped_variable_port_v = ScopedVariablePortView(self, scoped_variable_m)
+        self.canvas.add_port(scoped_variable_port_v)
         self._scoped_variables_ports.append(scoped_variable_port_v)
         self._ports.append(scoped_variable_port_v.port)
         self._handles.append(scoped_variable_port_v.handle)
