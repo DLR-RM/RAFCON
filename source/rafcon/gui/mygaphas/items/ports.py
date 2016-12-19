@@ -58,6 +58,20 @@ class PortView(object):
         self._last_label_relative_pos = 0, 0
 
     @property
+    def _canvas_index(self):
+        """Index within the canvas
+
+        This is required for sorting. The index is set identical to the corresponding state index, as the ports are
+        no items with their own index.
+
+        :return: Index within the canvas
+        :rtype: int
+        """
+        if self.parent:
+            return self.parent._canvas_index
+        return 0
+
+    @property
     def side(self):
         return self._side
 
