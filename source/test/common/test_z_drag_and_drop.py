@@ -160,4 +160,5 @@ def test_drag_and_drop_test(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main([__file__, '-xs'])
+    test_drag_and_drop_test(None)
+    # pytest.main([__file__, '-xs'])

@@ -13,6 +13,8 @@ from yaml import YAMLObject
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 
+from rafcon.core.custom_exceptions import RecoveryModeException
+from rafcon.core.config import global_config
 from rafcon.core.decorators import lock_state_machine
 from rafcon.utils import log
 from rafcon.utils.hashable import Hashable
@@ -87,8 +89,17 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
                     self._parent = ref(old_parent)
 
                 class_name = self.__class__.__name__
-                raise ValueError("{0} invalid within state {1} (id {2}): {3}".format(class_name, parent.name,
-                                                                                     parent.state_id, message))
+                if global_config.get_config_value("LIBRARY_RECOVERY_MODE") is True:
+                    do_delete_item = True
+                    # In case of just the data type is wrong raise an Exception but keep the data flow
+                    if "not have matching data types" in message:
+                        do_delete_item = False
+                        self._parent = parent
+                    raise RecoveryModeException("{0} invalid within state \"{1}\" (id {2}): {3}".format(
+                        class_name, parent.name, parent.state_id, message), do_delete_item=do_delete_item)
+                else:
+                    raise ValueError("{0} invalid within state \"{1}\" (id {2}): {3}".format(
+                        class_name, parent.name, parent.state_id, message))
 
     @property
     def state_element_id(self):

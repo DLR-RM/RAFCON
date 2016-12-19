@@ -10,7 +10,9 @@
 from copy import copy, deepcopy
 from threading import Condition
 from gtkmvc import Observable
+import traceback
 
+from rafcon.core.custom_exceptions import RecoveryModeException
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.state_elements.data_port import DataPortType
@@ -1999,12 +2001,21 @@ class ContainerState(State):
 
         old_transitions = self._transitions
         self._transitions = transitions
+        transition_ids_to_delete = []
         for transition_id, transition in transitions.iteritems():
             try:
                 transition.parent = self
-            except ValueError:
-                self._transitions = old_transitions
-                raise
+            except (ValueError, RecoveryModeException) as e:
+                if type(e) is RecoveryModeException:
+                    logger.error("Recovery error: {0}\n{1}".format(str(e), str(traceback.format_exc())))
+                    if e.do_delete_item:
+                        transition_ids_to_delete.append(transition.transition_id)
+                else:
+                    self._transitions = old_transitions
+                    raise
+
+        self._transitions = dict((transition_id, d) for (transition_id, d) in self._transitions.iteritems()
+                                if not transition_id in transition_ids_to_delete)
 
     @property
     def data_flows(self):
@@ -2042,12 +2053,21 @@ class ContainerState(State):
 
         old_data_flows = self._data_flows
         self._data_flows = data_flows
+        data_flow_ids_to_delete = []
         for data_flow_id, data_flow in data_flows.iteritems():
             try:
                 data_flow.parent = self
-            except ValueError:
-                self._data_flows = old_data_flows
-                raise
+            except (ValueError, RecoveryModeException) as e:
+                if type(e) is RecoveryModeException:
+                    logger.error("Recovery error: {0}\n{1}".format(str(e), str(traceback.format_exc())))
+                    if e.do_delete_item:
+                        data_flow_ids_to_delete.append(data_flow.data_flow_id)
+                else:
+                    self._data_flows = old_data_flows
+                    raise
+
+        self._data_flows= dict((data_flow_id, d) for (data_flow_id, d) in self._data_flows.iteritems()
+                               if not data_flow_id in data_flow_ids_to_delete)
 
     @property
     def start_state_id(self):

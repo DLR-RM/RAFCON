@@ -2,6 +2,7 @@ import pytest
 from pytest import raises
 
 # state machine
+from rafcon.core.custom_exceptions import RecoveryModeException
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.state import InputDataPort

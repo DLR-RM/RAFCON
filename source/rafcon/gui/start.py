@@ -218,13 +218,18 @@ if __name__ == '__main__':
 
     setup_mvc_configuration(user_input.config_path, user_input.gui_config_path, user_input.gui_config_path)
 
+    # setup the gui before loading the state machine as then the debug console shows the errors that emerged during
+    # loading the state state machine
+    main_window_controller = setup_gui()
+
+    while gtk.events_pending():
+        gtk.main_iteration(False)
+
     if user_input.state_machine_paths:
         state_machine = open_state_machines(user_input.state_machine_paths)
 
     if user_input.new:
         create_new_state_machine()
-
-    main_window_controller = setup_gui()
 
     post_setup_plugins(user_input)
 
