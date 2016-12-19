@@ -18,7 +18,7 @@ import testing_utils
 import pytest
 
 
-TEST_LIBRARY_PATH = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + "/test_libraries"
+TEST_LIBRARY_PATH = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "test_libraries")
 
 
 def setup_module(module=None):
