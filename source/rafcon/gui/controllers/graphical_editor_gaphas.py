@@ -213,11 +213,6 @@ class GraphicalEditorController(ExtendedController):
         if react_to_event(self.view, self.view.editor, event):
             logger.debug("Paste")
 
-            # Always update canvas and handle all events in the gtk queue before performing any changes
-            self.canvas.update_now()
-            while gtk.events_pending():
-                gtk.main_iteration(False)
-
             selection = self.model.selection
             selected_states = selection.get_states()
             if len(selection) != 1 or len(selected_states) < 1:
@@ -256,7 +251,10 @@ class GraphicalEditorController(ExtendedController):
                 new_state_m_copy.meta['gui']['editor_gaphas']['size'] = (new_state_v.width, new_state_v.height)
 
                 new_state_v.resize_all_children(old_size, True)
-            self._meta_data_changed(new_state_v, new_state_m_copy, 'all', True)
+                self._meta_data_changed(new_state_v, new_state_m_copy, 'all', True)
+
+            self.canvas.perform_update()
+
             return True
 
     def _update_selection_from_gaphas(self, view, selected_items):
@@ -311,16 +309,13 @@ class GraphicalEditorController(ExtendedController):
             return              # Ignore the one with less information
         model = notification.model
         view = self.canvas.get_view_for_model(model)
-
-        # Always update canvas and handle all events in the gtk queue before performing any changes
-        self.canvas.update_now()
-        while gtk.events_pending():
-            gtk.main_iteration(False)
         if isinstance(view, StateView):
             view.apply_meta_data(recursive=meta_signal_message.affects_children)
         else:
             view.apply_meta_data()
+
         self.canvas.request_update(view, matrix=True)
+        self.canvas.perform_update()
 
     def manual_notify_after(self, state_m):
         state_v = self.canvas.get_view_for_model(state_m)
@@ -362,11 +357,6 @@ class GraphicalEditorController(ExtendedController):
             if self._change_state_type:
                 return
 
-            # Always update canvas and handle all events in the gtk queue before performing any changes
-            self.canvas.update_now()
-            while gtk.events_pending():
-                gtk.main_iteration(False)
-
             # The method causing the change raised an exception, thus nothing was changed
             if (isinstance(result, str) and "CRASH" in result) or isinstance(result, Exception):
                 return
@@ -375,15 +365,13 @@ class GraphicalEditorController(ExtendedController):
                 state_v = self.canvas.get_view_for_model(model)
                 if state_v:  # Children of LibraryStates are not modeled, yet
                     self.canvas.request_update(state_v, matrix=False)
+                    self.canvas.perform_update()
             elif method_name == 'add_state':
-                if self._change_state_type:
-                    return
                 new_state = arguments[1]
                 new_state_m = model.states[new_state.state_id]
                 self.add_state_view_to_parent(new_state_m, model)
+                self.canvas.perform_update()
             elif method_name == 'remove_state':
-                if self._change_state_type:
-                    return
                 parent_state = arguments[0]
                 state_id = arguments[1]
                 parent_v = self.canvas.get_view_for_core_element(parent_state)
@@ -393,26 +381,27 @@ class GraphicalEditorController(ExtendedController):
                     state_v.remove()
                     if parent_v:
                         self.canvas.request_update(parent_v)
+                    self.canvas.perform_update()
 
             # ----------------------------------
             #           TRANSITIONS
             # ----------------------------------
             elif method_name == 'add_transition':
-                if self._change_state_type:
-                    return
                 transitions_models = model.transitions
                 transition_id = result
                 for transition_m in transitions_models:
                     if transition_m.transition.transition_id == transition_id:
                         self.add_transition_view_for_model(transition_m, model)
+                        self.canvas.perform_update()
+                        break
             elif method_name == 'remove_transition':
-                if self._change_state_type:
-                    return
                 self.remove_transition_view_from_parent_view(model)
+                self.canvas.perform_update()
             elif method_name == 'transition_change':
                 transition_m = model
                 transition_v = self.canvas.get_view_for_model(transition_m)
                 self.connect_transition_handle_to_state(transition_v, transition_m, transition_m.parent)
+                self.canvas.perform_update()
 
             # ----------------------------------
             #           DATA FLOW
@@ -423,12 +412,16 @@ class GraphicalEditorController(ExtendedController):
                 for data_flow_m in data_flow_models:
                     if data_flow_m.data_flow.data_flow_id == data_flow_id:
                         self.add_data_flow_view_for_model(data_flow_m, model)
+                        self.canvas.perform_update()
+                        break
             elif method_name == 'remove_data_flow':
                 self.remove_data_flow_view_from_parent_view(model)
+                self.canvas.perform_update()
             elif method_name == 'data_flow_change':
                 data_flow_m = model
                 data_flow_v = self.canvas.get_view_for_model(data_flow_m)
                 self.connect_data_flow_handle_to_state(data_flow_v, data_flow_m, data_flow_m.parent)
+                self.canvas.perform_update()
 
             # ----------------------------------
             #           OUTCOMES
@@ -440,6 +433,8 @@ class GraphicalEditorController(ExtendedController):
                     if outcome_m.outcome.outcome_id == result:
                         state_v.add_outcome(outcome_m)
                         self.canvas.request_update(state_v, matrix=False)
+                        self.canvas.perform_update()
+                        break
             elif method_name == 'remove_outcome':
                 state_m = model
                 state_v = self.canvas.get_view_for_model(state_m)
@@ -450,6 +445,8 @@ class GraphicalEditorController(ExtendedController):
                         if outcome_v.outcome_id == arguments[1]:
                             state_v.remove_outcome(outcome_v)
                             self.canvas.request_update(state_v, matrix=False)
+                            self.canvas.perform_update()
+                            break
 
             # ----------------------------------
             #           DATA PORTS
@@ -461,6 +458,8 @@ class GraphicalEditorController(ExtendedController):
                     if input_data_port_m.data_port.data_port_id == result:
                         state_v.add_input_port(input_data_port_m)
                         self.canvas.request_update(state_v, matrix=False)
+                        self.canvas.perform_update()
+                        break
             elif method_name == 'add_output_data_port':
                 state_m = model
                 state_v = self.canvas.get_view_for_model(state_m)
@@ -468,6 +467,8 @@ class GraphicalEditorController(ExtendedController):
                     if output_data_port_m.data_port.data_port_id == result:
                         state_v.add_output_port(output_data_port_m)
                         self.canvas.request_update(state_v, matrix=False)
+                        self.canvas.perform_update()
+                        break
             elif method_name == 'remove_input_data_port':
                 state_m = model
                 state_v = self.canvas.get_view_for_model(state_m)
@@ -478,6 +479,8 @@ class GraphicalEditorController(ExtendedController):
                         if input_port_v.port_id == arguments[1]:
                             state_v.remove_input_port(input_port_v)
                             self.canvas.request_update(state_v, matrix=False)
+                            self.canvas.perform_update()
+                            break
             elif method_name == 'remove_output_data_port':
                 state_m = model
                 state_v = self.canvas.get_view_for_model(state_m)
@@ -488,6 +491,8 @@ class GraphicalEditorController(ExtendedController):
                         if output_port_v.port_id == arguments[1]:
                             state_v.remove_output_port(output_port_v)
                             self.canvas.request_update(state_v, matrix=False)
+                            self.canvas.perform_update()
+                            break
             elif method_name in ['data_type', 'change_data_type']:
                 pass
             elif method_name == 'default_value':
@@ -503,6 +508,8 @@ class GraphicalEditorController(ExtendedController):
                     if scoped_variable_m.scoped_variable.data_port_id == result:
                         state_v.add_scoped_variable(scoped_variable_m)
                         self.canvas.request_update(state_v, matrix=False)
+                        self.canvas.perform_update()
+                        break
             elif method_name == 'remove_scoped_variable':
                 state_m = model
                 state_v = self.canvas.get_view_for_model(state_m)
@@ -513,6 +520,8 @@ class GraphicalEditorController(ExtendedController):
                         if scoped_variable_v.port_id == arguments[1]:
                             state_v.remove_scoped_variable(scoped_variable_v)
                             self.canvas.request_update(state_v, matrix=False)
+                            self.canvas.perform_update()
+                            break
 
             # ----------------------------------
             #        STATE MISCELLANEOUS
@@ -530,6 +539,7 @@ class GraphicalEditorController(ExtendedController):
                     self.canvas.request_update(state_v.name_view, matrix=False)
                 else:
                     self.canvas.request_update(state_v, matrix=False)
+                self.canvas.perform_update()
             elif method_name in ['change_state_type', 'change_root_state_type']:
                 pass
             elif method_name == 'parent':
@@ -554,12 +564,6 @@ class GraphicalEditorController(ExtendedController):
         signal_msg = info['arg']
         new_state_m = signal_msg.new_state_m
         state_v = self.canvas.get_view_for_model(old_state_m)
-        state_v.model = new_state_m
-
-        # Always update canvas and handle all events in the gtk queue before performing any changes
-        self.canvas.update_now()
-        while gtk.events_pending():
-            gtk.main_iteration(False)
 
         # If the root state has been changed, we recreate the whole state machine view
         if old_state_m is self.root_state_m:
@@ -572,6 +576,7 @@ class GraphicalEditorController(ExtendedController):
 
         # Otherwise we only look at the modified state and its children
         else:
+            state_v.model = new_state_m
             if isinstance(new_state_m, ContainerStateModel):
                 # Check for new states, which do not have a StateView (typically DeciderState)
                 for child_state_m in new_state_m.states.itervalues():
@@ -600,7 +605,7 @@ class GraphicalEditorController(ExtendedController):
             parent_v = self.canvas.get_parent(state_v)
             self.canvas.request_update(parent_v)
 
-        self.canvas.update_now()
+        self.canvas.perform_update()
 
         try:
             self._meta_data_changed(None, new_state_m, 'append_to_last_change', True)
