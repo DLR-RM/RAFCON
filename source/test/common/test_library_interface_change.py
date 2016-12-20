@@ -1,14 +1,9 @@
 import os
-from os.path import dirname, join, abspath
+from os.path import join
 
 # core elements
 import rafcon.core.singleton
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.library_state import LibraryState
-from rafcon.core.states.state import DataPortType
 from rafcon.core.storage import storage
-from rafcon.core.state_machine import StateMachine
 from rafcon.core.config import global_config
 
 # test environment elements
@@ -19,7 +14,7 @@ from rafcon.utils import log
 logger = log.get_logger("start-no-gui")
 
 
-def setup_module():
+def setup_function():
     # set the test_libraries path temporarily to the correct value
     testing_utils.remove_all_libraries()
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
@@ -28,14 +23,8 @@ def setup_module():
 
 
 def get_test_state_machine(name):
-    return storage.load_state_machine_from_path(
-        join(
-            join(
-                join(
-                    testing_utils.TEST_SM_PATH,
-                    "unit_test_state_machines"),
-                "faulty_libraries"),
-        name))
+    return storage.load_state_machine_from_path(testing_utils.get_test_sm_path(join("unit_test_state_machines",
+                                                                                    "faulty_libraries", name)))
 
 
 def test_load_data_ports_not_existing(caplog):
