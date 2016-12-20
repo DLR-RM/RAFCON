@@ -54,12 +54,11 @@ Modification History
 """"""""""""""""""""
 
 .. figure:: assets/EditHistory.jpg
-   :scale: 30 %
+   :width: 25 %
    :alt: Screenshot showing the branching modification history
    :align: right
 
-|Screenshot showing the branching modification history.| The history is
-implemented as a tree of actions. Therefore a trail history view (list)
+The history is implemented as a tree of actions. Therefore a trail history view (list)
 and a branch history view (tree) are possible. The actual used
 representation is the branch history view, see figure.
 

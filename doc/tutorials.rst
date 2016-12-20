@@ -6,8 +6,8 @@ Tutorials
 
 .. figure:: assets/Tutorial_99_Bottles_of_Beer.png
    :alt: Screenshot of the finished tutorial
-   :scale: 30 %
-   :align: right
+   :width: 90 %
+   :align: center
 
 In this tutorial we create a
 simple state-machine printing the lyrics of "99 Bottles of Beer", a
@@ -25,7 +25,7 @@ of achieving things in RAFCON.
    and clicking on the state here.
 #. Now we change the name of the root state to "99 Bottles of Beer" by
    entering that text in the input field next to "State Name" in the
-   State Editor on the right site. Here you can also see all other
+   State Editor on the center site. Here you can also see all other
    properties of our container state.
 #. Now we are going to create three execution states named "Sing",
    "Decimate bottles" and "Count bottles". Do so by selecting the
@@ -33,7 +33,7 @@ of achieving things in RAFCON.
    the menu bar. Rename each new state as described in the previous
    step.
 #. You can use drag and drop for the three child states to place them
-   next to each other. Using the lower right corner of all states, you
+   next to each other. Using the lower center corner of all states, you
    can resize them. When holding during the resize, the state keeps its
    width to height ratio. When holding during the resize (of container
    states), all content is resized with the state.
@@ -193,8 +193,8 @@ A screenshot of how the state machine how it looks like is shown here.
 
 .. figure:: assets/BasicTurtleDemoScreenshot.png
    :alt: Screenshot of RAFCON with an example state machine
-   :scale: 30 %
-   :align: right
+   :width: 90 %
+   :align: center
 
 Next start a roscore in another console:
 
@@ -231,8 +231,8 @@ core <https://rmintra01.robotic.dlr.de/wiki/RAFCON/Configuration#Core_configurat
 
 .. figure:: assets/EmptyLibraryPath_and_NewLibrary.jpg
    :alt: Screenshot of a empty library path and created 'Wait' state machine.
-   :scale: 30 %
-   :align: right
+   :width: 90 %
+   :align: center
 
 Let's add a new library path to our config file, which by default looks
 like this:
@@ -264,7 +264,7 @@ which is currently empty (see Figure above).
 Next, we generate two state machines, one is waiting and another is
 printing a message to the logger console (info level). Generate two
 state machines by clicking the button "New Statemachine" and turn the
-root\_state to a ExecutionState (by using StateEditorWidget on the right
+root\_state to a ExecutionState (by using StateEditorWidget on the center
 site) and insert the following scripts.
 
 First:
@@ -295,8 +295,8 @@ to test there functionality.
 
 .. figure:: assets/ReCombinedLibraries.jpg
    :alt: Screenshot of the finished tutorial
-   :scale: 30 %
-   :align: right
+   :width: 90 %
+   :align: center
 
    Screenshot of the finished tutorial
 
@@ -339,8 +339,8 @@ state is explained.
 
 .. figure:: assets/BarrierConcurrencyState.png
    :alt: Screenshot of RAFCON with an example state machine
-   :scale: 30 %
-   :align: right
+   :width: 90 %
+   :align: center
 
 At first create the state and transition structure shown in the above
 image. The State called "Barrier Concurrency" is a barrier concurrency

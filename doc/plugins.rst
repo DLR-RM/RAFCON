@@ -121,6 +121,8 @@ notice a new information bar at the bottom:
 
 .. figure:: assets/Rafcon_dds_monitoring_client.png
    :alt: A screenshot of the dds monitoring rafcon feature
+   :width: 90 %
+   :align: center
 
 This bar shows the status of the state machine on the remote server.
 There are four different states:

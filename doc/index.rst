@@ -1,7 +1,9 @@
 
 .. figure:: assets/RAFCON_Logo_Farbe_RGB.png
    :alt: Official RAFCON logo
-   :scale: 25 %
+   :width: 90 %
+   :align: center
+
 
 RMC advanced flow control
 =========================
@@ -15,7 +17,7 @@ without inheriting their drawbacks.
 
 
 .. figure:: assets/RAFCON_GUI_screenshot.png
-   :scale: 30 %
+   :width: 90 %
    :alt: Screenshot of RAFCON with an example state machine
    :align: center
 

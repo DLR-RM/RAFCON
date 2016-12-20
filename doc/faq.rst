@@ -53,7 +53,7 @@ state machine can be controlled.
 
 .. figure:: assets/Rafcon_execution_buttons.png
    :alt: Screenshot of RAFCON with an example state machine
-   :scale: 50 %
+   :width: 90 %
    :align: center
 
 Here the user can start, pause and stop the state machine. Furthermore,
@@ -61,7 +61,7 @@ a step mode can be activated.
 
 .. figure:: assets/Rafcon_execution_buttons_broad.png
    :alt: Screenshot of RAFCON with an example state machine
-   :scale: 50 %
+   :width: 90 %
    :align: center
 
 In the step mode, the use now can trigger four kinds of step: "Step
