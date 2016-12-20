@@ -1,5 +1,3 @@
-Discussion
-==========
 
 This page is intended as a public discussion for the development of new
 features in `RAFCON <home.rst>`__.
