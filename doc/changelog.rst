@@ -56,16 +56,16 @@ Patch releases 0.8.\*
 
 - Fixes:
 
-  - `#5 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/5>`_: Fix connection bug
-  - `#120 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/120>`_: Make state machines thread safe using RLocks
-  - `#154 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/154>`_: Multi-Selection problems
-  - `#159 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/159>`_: Transitions cannot be selected
-  - `#179 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/179>`_: Allow external source editor
-  - `#202 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/202>`_: RAFCON crash
-  - `#221 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/221>`_: issue when dragging data flows
-  - `#222 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/222>`_: Cannot remove transition of root state in TransitionController
-  - `#223 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/223>`_: rafcon library config relative path undefined behaviour
-  - `#224 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/224>`_: Switch to respective state when trying to open a state which is already open.
+  - :issue:`5`: Fix connection bug
+  - :issue:`120`: Make state machines thread safe using RLocks
+  - :issue:`154`: Multi-Selection problems
+  - :issue:`159`: Transitions cannot be selected
+  - :issue:`179`: Allow external source editor
+  - :issue:`202`: RAFCON crash
+  - :issue:`221`: issue when dragging data flows
+  - :issue:`222`: Cannot remove transition of root state in TransitionController
+  - :issue:`223`: rafcon library config relative path undefined behaviour
+  - :issue:`224`: Switch to respective state when trying to open a state which is already open.
 
 - Refactoring:
 
@@ -115,14 +115,10 @@ Patch releases 0.7.\*
 
 - Fixes
 
-  - `#177 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/177>`_:
-    Data flow hiding not working
-  - `#183 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/183>`_:
-    Rafcon freeze after global variable delete
-  - `#53 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/53>`_:
-    Configurations GUI
-  - `#181 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/181>`_:
-    State type change not working
+  - :issue:`177`: Data flow hiding not working
+  - :issue:`183`: Rafcon freeze after global variable delete
+  - :issue:`53`: Configurations GUI
+  - :issue:`181`: State type change not working
   - Several further fixes
 
 - Refactorings, optimizations, clean ups
@@ -133,13 +129,11 @@ Patch releases 0.7.\*
 
 - Features:
 
-  - Global variables can now be typed, see issue
-    `#81 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/81>`_
+  - Global variables can now be typed, see :issue:`Feature #81<81>`
   - GUI for modifying the configurations
   - Config files can be im- and exported
   - Graphical editor can be shown in fullscreen mode (default with
-    F11), see issue
-    `#36 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/36>`_
+    F11), see :issue:`Feature #36<36>`
   - I18n: RAFCON can be translated into other languages, rudimentary
     German translation is available
   - RAFCON core can be started with several state machines
@@ -147,9 +141,8 @@ Patch releases 0.7.\*
 - Improvements:
 
   - Fix backward compatibility for old ``statemachine.yaml`` files
-  - Undocked sidebars no longer have an entry in the task bar and are
-    shown on top with the main window, see issue
-    `#136 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/136>`_
+  - :issue:`136`: Undocked sidebars no longer have an entry in the task bar and are
+    shown on top with the main window
   - Added tooltips
   - When starting RAFCON from the console, not only the path to, but
     also the file name of a config file can be specified. This allows
@@ -166,15 +159,11 @@ Patch releases 0.7.\*
 
 - Fixes
 
-  - `#161 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/161>`_:
-    When refreshing a running state machine, the refreshed one is
+  - :issue:`161`: When refreshing a running state machine, the refreshed one is
     still running
-  - `#168 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/168>`_:
-    Undocked sidebars cause issues with is\_focus()
-  - `#169 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/169>`_:
-    Wrong dirty flag handling
-  - `#182 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/182>`_:
-    Test start script waits infinitely
+  - :issue:`168`: Undocked sidebars cause issues with is\_focus()
+  - :issue:`169`: Wrong dirty flag handling
+  - :issue:`182`: Test start script waits infinitely
   - Several further fixes
 
 - Refactorings, optimizations, clean ups

@@ -32,7 +32,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.ifconfig',
-    'sphinx.ext.autosectionlabel'
+    'sphinx.ext.autosectionlabel',
+    'sphinx.ext.extlinks'
 ]
 
 try:
@@ -109,6 +110,9 @@ modindex_common_prefix = ['rafcon.']
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
+
+extlinks = {'issue': ('https://rmc-github.robotic.dlr.de/common/rafcon/issues/%s',
+                      'Issue #')}
 
 
 # -- Options for HTML output ----------------------------------------------
