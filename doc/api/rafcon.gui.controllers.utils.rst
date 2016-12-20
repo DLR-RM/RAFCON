@@ -19,8 +19,3 @@ SingleWidgetWindowController (in single_widget_window)
 ------------------------------------------------------
 
 .. automodule:: rafcon.gui.controllers.utils.single_widget_window
-
-MoveAndEditWithTabKeyListFeatureController (in tab_key)
--------------------------------------------------------
-
-.. automodule:: rafcon.gui.controllers.utils.tab_key
