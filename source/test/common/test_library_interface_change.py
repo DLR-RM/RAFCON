@@ -14,7 +14,7 @@ from rafcon.utils import log
 logger = log.get_logger("start-no-gui")
 
 
-def setup_function():
+def setup_function(_):
     # set the test_libraries path temporarily to the correct value
     testing_utils.remove_all_libraries()
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
