@@ -1,6 +1,6 @@
 
 This page is intended as a public discussion for the development of new
-features in `RAFCON <home.rst>`__.
+features in :ref:`RAFCON`.
 
 Run core on a different host than the GUI host
 ----------------------------------------------

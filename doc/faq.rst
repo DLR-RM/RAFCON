@@ -2,7 +2,7 @@ FAQ
 ===
 
 On this page, we collect Frequently Ask Questions (FAQ) about
-`RAFCON <home.rst>`__. At the moment, there are three categories of
+:ref:`RAFCON`. At the moment, there are three categories of
 questions concerning `Core`_, `API`_ or
 `GUI`_. If you have a new question, please feel free to add
 those to the section `New Questions`_.
@@ -18,7 +18,7 @@ Where I can configure the RAFCON core?
 The core RAFCON configuration file is generally situated here
 ``~/.config/rafcon/config.yaml`` but also can be handed using a path as
 the config-folder parameter ``-c`` in the command line. For further
-explanation see `RAFCON/Configuration <configuration.rst>`__
+explanation see :ref:`Configuration`.
 
 Where can instances of global classes be initialized (e.g. a LN-client)?
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -278,7 +278,7 @@ Where can I configure the RAFCON GUI?
 You can either use File => Settings or manually edit
 ``~/.config/rafcon/gui_config.yaml``. This location can also be specified
 by the parameter ``-c`` in the command line. For further explanation see
-`RAFCON/Configuration <configuration.rst>`__
+:ref:`Configuration`.
 
 How can the hierarchy level of a state be changed in the graphical editor after it was created?
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""

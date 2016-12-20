@@ -1,7 +1,7 @@
 Changelog
 =========
 
-`RAFCON <index.rst>`__ is getting closer to a "public" release version.
+:ref:`RAFCON` is getting closer to a "public" release version.
 Therefore, we now try to create beta release versions regularly. The
 versions can be found both on
 `GitHub <https://rmc-github.robotic.dlr.de/common/rafcon/releases>`__ and

@@ -14,7 +14,7 @@ simple state-machine printing the lyrics of "99 Bottles of Beer", a
 `slightly advanced version of a Hello World
 program <http://en.wikipedia.org/wiki/99_Bottles_of_Beer#References_in_science>`__.
 The purpose is to give a first impression of how to create programs with
-`RAFCON <home.rst>`__, how to create loops and illustrate different ways
+:ref:`RAFCON`, how to create loops and illustrate different ways
 of achieving things in RAFCON.
 
 #. Start with a new state machine (first button in the tool bar or File
@@ -257,7 +257,7 @@ We edit the ``LIBRARY_PATH`` to take into account the library with name
 
 RAFCON assumes the path to be existing, so make sure it is.
 
-Now, we can `start RAFCON <getting_started.rst>`__. On the left side
+Now, we can :ref:`Getting started`. On the left side
 in the Library Tree, you can now see the new entry ``lib_tutorial``,
 which is currently empty (see Figure above).
 
@@ -415,7 +415,7 @@ By running RAFCON after sourcing the environment, the
 ``network_config.yaml`` is automatically generated in our home folder:
 ``~.config/rafcon/`` if it does not already exist. This file contains
 all settings for the communication. More details can be found at the
-`configuration page <configuration.rst>`__. The path of the
+:ref:`Configuration`. The path of the
 ``network_config.yaml`` can be changed by running the ``start.py``
 script with argument "-nc", which will be neccessary when we want to
 connect server and client running on a single system as like in this

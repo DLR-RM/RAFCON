@@ -1,7 +1,7 @@
 Plugins
 =======
 
-For `RAFCON <index.rst>`__, a plugin concept has been implemented and there
+For :ref:`RAFCON`, a plugin concept has been implemented and there
 are already some plugins out there. Most notable is the "Monitoring
 Plugin", which supports remote access and observation of a state-machine
 running somewhere in the network. There is also a plugin template
@@ -83,7 +83,7 @@ Monitoring Plugin
 
 This RAFCON plugin enables monitoring RAFCON instances via unsecure
 UDP/IP. The RMPM package name is ``rafcon_monitoring_plugin``. See also:
-"Using the monitoring plugin" at the `Tutorials <tutorials.rst>`__ page.
+"Using the monitoring plugin" at the :ref:`Tutorials` page.
 
 DDS Monitoring Plugin
 """""""""""""""""""""

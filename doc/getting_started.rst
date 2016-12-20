@@ -1,7 +1,7 @@
 Getting started
 ===============
 
-This guide will help you getting started with RAFCON.
+This guide will help you getting started with :ref:`RAFCON`.
 
 Start RAFCON with GUI
 ---------------------

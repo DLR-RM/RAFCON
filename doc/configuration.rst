@@ -1,7 +1,7 @@
 Configuration
 =============
 
-`RAFCON <index.rst>`__ can be configured using two config files, one for
+:ref:`RAFCON` can be configured using two config files, one for
 the core and one for the GUI. The config files are automatically
 generated (if not existing) on the first run of RAFCON. It is stored in
 your home folder: ``~/.config/rafcon/`` with name ``config.yaml`` and

@@ -5,8 +5,8 @@
    :align: center
 
 
-RMC advanced flow control
-=========================
+RAFCON
+======
 
 RAFCON (**R**\ MC **a**\ wesome [or advanced] **F**\ low **Con**\ trol, new name, aka Awesome tool) is an effort of
 DLR RMC to create a new flow control tool, based on existing ones. On the wiki page `Ablaufsteuerung

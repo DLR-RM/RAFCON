@@ -1,7 +1,7 @@
 Concepts
 ========
 
-A state-machine in RAFCON consists of states connected with transitions.
+A state-machine in :ref:`RAFCON` consists of states connected with transitions.
 In addition to this logical flow, RAFCON introduces what is called a
 data flow. This allows data to be directly shared between states.
 

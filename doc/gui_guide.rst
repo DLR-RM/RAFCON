@@ -1,7 +1,7 @@
 GUI Guide
 =========
 
-At this point a common guide for the `RAFCON <home.rst>`__-GUI will be
+At this point a common guide for the :ref:`RAFCON`-GUI will be
 generated. The page contains advises of how to use the widgets
 effectively and will be updated with new features of widgets and their
 usage.
@@ -9,12 +9,12 @@ usage.
 Left Bar
 --------
 
-Library Tree
-""""""""""""
+Library Tree widget
+"""""""""""""""""""
 
 The Library tree shows all library mounted by the LIBRARY\_PATH defined
 in your configuration file, see
-`RAFCON/Configuration <configuration.rst>`__.Sub-library paths unfold
+:ref:`Configuration`. Sub-library paths unfold
 and fold by double-click and a library directly is open by double-click
 it. A right-click on the row of a library element opens a menu with the
 options "Add as Library", "Add as template", "Open" and "Open and run".
@@ -24,8 +24,8 @@ actual selected state (as long as selected state is a ContainerState).
 The Library Tree can be reloaded by pressing the "Refresh"- or the
 "Refresh Libraries"-Button in the Menu-Bar or Tool-Bar, above.
 
-State Machine Tree
-""""""""""""""""""
+State Machine Tree widget
+"""""""""""""""""""""""""
 
 The State Machine Tree (or "State Tree") shows all states that are in
 the actual selected state-machine, its state\_id and the type of the
@@ -33,13 +33,13 @@ state. A state is selected if respective row becomes selected and the
 row of a state becomes selected if the state becomes selected by another
 widget. A selected state can be removed by pressing the delete-shortcut
 or a state can be added into a selected state/row by pressing the
-add-shortcut. See `RAFCON/Configuration <configuration.rst>`__ to
+add-shortcut. See :ref:`Configuration` to
 define those shortcuts.
 
-Global Variable Manager
-"""""""""""""""""""""""
+Global Variable Manager widget
+""""""""""""""""""""""""""""""
 
-The Global Varaible Widget shows all existing global variables, their
+The Global Variable Widget shows all existing global variables, their
 names, values and if they are locked. The name and value can be edited
 by clicking into those and "shift-tab", "tab", and the "arrow-keys" can
 be used to move throw the editable columns and variables. Press Enter or
@@ -47,11 +47,11 @@ move by using "shift-tab" or "tab" to confirm a change of a specific
 element. A selected global variable can be removed by pressing the
 delete-shortcut or a state can be added into a selected variable/row by
 pressing the add-shortcut. See
-`RAFCON/Configuration <configuration.rst>`__ to define those
+:ref:`Configuration` to define those
 shortcuts.
 
-Modification History
-""""""""""""""""""""
+Modification History widget
+"""""""""""""""""""""""""""
 
 .. figure:: assets/EditHistory.jpg
    :width: 25 %
@@ -90,22 +90,21 @@ element 0 which is labeled by action "None".
 
 -  history that is stored to be used after re-opening a state machine
 
-Execution History
-"""""""""""""""""
+Execution History widget
+""""""""""""""""""""""""
 
 Description in progress ...
 
 Center Pane
 -----------
 
-Graphical State Machine Editor
-""""""""""""""""""""""""""""""
+Graphical State Machine Editor widget
+"""""""""""""""""""""""""""""""""""""
 
 There are two different graphical editors for editing a state machine.
 Originally, the editor used OpenGL and was rather ugly. This is still
 the default editor. It is currently being replaced by an editor using
-the Python library "Gaphas". The `configuration
-documentation <configuration.rst>`__ explains how
+the Python library "Gaphas". The :ref:`Configuration` explains how
 to switch between the two editors.
 
 The Gaphas graphical editor is more advanced than the OpenGL one and
@@ -128,8 +127,8 @@ aware of:
 You can also drag'n'drop states into the editor. This is possible from
 the four "+ \*S" buttons below the editor and from the libraries widget.
 
-Debug Console
-"""""""""""""
+Debug Console widget
+""""""""""""""""""""
 
 The Debug Console can be found below the Grafical Editor. All messages
 will be displayed in it, whereas the type of the displayed messages can
@@ -154,8 +153,8 @@ Every "State Editor" consists of the three widgets described below: The
 State Overview, State content (with widgets for the Source Editor, Ports
 and Connection) and State Description/Summary.
 
-State Overview
-""""""""""""""
+State Overview widget
+"""""""""""""""""""""
 
 The State Overview can be found directly under the "STATE EDITOR"
 headline. It provides the name of the selected state, which can be
@@ -166,15 +165,15 @@ the possibility to pin selected states at the state editor by clicking
 on the pin symbol next to the blue highlighted state name, which allows
 an userfriendly switching between states.)
 
-Source Editor
-"""""""""""""
+Source Editor widget
+""""""""""""""""""""
 
 The Source Editor is the first tab of the notebook in the middle. It is
 a numbered editor with the buttons "Apply" to store and "Cancel" to
 discard changes.
 
-Outcomes and Transitions
-""""""""""""""""""""""""
+Outcomes and Transitions widget
+"""""""""""""""""""""""""""""""
 
 By clicking the middle tab of the center notebook, the sub-widgets
 Outcomes and Transitions can be reached. In the Outcomes widget the
@@ -191,8 +190,8 @@ State" with "Target Outcome". Todo: Internal/External With the buttons
 "Add" and "Remove", additional transitions can be added and selected
 ones can be deleted.
 
-Data Ports and Data Flows
-"""""""""""""""""""""""""
+Data Ports and Data Flows widget
+""""""""""""""""""""""""""""""""
 
 Data Ports and Data Flows sub-widgets can be shown by clicking the last
 tab of the middle notebook. Within the Data Ports sub-widget it is
@@ -208,23 +207,23 @@ the input ports is shown, while "Target State" and "Target Port" shows
 the targets of the output ports. With the buttons "Add" and "Remove",
 additional rows can be inserted and edited as like selected ones removed
 
-Data Linkage
-""""""""""""
+Data Linkage widget
+"""""""""""""""""""
 
 Description in progress ...
 
-Logical Linkage
-"""""""""""""""
+Logical Linkage widget
+""""""""""""""""""""""
 
 Description in progress ...
 
-Linkage Overview
-""""""""""""""""
+Linkage Overview widget
+"""""""""""""""""""""""
 
 Description in progress ...
 
-State Description
-"""""""""""""""""
+State Description widget
+""""""""""""""""""""""""
 
 The State Description sub-widget can be reached by clicking the second
 tab of the lower notebook. It is an editor, where comments or a
