@@ -71,6 +71,7 @@ setup(
     # install_requires=['docutils>=0.3', 'numpy', 'OpenGL', 'twisted', 'gtkmvc', 'parser', 'gtk', 'astroid', 'json',
     #                   'pyyaml'],
 
+    setup_requires=['Sphinx>=1.4'],
     tests_require=['pytest'],
     install_requires=['astroid', 'pylint', 'pyyaml'],
 
