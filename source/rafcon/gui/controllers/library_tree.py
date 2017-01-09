@@ -155,7 +155,7 @@ class LibraryTreeController(ExtendedController):
         if self.__expansion_state:
             logger.info("Libraries have been updated")
         else:
-            logger.info("Library tree have been initiated")
+            logger.info("Library tree has been initialized")
 
     @staticmethod
     def convert_if_human_readable(s):
