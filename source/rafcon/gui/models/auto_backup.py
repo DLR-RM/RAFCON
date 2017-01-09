@@ -28,7 +28,7 @@ if not os.path.exists(RAFCON_RUNTIME_BACKUP_PATH):
 try:
     import psutil
     process_id_list = [process.pid for process in psutil.process_iter()]
-except OSError:
+except (OSError, ImportError):
     logger.info("Could not retrieve list of current process ids")
     process_id_list = []
 
