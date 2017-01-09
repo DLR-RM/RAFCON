@@ -47,6 +47,10 @@ class PyTest(TestCommand):
         os.environ["PYTHONPATH"] = rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
         error_number = pytest.main(self.pytest_args + ['source/test/all'])
         sys.exit(error_number)
+
+
+global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil']
+
 setup(
     name='RAFCON',
     version=read_version_from_pt_file(),
@@ -71,9 +75,9 @@ setup(
     # install_requires=['docutils>=0.3', 'numpy', 'OpenGL', 'twisted', 'gtkmvc', 'parser', 'gtk', 'astroid', 'json',
     #                   'pyyaml'],
 
-    setup_requires=['Sphinx>=1.4'],
-    tests_require=['pytest'],
-    install_requires=['astroid', 'pylint', 'pyyaml'],
+    setup_requires=['Sphinx>=1.4', 'Pygments>=2.0'] + global_requirements,
+    tests_require=['pytest'] + global_requirements,
+    install_requires=global_requirements,
 
     cmdclass={'test': PyTest}
 )

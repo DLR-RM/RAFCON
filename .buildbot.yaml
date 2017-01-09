@@ -8,5 +8,9 @@ arch_ignore_failure:
 doc_dir: 'build_doc'
 
 test:
-  - eval "$(rmpm_do env --env-format embed_sh sw.common.pip2 | xargs)"
-  - python setup.py -v test
+  - export PATH=${VIRTUAL_ENV}/bin:${PATH}
+  - export PYTHONPATH=${PYTHONPATH}:${VIRTUAL_ENV}/lib/python2.7/site-packages
+  - echo PATH: $PATH
+  - echo PYTHONPATH: $PYTHONPATH
+  - pip freeze
+  - python setup.py test
