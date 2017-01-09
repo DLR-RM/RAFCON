@@ -10,7 +10,7 @@ doc_dir: 'build_doc'
 test:
   - export PATH=${VIRTUAL_ENV}/bin:${PATH}
   - export PYTHONPATH=${PYTHONPATH}:${VIRTUAL_ENV}/lib/python2.7/site-packages
-  - echo PATH: $PATH
-  - echo PYTHONPATH: $PYTHONPATH
+  - echo "PATH:" $PATH
+  - echo "PYTHONPATH:" $PYTHONPATH
   - pip freeze
   - python setup.py test
