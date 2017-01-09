@@ -1,21 +1,14 @@
 #!/usr/bin/python
 
-import logging
 import os
 import gtk
-import signal
-import argparse
-from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
+from os.path import join, expanduser
 import threading
-import sys
-
-import rafcon
+import time
 
 from rafcon.utils import log
 
 from rafcon.core.config import global_config
-from rafcon.core.state_machine import StateMachine
-from rafcon.core.states.hierarchy_state import HierarchyState
 import rafcon.core.singleton as sm_singletons
 import rafcon.core.storage.storage as storage
 
@@ -72,12 +65,14 @@ def trigger_gui_signals(*args):
     setup_config = args[2]
     state_machine = args[3]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    menubar_ctrl.on_save_as_activate(None, None, setup_config['target_path'][0])
-    import time
-    while state_machine.marked_dirty:
-        time.sleep(0.1)
-    call_gui_callback(menubar_ctrl.on_stop_activate, None)
-    call_gui_callback(menubar_ctrl.on_quit_activate, None)
+    try:
+        menubar_ctrl.on_save_as_activate(None, None, setup_config['target_path'][0])
+        while state_machine.marked_dirty:
+            time.sleep(0.1)
+    except:
+        logger.exception("Could not save state machine")
+    finally:
+        call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
 def convert(config_path, source_path, target_path=None):
