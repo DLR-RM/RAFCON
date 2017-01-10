@@ -43,10 +43,10 @@ class StateMachineManager(Observable):
         for sm_id in sm_ids:
             self.remove_state_machine(sm_id)
 
-    def open_state_machines(self, sm_ids, state_machine_path_by_sm_id):
+    def open_state_machines(self, state_machine_path_by_sm_id):
         from rafcon.core.storage import storage
-        for sm_idx in range(len(state_machine_path_by_sm_id)):
-            state_machine = storage.load_state_machine_from_path(state_machine_path_by_sm_id[sm_ids[sm_idx]])
+        for sm_id, sm_path in state_machine_path_by_sm_id.iteritems():
+            state_machine = storage.load_state_machine_from_path(sm_path, sm_id)
             self.add_state_machine(state_machine)
 
     def get_sm_id_for_root_state_id(self, root_state_id):

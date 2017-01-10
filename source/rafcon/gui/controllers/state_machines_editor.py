@@ -168,10 +168,19 @@ class StateMachinesEditorController(ExtendedController):
                     self.last_opened_state_machines.append(new_sm_id)
                 return
 
-    def get_page_id(self, state_machine_id):
+    def rearrange_state_machines(self, page_num_by_sm_id):
+        for sm_id, page_num in page_num_by_sm_id.iteritems():
+            state_machine_m = self.tabs[sm_id]['state_machine_m']
+            tab, tab_label = create_tab_header('', self.on_close_clicked, state_machine_m, 'refused')
+            set_tab_label_texts(tab_label, state_machine_m, state_machine_m.state_machine.marked_dirty)
+            page = self.tabs[sm_id]['page']
+            self.view.notebook.remove_page(self.get_page_num(sm_id))
+            self.view.notebook.insert_page(page, tab, page_num)
+
+    def get_page_num(self, state_machine_id):
         page = self.tabs[state_machine_id]['page']
-        page_id = self.view.notebook.page_num(page)
-        return page_id
+        page_num = self.view.notebook.page_num(page)
+        return page_num
 
     def get_page_for_state_machine_id(self, state_machine_id):
         return self.tabs[state_machine_id]['page']
@@ -224,7 +233,7 @@ class StateMachinesEditorController(ExtendedController):
         if selected_state_machine_id is None:
             return
 
-        page_id = self.get_page_id(selected_state_machine_id)
+        page_id = self.get_page_num(selected_state_machine_id)
 
         # to retrieve the current tab colors
         number_of_pages = self.view["notebook"].get_n_pages()
@@ -243,6 +252,10 @@ class StateMachinesEditorController(ExtendedController):
             label = self.view["notebook"].get_tab_label(page).get_children()[0]
             label.modify_fg(gtk.STATE_ACTIVE, old_label_colors[p])
             label.modify_fg(gtk.STATE_INSENSITIVE, old_label_colors[p])
+
+    def set_active_state_machine(self, state_machine_id):
+        page_num = self.get_page_num(state_machine_id)
+        self.view.notebook.set_current_page(page_num)
 
     @ExtendedController.observe("state_machines", after=True)
     def model_changed(self, model, prop_name, info):
@@ -341,7 +354,7 @@ class StateMachinesEditorController(ExtendedController):
         # the following statement will switch the selected notebook tab automatically and the history of the
         # last opened state machines will be destroyed
         # Close tab and remove info
-        page_id = self.get_page_id(sm_id)
+        page_id = self.get_page_num(sm_id)
         self.view.notebook.remove_page(page_id)
         del self.tabs[sm_id]
         self.remove_controller(sm_id)

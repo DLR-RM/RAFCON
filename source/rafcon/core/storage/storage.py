@@ -221,7 +221,7 @@ def save_state_recursively(state, base_path, parent_path, temporary_storage=Fals
             save_state_recursively(state, base_path, state_path, temporary_storage)
 
 
-def load_state_machine_from_path(base_path):
+def load_state_machine_from_path(base_path, state_machine_id=None):
     """Loads a state machine from the given path
 
     :param base_path: An optional base path for the state machine.
@@ -244,7 +244,7 @@ def load_state_machine_from_path(base_path):
 
     if os.path.exists(state_machine_file_path):
         state_machine_dict = storage_utils.load_objects_from_json(state_machine_file_path)
-        state_machine = StateMachine.from_dict(state_machine_dict)
+        state_machine = StateMachine.from_dict(state_machine_dict, state_machine_id)
         if "root_state_storage_id" not in state_machine_dict:
             root_state_storage_id = state_machine_dict['root_state_id']
             state_machine.supports_saving_state_names = False
@@ -267,7 +267,8 @@ def load_state_machine_from_path(base_path):
             last_update = creation_time
         else:
             last_update = tmp_dict['last_update']
-        state_machine = StateMachine(version=version, creation_time=creation_time, last_update=last_update)
+        state_machine = StateMachine(version=version, creation_time=creation_time, last_update=last_update,
+                                     state_machine_id=state_machine_id)
         state_machine.supports_saving_state_names = False
 
     root_state_path = os.path.join(base_path, root_state_storage_id)
