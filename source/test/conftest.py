@@ -7,4 +7,7 @@ def clean_temp_test_directory():
     import shutil
     import testing_utils
     test_temp_path = testing_utils.RAFCON_TEMP_PATH_TEST_BASE
-    shutil.rmtree(test_temp_path)
+    try:
+        shutil.rmtree(test_temp_path)
+    except OSError:
+        pass
