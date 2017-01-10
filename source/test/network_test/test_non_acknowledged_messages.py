@@ -1,4 +1,5 @@
 from multiprocessing import Process, Queue
+from Queue import Empty
 import os
 import threading
 import time
@@ -131,13 +132,18 @@ def test_non_acknowledged_messages():
     client = Process(target=start_udp_client, args=("udp_client1", q))
     client.start()
 
-    data = q.get(timeout=30)
-    assert data == FINAL_MESSAGE
-    q.put(FINAL_MESSAGE, timeout=30)
-    q.put(FINAL_MESSAGE)
-
-    server.join(30)
-    client.join(30)
+    try:
+        data = q.get(timeout=10)
+        assert data == FINAL_MESSAGE
+        q.put(FINAL_MESSAGE, timeout=10)
+        q.put(FINAL_MESSAGE)
+    except Empty:
+        server.terminate()
+        client.terminate()
+        raise
+    finally:
+        server.join(10)
+        client.join(10)
 
     assert not server.is_alive(), "Server is still alive"
     assert not client.is_alive(), "Client is still alive"

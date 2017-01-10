@@ -1,4 +1,5 @@
 from multiprocessing import Process, Queue
+from Queue import Empty
 import os
 import threading
 import time
@@ -147,17 +148,23 @@ def test_acknowledged_messages():
     client = Process(target=start_udp_client, args=("udp_client", q))
     client.start()
 
-    data = q.get(timeout=30)
-    if data == "Success":
-        logger.info("Test successful\n\n")
-    else:
-        logger.error("Test failed\n\n")
+    try:
+        data = q.get(timeout=10)
+        if data == "Success":
+            logger.info("Test successful\n\n")
+        else:
+            logger.error("Test failed\n\n")
 
-    q.put(FINAL_MESSAGE, timeout=30)
-    q.put(FINAL_MESSAGE, timeout=30)
-
-    server.join(30)
-    client.join(30)
+        q.put(FINAL_MESSAGE, timeout=10)
+        q.put(FINAL_MESSAGE, timeout=10)
+    except Empty:
+        server.terminate()
+        client.terminate()
+        time.sleep(0.1)
+        raise
+    finally:
+        server.join(10)
+        client.join(10)
 
     # Uninstall reactor to allow further test with custom reactors
     del sys.modules["twisted.internet.reactor"]

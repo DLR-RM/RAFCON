@@ -10,6 +10,7 @@
 
 from multiprocessing import Process, Queue
 import multiprocessing
+from Queue import Empty
 import threading
 import time
 import os
@@ -401,24 +402,29 @@ def test_network_gui():
     client1 = Process(target=launch_client, args=(interacting_function_client1, queue_dict))
     client1.start()
 
-    data = queue_dict[MAIN_QUEUE].get(timeout=30)
-    assert data == STOP_START_SUCCESSFUL
+    try:
+        data = queue_dict[MAIN_QUEUE].get(timeout=10)
+        assert data == STOP_START_SUCCESSFUL
 
-    data = queue_dict[MAIN_QUEUE].get(timeout=30)
-    assert data == DISCONNECTED_RUN_SUCCESSFUL
+        data = queue_dict[MAIN_QUEUE].get(timeout=10)
+        assert data == DISCONNECTED_RUN_SUCCESSFUL
 
-    data = queue_dict[MAIN_QUEUE].get(timeout=30)
-    assert data == DISABLED_RUN_SUCCESSFUL
+        data = queue_dict[MAIN_QUEUE].get(timeout=10)
+        assert data == DISABLED_RUN_SUCCESSFUL
 
-    data = queue_dict[MAIN_QUEUE].get(timeout=30)
-    assert data == APPLY_CONFIG_SUCCESSFUL
+        data = queue_dict[MAIN_QUEUE].get(timeout=10)
+        assert data == APPLY_CONFIG_SUCCESSFUL
 
-    queue_dict[KILL_SERVER_QUEUE].put("Kill", timeout=30)
-    queue_dict[KILL_CLIENT1_QUEUE].put("Kill", timeout=30)
-
-    print "Joining processes"
-    server.join(timeout=30)
-    client1.join(timeout=30)
+        queue_dict[KILL_SERVER_QUEUE].put("Kill", timeout=10)
+        queue_dict[KILL_CLIENT1_QUEUE].put("Kill", timeout=10)
+    except Empty:
+        server.terminate()
+        client1.terminate()
+        raise
+    finally:
+        print "Joining processes"
+        server.join(timeout=10)
+        client1.join(timeout=10)
 
     assert not server.is_alive(), "Server is still alive"
     assert not client1.is_alive(), "Client1 is still alive"
