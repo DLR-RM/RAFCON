@@ -618,10 +618,11 @@ class MenuBarController(ExtendedController):
     def refresh_state_machines(self):
         # delete dirty flags for state machines
         state_machine_manager.reset_dirty_flags()
+        currently_selected_sm_id = self.model.get_selected_state_machine_model().state_machine.state_machine_id
 
         # create a dictionary from state machine id to state machine path
         state_machine_path_by_sm_id = {}
-        sm_keys = []
+        page_num_by_sm_id = {}
         for sm_id, sm in state_machine_manager.state_machines.iteritems():
             # the sm.base_path is only None if the state machine has never been loaded or saved before
             if sm.file_system_path is not None:
@@ -633,13 +634,15 @@ class MenuBarController(ExtendedController):
                     new_path = "%s/%s" % (new_path, path_items[i + 1])
                 # print new_path
                 state_machine_path_by_sm_id[sm_id] = new_path
-                sm_keys.append(sm_id)
+                page_num_by_sm_id[sm_id] = self.state_machines_editor_ctrl.get_page_num(sm_id)
 
         self.states_editor_ctrl.close_all_pages()
         self.state_machines_editor_ctrl.close_all_pages()
 
         # reload state machines from file system
-        state_machine_manager.open_state_machines(sm_keys, state_machine_path_by_sm_id)
+        state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
+        self.state_machines_editor_ctrl.rearrange_state_machines(page_num_by_sm_id)
+        self.state_machines_editor_ctrl.set_active_state_machine(currently_selected_sm_id)
 
     def on_quit_activate(self, widget, data=None, force=False):
         avoid_shutdown = self.on_delete_event(self, widget, None, force=force)

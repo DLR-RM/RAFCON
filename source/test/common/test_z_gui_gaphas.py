@@ -68,7 +68,7 @@ def trigger_copy_delete_bug_signals(*args):
     new_state_m = new_hstate_m.states.values()[0]
 
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
-    page_id = state_machines_ctrl.get_page_id(first_sm_id)
+    page_id = state_machines_ctrl.get_page_num(first_sm_id)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
     select_and_paste_state(sm_m, new_state_m, root_state_m, menubar_ctrl, 'copy', main_window_controller, page)
 

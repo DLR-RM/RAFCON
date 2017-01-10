@@ -146,7 +146,7 @@ def trigger_gui_signals(*args):
     main_window_controller.view['main_window'].grab_focus()
     sm_manager_model.selected_state_machine_id = first_sm_id + 2
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
-    page_id = state_machines_ctrl.get_page_id(first_sm_id + 2)
+    page_id = state_machines_ctrl.get_page_num(first_sm_id + 2)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
     focus_graphical_editor_in_page(page)
     testing_utils.wait_for_gui()

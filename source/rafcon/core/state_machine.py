@@ -43,12 +43,15 @@ class StateMachine(Observable, JSONObject, Hashable):
     _marked_dirty = True
     _file_system_path = None
 
-    def __init__(self, root_state=None, version=None, creation_time=None, last_update=None):
+    def __init__(self, root_state=None, version=None, creation_time=None, last_update=None, state_machine_id=None):
         Observable.__init__(self)
 
         self._modification_lock = RLock()
 
-        self.state_machine_id = generate_state_machine_id()
+        if state_machine_id is None:
+            self.state_machine_id = generate_state_machine_id()
+        else:
+            self.state_machine_id = state_machine_id
 
         if root_state:
             self.root_state = root_state
@@ -80,11 +83,11 @@ class StateMachine(Observable, JSONObject, Hashable):
         return self.__copy__()
 
     @classmethod
-    def from_dict(cls, dictionary):
+    def from_dict(cls, dictionary, state_machine_id=None):
         version = dictionary['version']
         creation_time = dictionary['creation_time']
         last_update = dictionary['last_update']
-        return cls(None, version, creation_time, last_update)
+        return cls(None, version, creation_time, last_update, state_machine_id)
 
     def to_dict(self):
         return self.state_machine_to_dict(self)
