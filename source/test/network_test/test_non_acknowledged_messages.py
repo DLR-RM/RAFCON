@@ -1,5 +1,4 @@
 from multiprocessing import Process, Queue
-from Queue import Empty
 import os
 import threading
 import time
@@ -8,8 +7,6 @@ import pytest
 import sys
 sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
 
-from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
-from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 
 from acknowledged_udp.udp_client import UdpClient
@@ -137,7 +134,7 @@ def test_non_acknowledged_messages():
         assert data == FINAL_MESSAGE
         q.put(FINAL_MESSAGE, timeout=10)
         q.put(FINAL_MESSAGE)
-    except Empty:
+    except:
         server.terminate()
         client.terminate()
         raise

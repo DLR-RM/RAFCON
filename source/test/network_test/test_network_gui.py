@@ -10,7 +10,6 @@
 
 from multiprocessing import Process, Queue
 import multiprocessing
-from Queue import Empty
 import threading
 import time
 import os
@@ -417,7 +416,7 @@ def test_network_gui():
 
         queue_dict[KILL_SERVER_QUEUE].put("Kill", timeout=10)
         queue_dict[KILL_CLIENT1_QUEUE].put("Kill", timeout=10)
-    except Empty:
+    except:
         server.terminate()
         client1.terminate()
         raise

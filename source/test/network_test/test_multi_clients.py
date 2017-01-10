@@ -10,7 +10,6 @@
 
 from multiprocessing import Process, Queue
 import multiprocessing
-from Queue import Empty
 import threading
 import time
 import os
@@ -348,7 +347,7 @@ def test_multi_clients():
 
         data = queue_dict[MAIN_QUEUE].get(timeout=10)
         # print "===========================================", data
-    except Empty:
+    except:
         server.terminate()
         client1.terminate()
         client2.terminate()
