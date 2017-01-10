@@ -30,7 +30,7 @@ class PyTest(TestCommand):
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
-        self.pytest_args = ['-xs']
+        self.pytest_args = ['-vx']
 
     def finalize_options(self):
         TestCommand.finalize_options(self)
@@ -45,7 +45,9 @@ class PyTest(TestCommand):
         sys.path.insert(0, test_path)
         sys.path.insert(0, rafcon_path)
         os.environ["PYTHONPATH"] = rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
-        error_number = pytest.main(self.pytest_args + ['source/test/all'])
+        error_number = pytest.main(self.pytest_args + ['source/test/network_test'])
+        if not error_number:
+            error_number = pytest.main(self.pytest_args + ['source/test/common'])
         sys.exit(error_number)
 
 
