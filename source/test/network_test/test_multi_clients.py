@@ -14,6 +14,8 @@ import threading
 import time
 import os
 import pytest
+from test_single_client import launch_client
+from test_single_client import launch_server
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -194,36 +196,6 @@ def interacting_function_client2(main_window_controller, global_monitoring_manag
     queue_dict[SERVER_TO_CLIENT2_QUEUE].get()  # synchronize to server
     queue_dict[KILL_CLIENT2_QUEUE].get()  # synchronize to main process
     os._exit(0)
-
-
-def launch_client(interacting_function_client, multiprocessing_queue_dict):
-    # explicitly add the monitoring plugin to the RAFCON_PLUGIN_PATH
-    if os.environ.get('RAFCON_PLUGIN_PATH', False):
-        del os.environ['RAFCON_PLUGIN_PATH']
-    os.environ['RAFCON_PLUGIN_PATH'] = \
-        "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
-
-    import test.network_test.start_client
-    test.network_test.start_client.start_client(interacting_function_client, multiprocessing_queue_dict)
-
-    import sys
-    sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
-
-
-def launch_server(interacting_function_handle_server_, multiprocessing_queue_dict):
-    # explicitly add the monitoring plugin to the RAFCON_PLUGIN_PATH
-    if os.environ.get('RAFCON_PLUGIN_PATH', False):
-        del os.environ['RAFCON_PLUGIN_PATH']
-    os.environ['RAFCON_PLUGIN_PATH'] = \
-        "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
-
-    import test.network_test.start_server
-    server = Process(target=test.network_test.start_server.start_server,
-                     args=(interacting_function_handle_server_, multiprocessing_queue_dict))
-
-    import sys
-    sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
-    return server
 
 
 def test_multi_clients():
