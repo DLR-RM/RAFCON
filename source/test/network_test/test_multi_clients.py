@@ -302,11 +302,26 @@ def launch_server(interacting_function_handle_server_, multiprocessing_queue_dic
 
     import sys
     sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
-
     return server
 
 
+def check_if_ports_are_open():
+    import psutil
+    from acknowledged_udp.config import global_network_config
+    config_path = os.path.abspath(path=os.path.dirname(os.path.abspath(__file__)) + "/server")
+    global_network_config.load(path=config_path)
+    for connection in psutil.net_connections():
+        if int(global_network_config.get_config_value("SERVER_UDP_PORT")) == connection.laddr[1]:
+            return False
+    return True
+
+
 def test_multi_clients():
+
+    if not check_if_ports_are_open():
+        print "Address already in use by another server!"
+        assert True == False
+
     test_successful = True
 
     queue_dict = dict()
