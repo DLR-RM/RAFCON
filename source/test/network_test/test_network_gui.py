@@ -388,9 +388,7 @@ def launch_server(interacting_function_handle_server_, multiprocessing_queue_dic
 def test_network_gui():
 
     from test_multi_clients import check_if_ports_are_open
-    if not check_if_ports_are_open():
-        print "Address already in use by another server!"
-        assert True == False
+    assert check_if_ports_are_open(), "Address already in use by another server!"
 
     test_successful = True
 

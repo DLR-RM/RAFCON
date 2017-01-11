@@ -140,9 +140,7 @@ def start_udp_client(name, multi_processing_queue):
 def test_acknowledged_messages():
 
     from test_multi_clients import check_if_ports_are_open
-    if not check_if_ports_are_open():
-        print "Address already in use by another server!"
-        assert True == False
+    assert check_if_ports_are_open(), "Address already in use by another server!"
 
     q = Queue()
     server = Process(target=start_udp_server, args=("udp_server", q))

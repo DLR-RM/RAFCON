@@ -305,22 +305,32 @@ def launch_server(interacting_function_handle_server_, multiprocessing_queue_dic
     return server
 
 
-def check_if_ports_are_open():
+def check_if_ports_are_open(try_to_open=True):
     import psutil
     from acknowledged_udp.config import global_network_config
     config_path = os.path.abspath(path=os.path.dirname(os.path.abspath(__file__)) + "/server")
     global_network_config.load(path=config_path)
     for connection in psutil.net_connections():
         if int(global_network_config.get_config_value("SERVER_UDP_PORT")) == connection.laddr[1]:
-            return False
+            if not try_to_open or not connection.pid:
+                return False
+            try:
+                logger.info("Trying to kill process with PID {}".format(connection.pid))
+                process = psutil.Process(connection.pid)
+                logger.info("Process: {}".format(' '.join(process.cmdline())))
+                process.kill()
+                time.sleep(5)
+            except:
+                pass
+            finally:
+                return check_if_ports_are_open(try_to_open=False)
+
     return True
 
 
 def test_multi_clients():
 
-    if not check_if_ports_are_open():
-        print "Address already in use by another server!"
-        assert True == False
+    assert check_if_ports_are_open(), "Address already in use by another server!"
 
     test_successful = True
 
