@@ -182,7 +182,8 @@ def signal_handler(signal, frame):
     except Exception as e:
         import traceback
         print _("Could not stop state machine: {0} {1}").format(e.message, traceback.format_exc())
-
+# from rafcon.utils import log
+    logger.info(_("RAFCON launcher"))
     mvc_singletons.main_window_controller.get_controller('menu_bar_controller').prepare_destruction()
 
     # shutdown twisted correctly
@@ -196,10 +197,13 @@ def signal_handler(signal, frame):
     plugins.run_hook("post_destruction")
 
 
-class splashScreen():
+class SplashScreen:
 
     def __init__(self, width=800, height=200, img_path=None, debug=False):
         self.debug = debug
+
+        # Set up generic window as a popup. Set the title to rafcon so it is detectable in taskbars
+        # set width and height to parameter values and position the window in the center
         self.window = gtk.Window(gtk.WINDOW_POPUP)
         self.window.set_title('RAFCON')
         self.window.set_default_size(width, height)
@@ -207,15 +211,18 @@ class splashScreen():
 
         main_vbox = gtk.VBox(False, 1)
         self.window.add(main_vbox)
-        if img_path:
-            self.pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, width-50, height-50)
 
+        # If an img path was defined, create a gtk img and fill it from a pixelbuffer which is created from the
+        # set file path
+        if img_path:
             self.image = gtk.Image()
 
             self.pixbuf = gtk.gdk.pixbuf_new_from_file_at_size(img_path, width-50, height-50)
             self.image.set_from_pixbuf(self.pixbuf)
             main_vbox.pack_start(self.image, True, True)
 
+        # add label to display text, the text can be changed by the text() method.
+        # Align it in the middle of the gtk window
         self.lbl = gtk.Label("")
         self.lbl.set_alignment(0.5, 0.5)
         main_vbox.pack_start(self.lbl, True, True)
@@ -232,8 +239,10 @@ class splashScreen():
 
 if __name__ == '__main__':
     register_signal_handlers(signal_handler)
-    spl_img_path = os.path.join(rafcon.__path__[0], '..', '..', 'documents', 'logo', 'bitmap', 'RAFCON_Logo_Farbe_CMYK_negativ.png')
-    splScr = splashScreen(img_path=spl_img_path)
+
+    spl_img_path = os.path.join(rafcon.__path__[0], '..', '..', 'documents', 'logo', 'bitmap',
+                                'RAFCON_Logo_Farbe_CMYK_negativ.png')
+    splScr = SplashScreen(img_path=spl_img_path)
     splScr.text("Starting RAFCON...")
     while gtk.events_pending():
         gtk.main_iteration()
@@ -246,7 +255,7 @@ if __name__ == '__main__':
     pre_setup_plugins()
 
     # from rafcon.utils import log
-    logger.info(_("RAFCON launcher"))
+    # logger.info(_("RAFCON launcher"))
 
     splScr.text("Setting up mvc enviroment...")
     setup_mvc_environment()
