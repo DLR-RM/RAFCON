@@ -6,6 +6,8 @@ import logging
 import gtk
 import threading
 import signal
+import rafcon
+import time
 from yaml_configuration.config import config_path
 
 # gui
@@ -194,18 +196,59 @@ def signal_handler(signal, frame):
     plugins.run_hook("post_destruction")
 
 
+class splashScreen():
+
+    def __init__(self, width=800, height=200, img_path=None, debug=False):
+        self.debug = debug
+        self.window = gtk.Window(gtk.WINDOW_POPUP)
+        self.window.set_title('RAFCON')
+        self.window.set_default_size(width, height)
+        self.window.set_position(gtk.WIN_POS_CENTER)
+
+        main_vbox = gtk.VBox(False, 1)
+        self.window.add(main_vbox)
+        if img_path:
+            self.pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, width-50, height-50)
+
+            self.image = gtk.Image()
+
+            self.pixbuf = gtk.gdk.pixbuf_new_from_file_at_size(img_path, width-50, height-50)
+            self.image.set_from_pixbuf(self.pixbuf)
+            main_vbox.pack_start(self.image, True, True)
+
+        self.lbl = gtk.Label("")
+        self.lbl.set_alignment(0.5, 0.5)
+        main_vbox.pack_start(self.lbl, True, True)
+
+        self.window.show_all()
+
+    def text(self, text):
+        self.lbl.set_text(text)
+        if self.debug:
+            time.sleep(1)
+        while gtk.events_pending():
+            gtk.main_iteration_do(True)
+        return
+
 if __name__ == '__main__':
     register_signal_handlers(signal_handler)
+    spl_img_path = os.path.join(rafcon.__path__[0], '..', '..', 'documents', 'logo', 'bitmap', 'RAFCON_Logo_Farbe_CMYK_negativ.png')
+    splScr = splashScreen(img_path=spl_img_path)
+    splScr.text("Starting RAFCON...")
+    while gtk.events_pending():
+        gtk.main_iteration()
 
     setup_l10n()
     setup_l10n_gtk()
 
+    splScr.text("Setting up logger...")
     setup_gtkmvc_logger()
     pre_setup_plugins()
 
     # from rafcon.utils import log
     logger.info(_("RAFCON launcher"))
 
+    splScr.text("Setting up mvc enviroment...")
     setup_mvc_environment()
 
     parser = setup_argument_parser()
@@ -220,6 +263,7 @@ if __name__ == '__main__':
 
     # setup the gui before loading the state machine as then the debug console shows the errors that emerged during
     # loading the state state machine
+    splScr.text("Setting up gui...")
     main_window_controller = setup_gui()
 
     while gtk.events_pending():
@@ -248,6 +292,8 @@ if __name__ == '__main__':
 
             reactor.run()
         else:
+            splScr.text("Done!")
+            splScr.window.destroy()
             gtk.main()
 
         logger.info(_("Main window was closed"))
