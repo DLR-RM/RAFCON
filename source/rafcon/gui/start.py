@@ -7,6 +7,7 @@ import gtk
 import threading
 import signal
 import rafcon
+import time
 from yaml_configuration.config import config_path
 
 # gui
@@ -200,8 +201,10 @@ if __name__ == '__main__':
     register_signal_handlers(signal_handler)
 
     spl_img_path = os.path.join(rafcon.__path__[0], '..', '..', 'documents', 'logo', 'bitmap',
-                                'RAFCON_Logo_Farbe_CMYK_negativ.png')
-    spl_scr = SplashScreen(img_path=spl_img_path)
+                                  'RAFCON_Logo_Farbe_CMYK_negativ.png')
+
+    spl_scr = SplashScreen(contains_image=True)
+    spl_scr.load_image(spl_img_path)
     spl_scr.text("Starting RAFCON...")
     while gtk.events_pending():
         gtk.main_iteration()
@@ -213,7 +216,6 @@ if __name__ == '__main__':
     setup_gtkmvc_logger()
     pre_setup_plugins()
 
-    # from rafcon.utils import log
     # logger.info(_("RAFCON launcher"))
 
     spl_scr.text("Setting up mvc enviroment...")
@@ -260,8 +262,7 @@ if __name__ == '__main__':
 
             reactor.run()
         else:
-            spl_scr.text("Done!")
-            spl_scr.window.destroy()
+            spl_scr.destroy()
             gtk.main()
 
         logger.info(_("Main window was closed"))
