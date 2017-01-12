@@ -1,36 +1,17 @@
-import os
-import gtk
 import threading
-import shutil
+import pytest
+import time
 
-# mvc
 from rafcon.gui.runtime_config import global_runtime_config
-import rafcon.gui.singleton
 from rafcon.gui.utils import constants
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
-
-from rafcon.utils import log
 
 import testing_utils
-from testing_utils import call_gui_callback
-import pytest
+from testing_utils import call_gui_callback, run_gui, wait_for_gui_quit
+from rafcon.utils import log
 
-DOCKING_TEST_FOLDER = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/config_docking_test'
-warnings = 0
-
-
-def mirror_runtime_config_file():
-    global warnings
-    path = os.path.join(os.path.expanduser('~'), '.config', 'rafcon')
-    runtime_config_file = os.path.join(path, 'runtime_config.yaml')
-    if os.path.isfile(runtime_config_file):
-        if not os.path.exists(DOCKING_TEST_FOLDER):
-            os.mkdir(DOCKING_TEST_FOLDER)
-        shutil.copyfile(runtime_config_file,
-                        testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/config_docking_test/runtime_config.yaml')
-    else:
-        warnings += 1
+logger = log.get_logger(__name__)
+ready = threading.Event()
+event_size = None
 
 
 def get_stored_window_size(window_name):
@@ -40,71 +21,92 @@ def get_stored_window_size(window_name):
     return size
 
 
-def get_stored_window_position(window_key):
-    return global_runtime_config.get_config_value(window_key.upper() + '_BAR_WINDOW_POS')
+def notify_on_event(window, event=None):
+    print "event", event
+    ready.set()
+    return True
 
 
-@log.log_exceptions(None, gtk_quit=True)
-def trigger_docking_signals(*args):
-    main_window_controller = args[0]
-    menu_bar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    condition = threading.Condition()
+def notify_on_resize_event(window, event=None):
+    global event_size
+    print "event", event
+    ready.set()
+    event_size = (event.width, event.height)
 
-    def ensure_completion(window, event):
-        condition.acquire()
-        print "notify"
-        condition.notify()
-        condition.release()
-        return True
 
-    def wait_for_gui():
-        condition.acquire()
-        print "wait"
-        condition.wait(0.5)
-        print "finally"
-        condition.release()
+def wait_for_gui():
+    if not ready.wait(2):
+        raise RuntimeError("A timeout occurred")
+
+
+def undock_sidebars():
+    from rafcon.gui.singleton import main_window_controller
+    debug_sleep_time = 0
 
     def test_bar(window, window_name, window_key):
-        window.connect('configure-event', ensure_completion)
+        configure_handler_id = window.connect('configure-event', notify_on_resize_event)
+        hide_handler_id = window.connect('hide', notify_on_event)
+
+        print "undocking..."
+        time.sleep(debug_sleep_time)
+        ready.clear()
         call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key)].emit, "clicked")
         wait_for_gui()
-        wait_for_gui()
-        assert window.get_property('visible') == True
-        should_size = get_stored_window_size(window_name)
-        assert window.get_size() == should_size
-        window.resize(600, 600)
-        wait_for_gui()
-        wait_for_gui()
+        assert window.get_property('visible') is True
+        expected_size = get_stored_window_size(window_name)
+        new_size = window.get_size()
+        assert new_size == expected_size
 
+        print "resizing..."
+        time.sleep(debug_sleep_time)
+        ready.clear()
+        target_size = (600, 600)
+        if new_size == target_size:
+            target_size = (500, 500)
+        window.resize(*target_size)
+        wait_for_gui()
+        assert event_size == target_size
+
+        print "docking..."
         undocked_window_view = getattr(main_window_controller.view, window_name.lower())
         redock_button = getattr(undocked_window_view, "top_tool_bar")['redock_button']
+        time.sleep(debug_sleep_time)
+        ready.clear()
         call_gui_callback(redock_button.emit, "clicked")
-        main_window_controller.view["undock_{}_button".format(window_key)].emit("clicked")
-        assert window.get_size() == (600, 600)
         wait_for_gui()
-        window.move(100, 100)
-        wait_for_gui()
-        wait_for_gui()
-        call_gui_callback(redock_button.emit, "clicked")
-        main_window_controller.view["undock_{}_button".format(window_key)].emit("clicked")
-        # Does not work reliable...
-        # assert window.get_position() == (100, 100)
+        assert window.get_property('visible') is False
 
-    print "test left_bar_window"
+        print "undocking..."
+        time.sleep(debug_sleep_time)
+        ready.clear()
+        show_handler_id = window.connect('show', notify_on_event)
+        main_window_controller.view["undock_{}_button".format(window_key)].emit("clicked")
+        wait_for_gui()
+        assert window.get_property('visible') is True
+        assert window.get_size() == target_size
+
+        print "docking..."
+        time.sleep(debug_sleep_time)
+        ready.clear()
+        call_gui_callback(redock_button.emit, "clicked")
+        wait_for_gui()
+        assert window.get_property('visible') is False
+
+        window.disconnect(configure_handler_id)
+        window.disconnect(show_handler_id)
+        window.disconnect(hide_handler_id)
+
+    print "=> test left_bar_window"
     test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR_WINDOW", 'left_bar')
-    print "test right_bar_window"
+    print "=> test right_bar_window"
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR_WINDOW", 'right_bar')
-    print "test console_bar_window"
+    print "=> test console_bar_window"
     test_bar(main_window_controller.view.console_bar_window.get_top_widget(), "CONSOLE_BAR_WINDOW", 'console')
 
-    call_gui_callback(menu_bar_ctrl.on_quit_activate, None)
 
-
-@log.log_exceptions(None, gtk_quit=True)
-def trigger_pane_signals(*args):
-    mw_ctrl = args[0]
-    menu_bar_ctrl = mw_ctrl.get_controller('menu_bar_controller')
-    condition = threading.Condition()
+def check_pane_positions():
+    from rafcon.gui.singleton import main_window_controller
+    debug_sleep_time = 0
 
     stored_pane_positions = {}
     for config_id, pan_id in constants.PANE_ID.iteritems():
@@ -115,82 +117,87 @@ def trigger_pane_signals(*args):
             logging.warning("runtime_config-file has missing values?")
             return
 
-    def ensure_completion(window, event):
-        condition.acquire()
-        print "notify"
-        condition.notify()
-        condition.release()
-        return True
-
-    def wait_for_gui():
-        condition.acquire()
-        print "wait"
-        condition.wait(0.3)
-        print "finally"
-        condition.release()
-
     def test_bar(window, window_name, window_key):
-        window.connect('configure-event', ensure_completion)
-        call_gui_callback(mw_ctrl.view["undock_{}_button".format(window_key)].emit, "clicked")
+        configure_handler_id = window.connect('configure-event', notify_on_event)
+        hide_handler_id = window.connect('hide', notify_on_event)
+
+        print "undocking..."
+        time.sleep(debug_sleep_time)
+        ready.clear()
+        call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key)].emit, "clicked")
         wait_for_gui()
-        wait_for_gui()
-        undocked_window_view = getattr(mw_ctrl.view, window_name.lower())
+
+        print "docking..."
+        time.sleep(debug_sleep_time)
+        ready.clear()
+        undocked_window_view = getattr(main_window_controller.view, window_name.lower())
         redock_button = getattr(undocked_window_view, "top_tool_bar")['redock_button']
         call_gui_callback(redock_button.emit, "clicked")
         wait_for_gui()
 
-    print "test left_bar_window"
-    test_bar(mw_ctrl.view.left_bar_window.get_top_widget(), "LEFT_BAR_WINDOW", 'left_bar')
-    print "test right_bar_window"
-    test_bar(mw_ctrl.view.right_bar_window.get_top_widget(), "RIGHT_BAR_WINDOW", 'right_bar')
-    print "test console_bar_window"
-    test_bar(mw_ctrl.view.console_bar_window.get_top_widget(), "CONSOLE_BAR_WINDOW", 'console')
+        window.disconnect(configure_handler_id)
+        window.disconnect(hide_handler_id)
+
+    print "=> test left_bar_window"
+    test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR_WINDOW", 'left_bar')
+    print "=> test right_bar_window"
+    test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR_WINDOW", 'right_bar')
+    print "=> test console_bar_window"
+    test_bar(main_window_controller.view.console_bar_window.get_top_widget(), "CONSOLE_BAR_WINDOW", 'console')
 
     print "check if pane positions are still like in runtime_config.yaml"
     for config_id, pane_id in constants.PANE_ID.iteritems():
         print "check pos of ", config_id, pane_id
-        assert mw_ctrl.view[pane_id].get_position() == stored_pane_positions[config_id]
-
-    call_gui_callback(menu_bar_ctrl.on_quit_activate, None)
+        assert main_window_controller.view[pane_id].get_position() == stored_pane_positions[config_id]
 
 
 def test_window_positions(caplog):
-    testing_utils.initialize_rafcon()
-    mirror_runtime_config_file()
-    global_runtime_config.load(config_file='runtime_config.yaml', path=DOCKING_TEST_FOLDER)
-    testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
-    main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
-    # Wait for GUI to initialize
-    while gtk.events_pending():
-        gtk.main_iteration(False)
-    thread = threading.Thread(target=trigger_docking_signals, args=[main_window_controller])
-    thread.start()
+    run_gui(None, {
+                    'HISTORY_ENABLED': False,
+                    'AUTO_BACKUP_ENABLED': False
+                  }, {})
+    original_runtime_config = global_runtime_config.as_dict()
 
-    gtk.main()
-    thread.join()
+    try:
+        undock_sidebars()
+    finally:
+        for key, value in original_runtime_config.iteritems():
+            global_runtime_config.set_config_value(key, value)
+        from rafcon.gui.singleton import main_window_controller
+        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
+
+    wait_for_gui_quit()
+    logger.debug("after gtk main")
+
+    testing_utils.remove_all_libraries()
     testing_utils.test_multithreading_lock.release()
-    testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=warnings)
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 def test_pane_positions(caplog):
-    testing_utils.initialize_rafcon()
-    mirror_runtime_config_file()
-    global_runtime_config.load(config_file='runtime_config.yaml', path=DOCKING_TEST_FOLDER)
-    testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
-    main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
-    # Wait for GUI to initialize
-    while gtk.events_pending():
-        gtk.main_iteration(False)
-    thread = threading.Thread(target=trigger_pane_signals, args=[main_window_controller])
-    thread.start()
 
-    gtk.main()
-    thread.join()
+    run_gui(None, {
+                    'HISTORY_ENABLED': False,
+                    'AUTO_BACKUP_ENABLED': False
+                  }, {})
+    original_runtime_config = global_runtime_config.as_dict()
+
+    try:
+        check_pane_positions()
+    finally:
+        for key, value in original_runtime_config.iteritems():
+            global_runtime_config.set_config_value(key, value)
+        from rafcon.gui.singleton import main_window_controller
+        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
+
+    wait_for_gui_quit()
+    logger.debug("after gtk main")
+
+    testing_utils.remove_all_libraries()
     testing_utils.test_multithreading_lock.release()
-    testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=warnings)
-
+    testing_utils.assert_logger_warnings_and_errors(caplog)
 
 if __name__ == '__main__':
     pytest.main([__file__, '-xs'])
