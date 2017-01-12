@@ -34,7 +34,7 @@ def notify_on_resize_event(window, event=None):
     event_size = (event.width, event.height)
 
 
-def wait_for_gui():
+def wait_for_event_notification():
     if not ready.wait(2):
         raise RuntimeError("A timeout occurred")
 
@@ -51,7 +51,7 @@ def undock_sidebars():
         time.sleep(debug_sleep_time)
         ready.clear()
         call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key)].emit, "clicked")
-        wait_for_gui()
+        wait_for_event_notification()
         assert window.get_property('visible') is True
         expected_size = get_stored_window_size(window_name)
         new_size = window.get_size()
@@ -63,9 +63,17 @@ def undock_sidebars():
         target_size = (600, 600)
         if new_size == target_size:
             target_size = (500, 500)
+        print "target size", target_size
         window.resize(*target_size)
-        wait_for_gui()
-        assert event_size == target_size
+        wait_for_event_notification()
+        try:
+            assert event_size == target_size
+        except AssertionError:
+            # For unknown reasons, there are two configure events and only the latter one if for the new window size
+            ready.clear()
+            wait_for_event_notification()
+            assert event_size == target_size
+            print "got additional configure-event"
 
         print "docking..."
         undocked_window_view = getattr(main_window_controller.view, window_name.lower())
@@ -73,7 +81,7 @@ def undock_sidebars():
         time.sleep(debug_sleep_time)
         ready.clear()
         call_gui_callback(redock_button.emit, "clicked")
-        wait_for_gui()
+        wait_for_event_notification()
         assert window.get_property('visible') is False
 
         print "undocking..."
@@ -81,7 +89,7 @@ def undock_sidebars():
         ready.clear()
         show_handler_id = window.connect('show', notify_on_event)
         main_window_controller.view["undock_{}_button".format(window_key)].emit("clicked")
-        wait_for_gui()
+        wait_for_event_notification()
         assert window.get_property('visible') is True
         assert window.get_size() == target_size
 
@@ -89,7 +97,7 @@ def undock_sidebars():
         time.sleep(debug_sleep_time)
         ready.clear()
         call_gui_callback(redock_button.emit, "clicked")
-        wait_for_gui()
+        wait_for_event_notification()
         assert window.get_property('visible') is False
 
         window.disconnect(configure_handler_id)
@@ -125,7 +133,7 @@ def check_pane_positions():
         time.sleep(debug_sleep_time)
         ready.clear()
         call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key)].emit, "clicked")
-        wait_for_gui()
+        wait_for_event_notification()
 
         print "docking..."
         time.sleep(debug_sleep_time)
@@ -133,7 +141,7 @@ def check_pane_positions():
         undocked_window_view = getattr(main_window_controller.view, window_name.lower())
         redock_button = getattr(undocked_window_view, "top_tool_bar")['redock_button']
         call_gui_callback(redock_button.emit, "clicked")
-        wait_for_gui()
+        wait_for_event_notification()
 
         window.disconnect(configure_handler_id)
         window.disconnect(hide_handler_id)
