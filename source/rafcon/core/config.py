@@ -38,6 +38,14 @@ class ObservableConfig(DefaultConfig, Observable):
     def set_config_value(self, key, value):
         super(ObservableConfig, self).set_config_value(key, value)
 
+    def as_dict(self):
+        """Returns the configuration as dict
+
+        :return: A copy of the whole configuration as dict
+        :rtype: dict
+        """
+        return {key: self.get_config_value(key) for key in self.keys}
+
 
 class Config(ObservableConfig):
     """ Class to hold and load the global state machine configurations.

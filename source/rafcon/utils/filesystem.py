@@ -103,3 +103,10 @@ def read_version_from_pt_file():
                 version = parts[1].strip()
                 return version
     return 0
+
+
+def separate_folder_path_and_file_name(path):
+    if os.path.isdir(path):
+        return path, None
+    else:
+        return os.path.split(path)

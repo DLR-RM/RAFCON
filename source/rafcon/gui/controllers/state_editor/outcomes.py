@@ -355,6 +355,6 @@ class StateOutcomesEditorController(ExtendedController):
 
     def paste_action_callback(self, *event):
         """Callback method for paste action"""
-        if react_to_event(self.view, self.oc_list_ctrl.tree_view, event):
+        if react_to_event(self.view, self.oc_list_ctrl.tree_view, event) and self.oc_list_ctrl.active_entry_widget is None:
             global_clipboard.paste(self.model, limited=['outcomes'])
             return True

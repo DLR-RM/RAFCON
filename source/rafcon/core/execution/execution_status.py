@@ -9,12 +9,30 @@
 """
 from enum import Enum
 from gtkmvc import Observable
-from threading import Condition
+from threading import _Condition
 
 from execution_history import ExecutionHistory
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
+
+
+class CustomCondition(_Condition):
+    """
+    A class which inherits from Condition but can tell the outside world on how many threads are currently waiting.
+    """
+
+    def __init__(self, lock=None, verbose=None):
+        super(CustomCondition, self).__init__(lock, verbose)
+
+    def get_number_of_waiting_threads(self):
+        """
+        A getter for the number of waiting threads
+        :return:
+        """
+        # accessing a private member of a super class is ugly; a complete custom Condition implementation would be a
+        # possible solution
+        return len(self._Condition__waiters)
 
 
 class ExecutionStatus(Observable):
@@ -36,7 +54,7 @@ class ExecutionStatus(Observable):
         self._execution_mode = None
         self.execution_mode = execution_mode
         logger.debug("State machine status is set to %s" % str(execution_mode))
-        self.execution_condition_variable = Condition()
+        self.execution_condition_variable = CustomCondition()
 
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc

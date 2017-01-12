@@ -12,7 +12,7 @@
 
 import os
 import argparse
-from os.path import realpath, dirname, join, exists, isdir
+from os.path import realpath, dirname, join, exists
 import signal
 import time
 from Queue import Empty
@@ -112,10 +112,7 @@ def setup_configuration(config_path):
     :param config_path: Path to the core config file
     """
     if config_path is not None:
-        if isdir(config_path):
-            config_file = None
-        else:
-            config_path, config_file = os.path.split(config_path)
+        config_path, config_file = filesystem.separate_folder_path_and_file_name(config_path)
         global_config.load(config_file=config_file, path=config_path)
     else:
         global_config.load(path=config_path)

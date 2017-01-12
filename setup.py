@@ -30,7 +30,7 @@ class PyTest(TestCommand):
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
-        self.pytest_args = ['-vx']
+        self.pytest_args = ['-vxs', '-p', 'no:pytest_capturelog']
 
     def finalize_options(self):
         TestCommand.finalize_options(self)
@@ -78,7 +78,7 @@ setup(
     #                   'pyyaml'],
 
     setup_requires=['Sphinx>=1.4', 'Pygments>=2.0'] + global_requirements,
-    tests_require=['pytest'] + global_requirements,
+    tests_require=['pytest', 'pytest-catchlog'] + global_requirements,
     install_requires=global_requirements,
 
     cmdclass={'test': PyTest}

@@ -108,6 +108,10 @@ class ListViewController(ExtendedController):
             :param gtk.CellEditable editable: interface for editing the current TreeView cell
             :param str path: the path identifying the edited cell
             """
+            # secure scrollbar adjustments on active cell
+            [path, focus_column] = self.tree_view.get_cursor()
+            self.tree_view.scroll_to_cell(path, self.widget_columns[self.widget_columns.index(focus_column)], use_align=False)
+
             editing_cancelled_handler_id = renderer.connect('editing-canceled', on_editing_canceled)
             focus_out_handler_id = editable.connect('focus-out-event', on_focus_out)
             # Store reference to editable and signal handler ids for later access when removing the handlers
@@ -134,7 +138,7 @@ class ListViewController(ExtendedController):
 
     def copy_action_callback(self, *event):
         """Callback method for copy action"""
-        if react_to_event(self.view, self.tree_view, event):
+        if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
             sm_selection, sm_selected_model_list = self.get_state_machine_selection()
             # only list specific elements are copied by widget
             if sm_selection is not None:
@@ -144,7 +148,7 @@ class ListViewController(ExtendedController):
 
     def cut_action_callback(self, *event):
         """Callback method for copy action"""
-        if react_to_event(self.view, self.tree_view, event):
+        if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
             sm_selection, sm_selected_model_list = self.get_state_machine_selection()
             # only list specific elements are cut by widget
             if sm_selection is not None:
@@ -154,7 +158,7 @@ class ListViewController(ExtendedController):
 
     def add_action_callback(self, *event):
         """Callback method for add action"""
-        if react_to_event(self.view, self.tree_view, event):
+        if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
             self.on_add(None)
             return True
 
@@ -462,7 +466,8 @@ class ListViewController(ExtendedController):
                 return False
 
             del self.tree_view_keypress_callback.__func__.core_element_id
-            self.tree_view.set_cursor(next_row, self.widget_columns[next_focus_column_id], start_editing=True)
+            self.tree_view.scroll_to_cell(next_row, self.widget_columns[next_focus_column_id], use_align=False)
+            self.tree_view.set_cursor_on_cell(next_row, self.widget_columns[next_focus_column_id], start_editing=True)
             return True
 
 

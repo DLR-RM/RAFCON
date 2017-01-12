@@ -48,7 +48,9 @@ SHORTCUTS:
     abort: Escape
     add: <Control>A
     add_execution_state: <Alt>E
-    add_hierarchy_state: <Alt>H
+    add_hierarchy_state: 
+    - <Alt>H
+    - <Control><Shift>A
     add_preemptive_state: <Alt>C
     add_barrier_state: <Alt>B
     add_output: <Alt>U

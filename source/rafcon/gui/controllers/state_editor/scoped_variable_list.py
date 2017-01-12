@@ -99,7 +99,7 @@ class ScopedVariableListController(ListViewController):
          The convert flag will cause the insertion of scoped variables with the same names, data types and default values
          the objects of differing port type (in the clipboard) have.
         """
-        if react_to_event(self.view, self.tree_view, event):
+        if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
             if not global_clipboard.model_copies["scoped_variables"] and \
                     (global_clipboard.model_copies["input_data_ports"] or
                      global_clipboard.model_copies["output_data_ports"]):

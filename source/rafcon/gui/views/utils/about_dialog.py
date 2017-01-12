@@ -1,6 +1,7 @@
 # coding=utf-8
 import gtk
-from rafcon.utils.filesystem import read_version_from_pt_file
+import rafcon
+
 
 
 class MyAboutDialog(gtk.AboutDialog):
@@ -8,7 +9,7 @@ class MyAboutDialog(gtk.AboutDialog):
         gtk.AboutDialog.__init__(self)
 
         self.set_program_name("RAFCON")
-        self.set_version(read_version_from_pt_file())
+        self.set_version(rafcon.__version__)
         self.set_authors(("Rico Belder", "Sebastian Brunner", "Franz Steinmetz", "Michael Vilzmann", "Lukas Becker",
                           "Annika Wollschläger", "Benno Voggenreiter", "Matthias Büttner", "Mahmoud Akl"))
         # TODO: set copyright/license
