@@ -131,10 +131,9 @@ class DataPortListController(ListViewController):
         if not isinstance(self.model.state, LibraryState):
             shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)
             shortcut_manager.add_callback_for_action("add", self.add_action_callback)
-            # These shortcuts must not overwrite the default cut, copy and paste functionalities of the cells
-            # shortcut_manager.add_callback_for_action("copy", self.copy_action_callback)
-            # shortcut_manager.add_callback_for_action("cut", self.cut_action_callback)
-            # shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
+            shortcut_manager.add_callback_for_action("copy", self.copy_action_callback)
+            shortcut_manager.add_callback_for_action("cut", self.cut_action_callback)
+            shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
 
     def paste_action_callback(self, *event):
         """Callback method for paste action
@@ -144,7 +143,7 @@ class DataPortListController(ListViewController):
          The convert flag will cause the insertion of self.type ports with the same names, data types and default values
          the objects of differing port type (in the clipboard) have.
         """
-        if react_to_event(self.view, self.tree_view, event):
+        if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
             other_type = 'input' if self.type is 'output' else 'output'
             if not global_clipboard.model_copies["{0}_data_ports".format(self.type)] and \
                     (global_clipboard.model_copies["{0}_data_ports".format(other_type)] or
