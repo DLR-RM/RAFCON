@@ -11,7 +11,7 @@ from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 ready = threading.Event()
-event_size = None
+event_size = (0, 0)
 
 
 def get_stored_window_size(window_name):
@@ -39,6 +39,11 @@ def wait_for_event_notification():
         raise RuntimeError("A timeout occurred")
 
 
+def assert_size_equality(size1, size2):
+    assert abs(size1[0] - size2[0]) <= 10
+    assert abs(size1[1] - size2[1]) <= 10
+
+
 def undock_sidebars():
     from rafcon.gui.singleton import main_window_controller
     debug_sleep_time = 0
@@ -55,7 +60,7 @@ def undock_sidebars():
         assert window.get_property('visible') is True
         expected_size = get_stored_window_size(window_name)
         new_size = window.get_size()
-        assert new_size == expected_size
+        assert_size_equality(new_size, expected_size)
 
         print "resizing..."
         time.sleep(debug_sleep_time)
@@ -67,12 +72,12 @@ def undock_sidebars():
         window.resize(*target_size)
         wait_for_event_notification()
         try:
-            assert event_size == target_size
+            assert_size_equality(event_size, target_size)
         except AssertionError:
             # For unknown reasons, there are two configure events and only the latter one if for the new window size
             ready.clear()
             wait_for_event_notification()
-            assert event_size == target_size
+            assert_size_equality(event_size, target_size)
             print "got additional configure-event"
 
         print "docking..."
@@ -91,7 +96,7 @@ def undock_sidebars():
         main_window_controller.view["undock_{}_button".format(window_key)].emit("clicked")
         wait_for_event_notification()
         assert window.get_property('visible') is True
-        assert window.get_size() == target_size
+        assert_size_equality(window.get_size(), target_size)
 
         print "docking..."
         time.sleep(debug_sleep_time)
