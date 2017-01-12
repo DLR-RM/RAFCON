@@ -67,6 +67,11 @@ class SourceEditorController(EditorController):
             view['apply_button'].set_sensitive(False)
             view['cancel_button'].set_sensitive(False)
 
+        if global_gui_config.get_config_value('PREFER_EXTERNAL_EDITOR'):
+            # This opens an editor on spawning of a new source editor instance if the config flag is set
+            self.save_file_before_opening()
+            self.open_external_clicked(self.view['open_external_button'])
+
     @property
     def source_text(self):
         return self.model.state.script_text
@@ -99,12 +104,37 @@ class SourceEditorController(EditorController):
             logger.error('The operating system raised an error: {}'.format(e))
         return False
 
+    def save_file_before_opening(self):
+
+        file_path = self.model.state.get_file_system_path()
+
+        logger.debug("File will be opened with command: {}".format(
+            global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')))
+
+        try:
+            # Save the file before opening it to update the applied changes. Use option create_full_path=True
+            # to assure that temporary state_machines' script files are saved to
+            # (their path doesnt exist when not saved)
+            filesystem.write_file(file_path + os.path.sep + 'script.py',
+                                  self.view.get_text(), create_full_path=True)
+        except IOError as e:
+            # Only happens if the file doesnt exist yet and would be written to the temp folder.
+            # The method write_file doesnt create the path
+            logger.error('The operating system raised an error: {}'.format(e))
+        return file_path
+
     def open_external_clicked(self, button):
+
+        pref = global_gui_config.get_config_value("PREFER_EXTERNAL_EDITOR")
 
         def lock():
             # change the button label to suggest to the user that the text now is not editable
-            button.set_label('Unlock')
-            # Disable the text input events to the source editor widget
+            if pref:
+                button.set_label('Reload')
+                button.set_active(True)
+            else:
+                button.set_label('Unlock')
+                # Disable the text input events to the source editor widget
             self.view.set_enabled(False)
 
         def unlock():
@@ -123,19 +153,8 @@ class SourceEditorController(EditorController):
             def open_file_in_editor(command, text_field):
 
                 file_path = self.model.state.get_file_system_path()
-
-                logger.debug("File opened with command: {}".format(command))
-
-                try:
-                    # Save the file before opening it to update the applied changes. Use option create_full_path=True
-                    # to assure that temporary state_machines' script files are saved to
-                    # (their path doesnt exist when not saved)
-                    filesystem.write_file(file_path + os.path.sep + 'script.py',
-                                          self.view.get_text(), create_full_path=True)
-                except IOError as e:
-                    # Only happens if the file doesnt exist yet and would be written to the temp folder.
-                    # The method write_file doesnt create the path
-                    logger.error('The operating system raised an error: {}'.format(e))
+                if not pref:
+                    self.save_file_before_opening()
 
                 if not self.append_shell_command_to_path(command, file_path) and text_field:
                     # If a text field exists destroy it. Errors can occur with a specified editor as well
@@ -195,7 +214,11 @@ class SourceEditorController(EditorController):
             self.set_script_text(content)
 
             # If button is clicked after one open a file in the external editor, unlock the internal editor
-            unlock()
+            if not pref:
+                unlock()
+            else:
+                lock()
+
 
     def apply_clicked(self, button):
         """Triggered when the Apply button in the source editor is clicked.

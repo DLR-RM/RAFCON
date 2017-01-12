@@ -144,6 +144,7 @@ def test_gui(caplog):
     gui_config.global_gui_config.set_config_value('GAPHAS_EDITOR', True)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     gui_config.global_gui_config.set_config_value('CHECK_PYTHON_FILES_WITH_PYLINT', False)
+    gui_config.global_gui_config.set_config_value('PREFER_EXTERNAL_EDITOR', False)
 
     # Wait for GUI to initialize
     t_u.wait_for_gui()
