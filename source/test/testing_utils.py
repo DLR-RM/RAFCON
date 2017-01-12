@@ -67,7 +67,7 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
     import logging
     counted_warnings = 0
     counted_errors = 0
-    records = caplog.records if not hasattr(caplog.records, "__call__") else caplog.records()
+    records = caplog.records if isinstance(caplog.records, list) else caplog.records()
     for record in records:
         if record.levelno == logging.WARNING:
             counted_warnings += 1
