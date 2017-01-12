@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 
+import rafcon
 from rafcon.core.id_generator import generate_state_machine_id
 from rafcon.core.execution.execution_history import ExecutionHistory
 
@@ -84,10 +85,10 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     @classmethod
     def from_dict(cls, dictionary, state_machine_id=None):
-        version = dictionary['version']
+        state_machine_version = dictionary['version'] if 'version' in dictionary else dictionary['state_machine_version']
         creation_time = dictionary['creation_time']
         last_update = dictionary['last_update']
-        return cls(None, version, creation_time, last_update, state_machine_id)
+        return cls(None, state_machine_version, creation_time, last_update, state_machine_id)
 
     def to_dict(self):
         return self.state_machine_to_dict(self)
@@ -100,7 +101,8 @@ class StateMachine(Observable, JSONObject, Hashable):
         from rafcon.core.storage.storage import get_storage_id_for_state
         dict_representation = {
             'root_state_storage_id': get_storage_id_for_state(state_machine.root_state),
-            'version': state_machine.version,
+            'state_machine_version': state_machine.version,
+            'used_rafcon_version': rafcon.__version__,
             'creation_time': state_machine.creation_time,
             'last_update': state_machine.last_update,
         }

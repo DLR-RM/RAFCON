@@ -7,8 +7,6 @@ import pytest
 import sys
 sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
 
-from os.path import realpath, dirname, join, exists, expanduser, expandvars, isdir
-from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 
 from acknowledged_udp.udp_client import UdpClient
@@ -124,6 +122,10 @@ def start_udp_client(name, multi_processing_queue):
 
 
 def test_non_acknowledged_messages():
+
+    from test_single_client import check_if_ports_are_open
+    assert check_if_ports_are_open(), "Address already in use by another server!"
+
     q = Queue()
     server = Process(target=start_udp_server, args=("udp_server", q))
     server.start()
@@ -131,13 +133,18 @@ def test_non_acknowledged_messages():
     client = Process(target=start_udp_client, args=("udp_client1", q))
     client.start()
 
-    data = q.get(timeout=30)
-    assert data == FINAL_MESSAGE
-    q.put(FINAL_MESSAGE, timeout=30)
-    q.put(FINAL_MESSAGE)
-
-    server.join(30)
-    client.join(30)
+    try:
+        data = q.get(timeout=10)
+        assert data == FINAL_MESSAGE
+        q.put(FINAL_MESSAGE, timeout=10)
+        q.put(FINAL_MESSAGE)
+    except:
+        server.terminate()
+        client.terminate()
+        raise
+    finally:
+        server.join(10)
+        client.join(10)
 
     assert not server.is_alive(), "Server is still alive"
     assert not client.is_alive(), "Client is still alive"

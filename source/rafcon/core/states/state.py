@@ -213,7 +213,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self.thread.join()
             self.thread = None
         else:
-            logger.debug("Cannot join {0}, as the state hasn't been started, yet".format(self))
+            logger.debug("Cannot join {0}, as the state hasn't been started, yet or is already finished!".format(self))
 
     def setup_run(self):
         """ Executes a generic set of actions that has to be called in the run methods of each derived state class.
