@@ -126,8 +126,10 @@ def setup_argument_parser():
 
 def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_path):
     setup_configuration(core_config_path)
-    global_gui_config.load(gui_config_path)
-    global_runtime_config.load(runtime_config_path)
+    gui_config_path, gui_config_file = filesystem.separate_folder_path_and_file_name(gui_config_path)
+    global_gui_config.load(gui_config_file, gui_config_path)
+    runtime_config_path, runtime_config_file = filesystem.separate_folder_path_and_file_name(runtime_config_path)
+    global_runtime_config.load(runtime_config_file, runtime_config_path)
 
 
 def setup_gui():
