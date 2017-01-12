@@ -89,6 +89,7 @@ class GraphicalEditorController(ExtendedController):
         :param rafcon.gui.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
             between shortcuts and actions.
         """
+        shortcut_manager.add_callback_for_action("add", partial(self._add_new_state, state_type=StateType.EXECUTION))
         shortcut_manager.add_callback_for_action("add_execution_state", partial(self._add_new_state,
                                                                                 state_type=StateType.EXECUTION))
         shortcut_manager.add_callback_for_action("add_hierarchy_state", partial(self._add_new_state,
