@@ -123,7 +123,7 @@ def start_udp_client(name, multi_processing_queue):
 
 def test_non_acknowledged_messages():
 
-    from test_multi_clients import check_if_ports_are_open
+    from test_single_client import check_if_ports_are_open
     assert check_if_ports_are_open(), "Address already in use by another server!"
 
     q = Queue()
