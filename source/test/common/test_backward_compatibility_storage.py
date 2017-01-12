@@ -55,7 +55,7 @@ def test_backward_compatibility_storage(caplog):
     run_gui(None, {
                     'HISTORY_ENABLED': False,
                     'AUTO_BACKUP_ENABLED': False
-                  },
+                  }, {},
                   {
                     'unit_test_state_machines': testing_utils.get_test_sm_path("unit_test_state_machines")
                   })

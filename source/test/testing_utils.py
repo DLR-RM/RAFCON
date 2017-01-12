@@ -108,22 +108,27 @@ def call_gui_callback(callback, *args):
     condition.release()
 
 
-def initialize_rafcon(core_config=None, gui_config=None, libraries=None):
+def initialize_rafcon(core_config=None, gui_config=None, runtime_config=None, libraries=None):
     from rafcon.core.config import global_config
     from rafcon.core.singleton import library_manager, state_machine_manager
     from rafcon.gui.config import global_gui_config
+    from rafcon.gui.runtime_config import global_runtime_config
     from rafcon.gui.start import signal_handler
 
     test_multithreading_lock.acquire()
 
     global_config.load()
     global_gui_config.load()
+    global_runtime_config.load()
     if isinstance(core_config, dict):
         for key, value in core_config.iteritems():
             global_config.set_config_value(key, value)
     if isinstance(gui_config, dict):
         for key, value in gui_config.iteritems():
             global_gui_config.set_config_value(key, value)
+    if isinstance(runtime_config, dict):
+        for key, value in runtime_config.iteritems():
+            global_runtime_config.set_config_value(key, value)
 
     rafcon_library_path = join(dirname(RAFCON_PATH), 'libraries')
     remove_all_libraries()
@@ -160,9 +165,9 @@ def run_gui_thread():
     gtk.main()
 
 
-def run_gui(core_config=None, gui_config=None, libraries=None, timeout=5):
+def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=None, timeout=5):
     global gui_ready, gui_thread
-    initialize_rafcon(core_config, gui_config, libraries)
+    initialize_rafcon(core_config, gui_config, runtime_config, libraries)
     gui_ready = Event()
     gui_thread = Thread(target=run_gui_thread)
     gui_thread.start()
