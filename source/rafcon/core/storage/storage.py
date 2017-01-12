@@ -248,12 +248,12 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     if os.path.exists(state_machine_file_path):
         state_machine_dict = storage_utils.load_objects_from_json(state_machine_file_path)
         if 'used_rafcon_version' in state_machine_dict:
-            prev_used_rafcon_version = StrictVersion(state_machine_dict['used_rafcon_version'])
-            actual_used_rafcon_version = StrictVersion(rafcon.__version__)
-            if actual_used_rafcon_version < prev_used_rafcon_version:
+            previous_used_rafcon_version = StrictVersion(state_machine_dict['used_rafcon_version'])
+            active_rafcon_version = StrictVersion(rafcon.__version__)
+            if active_rafcon_version < previous_used_rafcon_version:
                 logger.warning("You try to read a stored state machine that was stored in a newer format ({0}) "
-                               "then the RAFCON version ({1}) in use right, now.".format(prev_used_rafcon_version,
-                                                                                         actual_used_rafcon_version))
+                               "then the RAFCON version ({1}) in use right, now.".format(previous_used_rafcon_version,
+                                                                                         active_rafcon_version))
         state_machine = StateMachine.from_dict(state_machine_dict, state_machine_id)
         if "root_state_storage_id" not in state_machine_dict:
             root_state_storage_id = state_machine_dict['root_state_id']
