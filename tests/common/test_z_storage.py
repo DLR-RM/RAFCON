@@ -321,8 +321,8 @@ def test_storage_with_gui(caplog):
 
 def test_on_clean_storing_with_name_in_path(caplog):
 
-    path_old_format = os.path.join(testing_utils.RAFCON_PATH, "..", "test_scripts", "unit_test_state_machines",
-                                   "id_to_name_plus_id_storage_format_test_do_not_update")
+    path_old_format = testing_utils.get_test_sm_path("unit_test_state_machines/"
+                                                     "id_to_name_plus_id_storage_format_test_do_not_update")
     path_new_format = os.path.join(get_unique_temp_path(), "id_to_name_plus_id_storage_format_test_do_not_update")
     shutil.copytree(path_old_format, path_new_format)
     sm = storage.load_state_machine_from_path(path_new_format)

@@ -25,13 +25,13 @@ RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE = join(constants.RAFCON_TEMP_PATH_BASE
 if not exists(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE):
     mkdir(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE)
 
+TESTS_PATH = dirname(__file__)
 RAFCON_PATH = realpath(rafcon.__path__[0])
 LIBRARY_SM_PATH = join(dirname(RAFCON_PATH), '..', 'share', 'libraries')
 EXAMPLES_SM_PATH = join(dirname(RAFCON_PATH), '..', 'share', 'examples')
-TEST_SM_PATH = join(dirname(RAFCON_PATH), 'test_scripts')
+TEST_SM_PATH = join(TESTS_PATH, 'assets')
 TEST_SCRIPT_PATH =  join(dirname(RAFCON_PATH), 'test_scripts')
 TUTORIAL_PATH = join(dirname(RAFCON_PATH), "..", "share", "examples", "tutorials")
-TESTS_PATH = dirname(__file__)
 
 
 def get_unique_temp_path():

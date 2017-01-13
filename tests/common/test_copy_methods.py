@@ -110,7 +110,7 @@ def create_models_lib():
         print state_m.state.state_id, state_m.state.get_path(), state_m.meta
     return sm_model.root_state, sm_model, state_dict
 
-    # sm_loaded = storage.load_state_machine_from_path(testing_utils.TEST_SM_PATH + "/unit_test_state_machines/last_data_wins_test")
+    # sm_loaded = storage.load_state_machine_from_path(testing_utils.TEST_PATH + "assets/unit_test_state_machines/last_data_wins_test")
     # # root_state = sm_loaded.root_state
     # #
     # # state_machine = StateMachine(root_state)

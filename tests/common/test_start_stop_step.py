@@ -12,10 +12,10 @@ import pytest
 
 
 def return_loop_state_machine():
-    state1 = ExecutionState("MyFirstState", path=testing_utils.TEST_SM_PATH, filename="loop_state1.py")
+    state1 = ExecutionState("MyFirstState", path=testing_utils.TEST_SCRIPT_PATH, filename="loop_state1.py")
     state1.add_outcome("MyFirstOutcome", 3)
 
-    state2 = ExecutionState("MySecondState", path=testing_utils.TEST_SM_PATH, filename="loop_state2.py")
+    state2 = ExecutionState("MySecondState", path=testing_utils.TEST_SCRIPT_PATH, filename="loop_state2.py")
     state2.add_outcome("FirstOutcome", 3)
 
     state3 = HierarchyState("MyFirstHierarchyState")

@@ -13,7 +13,7 @@ import pytest
 
 
 def create_state_machine():
-    state1 = ExecutionState("scoped_data_test_state", path=testing_utils.TEST_SM_PATH,
+    state1 = ExecutionState("scoped_data_test_state", path=testing_utils.TEST_SCRIPT_PATH,
                             filename="scoped_variable_test_state.py")
     state1.add_outcome("loop", 1)
     input1_state1 = state1.add_input_data_port("input_data_port1", "float")
