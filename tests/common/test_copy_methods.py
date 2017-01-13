@@ -110,8 +110,7 @@ def create_models_lib():
         print state_m.state.state_id, state_m.state.get_path(), state_m.meta
     return sm_model.root_state, sm_model, state_dict
 
-    # sm_loaded = storage.load_state_machine_from_path(rafcon.__path__[0] +
-    #                                                 "/../test_scripts/unit_test_state_machines/last_data_wins_test")
+    # sm_loaded = storage.load_state_machine_from_path(testing_utils.TEST_SM_PATH + "/unit_test_state_machines/last_data_wins_test")
     # # root_state = sm_loaded.root_state
     # #
     # # state_machine = StateMachine(root_state)
@@ -405,7 +404,7 @@ def test_complex(with_gui, caplog):
     testing_utils.initialize_rafcon()
     from rafcon.core.config import global_config
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["unit_test_state_machines"] = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines"
+    library_paths["unit_test_state_machines"] = os.path.join(testing_utils.TEST_SM_PATH, "unit_test_state_machines")
     rafcon.core.singleton.library_manager.refresh_libraries()
 
     if testing_utils.sm_manager_model is None:

@@ -29,7 +29,7 @@ class TestErrorPreemptionHandling():
         # This methods runs on class creation and creates the state machine
         testing_utils.test_multithreading_lock.acquire()
         state_machine = global_storage.load_state_machine_from_path(
-            rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/action_block_execution_test")
+            testing_utils.get_test_sm_path("unit_test_state_machines/action_block_execution_test"))
         cls.state_machine = state_machine
         state_machine_manager.add_state_machine(state_machine)
         state_machine_manager.active_state_machine_id = state_machine.state_machine_id

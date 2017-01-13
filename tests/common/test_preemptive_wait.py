@@ -12,10 +12,10 @@ import testing_utils
 
 
 def create_preemptive_wait_state_machine():
-    state1 = ExecutionState("state_1", path=rafcon.__path__[0] + "/../test_scripts", filename="preemptive_wait_test.py")
+    state1 = ExecutionState("state_1", path=testing_utils.TEST_SCRIPT_PATH, filename="preemptive_wait_test.py")
     state1.add_outcome("FirstOutcome", 3)
 
-    state2 = ExecutionState("state_2", path=rafcon.__path__[0] + "/../test_scripts", filename="preemptive_wait_test.py")
+    state2 = ExecutionState("state_2", path=testing_utils.TEST_SCRIPT_PATH, filename="preemptive_wait_test.py")
     state2.add_outcome("FirstOutcome", 3)
 
     ctr_state = PreemptiveConcurrencyState("FirstConcurrencyState")

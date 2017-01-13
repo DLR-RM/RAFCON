@@ -136,8 +136,7 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_new_activate, None)
 
     assert len(sm_manager_model.state_machines) == current_sm_length + 1
-    call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(rafcon.__path__[0],
-                                                                      "../test_scripts/tutorials/basic_turtle_demo_sm"))
+    call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TUTORIAL_PATH, "basic_turtle_demo_sm"))
     assert len(sm_manager_model.state_machines) == current_sm_length + 2
 
     sm_m = sm_manager_model.state_machines[first_sm_id + 2]
@@ -296,9 +295,9 @@ def test_gui(caplog):
     library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    library_paths["ros"] = join(rafcon.__path__[0], "../test_scripts/ros_libraries")
-    library_paths["turtle_libraries"] = join(rafcon.__path__[0], "../test_scripts/turtle_libraries")
-    library_paths["generic"] = join(rafcon.__path__[0], "../libraries/generic")
+    library_paths["ros"] = join(testing_utils.EXAMPLES_SM_PATH, "ros_libraries")
+    library_paths["turtle_libraries"] = join(testing_utils.EXAMPLES_SM_PATH, "turtle_libraries")
+    library_paths["generic"] = join(testing_utils.LIBRARY_SM_PATH, "generic")
     rafcon.core.singleton.library_manager.refresh_libraries()
 
     state_machine = create_state_machine()

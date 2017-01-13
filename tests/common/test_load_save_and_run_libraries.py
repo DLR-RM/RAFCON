@@ -31,11 +31,13 @@ def setup_module(module=None):
 def test_save_libraries(caplog):
     s = storage
 
-    state1 = ExecutionState("library_execution_state1", path=testing_utils.TEST_SM_PATH, filename="library_execution_state1.py")
+    state1 = ExecutionState("library_execution_state1", path=testing_utils.TEST_SCRIPT_PATH,
+                            filename="library_execution_state1.py")
     input_state1 = state1.add_input_data_port("data_input_port1", "float")
     output_state1 = state1.add_output_data_port("data_output_port1", "float")
 
-    state2 = ExecutionState("library_execution_state2", path=testing_utils.TEST_SM_PATH, filename="library_execution_state2.py")
+    state2 = ExecutionState("library_execution_state2", path=testing_utils.TEST_SCRIPT_PATH,
+                            filename="library_execution_state2.py")
     input_state2 = state2.add_input_data_port("data_input_port1", "float")
     output_state2 = state2.add_output_data_port("data_output_port1", "float")
 
@@ -62,20 +64,22 @@ def test_save_libraries(caplog):
                          output_state3)
 
     # save hierarchy state as state machine
-    s.save_state_machine_to_path(StateMachine(state3), testing_utils.get_test_sm_path(TEST_LIBRARY_PATH+"/hierarchy_library"),
-                                "0.1")
+    s.save_state_machine_to_path(StateMachine(state3),
+                                 testing_utils.get_test_sm_path(TEST_LIBRARY_PATH + "/hierarchy_library"), "0.1")
 
     # save execution state as state machine
-    s.save_state_machine_to_path(StateMachine(state1), testing_utils.get_test_sm_path(TEST_LIBRARY_PATH+"/execution_library"),
-                                "0.1")
+    s.save_state_machine_to_path(StateMachine(state1),
+                                 testing_utils.get_test_sm_path(TEST_LIBRARY_PATH + "/execution_library"), "0.1")
 
     # save hierarchy state as nested state machines
     state3.name = "library_nested1"
     s.save_state_machine_to_path(StateMachine(state3),
-                                testing_utils.get_test_sm_path(TEST_LIBRARY_PATH+"/library_container/library_nested1"), "0.1")
+                                testing_utils.get_test_sm_path(TEST_LIBRARY_PATH + "/library_container/library_nested1"),
+                                 "0.1")
     state3.name = "library_nested2"
     s.save_state_machine_to_path(StateMachine(state3),
-                                testing_utils.get_test_sm_path(TEST_LIBRARY_PATH+"/library_container/library_nested2"), "0.1")
+                                testing_utils.get_test_sm_path(TEST_LIBRARY_PATH + "/library_container/library_nested2"),
+                                 "0.1")
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -163,7 +167,7 @@ def test_save_nested_library_state(caplog):
     library_with_nested_library_sm = create_hierarchy_state_library_state_machine()
 
     storage.save_state_machine_to_path(library_with_nested_library_sm, testing_utils.get_test_sm_path(
-        TEST_LIBRARY_PATH+"/library_with_nested_library"), "0.1")
+        TEST_LIBRARY_PATH + "/library_with_nested_library"), "0.1")
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -189,7 +193,7 @@ def test_nested_library_state_machine(caplog):
 
 def test_rafcon_library_path_variable(caplog):
     rafcon.core.config.global_config.set_config_value("LIBRARY_PATHS", {})
-    os.environ['RAFCON_LIBRARY_PATH'] = os.path.join(os.path.dirname(testing_utils.RAFCON_PATH), 'libraries', 'generic')
+    os.environ['RAFCON_LIBRARY_PATH'] = os.path.join(testing_utils.LIBRARY_SM_PATH, 'generic')
     rafcon.core.singleton.library_manager.initialize()
     os.environ['RAFCON_LIBRARY_PATH'] = ""
     libraries = rafcon.core.singleton.library_manager.libraries

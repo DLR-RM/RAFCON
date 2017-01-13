@@ -14,12 +14,12 @@ import pytest
 
 
 def create_state_machine():
-    state1 = ExecutionState("first_state", path=rafcon.__path__[0] + "/../test_scripts", filename="scoped_data_test_state1.py")
+    state1 = ExecutionState("first_state", path=testing_utils.TEST_SCRIPT_PATH, filename="scoped_data_test_state1.py")
     state1.add_outcome("first_outcome", 3)
     state1.add_input_data_port("data_input_port1", "float")
     state1.add_output_data_port("data_output_port1", "float")
 
-    state2 = ExecutionState("second_state", path=rafcon.__path__[0] + "/../test_scripts", filename="scoped_data_test_state2.py")
+    state2 = ExecutionState("second_state", path=testing_utils.TEST_SCRIPT_PATH, filename="scoped_data_test_state2.py")
     state2.add_outcome("first_outcome", 3)
     state2.add_input_data_port("data_input_port1", "float")
     state2.add_output_data_port("data_output_port1", "float")

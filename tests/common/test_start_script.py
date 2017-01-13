@@ -12,8 +12,8 @@ if os.path.exists(FILE_MODIFIED_BY_STATE_MACHINE):
 
 
 def test_start_script_open():
-    script = dirname(realpath(rafcon.__file__)) + "/core/start.py"
-    start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
+    script = os.path.join(dirname(realpath(rafcon.__file__)), "core", "start.py")
+    start_path = testing_utils.get_test_sm_path("unit_test_state_machines/start_script_test")
     cmd = sys.executable + " %s -o %s" % (script, start_path)
     cmd_res = subprocess.call(cmd, shell=True)
     assert cmd_res == 0
@@ -25,8 +25,8 @@ def test_start_script_open():
 
 
 def test_start_script_state():
-    script = dirname(realpath(rafcon.__file__)) + "/core/start.py"
-    start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
+    script = os.path.join(dirname(realpath(rafcon.__file__)), "core", "start.py")
+    start_path = testing_utils.get_test_sm_path("unit_test_state_machines/start_script_test")
     state_path = "UTUOSC/AHWBOG"
     print start_path
     cmd = sys.executable + " %s -o %s -s %s" % (script, start_path, state_path)
@@ -41,9 +41,9 @@ def test_start_script_state():
 
 def test_start_script_valid_config():
     # valid config
-    script = dirname(realpath(rafcon.__file__)) + "/core/start.py"
-    start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
-    config = rafcon.__path__[0] + "/../../tests/common/configs_for_start_script_test/valid_config/config.yaml"
+    script = os.path.join(dirname(realpath(rafcon.__file__)), "core", "start.py")
+    start_path = testing_utils.get_test_sm_path("unit_test_state_machines/start_script_test")
+    config = os.path.join(testing_utils.TESTS_PATH, "common", "configs_for_start_script_test", "valid_config", "config.yaml")
     cmd = sys.executable + " %s -o %s -c %s" % (script, start_path, config)
     cmd_res = subprocess.call(cmd, shell=True)
     assert cmd_res == 0
@@ -56,9 +56,9 @@ def test_start_script_valid_config():
 '''
 def test_start_script_invalid_config(caplog):
     # invalid config
-    script = dirname(realpath(rafcon.__file__)) + "/core/start.py"
-    start_path = rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/start_script_test"
-    config = rafcon.__path__[0] + "/../../tests/common/configs_for_start_script_test/invalid_config"
+    script = os.path.join(dirname(realpath(rafcon.__file__)), "core", "start.py")
+    start_path = testing_utils.get_test_sm_path("unit_test_state_machines/start_script_test")
+    config = os.path.join(testing_utils.TESTS_PATH, "common", "configs_for_start_script_test", "invalid_config")
     cmd = "python %s -o %s -c %s" % (script, start_path, config)
     subprocess.call(cmd, shell=True)
     tmp = open("/tmp/rafcon_unit_tests/test_start_script.txt", "r")

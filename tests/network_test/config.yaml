@@ -1,5 +1,5 @@
 LIBRARY_PATHS:
-    generic: ${RAFCON_PATH}/../libraries/generic
+    generic: ${RAFCON_LIB_PATH}/generic
 TYPE: SM_CONFIG
 ENABLE_NETWORK_MONITORING: true
 USE_JSON: true

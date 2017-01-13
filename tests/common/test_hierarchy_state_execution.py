@@ -14,7 +14,7 @@ import pytest
 
 
 def create_hierarchy_state():
-    state1 = ExecutionState("MyFirstState", path=rafcon.__path__[0] + "/../test_scripts", filename="first_execution_state.py")
+    state1 = ExecutionState("MyFirstState", path=testing_utils.TEST_SCRIPT_PATH, filename="first_execution_state.py")
     state1.add_outcome("MyFirstOutcome", 3)
     state1.add_input_data_port("data_input_port1", "float")
     state1.add_output_data_port("faulty_output_port", "float")

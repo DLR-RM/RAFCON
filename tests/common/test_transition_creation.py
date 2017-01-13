@@ -15,15 +15,15 @@ import pytest
 
 
 def create_state_machine():
-    state1 = ExecutionState("DummyState1", path=rafcon.__path__[0] + "/../test_scripts", filename="transition_test_state.py")
+    state1 = ExecutionState("DummyState1", path=testing_utils.TEST_SCRIPT_PATH, filename="transition_test_state.py")
     state1.add_outcome('dummy_outcome_1', 3)
     state1.add_outcome('dummy_outcome_2', 4)
 
-    state2 = ExecutionState("DummyState2", path=rafcon.__path__[0] + "/../test_scripts", filename="transition_test_state.py")
+    state2 = ExecutionState("DummyState2", path=testing_utils.TEST_SCRIPT_PATH, filename="transition_test_state.py")
     state2.add_outcome('dummy_outcome_1', 3)
     state2.add_outcome('dummy_outcome_2', 4)
 
-    state3 = ExecutionState("DummyState3", path=rafcon.__path__[0] + "/../test_scripts", filename="transition_test_state.py")
+    state3 = ExecutionState("DummyState3", path=testing_utils.TEST_SCRIPT_PATH, filename="transition_test_state.py")
     state3.add_outcome('dummy_outcome_1', 3)
     state3.add_outcome('dummy_outcome_2', 4)
 

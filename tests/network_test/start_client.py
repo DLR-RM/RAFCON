@@ -87,7 +87,7 @@ def start_client(interacting_function, queue_dict):
     main_window_view = MainWindowView()
 
     state_machine = global_storage.load_state_machine_from_path(
-            rafcon.__path__[0] + "/../test_scripts/unit_test_state_machines/99_bottles_of_beer_monitoring")
+        testing_utils.get_test_sm_path("unit_test_state_machines/99_bottles_of_beer_monitoring"))
 
     sm_singletons.state_machine_manager.add_state_machine(state_machine)
 

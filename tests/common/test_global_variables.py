@@ -11,8 +11,7 @@ import testing_utils
 
 
 def create_state_machine():
-    state1 = ExecutionState("MyFirstState", path=rafcon.__path__[0] + "/../test_scripts",
-                            filename="global_variable_state.py")
+    state1 = ExecutionState("MyFirstState", path=testing_utils.TEST_SCRIPT_PATH, filename="global_variable_state.py")
     state1.add_outcome("first_outcome", 3)
     input_state1 = state1.add_input_data_port("input_data_port1", "float")
     output_state1 = state1.add_output_data_port("output_data_port1", "float")

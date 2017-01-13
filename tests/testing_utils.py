@@ -26,7 +26,12 @@ if not exists(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE):
     mkdir(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE)
 
 RAFCON_PATH = realpath(rafcon.__path__[0])
+LIBRARY_SM_PATH = join(dirname(RAFCON_PATH), '..', 'share', 'libraries')
+EXAMPLES_SM_PATH = join(dirname(RAFCON_PATH), 'test_scripts')
 TEST_SM_PATH = join(dirname(RAFCON_PATH), 'test_scripts')
+TEST_SCRIPT_PATH =  join(dirname(RAFCON_PATH), 'test_scripts')
+TUTORIAL_PATH = join(rafcon.__path__[0], "..", "test_scripts", "tutorials")
+TESTS_PATH = dirname(__file__)
 
 
 def get_unique_temp_path():
@@ -130,7 +135,7 @@ def initialize_rafcon(core_config=None, gui_config=None, runtime_config=None, li
         for key, value in runtime_config.iteritems():
             global_runtime_config.set_config_value(key, value)
 
-    rafcon_library_path = join(dirname(RAFCON_PATH), 'libraries')
+    rafcon_library_path = join(dirname(RAFCON_PATH), '..', 'share', 'libraries')
     remove_all_libraries()
     if not isinstance(libraries, dict):
         libraries = {}

@@ -97,9 +97,9 @@ def test_copy_delete_bug(caplog):
     gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
     gui_config.global_gui_config.set_config_value('GAPHAS_EDITOR', True)
     gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    library_paths["ros"] = join(rafcon.__path__[0], "../test_scripts/ros_libraries")
-    library_paths["turtle_libraries"] = join(rafcon.__path__[0], "../test_scripts/turtle_libraries")
-    library_paths["generic"] = join(rafcon.__path__[0], "../libraries/generic")
+    library_paths["ros"] = join(testing_utils.EXAMPLES_SM_PATH, "ros_libraries")
+    library_paths["turtle_libraries"] = join(testing_utils.EXAMPLES_SM_PATH, "turtle_libraries")
+    library_paths["generic"] = join(testing_utils.LIBRARY_SM_PATH, "generic")
     rafcon.core.singleton.library_manager.refresh_libraries()
 
     testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model

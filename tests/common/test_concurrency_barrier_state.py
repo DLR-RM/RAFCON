@@ -15,14 +15,14 @@ from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 
 
 def create_concurrency_barrier_state():
-    state1 = ExecutionState("FirstState", "id_of_state_1", path=rafcon.__path__[0] + "/../test_scripts",
+    state1 = ExecutionState("FirstState", "id_of_state_1", path=testing_utils.TEST_SCRIPT_PATH,
                             filename="concurrency_barrier1.py")
     state1.add_outcome("FirstOutcomeState1", 3)
     state1.add_outcome("SecondOutcomeState1", 4)
     input_state1 = state1.add_input_data_port("input_data_port1", "float")
     output_state1 = state1.add_output_data_port("output_data_port1", "float")
 
-    state2 = ExecutionState("SecondState", "id_of_state_2", path=rafcon.__path__[0] + "/../test_scripts",
+    state2 = ExecutionState("SecondState", "id_of_state_2", path=testing_utils.TEST_SCRIPT_PATH,
                             filename="concurrency_barrier2.py")
     state2.add_outcome("FirstOutcomeState2", 3)
     state2.add_outcome("SecondOutcomeState2", 4)
@@ -41,7 +41,7 @@ def create_concurrency_barrier_state():
     barrier_state.add_outcome("error_outcome", 4)
 
     barrier_state.states[UNIQUE_DECIDER_STATE_ID].name = "decider_state"
-    barrier_state.states[UNIQUE_DECIDER_STATE_ID]._script = Script(path=rafcon.__path__[0] + "/../test_scripts",
+    barrier_state.states[UNIQUE_DECIDER_STATE_ID]._script = Script(path=testing_utils.TEST_SCRIPT_PATH,
                                                                    filename="decider_state.py",
                                                                    check_path=True,
                                                                    parent=barrier_state.states[UNIQUE_DECIDER_STATE_ID])

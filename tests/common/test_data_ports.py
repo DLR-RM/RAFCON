@@ -17,7 +17,7 @@ import testing_utils
 
 
 def create_state_machine():
-    state1 = ExecutionState("MyFirstState", path=rafcon.__path__[0] + "/../test_scripts",
+    state1 = ExecutionState("MyFirstState", path=testing_utils.TEST_SCRIPT_PATH,
                             filename="default_data_port_test_state.py")
     state1.add_outcome("first_outcome", 3)
     input_state1 = state1.add_input_data_port("input_data_port1", "str", "default_value")
@@ -73,8 +73,8 @@ def test_last_wins_value_collection_for_data_ports(caplog):
 
     storage_path = testing_utils.get_unique_temp_path()
 
-    sm_loaded = storage.load_state_machine_from_path(rafcon.__path__[0] +
-                                                    "/../test_scripts/unit_test_state_machines/last_data_wins_test")
+    sm_loaded = storage.load_state_machine_from_path(
+        testing_utils.get_test_sm_path("unit_test_state_machines/last_data_wins_test"))
 
     root_state = sm_loaded.root_state
 
