@@ -3,7 +3,7 @@ LIBRARY_PATHS:
     generic: ${RAFCON_LIB_PATH}/generic
     ros: ../../../source/test_scripts/ros_libraries
     turtle_libraries: ../../../source/test_scripts/turtle_libraries
-    tutorials: ../../../source/test_scripts/tutorials
+    tutorials: ../../../share/examples/tutorials
     unit_test_state_machines: ../../../source/test_scripts/unit_test_state_machines
 
 LIBRARY_RECOVERY_MODE: False

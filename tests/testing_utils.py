@@ -30,7 +30,7 @@ LIBRARY_SM_PATH = join(dirname(RAFCON_PATH), '..', 'share', 'libraries')
 EXAMPLES_SM_PATH = join(dirname(RAFCON_PATH), 'test_scripts')
 TEST_SM_PATH = join(dirname(RAFCON_PATH), 'test_scripts')
 TEST_SCRIPT_PATH =  join(dirname(RAFCON_PATH), 'test_scripts')
-TUTORIAL_PATH = join(rafcon.__path__[0], "..", "test_scripts", "tutorials")
+TUTORIAL_PATH = join(dirname(RAFCON_PATH), "..", "share", "examples", "tutorials")
 TESTS_PATH = dirname(__file__)
 
 

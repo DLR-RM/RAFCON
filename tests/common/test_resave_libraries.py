@@ -9,7 +9,7 @@ import testing_utils
 def test_resave(caplog):
     testing_utils.initialize_rafcon()
     testing_utils.remove_all_libraries()
-    folder_to_convert = testing_utils.get_test_sm_path("tutorials")
+    folder_to_convert = testing_utils.TUTORIAL_PATH
     target_folder = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "resave_test")
     config_path = join(os.path.dirname(os.path.abspath(__file__)), "config_path")
     print "folder to convert: " + folder_to_convert
@@ -22,5 +22,3 @@ def test_resave(caplog):
 if __name__ == '__main__':
     #test_resave(None)
     pytest.main(['-s', __file__])
-
-
