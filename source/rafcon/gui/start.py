@@ -6,8 +6,6 @@ import logging
 import gtk
 import threading
 import signal
-import rafcon
-import time
 from yaml_configuration.config import config_path
 
 # gui
@@ -202,24 +200,23 @@ def signal_handler(signal, frame):
 if __name__ == '__main__':
     register_signal_handlers(signal_handler)
 
-    spl_scr = SplashScreen(contains_image=True, width=620, height=420)
-    spl_scr.rotate_image(random_=False)
-    spl_scr.set_text("Starting RAFCON...")
+    splash_screen = SplashScreen(contains_image=True, width=530, height=350)
+    splash_screen.rotate_image(random_=True)
+    splash_screen.set_text("Starting RAFCON...")
     while gtk.events_pending():
         gtk.main_iteration()
 
     setup_l10n()
     setup_l10n_gtk()
 
-    spl_scr.set_text("Setting up logger...")
-    spl_scr.rotate_image(random_=False)
+    splash_screen.set_text("Setting up logger...")
     setup_gtkmvc_logger()
+    splash_screen.set_text("Initializing plugins...")
     pre_setup_plugins()
 
     # logger.info(_("RAFCON launcher"))
 
-    spl_scr.set_text("Setting up mvc enviroment...")
-    spl_scr.rotate_image(random_=False)
+    splash_screen.set_text("Setting up environment...")
     setup_mvc_environment()
 
     parser = setup_argument_parser()
@@ -230,12 +227,12 @@ if __name__ == '__main__':
         constants.RAFCON_INSTANCE_LOCK_FILE = open(os.path.join(RAFCON_TEMP_PATH_BASE, 'lock'), 'a+')
         constants.RAFCON_INSTANCE_LOCK_FILE.close()
 
+    splash_screen.set_text("Loading configurations...")
     setup_mvc_configuration(user_input.config_path, user_input.gui_config_path, user_input.gui_config_path)
 
     # setup the gui before loading the state machine as then the debug console shows the errors that emerged during
     # loading the state state machine
-    spl_scr.set_text("Setting up gui...")
-    spl_scr.rotate_image(random_=False)
+    splash_screen.set_text("Loading GUI...")
     main_window_controller = setup_gui()
 
     while gtk.events_pending():
@@ -257,14 +254,13 @@ if __name__ == '__main__':
     if user_input.start_state_machine_flag:
         start_state_machine(state_machine, user_input.start_state_path, user_input.quit_flag)
 
+    splash_screen.destroy()
     try:
         # check if twisted is imported
         if reactor_required():
             from twisted.internet import reactor
-
             reactor.run()
         else:
-            spl_scr.destroy()
             gtk.main()
 
         logger.info(_("Main window was closed"))
