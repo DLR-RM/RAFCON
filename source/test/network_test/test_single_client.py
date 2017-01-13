@@ -186,9 +186,16 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
 
     execution_engine.stop()
     execution_engine.join()
+    # print_highlight("Server cp 1")
+    queue_dict[CLIENT1_TO_SERVER_QUEUE].get()
+    # print_highlight("Server cp 2")
+    queue_dict[SERVER_TO_CLIENT1_QUEUE].put("sync")
+    # print_highlight("Server cp 3")
     queue_dict[KILL_SERVER_QUEUE].get()
+    # print_highlight("Server cp 4")
     os._exit(0)
-
+    # normal exit does not work
+    # exit(0)
 
 def interacting_function_server(queue_dict):
     from rafcon.utils import log
@@ -211,6 +218,8 @@ def interacting_function_server(queue_dict):
     # execution_engine.run_to_selected_state("GLSUJY/PXTKIH") # wait before Sing
     execution_engine.run_to_selected_state("GLSUJY/NDIVLD")  # wait before Decimate Bottles
     # execution_engine.run_to_selected_state("GLSUJY/SFZGMH")  # wait before Count Bottles
+    sm_thread.join()
+    print_highlight("Joined server worker thread")
 
 
 def interacting_function_client1(main_window_controller, global_monitoring_manager, queue_dict):
@@ -273,8 +282,16 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[8])
     queue_dict[MAIN_QUEUE].put(START_FROM_SUCCESSFUL)
 
+    # print_highlight("client cp 1")
+    queue_dict[CLIENT1_TO_SERVER_QUEUE].put("sync")
+    # print_highlight("client cp 2")
+    queue_dict[SERVER_TO_CLIENT1_QUEUE].get()
+    # print_highlight("client cp 3")
     queue_dict[KILL_CLIENT1_QUEUE].get()  # synchronize to main process
+    # print_highlight("client cp 4")
     os._exit(0)
+    # normal exit does not work
+    # exit(0)
 
 
 def launch_client(interacting_function_client, multiprocessing_queue_dict):
@@ -375,8 +392,8 @@ def test_single_client():
     server.join(timeout=10)
     client1.join(timeout=10)
 
-    assert not server.is_alive(), "Server is still alive"
     assert not client1.is_alive(), "Client1 is still alive"
+    assert not server.is_alive(), "Server is still alive"
     assert test_successful is True
 
 

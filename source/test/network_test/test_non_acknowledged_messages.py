@@ -156,11 +156,11 @@ def test_non_acknowledged_messages():
 
     try:
         data = queue_dict[SERVER_TO_MAIN_QUEUE].get(timeout=10)
-        assert data == FINAL_MESSAGE
-        if data == "Success":
+        if data == FINAL_MESSAGE:
             logger.info("Test successful\n\n")
         else:
             logger.error("Test failed\n\n")
+        assert data == FINAL_MESSAGE
         # send destroy commands to other processes
         queue_dict[MAIN_TO_SERVER_QUEUE].put(DESTROY_MESSAGE)
         queue_dict[MAIN_TO_CLIENT_QUEUE].put(DESTROY_MESSAGE)
