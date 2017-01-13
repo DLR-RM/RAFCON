@@ -45,9 +45,9 @@ class PyTest(TestCommand):
         sys.path.insert(0, test_path)
         sys.path.insert(0, rafcon_path)
         os.environ["PYTHONPATH"] = rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
-        error_number = pytest.main(self.pytest_args + ['source/test/network_test'])
+        error_number = pytest.main(self.pytest_args + [path.join('tests', 'network_test')])
         if not error_number:
-            error_number = pytest.main(self.pytest_args + ['source/test/common'])
+            error_number = pytest.main(self.pytest_args + [path.join('tests', 'common')])
         sys.exit(error_number)
 
 
