@@ -40,7 +40,7 @@ class PyTest(TestCommand):
     def run_tests(self):
         # import here, cause outside the eggs aren't loaded
         import pytest
-        test_path = path.join(path.dirname(path.abspath(__file__)), 'source', 'test')
+        test_path = path.join(path.dirname(path.abspath(__file__)), 'tests')
         rafcon_path = path.join(path.dirname(path.abspath(__file__)), 'source')
         sys.path.insert(0, test_path)
         sys.path.insert(0, rafcon_path)
