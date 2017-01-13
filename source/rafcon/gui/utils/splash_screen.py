@@ -73,5 +73,5 @@ class SplashScreen(gtk.Window):
             image_path = paths[self.image_index]
             self.image_index += 1
 
-        self.load_image(image_folder + "/" + image_path)
+        self.load_image(os.path.join(image_folder, image_path))
 
