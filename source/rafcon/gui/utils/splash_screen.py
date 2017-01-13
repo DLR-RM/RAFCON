@@ -10,7 +10,7 @@ logger = log.get_logger(__name__)
 
 class SplashScreen(gtk.Window):
 
-    def __init__(self, width=800, height=200, contains_image=False):
+    def __init__(self, width=530, height=350, contains_image=False):
         # init gtk.Window with type popup
         super(SplashScreen, self).__init__(type=gtk.WINDOW_POPUP)
 
@@ -29,13 +29,14 @@ class SplashScreen(gtk.Window):
         # If an img path was defined, create a gtk img and fill it from a pixelbuffer which is created from the
         # set file path
         if contains_image:
-            main_vbox.pack_start(self.image, True, True)
+            main_vbox.pack_start(self.image, True, True, 0)
 
         # add label to display text, the text can be changed by the text() method.
         # Align it in the middle of the gtk window
         self.label = gtk.Label("")
         self.label.set_alignment(0.5, 0.5)
-        main_vbox.pack_start(self.label, True, True)
+        main_vbox.pack_start(self.label, False, True, 10)
+        main_vbox.set_spacing(0)
 
         self.show_all()
 
