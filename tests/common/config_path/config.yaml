@@ -1,8 +1,8 @@
 TYPE: SM_CONFIG
 LIBRARY_PATHS:
     generic: ${RAFCON_LIB_PATH}/generic
-    ros: ../../../source/test_scripts/ros_libraries
-    turtle_libraries: ../../../source/test_scripts/turtle_libraries
+    ros: ../../../share/examples/libraries/ros_libraries
+    turtle_libraries: ../../../share/examples/libraries/turtle_libraries
     tutorials: ../../../share/examples/tutorials
     unit_test_state_machines: ../../../source/test_scripts/unit_test_state_machines
 
