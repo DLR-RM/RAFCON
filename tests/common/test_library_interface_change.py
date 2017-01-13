@@ -18,7 +18,7 @@ def setup_function(_):
     # set the test_libraries path temporarily to the correct value
     testing_utils.remove_all_libraries()
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["unit_test_state_machines"] = os.path.join(testing_utils.TEST_SM_PATH, "unit_test_state_machines")
+    library_paths["unit_test_state_machines"] = os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")
     global_config.set_config_value("LIBRARY_RECOVERY_MODE", True)
 
 

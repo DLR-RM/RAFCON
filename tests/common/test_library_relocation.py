@@ -41,7 +41,7 @@ def test_library_relocation(caplog):
     testing_utils.remove_all_libraries()
 
     library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_scripts"] = testing_utils.TEST_SM_PATH
+    library_paths["test_scripts"] = testing_utils.TEST_ASSETS_PATH
 
     # logger.debug(library_paths["test_scripts"])
     # exit()

@@ -404,7 +404,7 @@ def test_complex(with_gui, caplog):
     testing_utils.initialize_rafcon()
     from rafcon.core.config import global_config
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["unit_test_state_machines"] = os.path.join(testing_utils.TEST_SM_PATH, "unit_test_state_machines")
+    library_paths["unit_test_state_machines"] = os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")
     rafcon.core.singleton.library_manager.refresh_libraries()
 
     if testing_utils.sm_manager_model is None:
