@@ -1,11 +1,13 @@
 import os
 import gtk
 import logging
+import shutil
 
 # mvc
 import rafcon.gui.singleton
 from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
+from rafcon.gui.models.state_machine import StateMachineModel
 
 # core elements
 import rafcon.core.singleton
@@ -234,6 +236,35 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, 
     return missing_elements, existing_elements
 
 
+def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
+
+    def check_state(state, state_id=None, state_machine=False):
+        # handle handed state machine
+        if state_machine:
+            folder = state.file_system_path # state is a state machine
+            current_state = state.root_state
+            state_id = state.root_state.state_id
+        else:
+            if state_id is None:
+                raise
+            folder = os.path.join(path_new_format, state.get_storage_path())
+            current_state = state.states[state_id]
+
+        # check that there is exact one child state folder with this state_id in this folder
+        elements_found = [elem for elem in os.listdir(folder) if state_id in elem]
+        if len(elements_found) > 1:
+            logger.warning("Too many folders {2} for state_id: {0} in folder {1}".format(state_id, folder, elements_found))
+        elif len(elements_found) < 1:
+            logger.warning("Too less folders {2} for state_id: {0} in folder {1}".format(state_id, folder, elements_found))
+
+        # recursive check of child states
+        if isinstance(current_state, ContainerState):
+            for state_id in current_state.states:
+                check_state(current_state, state_id)
+
+    check_state(sm_m.state_machine, state_machine=True)
+
+
 def test_storage_without_gui(caplog):
     with_gui = False
     logger.debug("create model")
@@ -288,7 +319,29 @@ def test_storage_with_gui(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
+def test_on_clean_storing_with_name_in_path(caplog):
+
+    path_old_format = os.path.join(testing_utils.RAFCON_PATH, "..", "test_scripts", "unit_test_state_machines",
+                                   "id_to_name_plus_id_storage_format_test_do_not_update")
+    path_new_format = os.path.join(get_unique_temp_path(), "id_to_name_plus_id_storage_format_test_do_not_update")
+    shutil.copytree(path_old_format, path_new_format)
+    sm = storage.load_state_machine_from_path(path_new_format)
+    sm.base_path = path_new_format
+    sm_m = StateMachineModel(sm, rafcon.gui.singleton.state_machine_manager_model)
+
+    on_save_activate(sm_m, logger)
+
+    missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
+    assert len(missing_elements) == 0
+
+    # check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m)
+
+    testing_utils.reload_config()
+    testing_utils.assert_logger_warnings_and_errors(caplog)
+
+
 if __name__ == '__main__':
     test_storage_without_gui(None)
     test_storage_with_gui(None)
+    test_on_clean_storing_with_name_in_path(None)
     # pytest.main([__file__])
