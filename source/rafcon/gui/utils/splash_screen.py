@@ -1,5 +1,4 @@
 import gtk
-import time
 import os
 import random
 import rafcon
@@ -16,7 +15,7 @@ class SplashScreen(gtk.Window):
         super(SplashScreen, self).__init__(type=gtk.WINDOW_POPUP)
 
         # index for the image rotator
-        self.img_index = 0
+        self.image_index = 0
 
         # Set the title to rafcon so it is detectable in taskbars
         # set width and height to parameter values and position the window in the center
@@ -34,43 +33,45 @@ class SplashScreen(gtk.Window):
 
         # add label to display text, the text can be changed by the text() method.
         # Align it in the middle of the gtk window
-        self.lbl = gtk.Label("")
-        self.lbl.set_alignment(0.5, 0.5)
-        main_vbox.pack_start(self.lbl, True, True)
+        self.label = gtk.Label("")
+        self.label.set_alignment(0.5, 0.5)
+        main_vbox.pack_start(self.label, True, True)
 
         self.show_all()
 
-    def text(self, text):
-        self.lbl.set_text(text)
+    def set_text(self, text):
+        self.label.set_text(text)
+        # include this to give more time to watch
+        # import time
+        # time.sleep(1)
         while gtk.events_pending():
             gtk.main_iteration_do(True)
         return
 
-    def load_image(self, path):
-        if path:
-            pixbuf = gtk.gdk.pixbuf_new_from_file_at_size(path, self.get_size()[0]-50, self.get_size()[1]-50)
+    def load_image(self, image_path):
+        if image_path:
+            pixbuf = gtk.gdk.pixbuf_new_from_file_at_size(image_path, self.get_size()[0] - 50, self.get_size()[1] - 50)
             self.image.set_from_pixbuf(pixbuf)
             while gtk.events_pending():
                 gtk.main_iteration_do(True)
         else:
             logger.debug("Splash screen image path is None")
 
-    def rotate(self, rand=True, img_folder=None):
+    def rotate_image(self, random_=True, image_folder=None):
 
-        if not img_folder:
-            # TODO: Replace this with an actual folder
-            img_folder = os.path.join(rafcon.__path__[0], 'gui', 'utils', 'images')
+        if not image_folder:
+            image_folder = os.path.join(rafcon.__path__[0], 'gui', 'themes', 'splashscreens')
 
         # get content of the specified img folder
-        paths = os.listdir(img_folder)
+        paths = os.listdir(image_folder)
         # if random mode is specified, choose a picture out of the target folder. Else switch through the pictures
-        if rand:
-            path = paths[int(random.uniform(0.0, len(paths)))]
+        if random_:
+            image_path = paths[int(random.uniform(0.0, len(paths)))]
         else:
-            if self.img_index >= len(paths):
-                self.img_index = 0
-            path = paths[self.img_index]
-            self.img_index += 1
+            if self.image_index >= len(paths):
+                self.image_index = 0
+            image_path = paths[self.image_index]
+            self.image_index += 1
 
-        self.load_image(img_folder + "/" + path)
+        self.load_image(image_folder + "/" + image_path)
 

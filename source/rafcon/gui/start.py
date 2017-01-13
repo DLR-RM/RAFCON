@@ -202,25 +202,24 @@ def signal_handler(signal, frame):
 if __name__ == '__main__':
     register_signal_handlers(signal_handler)
 
-    spl_img_path = os.path.join(rafcon.__path__[0], '..', '..', 'documents', 'logo', 'bitmap',
-                                  'RAFCON_Logo_Farbe_CMYK_negativ.png')
-
-    spl_scr = SplashScreen(contains_image=True)
-    spl_scr.load_image(spl_img_path)
-    spl_scr.text("Starting RAFCON...")
+    spl_scr = SplashScreen(contains_image=True, width=620, height=420)
+    spl_scr.rotate_image(random_=False)
+    spl_scr.set_text("Starting RAFCON...")
     while gtk.events_pending():
         gtk.main_iteration()
 
     setup_l10n()
     setup_l10n_gtk()
 
-    spl_scr.text("Setting up logger...")
+    spl_scr.set_text("Setting up logger...")
+    spl_scr.rotate_image(random_=False)
     setup_gtkmvc_logger()
     pre_setup_plugins()
 
     # logger.info(_("RAFCON launcher"))
 
-    spl_scr.text("Setting up mvc enviroment...")
+    spl_scr.set_text("Setting up mvc enviroment...")
+    spl_scr.rotate_image(random_=False)
     setup_mvc_environment()
 
     parser = setup_argument_parser()
@@ -235,7 +234,8 @@ if __name__ == '__main__':
 
     # setup the gui before loading the state machine as then the debug console shows the errors that emerged during
     # loading the state state machine
-    spl_scr.text("Setting up gui...")
+    spl_scr.set_text("Setting up gui...")
+    spl_scr.rotate_image(random_=False)
     main_window_controller = setup_gui()
 
     while gtk.events_pending():
