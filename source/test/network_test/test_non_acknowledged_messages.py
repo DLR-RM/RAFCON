@@ -42,6 +42,7 @@ def wait_for_test_finished(queue_dict, udp_endpoint, connector, server):
     else:
         destroy_message = queue_dict[MAIN_TO_CLIENT_QUEUE].get()
     print('process with id {0} will stop reactor'.format(str(os.getpid())))
+    udp_endpoint.shutdown()
     reactor.callFromThread(reactor.stop)
     print('process with id {0} did stop reactor'.format(str(os.getpid())))
     exit()
@@ -156,6 +157,10 @@ def test_non_acknowledged_messages():
     try:
         data = queue_dict[SERVER_TO_MAIN_QUEUE].get(timeout=10)
         assert data == FINAL_MESSAGE
+        if data == "Success":
+            logger.info("Test successful\n\n")
+        else:
+            logger.error("Test failed\n\n")
         # send destroy commands to other processes
         queue_dict[MAIN_TO_SERVER_QUEUE].put(DESTROY_MESSAGE)
         queue_dict[MAIN_TO_CLIENT_QUEUE].put(DESTROY_MESSAGE)
