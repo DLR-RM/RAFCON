@@ -108,7 +108,7 @@ def test_backward_stepping_library_state(caplog):
     testing_utils.initialize_rafcon()
     testing_utils.remove_all_libraries()
     # Load test library
-    config_path = rafcon.__path__[0] + "/../test/common/configs_for_start_script_test/valid_config/"
+    config_path = rafcon.__path__[0] + "/../../tests/common/configs_for_start_script_test/valid_config/"
     testing_utils.global_config.load('config.yaml', config_path)
     rafcon.core.singleton.library_manager.initialize()
 
@@ -134,7 +134,7 @@ def test_backward_stepping_library_state(caplog):
     logger.debug("Gtk main loop exited!")
     thread.join()
     logger.debug("Joined test triggering thread!")
-    os.chdir(testing_utils.RAFCON_PATH + "/../test/common")
+    os.chdir(testing_utils.RAFCON_PATH + "/../../tests/common")
     testing_utils.reload_config()
     testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)

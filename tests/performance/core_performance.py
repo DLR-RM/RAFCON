@@ -92,7 +92,7 @@ def execute_state(root_state):
 
 
 @measure_time
-def test_hierarchy_state_execution(number_child_states):
+def test_hierarchy_state_execution(number_child_states=100):
     hierarchy_state = create_hierarchy_state(number_child_states)
     execute_state(hierarchy_state)
 
