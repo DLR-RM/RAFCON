@@ -2,23 +2,24 @@ import sys
 import os
 import gtk
 import signal
+from os.path import dirname, abspath
 
 
-from rafcon.statemachine.states.hierarchy_state import HierarchyState
-from rafcon.statemachine.states.execution_state import ExecutionState
-from rafcon.statemachine.states.library_state import LibraryState
-from rafcon.statemachine.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.statemachine.state_machine import StateMachine
-from rafcon.statemachine.storage import storage
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.state_machine import StateMachine
+from rafcon.core.storage import storage
 
-from rafcon.mvc.controllers.main_window import MainWindowController
-from rafcon.mvc.views.main_window import MainWindowView
+from rafcon.gui.controllers.main_window import MainWindowController
+from rafcon.gui.views.main_window import MainWindowView
 
-import rafcon.statemachine.singleton
-import rafcon.mvc.singleton
+import rafcon.core.singleton
+import rafcon.gui.singleton
 
-from rafcon.statemachine.config import global_config
-from rafcon.mvc.config import global_gui_config
+from rafcon.core.config import global_config
+from rafcon.gui.config import global_gui_config
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -109,12 +110,13 @@ def create_turtle_statemachine(base_path, example_path):
 
 
 def run_turtle_demo():
-    signal.signal(signal.SIGINT, rafcon.statemachine.singleton.signal_handler)
+    import rafcon.core
+    import rafcon.core.start
+    signal.signal(signal.SIGINT, rafcon.core.start.signal_handler)
     global_config.load()
     global_gui_config.load()
     # set the test_libraries path temporarily to the correct value
-    library_paths = rafcon.statemachine.config.global_config.get_config_value("LIBRARY_PATHS")
-    print dir(rafcon), rafcon.__path__
+    library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
     if os.path.exists(str(os.path.sep).join([rafcon.__path__[0], '..', '..', '..', 'share', 'libraries'])):  # rm-pkg
         os.environ['RAFCON_LIB_PATH'] = os.path.join(rafcon.__path__[0], '..', '..', '..', 'share', 'libraries')
         library_paths["ros_libraries"] = os.path.join(rafcon.__path__[0], '..', '..', '..',
@@ -123,12 +125,12 @@ def run_turtle_demo():
                                                          'share', 'examples', 'libraries', 'turtle_libraries')
         example_path = os.path.join(rafcon.__path__[0], os.pardir, '..', '..', 'share', 'examples', "tutorials")
     else:  # git repo
-        os.environ['RAFCON_LIB_PATH'] = os.path.join(rafcon.__path__[0], '..', 'libraries')
-        library_paths["ros_libraries"] = os.path.join(rafcon.__path__[0], '..', 'test_scripts', 'ros_libraries')
-        library_paths["turtle_libraries"] = os.path.join(rafcon.__path__[0], '..', 'test_scripts', 'turtle_libraries')
-        example_path = os.path.join(rafcon.__path__[0], os.pardir, "test_scripts", "tutorials")
-    rafcon.statemachine.singleton.library_manager.initialize()
-    rafcon.statemachine.singleton.state_machine_manager.delete_all_state_machines()
+        os.environ['RAFCON_LIB_PATH'] = os.path.join(dirname(abspath(__file__)), '..', '..', '..', 'libraries')
+        library_paths["ros_libraries"] = os.path.join(dirname(abspath(__file__)), '..', '..', 'libraries', 'ros_libraries')
+        library_paths["turtle_libraries"] = os.path.join(dirname(abspath(__file__)), '..', '..', 'libraries', 'turtle_libraries')
+        example_path = os.path.join(dirname(abspath(__file__)), '..', '..', "tutorials")
+    rafcon.core.singleton.library_manager.initialize()
+    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
     base_path = os.path.dirname(os.path.abspath(__file__))
 
     basic_turtle_demo_state = create_turtle_statemachine(base_path, example_path)
@@ -136,14 +138,14 @@ def run_turtle_demo():
 
     # # load the state machine
     # [state_machine, version, creation_time] = storage.load_statemachine_from_path(
-    #     "../../test_scripts/tutorials/basic_turtle_demo_sm")
+    #     "../../share/examples/tutorials/basic_turtle_demo_sm")
 
-    rafcon.statemachine.singleton.library_manager.initialize()
+    rafcon.core.singleton.library_manager.initialize()
     main_window_view = MainWindowView()
-    rafcon.statemachine.singleton.state_machine_manager.add_state_machine(state_machine)
-    sm_manager_model = rafcon.mvc.singleton.state_machine_manager_model
+    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
-    main_window_controller = MainWindowController(sm_manager_model, main_window_view, editor_type="LogicDataGrouped")
+    main_window_controller = MainWindowController(sm_manager_model, main_window_view)
 
     gtk.main()
     logger.debug("Gtk main loop exited!")

@@ -5,7 +5,7 @@ LIBRARY_PATHS:
     ros: /home/brun_sb/USERSTORE/lru/statemachines/ros
     slam: /home/brun_sb/USERSTORE/lru/statemachines/slam
     spacebotcup: /home/brun_sb/USERSTORE/lru/statemachines/spacebotcup
-    turtle_libraries: /home_local/brun_sb/develop/rafcon/source/test_scripts/turtle_libraries
+    turtle_libraries: /home_local/brun_sb/develop/rafcon/share/examples/libraries/turtle_libraries
     vision: /home/brun_sb/USERSTORE/lru/statemachines/vision
     world: /home/brun_sb/USERSTORE/lru/statemachines/world
 TYPE: SM_CONFIG

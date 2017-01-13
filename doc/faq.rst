@@ -92,7 +92,7 @@ inputs and outputs of the function are the input data of the state
 ``backward_execute`` function is not defined, nothing is executed at
 all. For example backward-stepping state machines, have a look at the
 "functionality\_examples" in the RAFCON Git repository:
-``[path_to_git_repo]/source/test_scripts/functionality_examples``.
+``[path_to_git_repo]/share/examples/functionality_examples``.
 
 What does pause and stop do?
 """"""""""""""""""""""""""""
@@ -158,7 +158,7 @@ stopped (by the user clicking "Stop").
 This should also be kept in mind when developing libraries. As a user
 could use libraries in Preemptive Concurrency States, libraries should
 be designed in this way. For further comprehension consider the state
-machine example in source/test\_scripts/tutorials/simple\_preemption\_example in the
+machine example in share/examples/tutorials/simple\_preemption\_example in the
 project folder.
 
 What happens if the state machine is paused? How can I pause running services, e. g. the robot?
@@ -230,7 +230,7 @@ of the aborted state, the error is propagated upwards in the hierarchy
 until a state is handling the abortion or the state machine is left. An
 example state machine on how to use such a error handling can look like
 is given in
-``$RAFCON_GIT_REPO_PATH/source/test_scripts/unit_test_state_machines/error_propagation_test``.
+``$RAFCON_GIT_REPO_PATH/tests/asserts/unit_test_state_machines/error_propagation_test``.
 If the error handling state is a hierarchy state the "error" input data
 port must be manually forwarded to the first child state i.e. a
 input\_data port for the hierarchy and the child state has to created
