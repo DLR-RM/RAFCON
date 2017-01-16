@@ -1,18 +1,21 @@
 import os.path
 from copy import copy, deepcopy
 from weakref import ref
+from gtkmvc import ModelMT, Signal
 
 from rafcon.gui.models.signals import MetaSignalMsg, Notification
+from rafcon.gui.models.meta import MetaModel
+
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.state import State
 from rafcon.core.storage import storage
-from rafcon.utils import log
+
 from rafcon.utils import storage_utils
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
+from rafcon.utils import log
 
-from gtkmvc import ModelMT, Signal
 
 logger = log.get_logger(__name__)
 
@@ -49,7 +52,7 @@ def get_state_model_class_for_state(state):
         return None
 
 
-class AbstractStateModel(ModelMT, Hashable):
+class AbstractStateModel(MetaModel, Hashable):
     """This is an abstract class serving as base class for state models
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state).
@@ -72,12 +75,10 @@ class AbstractStateModel(ModelMT, Hashable):
                        "state_type_changed_signal")
 
     def __init__(self, state, parent=None, meta=None):
-        """Constructor
-        """
         if type(self) == AbstractStateModel:
             raise NotImplementedError
 
-        ModelMT.__init__(self)
+        MetaModel.__init__(self, meta)
         assert isinstance(state, State)
 
         self.state = state
@@ -85,14 +86,6 @@ class AbstractStateModel(ModelMT, Hashable):
         # True if root_state or state is parent start_state_id else False
         self.is_start = state.is_root_state or parent is None or isinstance(parent.state, LibraryState) or \
                         state.state_id == state.parent.start_state_id
-
-        if isinstance(meta, Vividict):
-            self.meta = meta
-        else:
-            self.meta = Vividict()
-        self.meta_signal = Signal()
-
-        self.temp = Vividict()
 
         self.parent = parent
 
