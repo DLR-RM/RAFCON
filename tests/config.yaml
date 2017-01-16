@@ -1,4 +1,3 @@
-ENABLE_NETWORK_MONITORING: true
 LIBRARY_PATHS:
     manipulation: /home/brun_sb/USERSTORE/lru/statemachines/manipulation
     navigation: /home/brun_sb/USERSTORE/lru/statemachines/navigation
