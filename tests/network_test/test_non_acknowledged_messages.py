@@ -23,7 +23,7 @@ DESTROY_MESSAGE = "destroy"
 # CLIENT_TO_SERVER_QUEUE = "client_to_server"
 # SERVER_TO_CLIENT_QUEUE = "server_to_client"
 SERVER_TO_MAIN_QUEUE = "client_to_server"
-# CLIENT_TO_MAIN_QUEUE = "server_to_client"
+CLIENT_TO_MAIN_QUEUE = "server_to_client"
 MAIN_TO_SERVER_QUEUE = "client_to_server"
 MAIN_TO_CLIENT_QUEUE = "server_to_client"
 

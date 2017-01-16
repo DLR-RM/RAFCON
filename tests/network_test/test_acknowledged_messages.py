@@ -18,18 +18,11 @@ from test_non_acknowledged_messages import wait_for_test_finished
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+import test_non_acknowledged_messages
 
 
-FINAL_MESSAGE = "final_message"
-DESTROY_MESSAGE = "destroy"
 SUCCESS_MESSAGE = "success"
 FAILURE_MESSAGE = "failure"
-# CLIENT_TO_SERVER_QUEUE = "client_to_server"
-# SERVER_TO_CLIENT_QUEUE = "server_to_client"
-# SERVER_TO_MAIN_QUEUE = "client_to_server"
-CLIENT_TO_MAIN_QUEUE = "server_to_client"
-MAIN_TO_SERVER_QUEUE = "client_to_server"
-MAIN_TO_CLIENT_QUEUE = "server_to_client"
 
 
 def info(title):
@@ -92,7 +85,7 @@ def send_test_data(udp_client, queue_dict):
     # register for acknowledges in the first message, all subsequent message should then be acknowledged
     protocols.append(Protocol(MessageType.REGISTER_WITH_ACKNOWLEDGES, "Registering with acks"))
     protocols.append(Protocol(MessageType.STATE_ID, "This is a state_id"))
-    protocols.append(Protocol(MessageType.COMMAND, FINAL_MESSAGE))
+    protocols.append(Protocol(MessageType.COMMAND, test_non_acknowledged_messages.FINAL_MESSAGE))
 
     while True:
         protocol = protocols.pop(0)
@@ -103,19 +96,23 @@ def send_test_data(udp_client, queue_dict):
                                               global_network_config.get_config_value("SERVER_UDP_PORT")),
                                              blocking=True)
 
-        if protocol.message_content == FINAL_MESSAGE:
+        if protocol.message_content == test_non_acknowledged_messages.FINAL_MESSAGE:
             break
 
         time.sleep(0.1)
     logger.debug("Sender thread finished")
 
     while udp_client.messages_to_be_acknowledged_pending():
+        from network_test.test_single_client import print_highlight
+        print_highlight(udp_client._messages_to_be_acknowledged)
+        for key, protocoll in udp_client._messages_to_be_acknowledged.iteritems():
+            print_highlight(protocoll[0].message_content)
         time.sleep(0.2)
 
     if udp_client.number_of_dropped_messages == 0:
-        queue_dict[CLIENT_TO_MAIN_QUEUE].put(SUCCESS_MESSAGE)
+        queue_dict[test_non_acknowledged_messages.CLIENT_TO_MAIN_QUEUE].put(SUCCESS_MESSAGE)
     else:
-        queue_dict[CLIENT_TO_MAIN_QUEUE].put(FAILURE_MESSAGE)
+        queue_dict[test_non_acknowledged_messages.CLIENT_TO_MAIN_QUEUE].put(FAILURE_MESSAGE)
 
 
 def start_udp_client(name, queue_dict):
@@ -149,9 +146,9 @@ def test_acknowledged_messages():
     # queue_dict[CLIENT_TO_SERVER_QUEUE] = Queue()
     # queue_dict[SERVER_TO_CLIENT_QUEUE] = Queue()
     # queue_dict[SERVER_TO_MAIN_QUEUE] = Queue()
-    queue_dict[CLIENT_TO_MAIN_QUEUE] = Queue()
-    queue_dict[MAIN_TO_SERVER_QUEUE] = Queue()
-    queue_dict[MAIN_TO_CLIENT_QUEUE] = Queue()
+    queue_dict[test_non_acknowledged_messages.CLIENT_TO_MAIN_QUEUE] = Queue()
+    queue_dict[test_non_acknowledged_messages.MAIN_TO_SERVER_QUEUE] = Queue()
+    queue_dict[test_non_acknowledged_messages.MAIN_TO_CLIENT_QUEUE] = Queue()
 
     server = Process(target=start_udp_server, args=("udp_server", queue_dict))
     server.start()
@@ -160,15 +157,17 @@ def test_acknowledged_messages():
     client.start()
 
     try:
-        data = queue_dict[CLIENT_TO_MAIN_QUEUE].get(timeout=10)
+        data = queue_dict[test_non_acknowledged_messages.CLIENT_TO_MAIN_QUEUE].get(timeout=10)
         if data == SUCCESS_MESSAGE:
             logger.info("Test successful\n\n")
         else:
             logger.error("Test failed\n\n")
         assert data == SUCCESS_MESSAGE
         # send destroy commands to other processes
-        queue_dict[MAIN_TO_SERVER_QUEUE].put(DESTROY_MESSAGE)
-        queue_dict[MAIN_TO_CLIENT_QUEUE].put(DESTROY_MESSAGE)
+        queue_dict[test_non_acknowledged_messages.MAIN_TO_SERVER_QUEUE].put(
+            test_non_acknowledged_messages.DESTROY_MESSAGE)
+        queue_dict[test_non_acknowledged_messages.MAIN_TO_CLIENT_QUEUE].put(
+            test_non_acknowledged_messages.DESTROY_MESSAGE)
     except:
         server.terminate()
         client.terminate()
