@@ -13,8 +13,6 @@ import signal
 from Queue import Empty
 import threading
 
-import testing_utils
-
 
 def check_for_sm_finished(sm, monitoring_manager=None):
     from rafcon.core.states.state import StateExecutionStatus
@@ -72,6 +70,7 @@ def start_server(interacting_function, queue_dict):
     # Initialize libraries
     sm_singletons.library_manager.initialize()
 
+    import testing_utils
     state_machine = global_storage.load_state_machine_from_path(
         testing_utils.get_test_sm_path("unit_test_state_machines/99_bottles_of_beer_monitoring"))
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
