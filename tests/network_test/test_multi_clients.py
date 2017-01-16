@@ -9,16 +9,12 @@
 """
 
 from multiprocessing import Process, Queue
+
 import multiprocessing
 import threading
 import time
 import os
 import pytest
-from test_single_client import launch_client
-from test_single_client import launch_server
-
-from rafcon.utils import log
-logger = log.get_logger(__name__)
 
 # communication queues
 CLIENT1_TO_SERVER_QUEUE = "client1_to_server"
@@ -40,25 +36,6 @@ TEST_ERROR = "Test error"
 # Decimate Bottles: NDIVLD
 # Count bottles: SFZGMH
 
-
-def custom_assert(statement1, statement2):
-    try:
-        assert statement1 == statement2
-    except Exception as e:
-        print statement1 + " is not equal " + statement2
-        exit()
-
-
-def print_highlight(statement):
-    print "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
-    print statement
-    print "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
-
-
-def reset_global_variable_manager(global_variable_manager):
-    global_variable_manager.set_variable("sing_counter", 0)
-    global_variable_manager.set_variable("decimate_counter", 0)
-    global_variable_manager.set_variable("count_counter", 0)
 
 sleep_time = 0.01
 
@@ -172,6 +149,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
 
 
 def interacting_function_client2(main_window_controller, global_monitoring_manager, queue_dict):
+    import rafcon.core.singleton as core_singletons
     from rafcon.utils import log
     logger = log.get_logger("Interacting client2")
 
@@ -181,7 +159,6 @@ def interacting_function_client2(main_window_controller, global_monitoring_manag
     while not global_monitoring_manager.endpoint_initialized:
         time.sleep(0.01)
 
-    import rafcon.core.singleton as core_singletons
     remote_execution_engine = core_singletons.state_machine_execution_engine
 
     # synchronize with server
@@ -199,6 +176,8 @@ def interacting_function_client2(main_window_controller, global_monitoring_manag
 
 
 def test_multi_clients():
+    from network_test.test_single_client import launch_client
+    from network_test.test_single_client import launch_server
     from test_single_client import check_if_ports_are_open
     if not check_if_ports_are_open():
         print "Address already in use by another server!"

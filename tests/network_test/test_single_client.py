@@ -15,9 +15,6 @@ import time
 import os
 import pytest
 
-from rafcon.utils import log
-logger = log.get_logger(__name__)
-
 # communication queues
 CLIENT1_TO_SERVER_QUEUE = "client1_to_server"
 SERVER_TO_CLIENT1_QUEUE = "server_to_client1"
@@ -57,9 +54,9 @@ def custom_assert(statement1, statement2):
 
 
 def print_highlight(statement):
-    print "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
+    print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
     print statement
-    print "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
+    print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 
 
 def reset_global_variable_manager(global_variable_manager):
@@ -196,6 +193,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     os._exit(0)
     # normal exit does not work
     # exit(0)
+
 
 def interacting_function_server(queue_dict):
     from rafcon.utils import log
