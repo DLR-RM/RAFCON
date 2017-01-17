@@ -1071,7 +1071,6 @@ class GraphicalEditorController(ExtendedController):
         new_rel_pos = subtract_pos(new_pos, parent_pos)
 
         state_m.set_meta_data_editor('rel_pos', new_rel_pos, from_gaphas=False)
-        # state_m.meta['gui']['editor_gaphas']['rel_pos'] = (new_rel_pos[0], -new_rel_pos[1])
 
         if publish_changes:
             if combined_action:

@@ -20,6 +20,15 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
+def mirror_y_axis_in_vividict_element(vividict, key):
+    rel_pos = vividict[key]
+    if isinstance(rel_pos, tuple):
+        vividict[key] = (rel_pos[0], -rel_pos[1])
+    else:
+        del vividict[key]
+    return vividict
+
+
 def diff_for_state_element_lists(self_list_of_elements, other_list_of_elements, name):
     id_name = name + '_id' if 'scope' not in name else 'data_port_id'
     self_dict = {getattr(getattr(elem, name), id_name): elem for elem in self_list_of_elements}
@@ -426,3 +435,11 @@ class AbstractStateModel(MetaModel, Hashable):
         meta_data_element_id = element_name + str(element_id)
         meta_data_element = element_m.meta
         meta_data[meta_data_element_id] = meta_data_element
+
+    @staticmethod
+    def _meta_data_editor_gaphas2opengl(vividict):
+        return mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
+
+    @staticmethod
+    def _meta_data_editor_opengl2gaphas(vividict):
+        return mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
