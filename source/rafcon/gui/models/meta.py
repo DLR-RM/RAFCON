@@ -83,7 +83,7 @@ class MetaModel(ModelMT):
         for key in key_path:
             if isinstance(meta_gui, list):
                 meta_gui[int(key)] = meta_data
-                return
+                break
             if key == key_path[-1]:
                 meta_gui[key] = meta_data
             else:
