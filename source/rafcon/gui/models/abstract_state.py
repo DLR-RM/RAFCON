@@ -442,4 +442,7 @@ class AbstractStateModel(MetaModel, Hashable):
 
     @staticmethod
     def _meta_data_editor_opengl2gaphas(vividict):
-        return mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
+        vividict = mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
+        if isinstance(vividict['size'], tuple):
+            vividict['income']['rel_pos'] = (0, vividict['size'][1] / 2.)
+        return vividict
