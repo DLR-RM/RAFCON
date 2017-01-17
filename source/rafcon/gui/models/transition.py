@@ -7,6 +7,18 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
+def mirror_waypoints(vividict):
+    if isinstance(vividict['waypoints'], list):
+        old_waypoint_list = vividict['waypoints']
+        new_waypoint_list = []
+        for wp in old_waypoint_list:
+            new_waypoint_list.append((wp[0], -wp[1]))
+            vividict['waypoints'] = new_waypoint_list
+    else:
+        del vividict['waypoints']
+    return vividict
+
+
 class TransitionModel(StateElementModel):
     """This model class manages a Transition
 
@@ -53,3 +65,11 @@ class TransitionModel(StateElementModel):
     @ModelMT.observe("transition", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(TransitionModel, self).model_changed(model, prop_name, info)
+
+    @staticmethod
+    def _meta_data_editor_gaphas2opengl(vividict):
+        return mirror_waypoints(vividict)
+
+    @staticmethod
+    def _meta_data_editor_opengl2gaphas(vividict):
+        return mirror_waypoints(vividict)
