@@ -85,3 +85,5 @@ class MetaModel(ModelMT):
                 meta_gui[key] = meta_data
             else:
                 meta_gui = meta_gui[key]
+
+        return self.get_meta_data_editor(for_gaphas=from_gaphas)
