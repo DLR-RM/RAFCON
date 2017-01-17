@@ -67,11 +67,11 @@ class StateView(Element):
         self.__symbol_size_cache = {}
         self._image_cache = ImageCache()
 
-        name_meta = state_m.meta['gui']['editor_gaphas']['name']
+        name_meta = state_m.get_meta_data_editor()['name']
         if not isinstance(name_meta['size'], tuple):
             name_width = self.width * 0.8
             name_height = self.height * 0.4
-            name_meta['size'] = (name_width, name_height)
+            name_meta = state_m.set_meta_data_editor('name.size', (name_width, name_height))['name']
         name_size = name_meta['size']
 
         self._name_view = NameView(state_m.state.name, name_size)
@@ -314,7 +314,7 @@ class StateView(Element):
         self._transparent = True
 
     def apply_meta_data(self, recursive=False):
-        state_meta = self.model.meta['gui']['editor_gaphas']
+        state_meta = self.model.get_meta_data_editor()
 
         self.position = state_meta['rel_pos']
         self.width = state_meta['size'][0]
@@ -329,15 +329,15 @@ class StateView(Element):
         if isinstance(state_meta['income']['rel_pos'], tuple):
             update_port_position(self.income, state_meta['income'])
         for outcome_v in self.outcomes:
-            update_port_position(outcome_v, outcome_v.model.meta['gui']['editor_gaphas'])
+            update_port_position(outcome_v, outcome_v.modelget_meta_data_editor())
         for data_port_v in self.inputs + self.outputs:
-            update_port_position(data_port_v, data_port_v.model.meta['gui']['editor_gaphas'])
+            update_port_position(data_port_v, data_port_v.model.get_meta_data_editor())
 
         self.name_view.apply_meta_data()
 
         if isinstance(self.model, ContainerStateModel):
             for scoped_port_v in self.scoped_variables:
-                update_port_position(scoped_port_v, scoped_port_v.model.meta['gui']['editor_gaphas'])
+                update_port_position(scoped_port_v, scoped_port_v.model.get_meta_data_editor())
             for transition_m in self.model.transitions:
                 transition_v = self.canvas.get_view_for_model(transition_m)
                 transition_v.apply_meta_data()
@@ -579,13 +579,13 @@ class StateView(Element):
         self._handles.append(income_v.handle)
         self._map_handles_port_v[income_v.handle] = income_v
 
-        port_meta = self.model.meta['gui']['editor_gaphas']['income']
+        port_meta = self.model.get_meta_data_editor()['income']
         if not isinstance(port_meta['rel_pos'], tuple):
             # Position income on the top of the left state side
             income_v.side = SnappedSide.LEFT
             pos_x = 0
             pos_y = self._calculate_port_pos_on_line(1, self.height)
-            port_meta['rel_pos'] = pos_x, pos_y
+            port_meta = self.model.set_meta_data_editor('income.rel_pos', (pos_x, pos_y))['income']
         income_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(income_v)
         return income_v
@@ -598,7 +598,7 @@ class StateView(Element):
         self._handles.append(outcome_v.handle)
         self._map_handles_port_v[outcome_v.handle] = outcome_v
 
-        port_meta = outcome_m.meta['gui']['editor_gaphas']
+        port_meta = outcome_m.get_meta_data_editor()
         if not isinstance(port_meta['rel_pos'], tuple):
             if outcome_m.outcome.outcome_id < 0:
                 # Position aborted/preempted in upper right corner
@@ -611,7 +611,7 @@ class StateView(Element):
                 pos_x = self.width
                 num_outcomes = len([o for o in self.outcomes if o.model.outcome.outcome_id >= 0])
                 pos_y = self._calculate_port_pos_on_line(num_outcomes, self.height)
-            port_meta['rel_pos'] = pos_x, pos_y
+            port_meta = outcome_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
         outcome_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(outcome_v)
 
@@ -632,14 +632,14 @@ class StateView(Element):
         self._handles.append(input_port_v.handle)
         self._map_handles_port_v[input_port_v.handle] = input_port_v
 
-        port_meta = port_m.meta['gui']['editor_gaphas']
+        port_meta = port_m.get_meta_data_editor()
         if not isinstance(port_meta['rel_pos'], tuple):
             # Distribute input ports on the left side of the state, starting from bottom
             input_port_v.side = SnappedSide.LEFT
             num_inputs = len(self._inputs)
             pos_x = 0
             pos_y = self.height - self._calculate_port_pos_on_line(num_inputs, self.height)
-            port_meta['rel_pos'] = pos_x, pos_y
+            port_meta = port_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
         input_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(input_port_v)
 
@@ -660,14 +660,14 @@ class StateView(Element):
         self._handles.append(output_port_v.handle)
         self._map_handles_port_v[output_port_v.handle] = output_port_v
 
-        port_meta = port_m.meta['gui']['editor_gaphas']
+        port_meta = port_m.get_meta_data_editor()
         if not isinstance(port_meta['rel_pos'], tuple):
             # Distribute output ports on the right side of the state, starting from bottom
             output_port_v.side = SnappedSide.RIGHT
             num_outputs = len(self._outputs)
             pos_x = self.width
             pos_y = self.height - self._calculate_port_pos_on_line(num_outputs, self.height)
-            port_meta['rel_pos'] = pos_x, pos_y
+            port_meta = port_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
         output_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(output_port_v)
 
@@ -690,7 +690,7 @@ class StateView(Element):
 
         scoped_variable_port_v.handle.pos = self.width * (0.1 * len(self._scoped_variables_ports)), 0
 
-        port_meta = scoped_variable_m.meta['gui']['editor_gaphas']
+        port_meta = scoped_variable_m.get_meta_data_editor()
         if not isinstance(port_meta['rel_pos'], tuple):
             # Distribute scoped variables on the top side of the state, starting from left
             scoped_variable_port_v.side = SnappedSide.TOP
@@ -698,7 +698,7 @@ class StateView(Element):
             pos_x = self._calculate_port_pos_on_line(num_scoped_vars, self.width,
                                                      port_width=self.border_width * 4)
             pos_y = 0
-            port_meta['rel_pos'] = pos_x, pos_y
+            port_meta = scoped_variable_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
         scoped_variable_port_v.handle.pos = port_meta['rel_pos']
 
         self.add_rect_constraint_for_port(scoped_variable_port_v)
@@ -743,13 +743,14 @@ class StateView(Element):
             new_rel_pos_y = old_rel_pos[1] * new_parent_size[1] / old_parent_size[1]
             return new_rel_pos_x, new_rel_pos_y
 
-        def set_item_properties(item, item_meta, size, rel_pos):
+        def set_item_properties(item, size, rel_pos):
+            prefix = 'name.' if isinstance(item, NameView) else ''
             item.width = size[0]
             item.height = size[1]
-            item_meta['size'] = size
+            item.model.set_meta_data_editor(prefix + 'size', size)
             if item is not self:
                 item.position = rel_pos
-                item_meta['rel_pos'] = rel_pos
+                item.model.set_meta_data_editor(prefix + 'rel_pos', rel_pos)
             if isinstance(item, StateView):
                 item.update_minimum_size_of_children()
 
@@ -760,18 +761,18 @@ class StateView(Element):
             # Set new state view properties
             old_state_rel_pos = state_v.position
             new_state_rel_pos = calc_new_rel_pos(old_state_rel_pos, old_state_size, new_state_size)
-            set_item_properties(state_v, state_v.model.meta['gui']['editor_gaphas'], new_state_size, new_state_rel_pos)
+            set_item_properties(state_v, new_state_size, new_state_rel_pos)
 
             # Set new name view properties
             name_v = state_v.name_view
             if use_meta_data:
-                old_name_size = state_v.model.meta['gui']['editor_gaphas']['name']['size']
+                old_name_size = state_v.model.get_meta_data_editor()['name']['size']
             else:
                 old_name_size = (name_v.width, name_v.height)
             new_name_size = (old_name_size[0] * width_factor, old_name_size[1] * height_factor)
-            old_name_rel_pos = state_v.model.meta['gui']['editor_gaphas']['name']['rel_pos']
+            old_name_rel_pos = state_v.model.get_meta_data_editor()['name']['rel_pos']
             new_name_rel_pos = calc_new_rel_pos(old_name_rel_pos, old_state_size, new_state_size)
-            set_item_properties(name_v, state_v.model.meta['gui']['editor_gaphas'], new_name_size, new_name_rel_pos)
+            set_item_properties(name_v, new_name_size, new_name_rel_pos)
 
             # Set new port view properties
             for port_v in state_v.get_all_ports():
@@ -789,7 +790,7 @@ class StateView(Element):
 
                 for child_state_v in state_v.child_state_views():
                     if use_meta_data:
-                        old_child_size = child_state_v.model.meta['gui']['editor_gaphas']['size']
+                        old_child_size = child_state_v.model.get_meta_data_editor()['size']
                     else:
                         old_child_size = (child_state_v.width, child_state_v.height)
 
@@ -855,7 +856,7 @@ class NameView(Element):
         return self._view
 
     def apply_meta_data(self):
-        name_meta = self.parent.model.meta['gui']['editor_gaphas']['name']
+        name_meta = self.parent.model.get_meta_data_editor()['name']
         # logger.info("name rel_pos {}".format(name_meta['rel_pos']))
         # logger.info("name size {}".format(name_meta['size']))
         self.position = name_meta['rel_pos']

@@ -108,14 +108,13 @@ class MoveItemTool(ItemTool):
                                                         inmotion.item.handles()[NW])
             if isinstance(inmotion.item, StateView):
                 state_m = inmotion.item.model
-                if state_m.meta['gui']['editor_gaphas']['rel_pos'] != rel_pos:
+                if state_m.get_meta_data_editor()['rel_pos'] != rel_pos:
                     position_changed = True
-                    state_m.meta['gui']['editor_gaphas']['rel_pos'] = rel_pos
-                    state_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
+                    state_m.set_meta_data_editor('rel_pos', rel_pos)
             elif isinstance(inmotion.item, NameView):
                 state_m = self.view.canvas.get_parent(inmotion.item).model
-                if state_m.meta['gui']['editor_gaphas']['name']['rel_pos'] != rel_pos:
-                    state_m.meta['gui']['editor_gaphas']['name']['rel_pos'] = rel_pos
+                if state_m.get_meta_data_editor()['name']['rel_pos'] != rel_pos:
+                    state_m.set_meta_data_editor('name.rel_pos', rel_pos)
                     position_changed = True
 
         if isinstance(self._item, StateView):
