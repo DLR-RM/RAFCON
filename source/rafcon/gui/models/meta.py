@@ -9,8 +9,8 @@ class MetaModel(ModelMT):
     def __init__(self, meta=None):
         ModelMT.__init__(self)
 
-        if isinstance(meta, Vividict):
-            self.meta = meta
+        if isinstance(meta, dict):
+            self.meta = Vividict(meta)
         else:
             self.meta = Vividict()
         self.temp = Vividict()
