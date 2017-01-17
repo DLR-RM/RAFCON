@@ -31,7 +31,7 @@ def test_meta_setter_return_value():
 
 
 @pytest.mark.parametrize("use_gaphas", [False, True])
-def test_state_element(use_gaphas):
+def test_editor_setter_getter(use_gaphas):
     meta_m = MetaModel()
 
     meta_data = meta_m.get_meta_data_editor(for_gaphas=use_gaphas)
@@ -53,7 +53,7 @@ def test_state_element(use_gaphas):
 
 
 @pytest.mark.parametrize("use_gaphas", [False, True])
-def test_state_element_conversion(use_gaphas):
+def test_editor_setter_getter_conversion(use_gaphas):
     meta_m = MetaModel()
     meta_m.meta["gui"]["editor_opengl" if use_gaphas else "editor_gaphas"]["test"] = (1, 2)
     meta_data = meta_m.get_meta_data_editor(for_gaphas=use_gaphas)
