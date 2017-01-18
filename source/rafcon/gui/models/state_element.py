@@ -21,9 +21,7 @@ class StateElementModel(MetaModel, Hashable):
     """
 
     _parent = None
-    meta = None
     meta_signal = Signal()
-    temp = None
 
     __observables__ = ("meta_signal",)
 
