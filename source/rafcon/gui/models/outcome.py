@@ -53,3 +53,25 @@ class OutcomeModel(StateElementModel):
     @ModelMT.observe("outcome", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(OutcomeModel, self).model_changed(model, prop_name, info)
+
+    def _meta_data_editor_gaphas2opengl(self, vividict):
+        if 'rel_pos' in vividict:
+            del vividict['rel_pos']
+        return vividict
+
+    def _meta_data_editor_opengl2gaphas(self, vividict):
+        if self.parent:
+            state_size = self.parent.get_meta_data_editor()['size']
+            if isinstance(state_size, tuple):
+                step = min(state_size) / 10.
+                if self.outcome.outcome_id == -1:  # aborted
+                    vividict["rel_pos"] = (state_size[0] - step, 0)
+                elif self.outcome.outcome_id == -2:  # preempted
+                    vividict["rel_pos"] = (state_size[0] - step * 3, 0)
+                else:  # user defined outcome
+                    num_outcomes = len(self.parent.outcomes) - 2
+                    # count user defined outcomes with smaller id than the current outcome
+                    outcome_num = sum(1 for outcome_id in self.parent.state.outcomes if
+                                      0 <= outcome_id < self.outcome.outcome_id)
+                    vividict["rel_pos"] = (state_size[0], state_size[1] / (num_outcomes + 1) * (outcome_num + 1))
+        return vividict
