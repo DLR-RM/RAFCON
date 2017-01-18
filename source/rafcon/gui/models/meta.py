@@ -17,8 +17,7 @@ class MetaModel(ModelMT):
 
         self.meta_signal = Signal()
 
-    @staticmethod
-    def _meta_data_editor_gaphas2opengl(vividict):
+    def _meta_data_editor_gaphas2opengl(self, vividict):
         """Convert meta data of editor from gaphas to OpenGL
 
         This should be implemented in the child classes if needed.
@@ -29,8 +28,7 @@ class MetaModel(ModelMT):
         """
         return vividict
 
-    @staticmethod
-    def _meta_data_editor_opengl2gaphas(vividict):
+    def _meta_data_editor_opengl2gaphas(self, vividict):
         """Convert meta data of editor from OpenGL to gaphas
 
         This should be implemented in the child classes if needed.

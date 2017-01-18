@@ -66,10 +66,8 @@ class TransitionModel(StateElementModel):
     def model_changed(self, model, prop_name, info):
         super(TransitionModel, self).model_changed(model, prop_name, info)
 
-    @staticmethod
-    def _meta_data_editor_gaphas2opengl(vividict):
+    def _meta_data_editor_gaphas2opengl(self, vividict):
         return mirror_waypoints(vividict)
 
-    @staticmethod
-    def _meta_data_editor_opengl2gaphas(vividict):
+    def _meta_data_editor_opengl2gaphas(self, vividict):
         return mirror_waypoints(vividict)
