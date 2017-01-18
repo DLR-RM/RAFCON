@@ -76,9 +76,6 @@ class SourceEditorController(EditorController):
         self.model.state.script_text = text
 
     # ===============================================================
-    def code_changed(self, source):
-        self.view.apply_tag('default')
-
     def append_shell_command_to_path(self, command, file_path):
 
         logger.debug("Opening path with command: {}".format(command))

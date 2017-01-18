@@ -28,14 +28,17 @@ class EditorController(ExtendedController):
         """Constructor"""
         assert isinstance(observed_method, str)
         self._observed_method = observed_method
+        self._not_editable_undo_runs = False
         ExtendedController.__init__(self, model, view)
 
     def register_view(self, view):
         view.get_buffer().connect('changed', self.code_changed)
 
-        view.get_buffer().begin_not_undoable_action()
+        if hasattr(view.get_buffer(), 'begin_not_undoable_action'):
+            view.get_buffer().begin_not_undoable_action()
         view.set_text(self.source_text)
-        view.get_buffer().end_not_undoable_action()
+        if hasattr(view.get_buffer(), 'end_not_undoable_action'):
+            view.get_buffer().end_not_undoable_action()
 
     def register_adapters(self):
         pass
@@ -108,6 +111,20 @@ class EditorController(ExtendedController):
 
     # ===============================================================
     def code_changed(self, source):
+
+        # work around to avoid changes at all (e.g. by enter-key) if text view property editable is False
+        # TODO if SourceView3 is used in future check if this can be skipped
+        if not self.view.textview.get_editable() and not self._not_editable_undo_runs and not self.view.while_in_set_enabled:
+            self._not_editable_undo_runs = True
+            if hasattr(self.view.get_buffer(), 'begin_not_undoable_action'):
+                self.view.get_buffer().begin_not_undoable_action()
+            # self.view.set_text(self.source_text)
+            self.view.textview.get_buffer().set_text(self.source_text)
+            self.view.set_enabled(False)
+            if hasattr(self.view.get_buffer(), 'end_not_undoable_action'):
+                self.view.get_buffer().end_not_undoable_action()
+            self._not_editable_undo_runs = False
+
         if self.view:
             self.view.apply_tag('default')
 
@@ -133,10 +150,11 @@ class EditorController(ExtendedController):
 
         Resets the code in the editor to the last-saved code.
         """
+        print "2"
         self.view.set_text(self.source_text)
 
     @ExtendedController.observe("state", after=True)
     def after_notification_of_script_text_was_changed(self, model, prop_name, info):
-
+        print "3"
         if self.view and "method_name" in info and self._observed_method == info['method_name']:
             self.view.set_text(self.source_text)
