@@ -61,6 +61,7 @@ class EditorView(View):
             self.textview = gtk.TextView()
             self.using_source_view = False
 
+        self.while_in_set_enabled = False
         self.register()
 
         scrollable = gtk.ScrolledWindow()
@@ -117,15 +118,18 @@ class EditorView(View):
         self.set_cursor_position(line_number, line_offset)
 
     def set_enabled(self, on):
+        self.while_in_set_enabled = True
+
         # Apply color scheme by set text 'workaround' (with current buffer source)
         self.set_text(self.get_text())
 
         if on:
-            self.textview.set_property('editable', True)
+            self.textview.set_editable(True)
             self.apply_tag('default')
         else:
             self.apply_tag('deactivated')
-        self.textview.set_property('editable', on)
+        self.textview.set_editable(on)
+        self.while_in_set_enabled = False
 
     def get_cursor_position(self):
         text_buffer = self.get_buffer()
