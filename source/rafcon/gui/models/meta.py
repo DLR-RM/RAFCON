@@ -6,6 +6,8 @@ from rafcon.utils.vividict import Vividict
 
 class MetaModel(ModelMT):
 
+    _parent = None
+
     def __init__(self, meta=None):
         ModelMT.__init__(self)
 
@@ -54,8 +56,9 @@ class MetaModel(ModelMT):
         assert isinstance(meta_gaphas, Vividict) and isinstance(meta_opengl, Vividict)
 
         # Use meta data of editor with more keys (typically one of the editors has zero keys)
-        from_gaphas = len(meta_gaphas) > len(meta_opengl) or (len(meta_gaphas) == len(meta_opengl) and for_gaphas)
-
+        parental_conversion_from_opengl = self._parent and self._parent().temp['conversion_from_opengl']
+        from_gaphas = len(meta_gaphas) > len(meta_opengl) or (len(meta_gaphas) == len(meta_opengl) and for_gaphas and
+                                                              not parental_conversion_from_opengl)
         # Convert meta data if meta data target and origin differ
         if from_gaphas and not for_gaphas:
             self.meta['gui']['editor_opengl'] = self._meta_data_editor_gaphas2opengl(meta_gaphas)
