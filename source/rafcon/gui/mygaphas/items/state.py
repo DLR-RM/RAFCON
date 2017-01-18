@@ -329,7 +329,7 @@ class StateView(Element):
         if isinstance(state_meta['income']['rel_pos'], tuple):
             update_port_position(self.income, state_meta['income'])
         for outcome_v in self.outcomes:
-            update_port_position(outcome_v, outcome_v.modelget_meta_data_editor())
+            update_port_position(outcome_v, outcome_v.model.get_meta_data_editor())
         for data_port_v in self.inputs + self.outputs:
             update_port_position(data_port_v, data_port_v.model.get_meta_data_editor())
 
