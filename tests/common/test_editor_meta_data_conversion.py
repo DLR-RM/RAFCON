@@ -18,7 +18,7 @@ def test_state_rel_pos(use_gaphas):
     assert meta_data["rel_pos"] == (1, -2)
 
 
-def test_state_income():
+def test_income():
     state = State()
     state_m = StateModel(state, parent=None)
     state_m.meta["gui"]["editor_opengl"]["size"] = (50, 50)
@@ -26,7 +26,7 @@ def test_state_income():
     assert meta_data["income"]["rel_pos"] == (0, 25)
 
 
-def test_state_3_outcomes():
+def test_3_outcomes():
     state = State()
     state_m = StateModel(state, parent=None)
     state_m.meta["gui"]["editor_opengl"]["size"] = (60, 60)
@@ -43,7 +43,7 @@ def test_state_3_outcomes():
             assert outcome_pos == (60, 30)
 
 
-def test_state_4_outcomes():
+def test_4_outcomes():
     state = State()
     state.add_outcome("success2")
     state_m = StateModel(state, parent=None)
@@ -63,7 +63,7 @@ def test_state_4_outcomes():
             assert outcome_pos == (90, 60)
 
 
-def test_state_input_opengl2gaphas():
+def test_input_opengl2gaphas():
     state = State()
     state.add_input_data_port("in", int, 0)
     state_m = StateModel(state, parent=None)
@@ -75,7 +75,7 @@ def test_state_input_opengl2gaphas():
     assert rel_pos == (0, 30)
 
 
-def test_state_input_gaphas2opengl():
+def test_input_gaphas2opengl():
     state = State()
     state.add_input_data_port("in", int, 0)
     state_m = StateModel(state, parent=None)
@@ -87,7 +87,7 @@ def test_state_input_gaphas2opengl():
     assert rel_pos == (0, -30)
 
 
-def test_state_output_opengl2gaphas():
+def test_output_opengl2gaphas():
     state = State()
     state.add_output_data_port("out", int, 0)
     state_m = StateModel(state, parent=None)
@@ -99,7 +99,7 @@ def test_state_output_opengl2gaphas():
     assert rel_pos == (100, 30)
 
 
-def test_state_output_gaphas2opengl():
+def test_output_gaphas2opengl():
     state = State()
     state.add_output_data_port("out", int, 0)
     state_m = StateModel(state, parent=None)
@@ -111,7 +111,7 @@ def test_state_output_gaphas2opengl():
     assert rel_pos == (100, -50)
 
 
-def test_state_scoped_variable_opengl2gaphas():
+def test_scoped_variable_opengl2gaphas():
     state = HierarchyState()
     state.add_scoped_variable("sv", int, 0)
     state_m = ContainerStateModel(state, parent=None)
@@ -123,7 +123,7 @@ def test_state_scoped_variable_opengl2gaphas():
     assert rel_pos == (70, 0)
 
 
-def test_state_scoped_variable_gaphas2opengl():
+def test_scoped_variable_gaphas2opengl():
     state = HierarchyState()
     state.add_scoped_variable("sv", int, 0)
     state_m = ContainerStateModel(state, parent=None)
