@@ -1,7 +1,9 @@
 import pytest
 
 from rafcon.core.states.state import State
+from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.gui.models.state import StateModel
+from rafcon.gui.models.container_state import ContainerStateModel
 
 from rafcon.core.state_elements.transition import Transition
 from rafcon.gui.models.transition import TransitionModel
@@ -59,6 +61,78 @@ def test_state_4_outcomes():
             assert outcome_pos == (90, 30)
         else:
             assert outcome_pos == (90, 60)
+
+
+def test_state_input_opengl2gaphas():
+    state = State()
+    state.add_input_data_port("in", int, 0)
+    state_m = StateModel(state, parent=None)
+    state_m.meta["gui"]["editor_opengl"]["size"] = (100, 100)
+    state_m.get_meta_data_editor(for_gaphas=True)
+    input_m = state_m.input_data_ports[0]
+    input_m.meta["gui"]["editor_opengl"]["inner_rel_pos"] = (20, -30)
+    rel_pos = input_m.get_meta_data_editor(for_gaphas=True)["rel_pos"]
+    assert rel_pos == (0, 30)
+
+
+def test_state_input_gaphas2opengl():
+    state = State()
+    state.add_input_data_port("in", int, 0)
+    state_m = StateModel(state, parent=None)
+    state_m.meta["gui"]["editor_gaphas"]["size"] = (100, 100)
+    state_m.get_meta_data_editor(for_gaphas=False)
+    input_m = state_m.input_data_ports[0]
+    input_m.meta["gui"]["editor_gaphas"]["rel_pos"] = (0, 30)
+    rel_pos = input_m.get_meta_data_editor(for_gaphas=False)["inner_rel_pos"]
+    assert rel_pos == (0, -30)
+
+
+def test_state_output_opengl2gaphas():
+    state = State()
+    state.add_output_data_port("out", int, 0)
+    state_m = StateModel(state, parent=None)
+    state_m.meta["gui"]["editor_opengl"]["size"] = (100, 100)
+    state_m.get_meta_data_editor(for_gaphas=True)
+    output_m = state_m.output_data_ports[0]
+    output_m.meta["gui"]["editor_opengl"]["inner_rel_pos"] = (20, -30)
+    rel_pos = output_m.get_meta_data_editor(for_gaphas=True)["rel_pos"]
+    assert rel_pos == (100, 30)
+
+
+def test_state_output_gaphas2opengl():
+    state = State()
+    state.add_output_data_port("out", int, 0)
+    state_m = StateModel(state, parent=None)
+    state_m.meta["gui"]["editor_gaphas"]["size"] = (100, 100)
+    state_m.get_meta_data_editor(for_gaphas=False)
+    output_m = state_m.output_data_ports[0]
+    output_m.meta["gui"]["editor_gaphas"]["rel_pos"] = (100, 50)
+    rel_pos = output_m.get_meta_data_editor(for_gaphas=False)["inner_rel_pos"]
+    assert rel_pos == (100, -50)
+
+
+def test_state_scoped_variable_opengl2gaphas():
+    state = HierarchyState()
+    state.add_scoped_variable("sv", int, 0)
+    state_m = ContainerStateModel(state, parent=None)
+    state_m.meta["gui"]["editor_opengl"]["size"] = (100, 100)
+    state_m.get_meta_data_editor(for_gaphas=True)
+    scoped_var_m = state_m.scoped_variables[0]
+    scoped_var_m.meta["gui"]["editor_opengl"]["inner_rel_pos"] = (70, 30)
+    rel_pos = scoped_var_m.get_meta_data_editor(for_gaphas=True)["rel_pos"]
+    assert rel_pos == (70, 0)
+
+
+def test_state_scoped_variable_gaphas2opengl():
+    state = HierarchyState()
+    state.add_scoped_variable("sv", int, 0)
+    state_m = ContainerStateModel(state, parent=None)
+    state_m.meta["gui"]["editor_gaphas"]["size"] = (100, 100)
+    state_m.get_meta_data_editor(for_gaphas=False)
+    scoped_var_m = state_m.scoped_variables[0]
+    scoped_var_m.meta["gui"]["editor_gaphas"]["rel_pos"] = (70, 0)
+    rel_pos = scoped_var_m.get_meta_data_editor(for_gaphas=False)["inner_rel_pos"]
+    assert rel_pos == (70, 0)
 
 
 @pytest.mark.parametrize("use_gaphas", [False, True])
