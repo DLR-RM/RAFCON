@@ -320,6 +320,7 @@ def test_storage_with_gui(caplog):
 
 
 def test_on_clean_storing_with_name_in_path(caplog):
+    rafcon.gui.singleton.global_gui_config.set_config_value("AUTO_BACKUP_ENABLED", True)
 
     path_old_format = testing_utils.get_test_sm_path("unit_test_state_machines/"
                                                      "id_to_name_plus_id_storage_format_test_do_not_update")
@@ -334,7 +335,7 @@ def test_on_clean_storing_with_name_in_path(caplog):
     missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
     assert len(missing_elements) == 0
 
-    # check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m)
+    check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m)
 
     testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)

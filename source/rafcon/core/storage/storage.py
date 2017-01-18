@@ -121,12 +121,12 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
 
         # if the state machine was formatted in the old style, it has to be deleted
         remove_deprecated_formatted_state_machine = False
-        if not state_machine.supports_saving_state_names:
-            remove_deprecated_formatted_state_machine = True
-
-        state_machine.supports_saving_state_names = True
-
         if not temporary_storage:
+            if not state_machine.supports_saving_state_names:
+                remove_deprecated_formatted_state_machine = True
+
+            state_machine.supports_saving_state_names = True
+
             if save_as:
                 # A copy of the state machine is created at a new place in the filesystem. Therefore, there are no paths
                 # to be removed
