@@ -436,11 +436,15 @@ class AbstractStateModel(MetaModel, Hashable):
         meta_data_element = element_m.meta
         meta_data[meta_data_element_id] = meta_data_element
 
-        return mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
     def _meta_data_editor_gaphas2opengl(self, vividict):
+        vividict = mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
+        if 'income' in vividict:
+            del vividict['income']
+        return vividict
 
     def _meta_data_editor_opengl2gaphas(self, vividict):
         vividict = mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
         if isinstance(vividict['size'], tuple):
+            self.temp['conversion_from_opengl'] = True
             vividict['income']['rel_pos'] = (0, vividict['size'][1] / 2.)
         return vividict
