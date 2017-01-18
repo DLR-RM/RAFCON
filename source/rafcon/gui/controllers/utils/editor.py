@@ -125,7 +125,8 @@ class EditorController(ExtendedController):
             self.source_text = text
             logger.debug("The source was saved {}.".format(self.__class__.__name__))
         else:
-            logger.debug("Source is the same as in storage {}.".format(self.__class__.__name__))
+            # logger.debug("Source is the same as in storage {}.".format(self.__class__.__name__))
+            pass
 
     def cancel_clicked(self, button):
         """Triggered when the Cancel-Shortcut in the editor is triggered
