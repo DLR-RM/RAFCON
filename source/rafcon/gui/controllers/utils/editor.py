@@ -118,7 +118,6 @@ class EditorController(ExtendedController):
             self._not_editable_undo_runs = True
             if hasattr(self.view.get_buffer(), 'begin_not_undoable_action'):
                 self.view.get_buffer().begin_not_undoable_action()
-            # self.view.set_text(self.source_text)
             self.view.textview.get_buffer().set_text(self.source_text)
             self.view.set_enabled(False)
             if hasattr(self.view.get_buffer(), 'end_not_undoable_action'):
@@ -150,11 +149,9 @@ class EditorController(ExtendedController):
 
         Resets the code in the editor to the last-saved code.
         """
-        print "2"
         self.view.set_text(self.source_text)
 
     @ExtendedController.observe("state", after=True)
     def after_notification_of_script_text_was_changed(self, model, prop_name, info):
-        print "3"
         if self.view and "method_name" in info and self._observed_method == info['method_name']:
             self.view.set_text(self.source_text)
