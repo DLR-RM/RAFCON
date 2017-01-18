@@ -15,6 +15,9 @@ import time
 import os
 import pytest
 
+import sys
+sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
+
 # communication queues
 CLIENT1_TO_SERVER_QUEUE = "client1_to_server"
 SERVER_TO_CLIENT1_QUEUE = "server_to_client1"
@@ -302,8 +305,8 @@ def launch_client(interacting_function_client, multiprocessing_queue_dict):
     import network_test.start_client
     network_test.start_client.start_client(interacting_function_client, multiprocessing_queue_dict)
 
-    import sys
-    sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
+    # import sys
+    # sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
 
 
 def launch_server(interacting_function_handle_server_, multiprocessing_queue_dict):
@@ -317,8 +320,6 @@ def launch_server(interacting_function_handle_server_, multiprocessing_queue_dic
     server = Process(target=network_test.start_server.start_server,
                      args=(interacting_function_handle_server_, multiprocessing_queue_dict))
 
-    import sys
-    sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
     return server
 
 
