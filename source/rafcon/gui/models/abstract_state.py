@@ -169,7 +169,7 @@ class AbstractStateModel(MetaModel, Hashable):
         else:
             self._parent = None
 
-    def get_sm_m_for_state_m(self, two_factor_check=True):
+    def get_state_machine_m(self, two_factor_check=True):
         """ Get respective state machine model
 
         Get a reference of the state machine model the state model belongs to. As long as the root state model
@@ -179,7 +179,7 @@ class AbstractStateModel(MetaModel, Hashable):
         :return: respective state machine model
         """
         from rafcon.gui.singleton import state_machine_manager_model
-        state_machine = self.state.get_sm_for_state()
+        state_machine = self.state.get_state_machine()
         if state_machine:
             if state_machine.state_machine_id in state_machine_manager_model.state_machines:
                 sm_m = state_machine_manager_model.state_machines[state_machine.state_machine_id]
@@ -280,7 +280,7 @@ class AbstractStateModel(MetaModel, Hashable):
             self.meta_signal.emit(msg)
 
     def _mark_state_machine_as_dirty(self):
-        state_machine = self.state.get_sm_for_state()
+        state_machine = self.state.get_state_machine()
         if state_machine:
             state_machine_id = state_machine.state_machine_id
             from rafcon.core.singleton import state_machine_manager

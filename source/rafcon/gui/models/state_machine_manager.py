@@ -102,8 +102,8 @@ class StateMachineManagerModel(ModelMT, Observable):
                 sm_m.destroy()
                 sm_m.selection.clear()
 
-    def get_sm_m_for_state_model(self, state_m):
-        return self.state_machines[state_m.state.get_sm_for_state().state_machine_id]
+    def get_state_machine_model(self, state_m):
+        return self.state_machines[state_m.state.get_state_machine().state_machine_id]
 
     def get_selected_state_machine_model(self):
         if self.selected_state_machine_id is None:

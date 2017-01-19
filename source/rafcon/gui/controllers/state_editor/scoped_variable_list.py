@@ -46,8 +46,8 @@ class ScopedVariableListController(ListViewController):
         self.next_focus_column = {}
         self.prev_focus_column = {}
 
-        if self.model.get_sm_m_for_state_m() is not None:
-            self.observe_model(self.model.get_sm_m_for_state_m())
+        if self.model.get_state_machine_m() is not None:
+            self.observe_model(self.model.get_state_machine_m())
         else:
             logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
 

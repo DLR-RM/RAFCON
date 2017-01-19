@@ -261,7 +261,7 @@ class SourceEditorController(EditorController):
                 message_string += "\n\nThe line was focused in the source editor."
 
             # select state to show source editor
-            sm_m = state_machine_manager_model.get_sm_m_for_state_model(self.model)
+            sm_m = state_machine_manager_model.get_state_machine_model(self.model)
             if sm_m.selection.get_selected_state() is not self.model:
                 sm_m.selection.set(self.model)
 

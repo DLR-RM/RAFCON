@@ -354,7 +354,7 @@ def get_state_model_for_state(state):
     :return: The model corresponding to state
     """
     assert isinstance(state, State)
-    state_machine_id = state.get_sm_for_state().state_machine_id
+    state_machine_id = state.get_state_machine().state_machine_id
     state_machine_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine_id]
     state_m = state_machine_m.root_state
     state_path = state.get_path()
@@ -377,7 +377,7 @@ def get_state_machine_model_for_state(state):
     :return: The state machine model containing the state
     """
     assert isinstance(state, State)
-    state_machine_id = state.get_sm_for_state().state_machine_id
+    state_machine_id = state.get_state_machine().state_machine_id
     state_machine_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine_id]
     return state_machine_m
 

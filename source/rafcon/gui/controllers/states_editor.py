@@ -86,7 +86,7 @@ def create_tab_header(title, close_callback, sticky_callback, *additional_parame
 
 
 def set_tab_label_texts(label, state_m, unsaved_changes=False):
-    state_machine_id = state_m.state.get_sm_for_state().state_machine_id
+    state_machine_id = state_m.state.get_state_machine().state_machine_id
     state_name = state_m.state.name
     state_name_trimmed = helpers.limit_string(state_name, STATE_NAME_MAX_CHARS)
     label_text = "{0}&#8201;&#8226;&#8201;{1}".format(state_machine_id, state_name_trimmed)
@@ -155,7 +155,7 @@ class StatesEditorController(ExtendedController):
         return id(state_m)
 
     def get_state_tab_name(self, state_m):
-        state_machine_id = state_m.state.get_sm_for_state().state_machine_id
+        state_machine_id = state_m.state.get_state_machine().state_machine_id
         state_name = state_m.state.name
         tab_name = "{0}|{1}".format(state_machine_id, state_name)
         return tab_name
@@ -403,7 +403,7 @@ class StatesEditorController(ExtendedController):
         for tab_info in self.tabs.values():
             if tab_info['page'] is page:
                 state_m = tab_info['state_m']
-                sm_id = state_m.state.get_sm_for_state().state_machine_id
+                sm_id = state_m.state.get_state_machine().state_machine_id
                 selected_state_m = self.current_state_machine_m.selection.get_selected_state()
 
                 # If the state of the selected tab is not in the selection, set it there

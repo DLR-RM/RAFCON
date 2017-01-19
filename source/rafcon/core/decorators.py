@@ -19,10 +19,10 @@ def lock_state_machine(func):
         self_reference = args[0]
         target_state_machine = None
         if isinstance(self_reference, State):
-            target_state_machine = self_reference.get_sm_for_state()
+            target_state_machine = self_reference.get_state_machine()
         elif isinstance(self_reference, StateElement):
             if self_reference.parent:
-                target_state_machine = self_reference.parent.get_sm_for_state()
+                target_state_machine = self_reference.parent.get_state_machine()
 
         if target_state_machine:
             target_state_machine.acquire_modification_lock()

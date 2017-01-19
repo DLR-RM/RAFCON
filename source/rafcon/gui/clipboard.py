@@ -134,9 +134,9 @@ class Clipboard(Observable):
                 # remove model from selection to avoid conflicts
                 # -> selection is not observing state machine changes and state machine model is not updating it
                 if model.parent is None and isinstance(model, StateModel) and model.state.is_root_state:
-                    selection = model.get_sm_m_for_state_m().selection if model.get_sm_m_for_state_m() else None
+                    selection = model.get_state_machine_m().selection if model.get_state_machine_m() else None
                 else:
-                    selection = model.parent.get_sm_m_for_state_m().selection if model.parent.get_sm_m_for_state_m() else None
+                    selection = model.parent.get_state_machine_m().selection if model.parent.get_state_machine_m() else None
                 if selection and model in getattr(selection, list_name):
                     selection.remove(model)
                 # remove element

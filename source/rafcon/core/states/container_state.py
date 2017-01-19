@@ -682,8 +682,8 @@ class ContainerState(State):
 
         if not storage_load:
             # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
-            if self.get_sm_for_state():
-                own_sm_id = self.get_sm_for_state().state_machine_id
+            if self.get_state_machine():
+                own_sm_id = self.get_state_machine().state_machine_id
                 if own_sm_id is not None:
                     storage.unmark_path_for_removal_for_sm_id(own_sm_id, state.get_file_system_path())
 
@@ -709,8 +709,8 @@ class ContainerState(State):
             self.set_start_state(None)
 
         # remove script folder
-        if self.get_sm_for_state():
-            own_sm_id = self.get_sm_for_state().state_machine_id
+        if self.get_state_machine():
+            own_sm_id = self.get_state_machine().state_machine_id
             if own_sm_id is None:
                 logger.warn("Something is going wrong during state removal. State does not belong to "
                             "a state machine!")

@@ -1068,14 +1068,14 @@ class CoreObjectIdentifier:
                               'PreemptiveConcurrencyState', 'LibraryState', 'DeciderState']:
                 self._path = core_obj_or_cls.get_path()
                 self._id = core_obj_or_cls.state_id
-                self._sm_id = core_obj_or_cls.get_sm_for_state().state_machine_id
+                self._sm_id = core_obj_or_cls.get_state_machine().state_machine_id
             else:
                 if isinstance(core_obj_or_cls.parent, State):
                     self._path = core_obj_or_cls.parent.get_path()
-                    if core_obj_or_cls.parent.get_sm_for_state() is None:
+                    if core_obj_or_cls.parent.get_state_machine() is None:
                         logger.warning('state has no state machine -> {0} {1}'.format(core_obj_or_cls.parent.name, core_obj_or_cls.parent.get_path()))
                     else:
-                        self._sm_id = core_obj_or_cls.parent.get_sm_for_state().state_machine_id
+                        self._sm_id = core_obj_or_cls.parent.get_state_machine().state_machine_id
                 else:
                     logger.warning("identifier of core object {0} without parent is mostly useless".format(self._type))
 
