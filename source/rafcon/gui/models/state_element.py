@@ -67,6 +67,11 @@ class StateElementModel(MetaModel, Hashable):
         """
         raise NotImplementedError()
 
+    def get_state_machine_m(self):
+        if self.parent:
+            return self.parent.get_state_machine_m()
+        return None
+
     def prepare_destruction(self):
         """Prepares the model for destruction
 
