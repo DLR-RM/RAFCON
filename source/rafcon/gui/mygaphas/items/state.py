@@ -745,12 +745,13 @@ class StateView(Element):
 
         def set_item_properties(item, size, rel_pos):
             prefix = 'name.' if isinstance(item, NameView) else ''
+            item_m = item.model if isinstance(item, StateView) else item.parent.model
             item.width = size[0]
             item.height = size[1]
-            item.model.set_meta_data_editor(prefix + 'size', size)
+            item_m.set_meta_data_editor(prefix + 'size', size)
             if item is not self:
                 item.position = rel_pos
-                item.model.set_meta_data_editor(prefix + 'rel_pos', rel_pos)
+                item_m.set_meta_data_editor(prefix + 'rel_pos', rel_pos)
             if isinstance(item, StateView):
                 item.update_minimum_size_of_children()
 
