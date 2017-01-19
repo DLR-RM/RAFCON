@@ -117,11 +117,20 @@ class EditorView(View):
         self.get_buffer().set_text(text)
         self.set_cursor_position(line_number, line_offset)
 
-    def set_enabled(self, on):
+    def set_enabled(self, on, text=None):
+        """ Set the default input or deactivated (disabled) style scheme
+
+         The method triggers the signal 'changed' by using set_text. Therefore, the method use the while_in_set_enabled
+         flag to make activities of the method observable. If a method trigger this method and was triggered by a
+         changed-signal this flag is supposed to avoid recursive calls.
+        :param bool on: enable flag.
+        :param str text: optional text to insert.
+        :return:
+        """
         self.while_in_set_enabled = True
 
         # Apply color scheme by set text 'workaround' (with current buffer source)
-        self.set_text(self.get_text())
+        self.set_text(self.get_text()) if text is None else self.set_text(text)
 
         if on:
             self.textview.set_editable(True)
