@@ -778,8 +778,8 @@ class GraphicalEditorController(ExtendedController):
             hash_after = self.model.mutable_hash().digest()
             if hash_before != hash_after:
                 self._meta_data_changed(None, self.root_state_m, 'append_initial_change', True)
-                logger.info("Opening the state machine caused some meta data to be generated, which will be stored if the"
-                            "state machine is saved.")
+                logger.info("Opening the state machine caused some meta data to be generated, which will be stored "
+                            " when the state machine is being saved.")
 
     @lock_state_machine
     def setup_state(self, state_m, parent=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
