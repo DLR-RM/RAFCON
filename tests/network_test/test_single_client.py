@@ -390,24 +390,9 @@ def test_single_client():
 
     print "Joining processes"
 
-    # wait for each process a maximum of 5 seconds
-    sleep_counter = 0
-    while server.is_alive():
-        sleep_counter += 1
-        if sleep_counter > 50:
-            assert True == False
-            break
-        time.sleep(0.1)
-    server.join(timeout=10)
-
-    sleep_counter = 0
-    while client1.is_alive():
-        sleep_counter += 1
-        if sleep_counter > 50:
-            assert True == False
-            break
-        time.sleep(0.1)
+    # wait for each process a maximum of 10 seconds
     client1.join(timeout=10)
+    server.join(timeout=10)
 
     assert not client1.is_alive(), "Client1 is still alive"
     assert not server.is_alive(), "Server is still alive"

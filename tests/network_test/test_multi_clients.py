@@ -85,7 +85,7 @@ def synchronize_with_client_threads(queue_dict, execution_engine):
 
     execution_engine.stop()
     execution_engine.join()
-    queue_dict[KILL_SERVER_QUEUE].get()
+    queue_dict[KILL_SERVER_QUEUE].get(3)
     os._exit(0)
 
 
@@ -144,7 +144,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
 
     queue_dict[SERVER_TO_CLIENT1_QUEUE].get()  # synchronize to server
     queue_dict[MAIN_QUEUE].put(START_PAUSE_RESUME_SUCCESSFUL)
-    queue_dict[KILL_CLIENT1_QUEUE].get()  # synchronize to main process
+    queue_dict[KILL_CLIENT1_QUEUE].get(3)  # synchronize to main process
     os._exit(0)
 
 
@@ -170,8 +170,8 @@ def interacting_function_client2(main_window_controller, global_monitoring_manag
     time.sleep(0.5)  # let the state machine pause for a while
     queue_dict[CLIENT2_TO_CLIENT1].put("State machine paused for some seconds!")
 
-    queue_dict[SERVER_TO_CLIENT2_QUEUE].get()  # synchronize to server
-    queue_dict[KILL_CLIENT2_QUEUE].get()  # synchronize to main process
+    queue_dict[SERVER_TO_CLIENT2_QUEUE].get(2)  # synchronize to server
+    queue_dict[KILL_CLIENT2_QUEUE].get(3)  # synchronize to main process
     os._exit(0)
 
 
