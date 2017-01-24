@@ -67,10 +67,10 @@ class SourceEditorController(EditorController):
             view['apply_button'].set_sensitive(False)
             view['cancel_button'].set_sensitive(False)
 
-        if global_gui_config.get_config_value('PREFER_EXTERNAL_EDITOR'):
-            # This opens an editor on spawning of a new source editor instance if the config flag is set
-            self.save_file_before_opening()
-            self.open_external_clicked(self.view['open_external_button'])
+        # if global_gui_config.get_config_value('PREFER_EXTERNAL_EDITOR'):
+        #     # This opens an editor on spawning of a new source editor instance if the config flag is set
+        #     self.save_file_before_opening()
+        #     self.open_external_clicked(self.view['open_external_button'])
 
     @property
     def source_text(self):
@@ -127,26 +127,16 @@ class SourceEditorController(EditorController):
 
         pref = global_gui_config.get_config_value("PREFER_EXTERNAL_EDITOR")
 
-        def lock():
-            # change the button label to suggest to the user that the text now is not editable
-            if pref:
-                button.set_label('Reload')
-                button.set_active(True)
+        def editor_lock(lock):
+            button_text = ['Unlock', 'Reload']
+            if lock:
+                button.set_label(button_text[pref])
             else:
-                button.set_label('Unlock')
-                # Disable the text input events to the source editor widget
-            self.view.set_enabled(False)
-
-        def unlock():
-            button.set_label('Open externally')
-            # When hitting the Open external button, set_active(False) is not called, thus the button stays blue
-            # while locked to highlight the reason why one cannot edit the text
-            button.set_active(False)
-            # Enable text input
-            self.view.set_enabled(True)
+                button.set_label('Open externally')
+            button.set_active(lock)
+            self.view.set_enabled(not lock)
 
         if button.get_active():
-
             # Get the specified "Editor" as in shell command from the gui config yaml
             external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')
 
@@ -163,11 +153,11 @@ class SourceEditorController(EditorController):
                     global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', None)
                     global_gui_config.save_configuration()
 
-                    unlock()
+                    editor_lock(False)
                     return
 
-                # Set the text on the button to 'Unlock' instead of 'Open external'
-                lock()
+                # Set the text on the button to 'Unlock' instead of 'Open externally'
+                editor_lock(True)
 
             def open_text_window():
 
@@ -192,7 +182,7 @@ class SourceEditorController(EditorController):
                 else:
                     # If Dialog is canceled either by the button or the cross, untoggle the button again and revert the
                     # lock, which is not implemented yet
-                    unlock()
+                    editor_lock(False)
 
                 text_input.destroy()
 
@@ -214,11 +204,7 @@ class SourceEditorController(EditorController):
             self.set_script_text(content)
 
             # If button is clicked after one open a file in the external editor, unlock the internal editor
-            if not pref:
-                unlock()
-            else:
-                lock()
-
+            editor_lock(pref)
 
     def apply_clicked(self, button):
         """Triggered when the Apply button in the source editor is clicked.
