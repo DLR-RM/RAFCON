@@ -1,7 +1,8 @@
+import copy
 import signal
 import tempfile
 from os import mkdir, environ
-from os.path import join, dirname, realpath, exists, abspath
+from os.path import join, dirname, realpath, isdir, exists, abspath
 from threading import Lock, Condition, Event, Thread
 
 import rafcon
@@ -114,6 +115,19 @@ def call_gui_callback(callback, *args):
 
 
 def initialize_rafcon(core_config=None, gui_config=None, runtime_config=None, libraries=None):
+    """ Initialize global configs and libraries
+
+     The function accepts tuples as arguments to load a config with (config-file, path) as tuple or a
+     dictionary that sets partly or all parameters of the config dictionary.
+     If the libraries dict is None the libraries set handed by the core-config tuple and respective LIBRARY_PATHS
+     is used as libraries dictionary.
+
+    :param core_config: Tuple pointing to config-file or dictionary for partly or all parameters of respective config.
+    :param gui_config: Tuple pointing to config-file or dictionary for partly or all parameters of respective config.
+    :param runtime_config: Tuple pointing to config-file or dictionary for partly or all parameters of respective config.
+    :param libraries: Dictionary with library mounting labels and hard drive paths.
+    :return:
+    """
     from rafcon.core.config import global_config
     from rafcon.core.singleton import library_manager, state_machine_manager
     from rafcon.gui.config import global_gui_config
@@ -122,19 +136,20 @@ def initialize_rafcon(core_config=None, gui_config=None, runtime_config=None, li
 
     test_multithreading_lock.acquire()
 
-    global_config.load()
-    global_gui_config.load()
-    global_runtime_config.load()
-    if isinstance(core_config, dict):
-        for key, value in core_config.iteritems():
-            global_config.set_config_value(key, value)
-    if isinstance(gui_config, dict):
-        for key, value in gui_config.iteritems():
-            global_gui_config.set_config_value(key, value)
-    if isinstance(runtime_config, dict):
-        for key, value in runtime_config.iteritems():
-            global_runtime_config.set_config_value(key, value)
+    # preserve LIBRARY_PATHS if handed with dict -> can be already be the dict of the global_config object
+    if libraries is None and core_config is not None and 'LIBRARY_PATHS' in core_config:
+        libraries = copy.deepcopy(core_config['LIBRARY_PATHS'])
 
+    # initialize global core config
+    if isinstance(core_config, tuple) and exists(join(core_config[1], core_config[0])):
+        global_config.load(core_config[0], core_config[1])
+        if global_config.get_config_value('LIBRARY_PATHS') is not None:
+            libraries = copy.deepcopy(global_config.get_config_value('LIBRARY_PATHS'))
+    else:
+        global_config.load()
+        if isinstance(core_config, dict):
+            for key, value in core_config.iteritems():
+                global_config.set_config_value(key, value)
     rafcon_library_path = join(dirname(RAFCON_PATH), '..', 'share', 'libraries')
     remove_all_libraries()
     if not isinstance(libraries, dict):
@@ -143,8 +158,27 @@ def initialize_rafcon(core_config=None, gui_config=None, runtime_config=None, li
         libraries["generic"] = join(rafcon_library_path, 'generic')
     global_config.set_config_value("LIBRARY_PATHS", libraries)
     environ['RAFCON_LIB_PATH'] = rafcon_library_path
+
     library_manager.initialize()
     state_machine_manager.delete_all_state_machines()
+
+    # initialize global gui config
+    if isinstance(gui_config, tuple) and exists(join(gui_config[1], gui_config[0])):
+        global_gui_config.load(gui_config[1], gui_config[0])
+    else:
+        global_gui_config.load()
+        if isinstance(gui_config, dict):
+            for key, value in gui_config.iteritems():
+                global_gui_config.set_config_value(key, value)
+
+    # initialize global runtime config
+    if isinstance(runtime_config, tuple) and exists(join(runtime_config[1], runtime_config[0])):
+        global_runtime_config.load(runtime_config[1], runtime_config[0])
+    else:
+        global_runtime_config.load()
+        if isinstance(runtime_config, dict):
+            for key, value in runtime_config.iteritems():
+                global_runtime_config.set_config_value(key, value)
 
     signal.signal(signal.SIGINT, signal_handler)
 

@@ -1167,6 +1167,23 @@ def test_type_modifications_without_gui(caplog):
 
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_machine_modifications_with_gui(with_gui, caplog):
+
+    # if with_gui:
+    #     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED', False, 'HISTORY_ENABLED', True})
+    # else:
+    #     testing_utils.initialize_rafcon(gui_config={'AUTO_BACKUP_ENABLED', False, 'HISTORY_ENABLED', True})
+    #
+    # [logger, sm_m, state_dict] = create_models()
+    # if testing_utils.sm_manager_model is None:
+    #     testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    #
+    # trigger_state_type_change_tests(rafcon.gui.singleton.state_machine_manager_model,
+    #                                 rafcon.gui.singleton.main_window_controller,
+    #                                 sm_m, state_dict, with_gui, logger)
+    #
+    # testing_utils.reload_config()
+    # testing_utils.assert_logger_warnings_and_errors(caplog)
+
     testing_utils.initialize_rafcon()
     print "create model"
     [logger, sm_m, state_dict] = create_models()
@@ -1199,6 +1216,32 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
 
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_type_change_bugs_with_gui(with_gui, caplog):
+
+    # if with_gui:
+    #     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED', False, 'HISTORY_ENABLED', True})
+    # else:
+    #     testing_utils.initialize_rafcon(gui_config={'AUTO_BACKUP_ENABLED', False, 'HISTORY_ENABLED', True})
+    #
+    # [logger, sm_m, state_dict] = create_models()
+    # if testing_utils.sm_manager_model is None:
+    #     testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    #
+    # try:
+    #     if with_gui:
+    #         trigger_state_type_change_typical_bug_tests(rafcon.gui.singleton.state_machine_manager_model,
+    #                                                     rafcon.gui.singleton.main_window_controller,
+    #                                                     sm_m, state_dict, with_gui, logger)
+    #     else:
+    #         rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
+    #         trigger_state_type_change_typical_bug_tests(rafcon.gui.singleton.state_machine_manager_model,
+    #                                                     None, sm_m, state_dict, with_gui, logger)
+    # finally:
+    #     menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
+    #     # call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
+    #
+    # testing_utils.reload_config()
+    # testing_utils.assert_logger_warnings_and_errors(caplog)
+
     print "NEW BUG TEST"
     testing_utils.initialize_rafcon()
     print "create model"
@@ -1820,6 +1863,9 @@ def trigger_state_type_change_typical_bug_tests(*args):
         sm_manager_model.state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
 
     logger.debug('number of sm is : {0}'.format(sm_manager_model.state_machines.keys()))
+    # import time
+    # time.sleep(0.1)
+    # print len(sm_manager_model.state_machines), len(sm_manager_model.state_machine_manager.state_machines)
     assert len(sm_manager_model.state_machines) == current_sm_length+1
     sm_m = sm_manager_model.state_machines[sm_manager_model.state_machines.keys()[-1]]
     save_state_machine(sm_m, state_machine_path + '_before1', logger, with_gui, menubar_ctrl)
