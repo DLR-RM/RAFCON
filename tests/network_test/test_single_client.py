@@ -181,18 +181,18 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     # as the state machine run to the end this is safe
     execution_engine.stop()
     execution_engine.join()
-    print "server: start from test successful\n\n"
+    print "server: start from test successful\n"
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[8])
 
     execution_engine.stop()
     execution_engine.join()
-    # print_highlight("Server cp 1")
+    print "server: wait for sync message from client\n"
     queue_dict[CLIENT1_TO_SERVER_QUEUE].get()
-    # print_highlight("Server cp 2")
+    print "server: send sync message to client\n"
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put("sync")
-    # print_highlight("Server cp 3")
-    queue_dict[KILL_SERVER_QUEUE].get()
-    # print_highlight("Server cp 4")
+    print "server: wait for kill command from main queue\n"
+    # set a timeout of 3 seconds
+    queue_dict[KILL_SERVER_QUEUE].get(3)
     os._exit(0)
     # normal exit does not work
     # exit(0)
@@ -281,15 +281,16 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     # directly start with decimate bottles and jump over the sing state
     remote_execution_engine.start(start_state_path="GLSUJY/NDIVLD")
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[8])
-    queue_dict[MAIN_QUEUE].put(START_FROM_SUCCESSFUL)
 
-    # print_highlight("client cp 1")
+    print "client: send sync message to server\n"
     queue_dict[CLIENT1_TO_SERVER_QUEUE].put("sync")
-    # print_highlight("client cp 2")
+    print "client: wait for sync message from server\n"
     queue_dict[SERVER_TO_CLIENT1_QUEUE].get()
-    # print_highlight("client cp 3")
-    queue_dict[KILL_CLIENT1_QUEUE].get()  # synchronize to main process
-    # print_highlight("client cp 4")
+    print "client: tell the main queue that tests were successful\n"
+    queue_dict[MAIN_QUEUE].put(START_FROM_SUCCESSFUL)
+    print "client: wait for kill command from main queue\n"
+    # set a timeout of 3 seconds
+    queue_dict[KILL_CLIENT1_QUEUE].get(3)
     os._exit(0)
     # normal exit does not work
     # exit(0)
@@ -388,8 +389,10 @@ def test_single_client():
     queue_dict[KILL_CLIENT1_QUEUE].put("Kill", timeout=10)
 
     print "Joining processes"
-    server.join(timeout=10)
+
+    # wait for each process a maximum of 10 seconds
     client1.join(timeout=10)
+    server.join(timeout=10)
 
     assert not client1.is_alive(), "Client1 is still alive"
     assert not server.is_alive(), "Server is still alive"
