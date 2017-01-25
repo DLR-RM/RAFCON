@@ -1218,9 +1218,9 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
 def test_state_type_change_bugs_with_gui(with_gui, caplog):
 
     # if with_gui:
-    #     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED', False, 'HISTORY_ENABLED', True})
+    #     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
     # else:
-    #     testing_utils.initialize_rafcon(gui_config={'AUTO_BACKUP_ENABLED', False, 'HISTORY_ENABLED', True})
+    #     testing_utils.initialize_rafcon(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
     #
     # [logger, sm_m, state_dict] = create_models()
     # if testing_utils.sm_manager_model is None:
