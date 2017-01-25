@@ -51,9 +51,6 @@ class MetaModel(ModelMT):
         :return: Meta data for the editor
         :rtype: Vividict
         """
-        editor_count = len(self.meta['gui'])
-        state_machine_m = self.get_state_machine_m() if hasattr(self, "get_state_machine_m") else None
-        state_machine = state_machine_m.state_machine if state_machine_m else None
         meta_gaphas = self.meta['gui']['editor_gaphas']
         meta_opengl = self.meta['gui']['editor_opengl']
         assert isinstance(meta_gaphas, Vividict) and isinstance(meta_opengl, Vividict)
@@ -67,16 +64,9 @@ class MetaModel(ModelMT):
             self.meta['gui']['editor_opengl'] = self._meta_data_editor_gaphas2opengl(meta_gaphas)
         elif not from_gaphas and for_gaphas:
             self.meta['gui']['editor_gaphas'] = self._meta_data_editor_opengl2gaphas(meta_opengl)
-        # mark state machine as dirty, when the meta dat has changed due to the conversion
-        if from_gaphas is not for_gaphas and state_machine:
-            state_machine.marked_dirty = True
 
         # only keep meta data for one editor
         del self.meta['gui']['editor_opengl' if for_gaphas else 'editor_gaphas']
-
-        # Also mark state machine as dirty if obsolete editor keys were removed
-        if editor_count != len(self.meta['gui']) and state_machine:
-            state_machine.marked_dirty = True
 
         return self.meta['gui']['editor_gaphas'] if for_gaphas else self.meta['gui']['editor_opengl']
 
