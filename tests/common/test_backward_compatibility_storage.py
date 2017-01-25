@@ -52,13 +52,9 @@ def run_state_machines(state_machines_path):
 def test_backward_compatibility_storage(caplog):
     path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_compatibility"))
 
-    run_gui(None, {
-                    'HISTORY_ENABLED': False,
-                    'AUTO_BACKUP_ENABLED': False
-                  }, {},
-                  {
-                    'unit_test_state_machines': testing_utils.get_test_sm_path("unit_test_state_machines")
-                  })
+    run_gui(gui_config={'HISTORY_ENABLED': False,
+                        'AUTO_BACKUP_ENABLED': False},
+            libraries={'unit_test_state_machines': testing_utils.get_test_sm_path("unit_test_state_machines")})
 
     try:
         run_state_machines(path)

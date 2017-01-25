@@ -54,6 +54,10 @@ Steps for releasing
 
 .. include:: release_steps.rst
 
+HowTo on creating a splashscreen
+--------------------------------
+
+.. include:: splashscreen.rst
 
 Discussion
 ----------
