@@ -18,12 +18,36 @@ def test_state_rel_pos(use_gaphas):
     assert meta_data["rel_pos"] == (1, -2)
 
 
+def test_name():
+    state = State()
+    state_m = StateModel(state, parent=None)
+    state_m.meta["gui"]["editor_opengl"]["size"] = (96, 150)
+    meta_data = state_m.get_meta_data_editor(for_gaphas=True)
+    assert meta_data["name"]["rel_pos"] == (8, 8)
+    assert meta_data["name"]["size"] == (80, 12)
+
+
 def test_income():
     state = State()
     state_m = StateModel(state, parent=None)
     state_m.meta["gui"]["editor_opengl"]["size"] = (50, 50)
     meta_data = state_m.get_meta_data_editor(for_gaphas=True)
     assert meta_data["income"]["rel_pos"] == (0, 25)
+
+
+def test_state_property_deletion():
+    state = State()
+    state_m = StateModel(state, parent=None)
+    state_m.meta["gui"]["editor_gaphas"]["income"]["rel_pos"] = (0, 50)
+    state_m.meta["gui"]["editor_gaphas"]["name"]["rel_pos"] = (10, 10)
+    state_m.meta["gui"]["editor_gaphas"]["name"]["size"] = (200, 100)
+    meta_data = state_m.get_meta_data_editor(for_gaphas=False)
+    assert "income" not in meta_data
+    assert "income" not in state_m.meta["gui"]["editor_gaphas"]
+    assert "income" not in state_m.meta["gui"]["editor_opengl"]
+    assert "name" not in meta_data
+    assert "name" not in state_m.meta["gui"]["editor_gaphas"]
+    assert "name" not in state_m.meta["gui"]["editor_opengl"]
 
 
 def test_3_outcomes():
