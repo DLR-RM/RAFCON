@@ -440,11 +440,22 @@ class AbstractStateModel(MetaModel, Hashable):
         vividict = mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
         if 'income' in vividict:
             del vividict['income']
+        if 'name' in vividict:
+            del vividict['name']
         return vividict
 
     def _meta_data_editor_opengl2gaphas(self, vividict):
         vividict = mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
         if isinstance(vividict['size'], tuple):
             self.temp['conversion_from_opengl'] = True
-            vividict['income']['rel_pos'] = (0, vividict['size'][1] / 2.)
+            # Determine income position
+            size = vividict['size']
+            vividict['income']['rel_pos'] = (0, size[1] / 2.)
+
+            # Determine size and position of NameView
+            margin = min(size) / 12.
+            name_height = min(size) / 8.
+            name_width = size[0] - 2 * margin
+            vividict['name']['size'] = (name_width, name_height)
+            vividict['name']['rel_pos'] = (margin, margin)
         return vividict
