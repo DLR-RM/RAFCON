@@ -27,7 +27,7 @@ from rafcon.utils import log
 
 # test environment elements
 import testing_utils
-from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
+from testing_utils import call_gui_callback
 from test_z_gui_state_type_change import store_state_elements, check_state_elements, \
      check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
      check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
@@ -36,7 +36,7 @@ from test_z_gui_states_editor_widget import check_state_editor_models
 import pytest
 
 NO_SAVE = False
-TEST_PATH = get_unique_temp_path()
+TEST_PATH = testing_utils.get_unique_temp_path()
 
 with_prints = False
 
@@ -1187,30 +1187,25 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     testing_utils.initialize_rafcon()
     print "create model"
     [logger, sm_m, state_dict] = create_models()
-    print "init libs"
-    testing_utils.remove_all_libraries()
-    if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     print "initialize MainWindow"
     main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
+    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
     while gtk.events_pending():
         # Wait for GUI to initialize
         gtk.main_iteration(False)
     print "start thread"
     thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[testing_utils.sm_manager_model, main_window_controller,
+                              args=[rafcon.gui.singleton.state_machine_manager_model, main_window_controller,
                                     sm_m, state_dict, with_gui, logger])
     thread.start()
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
-        test_multithreading_lock.release()
 
     thread.join()
-    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 # TODO introduce test_add_remove_history with_gui=True to have a more reliable unit-test
 
@@ -1223,8 +1218,6 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     #     testing_utils.initialize_rafcon(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
     #
     # [logger, sm_m, state_dict] = create_models()
-    # if testing_utils.sm_manager_model is None:
-    #     testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     #
     # try:
     #     if with_gui:
@@ -1237,51 +1230,38 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     #                                                     None, sm_m, state_dict, with_gui, logger)
     # finally:
     #     menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
-    #     # call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
+    #     call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
     #
-    # testing_utils.reload_config()
+    # testing_utils.terminate_rafcon()
     # testing_utils.assert_logger_warnings_and_errors(caplog)
 
-    print "NEW BUG TEST"
-    testing_utils.initialize_rafcon()
-    print "create model"
-    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    testing_utils.initialize_rafcon(gui_config={'AUTO_BACKUP_ENABLED': False})
     [logger, sm_m, state_dict] = create_models()
-    print "init libs"
-    testing_utils.remove_all_libraries()
-    rafcon.core.singleton.library_manager.initialize()
-
-    if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
     if with_gui:
         print "initialize MainWindow"
         main_window_view = MainWindowView()
-        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
+        main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
         if with_gui:
-            # Wait for GUI to initialize
-            while gtk.events_pending():
-                gtk.main_iteration(False)
-        print "start thread"
+            testing_utils.wait_for_gui()
         thread = threading.Thread(target=trigger_state_type_change_typical_bug_tests,
-                                  args=[testing_utils.sm_manager_model, main_window_controller, sm_m, state_dict,
-                                        with_gui, logger])
+                                  args=[rafcon.gui.singleton.state_machine_manager_model,
+                                        main_window_controller, sm_m, state_dict, with_gui, logger])
         thread.start()
 
         if with_gui:
             gtk.main()
             logger.debug("Gtk main loop exited!")
-            test_multithreading_lock.release()
 
         thread.join()
     else:
-        testing_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
-        print "start thread"
-        trigger_state_type_change_typical_bug_tests(testing_utils.sm_manager_model, None, sm_m, state_dict, with_gui, logger)
+        rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
+        trigger_state_type_change_typical_bug_tests(rafcon.gui.singleton.state_machine_manager_model,
+                                                    None, sm_m, state_dict, with_gui, logger)
 
-    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 
 @log.log_exceptions(None, gtk_quit=True)

@@ -21,7 +21,7 @@ from rafcon.utils import log
 
 # test environment elements
 
-from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
+from testing_utils import call_gui_callback
 from test_z_gui_state_type_change import get_state_editor_ctrl_and_store_id_dict
 import pytest
 
@@ -224,29 +224,23 @@ def test_state_type_change_test(with_gui, caplog):
 
     sm_m, state_dict = create_models()
 
-    testing_utils.remove_all_libraries()
-    #rafcon.core.singleton.library_manager.initialize()
-
-    if testing_utils.sm_manager_model is None:
-            testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
-
     main_window_controller = None
     if with_gui:
         main_window_view = MainWindowView()
 
         # load the meta data for the state machine
-        testing_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
+        rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
-        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
+        main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
         # Wait for GUI to initialize
         while gtk.events_pending():
             gtk.main_iteration(False)
     else:
         # load the meta data for the state machine
-        testing_utils.sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
+        rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
 
     thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[testing_utils.sm_manager_model, main_window_controller,
+                              args=[rafcon.gui.singleton.state_machine_manager_model, main_window_controller,
                                     sm_m, state_dict, with_gui, logger])
     thread.start()
 
@@ -255,12 +249,11 @@ def test_state_type_change_test(with_gui, caplog):
         logger.debug("Gtk main loop exited!")
         thread.join()
         logger.debug("Joined test triggering thread!")
-        test_multithreading_lock.release()
     else:
         thread.join()
 
-    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 
 if __name__ == '__main__':

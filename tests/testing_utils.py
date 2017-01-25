@@ -15,8 +15,6 @@ test_multithreading_lock = Lock()
 gui_thread = None
 gui_ready = None
 
-sm_manager_model = None
-
 RAFCON_TEMP_PATH_TEST_BASE = join(constants.RAFCON_TEMP_PATH_BASE, 'unit_tests')
 if not exists(RAFCON_TEMP_PATH_TEST_BASE):
     mkdir(RAFCON_TEMP_PATH_TEST_BASE)
@@ -181,6 +179,11 @@ def initialize_rafcon(core_config=None, gui_config=None, runtime_config=None, li
                 global_runtime_config.set_config_value(key, value)
 
     signal.signal(signal.SIGINT, signal_handler)
+
+
+def terminate_rafcon(config=True, gui_config=True):
+    reload_config(config, gui_config)
+    test_multithreading_lock.release()
 
 
 def wait_for_gui():

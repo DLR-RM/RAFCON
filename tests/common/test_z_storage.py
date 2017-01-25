@@ -22,7 +22,7 @@ from rafcon.utils import log
 
 # test environment elements
 import testing_utils
-from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
+from testing_utils import call_gui_callback
 import pytest
 
 logger = log.get_logger(__name__)
@@ -130,9 +130,7 @@ def save_state_machine(sm_model, path, logger, with_gui, menubar_ctrl):
         call_gui_callback(menubar_ctrl.on_quit_activate, None)
     else:
         sm_model.state_machine.base_path = path
-        # time.sleep(sleep_time_short)
         on_save_activate(sm_model, logger)
-        # time.sleep(sleep_time_short)
 
 
 def check_file(file_path, kind, missing_elements=None, existing_elements=None):
@@ -267,64 +265,69 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
 
 def test_storage_without_gui(caplog):
     with_gui = False
-    logger.debug("create model")
+    testing_utils.initialize_rafcon()
     [state, sm_m, state_dict] = create_models()
-    logger.debug("init libs")
-    testing_utils.remove_all_libraries()
-    rafcon.core.singleton.library_manager.initialize()
-    save_state_machine(sm_model=sm_m, path=get_unique_temp_path(), logger=logger, with_gui=with_gui,
+    save_state_machine(sm_model=sm_m, path=testing_utils.get_unique_temp_path(), logger=logger, with_gui=with_gui,
                        menubar_ctrl=None)
 
     missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
     assert len(missing_elements) == 0
 
-    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 
 def test_storage_with_gui(caplog):
+    # with_gui = True
+    # testing_utils.run_gui()
+    # [state, sm_m, state_dict] = create_models()
+    # menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
+    # try:
+    #     save_state_machine(sm_model=sm_m, path=testing_utils.get_unique_temp_path(), logger=logger, with_gui=with_gui,
+    #                        menubar_ctrl=menubar_ctrl)
+    # finally:
+    #     menubar_ctrl.on_quit_activate(None, None, True)
+    #
+    # missing_elements, _ = check_that_all_files_are_there(sm_m, check_meta_data=True, with_print=False)
+    # assert len(missing_elements) == 0
+    # testing_utils.terminate_rafcon()
+    # testing_utils.assert_logger_warnings_and_errors(caplog)
+
     with_gui = True
     testing_utils.initialize_rafcon()
     logger.debug("create model")
     [state, sm_m, state_dict] = create_models()
-    logger.debug("init libs")
 
-    if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
-    logger.debug("initialize MainWindow")
-    main_window_view = MainWindowView()
-
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
+    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    # Wait for GUI to initialize
-    while gtk.events_pending():
-        gtk.main_iteration(False)
+    testing_utils.wait_for_gui()
+
     logger.debug("start thread")
     import threading
     thread = threading.Thread(target=save_state_machine,
-                              args=[sm_m, get_unique_temp_path(), logger, with_gui, menubar_ctrl])
+                              args=[sm_m, testing_utils.get_unique_temp_path(), logger, with_gui, menubar_ctrl])
     thread.start()
 
     if with_gui:
         gtk.main()
         logger.debug("Gtk main loop exited!")
-        test_multithreading_lock.release()
 
     thread.join()
 
     missing_elements, _ = check_that_all_files_are_there(sm_m, check_meta_data=True, with_print=False)
     assert len(missing_elements) == 0
-
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 
 def test_on_clean_storing_with_name_in_path(caplog):
-    rafcon.gui.singleton.global_gui_config.set_config_value("AUTO_BACKUP_ENABLED", True)
+    testing_utils.initialize_rafcon(gui_config={"AUTO_BACKUP_ENABLED": True})
 
     path_old_format = testing_utils.get_test_sm_path("unit_test_state_machines/"
                                                      "id_to_name_plus_id_storage_format_test_do_not_update")
-    path_new_format = os.path.join(get_unique_temp_path(), "id_to_name_plus_id_storage_format_test_do_not_update")
+    path_new_format = os.path.join(testing_utils.get_unique_temp_path(),
+                                   "id_to_name_plus_id_storage_format_test_do_not_update")
     shutil.copytree(path_old_format, path_new_format)
     sm = storage.load_state_machine_from_path(path_new_format)
     sm.base_path = path_new_format
@@ -337,8 +340,8 @@ def test_on_clean_storing_with_name_in_path(caplog):
 
     check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m)
 
-    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 
 if __name__ == '__main__':

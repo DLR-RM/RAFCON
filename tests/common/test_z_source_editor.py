@@ -138,18 +138,14 @@ def trigger_source_editor_signals(main_window_controller):
 
 
 def test_gui(caplog):
-    t_u.initialize_rafcon()
+    t_u.initialize_rafcon(gui_config={'GAPHAS_EDITOR': True,
+                                      'AUTO_BACKUP_ENABLED': False,
+                                      'CHECK_PYTHON_FILES_WITH_PYLINT': False})
 
-    t_u.remove_all_libraries()
-    gui_config.global_gui_config.set_config_value('GAPHAS_EDITOR', True)
-    gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    gui_config.global_gui_config.set_config_value('CHECK_PYTHON_FILES_WITH_PYLINT', False)
+    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
     # Wait for GUI to initialize
     t_u.wait_for_gui()
-    t_u.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
-    main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(t_u.sm_manager_model, main_window_view)
 
     queue = Queue.Queue()
     thread = threading.Thread(target=lambda q, arg1: q.put(trigger_source_editor_signals(arg1)), 
@@ -169,8 +165,8 @@ def test_gui(caplog):
         logger.error("!The editor required in this test was not found on this machine. Test was aborted!")
         errors = 2
         
-    t_u.test_multithreading_lock.release()
     t_u.assert_logger_warnings_and_errors(caplog, expected_errors=errors)
+    t_u.terminate_rafcon()
 
 
 if __name__ == '__main__':

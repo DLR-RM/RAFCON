@@ -26,7 +26,7 @@ from rafcon.utils import log
 
 # test environment elements
 import testing_utils
-from testing_utils import test_multithreading_lock, call_gui_callback, get_unique_temp_path
+from testing_utils import call_gui_callback
 import pytest
 
 store_elements_ignores = []
@@ -660,13 +660,9 @@ def test_state_type_change_test(caplog):
     testing_utils.initialize_rafcon()
 
     sm_m, state_dict = create_models()
-    testing_utils.remove_all_libraries()
-    testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_controller = None
     if with_gui:
-        main_window_view = MainWindowView()
-        # load the meta data for the state machine
-        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
+        main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
     if with_gui:
         # Wait for GUI to initialize
@@ -681,9 +677,8 @@ def test_state_type_change_test(caplog):
 
     thread.join()
 
-    testing_utils.reload_config()
-    test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 
 if __name__ == '__main__':

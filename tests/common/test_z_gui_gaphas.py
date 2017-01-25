@@ -91,32 +91,41 @@ def trigger_copy_delete_bug_signals(*args):
 
 
 def test_copy_delete_bug(caplog):
-    testing_utils.initialize_rafcon()
-    testing_utils.remove_all_libraries()
-    library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
-    gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
-    gui_config.global_gui_config.set_config_value('GAPHAS_EDITOR', True)
-    gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    library_paths["ros"] = join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries")
-    library_paths["turtle_libraries"] = join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
-    library_paths["generic"] = join(testing_utils.LIBRARY_SM_PATH, "generic")
-    rafcon.core.singleton.library_manager.refresh_libraries()
+    # testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False, 'GAPHAS_EDITOR': True},
+    #                       libraries={"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
+    #                                  "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
+    #                                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
+    #                       )
+    #
+    # try:
+    #     trigger_copy_delete_bug_signals(rafcon.gui.singleton.state_machine_manager_model,
+    #                                     rafcon.gui.singleton.main_window_controller)
+    # finally:
+    #     menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
+    #     call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
+    #
+    # testing_utils.terminate_rafcon()
+    # testing_utils.assert_logger_warnings_and_errors(caplog)
 
-    testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
-    main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
+    libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
+                 "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
+                 "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
+    change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False, 'GAPHAS_EDITOR': True}
+    testing_utils.initialize_rafcon(gui_config=change_in_gui_config, libraries=libraries)
+
+    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
     # Wait for GUI to initialize
     testing_utils.wait_for_gui()
 
     thread = threading.Thread(target=trigger_copy_delete_bug_signals,
-                              args=[testing_utils.sm_manager_model, main_window_controller])
+                              args=[rafcon.gui.singleton.state_machine_manager_model, main_window_controller])
     thread.start()
     gtk.main()
     logger.debug("after gtk main")
     thread.join()
-    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 
 if __name__ == '__main__':

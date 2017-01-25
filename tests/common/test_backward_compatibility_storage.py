@@ -67,8 +67,8 @@ def test_backward_compatibility_storage(caplog):
     logger.debug("after gtk main")
 
     testing_utils.remove_all_libraries()
-    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 
 if __name__ == '__main__':

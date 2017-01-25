@@ -389,8 +389,7 @@ def test_simple(caplog):
     # rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
-    testing_utils.reload_config(config=True, gui_config=False)
-    testing_utils.test_multithreading_lock.release()
+    testing_utils.terminate_rafcon(config=True, gui_config=False)
 
 
 @pytest.mark.parametrize("with_gui", [False])
@@ -407,14 +406,11 @@ def test_complex(with_gui, caplog):
     library_paths["unit_test_state_machines"] = os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")
     rafcon.core.singleton.library_manager.refresh_libraries()
 
-    if testing_utils.sm_manager_model is None:
-        testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
-
     if with_gui:
         from rafcon.gui.controllers.main_window import MainWindowController
         from rafcon.gui.views.main_window import MainWindowView
         main_window_view = MainWindowView()
-        main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
+        main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
 
         # Wait for GUI to initialize
         while gtk.events_pending():
@@ -442,8 +438,8 @@ def test_complex(with_gui, caplog):
         gtk.main_iteration(False)
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
-    testing_utils.reload_config(config=True, gui_config=False)
-    testing_utils.test_multithreading_lock.release()
+    testing_utils.terminate_rafcon(config=True, gui_config=False)
+
     # import conftest
     # import shutil
     # for elem in os.listdir(testing_utils.constants.RAFCON_TEMP_PATH_BASE):

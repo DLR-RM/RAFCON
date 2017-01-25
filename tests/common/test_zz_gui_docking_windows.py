@@ -184,16 +184,13 @@ def test_window_positions(caplog):
     logger.debug("after gtk main")
 
     testing_utils.remove_all_libraries()
-    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 
 def test_pane_positions(caplog):
 
-    run_gui(None, {
-                    'HISTORY_ENABLED': False,
-                    'AUTO_BACKUP_ENABLED': False
-                  }, {})
+    run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
     original_runtime_config = global_runtime_config.as_dict()
 
     try:
@@ -209,8 +206,8 @@ def test_pane_positions(caplog):
     logger.debug("after gtk main")
 
     testing_utils.remove_all_libraries()
-    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 if __name__ == '__main__':
     pytest.main([__file__, '-xs'])
