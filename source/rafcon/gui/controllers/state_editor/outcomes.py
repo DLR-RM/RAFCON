@@ -108,6 +108,11 @@ class StateOutcomesListController(ListViewController):
         :param str path: The path string of the renderer
         :param str new_state_identifier: An identifier for the new state that was selected
         """
+        def do_self_transition_check(t_id, new_state_identifier):
+            # add self transition meta data
+            if 'self' in new_state_identifier.split('.'):
+                insert_self_transition_meta_data(self.model, t_id, 'outcomes_widget', 'append_to_last_change')
+
         outcome_id = self.list_store[path][self.ID_STORAGE_ID]
         if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
             transition_parent_state = self.model.parent.state
@@ -120,6 +125,7 @@ class StateOutcomesListController(ListViewController):
                 if not transition_parent_state.transitions[t_id].to_state == to_state_id:
                     try:
                         transition_parent_state.transitions[t_id].modify_target(to_state=to_state_id)
+                        do_self_transition_check(t_id, new_state_identifier)
                     except ValueError as e:
                         logger.warn("The target of transition couldn't be modified: {0}".format(e))
             else:
@@ -136,14 +142,10 @@ class StateOutcomesListController(ListViewController):
                                                                   from_outcome=outcome_id,
                                                                   to_state_id=to_state_id,
                                                                   to_outcome=None, transition_id=None)
+                    do_self_transition_check(t_id, new_state_identifier)
                 except (ValueError, TypeError) as e:
                     logger.warn("The transition couldn't be added: {0}".format(e))
                     return
-
-                # add self transition meta data
-                if 'self' in new_state_identifier.split('.'):
-                    insert_self_transition_meta_data(self.model, t_id, 'outcomes_widget', 'append_to_last_change')
-
             else:
                 logger.debug("outcome-editor got None in to_state-combo-change no transition is added")
 
