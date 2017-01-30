@@ -50,6 +50,8 @@ class SourceEditorController(EditorController):
     def register_view(self, view):
         super(SourceEditorController, self).register_view(view)
 
+        self.saved_initial = False
+
         view['open_external_button'].connect('clicked', self.open_external_clicked)
         view['apply_button'].connect('clicked', self.apply_clicked)
         view['cancel_button'].connect('clicked', self.cancel_clicked)
@@ -67,10 +69,6 @@ class SourceEditorController(EditorController):
             view['apply_button'].set_sensitive(False)
             view['cancel_button'].set_sensitive(False)
 
-        # if global_gui_config.get_config_value('PREFER_EXTERNAL_EDITOR'):
-        #     # This opens an editor on spawning of a new source editor instance if the config flag is set
-        #     self.save_file_before_opening()
-        #     self.open_external_clicked(self.view['open_external_button'])
 
     @property
     def source_text(self):
@@ -143,8 +141,11 @@ class SourceEditorController(EditorController):
             def open_file_in_editor(command, text_field):
 
                 file_path = self.model.state.get_file_system_path()
-                if not pref:
+
+                sm = state_machine_manager_model.state_machine_manager.get_active_state_machine()
+                if sm.marked_dirty and not self.saved_initial:
                     self.save_file_before_opening()
+                    self.saved_initial = True
 
                 if not self.append_shell_command_to_path(command, file_path) and text_field:
                     # If a text field exists destroy it. Errors can occur with a specified editor as well
@@ -203,7 +204,6 @@ class SourceEditorController(EditorController):
             content = filesystem.read_file(self.model.state.get_file_system_path(), 'script.py')
             self.set_script_text(content)
 
-            # If button is clicked after one open a file in the external editor, unlock the internal editor
             editor_lock(pref)
 
     def apply_clicked(self, button):
