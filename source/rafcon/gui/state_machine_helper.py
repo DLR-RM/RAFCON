@@ -493,21 +493,28 @@ def insert_state(state, as_template=False):
 def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', combined_action=False):
 
     try:
-        state_m_meta = state_m.meta['gui']['editor_opengl']
-        t_m = state_m.parent.get_transition_m(t_id)
-        outcome_id = t_m.transition.from_outcome
-        first_point_x = state_m_meta['rel_pos'][0] + 1.3*state_m_meta['size'][0]
-        first_point_y = state_m_meta['rel_pos'][1] - 0.1*outcome_id*state_m_meta['size'][1]
-        second_point_x = state_m_meta['rel_pos'][0] + 0.5*state_m_meta['size'][0]
-        second_point_y = state_m_meta['rel_pos'][1] + (0.5-0.1*outcome_id)*state_m_meta['size'][1]
+        gaphas_editor = global_gui_config.get_config_value('GAPHAS_EDITOR', True)
+        y_axis_mirror = 1 if gaphas_editor else -1
+        state_meta = state_m.get_meta_data_editor(for_gaphas=gaphas_editor)
 
-        t_m.meta['gui']['editor_opengl'].update({'waypoints': [(first_point_x, first_point_y),
-                                                               (second_point_x, second_point_y)]})
+        if 'rel_pos' not in state_meta or 'size' not in state_meta:
+            return
+
+        transition_m = state_m.parent.get_transition_m(t_id)
+        margin = min(state_meta['size']) / 10.
+        first_point_x = state_meta['rel_pos'][0] + state_meta['size'][0] + margin
+        first_point_y = state_meta['rel_pos'][1] - y_axis_mirror * margin
+        second_point_x = state_meta['rel_pos'][0] - margin
+        second_point_y = state_meta['rel_pos'][1] - y_axis_mirror * margin
+
+        waypoints = [(first_point_x, first_point_y), (second_point_x, second_point_y)]
+        transition_m.set_meta_data_editor('waypoints', waypoints, from_gaphas=gaphas_editor)
+
         from rafcon.gui.models.signals import MetaSignalMsg
         if combined_action:
-            t_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='append_to_last_change'))
+            transition_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='append_to_last_change'))
         else:
-            t_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='viapoint_position'))
+            transition_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='viapoint_position'))
     except TypeError:
         # meta data generation currently only supported for OpenGL editor
         pass
