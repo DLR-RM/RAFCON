@@ -3,7 +3,6 @@ import threading
 import pytest
 
 # gui elements
-import rafcon.gui.config as gui_config
 import rafcon.gui.singleton
 from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
@@ -30,6 +29,7 @@ def trigger_gvm_signals(main_window_controller):
 
     gvm.set_variable('new_0', 0)
 
+    # use gui callback to wait for gv row generation
     call_gui_callback(gvm_controller.apply_new_global_variable_value, 0, '2')
     assert gvm.get_variable('new_0') == 2
 
@@ -53,20 +53,12 @@ def trigger_gvm_signals(main_window_controller):
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
-
 def test_gui(caplog):
-    testing_utils.initialize_rafcon()
+    testing_utils.initialize_rafcon(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
 
-    gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
-    gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-
-    testing_utils.remove_all_libraries()
     testing_utils.remove_all_gvm_variables()
 
-    testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
-
-    main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(testing_utils.sm_manager_model, main_window_view)
+    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
     # Wait for GUI to initialize
     testing_utils.wait_for_gui()
@@ -77,10 +69,10 @@ def test_gui(caplog):
     logger.debug("after gtk main")
 
     thread.join()
-    testing_utils.test_multithreading_lock.release()
 
     # expected_errors=1 because global_variable_is_editable throws an error
     testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors = 1)
+    testing_utils.terminate_rafcon()
 
 
 if __name__ == '__main__':

@@ -32,10 +32,7 @@ def trigger_exectuion_engine(gvm, execution_engine):
 
 
 def test_multi_events(caplog):
-    testing_utils.remove_all_libraries()
-
-    state_machine_manager.delete_all_state_machines()
-    testing_utils.test_multithreading_lock.acquire()
+    testing_utils.initialize_rafcon()
 
     execution_trigger_thread = threading.Thread(target=trigger_exectuion_engine,
                                                 args=[global_variable_manager, state_machine_execution_engine])
@@ -48,9 +45,8 @@ def test_multi_events(caplog):
     state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert global_variable_manager.get_variable("sm_status") == 2
 
-    testing_utils.reload_config()
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
-    testing_utils.test_multithreading_lock.release()
+    testing_utils.terminate_rafcon()
 
 
 if __name__ == '__main__':

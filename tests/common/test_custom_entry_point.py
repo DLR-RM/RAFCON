@@ -12,10 +12,7 @@ import pytest
 
 
 def test_custom_entry_point(caplog):
-    testing_utils.remove_all_libraries()
-
-    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
-    testing_utils.test_multithreading_lock.acquire()
+    testing_utils.initialize_rafcon()
 
     start_state_id = "RWUZOP/ZDWBKU/HADSLI"
     sm = rafcon.core.singleton.state_machine_execution_engine.execute_state_machine_from_path(
@@ -24,8 +21,8 @@ def test_custom_entry_point(caplog):
     rafcon.core.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
     assert not rafcon.core.singleton.global_variable_manager.variable_exist("start_id21")
 
-    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 
 if __name__ == '__main__':

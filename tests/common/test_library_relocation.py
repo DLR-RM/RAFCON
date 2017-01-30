@@ -35,25 +35,11 @@ def open_folder(query):
 
 def test_library_relocation(caplog):
 
-    signal.signal(signal.SIGINT, start.signal_handler)
-    testing_utils.test_multithreading_lock.acquire()
-
-    testing_utils.remove_all_libraries()
-
-    library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["test_scripts"] = testing_utils.TEST_ASSETS_PATH
-
-    # logger.debug(library_paths["test_scripts"])
-    # exit()
+    testing_utils.initialize_rafcon(libraries={"test_scripts": testing_utils.TEST_ASSETS_PATH})
 
     interface.open_folder_func = open_folder
 
     interface.show_notice_func = show_notice
-
-    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
-
-    # Initialize libraries
-    sm_singletons.library_manager.initialize()
 
     state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path(
         "unit_test_state_machines/library_relocation_test"))
@@ -67,8 +53,7 @@ def test_library_relocation(caplog):
     assert state_machine.root_state.output_data["output_0"] == 27
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
-    testing_utils.reload_config(config=True, gui_config=False)
-    testing_utils.test_multithreading_lock.release()
+    testing_utils.terminate_rafcon(config=True, gui_config=False)
 
     logger.info("State machine execution finished!")
 

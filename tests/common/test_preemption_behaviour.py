@@ -19,10 +19,7 @@ import pytest
 
 
 def test_preemption_behaviour_in_preemption_state(caplog):
-    testing_utils.remove_all_libraries()
-
-    testing_utils.test_multithreading_lock.acquire()
-    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+    testing_utils.initialize_rafcon()
 
     sm = state_machine_execution_engine.execute_state_machine_from_path(
         path=testing_utils.get_test_sm_path("unit_test_state_machines/preemption_behaviour_test_sm"))
@@ -31,9 +28,8 @@ def test_preemption_behaviour_in_preemption_state(caplog):
     assert global_variable_manager.get_variable("s2") == 1.0
     assert not global_variable_manager.variable_exist("s3")
 
-    testing_utils.reload_config()
-    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 
 def trigger_stop(sm, execution_engine):
@@ -43,10 +39,7 @@ def trigger_stop(sm, execution_engine):
 
 
 def test_preemption_behaviour_during_stop(caplog):
-    testing_utils.remove_all_libraries()
-
-    testing_utils.test_multithreading_lock.acquire()
-    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+    testing_utils.initialize_rafcon()
 
     state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path(
         "unit_test_state_machines/preemption_behaviour_during_stop"))
@@ -64,9 +57,8 @@ def test_preemption_behaviour_during_stop(caplog):
     assert global_variable_manager.get_variable("s2") == 1
     assert not global_variable_manager.variable_exist("s3")
 
-    testing_utils.reload_config()
-    testing_utils.test_multithreading_lock.release()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.terminate_rafcon()
 
 
 if __name__ == '__main__':

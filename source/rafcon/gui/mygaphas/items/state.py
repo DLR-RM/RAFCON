@@ -137,6 +137,8 @@ class StateView(Element):
         if self.canvas:
             for constraint in self.constraints:
                 self.canvas.solver.request_resolve_constraint(constraint)
+            if not self.canvas.solver._solving:
+                self.canvas.solver.solve()
             for item in self.canvas.get_all_children(self):
                 if isinstance(item, (StateView, NameView)):
                     item.update_minimum_size()

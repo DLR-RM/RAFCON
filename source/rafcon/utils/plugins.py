@@ -29,7 +29,7 @@ def load_plugins():
     for plugin_path in plugin_list:
         if not plugin_path:
             continue
-        plugin_path = os.path.expandvars(os.path.expanduser(plugin_path))
+        plugin_path = os.path.expandvars(os.path.expanduser(plugin_path)).strip()
         if not os.path.exists(plugin_path):
             logger.error("The specified plugin path does not exist: {}".format(plugin_path))
             continue

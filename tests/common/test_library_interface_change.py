@@ -44,8 +44,7 @@ def test_load_data_ports_not_existing(caplog):
     assert rafcon.core.singleton.global_variable_manager.get_variable("x") == 1
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 2)
-    testing_utils.reload_config(config=True, gui_config=False)
-    testing_utils.test_multithreading_lock.release()
+    testing_utils.terminate_rafcon(config=True, gui_config=False)
 
     logger.info("State machine execution finished!")
 
@@ -66,8 +65,7 @@ def test_load_wrong_data_types(caplog):
     assert rafcon.core.singleton.global_variable_manager.get_variable("x") == 1
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 2)
-    testing_utils.reload_config(config=True, gui_config=False)
-    testing_utils.test_multithreading_lock.release()
+    testing_utils.terminate_rafcon(config=True, gui_config=False)
 
     logger.info("State machine execution finished!")
 
@@ -83,8 +81,7 @@ def test_load_not_existing_outcome(caplog):
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
-    testing_utils.reload_config(config=True, gui_config=False)
-    testing_utils.test_multithreading_lock.release()
+    testing_utils.terminate_rafcon(config=True, gui_config=False)
 
     logger.info("State machine execution finished!")
 

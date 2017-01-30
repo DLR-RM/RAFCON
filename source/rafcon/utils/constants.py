@@ -13,22 +13,15 @@ import getpass
 import os
 import stat
 
-from rafcon.core.config import global_config, CONFIG_FILE
-
-
-TEMP_PATH = global_config.get_config_value("TEMP_PATH")
-TEMP_PATH = tempfile.gettempdir() if TEMP_PATH is None else TEMP_PATH
+TEMP_PATH = tempfile.gettempdir()
 RAFCON_TEMP_PATH_BASE = os.path.join(TEMP_PATH, 'rafcon-{0}'.format(getpass.getuser()), str(os.getpid()))
 
-# check if the given temp-folder is read and writable -> TODO most probably needs adaptation for windows -> test it
+# check if the given temp-folder is read and writable
 if not (bool(os.stat(TEMP_PATH).st_mode & stat.S_IRUSR) and bool(os.stat(TEMP_PATH).st_mode & stat.S_IWUSR) or
         os.stat(TEMP_PATH).st_uid == os.getuid()):
-    raise OSError("The given or the default temp-folder {0} is not read and writable please use the variable TEMP_PATH "
-                  "in the {1} file to adjust the path to one which fulfill this criteria.".format(TEMP_PATH, CONFIG_FILE))
-
-# if global_config.get_config_value("TEMP_PATH") is None:
-#     global_config.set_config_value("TEMP_PATH", TEMP_PATH)
-#     global_config.save_configuration()
+    raise OSError("The given or the default tmp-folder '{0}' has to be read and writable please use the environment "
+                  "variables TMPDIR, TEMP and TMP (in this order) to adjust the path to one which fulfill this criteria."
+                  "".format(TEMP_PATH))
 
 try:
     os.makedirs(RAFCON_TEMP_PATH_BASE)
