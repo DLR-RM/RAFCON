@@ -35,9 +35,10 @@ class DescriptionEditorController(EditorController):
         view.textview.connect('size-allocate', self.scroll_to_bottom)
 
         if isinstance(self.model.state, LibraryState):
-            view.textview.set_sensitive(False)
+            view.textview.set_sensitive(True)
             description = self.model.state.state_copy.description if self.model.state.state_copy.description is not None else ''
             view.textview.get_buffer().set_text(description)
+            view.textview.set_editable(False)
         else:
             view.textview.connect('focus-out-event', self.on_focus_out)
 

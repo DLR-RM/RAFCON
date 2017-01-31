@@ -33,9 +33,11 @@ class EditorController(ExtendedController):
     def register_view(self, view):
         view.get_buffer().connect('changed', self.code_changed)
 
-        view.get_buffer().begin_not_undoable_action()
+        if hasattr(view.get_buffer(), 'begin_not_undoable_action'):
+            view.get_buffer().begin_not_undoable_action()
         view.set_text(self.source_text)
-        view.get_buffer().end_not_undoable_action()
+        if hasattr(view.get_buffer(), 'end_not_undoable_action'):
+            view.get_buffer().end_not_undoable_action()
 
     def register_adapters(self):
         pass
@@ -108,6 +110,27 @@ class EditorController(ExtendedController):
 
     # ===============================================================
     def code_changed(self, source):
+        """ Apply checks and adjustments of the TextBuffer and TextView after every change in buffer.
+
+         The method re-apply the tag (style) for the buffer. It avoids changes while editable-property set to False
+         which are caused by a bug in the GtkSourceView2. GtkSourceView2 is the default used TextView widget here.
+         The text buffer is reset after every change to last stored source-text by a respective work around which
+         suspends any generation of undo items and avoids a recursive call of the method set_enabled by observing
+         its while_in_set_enabled flag.
+
+        :param TextBuffer source:
+        :return:
+        """
+
+        # work around to avoid changes at all (e.g. by enter-key) if text view property editable is False
+        # TODO if SourceView3 is used in future check if this can be skipped
+        if not self.view.textview.get_editable() and not self.view.while_in_set_enabled:
+            if hasattr(self.view.get_buffer(), 'begin_not_undoable_action'):
+                self.view.get_buffer().begin_not_undoable_action()
+            self.view.set_enabled(False, self.source_text)
+            if hasattr(self.view.get_buffer(), 'end_not_undoable_action'):
+                self.view.get_buffer().end_not_undoable_action()
+
         if self.view:
             self.view.apply_tag('default')
 
@@ -125,7 +148,8 @@ class EditorController(ExtendedController):
             self.source_text = text
             logger.debug("The source was saved {}.".format(self.__class__.__name__))
         else:
-            logger.debug("Source is the same as in storage {}.".format(self.__class__.__name__))
+            # logger.debug("Source is the same as in storage {}.".format(self.__class__.__name__))
+            pass
 
     def cancel_clicked(self, button):
         """Triggered when the Cancel-Shortcut in the editor is triggered
@@ -136,6 +160,5 @@ class EditorController(ExtendedController):
 
     @ExtendedController.observe("state", after=True)
     def after_notification_of_script_text_was_changed(self, model, prop_name, info):
-
         if self.view and "method_name" in info and self._observed_method == info['method_name']:
             self.view.set_text(self.source_text)

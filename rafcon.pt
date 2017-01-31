@@ -25,12 +25,8 @@ python -m compileall -fq ./source/libraries
 
 [install]
 source/rafcon => source/rafcon
-source/libraries => share/libraries
 share | !*.pyc | !.gitignore => share
-source/test_scripts/ros_libraries | !*.pyc => share/examples/libraries/ros_libraries
-source/test_scripts/turtle_libraries | !*.pyc => share/examples/libraries/turtle_libraries
-source/test_scripts/tutorials | !*.pyc => share/examples/tutorials
-source/rafcon/documentation => docs
+doc => doc
 bin/ | !rafcon_start | !rafcon_start_gui | !resave_state_machines  | !*.pyc => bin # Symlinks are recreated in post_install step
 
 [post-install]

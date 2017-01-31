@@ -1,0 +1,4 @@
+LIBRARY_PATHS:
+    generic: ${RAFCON_LIB_PATH}/generic
+TYPE: SM_CONFIG
+USE_JSON: true

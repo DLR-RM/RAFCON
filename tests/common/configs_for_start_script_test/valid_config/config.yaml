@@ -1,0 +1,7 @@
+LIBRARY_PATHS:
+    generic: ${RAFCON_LIB_PATH}/generic
+    unit_test: ../../../assets/unit_test_state_machines/backward_step_library_execution_test/test_library/
+PROFILER_RESULT_PATH: /tmp/rafcon_profiler_result.prf
+PROFILER_RUN: false
+PROFILER_VIEWER: true
+TYPE: SM_CONFIG

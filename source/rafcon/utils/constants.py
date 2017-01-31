@@ -11,9 +11,17 @@
 import tempfile
 import getpass
 import os
+import stat
 
+TEMP_PATH = tempfile.gettempdir()
+RAFCON_TEMP_PATH_BASE = os.path.join(TEMP_PATH, 'rafcon-{0}'.format(getpass.getuser()), str(os.getpid()))
 
-RAFCON_TEMP_PATH_BASE = os.path.join(tempfile.gettempdir(), 'rafcon-{0}'.format(getpass.getuser()), str(os.getpid()))
+# check if the given temp-folder is read and writable
+if not (bool(os.stat(TEMP_PATH).st_mode & stat.S_IRUSR) and bool(os.stat(TEMP_PATH).st_mode & stat.S_IWUSR) or
+        os.stat(TEMP_PATH).st_uid == os.getuid()):
+    raise OSError("The given or the default tmp-folder '{0}' has to be read and writable please use the environment "
+                  "variables TMPDIR, TEMP and TMP (in this order) to adjust the path to one which fulfill this criteria."
+                  "".format(TEMP_PATH))
 
 try:
     os.makedirs(RAFCON_TEMP_PATH_BASE)
