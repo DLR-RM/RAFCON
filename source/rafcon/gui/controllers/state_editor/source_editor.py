@@ -99,12 +99,9 @@ class SourceEditorController(EditorController):
             logger.error('The operating system raised an error: {}'.format(e))
         return False
 
-    def save_file_before_opening(self):
+    def save_script(self):
 
         file_path = self.model.state.get_file_system_path()
-
-        logger.debug("File will be opened with command: {}".format(
-            global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')))
 
         try:
             # Save the file before opening it to update the applied changes. Use option create_full_path=True
@@ -120,12 +117,12 @@ class SourceEditorController(EditorController):
 
     def open_external_clicked(self, button):
 
-        pref = global_gui_config.get_config_value("PREFER_EXTERNAL_EDITOR")
+        prefer_external_editor = global_gui_config.get_config_value("PREFER_EXTERNAL_EDITOR")
 
-        def editor_lock(lock):
+        def set_editor_lock(lock):
             button_text = ['Unlock', 'Reload']
             if lock:
-                button.set_label(button_text[pref])
+                button.set_label('Reload' if prefer_external_editor else 'Unlock')
             else:
                 button.set_label('Open externally')
             button.set_active(lock)
@@ -141,7 +138,7 @@ class SourceEditorController(EditorController):
 
                 sm = state_machine_manager_model.state_machine_manager.get_active_state_machine()
                 if sm.marked_dirty and not self.saved_initial:
-                    self.save_file_before_opening()
+                    self.save_script()
                     self.saved_initial = True
 
                 if not self.append_shell_command_to_path(command, file_path) and text_field:
@@ -151,11 +148,11 @@ class SourceEditorController(EditorController):
                     global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', None)
                     global_gui_config.save_configuration()
 
-                    editor_lock(False)
+                    set_editor_lock(False)
                     return
 
                 # Set the text on the button to 'Unlock' instead of 'Open externally'
-                editor_lock(True)
+                set_editor_lock(True)
 
             def open_text_window():
 
@@ -180,7 +177,7 @@ class SourceEditorController(EditorController):
                 else:
                     # If Dialog is canceled either by the button or the cross, untoggle the button again and revert the
                     # lock, which is not implemented yet
-                    editor_lock(False)
+                    set_editor_lock(False)
 
                 text_input.destroy()
 
@@ -201,7 +198,7 @@ class SourceEditorController(EditorController):
             content = filesystem.read_file(self.model.state.get_file_system_path(), 'script.py')
             self.set_script_text(content)
 
-            editor_lock(pref)
+            set_editor_lock(prefer_external_editor)
 
     def apply_clicked(self, button):
         """Triggered when the Apply button in the source editor is clicked.
