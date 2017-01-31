@@ -412,7 +412,7 @@ class ContainerStateModel(StateModel):
                     state_id = info['args'][0]
 
             related_transitions, related_data_flows = self.state.related_linkage_state(state_id)
-            tmp_meta_data['state'] = self.states[state_id].meta
+            tmp_meta_data['state'] = self.states[state_id]
             for s_id, s_m in self.states[state_id].states.iteritems():
                 tmp_meta_data['states'][s_id] = s_m
             for sv_m in self.states[state_id].scoped_variables:
