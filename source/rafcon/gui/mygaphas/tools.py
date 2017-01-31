@@ -5,7 +5,7 @@ from math import pow
 
 from gaphas.aspect import HandleFinder, ItemConnectionSink, Connector, InMotion
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, ConnectHandleTool, RubberbandTool
-from gaphas.item import NW
+from gaphas.item import NW, Item
 
 from rafcon.gui.mygaphas.aspect import HandleInMotion, StateHandleFinder
 from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, \
@@ -61,13 +61,22 @@ class MoveItemTool(ItemTool):
         self._do_not_unselect = None
 
     def movable_items(self):
+        view = self.view
+
         if self._do_not_unselect:
-            self.view.focused_item = self._do_not_unselect
+            view.focused_item = self._do_not_unselect
 
         if self._move_name_v:
-            return [InMotion(self._item, self.view)]
+            yield InMotion(self._item, view)
         else:
-            return super(MoveItemTool, self).movable_items()
+            get_ancestors = view.canvas.get_ancestors
+            selected_items = set(view.selected_items)
+            for item in selected_items:
+                if not isinstance(item, Item):
+                    continue
+                # Do not move subitems of selected items
+                if not set(get_ancestors(item)).intersection(selected_items):
+                    yield InMotion(item, view)
 
     def on_button_press(self, event):
         # print "on_press_button: ", self.__class__.__name__
