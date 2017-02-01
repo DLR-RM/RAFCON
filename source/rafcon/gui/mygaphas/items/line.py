@@ -299,6 +299,7 @@ class PerpLine(Line):
         self._keep_handle_in_parent_state(handle)
 
     def add_waypoint(self, pos):
+        pos = self.canvas.get_matrix_i2i(self.parent, self).transform_point(*pos)
         handle = self._create_handle(pos)
         if self._to_waypoint:
             self._handles.insert(-2, handle)

@@ -64,8 +64,8 @@ class StateOutcomesListController(ListViewController):
         if not model.state.is_root_state:
             self.observe_model(model.parent)
 
-        if self.model.get_sm_m_for_state_m() is not None:
-            self.observe_model(self.model.get_sm_m_for_state_m())
+        if self.model.get_state_machine_m() is not None:
+            self.observe_model(self.model.get_state_machine_m())
         else:
             logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
 

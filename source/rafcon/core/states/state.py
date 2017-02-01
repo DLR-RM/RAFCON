@@ -512,7 +512,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             else:
                 return state_identifier + PATH_SEPARATOR + appendix
 
-    def get_sm_for_state(self):
+    def get_state_machine(self):
         """Get a reference of the state_machine the state belongs to
 
         :rtype rafcon.core.state_machine.StateMachine
@@ -522,7 +522,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             if self.is_root_state:
                 return self.parent
             else:
-                return self.parent.get_sm_for_state()
+                return self.parent.get_state_machine()
 
         return None
 
@@ -540,12 +540,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         :return: the path on the filesystem where the state is stored
         """
-        if not self.get_sm_for_state() or self.get_sm_for_state().file_system_path is None:
+        if not self.get_state_machine() or self.get_state_machine().file_system_path is None:
             if self._file_system_path:
                 # print "State_get_file_system_path 0: "
                 return self._file_system_path
-            elif self.get_sm_for_state():
-                if self.get_sm_for_state().supports_saving_state_names:
+            elif self.get_state_machine():
+                if self.get_state_machine().supports_saving_state_names:
                     # print "State_get_file_system_path 11: ",
                     # os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
                     path = os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
@@ -560,21 +560,21 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             else:
                 return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
         else:
-            if self.get_sm_for_state().supports_saving_state_names:
+            if self.get_state_machine().supports_saving_state_names:
                 # print "State_get_file_system_path 21: ",
-                # os.path.join(self.get_sm_for_state().file_system_path, str(self.get_storage_path()))
-                path = os.path.join(self.get_sm_for_state().file_system_path, str(self.get_storage_path()))
+                # os.path.join(self.get_state_machine().file_system_path, str(self.get_storage_path()))
+                path = os.path.join(self.get_state_machine().file_system_path, str(self.get_storage_path()))
                 if os.path.exists(path):
                     return path
                 else:
-                    path = os.path.join(self.get_sm_for_state().file_system_path, str(self.get_storage_path(
+                    path = os.path.join(self.get_state_machine().file_system_path, str(self.get_storage_path(
                         old_delimiter=True)))
                     # print "State_get_file_system_path 22: ", path
                     return path
             else:
                 # the default case for ID-formatted state machines when using a GUI
                 # print "State_get_file_system_path 23: "
-                return os.path.join(self.get_sm_for_state().file_system_path, self.get_path())
+                return os.path.join(self.get_state_machine().file_system_path, self.get_path())
 
     @lock_state_machine
     @Observable.observed
@@ -873,9 +873,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             if len(name) < 1:
                 raise ValueError("Name must have at least one character")
 
-        if self._name and self._name != name and self.get_sm_for_state():
+        if self._name and self._name != name and self.get_state_machine():
             # remove old path, as the state will be saved und another directory as its names changes
-            storage.mark_path_for_removal_for_sm_id(self.get_sm_for_state().state_machine_id, self.get_file_system_path())
+            storage.mark_path_for_removal_for_sm_id(self.get_state_machine().state_machine_id, self.get_file_system_path())
         self._name = name
 
     @property

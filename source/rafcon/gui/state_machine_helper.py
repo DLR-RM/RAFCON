@@ -11,7 +11,7 @@ from rafcon.gui.models import StateModel, AbstractStateModel, ContainerStateMode
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.outcome import OutcomeModel
 from rafcon.gui.models.state_machine import StateMachineModel
-from rafcon.gui.models.scoped_variable import ScopedVariableModel
+from rafcon.gui.models.signals import MetaSignalMsg
 
 from rafcon.gui.config import global_gui_config
 from rafcon.core.singleton import library_manager
@@ -19,6 +19,14 @@ import rafcon.gui.singleton
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+
+
+def add_pos(pos1, pos2):
+    return pos1[0] + pos2[0], pos1[1] + pos2[1]
+
+
+def subtract_pos(pos1, pos2):
+    return pos1[0] - pos2[0], pos1[1] - pos2[1]
 
 
 def delete_model(model, raise_exceptions=False):
@@ -354,7 +362,7 @@ def get_state_model_for_state(state):
     :return: The model corresponding to state
     """
     assert isinstance(state, State)
-    state_machine_id = state.get_sm_for_state().state_machine_id
+    state_machine_id = state.get_state_machine().state_machine_id
     state_machine_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine_id]
     state_m = state_machine_m.root_state
     state_path = state.get_path()
@@ -377,7 +385,7 @@ def get_state_machine_model_for_state(state):
     :return: The state machine model containing the state
     """
     assert isinstance(state, State)
-    state_machine_id = state.get_sm_for_state().state_machine_id
+    state_machine_id = state.get_state_machine().state_machine_id
     state_machine_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine_id]
     return state_machine_m
 
@@ -493,21 +501,27 @@ def insert_state(state, as_template=False):
 def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', combined_action=False):
 
     try:
-        state_m_meta = state_m.meta['gui']['editor_opengl']
-        t_m = state_m.parent.get_transition_m(t_id)
-        outcome_id = t_m.transition.from_outcome
-        first_point_x = state_m_meta['rel_pos'][0] + 1.3*state_m_meta['size'][0]
-        first_point_y = state_m_meta['rel_pos'][1] - 0.1*outcome_id*state_m_meta['size'][1]
-        second_point_x = state_m_meta['rel_pos'][0] + 0.5*state_m_meta['size'][0]
-        second_point_y = state_m_meta['rel_pos'][1] + (0.5-0.1*outcome_id)*state_m_meta['size'][1]
+        gaphas_editor = global_gui_config.get_config_value('GAPHAS_EDITOR', True)
+        y_axis_mirror = 1 if gaphas_editor else -1
+        state_meta = state_m.get_meta_data_editor(for_gaphas=gaphas_editor)
 
-        t_m.meta['gui']['editor_opengl'].update({'waypoints': [(first_point_x, first_point_y),
-                                                               (second_point_x, second_point_y)]})
-        from rafcon.gui.models.signals import MetaSignalMsg
+        if 'rel_pos' not in state_meta or 'size' not in state_meta:
+            return
+
+        transition_m = state_m.parent.get_transition_m(t_id)
+        margin = min(state_meta['size']) / 10.
+        first_point_x = state_meta['rel_pos'][0] + state_meta['size'][0] + margin
+        first_point_y = state_meta['rel_pos'][1] - y_axis_mirror * margin
+        second_point_x = state_meta['rel_pos'][0] - margin
+        second_point_y = state_meta['rel_pos'][1] - y_axis_mirror * margin
+
+        waypoints = [(first_point_x, first_point_y), (second_point_x, second_point_y)]
+        transition_m.set_meta_data_editor('waypoints', waypoints, from_gaphas=gaphas_editor)
+
         if combined_action:
-            t_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='append_to_last_change'))
+            transition_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='append_to_last_change'))
         else:
-            t_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='viapoint_position'))
+            transition_m.meta_signal.emit(MetaSignalMsg(origin=origin, change='viapoint_position'))
     except TypeError:
         # meta data generation currently only supported for OpenGL editor
         pass
@@ -520,40 +534,25 @@ def scale_meta_data_according_state(meta_data):
     :param meta_data: dict that hold lists of meta data with state attribute consistent keys
     :return:
     """
-    is_gaphas = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    old_parent_rel_pos = meta_data['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
 
-    # scale opengl meta data
-    rel_pos = meta_data['state']['gui']['editor_opengl']['rel_pos']
-    g_rel_pos = meta_data['state']['gui']['editor_gaphas']['rel_pos']
-    for s_m in meta_data['states'].itervalues():
-        if not is_gaphas:
-            s_m.meta['gui']['editor_opengl']['rel_pos'] = (s_m.meta['gui']['editor_opengl']['rel_pos'][0] + rel_pos[0],
-                                                           s_m.meta['gui']['editor_opengl']['rel_pos'][1] + rel_pos[1])
-        else:
-            s_m.meta['gui']['editor_gaphas']['rel_pos'] = (s_m.meta['gui']['editor_gaphas']['rel_pos'][0] + g_rel_pos[0],
-                                                           s_m.meta['gui']['editor_gaphas']['rel_pos'][1] + g_rel_pos[1])
-    for sv_m in meta_data['scoped_variables'].itervalues():
-        if not is_gaphas:
-            sv_m.meta['gui']['editor_opengl']['inner_rel_pos'] = (sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][0] + rel_pos[0],
-                                                                  sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][1] + rel_pos[1])
-        else:
-            pass
-            # sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'] = (sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'][0] + g_rel_pos[0],
-            #                                                       sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'][1] + g_rel_pos[1])
-    for t_m in meta_data['transitions'].itervalues():
-        if t_m.meta['gui']['editor_opengl']['waypoints'] and not is_gaphas:
-            for i, pos in enumerate(t_m.meta['gui']['editor_opengl']['waypoints']):
-                t_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] + rel_pos[0], pos[1] + rel_pos[1])
-        if t_m.meta['gui']['editor_gaphas']['waypoints'] and is_gaphas:
-            for i, pos in enumerate(t_m.meta['gui']['editor_gaphas']['waypoints']):
-                t_m.meta['gui']['editor_gaphas']['waypoints'][i] = (pos[0] + g_rel_pos[0], pos[1] + g_rel_pos[1])
-    for df_m in meta_data['data_flows'].itervalues():
-        if df_m.meta['gui']['editor_opengl']['waypoints'] and not is_gaphas:
-            for i, pos in enumerate(df_m.meta['gui']['editor_opengl']['waypoints']):
-                df_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] + rel_pos[0], pos[1] + rel_pos[1])
-        if df_m.meta['gui']['editor_gaphas']['waypoints'] and is_gaphas:
-            for i, pos in enumerate(df_m.meta['gui']['editor_gaphas']['waypoints']):
-                df_m.meta['gui']['editor_gaphas']['waypoints'][i] = (pos[0] + g_rel_pos[0], pos[1] + g_rel_pos[1])
+    for state_m in meta_data['states'].itervalues():
+        old_rel_pos = state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
+        state_m.set_meta_data_editor('rel_pos', add_pos(old_rel_pos, old_parent_rel_pos), from_gaphas=gaphas_editor)
+
+    for scoped_variable_m in meta_data['scoped_variables'].itervalues():
+        if not gaphas_editor:
+            old_rel_pos = scoped_variable_m.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']
+            scoped_variable_m.set_meta_data_editor('inner_rel_pos', add_pos(old_rel_pos, old_parent_rel_pos), False)
+
+    connection_models = meta_data['transitions'].values() + meta_data['data_flows'].values()
+    for connection_m in connection_models:
+        old_waypoints = connection_m.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
+        new_waypoints = []
+        for waypoint in old_waypoints:
+            new_waypoints.append(add_pos(waypoint, old_parent_rel_pos))
+        connection_m.set_meta_data_editor('waypoints', new_waypoints, from_gaphas=gaphas_editor)
 
     return True
 
@@ -565,67 +564,78 @@ def scale_meta_data_according_states(meta_data):
     :param meta_data: dict that hold lists of meta data with state attribute consistent keys
     :return:
     """
-    # upper left corner OpenGL
-    min_x = 1000.0
-    min_y = 1000.0
-    max_x = 0.0
-    max_y = 0.0
+    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    y_axis_mirror = 1 if gaphas_editor else -1
 
-    is_gaphas = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
-    for s_m in meta_data['states'].itervalues():
-        # print s_m.meta, s_m.state.state_id
-        if not is_gaphas:
-            min_x = min(0.9*s_m.meta['gui']['editor_opengl']['rel_pos'][0], min_x)
-            min_y = min(-0.9*s_m.meta['gui']['editor_opengl']['rel_pos'][1], min_y)
-            max_x = max(s_m.meta['gui']['editor_opengl']['rel_pos'][0] + 1.1*s_m.meta['gui']['editor_opengl']['size'][0], max_x)
-            max_y = max(-s_m.meta['gui']['editor_opengl']['rel_pos'][1] + 1.1*s_m.meta['gui']['editor_opengl']['size'][1], max_y)
-            # print min_x, -min_y, max_x, -max_y
-    for sv_m in meta_data['scoped_variables'].itervalues():
-        # print sv_m.meta
-        if not is_gaphas:
-            min_x = min(0.9*sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][0], min_x)
-            min_y = min(-0.9*sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][1], min_y)
-            max_x = max(1.2*sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][0], max_x)
-            max_y = max(-1.1*sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][1], max_y)
-    # print "+"*50 + "\n" + str(meta_data['state'])
-    if not is_gaphas:
-        meta_data['state']['gui']['editor_opengl']['rel_pos'] = (min_x, -min_y)
-        meta_data['state']['gui']['editor_opengl']['size'] = (abs(max_x - min_x), abs(max_y - min_y))
-    else:
-        # meta_data['state']['gui']['editor_gaphas']['rel_pos'] = (min_x, min_y)
-        pass
-    # print meta_data['state']
-    for s_m in meta_data['states'].itervalues():
-        if not is_gaphas:
-            s_m.meta['gui']['editor_opengl']['rel_pos'] = (s_m.meta['gui']['editor_opengl']['rel_pos'][0] - min_x,
-                                                           s_m.meta['gui']['editor_opengl']['rel_pos'][1] + min_y)
-        else:
-            pass
-            s_m.meta['gui']['editor_gaphas']['rel_pos'] = (s_m.meta['gui']['editor_gaphas']['rel_pos'][0] - min_x,
-                                                           s_m.meta['gui']['editor_gaphas']['rel_pos'][1] - min_y)
-    for sv_m in meta_data['scoped_variables'].itervalues():
-        if not is_gaphas:
-            sv_m.meta['gui']['editor_opengl']['inner_rel_pos'] = (sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][0] - min_x,
-                                                                  sv_m.meta['gui']['editor_opengl']['inner_rel_pos'][1] + min_y)
-        else:
-            pass
-            # sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'] = (sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'][0] - min_x,
-            #                                                       sv_m.meta['gui']['editor_gaphas']['inner_rel_pos'][1] - min_y)
-    for t_m in meta_data['transitions'].itervalues():
-        # print t_m.meta
-        if t_m.meta['gui']['editor_opengl']['waypoints'] and not is_gaphas:
-            for i, pos in enumerate(t_m.meta['gui']['editor_opengl']['waypoints']):
-                t_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] - min_x, pos[1] + min_y)
-        if t_m.meta['gui']['editor_gaphas']['waypoints'] and is_gaphas:
-            for i, pos in enumerate(t_m.meta['gui']['editor_gaphas']['waypoints']):
-                t_m.meta['gui']['editor_gaphas']['waypoints'][i] = (pos[0] - min_x, pos[1] - min_y)
-    for df_m in meta_data['data_flows'].itervalues():
-        # print df_m.meta
-        if df_m.meta['gui']['editor_opengl']['waypoints'] and not is_gaphas:
-            for i, pos in enumerate(df_m.meta['gui']['editor_opengl']['waypoints']):
-                df_m.meta['gui']['editor_opengl']['waypoints'][i] = (pos[0] - min_x, pos[1] + min_y)
-        if df_m.meta['gui']['editor_gaphas']['waypoints'] and is_gaphas:
-            for i, pos in enumerate(df_m.meta['gui']['editor_gaphas']['waypoints']):
-                df_m.meta['gui']['editor_gaphas']['waypoints'][i] = (pos[0] - min_x, pos[1] - min_y)
+    state_m = meta_data['state']
+    parent_state_m = meta_data['state'].parent
+    parent_size = parent_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
+
+    # Determine outer coordinates of elements that are to be grouped
+    # Use borders of the parent state as initial coordinates
+    left = parent_size[0]
+    right = 0.0
+    top = parent_size[1]
+    bottom = 0.0
+    margin = min(parent_size) / 20.
+
+    # Update outer coordinates regarding all states
+    for child_state_m in meta_data['states'].itervalues():
+        rel_pos = child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
+        size = child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
+        left = min(rel_pos[0], left)
+        right = max(rel_pos[0] + size[0], right)
+        top = min(y_axis_mirror * rel_pos[1], top)
+        bottom = max(y_axis_mirror * rel_pos[1] + size[1], bottom)
+
+    # Update outer coordinates regarding all scoped variables
+    if not gaphas_editor:
+        for scoped_variable_m in meta_data['scoped_variables'].itervalues():
+            rel_pos = scoped_variable_m.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']
+            left = min(rel_pos[0], left)
+            right = max(rel_pos[0], right)
+            top = min(y_axis_mirror * rel_pos[1], top)
+            bottom = max(y_axis_mirror * rel_pos[1], bottom)
+
+    # Update outer coordinates regarding all connections (waypoints)
+    connection_models = meta_data['transitions'].values() + meta_data['data_flows'].values()
+    for connection_m in connection_models:
+        waypoints = connection_m.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
+        for waypoint in waypoints:
+            left = min(waypoint[0], left)
+            right = max(waypoint[0], right)
+            top = min(y_axis_mirror * waypoint[1], top)
+            bottom = max(y_axis_mirror * waypoint[1], bottom)
+
+    # Add margin and ensure that the upper left corner is within the state
+    rel_pos = max(left - margin, 0), y_axis_mirror * max(top - margin, 0)
+    # Add margin and ensure that the lower right corner is within the state
+    size = (min(right - left + 2 * margin, parent_size[0] - rel_pos[0]),
+            min(bottom - top + 2 * margin, parent_size[1] - y_axis_mirror * rel_pos[1]))
+
+    # Set size and position of new container state
+    state_m.set_meta_data_editor('rel_pos', rel_pos, from_gaphas=gaphas_editor)
+    state_m.set_meta_data_editor('size', size, from_gaphas=gaphas_editor)
+
+    # Update relative position of states within the container in order to maintain their absolute position
+    for child_state_m in meta_data['states'].itervalues():
+        old_rel_pos = child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
+        new_rel_pos = subtract_pos(old_rel_pos, rel_pos)
+        child_state_m.set_meta_data_editor('rel_pos', new_rel_pos, from_gaphas=gaphas_editor)
+
+    # Do the same for scoped variable
+    if not gaphas_editor:
+        for scoped_variable_m in meta_data['scoped_variables'].itervalues():
+            old_rel_pos = scoped_variable_m.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']
+            new_rel_pos = subtract_pos(old_rel_pos, rel_pos)
+            scoped_variable_m.set_meta_data_editor('inner_rel_pos', new_rel_pos, from_gaphas=gaphas_editor)
+
+    # Do the same for all connections (transitions and data flows)
+    for connection_m in connection_models:
+        old_waypoints = connection_m.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
+        new_waypoints = []
+        for waypoint in old_waypoints:
+            new_waypoints.append(subtract_pos(waypoint, rel_pos))
+        connection_m.set_meta_data_editor('waypoints', new_waypoints, from_gaphas=gaphas_editor)
 
     return True

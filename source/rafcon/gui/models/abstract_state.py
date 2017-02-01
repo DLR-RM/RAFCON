@@ -1,20 +1,32 @@
 import os.path
 from copy import copy, deepcopy
 from weakref import ref
+from gtkmvc import ModelMT, Signal
 
 from rafcon.gui.models.signals import MetaSignalMsg, Notification
+from rafcon.gui.models.meta import MetaModel
+
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.state import State
 from rafcon.core.storage import storage
-from rafcon.utils import log
+
 from rafcon.utils import storage_utils
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
+from rafcon.utils import log
 
-from gtkmvc import ModelMT, Signal
 
 logger = log.get_logger(__name__)
+
+
+def mirror_y_axis_in_vividict_element(vividict, key):
+    rel_pos = vividict[key]
+    if isinstance(rel_pos, tuple):
+        vividict[key] = (rel_pos[0], -rel_pos[1])
+    else:
+        del vividict[key]
+    return vividict
 
 
 def diff_for_state_element_lists(self_list_of_elements, other_list_of_elements, name):
@@ -49,7 +61,7 @@ def get_state_model_class_for_state(state):
         return None
 
 
-class AbstractStateModel(ModelMT, Hashable):
+class AbstractStateModel(MetaModel, Hashable):
     """This is an abstract class serving as base class for state models
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state).
@@ -72,12 +84,10 @@ class AbstractStateModel(ModelMT, Hashable):
                        "state_type_changed_signal")
 
     def __init__(self, state, parent=None, meta=None):
-        """Constructor
-        """
         if type(self) == AbstractStateModel:
             raise NotImplementedError
 
-        ModelMT.__init__(self)
+        MetaModel.__init__(self, meta)
         assert isinstance(state, State)
 
         self.state = state
@@ -85,14 +95,6 @@ class AbstractStateModel(ModelMT, Hashable):
         # True if root_state or state is parent start_state_id else False
         self.is_start = state.is_root_state or parent is None or isinstance(parent.state, LibraryState) or \
                         state.state_id == state.parent.start_state_id
-
-        if isinstance(meta, Vividict):
-            self.meta = meta
-        else:
-            self.meta = Vividict()
-        self.meta_signal = Signal()
-
-        self.temp = Vividict()
 
         self.parent = parent
 
@@ -167,7 +169,7 @@ class AbstractStateModel(ModelMT, Hashable):
         else:
             self._parent = None
 
-    def get_sm_m_for_state_m(self, two_factor_check=True):
+    def get_state_machine_m(self, two_factor_check=True):
         """ Get respective state machine model
 
         Get a reference of the state machine model the state model belongs to. As long as the root state model
@@ -177,7 +179,7 @@ class AbstractStateModel(ModelMT, Hashable):
         :return: respective state machine model
         """
         from rafcon.gui.singleton import state_machine_manager_model
-        state_machine = self.state.get_sm_for_state()
+        state_machine = self.state.get_state_machine()
         if state_machine:
             if state_machine.state_machine_id in state_machine_manager_model.state_machines:
                 sm_m = state_machine_manager_model.state_machines[state_machine.state_machine_id]
@@ -278,7 +280,7 @@ class AbstractStateModel(ModelMT, Hashable):
             self.meta_signal.emit(msg)
 
     def _mark_state_machine_as_dirty(self):
-        state_machine = self.state.get_sm_for_state()
+        state_machine = self.state.get_state_machine()
         if state_machine:
             state_machine_id = state_machine.state_machine_id
             from rafcon.core.singleton import state_machine_manager
@@ -433,3 +435,27 @@ class AbstractStateModel(ModelMT, Hashable):
         meta_data_element_id = element_name + str(element_id)
         meta_data_element = element_m.meta
         meta_data[meta_data_element_id] = meta_data_element
+
+    def _meta_data_editor_gaphas2opengl(self, vividict):
+        vividict = mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
+        if 'income' in vividict:
+            del vividict['income']
+        if 'name' in vividict:
+            del vividict['name']
+        return vividict
+
+    def _meta_data_editor_opengl2gaphas(self, vividict):
+        vividict = mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
+        if isinstance(vividict['size'], tuple):
+            self.temp['conversion_from_opengl'] = True
+            # Determine income position
+            size = vividict['size']
+            vividict['income']['rel_pos'] = (0, size[1] / 2.)
+
+            # Determine size and position of NameView
+            margin = min(size) / 12.
+            name_height = min(size) / 8.
+            name_width = size[0] - 2 * margin
+            vividict['name']['size'] = (name_width, name_height)
+            vividict['name']['rel_pos'] = (margin, margin)
+        return vividict

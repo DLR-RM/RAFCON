@@ -88,7 +88,7 @@ class TransitionView(ConnectionView):
         self.remove_all_waypoints()
 
         # 2nd recreate all waypoints from meta data
-        for waypoint_pos in self.model.meta['gui']['editor_gaphas']['waypoints']:
+        for waypoint_pos in self.model.get_meta_data_editor()['waypoints']:
             self.add_waypoint(waypoint_pos)
 
 

@@ -2,7 +2,7 @@ from copy import copy, deepcopy
 from gtkmvc import ModelMT
 
 from rafcon.gui.models.state_element import StateElementModel
-from rafcon.core.state_elements.data_port import DataPort
+from rafcon.core.state_elements.data_port import DataPort, InputDataPort
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -54,3 +54,23 @@ class DataPortModel(StateElementModel):
     @ModelMT.observe("data_port", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(DataPortModel, self).model_changed(model, prop_name, info)
+
+    def _meta_data_editor_gaphas2opengl(self, vividict):
+        if 'rel_pos' in vividict:
+            rel_pos = vividict['rel_pos']
+            del vividict['rel_pos']
+            vividict['inner_rel_pos'] = (rel_pos[0], -rel_pos[1])
+        return vividict
+
+    def _meta_data_editor_opengl2gaphas(self, vividict):
+        if self.parent:
+            rel_pos = vividict['inner_rel_pos']
+            state_size = self.parent.get_meta_data_editor()['size']
+            if isinstance(rel_pos, tuple) and isinstance(state_size, tuple):
+                if isinstance(self.data_port, InputDataPort):
+                    vividict['rel_pos'] = (0, -rel_pos[1])
+                else:  # OutputDataPort
+                    vividict['rel_pos'] = (state_size[1], -rel_pos[1])
+            else:
+                del vividict['inner_rel_pos']
+        return vividict

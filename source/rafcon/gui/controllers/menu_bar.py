@@ -373,7 +373,7 @@ class MenuBarController(ExtendedController):
         all_tabs.extend(self.states_editor_ctrl.closed_tabs.values())
         dirty_source_editor_ctrls = [tab_dict['controller'].get_controller('source_ctrl') for tab_dict in all_tabs if
                                      tab_dict['source_code_view_is_dirty'] is True and
-                                     tab_dict['state_m'].state.get_sm_for_state().state_machine_id ==
+                                     tab_dict['state_m'].state.get_state_machine().state_machine_id ==
                                      state_machine_m.state_machine.state_machine_id]
 
         for dirty_source_editor_ctrl in dirty_source_editor_ctrls:

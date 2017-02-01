@@ -2,15 +2,16 @@ from weakref import ref
 from gtkmvc import ModelMT, Signal
 
 from rafcon.gui.models.signals import Notification
+from rafcon.gui.models.meta import MetaModel
 from rafcon.gui.models.abstract_state import AbstractStateModel
 
 from rafcon.utils.hashable import Hashable
-from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
-class StateElementModel(ModelMT, Hashable):
+class StateElementModel(MetaModel, Hashable):
     """This model class serves as base class for all models within a state model (ports, connections)
 
     Each state element model has a parent, meta and temp data. If observes itself and informs the parent about changes.
@@ -20,27 +21,14 @@ class StateElementModel(ModelMT, Hashable):
     """
 
     _parent = None
-    meta = None
     meta_signal = Signal()
-    temp = None
 
     __observables__ = ("meta_signal",)
 
     def __init__(self, parent, meta=None):
-        """Constructor
-        """
-
-        ModelMT.__init__(self)
+        MetaModel.__init__(self, meta)
 
         self.parent = parent
-
-        if isinstance(meta, Vividict):
-            self.meta = meta
-        else:
-            self.meta = Vividict()
-        self.meta_signal = Signal()
-
-        self.temp = Vividict()
 
         # this class is an observer of its own properties:
         self.register_observer(self)
@@ -78,6 +66,11 @@ class StateElementModel(ModelMT, Hashable):
         :rtype: rafcon.core.state_elements.state_element.StateElement
         """
         raise NotImplementedError()
+
+    def get_state_machine_m(self):
+        if self.parent:
+            return self.parent.get_state_machine_m()
+        return None
 
     def prepare_destruction(self):
         """Prepares the model for destruction

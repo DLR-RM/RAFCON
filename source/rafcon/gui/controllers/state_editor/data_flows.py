@@ -70,16 +70,16 @@ class LinkageListController(ListViewController):
                 model_to_observe.append(self.model.parent.parent)
                 state_m_4_get_sm_m_from = self.model.parent.parent
         else:
-            if self.model.get_sm_m_for_state_m(two_factor_check=False) is not None:
-                model_to_observe.append(self.model.get_sm_m_for_state_m(two_factor_check=False).root_state)
+            if self.model.get_state_machine_m(two_factor_check=False) is not None:
+                model_to_observe.append(self.model.get_state_machine_m(two_factor_check=False).root_state)
             else:
                 logger.warning("State model has no state machine model as expected -> state model: {0}".format(self.model))
 
 
         # observe state machine model
         two_factor_check = False if state_m_4_get_sm_m_from.state.is_root_state else True
-        if state_m_4_get_sm_m_from.get_sm_m_for_state_m(two_factor_check) is not None:
-            model_to_observe.append(state_m_4_get_sm_m_from.get_sm_m_for_state_m(two_factor_check))
+        if state_m_4_get_sm_m_from.get_state_machine_m(two_factor_check) is not None:
+            model_to_observe.append(state_m_4_get_sm_m_from.get_state_machine_m(two_factor_check))
         else:
             logger.warning("State model has no state machine model as expected -> state model: {0}".format(self.model))
 
@@ -129,8 +129,8 @@ class LinkageListController(ListViewController):
                 self.no_update = True if 'before' in info else False
 
             if overview['prop_name'][-1] == 'state' and overview['method_name'][-1] in ["change_state_type"] and \
-                    self.model.get_sm_m_for_state_m() is not None:
-                changed_model = self.model.get_sm_m_for_state_m().get_state_model_by_path(overview['args'][-1][1].get_path())
+                    self.model.get_state_machine_m() is not None:
+                changed_model = self.model.get_state_machine_m().get_state_model_by_path(overview['args'][-1][1].get_path())
                 if changed_model not in self._model_observed:
                     self.observe_model(changed_model)
 
