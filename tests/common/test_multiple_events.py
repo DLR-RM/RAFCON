@@ -32,7 +32,7 @@ def trigger_exectuion_engine(gvm, execution_engine):
 
 
 def test_multi_events(caplog):
-    testing_utils.initialize_rafcon()
+    testing_utils.initialize_environment()
 
     execution_trigger_thread = threading.Thread(target=trigger_exectuion_engine,
                                                 args=[global_variable_manager, state_machine_execution_engine])
@@ -46,7 +46,7 @@ def test_multi_events(caplog):
     assert global_variable_manager.get_variable("sm_status") == 2
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 if __name__ == '__main__':

@@ -128,7 +128,7 @@ def test_backward_stepping_library_state(caplog):
     logger.debug("after gtk main")
 
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 @log.log_exceptions(None, gtk_quit=True)
@@ -202,7 +202,7 @@ def test_backward_stepping_preemptive_state(caplog):
     logger.debug("after gtk main")
 
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 @log.log_exceptions(None, gtk_quit=True)
@@ -274,7 +274,7 @@ def test_backward_stepping_barrier_state(caplog):
     logger.debug("after gtk main")
 
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 if __name__ == '__main__':

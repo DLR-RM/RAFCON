@@ -34,7 +34,7 @@ def test_runtime_values(caplog):
     assert sm.root_state.output_data["data_output_port1"] == 114
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 def teardown_module(module=None):

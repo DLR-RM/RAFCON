@@ -265,7 +265,7 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
 
 def test_storage_without_gui(caplog):
     with_gui = False
-    testing_utils.initialize_rafcon()
+    testing_utils.initialize_environment()
     [state, sm_m, state_dict] = create_models()
     save_state_machine(sm_model=sm_m, path=testing_utils.get_unique_temp_path(), logger=logger, with_gui=with_gui,
                        menubar_ctrl=None)
@@ -274,7 +274,7 @@ def test_storage_without_gui(caplog):
     assert len(missing_elements) == 0
 
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 def test_storage_with_gui(caplog):
@@ -290,11 +290,11 @@ def test_storage_with_gui(caplog):
     #
     # missing_elements, _ = check_that_all_files_are_there(sm_m, check_meta_data=True, with_print=False)
     # assert len(missing_elements) == 0
-    # testing_utils.terminate_rafcon()
+    # testing_utils.shutdown_environment()
     # testing_utils.assert_logger_warnings_and_errors(caplog)
 
     with_gui = True
-    testing_utils.initialize_rafcon()
+    testing_utils.initialize_environment()
     logger.debug("create model")
     [state, sm_m, state_dict] = create_models()
 
@@ -318,11 +318,11 @@ def test_storage_with_gui(caplog):
     missing_elements, _ = check_that_all_files_are_there(sm_m, check_meta_data=True, with_print=False)
     assert len(missing_elements) == 0
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 def test_on_clean_storing_with_name_in_path(caplog):
-    testing_utils.initialize_rafcon(gui_config={"AUTO_BACKUP_ENABLED": True})
+    testing_utils.initialize_environment(gui_config={"AUTO_BACKUP_ENABLED": True})
 
     path_old_format = testing_utils.get_test_sm_path("unit_test_state_machines/"
                                                      "id_to_name_plus_id_storage_format_test_do_not_update")
@@ -341,7 +341,7 @@ def test_on_clean_storing_with_name_in_path(caplog):
     check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m)
 
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 if __name__ == '__main__':

@@ -17,7 +17,7 @@ logger = log.get_logger(__name__)
 
 
 def test_run_to_selected_state(caplog):
-    testing_utils.initialize_rafcon()
+    testing_utils.initialize_environment()
 
     sm = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/"
                                                                              "run_to_selected_state_test"))
@@ -45,7 +45,7 @@ def test_run_to_selected_state(caplog):
 
     # read all lines of the file and check if not more than 2 states have written to it
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 if __name__ == '__main__':

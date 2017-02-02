@@ -374,7 +374,7 @@ def test_simple(caplog):
     :return:
     """
     # create testbed
-    testing_utils.initialize_rafcon()
+    testing_utils.initialize_environment()
 
     [state, sm_model, state_dict] = create_models()
     run_copy_test(sm_model)
@@ -389,7 +389,7 @@ def test_simple(caplog):
     # rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
-    testing_utils.terminate_rafcon(config=True, gui_config=False)
+    testing_utils.shutdown_environment()
 
 
 @pytest.mark.parametrize("with_gui", [False])
@@ -400,7 +400,7 @@ def test_complex(with_gui, caplog):
     :return:
     """
     # create testbed
-    testing_utils.initialize_rafcon()
+    testing_utils.initialize_environment()
     from rafcon.core.config import global_config
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
     library_paths["unit_test_state_machines"] = os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")
@@ -438,7 +438,7 @@ def test_complex(with_gui, caplog):
         gtk.main_iteration(False)
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
-    testing_utils.terminate_rafcon(config=True, gui_config=False)
+    testing_utils.shutdown_environment()
 
     # import conftest
     # import shutil

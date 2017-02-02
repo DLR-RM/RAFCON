@@ -19,7 +19,7 @@ import pytest
 
 
 def test_preemption_behaviour_in_preemption_state(caplog):
-    testing_utils.initialize_rafcon()
+    testing_utils.initialize_environment()
 
     sm = state_machine_execution_engine.execute_state_machine_from_path(
         path=testing_utils.get_test_sm_path("unit_test_state_machines/preemption_behaviour_test_sm"))
@@ -29,7 +29,7 @@ def test_preemption_behaviour_in_preemption_state(caplog):
     assert not global_variable_manager.variable_exist("s3")
 
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 def trigger_stop(sm, execution_engine):
@@ -39,7 +39,7 @@ def trigger_stop(sm, execution_engine):
 
 
 def test_preemption_behaviour_during_stop(caplog):
-    testing_utils.initialize_rafcon()
+    testing_utils.initialize_environment()
 
     state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path(
         "unit_test_state_machines/preemption_behaviour_during_stop"))
@@ -58,7 +58,7 @@ def test_preemption_behaviour_during_stop(caplog):
     assert not global_variable_manager.variable_exist("s3")
 
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 if __name__ == '__main__':

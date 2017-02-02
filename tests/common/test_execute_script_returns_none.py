@@ -13,7 +13,7 @@ import testing_utils
 
 
 def test_execute_script_returns_none(caplog):
-    testing_utils.initialize_rafcon()
+    testing_utils.initialize_environment()
 
     state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/return_none_test_sm"))
 
@@ -28,7 +28,7 @@ def test_execute_script_returns_none(caplog):
     assert state_machine.root_state.final_outcome.outcome_id == 0
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 if __name__ == '__main__':
