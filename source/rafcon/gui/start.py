@@ -142,13 +142,16 @@ def setup_gui():
 
 
 def open_state_machines(paths):
+    first_sm = None
     for path in paths:
         try:
-            state_machine = storage.load_state_machine_from_path(path)
-            sm_singletons.state_machine_manager.add_state_machine(state_machine)
-            return state_machine
+            sm = storage.load_state_machine_from_path(path)
+            sm_singletons.state_machine_manager.add_state_machine(sm)
+            if first_sm is None:
+                first_sm = sm
         except Exception as e:
             logger.exception(_("Could not load state machine '{}': {}").format(path, e))
+    return first_sm
 
 
 def create_new_state_machine():
