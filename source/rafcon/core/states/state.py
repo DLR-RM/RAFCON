@@ -226,7 +226,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             raise TypeError("states must be of type dict")
         if not isinstance(self.output_data, dict):
             raise TypeError("states must be of type dict")
-        self.check_input_data_type(self.input_data)
+        self.check_input_data_type()
 
     def setup_backward_run(self):
         self.state_execution_status = StateExecutionStatus.ACTIVE
@@ -764,20 +764,19 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         return True, "valid"
 
-    def check_input_data_type(self, input_data):
+    def check_input_data_type(self):
         """Check the input data types of the state
 
-        :param input_data: the input_data dictionary to check
         :raises exceptions.TypeError: if the data of one of the input data ports is not of the specified type
         """
         for input_data_port_key, data_port in self.input_data_ports.iteritems():
-            if input_data_port_key in input_data:
-                if not input_data[data_port.name] is None:
-                    #check for primitive data types
-                    if not str(type(input_data[data_port.name]).__name__) == data_port.data_type:
-                        #check for classes
-                        if not isinstance(input_data[data_port.name], getattr(sys.modules[__name__], data_port.data_type)):
-                            raise TypeError("Input of execute function must be of type %s" % str(data_port.data_type))
+            if data_port.name in self.input_data and self.input_data[data_port.name] is not None:
+                #check for primitive data types
+                if not type(self.input_data[data_port.name]).__name__ == data_port.data_type.__name__:
+                    #check for classes
+                    # if not isinstance(self.input_data[data_port.name], getattr(sys.modules[__name__], data_port.data_type.__name__)):
+                    raise TypeError("Input of execute function must be of type {0} not {1} as current value {2}"
+                                    "".format(data_port.data_type, type(self.input_data[data_port.name]), self.input_data[data_port.name]))
 
     def check_output_data_type(self):
         """Check the output data types of the state
@@ -785,12 +784,13 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :raises exceptions.TypeError: if the data of one of the output data ports is not of the specified type
         """
         for output_port_id, output_port in self.output_data_ports.iteritems():
-            if hasattr(self.output_data, output_port.name) and self.output_data[output_port.name] is not None:
+            if output_port.name in self.output_data and self.output_data[output_port.name] is not None:
                 #check for primitive data types
-                if not str(type(self.output_data[output_port.name]).__name__) == output_port.data_type:
+                if not type(self.output_data[output_port.name]).__name__ == output_port.data_type.__name__:
                     #check for classes
-                    if not isinstance(self.output_data[output_port.name], getattr(sys.modules[__name__], output_port.data_type)):
-                        raise TypeError("Output of execute function must be of type %s" % str(output_port.data_type))
+                    # if not isinstance(self.output_data[output_port.name], getattr(sys.modules[__name__], output_port.data_type)):
+                    raise TypeError("Output of execute function must be of type  {0} not {1} as current value {2}"
+                                    "".format(output_port.data_type, type(self.output_data[output_port.name]), self.output_data[output_port.name]))
 
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- misc functions ---------------------------------------
