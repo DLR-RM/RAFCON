@@ -769,28 +769,26 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         :raises exceptions.TypeError: if the data of one of the input data ports is not of the specified type
         """
-        for input_data_port_key, data_port in self.input_data_ports.iteritems():
+        for data_port in self.input_data_ports.itervalues():
             if data_port.name in self.input_data and self.input_data[data_port.name] is not None:
-                #check for primitive data types
-                if not type(self.input_data[data_port.name]).__name__ == data_port.data_type.__name__:
-                    #check for classes
-                    # if not isinstance(self.input_data[data_port.name], getattr(sys.modules[__name__], data_port.data_type.__name__)):
+                #check for class
+                if not isinstance(self.input_data[data_port.name], data_port.data_type):
                     raise TypeError("Input of execute function must be of type {0} not {1} as current value {2}"
-                                    "".format(data_port.data_type, type(self.input_data[data_port.name]), self.input_data[data_port.name]))
+                                    "".format(data_port.data_type, type(self.input_data[data_port.name]),
+                                              self.input_data[data_port.name]))
 
     def check_output_data_type(self):
         """Check the output data types of the state
 
         :raises exceptions.TypeError: if the data of one of the output data ports is not of the specified type
         """
-        for output_port_id, output_port in self.output_data_ports.iteritems():
-            if output_port.name in self.output_data and self.output_data[output_port.name] is not None:
-                #check for primitive data types
-                if not type(self.output_data[output_port.name]).__name__ == output_port.data_type.__name__:
-                    #check for classes
-                    # if not isinstance(self.output_data[output_port.name], getattr(sys.modules[__name__], output_port.data_type)):
+        for data_port in self.output_data_ports.itervalues():
+            if data_port.name in self.output_data and self.output_data[data_port.name] is not None:
+                #check for class
+                if not isinstance(self.output_data[data_port.name], data_port.data_type):
                     raise TypeError("Output of execute function must be of type  {0} not {1} as current value {2}"
-                                    "".format(output_port.data_type, type(self.output_data[output_port.name]), self.output_data[output_port.name]))
+                                    "".format(data_port.data_type, type(self.output_data[data_port.name]),
+                                              self.output_data[data_port.name]))
 
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- misc functions ---------------------------------------
