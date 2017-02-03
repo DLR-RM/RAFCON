@@ -1,5 +1,4 @@
 import pytest
-import os
 # test for expected exceptions
 from pytest import raises
 
@@ -17,13 +16,13 @@ import testing_utils
 
 
 def create_state_machine():
-    state1 = ExecutionState("MyFirstState", path=testing_utils.TEST_SCRIPT_PATH,
+    state1 = ExecutionState("MyFirstState", state_id="FirstLevel2", path=testing_utils.TEST_SCRIPT_PATH,
                             filename="default_data_port_test_state.py")
     state1.add_outcome("first_outcome", 3)
     input_state1 = state1.add_input_data_port("input_data_port1", "str", "default_value")
     output_state1 = state1.add_output_data_port("output_data_port1", "str")
 
-    state2 = HierarchyState("MyFirstHierarchyState")
+    state2 = HierarchyState("MyFirstHierarchyState",state_id="FirstLevel1")
     state2.add_state(state1)
     state2.set_start_state(state1.state_id)
     state2.add_outcome("Container_Outcome", 6)
@@ -34,6 +33,39 @@ def create_state_machine():
     #                      input_state2,
     #                      state1.state_id,
     #                      input_state1)
+    state2.add_data_flow(state1.state_id,
+                         output_state1,
+                         state2.state_id,
+                         output_state2)
+
+    return StateMachine(state2)
+
+def create_state_machine2():
+    state1 = ExecutionState("MyFirstState", state_id="FirstLevel2", path=testing_utils.TEST_SCRIPT_PATH,
+                            filename="default_data_port_test_state.py")
+    state0 = ExecutionState("MyZeroState", state_id="ZeroLevel2", path=testing_utils.TEST_SCRIPT_PATH,
+                            filename="default_data_port_test_state.py")
+    state0.add_outcome("first_outcome", 3)
+    input_state0 = state0.add_input_data_port("input_data_port1", tuple, (1, 3, 2), data_port_id=1)
+    output_state0 = state0.add_output_data_port("output_data_port1", tuple)
+    state1.add_outcome("first_outcome", 3)
+    input_state1 = state1.add_input_data_port("input_data_port1", tuple, (1, 3, 2), data_port_id=1)
+    output_state1 = state1.add_output_data_port("output_data_port1", tuple)
+
+
+    state2 = HierarchyState("MyFirstHierarchyState",state_id="FirstLevel1")
+    state2.add_state(state1)
+    state2.add_state(state0)
+    state2.set_start_state(state0.state_id)
+    state2.add_outcome("Container_Outcome", 6)
+    state2.add_transition(state0.state_id, 3, state1.state_id, None)
+    state2.add_transition(state1.state_id, 3, state2.state_id, 6)
+    input_state2 = state2.add_input_data_port("input_data_port1", tuple)
+    output_state2 = state2.add_output_data_port("output_data_port1", tuple)
+    state2.add_data_flow(state0.state_id,
+                         output_state0,
+                         state1.state_id,
+                         input_state1)
     state2.add_data_flow(state1.state_id,
                          output_state1,
                          state2.state_id,
@@ -157,8 +189,43 @@ def test_unique_port_names(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
+def test_runtime_checks_for_data_port_data_types(caplog):
+
+    storage_path = testing_utils.get_unique_temp_path()
+    print storage_path
+
+    sm = create_state_machine2()
+
+    # test output port type check
+    script_text = 'def execute(self, inputs, outputs, gvm):\n' \
+                  '    outputs["output_data_port1"] = [1, 2, 3]\n' \
+                  '    return 3'
+    sm.get_state_by_path('FirstLevel1/ZeroLevel2').script_text = script_text
+
+    # TODO comment (next 2 lines) in after final fix of tuple storing bug is applied and remove 3 line (4 storage check)
+    # storage.save_state_machine_to_path(sm, storage_path)
+    # sm_loaded = storage.load_state_machine_from_path(storage_path)
+    sm_loaded = sm
+
+    root_state = sm_loaded.root_state
+
+    state_machine = StateMachine(root_state)
+    testing_utils.test_multithreading_lock.acquire()
+
+    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.join()
+    rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    testing_utils.test_multithreading_lock.release()
+    # 6 errors -> IN ORDER output port-, root state scoped-, input port-, output port-, root state scoped- and
+    # root state output port-data-type-errors
+    testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors=6)
+
+
 if __name__ == '__main__':
     test_default_values_of_data_ports(None)
     test_last_wins_value_collection_for_data_ports(None)
     test_unique_port_names(None)
+    test_runtime_checks_for_data_port_data_types(None)
     # pytest.main([__file__])

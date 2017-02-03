@@ -59,7 +59,8 @@ def test_hierarchy_state_execution(caplog):
     testing_utils.test_multithreading_lock.release()
 
     assert hierarchy_state.output_data["output1"] == 52.0
-    testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors=1)
+    # 2 type error -> one child output port data type error and root state scoped data type error
+    testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors=2)
 
 
 def test_hierarchy_save_load_test(caplog):
@@ -82,7 +83,8 @@ def test_hierarchy_save_load_test(caplog):
     testing_utils.test_multithreading_lock.release()
 
     assert state_machine.root_state.output_data["output1"] == 52.0
-    testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors=1)
+    # 2 type error -> one child output port data type error and root state scoped data type error
+    testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors=2)
 
 if __name__ == '__main__':
     test_hierarchy_state_execution(None)
