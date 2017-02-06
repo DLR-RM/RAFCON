@@ -22,32 +22,27 @@ def read_version_from_pt_file():
 class PyTest(TestCommand):
     """Run py.test with RAFCON tests
 
-    Copied from https://pytest.org/latest/goodpractises.html#integrating-with-setuptools-python-setup-py-test
+    Copied http://doc.pytest.org/en/latest/goodpractices.html#integrating-with-setuptools-python-setup-py-test-pytest-runner
     """
     # This allows the user to add custom parameters to py.test, e.g.
-    # python setup.py test -a "-v"
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+    # $ python setup.py test -a "-v"
+    user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
-        self.pytest_args = ['-vxs', '-p', 'no:pytest_capturelog']
-
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
+        self.pytest_args = '-vxs -p no:pytest_capturelog'
 
     def run_tests(self):
-        # import here, cause outside the eggs aren't loaded
-        import pytest
+        import shlex
+        import pytest  # import here, cause outside the eggs aren't loaded
         test_path = path.join(path.dirname(path.abspath(__file__)), 'tests')
         rafcon_path = path.join(path.dirname(path.abspath(__file__)), 'source')
         sys.path.insert(0, test_path)
         sys.path.insert(0, rafcon_path)
         os.environ["PYTHONPATH"] = rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
-        error_number = pytest.main(self.pytest_args + [path.join('tests', 'network_test')])
+        error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'network_test')])
         if not error_number:
-            error_number = pytest.main(self.pytest_args + [path.join('tests', 'common')])
+            error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'common')])
         sys.exit(error_number)
 
 

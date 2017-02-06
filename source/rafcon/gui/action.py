@@ -70,7 +70,7 @@ def get_state_tuple(state, state_m=None):
     :return: state_tuple tuple
     """
     # state_str = yaml.dump(state)
-    state_str = json.dumps(state, cls=JSONObjectEncoder, nested_jsonobjects=False,
+    state_str = json.dumps(state, cls=JSONObjectEncoder,
                            indent=4, check_circular=False, sort_keys=True)
 
     # print "++++++++++", state
