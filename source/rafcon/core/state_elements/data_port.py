@@ -26,6 +26,9 @@ class DataPort(StateElement):
     :ivar default_value: the default value of the data port
     :ivar int data_port_id: the id of the data port, must be unique for the parent state
     :ivar rafcon.core.states.state.State parent: reference to the parent state
+    :ivar bool force_type: if true the DataPort type exception is not raised while initiation (backward compatibility)
+    :ivar bool init_without_default_value_type_exceptions: if true it is allowed to initiate with any default value type
+        Used to load not matching default value data types and correct them using the GUI.
     """
 
     # Define all parameters and set their default values
@@ -34,10 +37,12 @@ class DataPort(StateElement):
     _data_type = type(None)
     _default_value = None
 
-    def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None, parent=None, force_type=False):
+    def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None, parent=None, force_type=False,
+                 init_without_default_value_type_exceptions=False):
         if type(self) == DataPort and not force_type:
             raise NotImplementedError
         super(DataPort, self).__init__()
+        self._no_type_error_exceptions = True if init_without_default_value_type_exceptions else False
         self._was_forced_type = force_type
         if data_port_id is None:
             self._data_port_id = generate_data_port_id([])
@@ -53,6 +58,7 @@ class DataPort(StateElement):
 
         # Checks for validity
         self.parent = parent
+        self._no_type_error_exceptions = False
 
         # logger.debug("DataPort with name %s initialized" % self.name)
 
@@ -80,10 +86,12 @@ class DataPort(StateElement):
         default_value = dictionary['default_value']
         # Allow creation of DataPort class when loading from YAML file
         if cls == DataPort:
-            return DataPort(name, data_type, default_value, data_port_id, force_type=True)
+            return DataPort(name, data_type, default_value, data_port_id, force_type=True,
+                            init_without_default_value_type_exceptions=True)
         # Call appropriate constructor, e.g. InputDataPort(...) for input data ports
         else:
-            return cls(name, data_type, default_value, data_port_id, force_type=True)
+            return cls(name, data_type, default_value, data_port_id, force_type=True,
+                       init_without_default_value_type_exceptions=True)
 
     @staticmethod
     def state_element_to_dict(state_element):
@@ -214,8 +222,18 @@ class DataPort(StateElement):
 
                 default_value = type_helpers.convert_string_value_to_type_value(default_value, data_type)
                 if default_value is None:
-                    raise AttributeError("Could not convert default value '{0}' to data type '{1}'".format(
+                    raise AttributeError("Could not convert default value '{0}' to data type '{1}'.".format(
                         default_value, data_type))
+            else:
+                if not isinstance(default_value, self.data_type):
+                    if self._no_type_error_exceptions:
+                        logger.warning("Handed default value '{0}' is of type '{1}' but data port data type is {2} {3}."
+                                       "".format(default_value, type(default_value), data_type, self))
+                    else:
+                        raise TypeError("Handed default value '{0}' is of type '{1}' but data port data type is {2}"
+                                        "{3} of {4}.".format(default_value, type(default_value), data_type,
+                                                             self,
+                                                             self.parent.get_path() if self.parent is not None else ""))
 
         return default_value
 

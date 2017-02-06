@@ -166,6 +166,14 @@ def test_unique_port_names(caplog):
     with raises(ValueError):
         state.add_scoped_variable("scope", "double", 0)
 
+    # check programmatic direct data_type and default_value usage DataPort-Class
+    state.add_input_data_port("_in", int, 0)
+    list_op_id = state.add_output_data_port("_out", list, [1, 2, 3])
+    with raises(TypeError):
+        state.add_scoped_variable("_scope", float, 0)
+    with raises(TypeError):
+        state.output_data_ports[list_op_id].default_value = (1, 3)
+
     # Names are allowed for other data port set
     state.add_output_data_port("in", "int", 0)
     state.add_scoped_variable("in", "int", 0)
@@ -182,8 +190,8 @@ def test_unique_port_names(caplog):
     with raises(ValueError):
         state.scoped_variables[scope_id].name = "out"
 
-    assert len(state.input_data_ports) == 3
-    assert len(state.output_data_ports) == 3
+    assert len(state.input_data_ports) == 4
+    assert len(state.output_data_ports) == 4
     assert len(state.scoped_variables) == 3
 
     testing_utils.assert_logger_warnings_and_errors(caplog)

@@ -64,8 +64,9 @@ def test_load_wrong_data_types(caplog):
 
     assert rafcon.core.singleton.global_variable_manager.get_variable("x") == 1
 
-    # 4 type errors -> 2 data flow port to port data type inequality and while runtime 1 input- and 1 output data type error
-    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 4)
+    # 4 data type errors -> 2 data flow port to port data type inequality and while runtime 1 input- and 1 output data type error
+    # 2 data type warnings -> 1 input- and  1 output-data port  data type warnings while loading of state machine
+    testing_utils.assert_logger_warnings_and_errors(caplog, 2, 4)
     testing_utils.shutdown_environment()
 
     logger.info("State machine execution finished!")
