@@ -192,16 +192,16 @@ def reference_free_check(v1, v2, prepend=[]):
 def meta_dump_or_deepcopy(meta):
     if DEBUG_META_REFERENCES:  # debug copy
         meta_source = meta
-        meta_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+        meta_str = json.dumps(meta, cls=JSONObjectEncoder,
                               indent=4, check_circular=False, sort_keys=True)
         meta_dump_copy = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
         meta_deepcopy = copy.deepcopy(meta)
 
-        meta_source_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+        meta_source_str = json.dumps(meta, cls=JSONObjectEncoder,
                                      indent=4, check_circular=False, sort_keys=True)
-        meta_dump_copy_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+        meta_dump_copy_str = json.dumps(meta, cls=JSONObjectEncoder,
                                         indent=4, check_circular=False, sort_keys=True)
-        meta_deepcopy_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+        meta_deepcopy_str = json.dumps(meta, cls=JSONObjectEncoder,
                                        indent=4, check_circular=False, sort_keys=True)
         assert meta_dump_copy_str == meta_source_str
         assert meta_dump_copy_str == meta_deepcopy_str
@@ -224,7 +224,7 @@ def meta_dump_or_deepcopy(meta):
 
     # print meta_str
     # if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR'):
-    #     meta_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+    #     meta_str = json.dumps(meta, cls=JSONObjectEncoder,
     #                           indent=4, check_circular=False, sort_keys=True)
     #     return json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
     # else:
@@ -414,7 +414,7 @@ class MetaAction:
         overview['instance'].append(overview['model'][-1])
         overview['info'][-1]['instance'] = overview['model'][-1]
 
-        meta_str = json.dumps(overview['model'][-1].meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+        meta_str = json.dumps(overview['model'][-1].meta, cls=JSONObjectEncoder,
                               indent=4, check_circular=False, sort_keys=True)
         # print meta_str
         self.meta = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
