@@ -281,6 +281,21 @@ class MainWindowController(ExtendedController):
         for config_id in constants.PANE_ID.keys():
             self.set_pane_position(config_id)
 
+        gui_helper.set_window_size_and_position(view.get_top_widget(), "MAIN_WINDOW")
+        while gtk.events_pending():
+            gtk.main_iteration(False)
+
+        if gui_config.get_config_value("RECOVER_UNDOCK_BAR_WINDOWS"):
+            if global_runtime_config.get_config_value("LEFT_BAR_WINDOW_UNDOCKED"):
+                self.undock_sidebar("LEFT_BAR_WINDOW", "left_bar", "undock_left_bar_button", "left_bar_return_button",
+                                    self.on_left_bar_hide_clicked, "left_bar_replacement", view["LEFT_BAR_WINDOW"])
+            if global_runtime_config.get_config_value("RIGHT_BAR_WINDOW_UNDOCKED"):
+                self.undock_sidebar("RIGHT_BAR_WINDOW", "right_bar", "undock_right_bar_button", "right_bar_return_button",
+                                    self.on_right_bar_hide_clicked, "right_bar_replacement", view["RIGHT_BAR_WINDOW"])
+            if global_runtime_config.get_config_value("CONSOLE_BAR_WINDOW_UNDOCKED"):
+                self.undock_sidebar("CONSOLE_BAR_WINDOW", "console", "undock_console_button", "console_return_button",
+                                    self.on_console_hide_clicked, None, view["CONSOLE_BAR_WINDOW"])
+
         if gui_config.get_config_value('AUTO_BACKUP_ENABLED') and gui_config.get_config_value('AUTO_RECOVERY_CHECK'):
             import rafcon.gui.models.auto_backup as auto_backup
             auto_backup.check_for_crashed_rafcon_instances()
@@ -289,6 +304,11 @@ class MainWindowController(ExtendedController):
         view.left_bar_window.get_top_widget().connect("configure-event", self.configure_event, "LEFT_BAR_WINDOW")
         view.right_bar_window.get_top_widget().connect("configure-event", self.configure_event, "RIGHT_BAR_WINDOW")
         view.console_bar_window.get_top_widget().connect("configure-event", self.configure_event, "CONSOLE_BAR_WINDOW")
+
+        if global_runtime_config.get_config_value("MAIN_WINDOW_MAXIMIZED"):
+            view.get_top_widget().get_focus()
+            view.get_top_widget().maximize()
+            view.get_top_widget().show()
 
         plugins.run_hook("main_window_setup", self)
 
@@ -432,12 +452,10 @@ class MainWindowController(ExtendedController):
         self.view['console_return_button'].show()
 
     def bring_undock_window_to_top_callback(self, widget, event, undocked_window, key):
-        global_runtime_config.store_widget_properties(undocked_window, key)
         gui_helper.set_window_size_and_position(undocked_window, key)
 
     def undock_window_callback(self, widget, event, undocked_window, key):
         if event.new_window_state & gtk.gdk.WINDOW_STATE_WITHDRAWN or event.new_window_state & gtk.gdk.WINDOW_STATE_ICONIFIED:
-            global_runtime_config.store_widget_properties(undocked_window, key)
             undocked_window.iconify()
         else:
             undocked_window.deiconify()
@@ -470,6 +488,7 @@ class MainWindowController(ExtendedController):
         self.handler_ids[window_name.lower()] = {"state": state_handler, "focus": focus_handler}
         window.set_transient_for(self.view.get_top_widget())
         self.view.get_top_widget().grab_focus()
+        global_runtime_config.set_config_value(window_name.upper() + "_UNDOCKED", True)
 
     def redock_sidebar(self, window_name, widget_name, sidebar_name, undock_button_name, return_function,
                        replacement_name, controller_name, widget, event=None):
@@ -481,14 +500,13 @@ class MainWindowController(ExtendedController):
         self.docked[widget_name] = True
         self.view['main_window'].disconnect(self.handler_ids[window_name.lower()]["state"])
         self.view['main_window'].disconnect(self.handler_ids[window_name.lower()]["focus"])
-        window = getattr(self.view, window_name.lower()).get_top_widget()
-        global_runtime_config.store_widget_properties(window, window_name.upper())
         return_function(None)
         self.view[widget_name].reparent(self.view[sidebar_name])
         self.get_controller(controller_name).hide_window()
         self.view[undock_button_name].show()
         if replacement_name:
             self.view[replacement_name].hide()
+        global_runtime_config.set_config_value(window_name.upper() + "_UNDOCKED", False)
         return True
 
     # Shortcut buttons
