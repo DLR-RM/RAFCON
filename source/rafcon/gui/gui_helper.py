@@ -190,18 +190,20 @@ def set_window_size_and_position(window, window_key):
      """
     size = global_runtime_config.get_config_value(window_key+'_SIZE')
     position = global_runtime_config.get_config_value(window_key+'_POS')
+    maximized = global_runtime_config.get_config_value(window_key+'_MAXIMIZED')
     if not size:
         size = constants.WINDOW_SIZE[window_key]
-    window.resize(size[0], size[1])
-
+    window.resize(*size)
     if position:
         position = (max(0, position[0]), max(0, position[1]))
         screen_width = gtk.gdk.screen_width()
         screen_height = gtk.gdk.screen_height()
         if position[0] < screen_width and position[1] < screen_height:
-            window.move(position[0], position[1])
+            window.move(*position)
     else:
         window.set_position(gtk.WIN_POS_MOUSE)
+    if maximized:
+        window.maximize()
     window.show()
 
 

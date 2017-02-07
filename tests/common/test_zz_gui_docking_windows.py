@@ -39,7 +39,7 @@ def wait_for_event_notification():
         raise RuntimeError("A timeout occurred")
 
 
-def assert_size_equality(size1, size2):
+def assert_size_equality(size1, size2, window=None):
     assert abs(size1[0] - size2[0]) <= 10
     assert abs(size1[1] - size2[1]) <= 10
 
@@ -60,7 +60,8 @@ def undock_sidebars():
         assert window.get_property('visible') is True
         expected_size = get_stored_window_size(window_name)
         new_size = window.get_size()
-        assert_size_equality(new_size, expected_size)
+        if not bool(window.maximize_initially):
+            assert_size_equality(new_size, expected_size, window)
 
         logger.info("resizing...")
         time.sleep(debug_sleep_time)

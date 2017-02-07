@@ -196,6 +196,10 @@ class MainWindowController(ExtendedController):
         view.right_bar_window.initialize_title('STATE EDITOR')
         view.console_bar_window.initialize_title('CONSOLE')
 
+    @staticmethod
+    def configure_event(widget, event, name):
+        global_runtime_config.store_widget_properties(widget, name)
+
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
 
@@ -280,6 +284,11 @@ class MainWindowController(ExtendedController):
         if gui_config.get_config_value('AUTO_BACKUP_ENABLED') and gui_config.get_config_value('AUTO_RECOVERY_CHECK'):
             import rafcon.gui.models.auto_backup as auto_backup
             auto_backup.check_for_crashed_rafcon_instances()
+
+        view.get_top_widget().connect("configure-event", self.configure_event, "MAIN_WINDOW")
+        view.left_bar_window.get_top_widget().connect("configure-event", self.configure_event, "LEFT_BAR_WINDOW")
+        view.right_bar_window.get_top_widget().connect("configure-event", self.configure_event, "RIGHT_BAR_WINDOW")
+        view.console_bar_window.get_top_widget().connect("configure-event", self.configure_event, "CONSOLE_BAR_WINDOW")
 
         plugins.run_hook("main_window_setup", self)
 

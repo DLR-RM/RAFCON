@@ -35,7 +35,12 @@ class RuntimeConfig(ObservableConfig):
         :param widget: The widget, for which the position (and possibly the size) will be stored.
         :param title: The title of the widget, which constitutes a part of its key in the configuration file.
         """
+
         if isinstance(widget, gtk.Window):
+            maximized = bool(widget.maximize_initially)
+            self.set_config_value('{0}_MAXIMIZED'.format(title), maximized)
+            if maximized:
+                return
             size = widget.get_size()
             self.set_config_value('{0}_SIZE'.format(title), size)
         position = widget.get_position()
