@@ -14,7 +14,6 @@ import gtk
 import glib
 
 from rafcon.core import interface
-from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.hierarchy_state import HierarchyState
@@ -34,6 +33,7 @@ from rafcon.gui import gui_helper
 from rafcon.gui import singleton as mvc_singleton
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.views.utils.about_dialog import MyAboutDialog
+from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 from rafcon.gui.controllers.config_window import ConfigWindowController
 from rafcon.gui.views.config_window import ConfigWindowView
@@ -59,6 +59,7 @@ class MenuBarController(ExtendedController):
     """
 
     def __init__(self, state_machine_manager_model, view, shortcut_manager, sm_execution_engine):
+        assert isinstance(view, MainWindowView)
         ExtendedController.__init__(self, state_machine_manager_model, view.menu_bar)
         self.state_machines_editor_ctrl = mvc_singleton.main_window_controller.\
             get_controller('state_machines_editor_ctrl')
@@ -167,9 +168,11 @@ class MenuBarController(ExtendedController):
 
     def on_toggle_full_screen_mode(self, *args):
         if self.view["full_screen"].get_active():
+            self.view["full_screen"].toggle()
             self.view["full_screen"].set_active(False)  # because toggle is not always working
         else:
             self.view["full_screen"].toggle()  # because set active is not always working
+            self.view["full_screen"].set_active(True)
 
     def on_full_screen_mode_toggled(self, *args):
         if self.full_screen_flag == self.view["full_screen"].active:
@@ -278,7 +281,7 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('data_flow_mode', self.data_flow_mode_toggled_shortcut)
         self.add_callback_to_shortcut_manager('show_aborted_preempted', self.show_aborted_preempted)
 
-        self.add_callback_to_shortcut_manager('full_screen', self.on_toggle_full_screen_mode)
+        self.add_callback_to_shortcut_manager('fullscreen', self.on_toggle_full_screen_mode)
 
     def call_action_callback(self, callback_name, *args):
         """Wrapper for action callbacks
