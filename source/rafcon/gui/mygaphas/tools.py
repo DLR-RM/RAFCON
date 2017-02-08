@@ -79,8 +79,6 @@ class MoveItemTool(ItemTool):
                     yield InMotion(item, view)
 
     def on_button_press(self, event):
-        # print "on_press_button: ", self.__class__.__name__
-
         if event.button not in self._buttons:
             return False  # Only handle events for registered buttons (left mouse clicks)
 
@@ -108,8 +106,6 @@ class MoveItemTool(ItemTool):
         return True
 
     def on_button_release(self, event):
-        # print "on_release_button: ", self.__class__.__name__
-
         position_changed = False
         for inmotion in self._movable_items:
             inmotion.move((event.x, event.y))
@@ -117,14 +113,21 @@ class MoveItemTool(ItemTool):
                                                         inmotion.item.handles()[NW])
             if isinstance(inmotion.item, StateView):
                 state_m = inmotion.item.model
-                if state_m.meta['gui']['editor_gaphas']['rel_pos'] != rel_pos:
+                if state_m.get_meta_data_editor()['rel_pos'] != rel_pos:
                     position_changed = True
-                    state_m.meta['gui']['editor_gaphas']['rel_pos'] = rel_pos
-                    state_m.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos[0], -rel_pos[1])
+                    state_m.set_meta_data_editor('rel_pos', rel_pos)
             elif isinstance(inmotion.item, NameView):
                 state_m = self.view.canvas.get_parent(inmotion.item).model
-                if state_m.meta['gui']['editor_gaphas']['name']['rel_pos'] != rel_pos:
-                    state_m.meta['gui']['editor_gaphas']['name']['rel_pos'] = rel_pos
+                if state_m.get_meta_data_editor()['name']['rel_pos'] != rel_pos:
+                    state_m.set_meta_data_editor('name.rel_pos', rel_pos)
+                    position_changed = True
+            elif isinstance(inmotion.item, TransitionView):
+                position_changed = True
+                transition_v = inmotion.item
+                current_waypoints = gap_helper.get_relative_positions_of_waypoints(transition_v)
+                old_waypoints = transition_v.model.get_meta_data_editor()['waypoints']
+                if current_waypoints != old_waypoints:
+                    gap_helper.update_meta_data_for_transition_waypoints(self.view.graphical_editor, transition_v, None)
                     position_changed = True
 
         if isinstance(self._item, StateView):
@@ -136,6 +139,10 @@ class MoveItemTool(ItemTool):
             if position_changed:
                 self.view.graphical_editor.emit('meta_data_changed', self.view.focused_item.parent.model,
                                                 "name_position", False)
+
+        if isinstance(self.view.focused_item, TransitionView):
+            if position_changed:
+                self.view.graphical_editor.emit('meta_data_changed', self._item.model, "waypoints", False)
 
         if not position_changed:
             if self._item in self.view.selected_items and event.state & constants.EXTEND_SELECTION_MODIFIER:
@@ -222,7 +229,6 @@ class HoverItemTool(HoverTool):
 
 class MultiSelectionTool(RubberbandTool):
     def on_button_press(self, event):
-        # print "on_button_press: ", self.__class__.__name__
         if event.state & constants.RUBBERBAND_MODIFIER:
             return super(MultiSelectionTool, self).on_button_press(event)
         return False
@@ -240,7 +246,6 @@ class MultiSelectionTool(RubberbandTool):
 
          The selection of elements is prior and never items are selected or deselected at the same time.
          """
-        # print "on_release_press: ", self.__class__.__name__
         self.queue_draw(self.view)
         x0, y0, x1, y1 = self.x0, self.y0, self.x1, self.y1
         # Hold down Ctrl-key to add selection to current selection

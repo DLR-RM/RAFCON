@@ -273,10 +273,9 @@ def update_meta_data_for_transition_waypoints(graphical_editor_view, transition_
     assert isinstance(transition_v, TransitionView)
 
     transition_m = transition_v.model
-    transition_meta_gaphas = transition_m.meta['gui']['editor_gaphas']
     waypoint_list = get_relative_positions_of_waypoints(transition_v)
     if waypoint_list != last_waypoint_list:
-        transition_meta_gaphas['waypoints'] = waypoint_list
+        transition_m.set_meta_data_editor('waypoints', waypoint_list)
         graphical_editor_view.emit('meta_data_changed', transition_m, "waypoints", True)
 
 
@@ -291,25 +290,24 @@ def update_meta_data_for_port(graphical_editor_view, item, handle):
         ScopedVariablePortView
     for port in item.get_all_ports():
         if not handle or handle is port.handle:
+            rel_pos = (port.handle.pos.x.value, port.handle.pos.y.value)
+            # meta data of incomes are stored in the parental state model
             if isinstance(port, IncomeView):
-                port_m = item.model
+                cur_rel_pos = item.model.get_meta_data_editor()['income']['rel_pos']
+                if rel_pos != cur_rel_pos:
+                    item.model.set_meta_data_editor('income.rel_pos', rel_pos)
+                    if handle:
+                        graphical_editor_view.emit('meta_data_changed', item.model, "income position", True)
+
             elif isinstance(port, (OutcomeView, InputPortView, OutputPortView, ScopedVariablePortView)):
                 port_m = port.model
+                cur_rel_pos = port_m.get_meta_data_editor()['rel_pos']
+                if rel_pos != cur_rel_pos:
+                    port_m.set_meta_data_editor('rel_pos', rel_pos)
+                    if handle:
+                        graphical_editor_view.emit('meta_data_changed', port_m, "position", True)
             else:
                 continue
-
-            port_meta = port_m.meta['gui']['editor_gaphas']
-            if isinstance(port, IncomeView):
-                port_meta = port_meta['income']
-
-            rel_pos = (port.handle.pos.x.value, port.handle.pos.y.value)
-            if rel_pos != port_meta['rel_pos']:
-                port_meta['rel_pos'] = rel_pos
-                if handle:
-                    if isinstance(port, IncomeView):
-                        graphical_editor_view.emit('meta_data_changed', port_m, "income position", True)
-                    else:
-                        graphical_editor_view.emit('meta_data_changed', port_m, "position", True)
 
             if handle:  # If we were supposed to update the meta data of a specific port, we can stop here
                 break
@@ -327,9 +325,8 @@ def update_meta_data_for_name_view(graphical_editor_view, name_v, publish=True):
     rel_pos = calc_rel_pos_to_parent(graphical_editor_view.editor.canvas, name_v, name_v.handles()[NW])
 
     state_v = graphical_editor_view.editor.canvas.get_parent(name_v)
-    meta_gaphas = state_v.model.meta['gui']['editor_gaphas']['name']
-    meta_gaphas['size'] = (name_v.width, name_v.height)
-    meta_gaphas['rel_pos'] = rel_pos
+    state_v.model.set_meta_data_editor('name.size', (name_v.width, name_v.height))
+    state_v.model.set_meta_data_editor('name.rel_pos', rel_pos)
 
     if publish:
         graphical_editor_view.emit('meta_data_changed', state_v.model, "name_size", False)
@@ -357,12 +354,8 @@ def update_meta_data_for_state_view(graphical_editor_view, state_v, affects_chil
 
     rel_pos = calc_rel_pos_to_parent(graphical_editor_view.editor.canvas, state_v, state_v.handles()[NW])
 
-    meta_gaphas = state_v.model.meta['gui']['editor_gaphas']
-    meta_opengl = state_v.model.meta['gui']['editor_opengl']
-    meta_gaphas['size'] = (state_v.width, state_v.height)
-    meta_gaphas['rel_pos'] = rel_pos
-    meta_opengl['size'] = (state_v.width, state_v.height)
-    meta_opengl['rel_pos'] = (rel_pos[0], -rel_pos[1])
+    state_v.model.set_meta_data_editor('size', (state_v.width, state_v.height))
+    state_v.model.set_meta_data_editor('rel_pos', rel_pos)
 
     if publish:
         graphical_editor_view.emit('meta_data_changed', state_v.model, "size", affects_children)

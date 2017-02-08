@@ -54,7 +54,7 @@ def trigger_gvm_signals(main_window_controller):
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 def test_gui(caplog):
-    testing_utils.initialize_rafcon(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+    testing_utils.initialize_environment(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
 
     testing_utils.remove_all_gvm_variables()
 
@@ -72,7 +72,7 @@ def test_gui(caplog):
 
     # expected_errors=1 because global_variable_is_editable throws an error
     testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors = 1)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 if __name__ == '__main__':

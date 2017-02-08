@@ -1171,7 +1171,7 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     # if with_gui:
     #     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED', False, 'HISTORY_ENABLED', True})
     # else:
-    #     testing_utils.initialize_rafcon(gui_config={'AUTO_BACKUP_ENABLED', False, 'HISTORY_ENABLED', True})
+    #     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED', False, 'HISTORY_ENABLED', True})
     #
     # [logger, sm_m, state_dict] = create_models()
     # if testing_utils.sm_manager_model is None:
@@ -1184,7 +1184,7 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     # testing_utils.reload_config()
     # testing_utils.assert_logger_warnings_and_errors(caplog)
 
-    testing_utils.initialize_rafcon()
+    testing_utils.initialize_environment()
     print "create model"
     [logger, sm_m, state_dict] = create_models()
 
@@ -1205,7 +1205,7 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
 
     thread.join()
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 # TODO introduce test_add_remove_history with_gui=True to have a more reliable unit-test
 
@@ -1215,7 +1215,7 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     # if with_gui:
     #     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
     # else:
-    #     testing_utils.initialize_rafcon(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
+    #     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
     #
     # [logger, sm_m, state_dict] = create_models()
     #
@@ -1232,10 +1232,10 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     #     menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
     #     call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
     #
-    # testing_utils.terminate_rafcon()
+    # testing_utils.shutdown_environment()
     # testing_utils.assert_logger_warnings_and_errors(caplog)
 
-    testing_utils.initialize_rafcon(gui_config={'AUTO_BACKUP_ENABLED': False})
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False})
     [logger, sm_m, state_dict] = create_models()
 
     # load the meta data for the state machine
@@ -1261,7 +1261,7 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
                                                     None, sm_m, state_dict, with_gui, logger)
 
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 @log.log_exceptions(None, gtk_quit=True)

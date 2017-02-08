@@ -112,8 +112,8 @@ def call_gui_callback(callback, *args):
     condition.release()
 
 
-def initialize_rafcon(core_config=None, gui_config=None, runtime_config=None, libraries=None):
-    """ Initialize global configs and libraries
+def initialize_environment(core_config=None, gui_config=None, runtime_config=None, libraries=None):
+    """ Initialize global configs, libraries and aquire multi threading lock
 
      The function accepts tuples as arguments to load a config with (config-file, path) as tuple or a
      dictionary that sets partly or all parameters of the config dictionary.
@@ -181,7 +181,19 @@ def initialize_rafcon(core_config=None, gui_config=None, runtime_config=None, li
     signal.signal(signal.SIGINT, signal_handler)
 
 
-def terminate_rafcon(config=True, gui_config=True):
+def shutdown_environment(config=True, gui_config=True):
+    """ Reset Config object classes of singletons and release multi threading lock
+
+     The function reloads the default config files optional and release the multi threading lock. This function is
+     intended to be the counterpart of the initialize_environment function so that the common environment test with
+     can be shutdown/recovered as easy as it was initialized before.
+     Therefore (recovering/reload default configs) it helps to avoid site effects with not properly initialized test
+     runs, too.
+
+    :param bool config: Flag to reload core config from default path.
+    :param bool gui_config: Flag to reload gui config from default path.
+    :return:
+    """
     reload_config(config, gui_config)
     test_multithreading_lock.release()
 
@@ -209,7 +221,7 @@ def run_gui_thread():
 
 def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=None, timeout=5):
     global gui_ready, gui_thread
-    initialize_rafcon(core_config, gui_config, runtime_config, libraries)
+    initialize_environment(core_config, gui_config, runtime_config, libraries)
     gui_ready = Event()
     gui_thread = Thread(target=run_gui_thread)
     gui_thread.start()

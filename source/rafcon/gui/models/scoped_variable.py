@@ -54,3 +54,18 @@ class ScopedVariableModel(StateElementModel):
     @ModelMT.observe("scoped_variable", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(ScopedVariableModel, self).model_changed(model, prop_name, info)
+
+    def _meta_data_editor_gaphas2opengl(self, vividict):
+        if 'rel_pos' in vividict:
+            rel_pos = vividict['rel_pos']
+            del vividict['rel_pos']
+            vividict['inner_rel_pos'] = (rel_pos[0], -rel_pos[1])
+        return vividict
+
+    def _meta_data_editor_opengl2gaphas(self, vividict):
+        rel_pos = vividict['inner_rel_pos']
+        if isinstance(rel_pos, tuple):
+            vividict['rel_pos'] = (rel_pos[0], 0)
+        else:
+            del vividict['inner_rel_pos']
+        return vividict

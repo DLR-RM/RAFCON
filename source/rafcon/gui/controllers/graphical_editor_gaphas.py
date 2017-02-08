@@ -143,7 +143,7 @@ class GraphicalEditorController(ExtendedController):
         :param time:
         """
         item = self.canvas.get_view_for_model(self.model.selection.get_selected_state().states[data.get_text()])
-        pos_start = item.model.meta['gui']['editor_gaphas']['rel_pos']
+        pos_start = item.model.get_meta_data_editor()['rel_pos']
         motion = InMotion(item, self.view.editor)
         motion.start_move(self.view.editor.get_matrix_i2v(item).transform_point(pos_start[0], pos_start[1]))
         motion.move((x, y))
@@ -229,10 +229,9 @@ class GraphicalEditorController(ExtendedController):
 
             for new_state_m_copy, orig_state_m_copy in insert_dict['states']:
 
-
                 # Adjust size of new state
-                old_size = orig_state_m_copy.meta['gui']['editor_gaphas']['size']
-                target_size = target_state_m.meta['gui']['editor_gaphas']['size']
+                old_size = orig_state_m_copy.get_meta_data_editor()['size']
+                target_size = target_state_m.get_meta_data_editor()['size']
 
                 # Use the old size, if it is smaller than the target state
                 if old_size[0]*2 < target_size[0] and old_size[1]*2 < target_size[1]:
@@ -249,7 +248,7 @@ class GraphicalEditorController(ExtendedController):
                 new_state_v = self.canvas.get_view_for_model(new_state_m_copy)
                 new_state_v.width = new_size[0]
                 new_state_v.height = new_size[1]
-                new_state_m_copy.meta['gui']['editor_gaphas']['size'] = (new_state_v.width, new_state_v.height)
+                new_state_m_copy.set_meta_data_editor('size', (new_state_v.width, new_state_v.height))
 
                 new_state_v.resize_all_children(old_size, True)
                 self._meta_data_changed(new_state_v, new_state_m_copy, 'all', True)
@@ -779,8 +778,8 @@ class GraphicalEditorController(ExtendedController):
             hash_after = self.model.mutable_hash().digest()
             if hash_before != hash_after:
                 self._meta_data_changed(None, self.root_state_m, 'append_initial_change', True)
-                logger.info("Opening the state machine caused some meta data to be generated, which will be stored if the"
-                            "state machine is saved.")
+                logger.info("Opening the state machine caused some meta data to be generated, which will be stored "
+                            " when the state machine is being saved.")
 
     @lock_state_machine
     def setup_state(self, state_m, parent=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
@@ -796,26 +795,19 @@ class GraphicalEditorController(ExtendedController):
         :param float depth: The hierarchy level of the state
         """
         assert isinstance(state_m, AbstractStateModel)
-        state_meta_gaphas = state_m.meta['gui']['editor_gaphas']
-        state_meta_opengl = state_m.meta['gui']['editor_opengl']
+        state_meta = state_m.get_meta_data_editor()
 
         # Use default values if no size information is stored
-        if isinstance(state_meta_opengl['size'], tuple) and not isinstance(state_meta_gaphas['size'], tuple):
-            state_meta_gaphas['size'] = state_meta_opengl['size']
-            self.model.state_machine.marked_dirty = True
-        if not isinstance(state_meta_gaphas['size'], tuple):
-            state_meta_gaphas['size'] = size
+        if not isinstance(state_meta['size'], tuple):
+            state_meta = state_m.set_meta_data_editor('size', size)
 
-        size = state_meta_gaphas['size']
+        size = state_meta['size']
 
-        if isinstance(state_meta_opengl['rel_pos'], tuple) and not isinstance(state_meta_gaphas['rel_pos'], tuple):
-            rel_pos = state_meta_opengl['rel_pos']
-            state_meta_gaphas['rel_pos'] = (rel_pos[0], -rel_pos[1])
-            self.model.state_machine.marked_dirty = True
-        elif not isinstance(state_meta_gaphas['rel_pos'], tuple):
-            state_meta_gaphas['rel_pos'] = rel_pos
+        # Use default values if no position information is stored
+        if not isinstance(state_meta['rel_pos'], tuple):
+            state_meta = state_m.set_meta_data_editor('rel_pos', rel_pos)
 
-        rel_pos = state_meta_gaphas['rel_pos']
+        rel_pos = state_meta['rel_pos']
 
         state_v = StateView(state_m, size, hierarchy_level)
 
@@ -892,22 +884,11 @@ class GraphicalEditorController(ExtendedController):
     @lock_state_machine
     def add_transition(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
 
-        transition_meta_gaphas = transition_m.meta['gui']['editor_gaphas']
-        transition_meta_opengl = transition_m.meta['gui']['editor_opengl']
+        transition_meta = transition_m.get_meta_data_editor()
 
         try:
             if use_waypoints:
-                if (isinstance(transition_meta_opengl['waypoints'], list) and
-                        isinstance(transition_meta_gaphas['waypoints'], dict)):
-                    old_waypoint_list = transition_meta_opengl['waypoints']
-                    new_waypoint_list = []
-                    for wp in old_waypoint_list:
-                        wp = (wp[0], -wp[1])
-                        new_waypoint_list.append(wp)
-                    transition_meta_gaphas['waypoints'] = new_waypoint_list
-                    self.model.state_machine.marked_dirty = True
-
-                waypoint_list = transition_meta_gaphas['waypoints']
+                waypoint_list = transition_meta['waypoints']
 
                 for waypoint in waypoint_list:
                     transition_v.add_waypoint(waypoint)

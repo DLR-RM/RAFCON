@@ -129,7 +129,7 @@ def test_drag_and_drop_test(caplog):
     # testing_utils.reload_config()
     # testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
 
-    testing_utils.initialize_rafcon()
+    testing_utils.initialize_environment()
 
     create_models()
 
@@ -161,7 +161,7 @@ def test_drag_and_drop_test(caplog):
         logger.debug("Joined test triggering thread!")
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 if __name__ == '__main__':

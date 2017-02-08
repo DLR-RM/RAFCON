@@ -14,7 +14,6 @@ import gtk
 import glib
 
 from rafcon.core import interface
-from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.hierarchy_state import HierarchyState
@@ -34,6 +33,7 @@ from rafcon.gui import gui_helper
 from rafcon.gui import singleton as mvc_singleton
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.views.utils.about_dialog import MyAboutDialog
+from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 from rafcon.gui.controllers.config_window import ConfigWindowController
 from rafcon.gui.views.config_window import ConfigWindowView
@@ -59,6 +59,7 @@ class MenuBarController(ExtendedController):
     """
 
     def __init__(self, state_machine_manager_model, view, shortcut_manager, sm_execution_engine):
+        assert isinstance(view, MainWindowView)
         ExtendedController.__init__(self, state_machine_manager_model, view.menu_bar)
         self.state_machines_editor_ctrl = mvc_singleton.main_window_controller.\
             get_controller('state_machines_editor_ctrl')
@@ -167,9 +168,11 @@ class MenuBarController(ExtendedController):
 
     def on_toggle_full_screen_mode(self, *args):
         if self.view["full_screen"].get_active():
+            self.view["full_screen"].toggle()
             self.view["full_screen"].set_active(False)  # because toggle is not always working
         else:
             self.view["full_screen"].toggle()  # because set active is not always working
+            self.view["full_screen"].set_active(True)
 
     def on_full_screen_mode_toggled(self, *args):
         if self.full_screen_flag == self.view["full_screen"].active:
@@ -200,7 +203,6 @@ class MenuBarController(ExtendedController):
         position = self.main_window_view.get_top_widget().get_position()
         self.full_screen_window.show()
         self.full_screen_window.move(position[0], position[1])
-        global_runtime_config.store_widget_properties(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
         self.full_screen_window.set_decorated(False)
         self.full_screen_window.fullscreen()
         self.main_window_view.get_top_widget().iconify()
@@ -278,7 +280,7 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('data_flow_mode', self.data_flow_mode_toggled_shortcut)
         self.add_callback_to_shortcut_manager('show_aborted_preempted', self.show_aborted_preempted)
 
-        self.add_callback_to_shortcut_manager('full_screen', self.on_toggle_full_screen_mode)
+        self.add_callback_to_shortcut_manager('fullscreen', self.on_toggle_full_screen_mode)
 
     def call_action_callback(self, callback_name, *args):
         """Wrapper for action callbacks
@@ -373,7 +375,7 @@ class MenuBarController(ExtendedController):
         all_tabs.extend(self.states_editor_ctrl.closed_tabs.values())
         dirty_source_editor_ctrls = [tab_dict['controller'].get_controller('source_ctrl') for tab_dict in all_tabs if
                                      tab_dict['source_code_view_is_dirty'] is True and
-                                     tab_dict['state_m'].state.get_sm_for_state().state_machine_id ==
+                                     tab_dict['state_m'].state.get_state_machine().state_machine_id ==
                                      state_machine_m.state_machine.state_machine_id]
 
         for dirty_source_editor_ctrl in dirty_source_editor_ctrls:
@@ -744,16 +746,10 @@ class MenuBarController(ExtendedController):
 
         logger.debug("Saving runtime config")
 
-        global_runtime_config.store_widget_properties(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
         global_runtime_config.store_widget_properties(self.main_window_view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['right_h_pane'], 'RIGHT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['central_v_pane'], 'CONSOLE_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['left_bar'], 'LEFT_BAR_INNER_PANE')
-
-        for sidebar_name in ['LEFT_BAR_WINDOW', 'RIGHT_BAR_WINDOW', 'CONSOLE_BAR_WINDOW']:
-            sidebar_widget = getattr(self.main_window_view, sidebar_name.lower()).get_top_widget()
-            if sidebar_widget.get_property('visible'):
-                global_runtime_config.store_widget_properties(sidebar_widget, sidebar_name)
 
         global_runtime_config.save_configuration()
 

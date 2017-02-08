@@ -37,6 +37,8 @@ class ObservableConfig(DefaultConfig, Observable):
     @Observable.observed
     def set_config_value(self, key, value):
         super(ObservableConfig, self).set_config_value(key, value)
+        if key not in self.keys:
+            self.keys.add(key)
 
     def as_dict(self):
         """Returns the configuration as dict

@@ -231,7 +231,7 @@ class ListViewController(ExtendedController):
         :rtype: rafcon.gui.selection.Selection
         """
         # print type(self).__name__, "get state machine selection", self.model
-        sm_selection = self.model.get_sm_m_for_state_m().selection if self.model.get_sm_m_for_state_m() else None
+        sm_selection = self.model.get_state_machine_m().selection if self.model.get_state_machine_m() else None
         return sm_selection, sm_selection.get_selection_of_core_element_type(self.CORE_ELEMENT_CLASS) if sm_selection else []
 
     def get_selections(self):

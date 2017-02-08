@@ -561,7 +561,7 @@ class GraphicalEditorController(ExtendedController):
                     self.changes_affect_children = True
                     for model in self.model.selection:
                         offset = None
-                        model_meta = model.meta['gui']['editor_opengl']
+                        model_meta = model.get_meta_data_editor(for_gaphas=False)
                         model_temp = model.temp['gui']['editor']
                         if isinstance(model, AbstractStateModel):
                             self.changed_models.append(model)
@@ -590,7 +590,7 @@ class GraphicalEditorController(ExtendedController):
                             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset[i])
                             self._move_data_port(model, new_pos, redraw=False, publish_changes=False)
                         elif isinstance(model, (DataFlowModel, TransitionModel)):
-                            waypoints = model.meta['gui']['editor_opengl']['waypoints']
+                            waypoints = model.get_meta_data_editor(for_gaphas=False)['waypoints']
                             if waypoints:
                                 for waypoint_id, waypoint_pos in enumerate(waypoints):
                                     new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset[i][waypoint_id])
@@ -611,7 +611,7 @@ class GraphicalEditorController(ExtendedController):
                     offset = self._get_position_relative_to_state(selected_state_m, self.mouse_move_start_coords)
                     self.drag_origin_offset = offset
                     selected_state_m.temp['gui']['editor']['original_rel_pos'] = \
-                        copy(selected_state_m.meta['gui']['editor_opengl']['rel_pos'])
+                        copy(selected_state_m.get_meta_data_editor(for_gaphas=False)['rel_pos'])
                 new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
                 self._move_state(selected_state_m, new_pos, publish_changes=False)
 
@@ -626,7 +626,7 @@ class GraphicalEditorController(ExtendedController):
                     self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords,
                                                            selected_port_m.temp['gui']['editor']['inner_pos'])
                     selected_port_m.temp['gui']['editor']['original_inner_rel_pos'] = \
-                        copy(selected_port_m.meta['gui']['editor_opengl']['inner_rel_pos'])
+                        copy(selected_port_m.get_meta_data_editor(for_gaphas=False)['inner_rel_pos'])
                 new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
                 self._move_data_port(selected_port_m, new_pos, publish_changes=False)
 
@@ -652,9 +652,9 @@ class GraphicalEditorController(ExtendedController):
                 self._last_meta_data_changed = "size"
                 self.changed_models.append(state_m)
                 lower_right_corner = (state_m.temp['gui']['editor']['pos'][0] +
-                                      state_m.meta['gui']['editor_opengl']['size'][0],
+                                      state_m.get_meta_data_editor(for_gaphas=False)['size'][0],
                                       state_m.temp['gui']['editor']['pos'][1] -
-                                      state_m.meta['gui']['editor_opengl']['size'][1])
+                                      state_m.get_meta_data_editor(for_gaphas=False)['size'][1])
                 self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords, lower_right_corner)
             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
             modifier_keys = event.state
@@ -719,7 +719,7 @@ class GraphicalEditorController(ExtendedController):
     def _limit_position_to_state(state_m, pos, child_size=(0, 0)):
         pos_x, pos_y = pos
         if state_m is not None:
-            state_meta = state_m.meta['gui']['editor_opengl']
+            state_meta = state_m.get_meta_data_editor(for_gaphas=False)
             state_temp = state_m.temp['gui']['editor']
             if pos_x < state_temp['pos'][0]:
                 pos_x = state_temp['pos'][0]
@@ -746,9 +746,9 @@ class GraphicalEditorController(ExtendedController):
         if isinstance(selected_model, (TransitionModel, DataFlowModel)):
             connection_m = selected_model
             parent_state_m = connection_m.parent
-            close_threshold = min(parent_state_m.meta['gui']['editor_opengl']['size']) / 50.
+            close_threshold = min(parent_state_m.get_meta_data_editor(for_gaphas=False)['size']) / 50.
             # Check distance between all waypoints of the selected transition/data flows and the given coordinates
-            for i, waypoint in enumerate(connection_m.meta['gui']['editor_opengl']['waypoints']):
+            for i, waypoint in enumerate(connection_m.get_meta_data_editor(for_gaphas=False)['waypoints']):
                 waypoint_pos = self._get_absolute_position(parent_state_m, waypoint)
                 # Only if coordinates are stored for the waypoints (always should be the case)
                 if dist(waypoint_pos, coords) < close_threshold:
@@ -820,7 +820,7 @@ class GraphicalEditorController(ExtendedController):
         :param tuple coords: Coordinates to check for the resizer
         """
         if isinstance(selected_model, AbstractStateModel):
-            state_meta = selected_model.meta['gui']['editor_opengl']
+            state_meta = selected_model.get_meta_data_editor(for_gaphas=False)
             state_temp = selected_model.temp['gui']['editor']
             # Calculate corner points of resizer
             p1 = (state_temp['pos'][0] + state_meta['size'][0], state_temp['pos'][1] - state_meta['size'][1])
@@ -896,12 +896,14 @@ class GraphicalEditorController(ExtendedController):
         :return: True, if a waypoint was removed, False else
         :rtype: bool
         """
-        close_threshold = min(connection_m.parent.meta['gui']['editor_opengl']['size']) / 70.
+        close_threshold = min(connection_m.parent.get_meta_data_editor(for_gaphas=False)['size']) / 70.
         # Check distance between all waypoints of the connection to the given coordinates
-        for waypoint in connection_m.meta['gui']['editor_opengl']['waypoints']:
+        for waypoint in connection_m.get_meta_data_editor(for_gaphas=False)['waypoints']:
             waypoint_pos = self._get_absolute_position(connection_m.parent, waypoint)
             if dist(waypoint_pos, coords) < close_threshold:
-                connection_m.meta['gui']['editor_opengl']['waypoints'].remove(waypoint)
+                waypoints = copy(connection_m.get_meta_data_editor(for_gaphas=False)['waypoints'])
+                waypoints.remove(waypoint)
+                connection_m.set_meta_data_editor('waypoints', waypoints, from_gaphas=False)
                 self._publish_changes(connection_m, "waypoint_remove", False)
                 self._redraw()
                 return True
@@ -929,12 +931,12 @@ class GraphicalEditorController(ExtendedController):
         """
         connection_temp = connection_m.temp['gui']['editor']
         parent_state_m = connection_m.parent
-        # The waypoints should exist as dictionary. If not (for any reason), we have to convert it to one
-        if isinstance(connection_m.meta['gui']['editor_opengl']['waypoints'], dict):
+        # The waypoints should exist as list. If not (for any reason), we have to convert it to one
+        if isinstance(connection_m.get_meta_data_editor(for_gaphas=False)['waypoints'], dict):
             # logger.warn("Connection waypoints was of type dict, expected list")
             # connection_m.meta['gui']['editor']['waypoints'] = connection_m.meta['waypoints'].items()
-            connection_m.meta['gui']['editor_opengl']['waypoints'] = []
-        waypoint_list = connection_m.meta['gui']['editor_opengl']['waypoints']
+            connection_m.set_meta_data_editor('waypoints', [], from_gaphas=False)
+        waypoint_list = copy(connection_m.get_meta_data_editor(for_gaphas=False)['waypoints'])
 
         # Create a list of all connection points, consisting of start, waypoints and end
         points = [self._get_position_relative_to_state(parent_state_m, connection_temp['from_pos'])]
@@ -950,8 +952,10 @@ class GraphicalEditorController(ExtendedController):
         for i in range(len(points) - 1):
             if point_on_line(rel_coords, points[i], points[i + 1]):
                 waypoint_list.insert(i, rel_coords)
+                break
         logger.debug('Connection waypoint added at rel pos {0:.1f} | {1:.1f} (abs pos {0:.1f} | {1:.1f})'.format(
                 rel_coords[0], rel_coords[1], coords[0], coords[1]))
+        connection_m.set_meta_data_editor('waypoints', waypoint_list, from_gaphas=False)
 
         self._publish_changes(connection_m, "waypoint_add", False)
         self._redraw()
@@ -993,7 +997,7 @@ class GraphicalEditorController(ExtendedController):
                                                                           to_outcome_id)
                 if self.temporary_waypoints:
                     transition_m = responsible_parent_m.get_transition_m(transition_id)
-                    transition_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
+                    transition_m.set_meta_data_editor('waypoints', self.temporary_waypoints, from_gaphas=False)
                     self._publish_changes(model=transition_m, change='append_to_last_change')
         except (AttributeError, ValueError) as e:
             logger.warn("Transition couldn't be added: {0}".format(e))
@@ -1034,7 +1038,7 @@ class GraphicalEditorController(ExtendedController):
                                                                       target_state_id, target_port_id)
                 if self.temporary_waypoints:
                     data_flow_m = responsible_parent.get_data_flow_m(data_flow_id)
-                    data_flow_m.meta['gui']['editor_opengl']['waypoints'] = self.temporary_waypoints
+                    data_flow_m.set_meta_data_editor('waypoints', self.temporary_waypoints, from_gaphas=False)
                     self._publish_changes(model=data_flow_m, change='append_to_last_change')
             except AttributeError as e:
                 logger.warn("Data flow couldn't be added: {0}".format(e))
@@ -1058,7 +1062,7 @@ class GraphicalEditorController(ExtendedController):
         if state_m.state.is_root_state:
             return
 
-        cur_size = state_m.meta['gui']['editor_opengl']['size']
+        cur_size = state_m.get_meta_data_editor(for_gaphas=False)['size']
 
         # Keep the state within its container state
         new_pos = self._limit_position_to_state(state_m.parent, new_pos, cur_size)
@@ -1066,8 +1070,7 @@ class GraphicalEditorController(ExtendedController):
         parent_pos = state_m.parent.temp['gui']['editor']['pos']
         new_rel_pos = subtract_pos(new_pos, parent_pos)
 
-        state_m.meta['gui']['editor_opengl']['rel_pos'] = new_rel_pos
-        state_m.meta['gui']['editor_gaphas']['rel_pos'] = (new_rel_pos[0], -new_rel_pos[1])
+        state_m.set_meta_data_editor('rel_pos', new_rel_pos, from_gaphas=False)
 
         if publish_changes:
             if combined_action:
@@ -1104,7 +1107,7 @@ class GraphicalEditorController(ExtendedController):
         parent_pos = port_m.parent.temp['gui']['editor']['pos']
         new_rel_pos = subtract_pos(new_pos, parent_pos)
 
-        port_m.meta['gui']['editor_opengl']['inner_rel_pos'] = new_rel_pos
+        port_m.set_meta_data_editor('inner_rel_pos', new_rel_pos, from_gaphas=False)
 
         if publish_changes:
             self._publish_changes(port_m, "position", affects_children=False)
@@ -1141,12 +1144,12 @@ class GraphicalEditorController(ExtendedController):
             if state_m.state.is_root_state:
                 return
             cur_pos = state_m.temp['gui']['editor']['pos']
-            new_pos = move_pos(cur_pos, state_m.parent.meta['gui']['editor_opengl']['size'])
+            new_pos = move_pos(cur_pos, state_m.parent.get_meta_data_editor(for_gaphas=False)['size'])
             self._move_state(state_m, new_pos, redraw, publish_changes)
 
         def move_port(port_m, redraw=True, publish_changes=True):
             cur_pos = port_m.temp['gui']['editor']['inner_pos']
-            new_pos = move_pos(cur_pos, port_m.parent.meta['gui']['editor_opengl']['size'])
+            new_pos = move_pos(cur_pos, port_m.get_meta_data_editor(for_gaphas=False)['size'])
             self._move_data_port(port_m, new_pos, redraw, publish_changes)
 
         event = (key, modifier)
@@ -1187,7 +1190,7 @@ class GraphicalEditorController(ExtendedController):
         :param bool redraw: Whether to redraw after updating the position
         :param bool publish_changes: Whether to publish the changes of the meta data
         """
-        waypoints = connection_m.meta['gui']['editor_opengl']['waypoints']
+        waypoints = copy(connection_m.get_meta_data_editor(for_gaphas=False)['waypoints'])
         connection_temp = connection_m.temp['gui']['editor']
         parent_state_m = connection_m.parent
         new_pos = self._limit_position_to_state(parent_state_m, new_pos)
@@ -1243,6 +1246,7 @@ class GraphicalEditorController(ExtendedController):
             new_rel_pos = calculate_snap_point(prev_point, new_rel_pos, next_point)
 
         waypoints[waypoint_id] = new_rel_pos
+        connection_m.set_meta_data_editor('waypoints', waypoints, from_gaphas=False)
 
         if publish_changes:
             self._publish_changes(connection_m, "waypoint_position", affects_children=False)
@@ -1266,7 +1270,7 @@ class GraphicalEditorController(ExtendedController):
         :param redraw: Whether to call redraw() at the end or not
         """
         state_temp = state_m.temp['gui']['editor']
-        state_meta = state_m.meta['gui']['editor_opengl']
+        state_meta = copy(state_m.get_meta_data_editor(for_gaphas=False))
 
         new_width = new_corner_pos[0] - state_temp['pos'][0]
         new_height = abs(new_corner_pos[1] - state_temp['pos'][1])
@@ -1298,12 +1302,12 @@ class GraphicalEditorController(ExtendedController):
                     max_bottom_edge = child_bottom_edge if max_bottom_edge > child_bottom_edge else max_bottom_edge
             # Check position of all waypoints of all transitions
             for transition_m in state_m.transitions:
-                for waypoint in transition_m.meta['gui']['editor_opengl']['waypoints']:
+                for waypoint in transition_m.get_meta_data_editor(for_gaphas=False)['waypoints']:
                     min_right_edge = waypoint[0] if min_right_edge < waypoint[0] else min_right_edge
                     max_bottom_edge = waypoint[1] if max_bottom_edge > waypoint[1] else max_bottom_edge
             # Check position of all waypoints of all data flows
             for data_flow_m in state_m.data_flows:
-                for waypoint in data_flow_m.meta['gui']['editor_opengl']['waypoints']:
+                for waypoint in data_flow_m.get_meta_data_editor(for_gaphas=False)['waypoints']:
                     min_right_edge = waypoint[0] if min_right_edge < waypoint[0] else min_right_edge
                     max_bottom_edge = waypoint[1] if max_bottom_edge > waypoint[1] else max_bottom_edge
             # Check lower right corner of all ports
@@ -1323,9 +1327,9 @@ class GraphicalEditorController(ExtendedController):
             else:
                 parent_state_m = state_m.parent
             max_right_edge = parent_state_m.temp['gui']['editor']['pos'][0] + \
-                             parent_state_m.meta['gui']['editor_opengl']['size'][0]
+                             parent_state_m.get_meta_data_editor(for_gaphas=False)['size'][0]
             min_bottom_edge = parent_state_m.temp['gui']['editor']['pos'][1] - \
-                              parent_state_m.meta['gui']['editor_opengl']['size'][1]
+                              parent_state_m.get_meta_data_editor(for_gaphas=False)['size'][1]
 
         # Desired new edges
         desired_right_edge = state_temp['pos'][0] + new_width
@@ -1346,7 +1350,7 @@ class GraphicalEditorController(ExtendedController):
             elif desired_bottom_edge < min_bottom_edge:  # Surround all children
                 new_height = state_temp['pos'][1] - min_bottom_edge
 
-        state_meta['size'] = (new_width, new_height)
+        state_meta = state_m.set_meta_data_editor('size', (new_width, new_height), from_gaphas=False)
 
         # Resize content if the state was resized and the modifier key is pressed
         if resize_content and (state_meta['size'][0] != old_size[0] or state_meta['size'][1] != old_size[1]):
@@ -1365,7 +1369,7 @@ class GraphicalEditorController(ExtendedController):
 
                 if isinstance(state_m, LibraryStateModel):
                     root_state_m = state_m.state_copy
-                    root_state_m.meta['gui']['editor_opengl']['size'] = copy(new_size)
+                    root_state_m.set_meta_data_editor('size', copy(new_size), from_gaphas=False)
                     if isinstance(root_state_m, ContainerStateModel):
                         resize_children(root_state_m, old_size, new_size)
 
@@ -1373,31 +1377,31 @@ class GraphicalEditorController(ExtendedController):
                     # Resize all transitions
                     for transition_m in state_m.transitions:
                         # By repositioning all waypoints
-                        for i, waypoint in enumerate(transition_m.meta['gui']['editor_opengl']['waypoints']):
+                        for i, waypoint in enumerate(transition_m.get_meta_data_editor(for_gaphas=False)['waypoints']):
                             new_rel_pos = calc_new_rel_pos(waypoint, old_size, new_size)
-                            transition_m.meta['gui']['editor_opengl']['waypoints'][i] = new_rel_pos
+                            transition_m.set_meta_data_editor('waypoints.{}'.format(i), new_rel_pos, from_gaphas=False)
                     # Resize all data flows
                     for data_flow_m in state_m.data_flows:
                         # By repositioning all waypoints
-                        for i, waypoint in enumerate(data_flow_m.meta['gui']['editor_opengl']['waypoints']):
+                        for i, waypoint in enumerate(data_flow_m.get_meta_data_editor(for_gaphas=False)['waypoints']):
                             new_rel_pos = calc_new_rel_pos(waypoint, old_size, new_size)
-                            data_flow_m.meta['gui']['editor_opengl']['waypoints'][i] = new_rel_pos
+                            data_flow_m.set_meta_data_editor('waypoints.{}'.format(i), new_rel_pos, from_gaphas=False)
 
                     for port_m in itertools.chain(state_m.input_data_ports, state_m.output_data_ports,
                                                   state_m.scoped_variables):
-                        old_rel_pos = port_m.meta['gui']['editor_opengl']['inner_rel_pos']
-                        port_m.meta['gui']['editor_opengl']['inner_rel_pos'] = calc_new_rel_pos(old_rel_pos, old_size,
-                                                                                                new_size)
+                        old_rel_pos = port_m.get_meta_data_editor(for_gaphas=False)['inner_rel_pos']
+                        new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
+                        port_m.set_meta_data_editor('inner_rel_pos', new_rel_pos, from_gaphas=False)
 
                     # Resize all child states
                     for child_state_m in state_m.states.itervalues():
-                        old_rel_pos = child_state_m.meta['gui']['editor_opengl']['rel_pos']
-                        child_state_m.meta['gui']['editor_opengl']['rel_pos'] = calc_new_rel_pos(old_rel_pos, old_size,
-                                                                                                 new_size)
+                        old_rel_pos = child_state_m.get_meta_data_editor(for_gaphas=False)['rel_pos']
+                        new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
+                        child_state_m.set_meta_data_editor('rel_pos', new_rel_pos, from_gaphas=False)
 
-                        old_size = child_state_m.meta['gui']['editor_opengl']['size']
+                        old_size = child_state_m.get_meta_data_editor(for_gaphas=False)['size']
                         new_size = (old_size[0] * width_factor, old_size[1] * height_factor)
-                        child_state_m.meta['gui']['editor_opengl']['size'] = new_size
+                        child_state_m.set_meta_data_editor('size', new_size, from_gaphas=False)
 
                         if isinstance(child_state_m, (ContainerStateModel, LibraryStateModel)):
                             resize_children(child_state_m, old_size, new_size)
@@ -1495,7 +1499,7 @@ class GraphicalEditorController(ExtendedController):
         :param float depth: The hierarchy level of the state
         """
         assert isinstance(state_m, AbstractStateModel)
-        state_meta = state_m.meta['gui']['editor_opengl']
+        state_meta = state_m.get_meta_data_editor(for_gaphas=False)
         state_temp = state_m.temp['gui']['editor']
         is_first_draw_of_state = not isinstance(state_temp['pos'], tuple)
         redraw = False
@@ -1503,19 +1507,19 @@ class GraphicalEditorController(ExtendedController):
         # Use default values if no size information is stored
         if not isinstance(state_meta['size'], tuple):
             if not isinstance(state_m, LibraryStateModel):
-                state_meta['size'] = size
+                state_meta = state_m.set_meta_data_editor('size', size, from_gaphas=False)
             else:
                 # Try to get size from library (will later be resized to fit in state
-                lib_size = state_m.state_copy.meta['gui']['editor_opengl']['size']
+                lib_size = state_m.state_copy.get_meta_data_editor(for_gaphas=False)['size']
                 if isinstance(lib_size, tuple):
-                    parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
+                    parent_size = state_m.parent.get_meta_data_editor(for_gaphas=False)['size']
                     if lib_size[0] >= parent_size[0] or lib_size[1] >= parent_size[1]:
                         target_size = parent_size[0] / 5., parent_size[1] / 5.
                         lib_size = calculate_size(lib_size, target_size)
                         lib_size = lib_size[0], lib_size[1]  # inverted y axis
-                    state_meta['size'] = copy(lib_size)
+                    state_meta = state_m.set_meta_data_editor('size', copy(lib_size), from_gaphas=False)
                 else:
-                    state_meta['size'] = size
+                    state_meta = state_m.set_meta_data_editor('size', size, from_gaphas=False)
 
         size = state_meta['size']
 
@@ -1525,7 +1529,7 @@ class GraphicalEditorController(ExtendedController):
         else:
             # Use default values if no size information is stored
             if not isinstance(state_meta['rel_pos'], tuple):
-                state_m.meta['gui']['editor_opengl']['rel_pos'] = rel_pos
+                state_meta = state_m.set_meta_data_editor('rel_pos', rel_pos, from_gaphas=False)
 
                 state_abs_pos = self._get_absolute_position(state_m.parent, rel_pos)
                 self._move_state(state_m, state_abs_pos, redraw=False, publish_changes=False)
@@ -1634,7 +1638,7 @@ class GraphicalEditorController(ExtendedController):
                 self.draw_data_flows(state_m, depth)
 
             if isinstance(state_temp['template'], bool) and state_temp['template'] is True:
-                parent_size = state_m.parent.meta['gui']['editor_opengl']['size']
+                parent_size = state_m.parent.get_meta_data_editor(for_gaphas=False)['size']
                 new_size = calculate_size(state_meta['size'], (parent_size[0] / 5., parent_size[1] / 5.))
                 new_size = new_size[0], -new_size[1]  # inverted y axis
                 new_corner_pos = add_pos(state_m.temp['gui']['editor']['pos'], new_size)
@@ -1643,7 +1647,7 @@ class GraphicalEditorController(ExtendedController):
                 redraw = True
 
         elif isinstance(state_m, LibraryStateModel):
-            lib_state_meta = state_m.state_copy.meta['gui']['editor_opengl']
+            lib_state_meta = state_m.state_copy.get_meta_data_editor(for_gaphas=False)
             show_content = state_m.meta['gui']['show_content'] is True
             is_first_draw_of_lib_state = not isinstance(state_m.state_copy.temp['gui']['editor']['pos'], tuple)
 
@@ -1660,7 +1664,7 @@ class GraphicalEditorController(ExtendedController):
                     new_corner_pos = add_pos(state_temp['pos'], state_meta['size'])
                     self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=False, resize_content=True,
                                        redraw=False)
-                    state_meta['size'] = lib_state_meta['size']
+                    state_m.set_meta_data_editor('size', lib_state_meta['size'], from_gaphas=False)
                     redraw = True
 
         self._handle_new_transition(state_m, depth)
@@ -1681,7 +1685,7 @@ class GraphicalEditorController(ExtendedController):
             the ports
         :param float parent_depth: The depth of the parent state
         """
-        parent_meta = parent_state_m.meta['gui']['editor_opengl']
+        parent_meta = parent_state_m.get_meta_data_editor(for_gaphas=False)
         max_rows = max(20, len(parent_state_m.input_data_ports), len(parent_state_m.output_data_ports))
         port_height = min(parent_meta['size']) / float(max_rows)
         max_port_width = min(parent_meta['size']) / 5.
@@ -1690,13 +1694,13 @@ class GraphicalEditorController(ExtendedController):
         # Input data ports
         num_input_ports = 1
         for port_m in parent_state_m.input_data_ports:
-            port_meta = port_m.meta['gui']['editor_opengl']
+            port_meta = port_m.get_meta_data_editor(for_gaphas=False)
             port_temp = port_m.temp['gui']['editor']
             port = port_m.data_port
             if not isinstance(port_meta['inner_rel_pos'], tuple):
                 # Put input ports by default in the lower left corner
                 rel_pos = (0, -parent_meta['size'][1] + num_input_ports * port_height)
-                port_meta['inner_rel_pos'] = rel_pos
+                port_meta = port_m.set_meta_data_editor('inner_rel_pos', rel_pos, from_gaphas=False)
             pos = self._get_absolute_position(parent_state_m, port_meta['inner_rel_pos'])
             port_temp['inner_pos'] = pos
 
@@ -1709,13 +1713,13 @@ class GraphicalEditorController(ExtendedController):
         # Output data ports
         num_output_ports = 1
         for port_m in parent_state_m.output_data_ports:
-            port_meta = port_m.meta['gui']['editor_opengl']
+            port_meta = port_m.get_meta_data_editor(for_gaphas=False)
             port_temp = port_m.temp['gui']['editor']
             port = port_m.data_port
             if not isinstance(port_meta['inner_rel_pos'], tuple):
                 # Put output ports by default in the lower right corner
                 rel_pos = (parent_meta['size'][0], -parent_meta['size'][1] + num_output_ports * port_height)
-                port_meta['inner_rel_pos'] = rel_pos
+                port_meta = port_m.set_meta_data_editor('inner_rel_pos', rel_pos, from_gaphas=False)
             pos = self._get_absolute_position(parent_state_m, port_meta['inner_rel_pos'])
             port_temp['inner_pos'] = pos
 
@@ -1728,15 +1732,15 @@ class GraphicalEditorController(ExtendedController):
         # Scoped variables
         num_scoped_variables = 0
         for port_m in parent_state_m.scoped_variables:
-            port_meta = port_m.meta['gui']['editor_opengl']
+            port_meta = port_m.get_meta_data_editor(for_gaphas=False)
             port_temp = port_m.temp['gui']['editor']
             port = port_m.scoped_variable
-            if not isinstance(port_m.meta['gui']['editor_opengl']['inner_rel_pos'], tuple):
+            if not isinstance(port_meta['inner_rel_pos'], tuple):
                 # Put scoped variables by default row-wise in at the top
                 max_cols = parent_meta['size'][0] // max_port_width
                 (row, col) = divmod(num_scoped_variables, max_cols)
                 rel_pos = (col * max_port_width, -port_height * (2 * row + 1))
-                port_meta['inner_rel_pos'] = rel_pos
+                port_meta = port_m.set_meta_data_editor('inner_rel_pos', rel_pos, from_gaphas=False)
             pos = self._get_absolute_position(parent_state_m, port_meta['inner_rel_pos'])
             port_temp['inner_pos'] = pos
 
@@ -1794,11 +1798,8 @@ class GraphicalEditorController(ExtendedController):
                                "{0}".format(transition_m.transition))
                 continue
 
-            if isinstance(transition_m.meta['gui']['editor_opengl']['waypoints'], dict):
-                transition_m.meta['gui']['editor_opengl']['waypoints'] = transition_m.meta['gui']['editor']['waypoints']
-
             waypoints = []
-            for waypoint in transition_m.meta['gui']['editor_opengl']['waypoints']:
+            for waypoint in transition_m.get_meta_data_editor(for_gaphas=False)['waypoints']:
                 waypoint_pos = self._get_absolute_position(parent_state_m, waypoint)
                 waypoints.append(waypoint_pos)
 
@@ -1861,11 +1862,8 @@ class GraphicalEditorController(ExtendedController):
             else:
                 to_pos = to_port.temp['gui']['editor']['outer_connector_pos']
 
-            if isinstance(data_flow_m.meta['gui']['editor_opengl']['waypoints'], dict):
-                data_flow_m.meta['gui']['editor_opengl']['waypoints'] = data_flow_m.meta['gui']['editor']['waypoints']
-
             waypoints = []
-            for waypoint in data_flow_m.meta['gui']['editor_opengl']['waypoints']:
+            for waypoint in data_flow_m.get_meta_data_editor(for_gaphas=False)['waypoints']:
                 waypoint_pos = self._get_absolute_position(parent_state_m, waypoint)
                 waypoints.append(waypoint_pos)
 
@@ -2095,10 +2093,10 @@ class GraphicalEditorController(ExtendedController):
     def get_boundaries(model, include_waypoints=False):
         """Returns the boundaries (in OpenGL) coordinates of the given model
 
-        :param gtkmvc.Model model: Model for which to get the boundaries
+        :param rafcon.gui.models.meta.MetaModel model: Model for which to get the boundaries
         :return list: left, right, bottom, top
         """
-        meta = model.meta['gui']['editor_opengl']
+        meta = model.get_meta_data_editor(for_gaphas=False)
         temp = model.temp['gui']['editor']
         if isinstance(model, AbstractStateModel):
             return temp['pos'][0], temp['pos'][0] + meta['size'][0], temp['pos'][1] - meta['size'][1], temp['pos'][1]
@@ -2181,24 +2179,25 @@ class GraphicalEditorController(ExtendedController):
                 # Multi-selection move
                 if isinstance(self.drag_origin_offset, list):
                     for model in self.model.selection:
-                        model_meta = model.meta['gui']['editor_opengl']
+                        model_meta = model.get_meta_data_editor(for_gaphas=False)
                         model_temp = model.temp['gui']['editor']
                         if isinstance(model, AbstractStateModel):
-                            model_meta['rel_pos'] = model_temp['original_rel_pos']
+                            model.set_meta_data_editor('rel_pos', model_temp['original_rel_pos'], from_gaphas=False)
                         elif isinstance(model, (DataPortModel, ScopedVariableModel)):
-                            model_meta['inner_rel_pos'] = model_temp['original_inner_rel_pos']
+                            model.set_meta_data_editor('inner_rel_pos', model_temp['original_inner_rel_pos'],
+                                                       from_gaphas=False)
                         elif isinstance(model, (DataFlowModel, TransitionModel)):
                             waypoints = model_meta['waypoints']
                             if waypoints:
                                 for waypoint_id, waypoint_pos in enumerate(waypoints):
-                                    waypoints[waypoint_id] = model_temp['original_waypoint_{0}_rel_pos'.format(
-                                            waypoint_id)]
+                                    model.set_meta_data_editor('waypoints.{}'.format(waypoint_id), model_temp[
+                                        'original_waypoint_{0}_rel_pos'.format(waypoint_id)], from_gaphas=False)
                 elif isinstance(self.single_selection, AbstractStateModel):
-                    self.single_selection.meta['gui']['editor_opengl']['rel_pos'] = \
-                        self.single_selection.temp['gui']['editor']['original_rel_pos']
+                    self.single_selection.set_meta_data_editor('rel_pos', self.single_selection.temp['gui'][
+                        'editor']['original_rel_pos'], from_gaphas=False)
                 elif isinstance(self.single_selection, (DataPortModel, ScopedVariableModel)):
-                    self.single_selection.meta['gui']['editor_opengl']['inner_rel_pos'] = \
-                        self.single_selection.temp['gui']['editor']['original_inner_rel_pos']
+                    self.single_selection.set_meta_data_editor('inner_rel_pos', self.single_selection.temp['gui'][
+                        'editor']['original_inner_rel_pos'], from_gaphas=False)
 
                 self.last_button_pressed = None  # prevents further movements
                 self._redraw()
@@ -2244,16 +2243,16 @@ class GraphicalEditorController(ExtendedController):
             for new_state_m_copy, orig_state_m_copy in insert_dict['states']:
 
                 # Adjust size of new state
-                old_size = orig_state_m_copy.meta['gui']['editor_opengl']['size']
-                target_size = target_state_m.meta['gui']['editor_opengl']['size']
+                old_size = orig_state_m_copy.get_meta_data_editor(for_gaphas=False)['size']
+                target_size = target_state_m.get_meta_data_editor(for_gaphas=False)['size']
 
                 new_size = calculate_size(old_size, (target_size[0] / 5., target_size[1] / 5.))
 
-                rel_pos_x, rel_pos_y = new_state_m_copy.meta['gui']['editor_opengl']['rel_pos']
+                rel_pos_x, rel_pos_y = new_state_m_copy.get_meta_data_editor(for_gaphas=False)['rel_pos']
                 rel_pos_x = target_size[0] * 4 / 5. if rel_pos_x > target_size[0] * 4 / 5. else rel_pos_x
                 rel_pos_y = -target_size[1] * 4 / 5. if rel_pos_y < -target_size[1] * 4 / 5. else rel_pos_y
                 pos = self._get_absolute_position(new_state_m_copy.parent, (rel_pos_x, rel_pos_y))
-                new_state_m_copy.meta['gui']['editor_opengl']['rel_pos'] = (rel_pos_x, rel_pos_y)
+                new_state_m_copy.set_meta_data_editor('rel_pos', (rel_pos_x, rel_pos_y), from_gaphas=False)
                 new_state_m_copy.temp['gui']['editor']['pos'] = pos
                 new_corner_pos = add_pos(new_state_m_copy.temp['gui']['editor']['pos'], new_size)
                 self._resize_state(new_state_m_copy, new_corner_pos, keep_ratio=True, resize_content=True, publish_changes=True)

@@ -70,7 +70,7 @@ def get_state_tuple(state, state_m=None):
     :return: state_tuple tuple
     """
     # state_str = yaml.dump(state)
-    state_str = json.dumps(state, cls=JSONObjectEncoder, nested_jsonobjects=False,
+    state_str = json.dumps(state, cls=JSONObjectEncoder,
                            indent=4, check_circular=False, sort_keys=True)
 
     # print "++++++++++", state
@@ -192,16 +192,16 @@ def reference_free_check(v1, v2, prepend=[]):
 def meta_dump_or_deepcopy(meta):
     if DEBUG_META_REFERENCES:  # debug copy
         meta_source = meta
-        meta_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+        meta_str = json.dumps(meta, cls=JSONObjectEncoder,
                               indent=4, check_circular=False, sort_keys=True)
         meta_dump_copy = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
         meta_deepcopy = copy.deepcopy(meta)
 
-        meta_source_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+        meta_source_str = json.dumps(meta, cls=JSONObjectEncoder,
                                      indent=4, check_circular=False, sort_keys=True)
-        meta_dump_copy_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+        meta_dump_copy_str = json.dumps(meta, cls=JSONObjectEncoder,
                                         indent=4, check_circular=False, sort_keys=True)
-        meta_deepcopy_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+        meta_deepcopy_str = json.dumps(meta, cls=JSONObjectEncoder,
                                        indent=4, check_circular=False, sort_keys=True)
         assert meta_dump_copy_str == meta_source_str
         assert meta_dump_copy_str == meta_deepcopy_str
@@ -224,7 +224,7 @@ def meta_dump_or_deepcopy(meta):
 
     # print meta_str
     # if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR'):
-    #     meta_str = json.dumps(meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+    #     meta_str = json.dumps(meta, cls=JSONObjectEncoder,
     #                           indent=4, check_circular=False, sort_keys=True)
     #     return json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
     # else:
@@ -414,7 +414,7 @@ class MetaAction:
         overview['instance'].append(overview['model'][-1])
         overview['info'][-1]['instance'] = overview['model'][-1]
 
-        meta_str = json.dumps(overview['model'][-1].meta, cls=JSONObjectEncoder, nested_jsonobjects=False,
+        meta_str = json.dumps(overview['model'][-1].meta, cls=JSONObjectEncoder,
                               indent=4, check_circular=False, sort_keys=True)
         # print meta_str
         self.meta = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
@@ -1068,14 +1068,14 @@ class CoreObjectIdentifier:
                               'PreemptiveConcurrencyState', 'LibraryState', 'DeciderState']:
                 self._path = core_obj_or_cls.get_path()
                 self._id = core_obj_or_cls.state_id
-                self._sm_id = core_obj_or_cls.get_sm_for_state().state_machine_id
+                self._sm_id = core_obj_or_cls.get_state_machine().state_machine_id
             else:
                 if isinstance(core_obj_or_cls.parent, State):
                     self._path = core_obj_or_cls.parent.get_path()
-                    if core_obj_or_cls.parent.get_sm_for_state() is None:
+                    if core_obj_or_cls.parent.get_state_machine() is None:
                         logger.warning('state has no state machine -> {0} {1}'.format(core_obj_or_cls.parent.name, core_obj_or_cls.parent.get_path()))
                     else:
-                        self._sm_id = core_obj_or_cls.parent.get_sm_for_state().state_machine_id
+                        self._sm_id = core_obj_or_cls.parent.get_state_machine().state_machine_id
                 else:
                     logger.warning("identifier of core object {0} without parent is mostly useless".format(self._type))
 

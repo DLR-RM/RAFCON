@@ -60,7 +60,11 @@ def undock_sidebars():
         assert window.get_property('visible') is True
         expected_size = get_stored_window_size(window_name)
         new_size = window.get_size()
-        assert_size_equality(new_size, expected_size)
+        if not bool(window.maximize_initially):
+            assert_size_equality(new_size, expected_size)
+        else:
+            maximized_parameter_name = window_key.upper() + "_WINDOW_MAXIMIZED"
+            assert bool(window.maximize_initially) and global_runtime_config.get_config_value(maximized_parameter_name)
 
         logger.info("resizing...")
         time.sleep(debug_sleep_time)
@@ -185,7 +189,7 @@ def test_window_positions(caplog):
 
     testing_utils.remove_all_libraries()
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 def test_pane_positions(caplog):
@@ -207,7 +211,7 @@ def test_pane_positions(caplog):
 
     testing_utils.remove_all_libraries()
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 if __name__ == '__main__':
     pytest.main([__file__, '-xs'])

@@ -295,7 +295,7 @@ def test_gui(caplog):
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
                  "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
-    testing_utils.initialize_rafcon(gui_config=change_in_gui_config, libraries=libraries)
+    testing_utils.initialize_environment(gui_config=change_in_gui_config, libraries=libraries)
 
     state_machine = create_state_machine()
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
@@ -312,7 +312,7 @@ def test_gui(caplog):
     logger.debug("after gtk main")
     thread.join()
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 if __name__ == '__main__':

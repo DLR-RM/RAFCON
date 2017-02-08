@@ -138,7 +138,7 @@ def trigger_source_editor_signals(main_window_controller):
 
 
 def test_gui(caplog):
-    t_u.initialize_rafcon(gui_config={'GAPHAS_EDITOR': True,
+    t_u.initialize_environment(gui_config={'GAPHAS_EDITOR': True,
                                       'AUTO_BACKUP_ENABLED': False,
                                       'CHECK_PYTHON_FILES_WITH_PYLINT': False,
                                       'PREFER_EXTERNAL_EDITOR': False})
@@ -168,7 +168,7 @@ def test_gui(caplog):
         errors = 2
         
     t_u.assert_logger_warnings_and_errors(caplog, expected_errors=errors)
-    t_u.terminate_rafcon()
+    t_u.shutdown_environment()
 
 
 if __name__ == '__main__':

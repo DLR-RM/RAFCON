@@ -120,6 +120,7 @@ class ExecutionState(State):
             self.setup_backward_run()
         else:
             self.setup_run()
+
         try:
 
             if self.backward_execution:

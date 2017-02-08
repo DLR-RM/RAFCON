@@ -1,0 +1,90 @@
+{
+    "__jsonqualname__": "rafcon.core.states.preemptive_concurrency_state.PreemptiveConcurrencyState", 
+    "data_flows": {
+        "4": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 4, 
+            "from_key": 0, 
+            "from_state": "LLCJCC", 
+            "to_key": 1, 
+            "to_state": "XYHUGO"
+        }, 
+        "5": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 5, 
+            "from_key": 0, 
+            "from_state": "OJIWAU", 
+            "to_key": 1, 
+            "to_state": "XYHUGO"
+        }, 
+        "7": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 7, 
+            "from_key": 0, 
+            "from_state": "XYHUGO", 
+            "to_key": 1, 
+            "to_state": "XYHUGO"
+        }
+    }, 
+    "description": null, 
+    "input_data_ports": {}, 
+    "name": "Output test", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.OutputDataPort", 
+            "data_port_id": 1, 
+            "data_type": {
+                "__type__": "__builtin__.int"
+            }, 
+            "default_value": 0, 
+            "name": "output_1"
+        }
+    }, 
+    "scoped_variables": {
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.scope.ScopedVariable", 
+            "data_port_id": 0, 
+            "data_type": {
+                "__type__": "__builtin__.int"
+            }, 
+            "default_value": -1, 
+            "name": "scoped_1"
+        }
+    }, 
+    "state_id": "XYHUGO", 
+    "transitions": {
+        "5": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "OJIWAU", 
+            "to_outcome": 0, 
+            "to_state": "XYHUGO", 
+            "transition_id": 5
+        }, 
+        "6": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "LLCJCC", 
+            "to_outcome": 0, 
+            "to_state": "XYHUGO", 
+            "transition_id": 6
+        }
+    }
+}

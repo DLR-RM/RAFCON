@@ -146,6 +146,10 @@ class AutoBackupModel(ModelMT):
     The forced interval FORCED_TEMPORARY_STORAGE_INTERVAL is used for the fix auto backup interval and as the forced
     time interval for the dynamic auto backup. The dynamic auto backup will backup additionally if the user was not
     doing any modifications till a time horizon of TIMED_TEMPORARY_STORAGE_INTERVAL.
+    The flag AUTO_RECOVERY_CHECK enables the check on not cleanly closed instances and state machines what only can be
+    performed if the AUTO_RECOVERY_LOCK_ENABLED is set True to write respective lock files into the backup folders.
+    If the lock file is not cleaned up the state machine and the RAFCON instance was not closed cleanly.
+
     """
 
     def __init__(self, state_machine_model):

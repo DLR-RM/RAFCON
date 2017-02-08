@@ -118,9 +118,9 @@ class ModificationHistoryTreeController(ExtendedController):
         self.redo(None, None)
 
     def on_reset_button_clicked(self, widget, event=None):
-        # logger.debug("do reset")
+        logger.debug("Reset modification history of state machine of {0}.".format(self.model))
+        self._selected_sm_model.storage_lock.acquire()
         self._selected_sm_model.history.modifications.reset()
-        logger.debug("release storage_lock")
         self._selected_sm_model.storage_lock.release()
 
     def on_toggle_mode(self, widget, event=None):
@@ -381,5 +381,3 @@ class ModificationHistoryTreeController(ExtendedController):
                 history_row_path = self.history_tree_store.get_path(history_row_iter)
                 self.view['history_tree'].expand_to_path(history_row_path)
         return history_row_iter
-
-

@@ -104,14 +104,14 @@ def test_copy_delete_bug(caplog):
     #     menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
     #     call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
     #
-    # testing_utils.terminate_rafcon()
+    # testing_utils.shutdown_environment()
     # testing_utils.assert_logger_warnings_and_errors(caplog)
 
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
                  "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
     change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False, 'GAPHAS_EDITOR': True}
-    testing_utils.initialize_rafcon(gui_config=change_in_gui_config, libraries=libraries)
+    testing_utils.initialize_environment(gui_config=change_in_gui_config, libraries=libraries)
 
     main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
@@ -125,7 +125,7 @@ def test_copy_delete_bug(caplog):
     logger.debug("after gtk main")
     thread.join()
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 if __name__ == '__main__':

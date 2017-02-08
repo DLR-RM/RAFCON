@@ -35,7 +35,7 @@ def open_folder(query):
 
 def test_library_relocation(caplog):
 
-    testing_utils.initialize_rafcon(libraries={"test_scripts": testing_utils.TEST_ASSETS_PATH})
+    testing_utils.initialize_environment(libraries={"test_scripts": testing_utils.TEST_ASSETS_PATH})
 
     interface.open_folder_func = open_folder
 
@@ -53,7 +53,7 @@ def test_library_relocation(caplog):
     assert state_machine.root_state.output_data["output_0"] == 27
 
     testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
-    testing_utils.terminate_rafcon(config=True, gui_config=False)
+    testing_utils.shutdown_environment()
 
     logger.info("State machine execution finished!")
 

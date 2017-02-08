@@ -223,10 +223,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.state_execution_status = StateExecutionStatus.ACTIVE
         self.preempted = False
         if not isinstance(self.input_data, dict):
-            raise TypeError("states must be of type dict")
+            raise TypeError("input_data must be of type dict")
         if not isinstance(self.output_data, dict):
-            raise TypeError("states must be of type dict")
-        self.check_input_data_type(self.input_data)
+            raise TypeError("output_data must be of type dict")
+        self.check_input_data_type()
 
     def setup_backward_run(self):
         self.state_execution_status = StateExecutionStatus.ACTIVE
@@ -512,7 +512,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             else:
                 return state_identifier + PATH_SEPARATOR + appendix
 
-    def get_sm_for_state(self):
+    def get_state_machine(self):
         """Get a reference of the state_machine the state belongs to
 
         :rtype rafcon.core.state_machine.StateMachine
@@ -522,7 +522,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             if self.is_root_state:
                 return self.parent
             else:
-                return self.parent.get_sm_for_state()
+                return self.parent.get_state_machine()
 
         return None
 
@@ -540,12 +540,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         :return: the path on the filesystem where the state is stored
         """
-        if not self.get_sm_for_state() or self.get_sm_for_state().file_system_path is None:
+        if not self.get_state_machine() or self.get_state_machine().file_system_path is None:
             if self._file_system_path:
                 # print "State_get_file_system_path 0: "
                 return self._file_system_path
-            elif self.get_sm_for_state():
-                if self.get_sm_for_state().supports_saving_state_names:
+            elif self.get_state_machine():
+                if self.get_state_machine().supports_saving_state_names:
                     # print "State_get_file_system_path 11: ",
                     # os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
                     path = os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
@@ -560,21 +560,21 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             else:
                 return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
         else:
-            if self.get_sm_for_state().supports_saving_state_names:
+            if self.get_state_machine().supports_saving_state_names:
                 # print "State_get_file_system_path 21: ",
-                # os.path.join(self.get_sm_for_state().file_system_path, str(self.get_storage_path()))
-                path = os.path.join(self.get_sm_for_state().file_system_path, str(self.get_storage_path()))
+                # os.path.join(self.get_state_machine().file_system_path, str(self.get_storage_path()))
+                path = os.path.join(self.get_state_machine().file_system_path, str(self.get_storage_path()))
                 if os.path.exists(path):
                     return path
                 else:
-                    path = os.path.join(self.get_sm_for_state().file_system_path, str(self.get_storage_path(
+                    path = os.path.join(self.get_state_machine().file_system_path, str(self.get_storage_path(
                         old_delimiter=True)))
                     # print "State_get_file_system_path 22: ", path
                     return path
             else:
                 # the default case for ID-formatted state machines when using a GUI
                 # print "State_get_file_system_path 23: "
-                return os.path.join(self.get_sm_for_state().file_system_path, self.get_path())
+                return os.path.join(self.get_state_machine().file_system_path, self.get_path())
 
     @lock_state_machine
     @Observable.observed
@@ -764,33 +764,35 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         return True, "valid"
 
-    def check_input_data_type(self, input_data):
+    def check_input_data_type(self):
         """Check the input data types of the state
 
-        :param input_data: the input_data dictionary to check
-        :raises exceptions.TypeError: if the data of one of the input data ports is not of the specified type
+        Checks all input data ports if the handed data is not of the specified type and generate an error logger message
+        with details of the found type conflict.
         """
-        for input_data_port_key, data_port in self.input_data_ports.iteritems():
-            if input_data_port_key in input_data:
-                if not input_data[data_port.name] is None:
-                    #check for primitive data types
-                    if not str(type(input_data[data_port.name]).__name__) == data_port.data_type:
-                        #check for classes
-                        if not isinstance(input_data[data_port.name], getattr(sys.modules[__name__], data_port.data_type)):
-                            raise TypeError("Input of execute function must be of type %s" % str(data_port.data_type))
+        for data_port in self.input_data_ports.itervalues():
+            if data_port.name in self.input_data and self.input_data[data_port.name] is not None:
+                #check for class
+                if not isinstance(self.input_data[data_port.name], data_port.data_type):
+                    logger.error("{0} had an data port error: Input of execute function must be of type {1} not {2} "
+                                 "as current value {3}".format(self, data_port.data_type,
+                                                               type(self.input_data[data_port.name]),
+                                                               self.input_data[data_port.name]))
 
     def check_output_data_type(self):
         """Check the output data types of the state
 
-        :raises exceptions.TypeError: if the data of one of the output data ports is not of the specified type
+        Checks all output data ports if the handed data is not of the specified type and generate an error logger message
+        with details of the found type conflict.
         """
-        for output_port_id, output_port in self.output_data_ports.iteritems():
-            if hasattr(self.output_data, output_port.name) and self.output_data[output_port.name] is not None:
-                #check for primitive data types
-                if not str(type(self.output_data[output_port.name]).__name__) == output_port.data_type:
-                    #check for classes
-                    if not isinstance(self.output_data[output_port.name], getattr(sys.modules[__name__], output_port.data_type)):
-                        raise TypeError("Output of execute function must be of type %s" % str(output_port.data_type))
+        for data_port in self.output_data_ports.itervalues():
+            if data_port.name in self.output_data and self.output_data[data_port.name] is not None:
+                #check for class
+                if not isinstance(self.output_data[data_port.name], data_port.data_type):
+                    logger.error("{0} had an data port error: Output of execute function must be of type {1} not {2} "
+                                 "as current value {3}".format(self, data_port.data_type,
+                                                               type(self.output_data[data_port.name]),
+                                                               self.output_data[data_port.name]))
 
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- misc functions ---------------------------------------
@@ -873,9 +875,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             if len(name) < 1:
                 raise ValueError("Name must have at least one character")
 
-        if self._name and self._name != name and self.get_sm_for_state():
+        if self._name and self._name != name and self.get_state_machine():
             # remove old path, as the state will be saved und another directory as its names changes
-            storage.mark_path_for_removal_for_sm_id(self.get_sm_for_state().state_machine_id, self.get_file_system_path())
+            storage.mark_path_for_removal_for_sm_id(self.get_state_machine().state_machine_id, self.get_file_system_path())
         self._name = name
 
     @property

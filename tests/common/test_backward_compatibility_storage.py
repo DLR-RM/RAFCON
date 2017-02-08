@@ -68,7 +68,7 @@ def test_backward_compatibility_storage(caplog):
 
     testing_utils.remove_all_libraries()
     testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.terminate_rafcon()
+    testing_utils.shutdown_environment()
 
 
 if __name__ == '__main__':
