@@ -292,6 +292,21 @@ into which you want to move your copied state. Make sure the target
 state is of type Hierarchy or Concurrency. With Ctrl+V or Edit => Paste,
 the original state is moved into the target state.
 
+If you only wanna combine several states to have them on one level or to
+encapsulate them you can use the group feature. This will create a new states
+HierarchyState and move the currently selected states into those. So you select all
+states to group on one hierarchical level and then use the group-shortcut
+typically STRG-G or the menu bar Edit->Group.
+
+A window can not be unmaximized what I can do?
+""""""""""""""""""""""""""""""""""""""""""""""
+
+This is generally a problem the is related to your window manager of your desktop
+and can be caused by different screens sizes or similar nasty configurations.
+The fastest way to solve this problem is to delete your runtime_config.yaml file which
+is commonly situated at ~/.config/rafcon/runtime_config.yaml and which will be generated
+automatically and cleanly after removal.
+
 New Questions
 -------------
 
