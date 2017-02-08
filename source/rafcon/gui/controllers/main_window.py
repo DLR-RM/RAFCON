@@ -287,7 +287,7 @@ class MainWindowController(ExtendedController):
             self.set_pane_position(config_id)
 
         # restore undock state of bar windows
-        if gui_config.get_config_value("RECOVER_UNDOCKED_BAR_WINDOWS"):
+        if gui_config.get_config_value("RESTORE_UNDOCKED_SIDEBARS"):
             if global_runtime_config.get_config_value("LEFT_BAR_WINDOW_UNDOCKED"):
                 self.undock_sidebar("LEFT_BAR_WINDOW", "left_bar", "undock_left_bar_button", "left_bar_return_button",
                                     self.on_left_bar_hide_clicked, "left_bar_replacement", view["LEFT_BAR_WINDOW"])
