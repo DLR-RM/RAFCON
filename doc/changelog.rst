@@ -14,6 +14,38 @@ log <https://rmc-github.robotic.dlr.de/common/rafcon/commits/master>`__.
 Patch releases 0.8.\*
 ---------------------
 
+0.8.4
+"""""
+
+- Improvements
+  - Meta data convert methods with clear interface from Gaphas to OpenGL and OpenGL to Gaphas
+    -> only one type of meta data hold
+  - Undocked side bars can be restored automatically after restart if RESTORE_UNDOCKED_SIDEBARS is set to True.
+
+- Bug Fixes
+
+  - :issue:`45`: Size of GUI cannot be changed
+  - :issue:`284`: Core does not check the type of the default values
+  - :issue:`282`: Input and output data port default_value check does not cover all cases
+  - :issue:`280`: List of tuples saved as list of lists
+  - :issue:`265`: jekyll documentation
+  - :issue:`277`: insert_self_transition_meta_data is never called
+  - :issue:`268`: Enter key can still be used in greyed out window
+  - :issue:`69`: Performance measurements
+  - :issue:`271`: The storage folders are not always clean after re-saving a state machine from old format to new
+  - :issue:`273`: Cannot refresh state machines
+  - :issue:`264`: pylint under osl not working
+  - :issue:`173`: Splash screen for RAFCON GUI initialization and RAFCON icon
+  - :issue:`253`: Ctrl+V for pasting in list views of state editor does not work
+  - :issue:`263`: The scrollbar in the io widget has to follow the currently edited text
+  - :issue:`255`: After refreshing, state machines should keep their tab order
+  - :issue:`185`: test_backward_stepping_barrier_state not working
+  - :issue:`258`: Maximum recursion depth reached
+  - :issue:`245`: Support library data port type change
+  - :issue:`251`: Handles are added when hovering over a transition handle
+  - :issue:`259`: Do not hard code version in about dialog
+  - :issue:`260`: Meta data is loaded several times
+
 0.8.3
 """""
 
