@@ -60,7 +60,11 @@ def undock_sidebars():
         assert window.get_property('visible') is True
         expected_size = get_stored_window_size(window_name)
         new_size = window.get_size()
-        assert_size_equality(new_size, expected_size)
+        if not bool(window.maximize_initially):
+            assert_size_equality(new_size, expected_size)
+        else:
+            maximized_parameter_name = window_key.upper() + "_WINDOW_MAXIMIZED"
+            assert bool(window.maximize_initially) and global_runtime_config.get_config_value(maximized_parameter_name)
 
         logger.info("resizing...")
         time.sleep(debug_sleep_time)

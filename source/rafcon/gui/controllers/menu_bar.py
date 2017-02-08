@@ -203,7 +203,6 @@ class MenuBarController(ExtendedController):
         position = self.main_window_view.get_top_widget().get_position()
         self.full_screen_window.show()
         self.full_screen_window.move(position[0], position[1])
-        global_runtime_config.store_widget_properties(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
         self.full_screen_window.set_decorated(False)
         self.full_screen_window.fullscreen()
         self.main_window_view.get_top_widget().iconify()
@@ -747,16 +746,10 @@ class MenuBarController(ExtendedController):
 
         logger.debug("Saving runtime config")
 
-        global_runtime_config.store_widget_properties(self.main_window_view.get_top_widget(), 'MAIN_WINDOW')
         global_runtime_config.store_widget_properties(self.main_window_view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['right_h_pane'], 'RIGHT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['central_v_pane'], 'CONSOLE_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['left_bar'], 'LEFT_BAR_INNER_PANE')
-
-        for sidebar_name in ['LEFT_BAR_WINDOW', 'RIGHT_BAR_WINDOW', 'CONSOLE_BAR_WINDOW']:
-            sidebar_widget = getattr(self.main_window_view, sidebar_name.lower()).get_top_widget()
-            if sidebar_widget.get_property('visible'):
-                global_runtime_config.store_widget_properties(sidebar_widget, sidebar_name)
 
         global_runtime_config.save_configuration()
 
