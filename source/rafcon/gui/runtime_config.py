@@ -29,13 +29,15 @@ class RuntimeConfig(ObservableConfig):
         super(RuntimeConfig, self).load(config_file, path)
 
     def store_widget_properties(self, widget, title):
-        """Sets configuration values for widgets. If the widget is a window, then the size and position are stored. If
-        the widget is a pane, then only the position is stored.
+        """Sets configuration values for widgets
+
+        If the widget is a window, then the size and position are stored. If the widget is a pane, then only the position
+        is stored. If the window is maximized the last insert position before being maximized is keep in the config and
+        the maximized flag set to True. The maximized state and the last size and position are strictly separated by this.
 
         :param widget: The widget, for which the position (and possibly the size) will be stored.
         :param title: The title of the widget, which constitutes a part of its key in the configuration file.
         """
-
         if isinstance(widget, gtk.Window):
             maximized = bool(widget.maximize_initially)
             self.set_config_value('{0}_MAXIMIZED'.format(title), maximized)

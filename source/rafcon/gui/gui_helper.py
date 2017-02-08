@@ -181,9 +181,10 @@ def format_cell(cell, height=None, padding=None):
 
 
 def set_window_size_and_position(window, window_key):
-    """Adjust GTK Window's size and position according to the corresponding values in the runtime_config file. If the
-    runtime_config does not exist, or the corresponding values are missing in the file, default values for the window
-    size are used, and the mouse position is used to adjust the window's position.
+    """Adjust GTK Window's size, position and maximized state according to the corresponding values in the
+    runtime_config file. The maximize method is triggered last to restore also the last stored size and position of the
+    window. If the runtime_config does not exist, or the corresponding values are missing in the file, default values
+    for the window size are used, and the mouse position is used to adjust the window's position.
 
     :param window: The GTK Window to be adjusted
     :param window_key: The window's key stored in the runtime config file
