@@ -87,6 +87,7 @@ A typical config file looks like this:
     SOURCE_EDITOR_STYLE: awesome-style
 
     GAPHAS_EDITOR: False
+    ENABLE_CACHING: True
 
     WAYPOINT_SNAP_ANGLE: 45
     WAYPOINT_SNAP_MAX_DIFF_ANGLE: 10
@@ -98,6 +99,8 @@ A typical config file looks like this:
     LOGGING_SHOW_INFO: True
     LOGGING_SHOW_WARNING: True
     LOGGING_SHOW_ERROR: True
+
+    LIBRARY_TREE_PATH_HUMAN_READABLE: False
 
     MINIMUM_SIZE_FOR_CONTENT: 30
     MAX_VISIBLE_LIBRARY_HIERARCHY: 2
@@ -115,6 +118,10 @@ A typical config file looks like this:
     AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL: False
     AUTO_BACKUP_FORCED_STORAGE_INTERVAL: 120
     AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL: 20
+    AUTO_RECOVERY_CHECK: False
+    AUTO_RECOVERY_LOCK_ENABLED: False
+
+    RESTORE_UNDOCKED_SIDEBARS: False
 
     SHORTCUTS:
         abort: Escape
@@ -193,6 +200,10 @@ GAPHAS\_EDITOR
     has been stopped (except bugfixes) in favor of a new editor using
     GTK cairo and the library Gaphas. The flag decides whether to use
     the old OpenGL editor (False) or the new Gaphas one (True).
+
+ENABLE\_CACHING:
+    Default: True
+    Affects only Gaphas editor and enables a accelerating caching feature.
 
 WAYPOINT\_SNAP\_ANGLE
     Default: ``45``
@@ -319,6 +330,27 @@ AUTO\_BACKUP\_DYNAMIC\_STORAGE\_INTERVAL
     Time horizon after which the "dynamic" auto-backup
     (``AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL`` is False) is triggered if
     there was no modification to the state-machine while this interval.
+
+AUTO\_RECOVERY\_CHECK
+    Default: ``False``
+    If True, the auto back module will check for backups of crashed instances or
+    badly closed state machines that left a lock file. This comfortable feature
+    only can be used if the crashed instances or state machines already were
+    created with ``AUTO_RECOVERY_LOCK_ENABLED`` and ``AUTO_BACKUP_ENABLED`` True
+    and thereby needed lock-files were set.
+
+
+AUTO\_RECOVERY\_LOCK\_ENABLED:
+    Default: ``False``
+    If True, the auto backup will put lock-files into the respective backup folder
+    to label not correctly/cleanly closed state machines and instances.
+    The auto recovery check is searching for these locks.
+
+RESTORE\_UNDOCKED\_SIDEBARS
+    Default: ``False``
+    If True, RAFCON will restore undocked windows from the last
+    RAFCON-instance run.
+
 
 SHORTCUTS
     Type: dict
