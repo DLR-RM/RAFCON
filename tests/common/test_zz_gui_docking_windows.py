@@ -39,7 +39,7 @@ def wait_for_event_notification():
         raise RuntimeError("A timeout occurred")
 
 
-def assert_size_equality(size1, size2, window=None):
+def assert_size_equality(size1, size2):
     assert abs(size1[0] - size2[0]) <= 10
     assert abs(size1[1] - size2[1]) <= 10
 
@@ -61,7 +61,10 @@ def undock_sidebars():
         expected_size = get_stored_window_size(window_name)
         new_size = window.get_size()
         if not bool(window.maximize_initially):
-            assert_size_equality(new_size, expected_size, window)
+            assert_size_equality(new_size, expected_size)
+        else:
+            maximized_parameter_name = window_key.upper() + "_WINDOW_MAXIMIZED"
+            assert bool(window.maximize_initially) and global_runtime_config.get_config_value(maximized_parameter_name)
 
         logger.info("resizing...")
         time.sleep(debug_sleep_time)
