@@ -317,21 +317,16 @@ class MenuBarController(ExtendedController):
     # menu bar functionality - File
     ######################################################
 
-    def on_new_activate(self, widget=None, data=None):
-        sm_menubar_helper.new_statemachine(menubar=self,
-                                           widget=widget,
-                                           data=data)
+    def on_new_activate(self):
+        sm_menubar_helper.new_statemachine(menubar=self,)
 
     @staticmethod
-    def on_open_activate(widget=None, data=None, path=None):
-        sm_menubar_helper.open_statemachine(widget=widget,
-                                            data=data,
-                                            path=path)
+    def on_open_activate(path=None):
+        sm_menubar_helper.open_statemachine(path=path)
 
-    def on_save_activate(self, widget, data=None, save_as=False, delete_old_state_machine=False):
+    def on_save_activate(self, widget, save_as=False, delete_old_state_machine=False):
         return sm_menubar_helper.save_statemachine(menubar=self,
                                                    widget=widget,
-                                                   data=data,
                                                    save_as=save_as,
                                                    delete_old_state_machine=delete_old_state_machine)
 
@@ -345,31 +340,21 @@ class MenuBarController(ExtendedController):
     def on_refresh_libraries_activate():
         sm_menubar_helper.refresh_libraries()
 
-    def on_refresh_all_activate(self, widget, data=None, force=False):
+    def on_refresh_all_activate(self, force=False):
         sm_menubar_helper.refresh_all(menubar=self,
-                                      widget=widget,
-                                      data=data,
                                       force=force)
 
-    def on_substitute_selected_state_activate(self, widget=None, data=None, path=None):
-        return state_bar_helper.substitute_selected_state(menubar=self,
-                                                          widget=widget,
-                                                          data=data,
-                                                          path=path)
+    def on_substitute_selected_state_activate(self):
+        return state_bar_helper.substitute_selected_state(menubar=self)
 
-    def on_substitute_library_with_template_activate(self, widget=None, data=None):
-        return state_bar_helper.substitute_selected_state(menubar=self,
-                                                          widget=widget,
-                                                          data=data)
+    def on_substitute_library_with_template_activate(self):
+        return state_bar_helper.substitute_selected_state(menubar=self)
 
-    def on_save_selected_state_as_activate(self, widget=None, data=None, path=None):
-        return state_bar_helper.save_selected_state_as(menubar=self,
-                                                       widget=widget,
-                                                       data=data,
-                                                       path=path)
+    def on_save_selected_state_as_activate(self):
+        return state_bar_helper.save_selected_state_as(menubar=self)
 
     @staticmethod
-    def on_menu_properties_activate(widget, data=None):
+    def on_menu_properties_activate():
         config_window_view = ConfigWindowView()
         config_window_ctrl = ConfigWindowController(mvc_singleton.core_config_model, config_window_view,
                                                     mvc_singleton.gui_config_model)

@@ -16,7 +16,7 @@ from rafcon.gui.helpers import state_machine as bar_sm_helper
 logger = log.get_logger(__name__)
 
 
-def substitute_selected_state(menubar, widget=None, data=None, path=None):
+def substitute_selected_state(menubar):
         selected_states = menubar.model.get_selected_state_machine_model().selection.get_states()
         if selected_states and len(selected_states) == 1:
             StateSubstituteChooseLibraryDialog(mvc_singleton.library_manager_model, parent=menubar.get_root_window())
@@ -26,7 +26,7 @@ def substitute_selected_state(menubar, widget=None, data=None, path=None):
             return False
 
 
-def substitute_library_with_template(menubar, widget=None, data=None):
+def substitute_library_with_template(menubar):
     selected_states = menubar.model.get_selected_state_machine_model().selection.get_states()
     if selected_states and len(selected_states) == 1 and isinstance(selected_states[0], LibraryStateModel):
         lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_states[0].state))
@@ -39,7 +39,7 @@ def substitute_library_with_template(menubar, widget=None, data=None):
         return False
 
 
-def save_selected_state_as(menubar, widget=None, data=None, path=None):
+def save_selected_state_as(menubar):
     selected_states = menubar.model.get_selected_state_machine_model().selection.get_states()
     if selected_states and len(selected_states) == 1:
         import copy

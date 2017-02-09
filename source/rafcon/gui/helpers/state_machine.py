@@ -13,7 +13,7 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 logger = log.get_logger(__name__)
 
 
-def new_statemachine(menubar=None, data=None, widget=None):
+def new_statemachine(menubar=None):
     if not menubar:
         error_no_menubar("new_statemachine")
         return
@@ -35,7 +35,7 @@ def new_statemachine(menubar=None, data=None, widget=None):
     glib.idle_add(grab_focus)
 
 
-def open_statemachine(widget=None, data=None, path=None):
+def open_statemachine(path=None):
     if path is None:
             if interface.open_folder_func is None:
                 logger.error("No function defined for opening a folder")
@@ -53,7 +53,7 @@ def open_statemachine(widget=None, data=None, path=None):
         logger.error('Error while trying to open state machine: {0}'.format(e))
 
 
-def save_statemachine(menubar, widget, data=None, save_as=False, delete_old_state_machine=False):
+def save_statemachine(menubar, widget, save_as=False, delete_old_state_machine=False):
         def on_message_dialog_response_signal(widget, response_id, source_editor_ctrl):
             state = source_editor_ctrl.model.state
             if response_id == ButtonDialog.OPTION_1.value:
@@ -122,7 +122,7 @@ def refresh_libraries():
     library_manager.refresh_libraries()
 
 
-def refresh_all(menubar=None, widget=None, data=None, force=False):
+def refresh_all(menubar=None, force=False):
     """Reloads all libraries and thus all state machines as well.
         :param menubar: the menubar where this method gets called from
         :param widget: the main widget
