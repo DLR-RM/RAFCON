@@ -120,7 +120,6 @@ class SourceEditorController(EditorController):
         prefer_external_editor = global_gui_config.get_config_value("PREFER_EXTERNAL_EDITOR")
 
         def set_editor_lock(lock):
-            button_text = ['Unlock', 'Reload']
             if lock:
                 button.set_label('Reload' if prefer_external_editor else 'Unlock')
             else:
