@@ -13,20 +13,14 @@ from functools import partial
 import gtk
 import glib
 
-from rafcon.core import interface
-from rafcon.core.state_machine import StateMachine
-from rafcon.core.states.library_state import LibraryState
-from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.core.storage import storage
 from rafcon.core.singleton import state_machine_manager, library_manager
 
 import rafcon.core.singleton as core_singletons
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.state import StateModel
 from rafcon.gui.models.container_state import ContainerStateModel
-from rafcon.gui.models.library_state import LibraryStateModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui import state_machine_helper
 from rafcon.gui import gui_helper
@@ -34,12 +28,12 @@ from rafcon.gui import singleton as mvc_singleton
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.views.utils.about_dialog import MyAboutDialog
 from rafcon.gui.views.main_window import MainWindowView
-from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 from rafcon.gui.controllers.config_window import ConfigWindowController
 from rafcon.gui.views.config_window import ConfigWindowView
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
-from rafcon.gui.helpers import state_machine as helper
+from rafcon.gui.helpers import state_machine as sm_menubar_helper
+from rafcon.gui.helpers import state as state_bar_helper
 
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
@@ -324,158 +318,64 @@ class MenuBarController(ExtendedController):
     ######################################################
 
     def on_new_activate(self, widget=None, data=None):
-        helper.new_statemachine(menubar=self,
-                                widget=widget,
-                                data=data)
+        sm_menubar_helper.new_statemachine(menubar=self,
+                                           widget=widget,
+                                           data=data)
 
     @staticmethod
     def on_open_activate(widget=None, data=None, path=None):
-        helper.open_statemachine(widget=widget,
-                                 data=data,
-                                 path=path)
+        sm_menubar_helper.open_statemachine(widget=widget,
+                                            data=data,
+                                            path=path)
 
     def on_save_activate(self, widget, data=None, save_as=False, delete_old_state_machine=False):
-        return helper.save_statemachine(menubar=self,
-                                        widget=widget,
-                                        data=data,
-                                        save_as=save_as,
-                                        delete_old_state_machine=delete_old_state_machine)
+        return sm_menubar_helper.save_statemachine(menubar=self,
+                                                   widget=widget,
+                                                   data=data,
+                                                   save_as=save_as,
+                                                   delete_old_state_machine=delete_old_state_machine)
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
-        helper.save_statemachine_as(menubar=self,
-                                    widget=widget,
-                                    data=data,
-                                    path=path)
+        sm_menubar_helper.save_statemachine_as(menubar=self,
+                                               widget=widget,
+                                               data=data,
+                                               path=path)
 
     @staticmethod
     def on_refresh_libraries_activate():
-        helper.refresh_libraries()
+        sm_menubar_helper.refresh_libraries()
 
     def on_refresh_all_activate(self, widget, data=None, force=False):
-        helper.refresh_all(menubar=self,
-                           widget=widget,
-                           data=data,
-                           force=force)
+        sm_menubar_helper.refresh_all(menubar=self,
+                                      widget=widget,
+                                      data=data,
+                                      force=force)
 
     def on_substitute_selected_state_activate(self, widget=None, data=None, path=None):
-        selected_states = self.model.get_selected_state_machine_model().selection.get_states()
-        if selected_states and len(selected_states) == 1:
-            StateSubstituteChooseLibraryDialog(mvc_singleton.library_manager_model, parent=self.get_root_window())
-            return True
-        else:
-            logger.warning("Substitute state needs exact one state to be selected.")
-            return False
+        return state_bar_helper.substitute_selected_state(menubar=self,
+                                                          widget=widget,
+                                                          data=data,
+                                                          path=path)
 
     def on_substitute_library_with_template_activate(self, widget=None, data=None):
-        selected_states = self.model.get_selected_state_machine_model().selection.get_states()
-        if selected_states and len(selected_states) == 1 and isinstance(selected_states[0], LibraryStateModel):
-            lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_states[0].state))
-            state_machine_helper.substitute_state(lib_state, as_template=True)
-            # TODO find out why the following generates a problem (e.g. lose of outcomes)
-            # state_machine_helper.substitute_state(selected_states[0].state, as_template=True)
-            return True
-        else:
-            logger.warning("Substitute library state with template needs exact one library state to be selected.")
-            return False
+        return state_bar_helper.substitute_selected_state(menubar=self,
+                                                          widget=widget,
+                                                          data=data)
 
     def on_save_selected_state_as_activate(self, widget=None, data=None, path=None):
-        selected_states = self.model.get_selected_state_machine_model().selection.get_states()
-        if selected_states and len(selected_states) == 1:
-            import copy
-            state_m = copy.copy(selected_states[0])
-            from rafcon.gui.models.state_machine import StateMachineModel
-            sm_m = StateMachineModel(StateMachine(root_state=state_m.state), self.model)
-            sm_m.root_state = state_m
-            from rafcon.core.storage.storage import save_state_machine_to_path
-            path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
-            if path:
-                save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
-                sm_m.store_meta_data()
-            else:
-                return False
-            # check if state machine is in library path
-            if library_manager.is_os_path_in_library_paths(path):
-                # TODO use a check box dialog with three check boxes and an confirmation and cancel button
+        return state_bar_helper.save_selected_state_as(menubar=self,
+                                                       widget=widget,
+                                                       data=data,
+                                                       path=path)
 
-                # Library refresh dialog
-                def on_message_dialog_response_signal(widget, response_id):
-                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value,
-                                       ButtonDialog.OPTION_3.value, -4]:
-                        widget.destroy()
-
-                    if response_id == ButtonDialog.OPTION_1.value:
-                        logger.debug("Library refresh is triggered.")
-                        self.on_refresh_libraries_activate(None)
-                    elif response_id == ButtonDialog.OPTION_2.value:
-                        logger.debug("Refresh all is triggered.")
-                        self.on_refresh_all_activate(None)
-                    elif response_id in [ButtonDialog.OPTION_3.value, -4]:
-                        pass
-                    else:
-                        logger.warning("Response id: {} is not considered".format(response_id))
-
-                message_string = "You stored your state machine in a path that is included into the library paths.\n\n"\
-                                 "Do you want to refresh the libraries or refresh libraries and state machines?"
-                RAFCONButtonDialog(message_string, ["Refresh libraries", "Refresh everything", "Do nothing"],
-                                   on_message_dialog_response_signal,
-                                   type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
-
-                # Offer state substitution dialog
-                def on_message_dialog_response_signal(widget, response_id):
-                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, -4]:
-                        widget.destroy()
-
-                    if response_id == ButtonDialog.OPTION_1.value:
-                        logger.debug("Substitute saved state with Library.")
-                        self.on_refresh_libraries_activate(None)
-                        [library_path, library_name] = library_manager.get_library_path_and_name_for_os_path(path)
-                        state = library_manager.get_library_instance(library_path, library_name)
-                        state_machine_helper.substitute_state(state, as_template=False)
-                    elif response_id in [ButtonDialog.OPTION_2.value, -4]:
-                        pass
-                    else:
-                        logger.warning("Response id: {} is not considered".format(response_id))
-
-                message_string = "You stored your state machine in a path that is included into the library paths.\n\n"\
-                                 "Do you want to substitute the state you saved by this library?"
-                RAFCONButtonDialog(message_string, ["Substitute", "Do nothing"],
-                                   on_message_dialog_response_signal,
-                                   type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
-
-            # Offer to open saved state machine dialog
-            def on_message_dialog_response_signal(widget, response_id):
-                if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, -4]:
-                    widget.destroy()
-
-                if response_id == ButtonDialog.OPTION_1.value:
-                    logger.debug("Open state machine.")
-                    try:
-                        state_machine = storage.load_state_machine_from_path(path)
-                        state_machine_manager.add_state_machine(state_machine)
-                    except (ValueError, IOError) as e:
-                        logger.error('Error while trying to open state machine: {0}'.format(e))
-                elif response_id in [ButtonDialog.OPTION_2.value, -4]:
-                    pass
-                else:
-                    logger.warning("Response id: {} is not considered".format(response_id))
-
-            message_string = "Should the newly created state machine be opened?"
-            RAFCONButtonDialog(message_string, ["Open", "Do not open"], on_message_dialog_response_signal,
-                               type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
-            return True
-        else:
-            logger.warning("Multiple states can not be saved as state machine directly. Group them before.")
-            return False
-
-    def on_menu_properties_activate(self, widget, data=None):
+    @staticmethod
+    def on_menu_properties_activate(widget, data=None):
         config_window_view = ConfigWindowView()
         config_window_ctrl = ConfigWindowController(mvc_singleton.core_config_model, config_window_view,
                                                     mvc_singleton.gui_config_model)
         mvc_singleton.main_window_controller.add_controller('config_window_ctrl', config_window_ctrl)
         config_window_view.show()
         config_window_view.get_top_widget().present()
-
-
 
     def stopped_state_machine_to_proceed(self):
 
