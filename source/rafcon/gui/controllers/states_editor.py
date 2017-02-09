@@ -19,11 +19,12 @@ from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.singleton import gui_config_model
-from rafcon.gui.utils import constants, helpers
+from rafcon.gui.utils import constants
 from rafcon.gui.utils.notification_overview import NotificationOverview, \
     is_execution_status_update_notification_from_state_machine_model
 from rafcon.gui.views.state_editor.state_editor import StateEditorView
 from rafcon.utils import log
+from rafcon.gui.helpers import text_formatting
 
 logger = log.get_logger(__name__)
 
@@ -88,7 +89,7 @@ def create_tab_header(title, close_callback, sticky_callback, *additional_parame
 def set_tab_label_texts(label, state_m, unsaved_changes=False):
     state_machine_id = state_m.state.get_state_machine().state_machine_id
     state_name = state_m.state.name
-    state_name_trimmed = helpers.limit_string(state_name, STATE_NAME_MAX_CHARS)
+    state_name_trimmed = text_formatting.limit_string(state_name, STATE_NAME_MAX_CHARS)
     label_text = "{0}&#8201;&#8226;&#8201;{1}".format(state_machine_id, state_name_trimmed)
     tooltip_text = state_name
     if unsaved_changes:

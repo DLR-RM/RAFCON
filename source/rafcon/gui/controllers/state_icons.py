@@ -10,12 +10,11 @@
 
 import gtk
 
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.execution_state import ExecutionState
+import gui.helpers.state_machine as state_machine_helper
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-
-import rafcon.gui.state_machine_helper as state_machine_helper
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.utils import log
 

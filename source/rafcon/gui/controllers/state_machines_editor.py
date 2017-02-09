@@ -25,7 +25,7 @@ from rafcon.gui.gui_helper import draw_for_all_gtk_states
 
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
 from rafcon.gui.utils import constants
-from rafcon.gui.utils import helpers
+from rafcon.gui.helpers import text_formatting
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -74,7 +74,7 @@ def create_tab_header(title, close_callback, *additional_parameters):
 def set_tab_label_texts(label, state_machine_m, unsaved_changes=False):
     state_machine_id = state_machine_m.state_machine.state_machine_id
     root_state_name = state_machine_m.root_state.state.name
-    root_state_name_trimmed = helpers.limit_string(root_state_name, ROOT_STATE_NAME_MAX_CHARS)
+    root_state_name_trimmed = text_formatting.limit_string(root_state_name, ROOT_STATE_NAME_MAX_CHARS)
     state_machine_path = state_machine_m.state_machine.file_system_path or "[not yet saved]"
     label_text = "{0}&#8201;&#8226;&#8201;{1}".format(state_machine_id, root_state_name_trimmed)
     tooltip_text = root_state_name + "\n\nPath: " + state_machine_path

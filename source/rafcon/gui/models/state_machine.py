@@ -4,15 +4,14 @@ from copy import copy, deepcopy
 
 from gtkmvc import ModelMT, Signal
 
-from rafcon.gui.config import global_gui_config
-from rafcon.gui.models import ContainerStateModel, StateModel
-from rafcon.gui.models.selection import Selection
-from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
-
+from rafcon.gui.config import global_gui_config
+from rafcon.gui.models import ContainerStateModel, StateModel
+from rafcon.gui.models.selection import Selection
+from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg
 from rafcon.utils import log
 from rafcon.utils import storage_utils
 from rafcon.utils.hashable import Hashable
@@ -249,7 +248,7 @@ class StateMachineModel(ModelMT, Hashable):
     def change_root_state_type(self, model, prop_name, info):
         if info.method_name != 'change_root_state_type':
             return
-        from rafcon.gui import state_machine_helper
+        from gui.helpers import state_machine
 
         state_m = self.root_state
 
@@ -267,7 +266,7 @@ class StateMachineModel(ModelMT, Hashable):
             self.selection.remove(state_m)
 
             # Extract child models of state, as they have to be applied to the new state model
-            child_models = state_machine_helper.extract_child_models_of_of_state(state_m, new_state_class)
+            child_models = state_machine.extract_child_models_of_of_state(state_m, new_state_class)
             self.change_root_state_type.__func__.child_models = child_models  # static variable of class method
             self.suppress_new_root_state_model_one_time = True
 
@@ -282,7 +281,7 @@ class StateMachineModel(ModelMT, Hashable):
 
                 # Create a new state model based on the new state and apply the extracted child models
                 child_models = self.change_root_state_type.__func__.child_models
-                new_state_m = state_machine_helper.create_state_model_for_state(new_state, child_models)
+                new_state_m = state_machine.create_state_model_for_state(new_state, child_models)
 
                 new_state_m.register_observer(self)
                 self.root_state = new_state_m

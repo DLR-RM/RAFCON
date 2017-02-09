@@ -10,35 +10,33 @@
 
 from functools import partial
 
-import gtk
 import glib
-
-from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.core.singleton import state_machine_manager, library_manager
+import gtk
 
 import rafcon.core.singleton as core_singletons
-from rafcon.gui.models.abstract_state import AbstractStateModel
-from rafcon.gui.models.state import StateModel
-from rafcon.gui.models.container_state import ContainerStateModel
-from rafcon.gui.models.scoped_variable import ScopedVariableModel
-from rafcon.gui import state_machine_helper
+from gui.helpers import state_machine
+from rafcon.core.singleton import state_machine_manager, library_manager
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.gui import gui_helper
 from rafcon.gui import singleton as mvc_singleton
-from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.views.utils.about_dialog import MyAboutDialog
-from rafcon.gui.views.main_window import MainWindowView
-from rafcon.gui.controllers.config_window import ConfigWindowController
-from rafcon.gui.views.config_window import ConfigWindowView
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.runtime_config import global_runtime_config
+from rafcon.gui.controllers.config_window import ConfigWindowController
+from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.helpers import state as state_menubar_helper
 from rafcon.gui.helpers import state_machine as sm_menubar_helper
-from rafcon.gui.helpers import state as state_bar_helper
-
+from rafcon.gui.models.abstract_state import AbstractStateModel
+from rafcon.gui.models.container_state import ContainerStateModel
+from rafcon.gui.models.scoped_variable import ScopedVariableModel
+from rafcon.gui.models.state import StateModel
+from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
-from rafcon.utils import plugins
+from rafcon.gui.views.config_window import ConfigWindowView
+from rafcon.gui.views.main_window import MainWindowView
+from rafcon.gui.views.utils.about_dialog import MyAboutDialog
 from rafcon.utils import log
+from rafcon.utils import plugins
 
 logger = log.get_logger(__name__)
 
@@ -317,14 +315,14 @@ class MenuBarController(ExtendedController):
     # menu bar functionality - File
     ######################################################
 
-    def on_new_activate(self):
+    def on_new_activate(self, widget=None, data=None):
         sm_menubar_helper.new_statemachine(menubar=self,)
 
     @staticmethod
-    def on_open_activate(path=None):
+    def on_open_activate(widget=None, data=None, path=None):
         sm_menubar_helper.open_statemachine(path=path)
 
-    def on_save_activate(self, widget, save_as=False, delete_old_state_machine=False):
+    def on_save_activate(self, widget, data=None, save_as=False, delete_old_state_machine=False):
         return sm_menubar_helper.save_statemachine(menubar=self,
                                                    widget=widget,
                                                    save_as=save_as,
@@ -340,21 +338,21 @@ class MenuBarController(ExtendedController):
     def on_refresh_libraries_activate():
         sm_menubar_helper.refresh_libraries()
 
-    def on_refresh_all_activate(self, force=False):
+    def on_refresh_all_activate(self, widget, data=None, force=False):
         sm_menubar_helper.refresh_all(menubar=self,
                                       force=force)
 
-    def on_substitute_selected_state_activate(self):
-        return state_bar_helper.substitute_selected_state(menubar=self)
+    def on_substitute_selected_state_activate(self, widget=None, data=None, path=None):
+        return state_menubar_helper.substitute_selected_state(menubar=self)
 
-    def on_substitute_library_with_template_activate(self):
-        return state_bar_helper.substitute_selected_state(menubar=self)
+    def on_substitute_library_with_template_activate(self, widget=None, data=None):
+        return state_menubar_helper.substitute_selected_state(menubar=self)
 
-    def on_save_selected_state_as_activate(self):
-        return state_bar_helper.save_selected_state_as(menubar=self)
+    def on_save_selected_state_as_activate(self, widget=None, data=None, path=None):
+        return state_menubar_helper.save_selected_state_as(menubar=self)
 
     @staticmethod
-    def on_menu_properties_activate():
+    def on_menu_properties_activate(widget, data=None):
         config_window_view = ConfigWindowView()
         config_window_ctrl = ConfigWindowController(mvc_singleton.core_config_model, config_window_view,
                                                     mvc_singleton.gui_config_model)
@@ -541,7 +539,7 @@ class MenuBarController(ExtendedController):
     ######################################################
 
     def on_toggle_is_start_state_active(self, widget, data=None):
-        return state_machine_helper.selected_state_toggle_is_start_state()
+        return state_machine.selected_state_toggle_is_start_state()
 
     def on_copy_selection_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action("copy", None, None)

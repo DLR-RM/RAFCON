@@ -1,25 +1,17 @@
 import gtk
-from gtk.gdk import CONTROL_MASK
 from enum import Enum
-from math import pow
-
-from gaphas.aspect import HandleFinder, ItemConnectionSink, Connector, InMotion
-from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, ConnectHandleTool, RubberbandTool
+from gaphas.aspect import HandleFinder, InMotion
 from gaphas.item import NW, Item
+from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, ConnectHandleTool, RubberbandTool
 
+from gui.helpers import state_machine
+from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGaphas
+from rafcon.gui.gui_helper import react_to_event
 from rafcon.gui.mygaphas.aspect import HandleInMotion, StateHandleFinder
-from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, \
-    TransitionPlaceholderView, DataFlowPlaceholderView, TransitionView, DataFlowView
-from rafcon.gui.mygaphas.items.ports import IncomeView, OutcomeView, InputPortView, OutputPortView, \
-    ScopedVariablePortView
+from rafcon.gui.mygaphas.items.connection import ConnectionView, TransitionPlaceholderView, DataFlowPlaceholderView, TransitionView, DataFlowView
+from rafcon.gui.mygaphas.items.ports import InputPortView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils import gap_helper
-
-from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGaphas
-
-from rafcon.gui import state_machine_helper
-from rafcon.gui.config import global_gui_config
-from rafcon.gui.gui_helper import react_to_event
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 
@@ -36,11 +28,11 @@ class RemoveItemTool(Tool):
         if gtk.gdk.keyval_name(event.keyval) == "Delete":
             # Delete Transition from state machine
             if isinstance(self.view.focused_item, TransitionView):
-                state_machine_helper.delete_model(self.view.focused_item.model)
+                state_machine.delete_model(self.view.focused_item.model)
                 return True
             # Delete DataFlow from state machine
             if isinstance(self.view.focused_item, DataFlowView):
-                state_machine_helper.delete_model(self.view.focused_item.model)
+                state_machine.delete_model(self.view.focused_item.model)
                 return True
             # Delete selected state(s) from state machine
             if isinstance(self.view.focused_item, StateView):
