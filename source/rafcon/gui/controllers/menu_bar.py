@@ -322,23 +322,11 @@ class MenuBarController(ExtendedController):
     ######################################################
     # menu bar functionality - File
     ######################################################
+
     def on_new_activate(self, widget=None, data=None):
-        import glib
-        logger.debug("Creating new state-machine...")
-        root_state = HierarchyState("new root state")
-        state_machine = StateMachine(root_state)
-        state_machine_manager.add_state_machine(state_machine)
-        state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
-        state_machine_m = self.model.get_selected_state_machine_model()
-        # If idle_add isn't used, gaphas crashes, as the view is not ready
-        glib.idle_add(state_machine_m.selection.set, state_machine_m.root_state)
-
-        def grab_focus():
-            editor_controller = self.state_machines_editor_ctrl.get_controller(state_machine.state_machine_id)
-            editor_controller.view.editor.grab_focus()
-
-        # The editor parameter of view is created belated, thus we have to use idle_add again
-        glib.idle_add(grab_focus)
+        helper.new_statemachine(menubar=self,
+                                widget=widget,
+                                data=data)
 
     @staticmethod
     def on_open_activate(widget=None, data=None, path=None):
@@ -347,21 +335,27 @@ class MenuBarController(ExtendedController):
                                  path=path)
 
     def on_save_activate(self, widget, data=None, save_as=False, delete_old_state_machine=False):
-        return helper.save_statemachine(widget=widget,
+        return helper.save_statemachine(menubar=self,
+                                        widget=widget,
                                         data=data,
                                         save_as=save_as,
                                         delete_old_state_machine=delete_old_state_machine)
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
-        if path is None:
-            if interface.create_folder_func is None:
-                logger.error("No function defined for creating a folder")
-                return False
-            path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
-            if path is None:
-                return False
-        self.model.get_selected_state_machine_model().state_machine.file_system_path = path
-        return self.on_save_activate(widget, data, save_as=True, delete_old_state_machine=True)
+        helper.save_statemachine_as(menubar=self,
+                                    widget=widget,
+                                    data=data,
+                                    path=path)
+
+    @staticmethod
+    def on_refresh_libraries_activate():
+        helper.refresh_libraries()
+
+    def on_refresh_all_activate(self, widget, data=None, force=False):
+        helper.refresh_all(menubar=self,
+                           widget=widget,
+                           data=data,
+                           force=force)
 
     def on_substitute_selected_state_activate(self, widget=None, data=None, path=None):
         selected_states = self.model.get_selected_state_machine_model().selection.get_states()
@@ -481,60 +475,7 @@ class MenuBarController(ExtendedController):
         config_window_view.show()
         config_window_view.get_top_widget().present()
 
-    def on_refresh_libraries_activate(self, widget, data=None):
-        """
-        Deletes and reloads all libraries from the filesystem.
-        :param widget: the main widget
-        :param data: optional data
-        :return:
-        """
-        library_manager.refresh_libraries()
 
-    def on_refresh_all_activate(self, widget, data=None, force=False):
-        """Reloads all libraries and thus all state machines as well.
-
-        :param widget: the main widget
-        :param data: optional data
-        """
-        if force:
-            self.refresh_libs_and_state_machines()
-        else:
-
-            # check if a state machine is still running
-            if not self.state_machine_execution_engine.finished_or_stopped:
-                if self.stopped_state_machine_to_proceed():
-                    pass  # state machine was stopped, proceeding reloading library
-                else:
-                    return
-
-            # check if the a dirty flag is still set
-            all_tabs = self.states_editor_ctrl.tabs.values()
-            all_tabs.extend(self.states_editor_ctrl.closed_tabs.values())
-            dirty_source_editor = [tab_dict['controller'] for tab_dict in all_tabs if
-                                   tab_dict['source_code_view_is_dirty'] is True]
-            if state_machine_manager.has_dirty_state_machine() or dirty_source_editor:
-
-                def on_message_dialog_response_signal(widget, response_id):
-                    if response_id == ButtonDialog.OPTION_1.value:
-                        self.refresh_libs_and_state_machines()
-                    else:
-                        logger.debug("Refresh canceled")
-                    widget.destroy()
-
-                message_string = "Are you sure you want to reload the libraries and all state machines?\n\n" \
-                                 "The following elements have been modified and not saved. " \
-                                 "These changes will get lost:"
-                for sm_id, sm in state_machine_manager.state_machines.iteritems():
-                    if sm.marked_dirty:
-                        message_string = "%s\n* State machine #%s and name '%s'" % (
-                            message_string, str(sm_id), sm.root_state.name)
-                for ctrl in dirty_source_editor:
-                    message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
-                        message_string, ctrl.model.state.name, ctrl.model.state.get_path())
-                RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"], on_message_dialog_response_signal,
-                                   type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
-            else:
-                self.refresh_libs_and_state_machines()
 
     def stopped_state_machine_to_proceed(self):
 
