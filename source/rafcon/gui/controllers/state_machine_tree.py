@@ -12,8 +12,7 @@ from functools import partial
 
 import gobject
 import gtk
-
-from gui.helpers import state_machine
+from rafcon.gui.helpers import state_machine
 from rafcon.core.states.state import State
 from rafcon.core.states.state import StateType
 from rafcon.gui.clipboard import global_clipboard

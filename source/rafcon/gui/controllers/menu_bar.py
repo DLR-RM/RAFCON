@@ -14,7 +14,7 @@ import glib
 import gtk
 
 import rafcon.core.singleton as core_singletons
-from gui.helpers import state_machine
+from rafcon.gui.helpers import state_machine
 from rafcon.core.singleton import state_machine_manager, library_manager
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState

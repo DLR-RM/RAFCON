@@ -10,7 +10,7 @@
 
 import gtk
 
-import gui.helpers.state_machine as state_machine_helper
+import rafcon.gui.helpers.state_machine as state_machine_helper
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState

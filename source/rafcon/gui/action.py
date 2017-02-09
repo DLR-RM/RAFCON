@@ -854,7 +854,7 @@ class StateMachineAction(Action, ModelMT):
         self.storage_version_for_state_type_change_signal_hook = None
 
     def set_root_state_to_version(self, state, storage_version):
-        import gui.helpers.state_machine as state_machine_helper
+        import rafcon.gui.helpers.state_machine as state_machine_helper
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s  || %s || StateMachineAction\n\n\n\n\n\n\n" % (state.get_path(), state))
         # self.state_machine.root_state = get_state_from_state_tuple(storage_version)
         root_state_version_from_storage = get_state_from_state_tuple(storage_version)

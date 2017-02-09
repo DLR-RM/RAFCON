@@ -22,7 +22,7 @@ from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MA
 from gtk.gdk import keyval_name
 
 import rafcon.core.id_generator as idgen
-from gui.helpers import state_machine
+from rafcon.gui.helpers import state_machine
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.states.state import StateType

@@ -14,7 +14,7 @@ import gtk
 from gtk.gdk import keyval_name
 from gtkmvc import Model
 
-from gui.helpers import state_machine
+from rafcon.gui.helpers import state_machine
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
