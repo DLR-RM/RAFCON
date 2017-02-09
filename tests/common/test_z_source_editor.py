@@ -140,7 +140,9 @@ def trigger_source_editor_signals(main_window_controller):
 def test_gui(caplog):
     t_u.initialize_environment(gui_config={'GAPHAS_EDITOR': True,
                                       'AUTO_BACKUP_ENABLED': False,
-                                      'CHECK_PYTHON_FILES_WITH_PYLINT': False})
+                                      'CHECK_PYTHON_FILES_WITH_PYLINT': False,
+                                      'PREFER_EXTERNAL_EDITOR': False})
+
 
     main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
