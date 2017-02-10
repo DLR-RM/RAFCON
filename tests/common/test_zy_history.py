@@ -1142,18 +1142,11 @@ def test_data_flow_property_modifications_history(caplog):
 
 
 def test_type_modifications_without_gui(caplog):
-    import rafcon.core.start
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False})
+
     with_gui = False
-    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
-    signal.signal(signal.SIGINT, rafcon.core.start.signal_handler)
-    global_config.load()  # load the default config
-    global_gui_config.load()  # load the default config
-    print "create model"
-    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+
     [logger, sm_m, state_dict] = create_models()
-    print "init libs"
-    testing_utils.remove_all_libraries()
-    rafcon.core.singleton.library_manager.initialize()
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
@@ -1161,8 +1154,7 @@ def test_type_modifications_without_gui(caplog):
     print "start thread"
     trigger_state_type_change_tests(sm_manager_model, None, sm_m, state_dict, with_gui, logger)
 
-    testing_utils.reload_config()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.shutdown_environment(caplog=caplog)
 
 
 @pytest.mark.parametrize("with_gui", [True])
@@ -1204,8 +1196,7 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
         logger.debug("Gtk main loop exited!")
 
     thread.join()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+    testing_utils.shutdown_environment(caplog=caplog)
 
 # TODO introduce test_add_remove_history with_gui=True to have a more reliable unit-test
 
@@ -1260,8 +1251,7 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
         trigger_state_type_change_typical_bug_tests(rafcon.gui.singleton.state_machine_manager_model,
                                                     None, sm_m, state_dict, with_gui, logger)
 
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+    testing_utils.shutdown_environment(caplog=caplog)
 
 
 @log.log_exceptions(None, gtk_quit=True)

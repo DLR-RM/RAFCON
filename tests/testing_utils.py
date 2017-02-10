@@ -31,6 +31,7 @@ EXAMPLES_PATH = join(TESTS_PATH, '..', 'share', 'examples')
 TEST_ASSETS_PATH = join(TESTS_PATH, 'assets')
 TEST_SCRIPT_PATH =  join(TESTS_PATH, 'assets', 'scripts')
 TUTORIAL_PATH = join(TESTS_PATH, "..", "share", "examples", "tutorials")
+RAFCON_SHARED_LIBRARY_PATH = join(dirname(RAFCON_PATH), '..', 'share', 'libraries')
 
 
 def get_unique_temp_path():
@@ -50,13 +51,14 @@ def reload_config(config=True, gui_config=True):
         rafcon.gui.config.global_gui_config.load()
 
 
-def remove_all_libraries():
+def remove_all_libraries(init_library_manager=True):
     from rafcon.core.config import global_config
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
     libs = [lib for lib in library_paths]
     for lib in libs:
         del library_paths[lib]
-    rafcon.core.singleton.library_manager.initialize()
+    if init_library_manager:
+        rafcon.core.singleton.library_manager.initialize()
 
 
 def remove_all_gvm_variables():
@@ -111,6 +113,20 @@ def call_gui_callback(callback, *args):
     condition.wait()
     condition.release()
 
+def rewind_and_set_libraries(libraries=None):
+    """ Clear libraries, set new libraries and secure default libraries set."""
+    from rafcon.core.config import global_config
+    if libraries is None:
+        libraries = {}
+    remove_all_libraries(init_library_manager=False)
+    if not isinstance(libraries, dict):
+        libraries = {}
+    if "generic" not in libraries:
+        libraries["generic"] = join(RAFCON_SHARED_LIBRARY_PATH, 'generic')
+    global_config.set_config_value("LIBRARY_PATHS", libraries)
+    environ['RAFCON_LIB_PATH'] = RAFCON_SHARED_LIBRARY_PATH
+    rafcon.core.singleton.library_manager.initialize()
+
 
 def initialize_environment(core_config=None, gui_config=None, runtime_config=None, libraries=None):
     """ Initialize global configs, libraries and aquire multi threading lock
@@ -148,16 +164,9 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
         if isinstance(core_config, dict):
             for key, value in core_config.iteritems():
                 global_config.set_config_value(key, value)
-    rafcon_library_path = join(dirname(RAFCON_PATH), '..', 'share', 'libraries')
-    remove_all_libraries()
-    if not isinstance(libraries, dict):
-        libraries = {}
-    if "generic" not in libraries:
-        libraries["generic"] = join(rafcon_library_path, 'generic')
-    global_config.set_config_value("LIBRARY_PATHS", libraries)
-    environ['RAFCON_LIB_PATH'] = rafcon_library_path
 
-    library_manager.initialize()
+    rewind_and_set_libraries(libraries=libraries)
+
     state_machine_manager.delete_all_state_machines()
 
     # initialize global gui config
@@ -181,21 +190,28 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
     signal.signal(signal.SIGINT, signal_handler)
 
 
-def shutdown_environment(config=True, gui_config=True):
-    """ Reset Config object classes of singletons and release multi threading lock
+def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0):
+    """ Reset Config object classes of singletons and release multi threading lock and optional do the log-msg test
 
      The function reloads the default config files optional and release the multi threading lock. This function is
      intended to be the counterpart of the initialize_environment function so that the common environment test with
      can be shutdown/recovered as easy as it was initialized before.
      Therefore (recovering/reload default configs) it helps to avoid site effects with not properly initialized test
      runs, too.
+     As long as the test stuck when one test is not releasing its multi-threading lock the function integrates a optional
+     caplog error and warning message count and check. This raise the Assertion error reliable and release the lock, too.
 
     :param bool config: Flag to reload core config from default path.
     :param bool gui_config: Flag to reload gui config from default path.
     :return:
     """
-    reload_config(config, gui_config)
-    test_multithreading_lock.release()
+    try:
+        if caplog is not None:
+            assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors)
+    finally:
+        rewind_and_set_libraries()
+        reload_config(config, gui_config)
+        test_multithreading_lock.release()
 
 
 def wait_for_gui():

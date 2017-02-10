@@ -124,11 +124,10 @@ def test_backward_stepping_library_state(caplog):
         menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
         call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
-    testing_utils.wait_for_gui_quit()
-    logger.debug("after gtk main")
+        testing_utils.wait_for_gui_quit()
+        logger.debug("after gtk main")
 
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 @log.log_exceptions(None, gtk_quit=True)
@@ -198,11 +197,10 @@ def test_backward_stepping_preemptive_state(caplog):
         menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
         call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
-    testing_utils.wait_for_gui_quit()
-    logger.debug("after gtk main")
+        testing_utils.wait_for_gui_quit()
+        logger.debug("after gtk main")
 
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 @log.log_exceptions(None, gtk_quit=True)
@@ -270,11 +268,10 @@ def test_backward_stepping_barrier_state(caplog):
         menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
         call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
-    testing_utils.wait_for_gui_quit()
-    logger.debug("after gtk main")
+        testing_utils.wait_for_gui_quit()
+        logger.debug("after gtk main")
 
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':

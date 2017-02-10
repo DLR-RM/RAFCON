@@ -15,8 +15,7 @@ def test_resave(caplog):
     print "config path: " + config_path
     resave.convert_libraries_in_path(config_path, folder_to_convert, target_folder)
 
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+    testing_utils.shutdown_environment(caplog=caplog)
 
 if __name__ == '__main__':
     #test_resave(None)

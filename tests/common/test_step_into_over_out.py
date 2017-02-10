@@ -19,11 +19,7 @@ def wait_and_join(state_machine, state_id):
 
 def test_custom_entry_point(caplog):
 
-    testing_utils.test_multithreading_lock.acquire()
-
-    testing_utils.remove_all_libraries()
-    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
-    rafcon.core.singleton.library_manager.initialize()
+    testing_utils.initialize_environment()
 
     state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path(
         "unit_test_state_machines/stepping_test"))
@@ -70,10 +66,10 @@ def test_custom_entry_point(caplog):
     rafcon.core.singleton.state_machine_execution_engine.stop()
     rafcon.core.singleton.state_machine_execution_engine.join()
 
-    assert rafcon.core.singleton.global_variable_manager.get_variable("bottles") == 95
-
-    testing_utils.test_multithreading_lock.release()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    try:
+        assert rafcon.core.singleton.global_variable_manager.get_variable("bottles") == 95
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':

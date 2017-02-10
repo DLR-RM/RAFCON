@@ -62,7 +62,8 @@ def trigger_drag_and_drop_tests(*args):
     call_gui_callback(graphical_editor_controller.view.editor.set_size_request, 500, 500)
 
     library_tree_controller.view.expand_all()
-    library_tree_controller.view.get_selection().select_path((0, 0))
+    # generic and unit_test_state_machines in library tree index 1 is unit_test_state_machines
+    library_tree_controller.view.get_selection().select_path((1, 0))
 
     selection_data = StructHelper(0, 0, None)
 
@@ -129,14 +130,10 @@ def test_drag_and_drop_test(caplog):
     # testing_utils.reload_config()
     # testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
 
-    testing_utils.initialize_environment()
+    testing_utils.initialize_environment(libraries={"unit_test_state_machines":
+                                                    testing_utils.get_test_sm_path("unit_test_state_machines")})
 
     create_models()
-
-    testing_utils.remove_all_libraries()
-    library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["unit_test_state_machines"] = testing_utils.get_test_sm_path("unit_test_state_machines")
-    rafcon.core.singleton.library_manager.initialize()
 
     main_window_view = MainWindowView()
 
@@ -160,8 +157,7 @@ def test_drag_and_drop_test(caplog):
         thread.join()
         logger.debug("Joined test triggering thread!")
 
-    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
-    testing_utils.shutdown_environment()
+    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 
 if __name__ == '__main__':

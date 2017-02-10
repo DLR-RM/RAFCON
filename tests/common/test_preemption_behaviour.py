@@ -25,11 +25,11 @@ def test_preemption_behaviour_in_preemption_state(caplog):
         path=testing_utils.get_test_sm_path("unit_test_state_machines/preemption_behaviour_test_sm"))
     rafcon.core.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
     from rafcon.core.singleton import global_variable_manager
-    assert global_variable_manager.get_variable("s2") == 1.0
-    assert not global_variable_manager.variable_exist("s3")
-
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+    try:
+        assert global_variable_manager.get_variable("s2") == 1.0
+        assert not global_variable_manager.variable_exist("s3")
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 def trigger_stop(sm, execution_engine):
@@ -53,12 +53,12 @@ def test_preemption_behaviour_during_stop(caplog):
     rafcon.core.singleton.state_machine_execution_engine.join()
 
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    assert global_variable_manager.get_variable("s1") == 1
-    assert global_variable_manager.get_variable("s2") == 1
-    assert not global_variable_manager.variable_exist("s3")
-
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+    try:
+        assert global_variable_manager.get_variable("s1") == 1
+        assert global_variable_manager.get_variable("s2") == 1
+        assert not global_variable_manager.variable_exist("s3")
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':

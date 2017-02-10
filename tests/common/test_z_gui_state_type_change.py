@@ -677,8 +677,7 @@ def test_state_type_change_test(caplog):
 
     thread.join()
 
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+    testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':

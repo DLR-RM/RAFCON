@@ -43,10 +43,10 @@ def test_multi_events(caplog):
 
     execution_trigger_thread.join()
     state_machine_manager.remove_state_machine(sm.state_machine_id)
-    assert global_variable_manager.get_variable("sm_status") == 2
-
-    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
-    testing_utils.shutdown_environment()
+    try:
+        assert global_variable_manager.get_variable("sm_status") == 2
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
 
 if __name__ == '__main__':

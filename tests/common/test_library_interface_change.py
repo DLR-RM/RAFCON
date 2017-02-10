@@ -16,10 +16,9 @@ logger = log.get_logger("start-no-gui")
 
 def setup_function(_):
     # set the test_libraries path temporarily to the correct value
-    testing_utils.remove_all_libraries()
-    library_paths = global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["unit_test_state_machines"] = os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")
     global_config.set_config_value("LIBRARY_RECOVERY_MODE", True)
+    testing_utils.rewind_and_set_libraries({"unit_test_state_machines":
+                                            os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")})
 
 
 def get_test_state_machine(name):
@@ -41,10 +40,10 @@ def test_load_data_ports_not_existing(caplog):
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_execution_engine.stop()
 
-    assert rafcon.core.singleton.global_variable_manager.get_variable("x") == 1
-
-    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 2)
-    testing_utils.shutdown_environment()
+    try:
+        assert rafcon.core.singleton.global_variable_manager.get_variable("x") == 1
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=2)
 
     logger.info("State machine execution finished!")
 
@@ -62,12 +61,13 @@ def test_load_wrong_data_types(caplog):
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_execution_engine.stop()
 
-    assert rafcon.core.singleton.global_variable_manager.get_variable("x") == 1
+    try:
+        assert rafcon.core.singleton.global_variable_manager.get_variable("x") == 1
 
-    # 4 data type errors -> 2 data flow port to port data type inequality and while runtime 1 input- and 1 output data type error
-    # 2 data type warnings -> 1 input- and  1 output-data port  data type warnings while loading of state machine
-    testing_utils.assert_logger_warnings_and_errors(caplog, 2, 4)
-    testing_utils.shutdown_environment()
+        # 4 data type errors -> 2 data flow port to port data type inequality and while runtime 1 input- and 1 output data type error
+        # 2 data type warnings -> 1 input- and  1 output-data port  data type warnings while loading of state machine
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=2, expected_errors=4)
 
     logger.info("State machine execution finished!")
 
@@ -82,8 +82,7 @@ def test_load_not_existing_outcome(caplog):
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
-    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
-    testing_utils.shutdown_environment()
+    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
 
     logger.info("State machine execution finished!")
 

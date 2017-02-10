@@ -25,10 +25,10 @@ def test_execute_script_returns_none(caplog):
     rafcon.core.singleton.state_machine_execution_engine.start()
     rafcon.core.singleton.state_machine_execution_engine.join()
 
-    assert state_machine.root_state.final_outcome.outcome_id == 0
-
-    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
-    testing_utils.shutdown_environment()
+    try:
+        assert state_machine.root_state.final_outcome.outcome_id == 0
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 
 if __name__ == '__main__':

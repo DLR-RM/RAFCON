@@ -19,10 +19,10 @@ def test_custom_entry_point(caplog):
         path=testing_utils.get_test_sm_path("unit_test_state_machines/test_custom_entry_point"),
         start_state_path=start_state_id)
     rafcon.core.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
-    assert not rafcon.core.singleton.global_variable_manager.variable_exist("start_id21")
-
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+    try:
+        assert not rafcon.core.singleton.global_variable_manager.variable_exist("start_id21")
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':

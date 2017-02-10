@@ -124,8 +124,7 @@ def test_copy_delete_bug(caplog):
     gtk.main()
     logger.debug("after gtk main")
     thread.join()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+    testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':

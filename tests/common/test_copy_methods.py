@@ -388,8 +388,7 @@ def test_simple(caplog):
     sm_model.destroy()
     # rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
 
-    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
-    testing_utils.shutdown_environment()
+    testing_utils.shutdown_environment(caplog=caplog)
 
 
 @pytest.mark.parametrize("with_gui", [False])
@@ -437,8 +436,7 @@ def test_complex(with_gui, caplog):
     while gtk.events_pending():
         gtk.main_iteration(False)
 
-    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
-    testing_utils.shutdown_environment()
+    testing_utils.shutdown_environment(caplog=caplog)
 
     # import conftest
     # import shutil

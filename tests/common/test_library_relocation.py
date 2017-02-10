@@ -50,10 +50,10 @@ def test_library_relocation(caplog):
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_execution_engine.stop()
 
-    assert state_machine.root_state.output_data["output_0"] == 27
-
-    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
-    testing_utils.shutdown_environment()
+    try:
+        assert state_machine.root_state.output_data["output_0"] == 27
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
 
     logger.info("State machine execution finished!")
 

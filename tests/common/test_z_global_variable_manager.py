@@ -71,8 +71,7 @@ def test_gui(caplog):
     thread.join()
 
     # expected_errors=1 because global_variable_is_editable throws an error
-    testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors = 1)
-    testing_utils.shutdown_environment()
+    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 
 if __name__ == '__main__':

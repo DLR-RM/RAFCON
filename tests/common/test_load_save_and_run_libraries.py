@@ -23,9 +23,7 @@ TEST_LIBRARY_PATH = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "test
 
 def setup_module(module=None):
     # set the test_libraries path temporarily to the correct value
-    testing_utils.remove_all_libraries()
-    library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["temporary_libraries"] = TEST_LIBRARY_PATH
+    testing_utils.rewind_and_set_libraries({"temporary_libraries": TEST_LIBRARY_PATH})
 
 
 def test_save_libraries(caplog):

@@ -267,14 +267,15 @@ def test_storage_without_gui(caplog):
     with_gui = False
     testing_utils.initialize_environment()
     [state, sm_m, state_dict] = create_models()
-    save_state_machine(sm_model=sm_m, path=testing_utils.get_unique_temp_path(), logger=logger, with_gui=with_gui,
-                       menubar_ctrl=None)
+    try:
+        save_state_machine(sm_model=sm_m, path=testing_utils.get_unique_temp_path(), logger=logger, with_gui=with_gui,
+                           menubar_ctrl=None)
 
-    missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
-    assert len(missing_elements) == 0
+        missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
 
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+        assert len(missing_elements) == 0
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 def test_storage_with_gui(caplog):
@@ -316,9 +317,10 @@ def test_storage_with_gui(caplog):
     thread.join()
 
     missing_elements, _ = check_that_all_files_are_there(sm_m, check_meta_data=True, with_print=False)
-    assert len(missing_elements) == 0
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+    try:
+        assert len(missing_elements) == 0
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 def test_on_clean_storing_with_name_in_path(caplog):
@@ -332,16 +334,16 @@ def test_on_clean_storing_with_name_in_path(caplog):
     sm = storage.load_state_machine_from_path(path_new_format)
     sm.base_path = path_new_format
     sm_m = StateMachineModel(sm, rafcon.gui.singleton.state_machine_manager_model)
+    try:
+        on_save_activate(sm_m, logger)
 
-    on_save_activate(sm_m, logger)
+        missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
 
-    missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
-    assert len(missing_elements) == 0
+        assert len(missing_elements) == 0
 
-    check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m)
-
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+        check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m)
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':

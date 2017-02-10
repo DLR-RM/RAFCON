@@ -167,8 +167,7 @@ def test_gui(caplog):
         logger.error("!The editor required in this test was not found on this machine. Test was aborted!")
         errors = 2
         
-    t_u.assert_logger_warnings_and_errors(caplog, expected_errors=errors)
-    t_u.shutdown_environment()
+    t_u.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=errors)
 
 
 if __name__ == '__main__':

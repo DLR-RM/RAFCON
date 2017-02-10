@@ -41,11 +41,10 @@ def test_run_to_selected_state(caplog):
     rafcon.core.singleton.state_machine_execution_engine.stop()
     rafcon.core.singleton.state_machine_execution_engine.join()
 
-    assert len(lines) < 3
-
-    # read all lines of the file and check if not more than 2 states have written to it
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+    try:
+        assert len(lines) < 3
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':

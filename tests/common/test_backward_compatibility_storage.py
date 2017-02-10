@@ -63,12 +63,10 @@ def test_backward_compatibility_storage(caplog):
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
         call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
-    wait_for_gui_quit()
-    logger.debug("after gtk main")
+        wait_for_gui_quit()
+        logger.debug("after gtk main")
 
-    testing_utils.remove_all_libraries()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':

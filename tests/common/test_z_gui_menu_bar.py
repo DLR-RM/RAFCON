@@ -311,8 +311,9 @@ def test_gui(caplog):
     gtk.main()
     logger.debug("after gtk main")
     thread.join()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
-    testing_utils.shutdown_environment()
+
+    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+
 
 
 if __name__ == '__main__':
