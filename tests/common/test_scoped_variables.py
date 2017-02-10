@@ -69,10 +69,11 @@ def test_scoped_variables(caplog):
     rafcon.core.singleton.state_machine_execution_engine.start()
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    testing_utils.test_multithreading_lock.release()
-
-    assert state_machine.root_state.output_data["output_data_port1"] == 42
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    try:
+        assert state_machine.root_state.output_data["output_data_port1"] == 42
+        testing_utils.assert_logger_warnings_and_errors(caplog)
+    finally:
+        testing_utils.test_multithreading_lock.release()
 
 
 if __name__ == '__main__':

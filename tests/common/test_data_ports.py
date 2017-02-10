@@ -94,11 +94,12 @@ def test_default_values_of_data_ports(caplog):
     rafcon.core.singleton.state_machine_execution_engine.start()
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    testing_utils.test_multithreading_lock.release()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
 
     print root_state.output_data
-    assert root_state.output_data["output_data_port1"] == "default_value"
+    try:
+        assert root_state.output_data["output_data_port1"] == "default_value"
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 def test_last_wins_value_collection_for_data_ports(caplog):
@@ -118,8 +119,7 @@ def test_last_wins_value_collection_for_data_ports(caplog):
     rafcon.core.singleton.state_machine_execution_engine.start()
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    testing_utils.test_multithreading_lock.release()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.shutdown_environment(caplog=caplog)
 
 
 def test_unique_port_names(caplog):
@@ -225,10 +225,9 @@ def test_runtime_checks_for_data_port_data_types(caplog):
     rafcon.core.singleton.state_machine_execution_engine.start()
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    testing_utils.test_multithreading_lock.release()
     # 6 errors -> IN ORDER output port-, root state scoped-, input port-, output port-, root state scoped- and
     # root state output port-data-type-errors
-    testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors=6)
+    testing_utils.shutdown_environment(caplog=caplog, expected_errors=6)
 
 
 if __name__ == '__main__':

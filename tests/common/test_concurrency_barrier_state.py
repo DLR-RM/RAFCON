@@ -75,13 +75,14 @@ def test_concurrency_barrier_save_load(caplog):
     rafcon.core.singleton.state_machine_execution_engine.start()
     rafcon.core.singleton.state_machine_execution_engine.join()
 
-    assert rafcon.core.singleton.global_variable_manager.get_variable("var_x") == 10
-    assert rafcon.core.singleton.global_variable_manager.get_variable("var_y") == 20
-    assert root_state.final_outcome.outcome_id == 4
+    try:
+        assert rafcon.core.singleton.global_variable_manager.get_variable("var_x") == 10
+        assert rafcon.core.singleton.global_variable_manager.get_variable("var_y") == 20
+        assert root_state.final_outcome.outcome_id == 4
 
-    rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    testing_utils.test_multithreading_lock.release()
-    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
+        rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 if __name__ == '__main__':
     pytest.main([__file__])

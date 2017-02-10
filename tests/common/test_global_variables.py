@@ -40,10 +40,11 @@ def test_concurrency_barrier_state_execution(caplog):
     rafcon.core.singleton.state_machine_execution_engine.start()
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    testing_utils.test_multithreading_lock.release()
-
-    assert root_state.output_data["output_data_port1"] == 42
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    try:
+        assert root_state.output_data["output_data_port1"] == 42
+        testing_utils.assert_logger_warnings_and_errors(caplog)
+    finally:
+        testing_utils.test_multithreading_lock.release()
 
 
 if __name__ == '__main__':

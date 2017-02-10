@@ -46,10 +46,12 @@ def test_start_stop_pause_step(caplog):
     rafcon.core.singleton.state_machine_execution_engine.stop()
     rafcon.core.singleton.state_machine_execution_engine.join()
 
-    assert rafcon.core.singleton.global_variable_manager.get_variable("counter") == 5
-    rafcon.core.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
-    testing_utils.test_multithreading_lock.release()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    try:
+        assert rafcon.core.singleton.global_variable_manager.get_variable("counter") == 5
+        rafcon.core.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
+        testing_utils.assert_logger_warnings_and_errors(caplog)
+    finally:
+        testing_utils.test_multithreading_lock.release()
 
 if __name__ == '__main__':
     pytest.main([__file__])

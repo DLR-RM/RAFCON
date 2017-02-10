@@ -44,11 +44,13 @@ def test_concurrency_preemption_state_execution(caplog):
     rafcon.core.singleton.state_machine_execution_engine.start()
     rafcon.core.singleton.state_machine_execution_engine.join()
 
-    assert rafcon.core.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
-    assert preemption_state_sm.root_state.final_outcome.outcome_id == 3
-    rafcon.core.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
-    testing_utils.test_multithreading_lock.release()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    try:
+        assert rafcon.core.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
+        assert preemption_state_sm.root_state.final_outcome.outcome_id == 3
+        rafcon.core.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
+        testing_utils.assert_logger_warnings_and_errors(caplog)
+    finally:
+        testing_utils.test_multithreading_lock.release()
 
 
 def test_concurrency_preemption_save_load(caplog):
@@ -66,10 +68,12 @@ def test_concurrency_preemption_save_load(caplog):
     rafcon.core.singleton.state_machine_execution_engine.start()
     rafcon.core.singleton.state_machine_execution_engine.join()
 
-    assert rafcon.core.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
-    rafcon.core.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
-    testing_utils.test_multithreading_lock.release()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    try:
+        assert rafcon.core.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
+        rafcon.core.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
+        testing_utils.assert_logger_warnings_and_errors(caplog)
+    finally:
+        testing_utils.test_multithreading_lock.release()
 
 if __name__ == '__main__':
     pytest.main([__file__])

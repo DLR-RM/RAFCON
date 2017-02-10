@@ -130,17 +130,19 @@ def test_core_destruct(caplog):
 
     state_gen_file, state_del_file, state_element_gen_file, state_element_del_file = get_log_elements(with_prints=True)
 
-    ratio = float(len(state_del_file))/float(len(state_gen_file))
-    diff = len(state_gen_file) - len(state_del_file)
-    print "Ratio of destroyed/generated state objects is: ", ratio, diff
-    assert 0 == diff
-    ratio = float(len(state_element_del_file))/float(len(state_element_gen_file))
-    diff = len(state_element_gen_file) - len(state_element_del_file)
-    print "Ratio of destroyed/generated state-elements objects is: ", ratio, diff
-    assert 0 == diff
-    un_patch_core_classes_from_log()
-    remove_log_files()
-    testing_utils.test_multithreading_lock.release()
+    try:
+        ratio = float(len(state_del_file))/float(len(state_gen_file))
+        diff = len(state_gen_file) - len(state_del_file)
+        print "Ratio of destroyed/generated state objects is: ", ratio, diff
+        assert 0 == diff
+        ratio = float(len(state_element_del_file))/float(len(state_element_gen_file))
+        diff = len(state_element_gen_file) - len(state_element_del_file)
+        print "Ratio of destroyed/generated state-elements objects is: ", ratio, diff
+        assert 0 == diff
+    finally:
+        un_patch_core_classes_from_log()
+        remove_log_files()
+        testing_utils.test_multithreading_lock.release()
 
 
 def _test_model_and_core_destruct(caplog):
