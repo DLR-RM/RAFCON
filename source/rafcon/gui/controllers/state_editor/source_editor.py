@@ -192,11 +192,14 @@ class SourceEditorController(EditorController):
                 # no active text field in the case of an already specified editor. Its needed for the SyntaxError catch
                 open_file_in_editor(external_editor, text_field=None)
         else:
+            # If button is clicked after one open a file in the external editor, unlock the internal editor to reload
+            set_editor_lock(False)
 
             # Load file contents after unlocking
             content = filesystem.read_file(self.model.state.get_file_system_path(), 'script.py')
             self.set_script_text(content)
 
+            # After reload internal editor and external editor is preferred lock internal editor again
             set_editor_lock(prefer_external_editor)
 
     def apply_clicked(self, button):

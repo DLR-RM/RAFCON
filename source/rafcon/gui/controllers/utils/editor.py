@@ -124,12 +124,12 @@ class EditorController(ExtendedController):
 
         # work around to avoid changes at all (e.g. by enter-key) if text view property editable is False
         # TODO if SourceView3 is used in future check if this can be skipped
-        # if not self.view.textview.get_editable() and not self.view.while_in_set_enabled:
-        #     if hasattr(self.view.get_buffer(), 'begin_not_undoable_action'):
-        #         self.view.get_buffer().begin_not_undoable_action()
-        #     self.view.set_enabled(False, self.source_text)
-        #     if hasattr(self.view.get_buffer(), 'end_not_undoable_action'):
-        #         self.view.get_buffer().end_not_undoable_action()
+        if not self.view.textview.get_editable() and not self.view.while_in_set_enabled:
+            if hasattr(self.view.get_buffer(), 'begin_not_undoable_action'):
+                self.view.get_buffer().begin_not_undoable_action()
+            self.view.set_enabled(False, self.source_text)
+            if hasattr(self.view.get_buffer(), 'end_not_undoable_action'):
+                self.view.get_buffer().end_not_undoable_action()
 
         if self.view:
             self.view.apply_tag('default')
