@@ -238,7 +238,7 @@ class ContainerStateModel(StateModel):
     def change_state_type(self, model, prop_name, info):
         if info.method_name != 'change_state_type':
             return
-        from gui.helpers import state_machine
+        from rafcon.gui.helpers import state_machine
         import rafcon.gui.singleton as mvc_singleton
 
         old_state = info.args[1]
@@ -353,7 +353,7 @@ class ContainerStateModel(StateModel):
             if isinstance(info.result, Exception):
                 logger.exception("State ungroup failed {0}".format(info.result))
             else:
-                from gui.helpers import state_machine
+                from rafcon.gui.helpers import state_machine
                 tmp_meta_data = self.group_state.__func__.tmp_meta_data_storage
                 state_id = info.result
                 grouped_state_m = self.states[state_id]
@@ -421,7 +421,7 @@ class ContainerStateModel(StateModel):
             if isinstance(info.result, Exception):
                 logger.exception("State ungroup failed {0}".format(info.result))
             else:
-                from gui.helpers import state_machine
+                from rafcon.gui.helpers import state_machine
                 tmp_meta_data = self.ungroup_state.__func__.tmp_meta_data_storage
                 # TODO do implement Gaphas support meta data scaling
                 # if not state_machine_helper.scale_meta_data_according_state(tmp_meta_data):

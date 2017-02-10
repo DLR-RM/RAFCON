@@ -4,7 +4,7 @@ from gaphas.aspect import HandleFinder, InMotion
 from gaphas.item import NW, Item
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, ConnectHandleTool, RubberbandTool
 
-from gui.helpers import state_machine
+from rafcon.gui.helpers import state_machine
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGaphas
 from rafcon.gui.gui_helper import react_to_event
 from rafcon.gui.mygaphas.aspect import HandleInMotion, StateHandleFinder

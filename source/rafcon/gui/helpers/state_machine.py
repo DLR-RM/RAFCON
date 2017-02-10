@@ -132,7 +132,7 @@ def save_statemachine_as(menubar=None, widget=None, data=None, path=None):
         if path is None:
             return False
     menubar.model.get_selected_state_machine_model().state_machine.file_system_path = path
-    save_statemachine(widget, data, save_as=True, delete_old_state_machine=True)
+    save_statemachine(menubar=menubar, widget=widget, save_as=True, delete_old_state_machine=True)
 
 
 def refresh_libraries():
@@ -261,6 +261,7 @@ def delete_selected_elements(state_machine_m):
 
 
 def selected_state_toggle_is_start_state():
+
     if rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model() is None:
         logger.warning("No state machine has been selected.")
         return False

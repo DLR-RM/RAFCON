@@ -8,13 +8,13 @@
 
 
 """
-
+from rafcon.gui.helpers import state_machine
 import glib
 import gtk
 from gtk.gdk import keyval_name
 from gtkmvc import Model
 
-from rafcon.gui.helpers import state_machine
+
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
@@ -140,6 +140,7 @@ class StateOverviewController(ExtendedController, Model):
 
     def on_toggle_is_start_state(self, button):
         if not button.get_active() == self.model.is_start:
+            # from rafcon.gui.helpers import state_machine as state_machine
             state_machine.selected_state_toggle_is_start_state()
 
     def on_toggle_show_content(self, checkbox):

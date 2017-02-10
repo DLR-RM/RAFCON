@@ -248,7 +248,7 @@ class StateMachineModel(ModelMT, Hashable):
     def change_root_state_type(self, model, prop_name, info):
         if info.method_name != 'change_root_state_type':
             return
-        from gui.helpers import state_machine
+        from rafcon.gui.helpers import state_machine
 
         state_m = self.root_state
 

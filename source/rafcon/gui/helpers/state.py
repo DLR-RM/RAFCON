@@ -1,6 +1,6 @@
 import gtk
 
-from gui.helpers import state_machine
+from rafcon.gui.helpers import state_machine
 from rafcon.core import interface
 from rafcon.core.singleton import state_machine_manager, library_manager
 from rafcon.core.state_machine import StateMachine
