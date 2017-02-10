@@ -186,7 +186,7 @@ class MenuBarController(ExtendedController):
 
     def on_full_screen_activate(self, *args):
         """
-        function to display the currently selected statemachine in full screen mode
+        function to display the currently selected state machine in full screen mode
         :param args:
         :return:
         """

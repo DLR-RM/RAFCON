@@ -143,7 +143,7 @@ class ExecutionState(State):
             formatted_exc = traceback.format_exception(exc_type, exc_value, exc_traceback)
             truncated_exc = []
             for line in formatted_exc:
-                if os.path.join("rafcon", "statemachine") not in line:
+                if os.path.join("rafcon", "core") not in line:
                     truncated_exc.append(line)
             logger.error("{0} had an internal error: {1}: {2}\n{3}".format(self, type(e).__name__, e,
                                                                            ''.join(truncated_exc)))
