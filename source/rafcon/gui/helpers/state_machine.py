@@ -14,6 +14,7 @@ from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.core.states.state import StateType
+
 from rafcon.gui.models import StateModel, AbstractStateModel, ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.outcome import OutcomeModel

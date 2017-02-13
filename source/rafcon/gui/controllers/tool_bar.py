@@ -48,7 +48,7 @@ class ToolBarController(ExtendedController):
         pass
 
     def on_button_refresh_libs_clicked(self, widget, data=None):
-        self.menu_bar_ctrl.on_refresh_libraries_activate(widget, data)
+        self.menu_bar_ctrl.on_refresh_libraries_activate()
 
     def on_button_save_clicked(self, widget, data=None):
         self.menu_bar_ctrl.on_save_activate(widget, data)
