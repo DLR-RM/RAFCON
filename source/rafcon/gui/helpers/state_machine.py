@@ -31,7 +31,7 @@ logger = log.get_logger(__name__)
 
 def new_state_machine(menubar=None):
     if not menubar:
-        error_no_menubar("new_statemachine")
+        error_no_menubar("new_state_machine")
         return
     import glib
     logger.debug("Creating new state-machine...")
@@ -120,7 +120,7 @@ def save_state_machine(menubar, widget, save_as=False, delete_old_state_machine=
 
 def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
     if not menubar:
-        error_no_menubar("save_statemachine_as")
+        error_no_menubar("save_state_machine_as")
         return
 
     if path is None:
