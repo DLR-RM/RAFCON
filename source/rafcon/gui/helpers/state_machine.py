@@ -130,7 +130,7 @@ def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
         if path is None:
             return False
     menubar.model.get_selected_state_machine_model().state_machine.file_system_path = path
-    save_statemachine(menubar=menubar, widget=widget, save_as=True, delete_old_state_machine=True)
+    save_state_machine(menubar=menubar, widget=widget, save_as=True, delete_old_state_machine=True)
 
 
 def refresh_libraries():

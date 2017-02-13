@@ -316,23 +316,23 @@ class MenuBarController(ExtendedController):
     ######################################################
 
     def on_new_activate(self, widget=None, data=None):
-        sm_menubar_helper.new_statemachine(menubar=self,)
+        sm_menubar_helper.new_state_machine(menubar=self, )
 
     @staticmethod
     def on_open_activate(widget=None, data=None, path=None):
-        sm_menubar_helper.open_statemachine(path=path)
+        sm_menubar_helper.open_state_machine(path=path)
 
     def on_save_activate(self, widget, data=None, save_as=False, delete_old_state_machine=False):
-        return sm_menubar_helper.save_statemachine(menubar=self,
-                                                   widget=widget,
-                                                   save_as=save_as,
-                                                   delete_old_state_machine=delete_old_state_machine)
+        return sm_menubar_helper.save_state_machine(menubar=self,
+                                                    widget=widget,
+                                                    save_as=save_as,
+                                                    delete_old_state_machine=delete_old_state_machine)
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
-        sm_menubar_helper.save_statemachine_as(menubar=self,
-                                               widget=widget,
-                                               data=data,
-                                               path=path)
+        sm_menubar_helper.save_state_machine_as(menubar=self,
+                                                widget=widget,
+                                                data=data,
+                                                path=path)
 
     @staticmethod
     def on_refresh_libraries_activate():
