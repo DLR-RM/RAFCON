@@ -12,9 +12,10 @@ from functools import partial
 
 import gobject
 import gtk
-from rafcon.gui.helpers import state_machine
+
 from rafcon.core.states.state import State
 from rafcon.core.states.state import StateType
+from rafcon.gui.helpers import state_machine
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
 from rafcon.gui.controllers.utils.tree_view_controller import TreeViewController

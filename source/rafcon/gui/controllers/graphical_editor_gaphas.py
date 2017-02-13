@@ -15,7 +15,6 @@ from gaphas.aspect import InMotion, ItemFinder
 from gtk.gdk import ACTION_COPY
 
 import rafcon.core.id_generator as idgen
-from rafcon.gui.helpers import state_machine
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.state import StateType
 from rafcon.gui.clipboard import global_clipboard
@@ -31,6 +30,7 @@ from rafcon.gui.mygaphas.items.ports import OutcomeView, DataPortView, ScopedVar
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.singleton import gui_config_model, runtime_config_model
 from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView
+from rafcon.gui.helpers import state_machine
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

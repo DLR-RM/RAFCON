@@ -1,11 +1,9 @@
+import gtk
 
-
-from rafcon.utils import log
 from rafcon.core.singleton import state_machine_manager
 from rafcon.core import interface
 from rafcon.core.storage import storage
-from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
-import gtk
+from rafcon.core.singleton import library_manager
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.state import State
 from rafcon.core.states.container_state import ContainerState
@@ -21,16 +19,16 @@ from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.outcome import OutcomeModel
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.models.signals import MetaSignalMsg
-
 from rafcon.gui.config import global_gui_config
-from rafcon.core.singleton import library_manager
+from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
 import rafcon.gui.singleton
+from rafcon.utils import log
 
 
 logger = log.get_logger(__name__)
 
 
-def new_statemachine(menubar=None):
+def new_state_machine(menubar=None):
     if not menubar:
         error_no_menubar("new_statemachine")
         return
@@ -52,7 +50,7 @@ def new_statemachine(menubar=None):
     glib.idle_add(grab_focus)
 
 
-def open_statemachine(path=None):
+def open_state_machine(path=None):
     if path is None:
             if interface.open_folder_func is None:
                 logger.error("No function defined for opening a folder")
@@ -70,7 +68,7 @@ def open_statemachine(path=None):
         logger.error('Error while trying to open state machine: {0}'.format(e))
 
 
-def save_statemachine(menubar, widget, save_as=False, delete_old_state_machine=False):
+def save_state_machine(menubar, widget, save_as=False, delete_old_state_machine=False):
         def on_message_dialog_response_signal(widget, response_id, source_editor_ctrl):
             state = source_editor_ctrl.model.state
             if response_id == ButtonDialog.OPTION_1.value:
@@ -119,7 +117,7 @@ def save_statemachine(menubar, widget, save_as=False, delete_old_state_machine=F
         return True
 
 
-def save_statemachine_as(menubar=None, widget=None, data=None, path=None):
+def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
     if not menubar:
         error_no_menubar("save_statemachine_as")
         return

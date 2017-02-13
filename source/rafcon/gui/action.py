@@ -14,7 +14,6 @@ from gtkmvc import ModelMT
 from jsonconversion.decoder import JSONObjectDecoder
 from jsonconversion.encoder import JSONObjectEncoder
 
-import rafcon.gui.singleton as mvc_singleton
 from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.core.global_variable_manager import GlobalVariableManager
 from rafcon.core.library_manager import LibraryManager
@@ -36,6 +35,7 @@ from rafcon.core.storage import storage
 from rafcon.gui.models.container_state import ContainerState, ContainerStateModel
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.utils.notification_overview import NotificationOverview
+import rafcon.gui.singleton as mvc_singleton
 from rafcon.utils import log
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 from rafcon.utils.storage_utils import substitute_modules

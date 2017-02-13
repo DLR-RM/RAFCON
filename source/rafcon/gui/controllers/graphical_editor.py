@@ -22,7 +22,6 @@ from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MA
 from gtk.gdk import keyval_name
 
 import rafcon.core.id_generator as idgen
-from rafcon.gui.helpers import state_machine
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.states.state import StateType
@@ -40,6 +39,7 @@ from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.views.graphical_editor import Direction
+from rafcon.gui.helpers import state_machine
 from rafcon.utils import log
 from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 

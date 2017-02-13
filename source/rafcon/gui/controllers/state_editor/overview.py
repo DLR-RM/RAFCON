@@ -8,12 +8,10 @@
 
 
 """
-from rafcon.gui.helpers import state_machine
 import glib
 import gtk
 from gtk.gdk import keyval_name
 from gtkmvc import Model
-
 
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.core.states.execution_state import ExecutionState
@@ -21,6 +19,7 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.states.state import StateType
+from rafcon.gui.helpers import state_machine
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.gui_helper import format_cell
 from rafcon.gui.models.signals import MetaSignalMsg
