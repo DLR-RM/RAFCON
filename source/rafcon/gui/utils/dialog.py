@@ -142,7 +142,6 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
 
         super(RAFCONCheckBoxTableDialog, self).__init__(markup_text, button_texts, callback, callback_args, False,
                                                         message_type, parent, width)
-        self.column_name_by_id_dict = {}
         if table_header is None:
             table_header = ["CheckBox", "Description"]
         if table_data is None:
@@ -189,8 +188,10 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
                 text_renderer = gtk.CellRendererText()
                 text_column = gtk.TreeViewColumn(table_header[index], text_renderer, text=index)
                 self.tree_view.append_column(text_column)
-            # else:
-                # print "DO NOT GENERATE COLUMN FOR TYPE: ", column_type
+            else:
+                if not len(first_row_data_types) == index + 1:
+                    logger.error("Unexpected case, the widget is not generate column of type: {0} and "
+                                 "the column is not the last in the list.".format(column_type))
 
         # correct last list element if not boolean or string and table data length is +1 compared to table header
         if first_row_data_types and len(first_row_data_types) == len(table_header) + 1 and \
