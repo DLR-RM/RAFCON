@@ -11,7 +11,7 @@ import rafcon.core.singleton as sm_singleton
 
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.models.state_machine import StateMachineModel
-from rafcon.gui.utils.dialog import RAFCONDialog
+from rafcon.gui.utils.dialog import ButtonDialog, RAFCONDialog, RAFCONCheckBoxTableDialog
 import rafcon.gui.singleton as mvc_singleton
 
 
@@ -35,10 +35,13 @@ except (OSError, ImportError):
 
 def check_for_crashed_rafcon_instances():
 
-    def on_message_dialog_response_signal(widget, response_id, found_backups):
-        if response_id == 42:
-            for path, pid, lock_file, m_time, full_path_dirty_lock in found_backups:
-                if path is not None:
+    def on_message_dialog_response_signal(widget, response_id, found_backups, *args):
+
+        if response_id == ButtonDialog.OPTION_1.value:
+            for index, tuple_of__backup in enumerate(found_backups):
+                path, pid, lock_file, m_time, full_path_dirty_lock = tuple_of__backup
+                if path is not None and widget.list_store[index][0]:  # Open it
+
                     state_machine = storage.load_state_machine_from_path(path)
                     mvc_singleton.state_machine_manager.add_state_machine(state_machine)
                     sm_m = mvc_singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
@@ -53,6 +56,7 @@ def check_for_crashed_rafcon_instances():
                         state_machine._file_system_path = None
                     sm_m.storage_lock.release()
 
+                    # re-construct dirty log
                     with open(full_path_dirty_lock) as f:
                         lines = f.readlines()
                         lines.pop(0) # ignore backup path -> first line
@@ -67,18 +71,24 @@ def check_for_crashed_rafcon_instances():
                     state_machine.marked_dirty = True
                     sm_m.auto_backup.check_for_auto_backup(force=True)
 
-        if response_id in [42, 44]:
-            for path, pid, lock_file, m_time, full_path_dirty_lock in found_backups:
-                if path is None:
-                    logger.debug("Clean up lock of RAFCON instance with pid {}".format(pid))
-                else:
-                    logger.debug("Clean up lock for state machine with path: {0} pid: {1} lock_file: {2}"
-                                 "".format(path, pid, lock_file))
-                if path is not None:
-                    os.remove(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'runtime_backup', lock_file))
-                if os.path.exists(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'lock')):
-                    os.remove(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'lock'))
-        if response_id in [42, 43, 44]:
+        if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_3.value]:
+            for index, tuple_of__backup in enumerate(found_backups):
+                path, pid, lock_file, m_time, full_path_dirty_lock = tuple_of__backup
+                list_store_row = widget.list_store[index]
+                if (list_store_row[0] or list_store_row[2]) and response_id == ButtonDialog.OPTION_1.value or \
+                        response_id == ButtonDialog.OPTION_3.value:
+
+                    if path is None:
+                        logger.debug("Clean up lock of RAFCON instance with pid {}".format(pid))
+                    else:
+                        logger.debug("Clean up lock for state machine with path: {0} pid: {1} lock_file: {2}"
+                                     "".format(path, pid, lock_file))
+                    if path is not None:
+                        os.remove(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'runtime_backup', lock_file))
+                    if os.path.exists(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'lock')):
+                        os.remove(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'lock'))
+
+        if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, ButtonDialog.OPTION_3.value]:
             widget.destroy()
 
     # find crashed RAFCON instances and not stored state machine with backups
@@ -114,22 +124,35 @@ def check_for_crashed_rafcon_instances():
     if restorable_sm and any([path is not None for path, pid, lock_file, m_time, full_path_dirty_lock in restorable_sm]):
         dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=mvc_singleton.main_window_controller.view.get_top_widget())
         message_string = "There have been found state machines of not correctly closed rafcon instances?\n\n" \
-                         "The following state machines have been modified and not saved: \n" + \
-                         "\n".join(["\t - modified: {} path: {}"
-                                    "".format(elem[3], elem[0]) if elem[0] is not None else
-                                    "- instance with pid: {}".format(elem[1]) for elem in restorable_sm]) + \
-                         "\n\nThis check and dialog can be disabled by setting 'AUTO_RECOVERY_CHECK': False " \
-                         "in the GUI configuration file."
+                         "This check and dialog can be disabled by setting 'AUTO_RECOVERY_CHECK': False " \
+                         "in the GUI configuration file.\n\n" \
+                         "The following state machines have been modified and not saved: \n"
+
         dialog.set_markup(message_string)
-        hbox = dialog.get_action_area()
-        vbox = hbox.parent
-        msg_ctr = vbox.get_children()[0]
-        text_ctr = msg_ctr.get_children()[1]
-        text_ctr.get_children()[0].set_size_request(1400, -1)
-        text_ctr.get_children()[1].set_size_request(1400, -1)
-        dialog.add_button("Open all state machines.", 42)
-        dialog.add_button("Remind me later.", 43)
-        dialog.add_button("Ignore -> Remove all Notifications.", 44)
+        table_header = ["Open", "Decide Later", "Delete", "Last modified", "System path"]
+        table_data = [(True if elem[0] is not None else False, False, False if elem[0] is not None else True,
+                       str(elem[3]) if elem[0] is not None else "instance with pid: {0}".format(elem[1]),
+                       str(elem[0]) if elem[0] is not None else "", elem) for elem in restorable_sm]
+
+        def on_toggled(cell, path, column_id):
+            other_ids = [0, 1, 2]
+            other_ids.remove(column_id)
+            system_path = dialog.list_store[path][5][0]
+            if system_path is not None:
+                dialog.list_store[path][column_id] = False if cell.get_active() else True
+                for other_id in other_ids:
+                    dialog.list_store[path][other_id] = False
+            else:
+                logger.info("Those lock is removed anytime because for instances without state machine lock "
+                            "there is no recovery procedure, for now.")
+
+        dialog = RAFCONCheckBoxTableDialog(message_string,
+                                           button_texts=("Apply", "Remind me Later.", "Ignore -> Remove all Notifications/Locks."),
+                                           callback=None, callback_args=None,
+                                           table_header=table_header, table_data=table_data, toggled_callback=on_toggled,
+                                           message_type=gtk.MESSAGE_QUESTION,
+                                           parent=mvc_singleton.main_window_controller.view.get_top_widget(),
+                                           width=800, standalone=False)
         dialog.finalize(on_message_dialog_response_signal, restorable_sm)
 
     return restorable_sm
