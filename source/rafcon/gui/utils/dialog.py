@@ -1,4 +1,5 @@
 import gtk
+import gobject
 from enum import Enum
 
 from rafcon.gui.utils import constants
@@ -125,3 +126,82 @@ class RAFCONButtonInputDialog(RAFCONButtonDialog):
 
     def return_check(self):
         return self.check.get_state()
+
+
+class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
+    """ The window creates a table with multiple rows of check box- and text field-columns.
+
+    The header is defined by a list of strings. The table data is defined by row-wise boolean and string elements.
+    Before creation the data is checked on consistency so that at index x in any row is the same type of value.
+    The table data tolerates one not bool or string values ate the end of the list to store complex python object
+    and thereby open more options in checkbox handling.
+    """
+
+    def __init__(self, markup_text, button_texts, callback, callback_args=(), table_header=None, table_data=None,
+                 toggled_callback=None, message_type=gtk.MESSAGE_INFO, parent=None, width=None, standalone=True):
+
+        super(RAFCONCheckBoxTableDialog, self).__init__(markup_text, button_texts, callback, callback_args, False,
+                                                        message_type, parent, width)
+        self.column_name_by_id_dict = {}
+        if table_header is None:
+            table_header = []
+        if table_data is None:
+            table_data = [[]]
+        if toggled_callback is None:
+            # set default toggled callback
+            def on_toggled(cell, path, column_id):
+                self.list_store[path][column_id] = False if cell.get_active() else True
+
+            toggled_callback = on_toggled
+
+        # check if data is consistent
+        if not all(len(row) == len(table_header) or not isinstance(row[-1], (str, basestring, bool)) and
+                len(row) == 1 + len(table_header) for row in table_data):
+            raise ValueError("All rows of the table_data list has to be the same length as the table_header list "
+                             "(+1 data element), here length = {0}". format(len(table_header)))
+
+        if not all([isinstance(row_elem, (bool, str, basestring))
+                   for index, row_elem in enumerate(table_data[0]) if not index + 1 == len(table_data[0])]):
+            raise TypeError("All row elements have to be of type boolean or string except of last one.")
+
+        first_row_data_types = [type(row_elem) for row_elem in table_data[0]]
+        for row_index, row in enumerate(table_data):
+            for column_index, row_elem in enumerate(row):
+                if not isinstance(row_elem, first_row_data_types[column_index]):
+                    raise TypeError("All rows have to have the same type at the same column index. Here you have at "
+                                    "column index {0} and row_index {1} type: {2} and in row 0 at this index type: {3}"
+                                    "".format(column_index, row_index, type(row_elem), type(first_row_data_types[column_index])))
+
+        # create tree view
+        self.tree_view = gtk.TreeView()
+        hbox = self.get_action_area()
+        vbox = hbox.parent
+        vbox.add(self.tree_view)
+        for index, column_type in enumerate(first_row_data_types):
+            if column_type is bool:
+                # create checkbox column
+                check_box_renderer = gtk.CellRendererToggle()
+                if toggled_callback is not None:
+                    check_box_renderer.connect("toggled", toggled_callback, index)
+                checkbox_column = gtk.TreeViewColumn(table_header[index], check_box_renderer, active=index)
+                self.tree_view.append_column(checkbox_column)
+            elif column_type in (str, basestring):
+                text_renderer = gtk.CellRendererText()
+                text_column = gtk.TreeViewColumn(table_header[index], text_renderer, text=index)
+                self.tree_view.append_column(text_column)
+            # else:
+                # print "DO NOT GENERATE COLUMN FOR TYPE: ", column_type
+
+        # correct last list element if not boolean or string
+        if not isinstance(first_row_data_types[-1], (bool, str, basestring)):
+            first_row_data_types[-1] = gobject.TYPE_PYOBJECT
+
+        # fill list store
+        self.list_store = gtk.ListStore(*first_row_data_types)
+        self.tree_view.set_model(self.list_store)
+        for row in table_data:
+            self.list_store.append(row)
+        self.vbox.show_all()
+
+        if standalone:
+            self.finalize_and_run_with_callbacks(callback, callback_args)
