@@ -144,9 +144,9 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
                                                         message_type, parent, width)
         self.column_name_by_id_dict = {}
         if table_header is None:
-            table_header = []
+            table_header = ["CheckBox", "Description"]
         if table_data is None:
-            table_data = [[]]
+            table_data = [[True, "That is true."]]
         if toggled_callback is None:
             # set default toggled callback
             def on_toggled(cell, path, column_id):
@@ -192,8 +192,9 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
             # else:
                 # print "DO NOT GENERATE COLUMN FOR TYPE: ", column_type
 
-        # correct last list element if not boolean or string
-        if not isinstance(first_row_data_types[-1], (bool, str, basestring)):
+        # correct last list element if not boolean or string and table data length is +1 compared to table header
+        if first_row_data_types and len(first_row_data_types) == len(table_header) + 1 and \
+                not isinstance(first_row_data_types[-1], (bool, str, basestring)):
             first_row_data_types[-1] = gobject.TYPE_PYOBJECT
 
         # fill list store
@@ -204,4 +205,6 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
         self.vbox.show_all()
 
         if standalone:
-            self.finalize_and_run_with_callbacks(callback, callback_args)
+            self.finalize(callback, callback_args)
+            self.grab_focus()
+            self.run()
