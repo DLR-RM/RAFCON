@@ -333,7 +333,7 @@ class ContainerStateModel(StateModel):
         if info.method_name != 'group_states':
             return
         if 'before' in info:
-            tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
+            tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
             state_ids = info['kwargs'].get('state_ids', None)
             scoped_variables = info['kwargs'].get('scoped_variables', [])
             # print "info['kwargs']: ", info['kwargs']
@@ -346,49 +346,49 @@ class ContainerStateModel(StateModel):
             related_transitions, related_data_flows = self.state.related_linkage_states_and_scoped_variables(state_ids,
                                                                                                              scoped_variables)
             for state_id in state_ids:
-                tmp_meta_data['states'][state_id] = self.states[state_id]
+                tmp_models_dict['states'][state_id] = self.states[state_id]
             for sv_id in scoped_variables:
-                tmp_meta_data['scoped_variables'][sv_id] = self.get_scoped_variable_m(sv_id)
+                tmp_models_dict['scoped_variables'][sv_id] = self.get_scoped_variable_m(sv_id)
             for t in related_transitions['enclosed']:
-                tmp_meta_data['transitions'][t.transition_id] = self.get_transition_m(t.transition_id)
+                tmp_models_dict['transitions'][t.transition_id] = self.get_transition_m(t.transition_id)
             for df in related_data_flows['enclosed']:
-                tmp_meta_data['data_flows'][df.data_flow_id] = self.get_data_flow_m(df.data_flow_id)
-            self.group_state.__func__.tmp_meta_data_storage = tmp_meta_data
+                tmp_models_dict['data_flows'][df.data_flow_id] = self.get_data_flow_m(df.data_flow_id)
+            self.group_state.__func__.tmp_models_storage = tmp_models_dict
         else:
             if isinstance(info.result, Exception):
                 logger.exception("State ungroup failed {0}".format(info.result))
             else:
                 from rafcon.gui import state_machine_helper
-                tmp_meta_data = self.group_state.__func__.tmp_meta_data_storage
+                tmp_models_dict = self.group_state.__func__.tmp_models_storage
                 state_id = info.result
                 grouped_state_m = self.states[state_id]
-                tmp_meta_data['state'] = grouped_state_m
+                tmp_models_dict['state'] = grouped_state_m
                 # TODO do implement OpenGL and Gaphas support meta data scaling
-                if not state_machine_helper.scale_meta_data_according_states(tmp_meta_data):
-                    del self.group_state.__func__.tmp_meta_data_storage
+                if not state_machine_helper.scale_meta_data_according_states(tmp_models_dict):
+                    del self.group_state.__func__.tmp_models_storage
                     return
 
                 # TODO refactor by taking ungroup into account
-                grouped_state_m.meta = tmp_meta_data['state'].meta
-                for state_id, state_m in tmp_meta_data['states'].iteritems():
+                grouped_state_m.meta = tmp_models_dict['state'].meta
+                for state_id, state_m in tmp_models_dict['states'].iteritems():
                     if state_id in grouped_state_m.states:
                         grouped_state_m.states[state_id].meta = state_m.meta
                     else:
                         logger.info("state model to set meta data could not be found -> {0}".format(state_m.state))
-                for sv_data_port_id, sv_m in tmp_meta_data['scoped_variables'].iteritems():
+                for sv_data_port_id, sv_m in tmp_models_dict['scoped_variables'].iteritems():
                     # print sv_data_port_id, sv_m, self.state.scoped_variables.keys(), self.state.input_data_ports.keys(), self.state.output_data_ports.keys()
                     if grouped_state_m.get_scoped_variable_m(sv_data_port_id):
                         grouped_state_m.get_scoped_variable_m(sv_data_port_id).meta = sv_m.meta
                     else:
                         logger.info("scoped variable model to set meta data could not be found"
                                     " -> {0}".format(sv_m.scoped_variable))
-                for t_id, t_m in tmp_meta_data['transitions'].iteritems():
+                for t_id, t_m in tmp_models_dict['transitions'].iteritems():
                     if grouped_state_m.get_transition_m(t_id) is not None:
                         grouped_state_m.get_transition_m(t_id).meta = t_m.meta
                     else:
                         logger.info("transition model to set meta data could not be found"
                                     " -> {0}".format(t_m.transition))
-                for df_id, df_m in tmp_meta_data['data_flows'].iteritems():
+                for df_id, df_m in tmp_models_dict['data_flows'].iteritems():
                     if grouped_state_m.get_data_flow_m(df_id) is not None:
                         grouped_state_m.get_data_flow_m(df_id).meta = df_m.meta
                     else:
@@ -396,14 +396,14 @@ class ContainerStateModel(StateModel):
 
                 # grouped_state_m.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
 
-            del self.group_state.__func__.tmp_meta_data_storage
+            del self.group_state.__func__.tmp_models_storage
 
     @ModelMT.observe("state", after=True, before=True)
     def ungroup_state(self, model, prop_name, info):
         if info.method_name != 'ungroup_state':
             return
         if 'before' in info:
-            tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
+            tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
             state_id = info['kwargs'].get('state_id', None)
             if state_id is None:
                 if 'state' not in info['kwargs']:
@@ -412,46 +412,48 @@ class ContainerStateModel(StateModel):
                     state_id = info['args'][0]
 
             related_transitions, related_data_flows = self.state.related_linkage_state(state_id)
-            tmp_meta_data['state'] = self.states[state_id]
+            tmp_models_dict['state'] = self.states[state_id]
             for s_id, s_m in self.states[state_id].states.iteritems():
-                tmp_meta_data['states'][s_id] = s_m
+                tmp_models_dict['states'][s_id] = s_m
             for sv_m in self.states[state_id].scoped_variables:
-                tmp_meta_data['scoped_variables'][sv_m.scoped_variable.data_port_id] = sv_m
+                tmp_models_dict['scoped_variables'][sv_m.scoped_variable.data_port_id] = sv_m
             for t in related_transitions['internal']['enclosed']:
-                tmp_meta_data['transitions'][t.transition_id] = self.states[state_id].get_transition_m(t.transition_id)
+                tmp_models_dict['transitions'][t.transition_id] = self.states[state_id].get_transition_m(t.transition_id)
             for df in related_data_flows['internal']['enclosed']:
-                tmp_meta_data['data_flows'][df.data_flow_id] = self.states[state_id].get_data_flow_m(df.data_flow_id)
-            self.ungroup_state.__func__.tmp_meta_data_storage = tmp_meta_data
+                tmp_models_dict['data_flows'][df.data_flow_id] = self.states[state_id].get_data_flow_m(df.data_flow_id)
+            self.ungroup_state.__func__.tmp_models_storage = tmp_models_dict
         else:
             if isinstance(info.result, Exception):
                 logger.exception("State ungroup failed {0}".format(info.result))
             else:
                 from rafcon.gui import state_machine_helper
-                tmp_meta_data = self.ungroup_state.__func__.tmp_meta_data_storage
+                tmp_models_dict = self.ungroup_state.__func__.tmp_models_storage
                 # TODO do implement Gaphas support meta data scaling
-                if not state_machine_helper.scale_meta_data_according_state(tmp_meta_data):
-                    del self.ungroup_state.__func__.tmp_meta_data_storage
+                if not state_machine_helper.scale_meta_data_according_state(tmp_models_dict):
+                    del self.ungroup_state.__func__.tmp_models_storage
                     return
 
-                for state_id, state_m in tmp_meta_data['states'].iteritems():
+                tmp_models_dict.pop('state')
+
+                for state_id, state_m in tmp_models_dict['states'].iteritems():
                     if state_id in self.states:
                         self.states[state_id].meta = state_m.meta
                     else:
                         logger.info("state model to set meta data could not be found -> {0}".format(state_m.state))
-                for sv_data_port_id, sv_m in tmp_meta_data['scoped_variables'].iteritems():
+                for sv_data_port_id, sv_m in tmp_models_dict['scoped_variables'].iteritems():
                     # print sv_data_port_id, sv_m, self.state.scoped_variables.keys(), self.state.input_data_ports.keys(), self.state.output_data_ports.keys()
                     if self.get_scoped_variable_m(sv_data_port_id):
                         self.get_scoped_variable_m(sv_data_port_id).meta = sv_m.meta
                     else:
                         logger.info("scoped variable model to set meta data could not be found"
                                     " -> {0}".format(sv_m.scoped_variable))
-                for t_id, t_m in tmp_meta_data['transitions'].iteritems():
+                for t_id, t_m in tmp_models_dict['transitions'].iteritems():
                     if self.get_transition_m(t_id) is not None:
                         self.get_transition_m(t_id).meta = t_m.meta
                     else:
                         logger.info("transition model to set meta data could not be found"
                                     " -> {0}".format(t_m.transition))
-                for df_id, df_m in tmp_meta_data['data_flows'].iteritems():
+                for df_id, df_m in tmp_models_dict['data_flows'].iteritems():
                     if self.get_data_flow_m(df_id) is not None:
                         self.get_data_flow_m(df_id).meta = df_m.meta
                     else:
@@ -459,7 +461,7 @@ class ContainerStateModel(StateModel):
                 # TODO may refactor the signal to avoid this miss-use
                 # self.meta_signal.emit(MetaSignalMsg("ungroup_state", "all", True))
 
-            del self.ungroup_state.__func__.tmp_meta_data_storage
+            del self.ungroup_state.__func__.tmp_models_storage
 
     def get_scoped_variable_m(self, data_port_id):
         """Returns the scoped variable model for the given data port id
