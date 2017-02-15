@@ -21,7 +21,7 @@ def test_number_of_whitespaces():
     print len(gui_print_lines)
     assert len(gui_print_lines) == 36
     print len(state_machine_print_lines)
-    assert len(state_machine_print_lines) == 12
+    assert len(state_machine_print_lines) == 11
     print len(utils_print_lines)
     assert len(utils_print_lines) == 1
 

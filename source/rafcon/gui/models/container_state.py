@@ -294,28 +294,26 @@ class ContainerStateModel(StateModel):
                 if child_state_id in self.states:
                     self.states[child_state_id].meta = child_state_m.meta
                 else:
-                    logger.info("state model to set meta data could not be found -> {0}".format(child_state_m.state))
+                    logger.warning("state model to set meta data could not be found -> {0}".format(child_state_m.state))
         if 'scoped_variables' in source_models_dict:
             for sv_data_port_id, sv_m in source_models_dict['scoped_variables'].iteritems():
-                # print sv_data_port_id, sv_m, self.state.scoped_variables.keys(), self.state.input_data_ports.keys(), self.state.output_data_ports.keys()
                 if self.get_scoped_variable_m(sv_data_port_id):
                     self.get_scoped_variable_m(sv_data_port_id).meta = sv_m.meta
                 else:
-                    logger.info("scoped variable model to set meta data could not be found"
-                                " -> {0}".format(sv_m.scoped_variable))
+                    logger.warning("scoped variable model to set meta data could not be found"
+                                   " -> {0}".format(sv_m.scoped_variable))
         if 'transitions' in source_models_dict:
             for t_id, t_m in source_models_dict['transitions'].iteritems():
                 if self.get_transition_m(t_id) is not None:
                     self.get_transition_m(t_id).meta = t_m.meta
                 else:
-                    logger.info("transition model to set meta data could not be found"
-                                " -> {0}".format(t_m.transition))
+                    logger.warning("transition model to set meta data could not be found -> {0}".format(t_m.transition))
         if 'data_flows' in source_models_dict:
             for df_id, df_m in source_models_dict['data_flows'].iteritems():
                 if self.get_data_flow_m(df_id) is not None:
                     self.get_data_flow_m(df_id).meta = df_m.meta
                 else:
-                    logger.info("data flow model to set meta data could not be found -> {0}".format(df_m.data_flow))
+                    logger.warning("data flow model to set meta data could not be found -> {0}".format(df_m.data_flow))
 
     @ModelMT.observe("state", after=True, before=True)
     def substitute_state(self, model, prop_name, info):
@@ -346,15 +344,13 @@ class ContainerStateModel(StateModel):
                 for t_id, t_meta in tmp_meta_data['transitions'].iteritems():
                     if self.get_transition_m(t_id) is not None:
                         self.get_transition_m(t_id).meta = t_meta
-                    else:
-                        logger.info("transition model to set meta data could not be found"
-                                    " -> {0}".format(t_id))
+                    elif t_id in self.state.substitute_state.__func__.re_create_io_going_t_ids:
+                        logger.warning("Transition model with id {0} to set meta data could not be found.".format(t_id))
                 for df_id, df_meta in tmp_meta_data['data_flows'].iteritems():
                     if self.get_data_flow_m(df_id) is not None:
                         self.get_data_flow_m(df_id).meta = df_meta
-                    else:
-                        logger.info("data flow model to set meta data could not be found"
-                                    " -> {0}".format(df_id))
+                    elif df_id in self.state.substitute_state.__func__.re_create_io_going_df_ids:
+                        logger.warning("Data flow model with id {0} to set meta data could not be found.".format(df_id))
                 # TODO maybe refactor the signal usage to use the following one
                 # self.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True))
 
@@ -375,8 +371,8 @@ class ContainerStateModel(StateModel):
                     scoped_variables = info['args'][2]
                 state_ids = info['args'][1]
 
-            related_transitions, related_data_flows = self.state.related_linkage_states_and_scoped_variables(state_ids,
-                                                                                                             scoped_variables)
+            related_transitions, related_data_flows = \
+                self.state.related_linkage_states_and_scoped_variables(state_ids, scoped_variables)
             for state_id in state_ids:
                 tmp_models_dict['states'][state_id] = self.states[state_id]
             for sv_id in scoped_variables:
@@ -401,6 +397,7 @@ class ContainerStateModel(StateModel):
                     return
 
                 grouped_state_m.insert_meta_data_from_models_dict(tmp_models_dict)
+
                 # TODO maybe refactor the signal usage to use the following one
                 # grouped_state_m.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
 
@@ -441,7 +438,23 @@ class ContainerStateModel(StateModel):
                     del self.ungroup_state.__func__.tmp_models_storage
                     return
 
+                # reduce tmp models by not applied state meta data
                 tmp_models_dict.pop('state')
+
+                # correct state element ids with new state element ids to set meta data on right state element
+                tmp_models_dict['states'] = \
+                    {new_state_id: tmp_models_dict['states'][old_state_id]
+                     for old_state_id, new_state_id in self.state.ungroup_state.__func__.state_id_dict.iteritems()}
+                tmp_models_dict['scoped_variables'] = \
+                    {new_sv_id: tmp_models_dict['scoped_variables'][old_sv_id]
+                     for old_sv_id, new_sv_id in self.state.ungroup_state.__func__.sv_id_dict.iteritems()}
+                tmp_models_dict['transitions'] = \
+                    {new_t_id: tmp_models_dict['transitions'][old_t_id]
+                     for old_t_id, new_t_id in self.state.ungroup_state.__func__.enclosed_t_id_dict.iteritems()}
+                tmp_models_dict['data_flows'] = \
+                    {new_df_id: tmp_models_dict['data_flows'][old_df_id]
+                     for old_df_id, new_df_id in self.state.ungroup_state.__func__.enclosed_df_id_dict.iteritems()}
+
                 self.insert_meta_data_from_models_dict(tmp_models_dict)
 
                 # TODO maybe refactor the signal usage to use the following one
