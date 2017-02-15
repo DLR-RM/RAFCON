@@ -285,6 +285,38 @@ class ContainerStateModel(StateModel):
                 state_machine_m.selection.add(new_state_m)
                 # self.meta_signal.emit(MetaSignalMsg("state_type_change", "all", True))
 
+    def insert_meta_data_from_models_dict(self, source_models_dict):
+
+        if 'state' in source_models_dict:
+            self.meta = source_models_dict['state'].meta
+        if 'states' in source_models_dict:
+            for child_state_id, child_state_m in source_models_dict['states'].iteritems():
+                if child_state_id in self.states:
+                    self.states[child_state_id].meta = child_state_m.meta
+                else:
+                    logger.info("state model to set meta data could not be found -> {0}".format(child_state_m.state))
+        if 'scoped_variables' in source_models_dict:
+            for sv_data_port_id, sv_m in source_models_dict['scoped_variables'].iteritems():
+                # print sv_data_port_id, sv_m, self.state.scoped_variables.keys(), self.state.input_data_ports.keys(), self.state.output_data_ports.keys()
+                if self.get_scoped_variable_m(sv_data_port_id):
+                    self.get_scoped_variable_m(sv_data_port_id).meta = sv_m.meta
+                else:
+                    logger.info("scoped variable model to set meta data could not be found"
+                                " -> {0}".format(sv_m.scoped_variable))
+        if 'transitions' in source_models_dict:
+            for t_id, t_m in source_models_dict['transitions'].iteritems():
+                if self.get_transition_m(t_id) is not None:
+                    self.get_transition_m(t_id).meta = t_m.meta
+                else:
+                    logger.info("transition model to set meta data could not be found"
+                                " -> {0}".format(t_m.transition))
+        if 'data_flows' in source_models_dict:
+            for df_id, df_m in source_models_dict['data_flows'].iteritems():
+                if self.get_data_flow_m(df_id) is not None:
+                    self.get_data_flow_m(df_id).meta = df_m.meta
+                else:
+                    logger.info("data flow model to set meta data could not be found -> {0}".format(df_m.data_flow))
+
     @ModelMT.observe("state", after=True, before=True)
     def substitute_state(self, model, prop_name, info):
         if info.method_name != 'substitute_state':
@@ -323,7 +355,7 @@ class ContainerStateModel(StateModel):
                     else:
                         logger.info("data flow model to set meta data could not be found"
                                     " -> {0}".format(df_id))
-                # TODO may refactor the signal to avoid this miss-use
+                # TODO maybe refactor the signal usage to use the following one
                 # self.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True))
 
             del self.substitute_state.__func__.tmp_meta_data_storage
@@ -368,32 +400,8 @@ class ContainerStateModel(StateModel):
                     del self.group_state.__func__.tmp_models_storage
                     return
 
-                # TODO refactor by taking ungroup into account
-                grouped_state_m.meta = tmp_models_dict['state'].meta
-                for state_id, state_m in tmp_models_dict['states'].iteritems():
-                    if state_id in grouped_state_m.states:
-                        grouped_state_m.states[state_id].meta = state_m.meta
-                    else:
-                        logger.info("state model to set meta data could not be found -> {0}".format(state_m.state))
-                for sv_data_port_id, sv_m in tmp_models_dict['scoped_variables'].iteritems():
-                    # print sv_data_port_id, sv_m, self.state.scoped_variables.keys(), self.state.input_data_ports.keys(), self.state.output_data_ports.keys()
-                    if grouped_state_m.get_scoped_variable_m(sv_data_port_id):
-                        grouped_state_m.get_scoped_variable_m(sv_data_port_id).meta = sv_m.meta
-                    else:
-                        logger.info("scoped variable model to set meta data could not be found"
-                                    " -> {0}".format(sv_m.scoped_variable))
-                for t_id, t_m in tmp_models_dict['transitions'].iteritems():
-                    if grouped_state_m.get_transition_m(t_id) is not None:
-                        grouped_state_m.get_transition_m(t_id).meta = t_m.meta
-                    else:
-                        logger.info("transition model to set meta data could not be found"
-                                    " -> {0}".format(t_m.transition))
-                for df_id, df_m in tmp_models_dict['data_flows'].iteritems():
-                    if grouped_state_m.get_data_flow_m(df_id) is not None:
-                        grouped_state_m.get_data_flow_m(df_id).meta = df_m.meta
-                    else:
-                        logger.info("data flow model to set meta data could not be found -> {0}".format(df_m.data_flow))
-
+                grouped_state_m.insert_meta_data_from_models_dict(tmp_models_dict)
+                # TODO maybe refactor the signal usage to use the following one
                 # grouped_state_m.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
 
             del self.group_state.__func__.tmp_models_storage
@@ -434,31 +442,9 @@ class ContainerStateModel(StateModel):
                     return
 
                 tmp_models_dict.pop('state')
+                self.insert_meta_data_from_models_dict(tmp_models_dict)
 
-                for state_id, state_m in tmp_models_dict['states'].iteritems():
-                    if state_id in self.states:
-                        self.states[state_id].meta = state_m.meta
-                    else:
-                        logger.info("state model to set meta data could not be found -> {0}".format(state_m.state))
-                for sv_data_port_id, sv_m in tmp_models_dict['scoped_variables'].iteritems():
-                    # print sv_data_port_id, sv_m, self.state.scoped_variables.keys(), self.state.input_data_ports.keys(), self.state.output_data_ports.keys()
-                    if self.get_scoped_variable_m(sv_data_port_id):
-                        self.get_scoped_variable_m(sv_data_port_id).meta = sv_m.meta
-                    else:
-                        logger.info("scoped variable model to set meta data could not be found"
-                                    " -> {0}".format(sv_m.scoped_variable))
-                for t_id, t_m in tmp_models_dict['transitions'].iteritems():
-                    if self.get_transition_m(t_id) is not None:
-                        self.get_transition_m(t_id).meta = t_m.meta
-                    else:
-                        logger.info("transition model to set meta data could not be found"
-                                    " -> {0}".format(t_m.transition))
-                for df_id, df_m in tmp_models_dict['data_flows'].iteritems():
-                    if self.get_data_flow_m(df_id) is not None:
-                        self.get_data_flow_m(df_id).meta = df_m.meta
-                    else:
-                        logger.info("data flow model to set meta data could not be found -> {0}".format(df_m.data_flow))
-                # TODO may refactor the signal to avoid this miss-use
+                # TODO maybe refactor the signal usage to use the following one
                 # self.meta_signal.emit(MetaSignalMsg("ungroup_state", "all", True))
 
             del self.ungroup_state.__func__.tmp_models_storage
