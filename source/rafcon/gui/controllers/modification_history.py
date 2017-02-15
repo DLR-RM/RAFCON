@@ -8,16 +8,15 @@
 
 """
 
-import gtk
 import gobject
-
-from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
+import gtk
 
 from rafcon.gui import singleton as mvc_singleton
-
-from rafcon.gui.gui_helper import react_to_event
+from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.helpers.label import react_to_event
+from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 # TODO Comment

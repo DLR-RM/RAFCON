@@ -12,7 +12,7 @@ from rafcon.core.states.library_state import LibraryState
 
 from rafcon.gui.controllers.utils.editor import EditorController
 
-from rafcon.gui.gui_helper import react_to_event
+from rafcon.gui.helpers.label import react_to_event
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

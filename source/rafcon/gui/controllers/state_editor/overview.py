@@ -19,9 +19,9 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.states.state import StateType
-from rafcon.gui.helpers import state_machine
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.gui_helper import format_cell
+from rafcon.gui.helpers import state_machine
+from rafcon.gui.helpers.label import format_cell
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.utils import constants
 from rafcon.utils import log

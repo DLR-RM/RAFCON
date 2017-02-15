@@ -8,18 +8,17 @@
 
 """
 
-from functools import partial
-
 import gobject
 import gtk
+from functools import partial
 
 from rafcon.core.states.state import State
 from rafcon.core.states.state import StateType
-from rafcon.gui.helpers import state_machine
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
 from rafcon.gui.controllers.utils.tree_view_controller import TreeViewController
-from rafcon.gui.gui_helper import react_to_event
+from rafcon.gui.helpers import state_machine
+from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models import ContainerStateModel
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.utils.notification_overview import NotificationOverview, \

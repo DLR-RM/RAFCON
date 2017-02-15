@@ -11,32 +11,31 @@
 import gtk
 from functools import partial
 
+import rafcon.core.config
+import rafcon.core.singleton
+import rafcon.gui.singleton as mvc_singleton
+from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+from rafcon.gui.config import global_gui_config as gui_config
+from rafcon.gui.controllers.execution_history import ExecutionHistoryTreeController
 from rafcon.gui.controllers.global_variable_manager import GlobalVariableManagerController
+from rafcon.gui.controllers.library_tree import LibraryTreeController
+from rafcon.gui.controllers.menu_bar import MenuBarController
+from rafcon.gui.controllers.modification_history import ModificationHistoryTreeController
 from rafcon.gui.controllers.state_icons import StateIconController
 from rafcon.gui.controllers.state_machine_tree import StateMachineTreeController
-from rafcon.gui.controllers.modification_history import ModificationHistoryTreeController
-from rafcon.gui.controllers.library_tree import LibraryTreeController
-from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
-from rafcon.gui.shortcut_manager import ShortcutManager
-from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.controllers.states_editor import StatesEditorController
 from rafcon.gui.controllers.state_machines_editor import StateMachinesEditorController
-from rafcon.gui.controllers.menu_bar import MenuBarController
+from rafcon.gui.controllers.states_editor import StatesEditorController
 from rafcon.gui.controllers.tool_bar import ToolBarController
 from rafcon.gui.controllers.top_tool_bar import TopToolBarMainWindowController
-from rafcon.gui.controllers.execution_history import ExecutionHistoryTreeController
 from rafcon.gui.controllers.undocked_window import UndockedWindowController
-from rafcon.core.execution.execution_status import StateMachineExecutionStatus
-import rafcon.gui.singleton as mvc_singleton
-import rafcon.core.singleton
-import rafcon.core.config
-from rafcon.gui.config import global_gui_config as gui_config
+from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.helpers import label
+from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.runtime_config import global_runtime_config
+from rafcon.gui.shortcut_manager import ShortcutManager
 from rafcon.gui.utils import constants
-from rafcon.gui import gui_helper
-from rafcon.utils import plugins
 from rafcon.utils import log
-
+from rafcon.utils import plugins
 
 logger = log.get_logger(__name__)
 
@@ -186,13 +185,13 @@ class MainWindowController(ExtendedController):
         view['debug_console_button_hbox'].reorder_child(view['button_show_debug'], 3)
 
         # Initialize the Left-Bar Notebooks' titles according to initially-selected tabs
-        upper_title = gui_helper.set_notebook_title(view['upper_notebook'], view['upper_notebook'].get_current_page(),
-                                                    view['upper_notebook_title'])
-        lower_title = gui_helper.set_notebook_title(view['lower_notebook'], view['lower_notebook'].get_current_page(),
-                                                    view['lower_notebook_title'])
+        upper_title = label.set_notebook_title(view['upper_notebook'], view['upper_notebook'].get_current_page(),
+                                               view['upper_notebook_title'])
+        lower_title = label.set_notebook_title(view['lower_notebook'], view['lower_notebook'].get_current_page(),
+                                               view['lower_notebook_title'])
 
         # Initialize the Left-Bar un-docked window title
-        view.left_bar_window.initialize_title(gui_helper.create_left_bar_window_title(upper_title, lower_title))
+        view.left_bar_window.initialize_title(label.create_left_bar_window_title(upper_title, lower_title))
         view.right_bar_window.initialize_title('STATE EDITOR')
         view.console_bar_window.initialize_title('CONSOLE')
 
@@ -280,7 +279,7 @@ class MainWindowController(ExtendedController):
         self.view['step_buttons'].hide()
 
         # Initializing Main Window Size & Position
-        gui_helper.set_window_size_and_position(view.get_top_widget(), 'MAIN_WINDOW')
+        label.set_window_size_and_position(view.get_top_widget(), 'MAIN_WINDOW')
 
         # Initializing Pane positions
         for config_id in constants.PANE_ID.keys():
@@ -470,7 +469,7 @@ class MainWindowController(ExtendedController):
         self.docked[widget_name] = False
         window_view = getattr(self.view, window_name.lower())
         window = window_view.get_top_widget()
-        gui_helper.set_window_size_and_position(window, window_name.upper())
+        label.set_window_size_and_position(window, window_name.upper())
         self.view[widget_name].reparent(window_view['central_eventbox'])
         self.view[undock_button_name].hide()
         hide_function(None)
@@ -551,5 +550,5 @@ class MainWindowController(ExtendedController):
         :param window: The left-bar window, for which the title should be changed
         :param notebook_identifier: A string identifying whether the notebook is the upper or the lower one
         """
-        title = gui_helper.set_notebook_title(notebook, page_num, title_label)
+        title = label.set_notebook_title(notebook, page_num, title_label)
         window.reset_title(title, notebook_identifier)

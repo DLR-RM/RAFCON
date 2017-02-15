@@ -7,14 +7,13 @@
 
 """
 import gtk
-from os.path import dirname
 import yaml_configuration.config
+from os.path import dirname
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models.config_model import ConfigModel
 from rafcon.gui.views.config_window import ConfigWindowView
-
-from rafcon.gui.gui_helper import react_to_event
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

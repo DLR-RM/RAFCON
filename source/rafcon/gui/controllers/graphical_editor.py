@@ -8,18 +8,17 @@
 
 """
 
+import gobject
 import itertools
 import sys
 import time
 from copy import copy
 from functools import partial
-from math import sin, cos, atan2
-
-import gobject
 from gtk import DEST_DEFAULT_ALL
 from gtk.gdk import ACTION_COPY, ModifierType
 from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
 from gtk.gdk import keyval_name
+from math import sin, cos, atan2
 
 import rafcon.core.id_generator as idgen
 from rafcon.core.decorators import lock_state_machine
@@ -29,7 +28,8 @@ from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuControllerOpenGLEditor
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.gui_helper import react_to_event
+from rafcon.gui.helpers import state_machine
+from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models import ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.data_port import DataPortModel
@@ -39,7 +39,6 @@ from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.views.graphical_editor import Direction
-from rafcon.gui.helpers import state_machine
 from rafcon.utils import log
 from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 

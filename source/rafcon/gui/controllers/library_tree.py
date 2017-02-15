@@ -9,17 +9,16 @@
 
 """
 
-import os
-from functools import partial
-
 import gobject
 import gtk
+import os
+from functools import partial
 
 import rafcon.gui.helpers.state_machine as state_machine_helper
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.gui_helper import create_image_menu_item
+from rafcon.gui.helpers.label import create_image_menu_item
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
 from rafcon.utils import log

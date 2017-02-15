@@ -1,23 +1,22 @@
 from gtkmvc import View
 
-from rafcon.gui.views.logging import LoggingView
+from rafcon.gui.config import global_gui_config
+from rafcon.gui.helpers import label
+from rafcon.gui.utils import constants
+from rafcon.gui.views.execution_history import ExecutionHistoryView
+from rafcon.gui.views.global_variable_editor import GlobalVariableEditorView
 from rafcon.gui.views.library_tree import LibraryTreeView
+from rafcon.gui.views.logging import LoggingView
+from rafcon.gui.views.menu_bar import MenuBarView
+from rafcon.gui.views.modification_history import ModificationHistoryView
 from rafcon.gui.views.state_icons import StateIconView
 from rafcon.gui.views.state_machine_tree import StateMachineTreeView
-from rafcon.gui.views.global_variable_editor import GlobalVariableEditorView
-from rafcon.gui.views.modification_history import ModificationHistoryView
-from rafcon.gui.views.execution_history import ExecutionHistoryView
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
 from rafcon.gui.views.states_editor import StatesEditorView
-from rafcon.gui.views.top_tool_bar import TopToolBarView
-from rafcon.gui.views.menu_bar import MenuBarView
 from rafcon.gui.views.tool_bar import ToolBarView
+from rafcon.gui.views.top_tool_bar import TopToolBarView
 from rafcon.gui.views.undocked_window import UndockedWindowView
-
-from rafcon.gui.utils import constants
 from rafcon.utils.i18n import _
-from rafcon.gui.config import global_gui_config
-from rafcon.gui import gui_helper
 
 
 class MainWindowView(View):
@@ -33,9 +32,9 @@ class MainWindowView(View):
         ################################################
         # Undock Buttons
         ################################################
-        self['undock_left_bar_button'].set_image(gui_helper.create_button_label(constants.BUTTON_UNDOCK))
-        self['undock_right_bar_button'].set_image(gui_helper.create_button_label(constants.BUTTON_UNDOCK))
-        self['undock_console_button'].set_image(gui_helper.create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_left_bar_button'].set_image(label.create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_right_bar_button'].set_image(label.create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_console_button'].set_image(label.create_button_label(constants.BUTTON_UNDOCK))
 
         ######################################################
         # Library Tree
@@ -97,10 +96,10 @@ class MainWindowView(View):
 
         self['graphical_editor_label_event_box'].remove(self['graphical_editor_label'])
         self['graphical_editor_label_event_box'].set_border_width(constants.GRID_SIZE)
-        graphical_editor_label = gui_helper.create_label_with_text_and_spacing(_('GRAPHICAL EDITOR'),
-                                                                               font_size=constants.FONT_SIZE_BIG,
-                                                                               letter_spacing=constants.
-                                                                               LETTER_SPACING_1PT)
+        graphical_editor_label = label.create_label_with_text_and_spacing(_('GRAPHICAL EDITOR'),
+                                                                          font_size=constants.FONT_SIZE_BIG,
+                                                                          letter_spacing=constants.
+                                                                          LETTER_SPACING_1PT)
         graphical_editor_label.set_alignment(0, .5)
         self['graphical_editor_label_event_box'].add(graphical_editor_label)
 
@@ -113,9 +112,9 @@ class MainWindowView(View):
 
         self['state_editor_label_hbox'].remove(self['state_editor_label'])
         self['state_editor_label_hbox'].set_border_width(constants.GRID_SIZE)
-        state_editor_label = gui_helper.create_label_with_text_and_spacing(_('STATE EDITOR'),
-                                                                           font_size=constants.FONT_SIZE_BIG,
-                                                                           letter_spacing=constants.LETTER_SPACING_1PT)
+        state_editor_label = label.create_label_with_text_and_spacing(_('STATE EDITOR'),
+                                                                      font_size=constants.FONT_SIZE_BIG,
+                                                                      letter_spacing=constants.LETTER_SPACING_1PT)
         state_editor_label.set_alignment(0., 0.)
         self['state_editor_label_hbox'].add(state_editor_label)
 
@@ -151,16 +150,16 @@ class MainWindowView(View):
         ################################################
         # Hide Buttons
         ################################################
-        self['left_bar_hide_button'].set_image(gui_helper.create_button_label(constants.BUTTON_LEFTA))
-        self['right_bar_hide_button'].set_image(gui_helper.create_button_label(constants.BUTTON_RIGHTA))
-        self['console_hide_button'].set_image(gui_helper.create_button_label(constants.BUTTON_DOWNA))
+        self['left_bar_hide_button'].set_image(label.create_button_label(constants.BUTTON_LEFTA))
+        self['right_bar_hide_button'].set_image(label.create_button_label(constants.BUTTON_RIGHTA))
+        self['console_hide_button'].set_image(label.create_button_label(constants.BUTTON_DOWNA))
 
         ################################################
         # Return Buttons
         ################################################
-        self['left_bar_return_button'].set_image(gui_helper.create_button_label(constants.BUTTON_RIGHTA))
-        self['right_bar_return_button'].set_image(gui_helper.create_button_label(constants.BUTTON_LEFTA))
-        self['console_return_button'].set_image(gui_helper.create_button_label(constants.BUTTON_UPA))
+        self['left_bar_return_button'].set_image(label.create_button_label(constants.BUTTON_RIGHTA))
+        self['right_bar_return_button'].set_image(label.create_button_label(constants.BUTTON_LEFTA))
+        self['console_return_button'].set_image(label.create_button_label(constants.BUTTON_UPA))
 
         # --------------------------------------------------------------------------
         # Edit graphical_editor_shortcuts
@@ -183,14 +182,14 @@ class MainWindowView(View):
         button_step_backward_shortcut = self['button_step_backward_shortcut']
         button_step_backward_shortcut.set_tooltip_text('Step Backward')
 
-        button_start_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_START))
-        button_pause_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_PAUSE))
-        button_stop_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_STOP))
-        button_step_mode_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_STEPM))
-        button_step_in_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_STEP_INTO))
-        button_step_over_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_STEP_OVER))
-        button_step_out_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_STEP_OUT))
-        button_step_backward_shortcut.set_label_widget(gui_helper.create_button_label(constants.BUTTON_BACKW))
+        button_start_shortcut.set_label_widget(label.create_button_label(constants.BUTTON_START))
+        button_pause_shortcut.set_label_widget(label.create_button_label(constants.BUTTON_PAUSE))
+        button_stop_shortcut.set_label_widget(label.create_button_label(constants.BUTTON_STOP))
+        button_step_mode_shortcut.set_label_widget(label.create_button_label(constants.BUTTON_STEPM))
+        button_step_in_shortcut.set_label_widget(label.create_button_label(constants.BUTTON_STEP_INTO))
+        button_step_over_shortcut.set_label_widget(label.create_button_label(constants.BUTTON_STEP_OVER))
+        button_step_out_shortcut.set_label_widget(label.create_button_label(constants.BUTTON_STEP_OUT))
+        button_step_backward_shortcut.set_label_widget(label.create_button_label(constants.BUTTON_BACKW))
 
         # --------------------------------------------------------------------------
 
@@ -228,7 +227,7 @@ class MainWindowView(View):
                 child = notebook.get_nth_page(i)
                 tab_label = notebook.get_tab_label(child)
                 tab_label_text = tab_label.get_text()
-                notebook.set_tab_label(child, gui_helper.create_tab_header_label(tab_label_text, icons))
+                notebook.set_tab_label(child, label.create_tab_header_label(tab_label_text, icons))
                 notebook.set_tab_reorderable(child, True)
                 notebook.set_tab_detachable(child, True)
 
@@ -240,7 +239,7 @@ class MainWindowView(View):
         found = False
         for notebook in self.left_bar_notebooks:
             for i in range(notebook.get_n_pages()):
-                if gui_helper.get_notebook_tab_title(notebook, i) == gui_helper.get_widget_title(tab_label):
+                if label.get_notebook_tab_title(notebook, i) == label.get_widget_title(tab_label):
                     found = True
                     break
             if found:

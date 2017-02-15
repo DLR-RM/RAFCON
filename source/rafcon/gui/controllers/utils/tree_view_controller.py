@@ -5,7 +5,7 @@ from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.gui_helper import react_to_event, is_event_of_key_string
+from rafcon.gui.helpers.label import react_to_event, is_event_of_key_string
 from rafcon.gui.models.selection import Selection, reduce_to_parent_states
 from rafcon.utils import log
 

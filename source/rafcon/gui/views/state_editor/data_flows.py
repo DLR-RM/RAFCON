@@ -1,7 +1,7 @@
 from gtkmvc import View
 
+from rafcon.gui.helpers import label
 from rafcon.gui.utils import constants
-from rafcon.gui import gui_helper
 
 
 class StateDataFlowsListView(View):
@@ -23,7 +23,7 @@ class StateDataFlowsEditorView(View):
     def __init__(self):
         View.__init__(self)
 
-        gui_helper.set_label_markup(self['data_flows_label'], 'DATA FLOWS', letter_spacing=constants.LETTER_SPACING_1PT)
+        label.set_label_markup(self['data_flows_label'], 'DATA FLOWS', letter_spacing=constants.LETTER_SPACING_1PT)
 
         self.data_flows_listView = StateDataFlowsListView()
         self['dataflows_scroller'].add(self.data_flows_listView.get_top_widget())
