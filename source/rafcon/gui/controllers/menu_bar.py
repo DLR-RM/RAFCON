@@ -21,7 +21,7 @@ from rafcon.gui.helpers import label
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.config_window import ConfigWindowController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers import state as gui_helper_state, label
+from rafcon.gui.helpers import state as gui_helper_state
 from rafcon.gui.helpers import state_machine as gui_helper_state_machine
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.container_state import ContainerStateModel
@@ -692,7 +692,7 @@ class MenuBarController(ExtendedController):
     ######################################################
     def on_about_activate(self, widget, data=None):
         about = MyAboutDialog()
-        widget.set_button_children_size_request(about)
+        label.set_button_children_size_request(about)
         response = about.run()
         if response == gtk.RESPONSE_DELETE_EVENT or response == gtk.RESPONSE_CANCEL:
             about.destroy()

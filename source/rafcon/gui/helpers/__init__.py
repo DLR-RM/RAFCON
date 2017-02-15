@@ -1,1 +1,1 @@
-__all__ = ['state_machine', 'state', 'text_formatting', 'widget']
+__all__ = ['state_machine', 'state', 'text_formatting', 'label']
