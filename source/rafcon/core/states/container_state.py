@@ -1214,6 +1214,22 @@ class ContainerState(State):
     # TODO output-in, input-in nur ein data flow
     # TODO data flows mit gleichen Attributen nur einmal
 
+    def check_data_flow_id(self, data_flow_id):
+        """ Check the data flow id and calculate a new one if its None
+
+        :param data_flow_id: The data flow id to check
+        :return: The new data flow id
+        :raises exceptions.AttributeError: if data_flow.data_flow_id already exists
+        """
+        if data_flow_id is not None:
+            if data_flow_id in self._data_flows.iterkeys():
+                raise AttributeError("The data_flow id %s already exists. Cannot add data_flow!", data_flow_id)
+        else:
+            data_flow_id = generate_data_flow_id()
+            while data_flow_id in self._data_flows.iterkeys():
+                data_flow_id = generate_data_flow_id()
+        return data_flow_id
+
     @lock_state_machine
     @Observable.observed
     # Primary key is data_flow_id.
@@ -1226,10 +1242,7 @@ class ContainerState(State):
         :param to_data_port_id: The input_key of the target state
         :param data_flow_id: an optional id for the data flow
         """
-        if data_flow_id is None:
-            data_flow_id = generate_data_flow_id()
-            while data_flow_id in self._data_flows.iterkeys():
-                data_flow_id = generate_data_flow_id()
+        data_flow_id = self.check_data_flow_id(data_flow_id)
 
         self.data_flows[data_flow_id] = DataFlow(from_state_id, from_data_port_id, to_state_id, to_data_port_id,
                                                  data_flow_id, self)
