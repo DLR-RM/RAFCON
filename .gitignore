@@ -1,4 +1,5 @@
-
+.eggs
+dist
 **runtime_config.yaml
 build_doc
 
