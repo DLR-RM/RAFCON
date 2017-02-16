@@ -38,8 +38,8 @@ def check_for_crashed_rafcon_instances():
     def on_message_dialog_response_signal(widget, response_id, found_backups, *args):
 
         if response_id == ButtonDialog.OPTION_1.value:
-            for index, tuple_of__backup in enumerate(found_backups):
-                path, pid, lock_file, m_time, full_path_dirty_lock = tuple_of__backup
+            for index, tuple_of_backup in enumerate(found_backups):
+                path, pid, lock_file, m_time, full_path_dirty_lock = tuple_of_backup
                 if path is not None and widget.list_store[index][0]:  # Open it
 
                     state_machine = storage.load_state_machine_from_path(path)
@@ -72,8 +72,8 @@ def check_for_crashed_rafcon_instances():
                     sm_m.auto_backup.check_for_auto_backup(force=True)
 
         if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_3.value]:
-            for index, tuple_of__backup in enumerate(found_backups):
-                path, pid, lock_file, m_time, full_path_dirty_lock = tuple_of__backup
+            for index, tuple_of_backup in enumerate(found_backups):
+                path, pid, lock_file, m_time, full_path_dirty_lock = tuple_of_backup
                 list_store_row = widget.list_store[index]
                 if (list_store_row[0] or list_store_row[2]) and response_id == ButtonDialog.OPTION_1.value or \
                         response_id == ButtonDialog.OPTION_3.value:
