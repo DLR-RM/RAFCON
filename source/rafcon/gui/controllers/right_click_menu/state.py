@@ -9,14 +9,16 @@
 """
 
 import gtk
+from functools import partial
 
-import rafcon.gui.singleton as mvc_singleton
+import rafcon.core.singleton as core_singleton
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+import rafcon.gui.singleton as mvc_singleton
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers.label import create_image_menu_item, create_check_menu_item
+from rafcon.gui.helpers.label import create_image_menu_item, create_check_menu_item, append_sub_menu_to_parent_menu
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.utils import constants
 from rafcon.utils import log
@@ -45,6 +47,53 @@ class StateMachineRightClickMenu(object):
 
         self.insert_is_start_state_in_menu(menu, shortcuts_dict, accel_group)
 
+        execution_sub_menu_item, execution_sub_menu = append_sub_menu_to_parent_menu("Execution", menu,
+                                                                                 constants.BUTTON_EXP)
+        execution_sub_menu.append(create_image_menu_item("from here", constants.BUTTON_START_FROM_SELECTED_STATE,
+                                                         self.on_run_from_selected_state_activate,
+                                                         accel_code=shortcuts_dict['start_from_selected'][0],
+                                                         accel_group=accel_group))
+        execution_sub_menu.append(create_image_menu_item("stop here", constants.BUTTON_RUN_TO_SELECTED_STATE,
+                                                         self.on_run_to_selected_state_activate,
+                                                         accel_code=shortcuts_dict['run_to_selected'][0],
+                                                         accel_group=accel_group))
+
+        menu.append(gtk.SeparatorMenuItem())
+
+        add_sub_menu_item, add_sub_menu = append_sub_menu_to_parent_menu("Add", menu, constants.BUTTON_ADD)
+
+        add_state_sub_menu_item, add_state_sub_menu = append_sub_menu_to_parent_menu("State", add_sub_menu,
+                                                                                     constants.BUTTON_ADD)
+
+        add_state_sub_menu.append(create_image_menu_item("Execution State", constants.BUTTON_ADD,
+                                           self.on_add_execution_state_activate,
+                                           accel_code=shortcuts_dict['add_execution_state'][0],
+                                           accel_group=accel_group))
+        add_state_sub_menu.append(create_image_menu_item("Hierarchy State", constants.BUTTON_ADD,
+                                           self.on_add_hierarchy_state_activate,
+                                           accel_code=shortcuts_dict['add_hierarchy_state'][0],
+                                           accel_group=accel_group))
+        add_state_sub_menu.append(create_image_menu_item("Preemptive State", constants.BUTTON_ADD,
+                                           self.on_add_preemptive_state_activate,
+                                           accel_code=shortcuts_dict['add_preemptive_state'][0],
+                                           accel_group=accel_group))
+        add_state_sub_menu.append(create_image_menu_item("Barrier State", constants.BUTTON_ADD,
+                                           self.on_add_barrier_state_activate,
+                                           accel_code=shortcuts_dict['add_barrier_state'][0],
+                                           accel_group=accel_group))
+
+        add_sub_menu.append(gtk.SeparatorMenuItem())
+
+        add_sub_menu.append(create_image_menu_item("Outcome", constants.BUTTON_ADD, self.on_add_outcome,
+                                           accel_code=shortcuts_dict['add_outcome'][0], accel_group=accel_group))
+        add_sub_menu.append(create_image_menu_item("Output Port", constants.BUTTON_ADD, self.on_add_output,
+                                           accel_code=shortcuts_dict['add_output'][0], accel_group=accel_group))
+        add_sub_menu.append(create_image_menu_item("Input Port", constants.BUTTON_ADD, self.on_add_input,
+                                           accel_code=shortcuts_dict['add_input'][0], accel_group=accel_group))
+        add_sub_menu.append(create_image_menu_item("Scoped Variable", constants.BUTTON_ADD, self.on_add_scoped_variable,
+                                           accel_code=shortcuts_dict['add_scoped_variable'][0], accel_group=accel_group))
+        menu.append(gtk.SeparatorMenuItem())
+
         menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate,
                                            accel_code=shortcuts_dict['copy'][0], accel_group=accel_group))
         menu.append(create_image_menu_item("Paste selection", constants.BUTTON_PASTE, self.on_paste_activate,
@@ -55,52 +104,26 @@ class StateMachineRightClickMenu(object):
                                            accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
         menu.append(create_image_menu_item("Ungroup states", constants.BUTTON_UNGR, self.on_ungroup_state_activate,
                                            accel_code=shortcuts_dict['ungroup'][0], accel_group=accel_group))
-
-        if global_gui_config.get_config_value('EXTENDED_RIGHT_CLICK_MENU'):
-            menu.append(gtk.SeparatorMenuItem())
-
-            menu.append(create_image_menu_item("Add Execution State", constants.BUTTON_ADD,
-                                               self.on_add_execution_state_activate,
-                                               accel_code=shortcuts_dict['add_execution_state'][0],
-                                               accel_group=accel_group))
-            menu.append(create_image_menu_item("Add Hierarchy State", constants.BUTTON_ADD,
-                                               self.on_add_hierarchy_state_activate,
-                                               accel_code=shortcuts_dict['add_hierarchy_state'][0],
-                                               accel_group=accel_group))
-            menu.append(create_image_menu_item("Add Preemptive State", constants.BUTTON_ADD,
-                                               self.on_add_preemptive_state_activate,
-                                               accel_code=shortcuts_dict['add_preemptive_state'][0],
-                                               accel_group=accel_group))
-            menu.append(create_image_menu_item("Add Barrier State", constants.BUTTON_ADD,
-                                               self.on_add_barrier_state_activate,
-                                               accel_code=shortcuts_dict['add_barrier_state'][0],
-                                               accel_group=accel_group))
-
-            menu.append(gtk.SeparatorMenuItem())
-
-            menu.append(create_image_menu_item("Add Outcome", constants.BUTTON_ADD, self.on_add_outcome,
-                                               accel_code=shortcuts_dict['add_outcome'][0], accel_group=accel_group))
-            menu.append(create_image_menu_item("Add Output Port", constants.BUTTON_ADD, self.on_add_output,
-                                               accel_code=shortcuts_dict['add_output'][0], accel_group=accel_group))
-            menu.append(create_image_menu_item("Add Input Port", constants.BUTTON_ADD, self.on_add_input,
-                                               accel_code=shortcuts_dict['add_input'][0], accel_group=accel_group))
-            menu.append(create_image_menu_item("Add Scoped Variable", constants.BUTTON_ADD, self.on_add_scoped_variable,
-                                               accel_code=shortcuts_dict['add_scoped_variable'][0], accel_group=accel_group))
-
-        menu.append(gtk.SeparatorMenuItem())
-
-        menu.append(create_image_menu_item("Run from here", constants.BUTTON_START_FROM_SELECTED_STATE,
-                                           self.on_run_from_selected_state_activate,
-                                           accel_code=shortcuts_dict['start_from_selected'][0], accel_group=accel_group))
-        menu.append(create_image_menu_item("Stop here", constants.BUTTON_RUN_TO_SELECTED_STATE,
-                                           self.on_run_to_selected_state_activate,
-                                           accel_code=shortcuts_dict['run_to_selected'][0], accel_group=accel_group))
-        menu.append(create_image_menu_item("Save state as state machine", constants.BUTTON_SAVE,
-                                           self.on_save_state_as_state_machine_activate,
-                                           accel_code=shortcuts_dict['save_state_as'][0], accel_group=accel_group))
         menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
                                            self.on_substitute_state_activate,
                                            accel_code=shortcuts_dict['substitute_state'][0], accel_group=accel_group))
+        menu.append(gtk.SeparatorMenuItem())
+
+        save_as_sub_menu_item, save_as_sub_menu = append_sub_menu_to_parent_menu("Save state as", menu,
+                                                                                 constants.BUTTON_SAVE)
+
+        save_as_sub_menu.append(create_image_menu_item("State machine", constants.BUTTON_SAVE,
+                                           self.on_save_state_as_state_machine_activate,
+                                           accel_code=shortcuts_dict['save_state_as'][0], accel_group=accel_group))
+        save_as_library_sub_menu_item, save_as_library_sub_menu = append_sub_menu_to_parent_menu("Library",
+                                                                                                 save_as_sub_menu,
+                                                                                                 constants.SIGN_LIB)
+        library_paths = core_singleton.library_manager.library_paths
+        for library_root_key in library_paths.iterkeys():
+            save_as_library_sub_menu.append(create_image_menu_item(library_root_key, constants.SIGN_LIB,
+                                                                   partial(self.on_save_state_as_state_machine_activate,
+                                                                           path=library_paths[library_root_key]),
+                                                                   accel_code=None, accel_group=accel_group))
 
         return menu
 
@@ -196,8 +219,15 @@ class StateMachineRightClickMenu(object):
     def on_run_to_selected_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('run_to_selected', None, None)
 
-    def on_save_state_as_state_machine_activate(self, widget, data=None):
-        self.shortcut_manager.trigger_action('save_state_as', None, None)
+    def on_save_state_as_state_machine_activate(self, widget, data=None, path=None):
+        menu_bar_controller = mvc_singleton.main_window_controller.get_controller('menu_bar_controller')
+        if path is not None:
+            old_last_path_open = mvc_singleton.global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
+            mvc_singleton.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
+            menu_bar_controller.on_save_selected_state_as_activate()
+            mvc_singleton.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', old_last_path_open)
+        else:
+            menu_bar_controller.on_save_selected_state_as_activate()
 
     def on_substitute_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('substitute_state', None, None)

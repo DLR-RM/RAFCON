@@ -84,6 +84,14 @@ def create_check_menu_item(label_text="", is_active=False, callback=None, callba
     return menu_item
 
 
+def append_sub_menu_to_parent_menu(name, parent_menu, icon_code=None):
+    sub_menu_item = create_image_menu_item(name, icon_code)
+    parent_menu.append(sub_menu_item)
+    sub_menu = gtk.Menu()
+    sub_menu_item.set_submenu(sub_menu)
+    return sub_menu_item, sub_menu
+
+
 def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
     """Create a button label with a chosen icon.
 
