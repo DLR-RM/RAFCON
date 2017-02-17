@@ -23,7 +23,7 @@ class RAFCONMessageDialog(gtk.MessageDialog):
             self.add_callback(callback, *callback_args)
 
         self.show_all()
-        # I only grab focus in the highest class, the inhereting classes should have the focus as well because the all
+        # Only grab focus in the highest class, the inheriting classes should have the focus as well because they all
         # execute the init of this class
         self.grab_focus()
 
@@ -46,7 +46,7 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
         hbox = gtk.HBox(homogeneous=False, spacing=constants.GRID_SIZE)
         for index, button in enumerate(button_texts):
                 button = gtk.Button(button)
-                button.connect('clicked', self.add_clicked_response, index)
+                button.connect('clicked', self.add_response, index)
                 hbox.pack_start(button, True, True, 1)
 
         # alignment area to resize the buttons to their label size
@@ -58,9 +58,9 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
         self.show_all()
         self.run() if callback else None
 
-    def add_clicked_response(self, widget, index):
-        # add responses to the 'clicked' event of the button. First buttons gets 0 as response
-        self.response(index)
+    def add_response(self, widget, index):
+        # add responses to the 'clicked' event of the button. First button gets 1 as response Second 2 etc.
+        self.response(index+1)
 
 
 class RAFCONInputDialog(RAFCONButtonDialog):
@@ -71,25 +71,26 @@ class RAFCONInputDialog(RAFCONButtonDialog):
 
         super(RAFCONInputDialog, self).__init__(callback, callback_args, markup_text, button_texts, type, flags, parent)
 
+        # create a new gtk.Hbox to put in the checkbox and the entry
+        hbox = gtk.HBox(homogeneous=False, spacing=constants.GRID_SIZE)
+        self.get_content_area().add(hbox)
+
         # Setup new text entry line
         self.entry = gtk.Entry()
         self.entry.set_editable(1)
         self.entry.set_activates_default(True)
         self.entry.set_width_chars(10)
 
-        self.entry.connect('activate', lambda w: self.response(0))
+        # Hitting the enter button responds 1 from the widget
+        # This is the same as the first button, so the first button should always be sth. approving the content of the
+        # window. Probably a configurable flag would also make sense.
+        self.entry.connect('activate', self.add_response, 0)
+        hbox.pack_start(self.entry, True, True, 1)
 
-        # create a new gtk.Hbox to put in the checkbox and the entry
-        hbox = gtk.HBox(homogeneous=False, spacing=constants.GRID_SIZE)
-        # add the hbox to the content area
-        self.get_content_area().add(hbox)
-
-        if checkbox_text:
-            # If a checkbox is asked for by the caller, create one.
+        if isinstance(checkbox_text, str):
+            # If a checkbox_text is specified by the caller, we can assume that one should be used.
             self.check = gtk.CheckButton(checkbox_text)
             hbox.pack_end(self.check, True, True, 1)
-
-        hbox.pack_end(self.entry, True, True, 1)
 
         self.show_all()
         self.run() if callback else None
@@ -114,11 +115,9 @@ class RAFCONColumnCheckBoxDialog(RAFCONButtonDialog):
         # this is not really needed i guess if I can get the checkboxes over the content area anyway
         # TODO change this to a solution without the list.
         self.checkboxes = []
-        for checkbox in checkbox_texts:
+        for index, checkbox in enumerate(checkbox_texts):
             self.checkboxes.append(gtk.CheckButton(checkbox))
-
-        for checkbox in self.checkboxes:
-            checkbox_vbox.pack_start(checkbox, True, True, 1)
+            checkbox_vbox.pack_start(self.checkboxes[index], True, True, 1)
 
         self.show_all()
         self.run() if callback else None
@@ -132,34 +131,4 @@ class RAFCONColumnCheckBoxDialog(RAFCONButtonDialog):
     def get_checkboxes(self):
         return self.checkboxes
 
-# TODO: Rico, please put your checbox tree dialog here, i dont want to do it and "claim" the code by myself
-
-# class RAFCONMultiColumnCheckBoxDialog(RAFCONButtonDialog):
-#
-#     def __init__(self, callback=None, callback_args=(), markup_text=None, button_texts=None, checkbox_texts=None, num_columns=1, titles=None, type=gtk.MESSAGE_INFO, flags=gtk.DIALOG_MODAL, parent=None, autorun=False):
-#
-#         super(RAFCONMultiColumnCheckBoxDialog, self).__init__(callback, callback_args, markup_text, button_texts, type, flags, parent)
-#         self.rows = []
-#         vbox = self.get_content_area()
-#         for checkbox_row in checkbox_texts:
-#             row = []
-#             row.append(gtk.HBox(homogeneous=False, spacing=constants.GRID_SIZE))
-#             self.rows.append(row)
-#             row.append(gtk.CheckButton(checkbox_row))
-#             row[1].show()
-#             row[0].pack_end(row[1], True, True, 1)
-#             for x in xrange(num_columns-1):
-#                 row.append(gtk.CheckButton())
-#                 row[x+2].show()
-#                 row[0].pack_start(row[x+2], True, True, 1)
-#             row[0].show()
-#
-#         for row in self.rows:
-#             vbox.add(row[0])
-#
-#         vbox.show()
-#
-#         self.show()
-#         self.grab_focus()
-#         self.run() if autorun else None
-
+# TODO: Rico, please put your checkbox tree dialog here, i don't want to do it and "claim" the code by myself :)
