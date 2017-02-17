@@ -6,7 +6,7 @@ import os
 
 def search_for_print_statements(path):
     # subprocess output retrieval somehow does not work with grep commands
-    command = "grep -R -v '# print' " + str(dirname(realpath(rafcon.__file__))) + path + \
+    command = "grep -Rn -v '# print' " + str(dirname(realpath(rafcon.__file__))) + path + \
               "  | grep -v '# .* print' | grep ' print '"
     output = os.popen(command).read()
     # print output
@@ -18,10 +18,13 @@ def test_number_of_whitespaces():
     gui_print_lines = search_for_print_statements("/gui")
     state_machine_print_lines = search_for_print_statements("/core")
     utils_print_lines = search_for_print_statements("/utils")
+    print "\n".join([str(line) for line in gui_print_lines])
     print len(gui_print_lines)
     assert len(gui_print_lines) == 36
+    print "\n".join([str(line) for line in state_machine_print_lines])
     print len(state_machine_print_lines)
     assert len(state_machine_print_lines) == 11
+    print "\n".join([str(line) for line in utils_print_lines])
     print len(utils_print_lines)
     assert len(utils_print_lines) == 1
 
