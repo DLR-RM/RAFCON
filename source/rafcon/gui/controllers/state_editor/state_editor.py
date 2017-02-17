@@ -20,7 +20,7 @@ from rafcon.gui.controllers.state_editor.scoped_variable_list import ScopedVaria
 from rafcon.gui.controllers.state_editor.source_editor import SourceEditorController
 from rafcon.gui.controllers.state_editor.transitions import StateTransitionsEditorController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers import label
+import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.models import ContainerStateModel
 from rafcon.gui.utils import constants
 from rafcon.utils import log
@@ -92,7 +92,7 @@ class StateEditorController(ExtendedController):
                 tab_label = notebook.get_tab_label(child)
                 if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
                     tab_label_text = tab_label.get_text()
-                    notebook.set_tab_label(child, label.create_tab_header_label(tab_label_text, self.icons))
+                    notebook.set_tab_label(child, gui_helper_label.create_tab_header_label(tab_label_text, self.icons))
                 else:
                     tab_label.set_angle(270)
                 notebook.set_tab_reorderable(child, True)

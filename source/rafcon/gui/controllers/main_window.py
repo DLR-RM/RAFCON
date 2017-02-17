@@ -29,7 +29,7 @@ from rafcon.gui.controllers.tool_bar import ToolBarController
 from rafcon.gui.controllers.top_tool_bar import TopToolBarMainWindowController
 from rafcon.gui.controllers.undocked_window import UndockedWindowController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers import label
+import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.shortcut_manager import ShortcutManager
@@ -185,13 +185,15 @@ class MainWindowController(ExtendedController):
         view['debug_console_button_hbox'].reorder_child(view['button_show_debug'], 3)
 
         # Initialize the Left-Bar Notebooks' titles according to initially-selected tabs
-        upper_title = label.set_notebook_title(view['upper_notebook'], view['upper_notebook'].get_current_page(),
-                                               view['upper_notebook_title'])
-        lower_title = label.set_notebook_title(view['lower_notebook'], view['lower_notebook'].get_current_page(),
-                                               view['lower_notebook_title'])
+        upper_title = gui_helper_label.set_notebook_title(view['upper_notebook'],
+                                                          view['upper_notebook'].get_current_page(),
+                                                          view['upper_notebook_title'])
+        lower_title = gui_helper_label.set_notebook_title(view['lower_notebook'],
+                                                          view['lower_notebook'].get_current_page(),
+                                                          view['lower_notebook_title'])
 
         # Initialize the Left-Bar un-docked window title
-        view.left_bar_window.initialize_title(label.create_left_bar_window_title(upper_title, lower_title))
+        view.left_bar_window.initialize_title(gui_helper_label.create_left_bar_window_title(upper_title, lower_title))
         view.right_bar_window.initialize_title('STATE EDITOR')
         view.console_bar_window.initialize_title('CONSOLE')
 
@@ -279,7 +281,7 @@ class MainWindowController(ExtendedController):
         self.view['step_buttons'].hide()
 
         # Initializing Main Window Size & Position
-        label.set_window_size_and_position(view.get_top_widget(), 'MAIN_WINDOW')
+        gui_helper_label.set_window_size_and_position(view.get_top_widget(), 'MAIN_WINDOW')
 
         # Initializing Pane positions
         for config_id in constants.PANE_ID.keys():
@@ -469,7 +471,7 @@ class MainWindowController(ExtendedController):
         self.docked[widget_name] = False
         window_view = getattr(self.view, window_name.lower())
         window = window_view.get_top_widget()
-        label.set_window_size_and_position(window, window_name.upper())
+        gui_helper_label.set_window_size_and_position(window, window_name.upper())
         self.view[widget_name].reparent(window_view['central_eventbox'])
         self.view[undock_button_name].hide()
         hide_function(None)
@@ -550,5 +552,5 @@ class MainWindowController(ExtendedController):
         :param window: The left-bar window, for which the title should be changed
         :param notebook_identifier: A string identifying whether the notebook is the upper or the lower one
         """
-        title = label.set_notebook_title(notebook, page_num, title_label)
+        title = gui_helper_label.set_notebook_title(notebook, page_num, title_label)
         window.reset_title(title, notebook_identifier)

@@ -1,7 +1,7 @@
 import gtk
 from gtkmvc import View
 
-from rafcon.gui.helpers import label
+import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
 
 
@@ -20,13 +20,13 @@ class TopToolBarView(View):
         minimize_button = self['minimize_button']
         redock_button = self['redock_button']
 
-        close_label = label.create_button_label(constants.BUTTON_CLOSE)
+        close_label = gui_helper_label.create_button_label(constants.BUTTON_CLOSE)
         close_button.set_label_widget(close_label)
 
-        maximize_label = label.create_button_label(constants.BUTTON_EXP)
+        maximize_label = gui_helper_label.create_button_label(constants.BUTTON_EXP)
         maximize_button.set_label_widget(maximize_label)
 
         minimize_button.set_label('_')
 
-        redock_label = label.create_button_label(constants.BUTTON_UNDOCK)
+        redock_label = gui_helper_label.create_button_label(constants.BUTTON_UNDOCK)
         redock_button.set_label_widget(redock_label)

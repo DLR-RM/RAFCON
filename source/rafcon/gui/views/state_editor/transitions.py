@@ -1,6 +1,6 @@
 from gtkmvc import View
 
-from rafcon.gui.helpers import label
+import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
 
 
@@ -23,8 +23,8 @@ class StateTransitionsEditorView(View):
     def __init__(self):
         View.__init__(self)
 
-        label.set_label_markup(self['transitions_label'], 'TRANSITIONS',
-                               letter_spacing=constants.LETTER_SPACING_1PT)
+        gui_helper_label.set_label_markup(self['transitions_label'], 'TRANSITIONS',
+                                          letter_spacing=constants.LETTER_SPACING_1PT)
 
         self.transitions_listView = StateTransitionsListView()
         self['transitions_scroller'].add(self.transitions_listView.get_top_widget())

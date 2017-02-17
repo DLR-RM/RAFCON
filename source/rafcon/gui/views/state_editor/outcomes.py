@@ -1,7 +1,7 @@
 import gtk
 from gtkmvc import View
 
-from rafcon.gui.helpers import label
+import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
 
 
@@ -43,8 +43,8 @@ class StateOutcomesEditorView(View):
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrollable.add(self.treeView['tree_view'])
 
-        outcomes_label = label.create_label_with_text_and_spacing("OUTCOMES",
-                                                                  letter_spacing=constants.LETTER_SPACING_1PT)
+        outcomes_label = gui_helper_label.create_label_with_text_and_spacing("OUTCOMES",
+                                                                             letter_spacing=constants.LETTER_SPACING_1PT)
         outcomes_label.set_alignment(0.0, 0.5)
         eventbox = gtk.EventBox()
         eventbox.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
