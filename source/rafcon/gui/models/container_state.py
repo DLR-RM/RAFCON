@@ -383,11 +383,12 @@ class ContainerStateModel(StateModel):
             else:
                 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
+                tmp_models_dict = self.group_state.__func__.tmp_models_storage
                 state_id = info.result
                 grouped_state_m = self.states[state_id]
                 tmp_models_dict['state'] = grouped_state_m
                 # TODO do implement OpenGL and Gaphas support meta data scaling
-                if not gui_helper_state_machine.scale_meta_data_according_states(tmp_moduls_dict):
+                if not gui_helper_state_machine.scale_meta_data_according_states(tmp_models_dict):
                     del self.group_state.__func__.tmp_models_storage
                     return
 
@@ -429,7 +430,7 @@ class ContainerStateModel(StateModel):
                 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
                 tmp_models_dict = self.ungroup_state.__func__.tmp_models_storage
                 # TODO do implement Gaphas support meta data scaling
-                # if not gui_helper_state_machine.scale_meta_data_according_state(tmp_models_dict):
+                if not gui_helper_state_machine.scale_meta_data_according_state(tmp_models_dict):
                     del self.ungroup_state.__func__.tmp_models_storage
                     return
 
