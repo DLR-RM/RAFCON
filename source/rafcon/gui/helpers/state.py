@@ -5,7 +5,7 @@ from rafcon.core.singleton import state_machine_manager, library_manager
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
-from rafcon.gui import singleton as mvc_singleton
+from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.models.library_state import LibraryStateModel
@@ -18,7 +18,7 @@ logger = log.get_logger(__name__)
 def substitute_selected_state(menubar):
         selected_states = menubar.model.get_selected_state_machine_model().selection.get_states()
         if selected_states and len(selected_states) == 1:
-            StateSubstituteChooseLibraryDialog(mvc_singleton.library_manager_model, parent=menubar.get_root_window())
+            StateSubstituteChooseLibraryDialog(gui_singletons.library_manager_model, parent=menubar.get_root_window())
             return True
         else:
             logger.warning("Substitute state needs exact one state to be selected.")

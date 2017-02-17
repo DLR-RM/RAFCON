@@ -153,8 +153,8 @@ class StateEditorController(ExtendedController):
         When the type of the observed state changes, a new model is created. The look of this controller's view
         depends on the kind of model. Therefore, we have to destroy this editor and open a new one with the new model.
         """
-        import rafcon.gui.singleton as mvc_singleton
+        import rafcon.gui.singleton as gui_singletons
         msg = info['arg']
         new_state_m = msg.new_state_m
-        states_editor_ctrl = mvc_singleton.main_window_controller.get_controller('states_editor_ctrl')
+        states_editor_ctrl = gui_singletons.main_window_controller.get_controller('states_editor_ctrl')
         states_editor_ctrl.recreate_state_editor(self.model, new_state_m)

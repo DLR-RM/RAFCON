@@ -10,7 +10,7 @@ from yaml_configuration.config import config_path
 
 # gui
 from rafcon.gui.config import global_gui_config
-import rafcon.gui.singleton as mvc_singletons
+import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.runtime_config import global_runtime_config
@@ -90,7 +90,7 @@ def start_stop_state_machine(state_machine, start_state_path, quit_flag):
         reactor.callFromThread(reactor.stop)
 
     if quit_flag:
-        mvc_singletons.main_window_controller.get_controller('menu_bar_controller').on_quit_activate(None, None)
+        gui_singletons.main_window_controller.get_controller('menu_bar_controller').on_quit_activate(None, None)
 
 
 def setup_argument_parser():
@@ -136,7 +136,7 @@ def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_pa
 def setup_gui():
     # Create the GUI-View
     main_window_view = MainWindowView()
-    sm_manager_model = mvc_singletons.state_machine_manager_model
+    sm_manager_model = gui_singletons.state_machine_manager_model
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
     return main_window_controller
 
@@ -188,7 +188,7 @@ def signal_handler(signal, frame):
         print _("Could not stop state machine: {0} {1}").format(e.message, traceback.format_exc())
 # from rafcon.utils import log
     logger.info(_("RAFCON launcher"))
-    mvc_singletons.main_window_controller.get_controller('menu_bar_controller').prepare_destruction()
+    gui_singletons.main_window_controller.get_controller('menu_bar_controller').prepare_destruction()
 
     # shutdown twisted correctly
     if reactor_required():

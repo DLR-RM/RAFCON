@@ -36,7 +36,7 @@ from rafcon.gui.models.container_state import ContainerState, ContainerStateMode
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.utils.notification_overview import NotificationOverview
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-import rafcon.gui.singleton as mvc_singleton
+import rafcon.gui.singleton as gui_singletons
 from rafcon.utils import log
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 from rafcon.utils.storage_utils import substitute_modules
@@ -555,9 +555,9 @@ class Action(ModelMT):
         """
 
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
-        mw_ctrl = mvc_singleton.main_window_controller
+        mw_ctrl = gui_singletons.main_window_controller
         g_sm_editor = None
-        if mvc_singleton.main_window_controller:
+        if gui_singletons.main_window_controller:
             g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
                                                                     self.state_machine.state_machine_id],
                                                          with_print=False)

@@ -11,10 +11,10 @@
 import gtk
 from functools import partial
 
-import rafcon.core.singleton as core_singleton
+import rafcon.core.singleton as core_singletons
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-import rafcon.gui.singleton as mvc_singleton
+import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -118,7 +118,7 @@ class StateMachineRightClickMenu(object):
         save_as_library_sub_menu_item, save_as_library_sub_menu = append_sub_menu_to_parent_menu("Library",
                                                                                                  save_as_sub_menu,
                                                                                                  constants.SIGN_LIB)
-        library_paths = core_singleton.library_manager.library_paths
+        library_paths = core_singletons.library_manager.library_paths
         for library_root_key in library_paths.iterkeys():
             save_as_library_sub_menu.append(create_image_menu_item(library_root_key, constants.SIGN_LIB,
                                                                    partial(self.on_save_state_as_state_machine_activate,
@@ -129,7 +129,7 @@ class StateMachineRightClickMenu(object):
 
     def insert_is_start_state_in_menu(self, menu, shortcuts_dict, accel_group):
 
-        state_m_list = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+        state_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
         has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
         if len(state_m_list) == 1 and isinstance(state_m_list[0], AbstractStateModel) and \
                 not state_m_list[0].state.is_root_state and \
@@ -220,12 +220,12 @@ class StateMachineRightClickMenu(object):
         self.shortcut_manager.trigger_action('run_to_selected', None, None)
 
     def on_save_state_as_state_machine_activate(self, widget, data=None, path=None):
-        menu_bar_controller = mvc_singleton.main_window_controller.get_controller('menu_bar_controller')
+        menu_bar_controller = gui_singletons.main_window_controller.get_controller('menu_bar_controller')
         if path is not None:
-            old_last_path_open = mvc_singleton.global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
-            mvc_singleton.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
+            old_last_path_open = gui_singletons.global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
+            gui_singletons.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
             menu_bar_controller.on_save_selected_state_as_activate()
-            mvc_singleton.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', old_last_path_open)
+            gui_singletons.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', old_last_path_open)
         else:
             menu_bar_controller.on_save_selected_state_as_activate()
 
@@ -239,7 +239,7 @@ class StateMachineRightClickMenu(object):
         from rafcon.gui.models.library_state import LibraryStateModel
         # Single right click
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
-            selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+            selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
             if len(selection.get_all()) == 1 and len(selection.get_states()) == 1 and \
                     isinstance(selection.get_states()[0], LibraryStateModel):
                 menu = self.generate_right_click_menu_library()
@@ -291,7 +291,7 @@ class StateRightClickMenuControllerOpenGLEditor(StateMachineRightClickMenuContro
 
     def activate_menu(self, event, menu):
         # logger.info("activate_menu by " + self.__class__.__name__)
-        selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if selection.get_num_states() > 0 or selection.get_num_scoped_variables() > 0:
             menu.popup(None, None, None, event.button, event.time)
             return True
@@ -315,7 +315,7 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
 
     def activate_menu(self, event, menu):
         # logger.info("activate_menu by " + self.__class__.__name__)
-        selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if selection.get_num_states() > 0 or selection.get_num_scoped_variables() > 0:
             menu.popup(None, None, None, event.button, event.time)
             return True

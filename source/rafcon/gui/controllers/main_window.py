@@ -13,7 +13,7 @@ from functools import partial
 
 import rafcon.core.config
 import rafcon.core.singleton
-import rafcon.gui.singleton as mvc_singleton
+import rafcon.gui.singleton as gui_singletons
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.controllers.execution_history import ExecutionHistoryTreeController
@@ -52,9 +52,9 @@ class MainWindowController(ExtendedController):
     def __init__(self, state_machine_manager_model, view):
         ExtendedController.__init__(self, state_machine_manager_model, view)
 
-        mvc_singleton.main_window_controller = self
+        gui_singletons.main_window_controller = self
         self.state_machine_manager_model = state_machine_manager_model
-        self.observe_model(mvc_singleton.gui_config_model)
+        self.observe_model(gui_singletons.gui_config_model)
 
         self.shortcut_manager = None
         self.handler_ids = {}
@@ -63,7 +63,7 @@ class MainWindowController(ExtendedController):
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         state_machine_manager = state_machine_manager_model.state_machine_manager
 
-        self.state_machine_execution_model = mvc_singleton.state_machine_execution_model
+        self.state_machine_execution_model = gui_singletons.state_machine_execution_model
         self.observe_model(self.state_machine_execution_model)
         self.state_machine_execution_model.register_observer(self)
 
@@ -71,7 +71,7 @@ class MainWindowController(ExtendedController):
         self.shortcut_manager = ShortcutManager(view['main_window'])
 
         # library tree
-        self.library_manager_model = mvc_singleton.library_manager_model
+        self.library_manager_model = gui_singletons.library_manager_model
         library_controller = LibraryTreeController(self.library_manager_model, view.library_tree,
                                                    state_machine_manager_model)
         self.add_controller('library_controller', library_controller)
@@ -100,7 +100,7 @@ class MainWindowController(ExtendedController):
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
 
         # global variable editor
-        global_variable_manager_ctrl = GlobalVariableManagerController(mvc_singleton.global_variable_manager_model,
+        global_variable_manager_ctrl = GlobalVariableManagerController(gui_singletons.global_variable_manager_model,
                                                                        view.global_var_editor)
         self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
 

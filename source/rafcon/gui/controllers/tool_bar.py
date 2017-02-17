@@ -9,7 +9,7 @@
 """
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui import singleton as mvc_singleton
+from rafcon.gui import singleton as gui_singletons
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -25,7 +25,7 @@ class ToolBarController(ExtendedController):
 
     def __init__(self, state_machine_manager_model, view):
         ExtendedController.__init__(self, state_machine_manager_model, view)
-        self.menu_bar_ctrl = mvc_singleton.main_window_controller.get_controller('menu_bar_controller')
+        self.menu_bar_ctrl = gui_singletons.main_window_controller.get_controller('menu_bar_controller')
         self.shortcut_manager = None
 
     def register_view(self, view):

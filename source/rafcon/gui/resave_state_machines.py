@@ -14,7 +14,7 @@ import rafcon.core.storage.storage as storage
 
 from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
-import rafcon.gui.singleton as mvc_singletons
+import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 
@@ -118,7 +118,7 @@ def convert(config_path, source_path, target_path=None):
     else:
         logger.error("You need to specify exactly one state machine to be converted!")
 
-    sm_manager_model = mvc_singletons.state_machine_manager_model
+    sm_manager_model = gui_singletons.state_machine_manager_model
 
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
     main_window = main_window_view.get_top_widget()

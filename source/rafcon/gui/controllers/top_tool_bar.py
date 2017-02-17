@@ -12,7 +12,7 @@
 import gtk
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui import singleton as mvc_singleton
+from rafcon.gui import singleton as gui_singletons
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -32,8 +32,8 @@ class TopToolBarController(ExtendedController):
         self.shortcut_manager = None
         self.top_level_window = top_level_window
         self.full_screen = False
-        self.menu_bar_controller = mvc_singleton.main_window_controller.get_controller('menu_bar_controller')
-        self.main_window_controller = mvc_singleton.main_window_controller
+        self.menu_bar_controller = gui_singletons.main_window_controller.get_controller('menu_bar_controller')
+        self.main_window_controller = gui_singletons.main_window_controller
 
     def register_view(self, view):
         """Called when the View was registered"""

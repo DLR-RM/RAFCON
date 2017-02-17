@@ -12,7 +12,7 @@ import rafcon.core.singleton as sm_singleton
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.utils.dialog import ButtonDialog, RAFCONDialog, RAFCONCheckBoxTableDialog
-import rafcon.gui.singleton as mvc_singleton
+import rafcon.gui.singleton as gui_singletons
 
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
@@ -43,8 +43,8 @@ def check_for_crashed_rafcon_instances():
                 if path is not None and widget.list_store[index][0]:  # Open it
 
                     state_machine = storage.load_state_machine_from_path(path)
-                    mvc_singleton.state_machine_manager.add_state_machine(state_machine)
-                    sm_m = mvc_singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
+                    gui_singletons.state_machine_manager.add_state_machine(state_machine)
+                    sm_m = gui_singletons.state_machine_manager_model.state_machines[state_machine.state_machine_id]
                     assert sm_m.state_machine is state_machine
 
                     # correct backup instance and sm-storage-path
@@ -122,7 +122,7 @@ def check_for_crashed_rafcon_instances():
     #     print "Restorable state machines: \n" + '\n'.join([elem[0] for elem in restorable_sm if elem[0] is not None])
 
     if restorable_sm and any([path is not None for path, pid, lock_file, m_time, full_path_dirty_lock in restorable_sm]):
-        dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=mvc_singleton.main_window_controller.view.get_top_widget())
+        dialog = RAFCONDialog(type=gtk.MESSAGE_WARNING, parent=gui_singletons.main_window_controller.view.get_top_widget())
         message_string = "There have been found state machines of not correctly closed rafcon instances?\n\n" \
                          "This check and dialog can be disabled by setting 'AUTO_RECOVERY_CHECK': False " \
                          "in the GUI configuration file.\n\n" \
@@ -151,7 +151,7 @@ def check_for_crashed_rafcon_instances():
                                            callback=None, callback_args=None,
                                            table_header=table_header, table_data=table_data, toggled_callback=on_toggled,
                                            message_type=gtk.MESSAGE_QUESTION,
-                                           parent=mvc_singleton.main_window_controller.view.get_top_widget(),
+                                           parent=gui_singletons.main_window_controller.view.get_top_widget(),
                                            width=800, standalone=False)
         dialog.finalize(on_message_dialog_response_signal, restorable_sm)
 

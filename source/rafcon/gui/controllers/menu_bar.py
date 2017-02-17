@@ -16,7 +16,7 @@ import rafcon.core.singleton as core_singletons
 from rafcon.core.singleton import state_machine_manager, library_manager
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.gui import singleton as mvc_singleton
+from rafcon.gui import singleton as gui_singletons
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.config_window import ConfigWindowController
@@ -52,14 +52,14 @@ class MenuBarController(ExtendedController):
     def __init__(self, state_machine_manager_model, view, shortcut_manager, sm_execution_engine):
         assert isinstance(view, MainWindowView)
         ExtendedController.__init__(self, state_machine_manager_model, view.menu_bar)
-        self.state_machines_editor_ctrl = mvc_singleton.main_window_controller.\
+        self.state_machines_editor_ctrl = gui_singletons.main_window_controller.\
             get_controller('state_machines_editor_ctrl')
-        self.states_editor_ctrl = mvc_singleton.main_window_controller.get_controller('states_editor_ctrl')
+        self.states_editor_ctrl = gui_singletons.main_window_controller.get_controller('states_editor_ctrl')
         self.shortcut_manager = shortcut_manager
         self.logging_view = view.logging_view
         self.main_window_view = view
-        self.observe_model(mvc_singleton.core_config_model)
-        self.observe_model(mvc_singleton.gui_config_model)
+        self.observe_model(gui_singletons.core_config_model)
+        self.observe_model(gui_singletons.gui_config_model)
 
         self._destroyed = False
         self.handler_ids = {}
@@ -352,9 +352,9 @@ class MenuBarController(ExtendedController):
     @staticmethod
     def on_menu_properties_activate(widget, data=None):
         config_window_view = ConfigWindowView()
-        config_window_ctrl = ConfigWindowController(mvc_singleton.core_config_model, config_window_view,
-                                                    mvc_singleton.gui_config_model)
-        mvc_singleton.main_window_controller.add_controller('config_window_ctrl', config_window_ctrl)
+        config_window_ctrl = ConfigWindowController(gui_singletons.core_config_model, config_window_view,
+                                                    gui_singletons.gui_config_model)
+        gui_singletons.main_window_controller.add_controller('config_window_ctrl', config_window_ctrl)
         config_window_view.show()
         config_window_view.get_top_widget().present()
 
@@ -528,7 +528,7 @@ class MenuBarController(ExtendedController):
         # Should close all tabs
         core_singletons.state_machine_manager.delete_all_state_machines()
         # Recursively destroys the main window
-        mvc_singleton.main_window_controller.destroy()
+        gui_singletons.main_window_controller.destroy()
         self.logging_view.quit_flag = True
         glib.idle_add(log.unregister_logging_view, 'main')
 
@@ -647,7 +647,7 @@ class MenuBarController(ExtendedController):
 
     def on_start_from_selected_state_activate(self, widget, data=None):
         logger.debug("Run from selected state ...")
-        selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         selected_state_models = selection.get_states()
         if len(selected_state_models) is not 1:
             logger.error("Exactly one state must be selected!")
@@ -679,7 +679,7 @@ class MenuBarController(ExtendedController):
     def on_run_to_selected_state_activate(self, widget, data=None):
         logger.debug("Run to selected state ...")
 
-        selection = mvc_singleton.state_machine_manager_model.get_selected_state_machine_model().selection
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         selected_state_models = selection.get_states()
         if len(selected_state_models) is not 1:
             logger.error("Exactly one state must be selected!")

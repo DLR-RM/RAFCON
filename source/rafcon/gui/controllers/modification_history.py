@@ -11,7 +11,7 @@
 import gobject
 import gtk
 
-from rafcon.gui import singleton as mvc_singleton
+from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
@@ -160,7 +160,7 @@ class ModificationHistoryTreeController(ExtendedController):
         :rtype: bool
         """
         # TODO re-organize as request to controller which holds source-editor-view or any parent to it
-        for key, tab in mvc_singleton.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
+        for key, tab in gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
             if tab['controller'].get_controller('source_ctrl') is not None and \
                     react_to_event(self.view, tab['controller'].get_controller('source_ctrl').view.textview,
                                    (key_value, modifier_mask)) or \
@@ -181,7 +181,7 @@ class ModificationHistoryTreeController(ExtendedController):
         :rtype: bool
         """
         # TODO re-organize as request to controller which holds source-editor-view or any parent to it
-        for key, tab in mvc_singleton.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
+        for key, tab in gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
             if tab['controller'].get_controller('source_ctrl') is not None and \
                     react_to_event(self.view, tab['controller'].get_controller('source_ctrl').view.textview,
                                    (key_value, modifier_mask)) or \

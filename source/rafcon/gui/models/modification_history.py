@@ -406,9 +406,9 @@ class ModificationsHistoryModel(ModelMT):
         self.change_count += 1
 
     def is_gaphas_editor(self):
-        import rafcon.gui.singleton as mvc_singleton
+        import rafcon.gui.singleton as gui_singletons
         import rafcon.gui.controllers.graphical_editor as graphical_editor_opengl
-        mw_ctrl = mvc_singleton.main_window_controller
+        mw_ctrl = gui_singletons.main_window_controller
         g_sm_editor = None
         if mw_ctrl:
             g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
