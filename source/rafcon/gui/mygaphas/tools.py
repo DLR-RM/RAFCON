@@ -5,7 +5,7 @@ from gaphas.item import NW, Item
 from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, ConnectHandleTool, RubberbandTool
 
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGaphas
-from rafcon.gui.helpers import state_machine
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.mygaphas.aspect import HandleInMotion, StateHandleFinder
 from rafcon.gui.mygaphas.items.connection import ConnectionView, TransitionPlaceholderView, DataFlowPlaceholderView, TransitionView, DataFlowView
@@ -28,11 +28,11 @@ class RemoveItemTool(Tool):
         if gtk.gdk.keyval_name(event.keyval) == "Delete":
             # Delete Transition from state machine
             if isinstance(self.view.focused_item, TransitionView):
-                state_machine.delete_model(self.view.focused_item.model)
+                gui_helper_state_machine.delete_model(self.view.focused_item.model)
                 return True
             # Delete DataFlow from state machine
             if isinstance(self.view.focused_item, DataFlowView):
-                state_machine.delete_model(self.view.focused_item.model)
+                gui_helper_state_machine.delete_model(self.view.focused_item.model)
                 return True
             # Delete selected state(s) from state machine
             if isinstance(self.view.focused_item, StateView):

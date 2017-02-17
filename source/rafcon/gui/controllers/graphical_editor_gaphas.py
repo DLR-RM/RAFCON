@@ -18,7 +18,7 @@ from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.state import StateType
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers import state_machine
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
@@ -180,7 +180,7 @@ class GraphicalEditorController(ExtendedController):
         """
         if react_to_event(self.view, self.view.editor, event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-            return state_machine.add_new_state(self.model, state_type)
+            return gui_helper_state_machine.add_new_state(self.model, state_type)
 
     @lock_state_machine
     def _copy_selection(self, *event):
@@ -329,7 +329,7 @@ class GraphicalEditorController(ExtendedController):
                     state_model_to_be_changed = model.root_state
                 else:
                     state_to_be_changed = arguments[1]
-                    state_model_to_be_changed = state_machine.get_state_model_for_state(state_to_be_changed)
+                    state_model_to_be_changed = gui_helper_state_machine.get_state_model_for_state(state_to_be_changed)
                 self.observe_model(state_model_to_be_changed)
 
     @ExtendedController.observe("state_machine", after=True)
@@ -762,7 +762,7 @@ class GraphicalEditorController(ExtendedController):
                                 hierarchy_level=new_state_hierarchy_level)
 
     def _remove_state_view(self, view):
-        return state_machine.delete_selected_elements(self.model)
+        return gui_helper_state_machine.delete_selected_elements(self.model)
 
     def setup_canvas(self):
         with self.model.state_machine.modification_lock():

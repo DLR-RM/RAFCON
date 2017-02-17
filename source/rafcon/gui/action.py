@@ -35,6 +35,7 @@ from rafcon.core.storage import storage
 from rafcon.gui.models.container_state import ContainerState, ContainerStateModel
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.utils.notification_overview import NotificationOverview
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 import rafcon.gui.singleton as mvc_singleton
 from rafcon.utils import log
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
@@ -854,7 +855,6 @@ class StateMachineAction(Action, ModelMT):
         self.storage_version_for_state_type_change_signal_hook = None
 
     def set_root_state_to_version(self, state, storage_version):
-        import rafcon.gui.helpers.state_machine as state_machine_helper
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s  || %s || StateMachineAction\n\n\n\n\n\n\n" % (state.get_path(), state))
         # self.state_machine.root_state = get_state_from_state_tuple(storage_version)
         root_state_version_from_storage = get_state_from_state_tuple(storage_version)
@@ -863,17 +863,17 @@ class StateMachineAction(Action, ModelMT):
 
         if self.with_print:
             print "\n#H# TRY STATE_HELPER ", type(root_state_version_from_storage), \
-                isinstance(root_state_version_from_storage, state_machine_helper.HierarchyState), "\n"
-        if isinstance(root_state_version_from_storage, state_machine_helper.HierarchyState):
-            new_state_class = state_machine_helper.HierarchyState
-        elif isinstance(root_state_version_from_storage, state_machine_helper.BarrierConcurrencyState):
-            new_state_class = state_machine_helper.BarrierConcurrencyState
-        elif isinstance(root_state_version_from_storage, state_machine_helper.PreemptiveConcurrencyState):
-            new_state_class = state_machine_helper.PreemptiveConcurrencyState
+                isinstance(root_state_version_from_storage, HierarchyState), "\n"
+        if isinstance(root_state_version_from_storage, HierarchyState):
+            new_state_class = HierarchyState
+        elif isinstance(root_state_version_from_storage, BarrierConcurrencyState):
+            new_state_class = BarrierConcurrencyState
+        elif isinstance(root_state_version_from_storage, PreemptiveConcurrencyState):
+            new_state_class = PreemptiveConcurrencyState
         else:
             if self.with_print:
                 logger.info("SM set_root_state_to_version: with NO type change")
-            new_state_class = state_machine_helper.ExecutionState
+            new_state_class = ExecutionState
         logger.debug("DO root version change " + self.type)
                  # logger.debug("DO root version change")
         # observe root state model (type change signal)
@@ -889,7 +889,7 @@ class StateMachineAction(Action, ModelMT):
             self.storage_version_for_state_type_change_signal_hook = None
             self.relieve_model(old_root_state_m)
         else:
-            new_state = state_machine_helper.create_new_state_from_state_with_type(state, new_state_class)
+            new_state = gui_helper_state_machine.create_new_state_from_state_with_type(state, new_state_class)
 
             self.update_state(new_state, root_state_version_from_storage)
 

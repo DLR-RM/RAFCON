@@ -20,7 +20,7 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.states.state import StateType
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers import state_machine
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import format_cell
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.utils import constants
@@ -140,7 +140,7 @@ class StateOverviewController(ExtendedController, Model):
     def on_toggle_is_start_state(self, button):
         if not button.get_active() == self.model.is_start:
             # from rafcon.gui.helpers import state_machine as state_machine
-            state_machine.selected_state_toggle_is_start_state()
+            gui_helper_state_machine.selected_state_toggle_is_start_state()
 
     def on_toggle_show_content(self, checkbox):
         self.model.meta['gui']['show_content'] = checkbox.get_active()

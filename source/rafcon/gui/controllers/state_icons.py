@@ -10,7 +10,7 @@
 
 import gtk
 
-import rafcon.gui.helpers.state_machine as state_machine_helper
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
@@ -110,5 +110,5 @@ class StateIconController(ExtendedController):
         elif selected_path == "BS":
             state = BarrierConcurrencyState()
 
-        if state_machine_helper.insert_state(state, False):
+        if gui_helper_state_machine.insert_state(state, False):
             return state.state_id

@@ -238,7 +238,7 @@ class ContainerStateModel(StateModel):
     def change_state_type(self, model, prop_name, info):
         if info.method_name != 'change_state_type':
             return
-        from rafcon.gui.helpers import state_machine
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         import rafcon.gui.singleton as mvc_singleton
 
         old_state = info.args[1]
@@ -255,7 +255,7 @@ class ContainerStateModel(StateModel):
             state_machine_m.selection.remove(state_m)
 
             # Extract child models of state, as they have to be applied to the new state model
-            child_models = state_machine.extract_child_models_of_of_state(state_m, new_state_class)
+            child_models = gui_helper_state_machine.extract_child_models_of_of_state(state_m, new_state_class)
             self.change_state_type.__func__.child_models = child_models  # static variable of class method
 
         # After the state has been changed in the core, we create a new model for it with all information extracted
@@ -268,7 +268,7 @@ class ContainerStateModel(StateModel):
                 new_state = info.result
                 # Create a new state model based on the new state and apply the extracted child models
                 child_models = self.change_state_type.__func__.child_models
-                new_state_m = state_machine.create_state_model_for_state(new_state, child_models)
+                new_state_m = gui_helper_state_machine.create_state_model_for_state(new_state, child_models)
                 # Set this state model (self) to be the parent of our new state model
                 new_state_m.parent = self
                 # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
@@ -353,13 +353,14 @@ class ContainerStateModel(StateModel):
             if isinstance(info.result, Exception):
                 logger.exception("State ungroup failed {0}".format(info.result))
             else:
-                from rafcon.gui.helpers import state_machine
+                import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+
                 tmp_meta_data = self.group_state.__func__.tmp_meta_data_storage
                 state_id = info.result
                 grouped_state_m = self.states[state_id]
                 tmp_meta_data['state'] = grouped_state_m
                 # TODO do implement OpenGL and Gaphas support meta data scaling
-                if not state_machine.scale_meta_data_according_states(tmp_meta_data):
+                if not gui_helper_state_machine.scale_meta_data_according_states(tmp_meta_data):
                     del self.group_state.__func__.tmp_meta_data_storage
                     return
 
@@ -421,10 +422,10 @@ class ContainerStateModel(StateModel):
             if isinstance(info.result, Exception):
                 logger.exception("State ungroup failed {0}".format(info.result))
             else:
-                from rafcon.gui.helpers import state_machine
+                import rafcon.gui.helpers.state_machine as gui_helper_state_machine
                 tmp_meta_data = self.ungroup_state.__func__.tmp_meta_data_storage
                 # TODO do implement Gaphas support meta data scaling
-                # if not state_machine_helper.scale_meta_data_according_state(tmp_meta_data):
+                # if not gui_helper_state_machine.scale_meta_data_according_state(tmp_meta_data):
                 #     del self.ungroup_state.__func__.tmp_meta_data_storage
                 #     return
 

@@ -14,7 +14,7 @@ import gtk
 import os
 from functools import partial
 
-import rafcon.gui.helpers.state_machine as state_machine_helper
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -183,7 +183,7 @@ class LibraryTreeController(ExtendedController):
         :param time:
         """
         library_state = self._get_selected_library_state()
-        if state_machine_helper.insert_state(library_state, False):
+        if gui_helper_state_machine.insert_state(library_state, False):
             data.set_text(library_state.state_id)
 
     def on_drag_begin(self, widget, context):
@@ -195,7 +195,7 @@ class LibraryTreeController(ExtendedController):
         self.view.drag_source_set_icon_stock(gtk.STOCK_NEW)
 
     def insert_button_clicked(self, widget, as_template=False):
-        state_machine_helper.insert_state(self._get_selected_library_state(), as_template)
+        gui_helper_state_machine.insert_state(self._get_selected_library_state(), as_template)
 
     def select_open_state_machine_of_selected_library_element(self):
         """Select respective state machine of selected library in state machine manager if already open """
@@ -273,10 +273,10 @@ class LibraryTreeController(ExtendedController):
         return False
 
     def substitute_as_library_clicked(self, widget):
-        state_machine_helper.substitute_state(self._get_selected_library_state(), as_template=False)
+        gui_helper_state_machine.substitute_state(self._get_selected_library_state(), as_template=False)
 
     def substitute_as_template_clicked(self, widget):
-        state_machine_helper.substitute_state(self._get_selected_library_state(), as_template=True)
+        gui_helper_state_machine.substitute_state(self._get_selected_library_state(), as_template=True)
 
     def _get_selected_library_state(self):
         """Returns the LibraryState which was selected in the LibraryTree

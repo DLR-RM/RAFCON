@@ -28,7 +28,7 @@ from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuControllerOpenGLEditor
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers import state_machine
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models import ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.abstract_state import AbstractStateModel
@@ -500,7 +500,7 @@ class GraphicalEditorController(ExtendedController):
         if self.changed_models:
             if len(self.changed_models) > 1:
                 self.changes_affect_children = True
-                self.changed_models = state_machine.reduce_to_parent_states(self.changed_models)
+                self.changed_models = gui_helper_state_machine.reduce_to_parent_states(self.changed_models)
             if len(self.changed_models) > 1:
                 parent_m = self.root_state_m
             else:
@@ -1160,7 +1160,7 @@ class GraphicalEditorController(ExtendedController):
 
                 affects_children = len(self.model.selection) > 1
                 if affects_children:
-                    reduced_list = state_machine.reduce_to_parent_states(self.model.selection)
+                    reduced_list = gui_helper_state_machine.reduce_to_parent_states(self.model.selection)
                     if len(reduced_list) > 1:
                         parent_m = self.root_state_m
                     else:
@@ -2148,7 +2148,7 @@ class GraphicalEditorController(ExtendedController):
     @lock_state_machine
     def _delete_selection(self, *event):
         if react_to_event(self.view, self.view.editor, event):
-            return state_machine.delete_selected_elements(self.model)
+            return gui_helper_state_machine.delete_selected_elements(self.model)
 
     @lock_state_machine
     def _add_new_state(self, *event, **kwargs):
@@ -2158,7 +2158,7 @@ class GraphicalEditorController(ExtendedController):
         """
         if react_to_event(self.view, self.view.editor, event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-            return state_machine.add_new_state(self.model, state_type)
+            return gui_helper_state_machine.add_new_state(self.model, state_type)
 
     @lock_state_machine
     def _abort(self, *event):

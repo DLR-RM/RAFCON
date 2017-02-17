@@ -1,7 +1,6 @@
 import gtk
 from gtk import Container, Button
 
-from rafcon.gui import singleton as mvc_singleton
 from rafcon.gui.utils import constants
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config

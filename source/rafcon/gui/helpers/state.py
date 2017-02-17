@@ -1,6 +1,5 @@
 import gtk
 
-from rafcon.gui.helpers import state_machine
 from rafcon.core import interface
 from rafcon.core.singleton import state_machine_manager, library_manager
 from rafcon.core.state_machine import StateMachine
@@ -8,7 +7,7 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
 from rafcon.gui import singleton as mvc_singleton
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
-from rafcon.gui.helpers import state_machine as bar_sm_helper
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.models.library_state import LibraryStateModel
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
 from rafcon.utils import log
@@ -30,7 +29,7 @@ def substitute_library_with_template(menubar):
     selected_states = menubar.model.get_selected_state_machine_model().selection.get_states()
     if selected_states and len(selected_states) == 1 and isinstance(selected_states[0], LibraryStateModel):
         lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_states[0].state))
-        state_machine.substitute_state(lib_state, as_template=True)
+        gui_helper_state_machine.substitute_state(lib_state, as_template=True)
         # TODO find out why the following generates a problem (e.g. lose of outcomes)
         # state_machine_helper.substitute_state(selected_states[0].state, as_template=True)
         return True
@@ -66,10 +65,10 @@ def save_selected_state_as(menubar):
 
                 if response_id == ButtonDialog.OPTION_1.value:
                     logger.debug("Library refresh is triggered.")
-                    bar_sm_helper.refresh_libraries()
+                    gui_helper_state_machine.refresh_libraries()
                 elif response_id == ButtonDialog.OPTION_2.value:
                     logger.debug("Refresh all is triggered.")
-                    bar_sm_helper.refresh_all(None)
+                    gui_helper_state_machine.refresh_all(None)
                 elif response_id in [ButtonDialog.OPTION_3.value, -4]:
                     pass
                 else:
@@ -88,10 +87,10 @@ def save_selected_state_as(menubar):
 
                 if response_id == ButtonDialog.OPTION_1.value:
                     logger.debug("Substitute saved state with Library.")
-                    bar_sm_helper.refresh_libraries()
+                    gui_helper_state_machine.refresh_libraries()
                     [library_path, library_name] = library_manager.get_library_path_and_name_for_os_path(path)
                     state = library_manager.get_library_instance(library_path, library_name)
-                    state_machine.substitute_state(state, as_template=False)
+                    gui_helper_state_machine.substitute_state(state, as_template=False)
                 elif response_id in [ButtonDialog.OPTION_2.value, -4]:
                     pass
                 else:
