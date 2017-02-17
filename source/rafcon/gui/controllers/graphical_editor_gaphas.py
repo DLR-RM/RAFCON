@@ -8,35 +8,28 @@
 
 """
 
-from functools import partial
-
 import gtk
-from gtk.gdk import ACTION_COPY
+from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
+from gtk.gdk import ACTION_COPY
 
-from rafcon.core.states.state import StateType
-from rafcon.core.decorators import lock_state_machine
 import rafcon.core.id_generator as idgen
-
+from rafcon.core.decorators import lock_state_machine
+from rafcon.core.states.state import StateType
 from rafcon.gui.clipboard import global_clipboard
-from rafcon.gui import state_machine_helper
-
-from rafcon.gui.models.signals import MetaSignalMsg
-from rafcon.gui.models.state_machine import StateMachineModel
+from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
-
-from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView
-
-from rafcon.gui.mygaphas.items.state import StateView, NameView
+from rafcon.gui.models.signals import MetaSignalMsg
+from rafcon.gui.models.state_machine import StateMachineModel
+from rafcon.gui.mygaphas.canvas import MyCanvas
 from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
 from rafcon.gui.mygaphas.items.ports import OutcomeView, DataPortView, ScopedVariablePortView
-from rafcon.gui.mygaphas.canvas import MyCanvas
-from rafcon.gui.mygaphas import guide
-
+from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.singleton import gui_config_model, runtime_config_model
-from rafcon.gui.gui_helper import react_to_event
+from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -187,7 +180,7 @@ class GraphicalEditorController(ExtendedController):
         """
         if react_to_event(self.view, self.view.editor, event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-            return state_machine_helper.add_new_state(self.model, state_type)
+            return gui_helper_state_machine.add_new_state(self.model, state_type)
 
     @lock_state_machine
     def _copy_selection(self, *event):
@@ -336,7 +329,7 @@ class GraphicalEditorController(ExtendedController):
                     state_model_to_be_changed = model.root_state
                 else:
                     state_to_be_changed = arguments[1]
-                    state_model_to_be_changed = state_machine_helper.get_state_model_for_state(state_to_be_changed)
+                    state_model_to_be_changed = gui_helper_state_machine.get_state_model_for_state(state_to_be_changed)
                 self.observe_model(state_model_to_be_changed)
 
     @ExtendedController.observe("state_machine", after=True)
@@ -769,7 +762,7 @@ class GraphicalEditorController(ExtendedController):
                                 hierarchy_level=new_state_hierarchy_level)
 
     def _remove_state_view(self, view):
-        return state_machine_helper.delete_selected_elements(self.model)
+        return gui_helper_state_machine.delete_selected_elements(self.model)
 
     def setup_canvas(self):
         with self.model.state_machine.modification_lock():

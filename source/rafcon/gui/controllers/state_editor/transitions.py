@@ -9,19 +9,16 @@
 
 """
 
-import gtk
 import gobject
+import gtk
 
-from rafcon.core.states.library_state import LibraryState
 from rafcon.core.state_elements.transition import Transition
-
-from rafcon.gui.models.container_state import ContainerStateModel
-from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.controllers.state_editor.data_flows import LinkageListController
+from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.helpers.label import format_cell
+from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
-
-from rafcon.gui.gui_helper import format_cell
-
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

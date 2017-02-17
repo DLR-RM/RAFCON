@@ -8,21 +8,19 @@
 
 """
 
+import gobject
+import gtk
 from functools import partial
 
-import gtk
-import gobject
-
-from rafcon.core.states.state import StateType
 from rafcon.core.states.state import State
-
-from rafcon.gui.controllers.utils.tree_view_controller import TreeViewController
+from rafcon.core.states.state import StateType
+from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
+from rafcon.gui.controllers.utils.tree_view_controller import TreeViewController
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models import ContainerStateModel
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
-from rafcon.gui.clipboard import global_clipboard
-from rafcon.gui import state_machine_helper
-from rafcon.gui.gui_helper import react_to_event
 from rafcon.gui.utils.notification_overview import NotificationOverview, \
     is_execution_status_update_notification_from_state_machine_model
 from rafcon.utils import log
@@ -119,12 +117,12 @@ class StateMachineTreeController(TreeViewController):
         """
         if react_to_event(self.view, self.view['state_machine_tree_view'], event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-            state_machine_helper.add_new_state(self._selected_sm_model, state_type)
+            gui_helper_state_machine.add_new_state(self._selected_sm_model, state_type)
             return True
 
     def _delete_selection(self, *event):
         if react_to_event(self.view, self.view['state_machine_tree_view'], event):
-            return state_machine_helper.delete_selected_elements(self._selected_sm_model)
+            return gui_helper_state_machine.delete_selected_elements(self._selected_sm_model)
 
     @TreeViewController.observe("state_machine", after=True)
     def states_update(self, model, prop_name, info):

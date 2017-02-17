@@ -1,17 +1,17 @@
 from gtkmvc import View
 
-from rafcon.gui.views.state_editor.source_editor import SourceEditorView
-from rafcon.gui.views.state_editor.description_editor import DescriptionEditorView
-from rafcon.gui.views.state_editor.outcomes import StateOutcomesEditorView
-from rafcon.gui.views.state_editor.overview import StateOverviewView
-from rafcon.gui.views.state_editor.input_port_list import InputPortsListView
-from rafcon.gui.views.state_editor.output_port_list import OutputPortsListView
-from rafcon.gui.views.state_editor.scoped_variables_list import ScopedVariablesListView
-from rafcon.gui.views.state_editor.transitions import StateTransitionsEditorView
-from rafcon.gui.views.state_editor.data_flows import StateDataFlowsEditorView
-from rafcon.gui.views.state_editor.linkage_overview import LinkageOverviewView
+import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
-from rafcon.gui import gui_helper
+from rafcon.gui.views.state_editor.data_flows import StateDataFlowsEditorView
+from rafcon.gui.views.state_editor.description_editor import DescriptionEditorView
+from rafcon.gui.views.state_editor.input_port_list import InputPortsListView
+from rafcon.gui.views.state_editor.linkage_overview import LinkageOverviewView
+from rafcon.gui.views.state_editor.outcomes import StateOutcomesEditorView
+from rafcon.gui.views.state_editor.output_port_list import OutputPortsListView
+from rafcon.gui.views.state_editor.overview import StateOverviewView
+from rafcon.gui.views.state_editor.scoped_variables_list import ScopedVariablesListView
+from rafcon.gui.views.state_editor.source_editor import SourceEditorView
+from rafcon.gui.views.state_editor.transitions import StateTransitionsEditorView
 
 
 class StateEditorView(View):
@@ -24,7 +24,8 @@ class StateEditorView(View):
         self.page_dict = {}
         self.notebook_names = ['main_notebook_1', 'main_notebook_2']
 
-        gui_helper.set_label_markup(self['data_ports_label'], 'DATA PORTS', letter_spacing=constants.LETTER_SPACING_1PT)
+        gui_helper_label.set_label_markup(self['data_ports_label'], 'DATA PORTS',
+                                          letter_spacing=constants.LETTER_SPACING_1PT)
 
         self['properties_view'] = StateOverviewView()
         self['inputs_view'] = InputPortsListView()

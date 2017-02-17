@@ -280,7 +280,7 @@ def trigger_gui_signals(*args):
     assert len(data_flows_after['external']['ingoing']) == 1
     assert state_m_parent.state.states[new_state_id].input_data_ports.items()[0][1].default_value == 2.0
 
-    call_gui_callback(menubar_ctrl.on_refresh_libraries_activate, None)
+    call_gui_callback(menubar_ctrl.on_refresh_libraries_activate)
     call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
     assert len(sm_manager_model.state_machines) == 1
 

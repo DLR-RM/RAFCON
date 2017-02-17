@@ -1,10 +1,9 @@
 import gtk
-
 from gtkmvc import View
 
-from rafcon.gui.utils import constants
-from rafcon.gui.gui_helper import set_label_markup
 from rafcon.gui.config import global_gui_config
+from rafcon.gui.helpers.label import set_label_markup
+from rafcon.gui.utils import constants
 
 
 class MenuBarView(View):

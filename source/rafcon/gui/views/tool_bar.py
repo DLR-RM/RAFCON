@@ -1,6 +1,7 @@
 from gtkmvc import View
+
+from rafcon.gui.helpers.label import create_label_widget_with_icon
 from rafcon.gui.utils import constants
-from rafcon.gui.gui_helper import create_label_widget_with_icon
 from rafcon.utils.i18n import _
 
 

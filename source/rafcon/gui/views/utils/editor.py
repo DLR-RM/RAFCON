@@ -1,9 +1,9 @@
 import gtk
 from gtkmvc import View
 
+import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils import constants
-from rafcon.gui import gui_helper
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -22,7 +22,8 @@ class EditorView(View):
 
         vbox = gtk.VBox()
 
-        source_label = gui_helper.create_label_with_text_and_spacing(name, letter_spacing=constants.LETTER_SPACING_1PT)
+        source_label = gui_helper_label.create_label_with_text_and_spacing(name,
+                                                                           letter_spacing=constants.LETTER_SPACING_1PT)
         source_label.set_alignment(0.0, 0.5)
         source_box = gtk.EventBox()
         source_box.set_name(name.replace(' ', '_').lower() + '_label_wrapper')

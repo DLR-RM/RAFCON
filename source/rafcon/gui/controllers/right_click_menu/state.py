@@ -10,16 +10,15 @@
 
 import gtk
 
-from rafcon.gui.utils import constants
-from rafcon.gui.gui_helper import create_image_menu_item, create_check_menu_item
-from rafcon.gui.clipboard import global_clipboard
-from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.models.abstract_state import AbstractStateModel
+import rafcon.gui.singleton as mvc_singleton
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-import rafcon.gui.singleton as mvc_singleton
+from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
-
+from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.helpers.label import create_image_menu_item, create_check_menu_item
+from rafcon.gui.models.abstract_state import AbstractStateModel
+from rafcon.gui.utils import constants
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

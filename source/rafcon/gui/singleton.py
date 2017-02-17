@@ -7,19 +7,17 @@
 
 
 """
-from rafcon.gui.config import global_gui_config
-from rafcon.gui.models.library_manager import LibraryManagerModel
-from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
-from rafcon.gui.models.global_variable_manager import GlobalVariableManagerModel
-from rafcon.gui.models.state_machine_execution_engine import StateMachineExecutionEngineModel
-from rafcon.gui.models.config_model import ConfigModel
+from rafcon.core import interface
 from rafcon.core.config import global_config
-from rafcon.gui.runtime_config import global_runtime_config
-
 from rafcon.core.singleton import state_machine_manager,\
     global_variable_manager, state_machine_execution_engine, library_manager
-from rafcon.core import interface
-
+from rafcon.gui.config import global_gui_config
+from rafcon.gui.models.config_model import ConfigModel
+from rafcon.gui.models.global_variable_manager import GlobalVariableManagerModel
+from rafcon.gui.models.library_manager import LibraryManagerModel
+from rafcon.gui.models.state_machine_execution_engine import StateMachineExecutionEngineModel
+from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
+from rafcon.gui.runtime_config import global_runtime_config
 
 global_focus = None
 
@@ -111,7 +109,7 @@ interface.create_folder_func = create_folder
 
 def show_notice(query):
     import gtk
-    from rafcon.gui.gui_helper import set_button_children_size_request
+    from rafcon.gui.helpers.label import set_button_children_size_request
     from xml.sax.saxutils import escape
     dialog = gtk.MessageDialog(flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
     if main_window_controller:

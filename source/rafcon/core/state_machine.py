@@ -8,20 +8,20 @@
 
 """
 
+from contextlib import contextmanager
 from copy import copy
 from threading import RLock
-from contextlib import contextmanager
 
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 
 import rafcon
-from rafcon.core.id_generator import generate_state_machine_id
 from rafcon.core.execution.execution_history import ExecutionHistory
-
+from rafcon.core.id_generator import generate_state_machine_id
+from rafcon.utils import log
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.storage_utils import get_current_time_string
-from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -190,7 +190,7 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     @Observable.observed
     def change_root_state_type(self, new_state_class):
-        from rafcon.gui.state_machine_helper import create_new_state_from_state_with_type
+        from rafcon.gui.helpers.state_machine import create_new_state_from_state_with_type
 
         state = self.root_state
         state_id = state.state_id

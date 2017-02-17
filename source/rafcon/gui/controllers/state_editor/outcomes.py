@@ -9,18 +9,16 @@
 
 """
 
-import gtk
 import gobject
+import gtk
 
-from rafcon.core.states.library_state import LibraryState
+from rafcon.gui.helpers.state_machine import insert_self_transition_meta_data
 from rafcon.core.state_elements.outcome import Outcome
-
+from rafcon.core.states.library_state import LibraryState
+from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController, react_to_event
 from rafcon.gui.models.container_state import ContainerStateModel
-from rafcon.gui.state_machine_helper import insert_self_transition_meta_data
-from rafcon.gui.clipboard import global_clipboard
-
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

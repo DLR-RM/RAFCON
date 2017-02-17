@@ -7,25 +7,26 @@
 
 
 """
+import traceback
 from copy import copy, deepcopy
 from threading import Condition
+
 from gtkmvc import Observable
-import traceback
 
 from rafcon.core.custom_exceptions import RecoveryModeException
+from rafcon.core.decorators import lock_state_machine
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
-from rafcon.core.states.state import StateExecutionStatus
-from rafcon.core.state_elements.data_port import DataPortType
 from rafcon.core.id_generator import *
 from rafcon.core.singleton import state_machine_execution_engine
-from rafcon.core.state_elements.state_element import StateElement
-from rafcon.core.state_elements.scope import ScopedData, ScopedVariable
 from rafcon.core.state_elements.data_flow import DataFlow
+from rafcon.core.state_elements.data_port import DataPortType
 from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.scope import ScopedData, ScopedVariable
+from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.state_elements.transition import Transition
-from rafcon.core.states.state import State
-from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.library_state import LibraryState
+from rafcon.core.states.state import State
+from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.storage import storage
 from rafcon.utils.type_helpers import type_inherits_of_type
 
@@ -969,7 +970,7 @@ class ContainerState(State):
         :rtype: :py:class:`rafcon.core.states.state.State`
         :raises exceptions.ValueError: if the state does not exist in the container state
         """
-        from rafcon.gui.state_machine_helper import create_new_state_from_state_with_type
+        from rafcon.gui.helpers.state_machine import create_new_state_from_state_with_type
 
         state_id = state.state_id
 
