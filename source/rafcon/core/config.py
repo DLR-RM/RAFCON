@@ -29,7 +29,7 @@ class ObservableConfig(DefaultConfig, Observable):
     keys_requiring_restart = set()
 
     def __init__(self, defaults, logger_object=None):
-        DefaultConfig.__init__(self, defaults, logger_object)
+        DefaultConfig.__init__(self, defaults, logger_object, rel_config_path='rafcon')
         Observable.__init__(self)
         config = yaml.load(defaults)
         self.keys = set([] if not config else config.keys())
