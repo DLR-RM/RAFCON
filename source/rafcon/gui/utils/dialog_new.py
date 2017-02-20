@@ -9,7 +9,8 @@ class RAFCONMessageDialog(gtk.MessageDialog):
 
     def __init__(self, callback=None, callback_args=(),
                  markup_text=None,
-                 type=gtk.MESSAGE_INFO, flags=gtk.DIALOG_MODAL, parent=None, buttons=gtk.BUTTONS_OK):
+                 type=gtk.MESSAGE_INFO, flags=gtk.DIALOG_MODAL, parent=None, buttons=gtk.BUTTONS_OK,
+                 standalone=False):
 
         super(RAFCONMessageDialog, self).__init__(type=type, buttons=buttons, flags=flags)
 
@@ -29,7 +30,7 @@ class RAFCONMessageDialog(gtk.MessageDialog):
 
         # Run by yourself if callbacks exist. If not,
         # it doesnt make sense because the window can't be destroyed properly
-        self.run() if callback else None
+        self.run() if standalone else None
 
     def add_callback(self, callback, *args):
         self.connect('response', callback, *args)
@@ -39,7 +40,8 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
 
     def __init__(self, callback=None, callback_args=(),
                  markup_text=None, button_texts=None,
-                 type=gtk.MESSAGE_INFO, flags=gtk.DIALOG_MODAL, parent=None):
+                 type=gtk.MESSAGE_INFO, flags=gtk.DIALOG_MODAL, parent=None,
+                 standalone=False):
 
         super(RAFCONButtonDialog, self).__init__(callback, callback_args, markup_text, type, flags, parent, buttons=gtk.BUTTONS_NONE)
 
@@ -56,7 +58,7 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
         self.get_action_area().get_parent().pack_end(align_action_area)
 
         self.show_all()
-        self.run() if callback else None
+        self.run() if standalone else None
 
     def add_response(self, widget, index):
         # add responses to the 'clicked' event of the button. First button gets 1 as response Second 2 etc.
@@ -67,7 +69,8 @@ class RAFCONInputDialog(RAFCONButtonDialog):
 
     def __init__(self, callback=None, callback_args=(),
                  markup_text=None, button_texts=None, checkbox_text=None,
-                 type=gtk.MESSAGE_INFO, flags=gtk.DIALOG_MODAL, parent=None):
+                 type=gtk.MESSAGE_INFO, flags=gtk.DIALOG_MODAL, parent=None,
+                 standalone=False):
 
         super(RAFCONInputDialog, self).__init__(callback, callback_args, markup_text, button_texts, type, flags, parent)
 
@@ -93,7 +96,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
             hbox.pack_end(self.check, True, True, 1)
 
         self.show_all()
-        self.run() if callback else None
+        self.run() if standalone else None
 
     def get_entry(self):
         return self.entry.get_text()
@@ -106,7 +109,8 @@ class RAFCONColumnCheckBoxDialog(RAFCONButtonDialog):
 
     def __init__(self, callback=None, callback_args=(),
                  markup_text=None, button_texts=None, checkbox_texts=None,
-                 type=gtk.MESSAGE_INFO, flags=gtk.DIALOG_MODAL, parent=None):
+                 type=gtk.MESSAGE_INFO, flags=gtk.DIALOG_MODAL, parent=None,
+                 standalone=False):
 
         super(RAFCONColumnCheckBoxDialog, self).__init__(callback, callback_args, markup_text, button_texts, type, flags, parent)
 
@@ -120,10 +124,10 @@ class RAFCONColumnCheckBoxDialog(RAFCONButtonDialog):
             checkbox_vbox.pack_start(self.checkboxes[index], True, True, 1)
 
         self.show_all()
-        self.run() if callback else None
+        self.run() if standalone else None
 
     def get_checkbox_state_by_name(self, checkbox_text):
-        pass
+        return [bool(checkbox.get_state()) for checkbox in self.checkboxes if checkbox.get_label() == checkbox_text]
 
     def get_checkbox_state_by_index(self, checkbox_index):
         return bool(self.checkboxes[checkbox_index].get_state())
