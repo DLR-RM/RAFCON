@@ -6,6 +6,18 @@ logger = log.get_logger(__name__)
 
 
 class RAFCONMessageDialog(gtk.MessageDialog):
+    """A dialog which consists of a gtk button and a markup text. This can be used for informing the user about
+    important things happening
+
+    :param callback: A callback function which should be executed on the end of the run() method
+    :param callback_args: Arguments passed to the callback function
+    :param markup_text: The text inside the dialog
+    :param type: The gtk type of the dialog, e.g. gtk.MESSAGE_INFO, gtk.MESSAGE_QUESTION etc.
+    :param flags: gtk flags passed to the __init__ of gtk.MessageDialog
+    :param parent: The parent widget of this dialog
+    :param buttons: a standard gtk Button passed to the gtk.MessageDialog e.g. BUTTONS_OK or BUTTONS_CANCEL
+    :param standalone: specify if the dialog should run by itself and is only cancelable by a callback function
+    """
 
     def __init__(self, callback=None, callback_args=(),
                  markup_text=None,
@@ -28,7 +40,7 @@ class RAFCONMessageDialog(gtk.MessageDialog):
         # execute the init of this class
         self.grab_focus()
 
-        # Run by yourself if callbacks exist. If not,
+        # Run by yourself if this is the requested dialog. If not,
         # it doesnt make sense because the window can't be destroyed properly
         self.run() if standalone else None
 
@@ -37,6 +49,19 @@ class RAFCONMessageDialog(gtk.MessageDialog):
 
 
 class RAFCONButtonDialog(RAFCONMessageDialog):
+    """A dialog which holds a markup text and a configurable amount of buttons specified in button_texts as a string list.
+    The buttons' response ids are there indexes in the buttons_texts list plus 1, so the first button responds with 1 on
+    a 'clicked' event.
+
+    :param callback: A callback function which should be executed on the end of the run() method
+    :param callback_args: Arguments passed to the callback function
+    :param markup_text: The text inside the dialog
+    :param button_texts: A list containing all buttons_texts to be created as gtk Buttons
+    :param type: The gtk type of the dialog, e.g. gtk.MESSAGE_INFO, gtk.MESSAGE_QUESTION etc.
+    :param flags: gtk flags passed to the __init__ of gtk.MessageDialog
+    :param parent: The parent widget of this dialog
+    :param standalone: specify if the dialog should run by itself and is only cancelable by a callback function
+    """
 
     def __init__(self, callback=None, callback_args=(),
                  markup_text=None, button_texts=None,
@@ -44,6 +69,10 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
                  standalone=False):
 
         super(RAFCONButtonDialog, self).__init__(callback, callback_args, markup_text, type, flags, parent, buttons=gtk.BUTTONS_NONE)
+
+        # remove the button box as it is no longer needed
+        vbox = self.get_action_area().get_parent()
+        vbox.remove(self.get_action_area())
 
         hbox = gtk.HBox(homogeneous=False, spacing=constants.GRID_SIZE)
         for index, button in enumerate(button_texts):
@@ -55,7 +84,7 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
         align_action_area = gtk.Alignment(xalign=1, yalign=0.0, xscale=0.0, yscale=0.0)
 
         align_action_area.add(hbox)
-        self.get_action_area().get_parent().pack_end(align_action_area)
+        vbox.pack_end(align_action_area)
 
         self.show_all()
         self.run() if standalone else None
@@ -66,6 +95,21 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
 
 
 class RAFCONInputDialog(RAFCONButtonDialog):
+    """A dialog containing the a number of buttons specified in button_texts, an optional checkbox specified in
+    checkbox_text and an entry line to write in. The state of the checkbox can be returned by get_checkbox_state(),
+    the content of the entry box can be returned by get_entry(). Hitting the enter button results in the same response
+    signal as the first button, so it is recommended to use "ok" or sth. similar as first button.
+
+    :param callback: A callback function which should be executed on the end of the run() method
+    :param callback_args: Arguments passed to the callback function
+    :param markup_text: The text inside the dialog
+    :param button_texts: A list containing all buttons_texts to be created as gtk Buttons
+    :param checkbox_text: Define the text of the checkbox next to the entry line. If no present, no checkbox is created
+    :param type: The gtk type of the dialog, e.g. gtk.MESSAGE_INFO, gtk.MESSAGE_QUESTION etc.
+    :param flags: gtk flags passed to the __init__ of gtk.MessageDialog
+    :param parent: The parent widget of this dialog
+    :param standalone: specify if the dialog should run by itself and is only cancelable by a callback function
+    """
 
     def __init__(self, callback=None, callback_args=(),
                  markup_text=None, button_texts=None, checkbox_text=None,
@@ -106,6 +150,20 @@ class RAFCONInputDialog(RAFCONButtonDialog):
 
 
 class RAFCONColumnCheckBoxDialog(RAFCONButtonDialog):
+    """A dialog containing a column of checkboxes in addition to a number of buttons and a markup text.
+    All checkboxes can be returned by get_checkboxes() in addition the state of a single checkbox can be either returned
+    by index with get_checkbox_by_index() or by name with get_chackbox_by_name()
+
+    :param callback: A callback function which should be executed on the end of the run() method
+    :param callback_args: Arguments passed to the callback function
+    :param markup_text: The text inside the dialog
+    :param button_texts: A list containing all buttons_texts to be created as gtk Buttons
+    :param checkbox_texts: The labels for checkboxes, also defines the number of checkboxes
+    :param type: The gtk type of the dialog, e.g. gtk.MESSAGE_INFO, gtk.MESSAGE_QUESTION etc.
+    :param flags: gtk flags passed to the __init__ of gtk.MessageDialog
+    :param parent: The parent widget of this dialog
+    :param standalone: specify if the dialog should run by itself and is only cancelable by a callback function
+    """
 
     def __init__(self, callback=None, callback_args=(),
                  markup_text=None, button_texts=None, checkbox_texts=None,
