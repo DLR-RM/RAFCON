@@ -18,7 +18,7 @@ import gobject
 from rafcon.core.states.library_state import LibraryState
 
 from rafcon.gui.utils import constants
-from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
+from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.gui_helper import create_image_menu_item
 import rafcon.gui.state_machine_helper as state_machine_helper
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -247,19 +247,18 @@ class LibraryTreeController(ExtendedController):
             tree_m_row = self.tree_store[path]
             assert isinstance(tree_m_row[self.ITEM_STORAGE_ID], str)
             library_file_system_path = tree_m_row[self.ITEM_STORAGE_ID]
-            def on_message_dialog_response_signal(widget, response_id):
-                if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, -4]:
-                    widget.destroy()
 
-                if response_id == ButtonDialog.OPTION_1.value:
+            def on_message_dialog_response_signal(widget, response_id):
+                if response_id == 1:
                     logger.debug("Remove of Library {} is triggered.".format(tree_m_row[self.ITEM_STORAGE_ID]))
 
                     self.model.library_manager.remove_library_from_file_system(tree_m_row[self.LIB_PATH_STORAGE_ID],
                                                                                tree_m_row[self.ID_STORAGE_ID])
-                elif response_id in [ButtonDialog.OPTION_2.value, -4]:
+                elif response_id in [2, -4]:
                     pass
                 else:
                     logger.warning("Response id: {} is not considered".format(response_id))
+                widget.destroy()
 
             message_string = "You choose to remove library with " \
                              "\n\nlibrary tree path:   {0}" \
@@ -271,7 +270,7 @@ class LibraryTreeController(ExtendedController):
             width = 8*len("physical path:        " + library_file_system_path)
             RAFCONButtonDialog(message_string, ["Remove library", "Cancel"],
                                on_message_dialog_response_signal,
-                               type=gtk.MESSAGE_QUESTION, parent=self.get_root_window(), width=min(width, 1400))
+                               message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window(), width=min(width, 1400))
             return True
         return False
 

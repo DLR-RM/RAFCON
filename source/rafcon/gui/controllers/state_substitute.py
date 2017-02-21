@@ -13,7 +13,7 @@ import gtk
 
 from rafcon.gui.views.library_tree import LibraryTreeView
 from rafcon.gui.controllers.library_tree import LibraryTreeController
-from rafcon.gui.utils.dialog import RAFCONDialog, ButtonDialog
+from rafcon.gui.utils.dialog import RAFCONMessageDialog
 
 from rafcon.utils import log
 
@@ -55,12 +55,14 @@ class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
             return True
 
 
-class StateSubstituteChooseLibraryDialog(RAFCONDialog):
+class StateSubstituteChooseLibraryDialog(RAFCONMessageDialog):
 
     def __init__(self, model, width=500, height=500, pos=None, parent=None):
         self.model = model
 
-        super(StateSubstituteChooseLibraryDialog, self).__init__(gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, gtk.DIALOG_MODAL, parent)
+        super(StateSubstituteChooseLibraryDialog, self).__init__(message_type=gtk.MESSAGE_INFO,
+                                                                 buttons=gtk.BUTTONS_NONE,
+                                                                 flags=gtk.DIALOG_MODAL, parent=parent)
         self.set_title('Library choose dialog')
         self.resize(width=width, height=height)
         if pos is not None:
@@ -68,9 +70,9 @@ class StateSubstituteChooseLibraryDialog(RAFCONDialog):
         self.set_markup("Choose a Library to substitute the state with.")
 
         button_texts = ['As library', 'As template', 'Cancel']
-        for button_text, option in zip(button_texts, ButtonDialog):
-            self.add_button(button_text, option.value)
-        self.finalize(self.check_for_library_path)
+        for index, button_text in enumerate(button_texts):
+            self.add_button(button_text, index)
+        self.add_callback(self.check_for_library_path)
 
         self.widget_view = LibraryTreeView()
         self.widget_ctrl = StateSubstituteChooseLibraryDialogTreeController(self.model, self.widget_view,
@@ -88,18 +90,15 @@ class StateSubstituteChooseLibraryDialog(RAFCONDialog):
         super(StateSubstituteChooseLibraryDialog, self).destroy()
 
     def check_for_library_path(self, widget, response_id):
-        if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value,
-                           ButtonDialog.OPTION_3.value, -4]:
-            self.destroy()
-
-        if response_id == ButtonDialog.OPTION_1.value:
+        if response_id == 1:
             logger.debug("Library substitute state as library triggered.")
             self.widget_ctrl.substitute_as_library_clicked(None)
-        elif response_id == ButtonDialog.OPTION_2.value:
+        elif response_id == 2:
             logger.debug("Library substitute state as template triggered.")
             self.widget_ctrl.substitute_as_template_clicked(None)
-        elif response_id in [ButtonDialog.OPTION_3.value, -4]:
+        elif response_id in [3, -4]:
             pass
         else:
             logger.warning("Response id: {} is not considered".format(response_id))
+        self.destroy()
 

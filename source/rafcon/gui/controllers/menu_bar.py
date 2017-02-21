@@ -41,7 +41,7 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 
 from rafcon.gui.utils import constants
-from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
+from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.utils import plugins
 from rafcon.utils import log
 
@@ -359,11 +359,11 @@ class MenuBarController(ExtendedController):
     def on_save_activate(self, widget, data=None, save_as=False, delete_old_state_machine=False):
         def on_message_dialog_response_signal(widget, response_id, source_editor_ctrl):
             state = source_editor_ctrl.model.state
-            if response_id == ButtonDialog.OPTION_1.value:
+            if response_id == 1:
                 logger.debug("Applying source code changes of state '{}'".format(state.name))
                 source_editor_ctrl.apply_clicked(None)
 
-            elif response_id == ButtonDialog.OPTION_2.value:
+            elif response_id == 2:
                 logger.debug("Ignoring source code changes of state '{}'".format(state.name))
             widget.destroy()
 
@@ -387,7 +387,7 @@ class MenuBarController(ExtendedController):
                 dirty_source_editor_ctrl.apply_clicked(None)
             else:
                 RAFCONButtonDialog(message_string, ["Apply", "Ignore changes"], on_message_dialog_response_signal,
-                                   [dirty_source_editor_ctrl], type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+                                   [dirty_source_editor_ctrl], message_type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
 
         save_path = state_machine_m.state_machine.file_system_path
         if save_path is None:
@@ -457,39 +457,36 @@ class MenuBarController(ExtendedController):
 
                 # Library refresh dialog
                 def on_message_dialog_response_signal(widget, response_id):
-                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value,
-                                       ButtonDialog.OPTION_3.value, -4]:
-                        widget.destroy()
-
-                    if response_id == ButtonDialog.OPTION_1.value:
+                    if response_id == 1:
                         logger.debug("Library refresh is triggered.")
                         self.on_refresh_libraries_activate(None)
-                    elif response_id == ButtonDialog.OPTION_2.value:
+                    elif response_id == 2:
                         logger.debug("Refresh all is triggered.")
                         self.on_refresh_all_activate(None)
-                    elif response_id in [ButtonDialog.OPTION_3.value, -4]:
+                    elif response_id in [3, -4]:
                         pass
                     else:
                         logger.warning("Response id: {} is not considered".format(response_id))
+                    widget.destroy()
 
                 message_string = "You stored your state machine in a path that is included into the library paths.\n\n"\
                                  "Do you want to refresh the libraries or refresh libraries and state machines?"
                 RAFCONButtonDialog(message_string, ["Refresh libraries", "Refresh everything", "Do nothing"],
                                    on_message_dialog_response_signal,
-                                   type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+                                   message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
 
                 # Offer state substitution dialog
                 def on_message_dialog_response_signal(widget, response_id):
-                    if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, -4]:
+                    if response_id in [1, 2, -4]:
                         widget.destroy()
 
-                    if response_id == ButtonDialog.OPTION_1.value:
+                    if response_id == 1:
                         logger.debug("Substitute saved state with Library.")
                         self.on_refresh_libraries_activate(None)
                         [library_path, library_name] = library_manager.get_library_path_and_name_for_os_path(path)
                         state = library_manager.get_library_instance(library_path, library_name)
                         state_machine_helper.substitute_state(state, as_template=False)
-                    elif response_id in [ButtonDialog.OPTION_2.value, -4]:
+                    elif response_id in [2, -4]:
                         pass
                     else:
                         logger.warning("Response id: {} is not considered".format(response_id))
@@ -498,28 +495,26 @@ class MenuBarController(ExtendedController):
                                  "Do you want to substitute the state you saved by this library?"
                 RAFCONButtonDialog(message_string, ["Substitute", "Do nothing"],
                                    on_message_dialog_response_signal,
-                                   type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+                                   message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
 
             # Offer to open saved state machine dialog
             def on_message_dialog_response_signal(widget, response_id):
-                if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value, -4]:
-                    widget.destroy()
-
-                if response_id == ButtonDialog.OPTION_1.value:
+                if response_id == 1:
                     logger.debug("Open state machine.")
                     try:
                         state_machine = storage.load_state_machine_from_path(path)
                         state_machine_manager.add_state_machine(state_machine)
                     except (ValueError, IOError) as e:
                         logger.error('Error while trying to open state machine: {0}'.format(e))
-                elif response_id in [ButtonDialog.OPTION_2.value, -4]:
+                elif response_id in [2, -4]:
                     pass
                 else:
                     logger.warning("Response id: {} is not considered".format(response_id))
+                widget.destroy()
 
             message_string = "Should the newly created state machine be opened?"
             RAFCONButtonDialog(message_string, ["Open", "Do not open"], on_message_dialog_response_signal,
-                               type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+                               message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
             return True
         else:
             logger.warning("Multiple states can not be saved as state machine directly. Group them before.")
@@ -567,7 +562,7 @@ class MenuBarController(ExtendedController):
             if state_machine_manager.has_dirty_state_machine() or dirty_source_editor:
 
                 def on_message_dialog_response_signal(widget, response_id):
-                    if response_id == ButtonDialog.OPTION_1.value:
+                    if response_id == 1:
                         self.refresh_libs_and_state_machines()
                     else:
                         logger.debug("Refresh canceled")
@@ -584,27 +579,27 @@ class MenuBarController(ExtendedController):
                     message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
                         message_string, ctrl.model.state.name, ctrl.model.state.get_path())
                 RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"], on_message_dialog_response_signal,
-                                   type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+                                   message_type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             else:
                 self.refresh_libs_and_state_machines()
 
     def stopped_state_machine_to_proceed(self):
 
             def on_message_dialog_response_signal(widget, response_id):
-                if response_id == ButtonDialog.OPTION_1.value:
+                if response_id == 1:
                     self.state_machine_execution_engine.stop()
                     widget.state_machine_stopped = True
-                elif response_id == ButtonDialog.OPTION_2.value:
+                elif response_id == 2:
                     logger.debug("State machine will stay running and no refresh will be performed!")
                     widget.state_machine_stopped = False
                 widget.destroy()
 
-            message_string = "A state machine is still running. The state machines can only be refeshed" \
+            message_string = "A state machine is still running. The state machines can only be refreshed" \
                              "if no state machine is running any more."
             dialog = RAFCONButtonDialog(message_string, ["Stop execution and refresh libraries",
-                                                "Keep running and do not refresh libraries"],
+                                                         "Keep running and do not refresh libraries"],
                                         on_message_dialog_response_signal,
-                                        type=gtk.MESSAGE_QUESTION,
+                                        message_type=gtk.MESSAGE_QUESTION,
                                         parent=self.get_root_window())
 
             state_machine_stopped = False
@@ -681,16 +676,15 @@ class MenuBarController(ExtendedController):
         if state_machine_manager.has_dirty_state_machine():
 
             def on_message_dialog_response_signal(widget, response_id):
-                if response_id == ButtonDialog.OPTION_1.value:
-                    widget.destroy()
+                if response_id == 1:
                     if not self.state_machine_execution_engine.finished_or_stopped():
                         self.check_sm_running()
                     else:
                         self.prepare_destruction()
                         self.on_destroy(None)
-                elif response_id == ButtonDialog.OPTION_2.value:
+                elif response_id == 2:
                     logger.debug("Close main window canceled")
-                    widget.destroy()
+                widget.destroy()
 
             message_string = "Are you sure you want to exit RAFCON?\n\n" \
                              "The following state machines have been modified and not saved. " \
@@ -699,7 +693,7 @@ class MenuBarController(ExtendedController):
                 if sm.marked_dirty:
                     message_string = "%s\n#%s: %s " % (message_string, str(sm_id), sm.root_state.name)
             RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"], on_message_dialog_response_signal,
-                               type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+                               message_type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             return True
         return False
 
@@ -707,9 +701,9 @@ class MenuBarController(ExtendedController):
         if not self.state_machine_execution_engine.finished_or_stopped():
 
             def on_message_dialog_response_signal(widget, response_id):
-                if response_id == ButtonDialog.OPTION_1.value:
+                if response_id == 1:
                     self.state_machine_execution_engine.stop()
-                elif response_id == ButtonDialog.OPTION_2.value:
+                elif response_id == 2:
                     logger.debug("State machine will stay running!")
                 widget.destroy()
                 self.prepare_destruction()
@@ -717,7 +711,7 @@ class MenuBarController(ExtendedController):
 
             message_string = "The state machine is still running. Do you want to stop the execution before closing?"
             RAFCONButtonDialog(message_string, ["Stop execution", "Keep running"], on_message_dialog_response_signal,
-                               type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+                               message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
             return True
         return False
 
