@@ -21,10 +21,10 @@ class RAFCONMessageDialog(gtk.MessageDialog):
 
     def __init__(self, markup_text=None,
                  callback=None, callback_args=(),
-                 message_type=gtk.MESSAGE_INFO, flags=gtk.DIALOG_MODAL, parent=None, buttons=gtk.BUTTONS_OK,
+                 message_type=gtk.MESSAGE_INFO, flags=gtk.DIALOG_MODAL, parent=None,
                  width=None, standalone=False):
 
-        super(RAFCONMessageDialog, self).__init__(type=message_type, buttons=buttons, flags=flags)
+        super(RAFCONMessageDialog, self).__init__(type=message_type, buttons=gtk.BUTTONS_OK, flags=flags)
 
         if parent:
             super(RAFCONMessageDialog, self).set_transient_for(parent)
@@ -43,7 +43,7 @@ class RAFCONMessageDialog(gtk.MessageDialog):
             text_ctr.get_children()[0].set_size_request(width, -1)
             text_ctr.get_children()[1].set_size_request(width, -1)
 
-        self.show_all()
+        self.show()
         # Only grab focus in the highest class, the inheriting classes should have the focus as well because they all
         # execute the init of this class
         self.grab_focus()
@@ -77,25 +77,25 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
                  width=None, standalone=False):
 
         super(RAFCONButtonDialog, self).__init__(markup_text, callback, callback_args, message_type,
-                                                 flags, parent, gtk.BUTTONS_NONE, width)
+                                                 flags, parent, width)
 
         # remove the button box as it is no longer needed
         vbox = self.get_action_area().get_parent()
         vbox.remove(self.get_action_area())
 
-        hbox = gtk.HBox(homogeneous=False, spacing=constants.GRID_SIZE)
+        self.hbox = gtk.HBox(homogeneous=False, spacing=constants.GRID_SIZE)
         if button_texts:
             for index, button in enumerate(button_texts):
                     button = gtk.Button(button)
                     button.connect('clicked', self.add_response, index)
-                    hbox.pack_start(button, True, True, 1)
+                    self.hbox.pack_start(button, True, True, 1)
         else:
             logger.debug("No buttons where specified for the dialog from type or inheriting from RAFCONButtonDialog")
 
         # alignment area to resize the buttons to their label size
         align_action_area = gtk.Alignment(xalign=1, yalign=0.0, xscale=0.0, yscale=0.0)
 
-        align_action_area.add(hbox)
+        align_action_area.add(self.hbox)
         vbox.pack_end(align_action_area)
 
         self.show_all()
@@ -225,4 +225,3 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
         super(RAFCONCheckBoxTableDialog, self).__init__(markup_text, button_texts, callback,callback_args, message_type, parent=parent, width=width)
 
 # TODO: Rico, please put your checkbox tree dialog here, i don't want to do it and "claim" the code by myself :)
-
