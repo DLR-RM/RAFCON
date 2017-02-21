@@ -43,7 +43,7 @@ class RAFCONMessageDialog(gtk.MessageDialog):
             text_ctr.get_children()[0].set_size_request(width, -1)
             text_ctr.get_children()[1].set_size_request(width, -1)
 
-        self.show()
+        self.show_all()
         # Only grab focus in the highest class, the inheriting classes should have the focus as well because they all
         # execute the init of this class
         self.grab_focus()
