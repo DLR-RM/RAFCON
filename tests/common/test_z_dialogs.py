@@ -11,7 +11,7 @@ logger = log.get_logger(__name__)
 def xor(_list):
     result = 0
     for element in _list:
-        result = element.get_active() ^ result
+        result = element ^ result
     return result
 
 
@@ -23,7 +23,7 @@ def trigger_dialog_tests():
         assert response_id == -5
 
     def on_button_clicked(widget, response_id):
-        # Last button in the order gets the reponse 4 ((index=3) + 1)
+        # Last button in the order gets the response 4 ((index=3) + 1)
         assert response_id == 4
 
     def on_entry_activated(widget, response_id):
@@ -41,7 +41,7 @@ def trigger_dialog_tests():
         # Check if the checkbutton labels are correct
         assert len(widget.get_checkbox_state_by_name(test_text)) == 4
 
-        assert not xor(widget.get_checkboxes())
+        assert not xor(widget.get_checkbox_states())
 
     dialog_window = dialog.RAFCONMessageDialog(markup_text=test_text, callback=on_ok_clicked)
     # First button of the dialog, in this case the standard "Ok" button
@@ -71,7 +71,7 @@ def trigger_dialog_tests():
     dialog_window.entry.activate()
     dialog_window.destroy()
 
-    dialog_window = dialog.RAFCONColumnCheckBoxDialog(markup_text=test_text,
+    dialog_window = dialog.RAFCONColumnCheckboxDialog(markup_text=test_text,
                                                       callback=on_checkbox_dialog_approval,
                                                       message_type=gtk.MESSAGE_QUESTION,
                                                       checkbox_texts=[test_text, test_text, test_text, test_text],

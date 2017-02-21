@@ -12,10 +12,9 @@ class RAFCONMessageDialog(gtk.MessageDialog):
     :param callback: A callback function which should be executed on the end of the run() method
     :param callback_args: Arguments passed to the callback function
     :param markup_text: The text inside the dialog
-    :param type: The gtk type of the dialog, e.g. gtk.MESSAGE_INFO, gtk.MESSAGE_QUESTION etc.
+    :param message_type: The gtk type of the dialog, e.g. gtk.MESSAGE_INFO, gtk.MESSAGE_QUESTION etc.
     :param flags: gtk flags passed to the __init__ of gtk.MessageDialog
     :param parent: The parent widget of this dialog
-    :param buttons: a standard gtk Button passed to the gtk.MessageDialog e.g. BUTTONS_OK or BUTTONS_CANCEL
     :param standalone: specify if the dialog should run by itself and is only cancelable by a callback function
     """
 
@@ -28,10 +27,11 @@ class RAFCONMessageDialog(gtk.MessageDialog):
 
         if parent:
             super(RAFCONMessageDialog, self).set_transient_for(parent)
-
-        from cgi import escape
-        super(RAFCONMessageDialog, self).set_markup(escape(markup_text))
-
+        if isinstance(markup_text, str):
+            from cgi import escape
+            super(RAFCONMessageDialog, self).set_markup(escape(markup_text))
+        else:
+            logger.debug("The specified message text is not a String")
         if callback:
             self.add_callback(callback, *callback_args)
 
@@ -65,7 +65,7 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
     :param button_texts: A list containing all buttons_texts to be created as gtk Buttons
     :param callback: A callback function which should be executed on the end of the run() method
     :param callback_args: Arguments passed to the callback function
-    :param type: The gtk type of the dialog, e.g. gtk.MESSAGE_INFO, gtk.MESSAGE_QUESTION etc.
+    :param message_type: The gtk type of the dialog, e.g. gtk.MESSAGE_INFO, gtk.MESSAGE_QUESTION etc.
     :param flags: gtk flags passed to the __init__ of gtk.MessageDialog
     :param parent: The parent widget of this dialog
     :param standalone: specify if the dialog should run by itself and is only cancelable by a callback function
@@ -117,7 +117,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
     :param checkbox_text: Define the text of the checkbox next to the entry line. If no present, no checkbox is created
     :param callback: A callback function which should be executed on the end of the run() method
     :param callback_args: Arguments passed to the callback function
-    :param type: The gtk type of the dialog, e.g. gtk.MESSAGE_INFO, gtk.MESSAGE_QUESTION etc.
+    :param message_type: The gtk type of the dialog, e.g. gtk.MESSAGE_INFO, gtk.MESSAGE_QUESTION etc.
     :param flags: gtk flags passed to the __init__ of gtk.MessageDialog
     :param parent: The parent widget of this dialog
     :param standalone: specify if the dialog should run by itself and is only cancelable by a callback function
@@ -147,6 +147,8 @@ class RAFCONInputDialog(RAFCONButtonDialog):
         self.entry.connect('activate', self.add_response, 0)
         hbox.pack_start(self.entry, True, True, 1)
 
+        self.check = None
+
         if isinstance(checkbox_text, str):
             # If a checkbox_text is specified by the caller, we can assume that one should be used.
             self.check = gtk.CheckButton(checkbox_text)
@@ -159,10 +161,13 @@ class RAFCONInputDialog(RAFCONButtonDialog):
         return self.entry.get_text()
 
     def get_checkbox_state(self):
-        return bool(self.check.get_state())
+        if self.check:
+            return bool(self.check.get_state())
+        else:
+            return False
 
 
-class RAFCONColumnCheckBoxDialog(RAFCONButtonDialog):
+class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
     """A dialog containing a column of checkboxes in addition to a number of buttons and a markup text.
     All checkboxes can be returned by get_checkboxes() in addition the state of a single checkbox can be either returned
     by index with get_checkbox_by_index() or by name with get_checkbox_by_name()
@@ -172,7 +177,7 @@ class RAFCONColumnCheckBoxDialog(RAFCONButtonDialog):
     :param checkbox_texts: The labels for checkboxes, also defines the number of checkboxes
     :param callback: A callback function which should be executed on the end of the run() method
     :param callback_args: Arguments passed to the callback function
-    :param type: The gtk type of the dialog, e.g. gtk.MESSAGE_INFO, gtk.MESSAGE_QUESTION etc.
+    :param message_type: The gtk type of the dialog, e.g. gtk.MESSAGE_INFO, gtk.MESSAGE_QUESTION etc.
     :param flags: gtk flags passed to the __init__ of gtk.MessageDialog
     :param parent: The parent widget of this dialog
     :param standalone: specify if the dialog should run by itself and is only cancelable by a callback function
@@ -183,7 +188,7 @@ class RAFCONColumnCheckBoxDialog(RAFCONButtonDialog):
                  message_type=gtk.MESSAGE_INFO, flags=gtk.DIALOG_MODAL, parent=None,
                  width=None, standalone=False):
 
-        super(RAFCONColumnCheckBoxDialog, self).__init__(markup_text, button_texts, callback, callback_args,
+        super(RAFCONColumnCheckboxDialog, self).__init__(markup_text, button_texts, callback, callback_args,
                                                          message_type, flags, parent, width)
 
         checkbox_vbox = gtk.VBox(homogeneous=False, spacing=constants.GRID_SIZE)
@@ -209,8 +214,8 @@ class RAFCONColumnCheckBoxDialog(RAFCONButtonDialog):
     def get_checkbox_state_by_index(self, checkbox_index):
         return bool(self.checkboxes[checkbox_index].get_state())
 
-    def get_checkboxes(self):
-        return self.checkboxes
+    def get_checkbox_states(self):
+        return [bool(checkbox.get_state()) for checkbox in self.checkboxes]
 
 
 class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
