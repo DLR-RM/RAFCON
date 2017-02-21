@@ -1,9 +1,0 @@
-{
-    "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
-    "description": "null", 
-    "input_data_ports": "{\n    \"0\": {\n        \"__jsonqualname__\": \"rafcon.core.state_elements.data_port.InputDataPort\", \n        \"data_port_id\": \"0\", \n        \"data_type\": \"{\\n    \\\"__type__\\\": \\\"__builtin__.bool\\\"\\n}\", \n        \"default_value\": \"false\", \n        \"name\": \"\\\"abort_on_quit\\\"\"\n    }, \n    \"1\": {\n        \"__jsonqualname__\": \"rafcon.core.state_elements.data_port.InputDataPort\", \n        \"data_port_id\": \"1\", \n        \"data_type\": \"{\\n    \\\"__type__\\\": \\\"__builtin__.str\\\"\\n}\", \n        \"default_value\": \"null\", \n        \"name\": \"\\\"message_text\\\"\"\n    }\n}", 
-    "name": "\"SpawnMessageDialog\"", 
-    "outcomes": "{\n    \"-2\": {\n        \"__jsonqualname__\": \"rafcon.core.state_elements.outcome.Outcome\", \n        \"name\": \"\\\"preempted\\\"\", \n        \"outcome_id\": \"-2\"\n    }, \n    \"-1\": {\n        \"__jsonqualname__\": \"rafcon.core.state_elements.outcome.Outcome\", \n        \"name\": \"\\\"aborted\\\"\", \n        \"outcome_id\": \"-1\"\n    }, \n    \"0\": {\n        \"__jsonqualname__\": \"rafcon.core.state_elements.outcome.Outcome\", \n        \"name\": \"\\\"success\\\"\", \n        \"outcome_id\": \"0\"\n    }\n}", 
-    "output_data_ports": "{}", 
-    "state_id": "\"IFVXMH\""
-}

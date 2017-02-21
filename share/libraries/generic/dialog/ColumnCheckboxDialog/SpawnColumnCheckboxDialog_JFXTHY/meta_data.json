@@ -29,8 +29,8 @@
             "rel_pos": {
                 "__jsonqualname__": "__builtin__.tuple", 
                 "items": [
-                    43.779999999999966, 
-                    41.62
+                    33.33333333333334, 
+                    42.66666666666668
                 ]
             }, 
             "size": {
@@ -48,7 +48,7 @@
                 "rel_pos": {
                     "__jsonqualname__": "__builtin__.tuple", 
                     "items": [
-                        0, 
+                        0.4098659615741972, 
                         18.0
                     ]
                 }
@@ -61,8 +61,34 @@
                 "rel_pos": {
                     "__jsonqualname__": "__builtin__.tuple", 
                     "items": [
-                        0, 
+                        0.4098659615741972, 
                         16.4
+                    ]
+                }
+            }
+        }
+    }, 
+    "input_data_port2": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.4098659615741972, 
+                        14.799999999999999
+                    ]
+                }
+            }
+        }
+    }, 
+    "input_data_port3": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.4098659615741972, 
+                        13.2
                     ]
                 }
             }
@@ -102,6 +128,32 @@
                     "items": [
                         20.0, 
                         2.0
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome1": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        20.0, 
+                        3.6
+                    ]
+                }
+            }
+        }
+    }, 
+    "output_data_port4": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        23.091812147554617, 
+                        16.4
                     ]
                 }
             }
