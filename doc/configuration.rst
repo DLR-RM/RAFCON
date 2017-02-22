@@ -381,10 +381,10 @@ DEFAULT\_EXTERNAL\_EDITOR
     you wish and results in a shell command with the following pattern:
     '<DEFAULT\_EXTERNAL\_EDITOR> script.py>'.
 
-PREFER_EXTERNAL_EDITOR: False
+PREFER_EXTERNAL_EDITOR
     Default: ``False``
     If True, RAFCON will assume that the user always wants to work with a different editor
-    than the internal on. If the 'Open externally' button is clicked, the source text is 
+    than the internal one. If the 'Open externally' button is clicked, the source text is 
     locked the whole time and a 'Reload' buttons reloads the saved file into RAFCON.
     If False, it is recommended to close the externally opend script.py everytime you are
     done editing.
