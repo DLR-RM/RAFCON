@@ -82,96 +82,118 @@ A typical config file looks like this:
 
 .. code:: yaml
 
-    TYPE: GUI_CONFIG
+TYPE: GUI_CONFIG
 
-    SOURCE_EDITOR_STYLE: awesome-style
+SOURCE_EDITOR_STYLE: rafcon-dark
 
-    GAPHAS_EDITOR: False
-    ENABLE_CACHING: True
+GAPHAS_EDITOR: True
+ENABLE_CACHING: True    # Affects only Gaphas editor
 
-    WAYPOINT_SNAP_ANGLE: 45
-    WAYPOINT_SNAP_MAX_DIFF_ANGLE: 10
-    WAYPOINT_SNAP_MAX_DIFF_PIXEL: 50
+WAYPOINT_SNAP_ANGLE: 45
+WAYPOINT_SNAP_MAX_DIFF_ANGLE: 10
+WAYPOINT_SNAP_MAX_DIFF_PIXEL: 50
 
-    PORT_SNAP_DISTANCE: 5
+PORT_SNAP_DISTANCE: 5
 
-    LOGGING_SHOW_DEBUG: False
-    LOGGING_SHOW_INFO: True
-    LOGGING_SHOW_WARNING: True
-    LOGGING_SHOW_ERROR: True
+LOGGING_SHOW_DEBUG: False
+LOGGING_SHOW_INFO: True
+LOGGING_SHOW_WARNING: True
+LOGGING_SHOW_ERROR: True
 
-    LIBRARY_TREE_PATH_HUMAN_READABLE: False
+LIBRARY_TREE_PATH_HUMAN_READABLE: False
 
-    MINIMUM_SIZE_FOR_CONTENT: 30
-    MAX_VISIBLE_LIBRARY_HIERARCHY: 2
+MINIMUM_SIZE_FOR_CONTENT: 30
+MAX_VISIBLE_LIBRARY_HIERARCHY: 2
 
-    USE_ICONS_AS_TAB_LABELS: True
+USE_ICONS_AS_TAB_LABELS: True
 
-    SHOW_NAMES_ON_DATA_FLOWS: True
-    ROTATE_NAMES_ON_CONNECTIONS: False
+SHOW_NAMES_ON_DATA_FLOWS: True
+ROTATE_NAMES_ON_CONNECTIONS: False
+HISTORY_ENABLED: True 
 
-    HISTORY_ENABLED: True 
+KEEP_ONLY_STICKY_STATES_OPEN: True
 
-    KEEP_ONLY_STICKY_STATES_OPEN: True
+AUTO_BACKUP_ENABLED: True
+AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL: False
+AUTO_BACKUP_FORCED_STORAGE_INTERVAL: 120
+AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL: 20
+AUTO_RECOVERY_CHECK: False
+AUTO_RECOVERY_LOCK_ENABLED: False
 
-    AUTO_BACKUP_ENABLED: True
-    AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL: False
-    AUTO_BACKUP_FORCED_STORAGE_INTERVAL: 120
-    AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL: 20
-    AUTO_RECOVERY_CHECK: False
-    AUTO_RECOVERY_LOCK_ENABLED: False
+AUTO_APPLY_SOURCE_CODE_CHANGES: True
 
-    RESTORE_UNDOCKED_SIDEBARS: False
+CHECK_PYTHON_FILES_WITH_PYLINT: False
 
-    SHORTCUTS:
-        abort: Escape
-        add: <Control>A             # In graphical editor: add execution state
-        add2: <Control><Shift>A     # In graphical editor: add hierarchy state
-        backward_step: F9
-        close: <Control>W
-        copy: <Control>C
-        cut: <Control>X
-        data_flow_mode: <Control><Shift>D
-        delete: Delete
-        down:
-        - <Control>Down
-        - <Control><Shift>Down
-        entry: <Control>E
-        fit: <Control>space
-        group: <Control>G
-        info: <Control>I
-        left:
-        - <Control>Left
-        - <Control><Shift>Left
-        new: <Control>N
-        open: <Control>O
-        paste: <Control>V
-        pause: F7
-        quit: <Control>Q
-        redo:
-        - <Control>Y
-        - <Control><Shift>Z
-        reload: <Shift>F5
-        rename: F2
-        right:
-        - <Control>Right
-        - <Control><Shift>Right
-        save: <Control>S
-        save_as: <Control><Shift>S
-        show_aborted_preempted: <Control>P
-        show_data_flows: <Control>D
-        show_data_values: <Control>L
-        start: F5
-        step: F4
-        step_mode: F6
-        stop: F8
-        undo: <Control>Z
-        ungroup: <Control>U
-        up:
-        - <Control>Up
-        - <Control><Shift>Up
-        apply: <Control><Shift>E
+DEFAULT_EXTERNAL_EDITOR: gvim
+PREFER_EXTERNAL_EDITOR: False
 
+RESTORE_UNDOCKED_SIDEBARS: False
+
+SHORTCUTS:
+    abort: Escape
+    add: <Control>A
+    add_execution_state: <Alt>E
+    add_hierarchy_state: 
+    - <Alt>H
+    - <Control><Shift>A
+    add_preemptive_state: <Alt>C
+    add_barrier_state: <Alt>B
+    add_output: <Alt>U
+    add_input: <Alt>N
+    add_outcome: <Alt>T
+    add_scoped_variable: <Alt>V
+    apply: <Control><Shift>E
+    backward_step: F9
+    close: <Control>W
+    copy: <Control>C
+    cut: <Control>X
+    data_flow_mode: <Control><Shift>D
+    delete: Delete
+    down:
+    - <Control>Down
+    - <Control><Shift>Down
+    fit: <Control>space
+    group: <Control>G
+    info: <Control>I
+    is_start_state: <Control>E
+    left:
+    - <Control>Left
+    - <Control><Shift>Left
+    new: <Control>N
+    open: <Control>O
+    open_external_editor: <Control><Shift>Q
+    paste: <Control>V
+    pause: F7
+    quit: <Control>Q
+    redo:
+    - <Control>Y
+    - <Control><Shift>Z
+    reload: <Shift>F5
+    rename: F2
+    right:
+    - <Control>Right
+    - <Control><Shift>Right
+    run_to_selected: <Control><Shift>R
+    save: <Control>S
+    save_as: <Control><Shift>S
+    save_state_as: <Control><Alt>S
+    substitute_state: <Control><Shift><Alt>S
+    show_aborted_preempted: <Control>P
+    show_data_flows: <Control>D
+    show_data_values: <Control>L
+    start: F5
+    start_from_selected: <Control>R
+    step: F4
+    step_mode: F6
+    stop: F8
+    undo: <Control>Z
+    ungroup:
+    - <Control><Shift>G
+    - <Control>U
+    up:
+    - <Control>Up
+    - <Control><Shift>Up
+    fullscreen: F11
 Documentation
 """""""""""""
 
@@ -351,6 +373,20 @@ RESTORE\_UNDOCKED\_SIDEBARS
     If True, RAFCON will restore undocked windows from the last
     RAFCON-instance run.
 
+DEFAULT\_EXTERNAL\_EDITOR
+    Default: Empty
+    Holds the command which is executed before the script.py file by clicking the 
+    'Open externally' button in the source editor window. The command can be anything 
+    you wish and results in a shell command with the following pattern:
+    '<DEFAULT\_EXTERNAL\_EDITOR> script.py>'.
+
+PREFER_EXTERNAL_EDITOR: False
+    Default: ``False``
+    If True, RAFCON will assume that the user always wants to work with a different editor
+    than the internal on. If the 'Open externally' button is clicked, the source text is 
+    locked the whole time and a 'Reload' buttons reloads the saved file into RAFCON.
+    If False, it is recommended to close the externally opend script.py everytime you are
+    done editing.
 
 SHORTCUTS
     Type: dict
