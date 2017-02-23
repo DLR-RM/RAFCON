@@ -340,14 +340,17 @@ class MenuBarController(ExtendedController):
         gui_helper_state_machine.refresh_all(menubar=self,
                                              force=force)
 
+    @staticmethod
     def on_substitute_selected_state_activate(self, widget=None, data=None, path=None):
-        return gui_helper_state.substitute_selected_state(menubar=self)
+        return gui_helper_state.substitute_selected_state()
 
+    @staticmethod
     def on_substitute_library_with_template_activate(self, widget=None, data=None):
-        return gui_helper_state.substitute_library_with_template(menubar=self)
+        return gui_helper_state.substitute_library_with_template()
 
+    @staticmethod
     def on_save_selected_state_as_activate(self, widget=None, data=None, path=None):
-        return gui_helper_state.save_selected_state_as(menubar=self)
+        return gui_helper_state.save_selected_state_as()
 
     @staticmethod
     def on_menu_properties_activate(widget, data=None):

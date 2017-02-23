@@ -1,4 +1,5 @@
 import gtk
+import copy
 
 from rafcon.core import interface
 from rafcon.core.singleton import state_machine_manager, library_manager
@@ -8,6 +9,7 @@ from rafcon.core.storage import storage
 from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.models.library_state import LibraryStateModel
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
 from rafcon.utils import log
@@ -15,18 +17,19 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-def substitute_selected_state(menubar):
-    selected_states = menubar.model.get_selected_state_machine_model().selection.get_states()
+def substitute_selected_state():
+    selected_states = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
     if selected_states and len(selected_states) == 1:
-        StateSubstituteChooseLibraryDialog(gui_singletons.library_manager_model, parent=menubar.get_root_window())
+        StateSubstituteChooseLibraryDialog(gui_singletons.library_manager_model,
+                                           parent=gui_singletons.main_window_controller.get_root_window())
         return True
     else:
         logger.warning("Substitute state needs exact one state to be selected.")
         return False
 
 
-def substitute_library_with_template(menubar):
-    selected_states = menubar.model.get_selected_state_machine_model().selection.get_states()
+def substitute_library_with_template():
+    selected_states = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
     if selected_states and len(selected_states) == 1 and isinstance(selected_states[0], LibraryStateModel):
         lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_states[0].state))
         gui_helper_state_machine.substitute_state(lib_state, as_template=True)
@@ -38,18 +41,16 @@ def substitute_library_with_template(menubar):
         return False
 
 
-def save_selected_state_as(menubar):
-    selected_states = menubar.model.get_selected_state_machine_model().selection.get_states()
+def save_selected_state_as():
+    state_machine_manager_model = gui_singletons.state_machine_manager_model
+    selected_states = state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
     if selected_states and len(selected_states) == 1:
-        import copy
         state_m = copy.copy(selected_states[0])
-        from rafcon.gui.models.state_machine import StateMachineModel
-        sm_m = StateMachineModel(StateMachine(root_state=state_m.state), menubar.model)
+        sm_m = StateMachineModel(StateMachine(root_state=state_m.state), state_machine_manager_model)
         sm_m.root_state = state_m
-        from rafcon.core.storage.storage import save_state_machine_to_path
         path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
         if path:
-            save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
+            storage.save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
             sm_m.store_meta_data()
         else:
             return False
@@ -78,7 +79,8 @@ def save_selected_state_as(menubar):
                              "Do you want to refresh the libraries or refresh libraries and state machines?"
             RAFCONButtonDialog(message_string, ["Refresh libraries", "Refresh everything", "Do nothing"],
                                on_message_dialog_response_signal,
-                               type=gtk.MESSAGE_QUESTION, parent=menubar.get_root_window())
+                               type=gtk.MESSAGE_QUESTION,
+                               parent=gui_singletons.main_window_controller.get_root_window())
 
             # Offer state substitution dialog
             def on_message_dialog_response_signal(widget, response_id):
@@ -100,7 +102,8 @@ def save_selected_state_as(menubar):
                              "Do you want to substitute the state you saved by this library?"
             RAFCONButtonDialog(message_string, ["Substitute", "Do nothing"],
                                on_message_dialog_response_signal,
-                               type=gtk.MESSAGE_QUESTION, parent=menubar.get_root_window())
+                               type=gtk.MESSAGE_QUESTION,
+                               parent=gui_singletons.main_window_controller.get_root_window())
 
         # Offer to open saved state machine dialog
         def on_message_dialog_response_signal(widget, response_id):
@@ -121,7 +124,8 @@ def save_selected_state_as(menubar):
 
         message_string = "Should the newly created state machine be opened?"
         RAFCONButtonDialog(message_string, ["Open", "Do not open"], on_message_dialog_response_signal,
-                           type=gtk.MESSAGE_QUESTION, parent=menubar.get_root_window())
+                           type=gtk.MESSAGE_QUESTION,
+                           parent=gui_singletons.main_window_controller.get_root_window())
         return True
     else:
         logger.warning("Multiple states can not be saved as state machine directly. Group them before.")
