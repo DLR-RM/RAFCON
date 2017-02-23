@@ -341,15 +341,15 @@ class MenuBarController(ExtendedController):
                                              force=force)
 
     @staticmethod
-    def on_substitute_selected_state_activate(self, widget=None, data=None, path=None):
+    def on_substitute_selected_state_activate(widget=None, data=None, path=None):
         return gui_helper_state.substitute_selected_state()
 
     @staticmethod
-    def on_substitute_library_with_template_activate(self, widget=None, data=None):
+    def on_substitute_library_with_template_activate(widget=None, data=None):
         return gui_helper_state.substitute_library_with_template()
 
     @staticmethod
-    def on_save_selected_state_as_activate(self, widget=None, data=None, path=None):
+    def on_save_selected_state_as_activate(widget=None, data=None, path=None):
         return gui_helper_state.save_selected_state_as()
 
     @staticmethod
@@ -539,7 +539,8 @@ class MenuBarController(ExtendedController):
     # menu bar functionality - Edit
     ######################################################
 
-    def on_toggle_is_start_state_active(self, widget, data=None):
+    @staticmethod
+    def on_toggle_is_start_state_active(widget, data=None):
         return gui_helper_state_machine.selected_state_toggle_is_start_state()
 
     def on_copy_selection_activate(self, widget, data=None):
@@ -615,25 +616,29 @@ class MenuBarController(ExtendedController):
         else:
             self.view["show_aborted_preempted"].set_active(True)
 
-    def on_data_flow_mode_toggled(self, widget, data=None):
+    @staticmethod
+    def on_data_flow_mode_toggled(widget, data=None):
         if widget.get_active():
             global_runtime_config.set_config_value("DATA_FLOW_MODE", True)
         else:
             global_runtime_config.set_config_value("DATA_FLOW_MODE", False)
 
-    def on_show_data_flows_toggled(self, widget, data=None):
+    @staticmethod
+    def on_show_data_flows_toggled(widget, data=None):
         if widget.get_active():
             global_runtime_config.set_config_value("SHOW_DATA_FLOWS", True)
         else:
             global_runtime_config.set_config_value("SHOW_DATA_FLOWS", False)
 
-    def on_show_data_values_toggled(self, widget, data=None):
+    @staticmethod
+    def on_show_data_values_toggled(widget, data=None):
         if widget.get_active():
             global_runtime_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
         else:
             global_runtime_config.set_config_value("SHOW_DATA_FLOW_VALUE_LABELS", False)
 
-    def on_show_aborted_preempted_toggled(self, widget, data=None):
+    @staticmethod
+    def on_show_aborted_preempted_toggled(widget, data=None):
         if widget.get_active():
             global_runtime_config.set_config_value("SHOW_ABORTED_PREEMPTED", True)
         else:
@@ -693,7 +698,8 @@ class MenuBarController(ExtendedController):
     ######################################################
     # menu bar functionality - Help
     ######################################################
-    def on_about_activate(self, widget, data=None):
+    @staticmethod
+    def on_about_activate(widget, data=None):
         about = MyAboutDialog()
         gui_helper_label.set_button_children_size_request(about)
         response = about.run()

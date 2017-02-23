@@ -219,7 +219,8 @@ class StateMachineRightClickMenu(object):
     def on_run_to_selected_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('run_to_selected', None, None)
 
-    def on_save_state_as_state_machine_activate(self, widget, data=None, path=None):
+    @staticmethod
+    def on_save_state_as_state_machine_activate(widget, data=None, path=None):
         menu_bar_controller = gui_singletons.main_window_controller.get_controller('menu_bar_controller')
         if path is not None:
             old_last_path_open = gui_singletons.global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
