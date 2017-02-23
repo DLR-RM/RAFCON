@@ -16,13 +16,13 @@ logger = log.get_logger(__name__)
 
 
 def substitute_selected_state(menubar):
-        selected_states = menubar.model.get_selected_state_machine_model().selection.get_states()
-        if selected_states and len(selected_states) == 1:
-            StateSubstituteChooseLibraryDialog(gui_singletons.library_manager_model, parent=menubar.get_root_window())
-            return True
-        else:
-            logger.warning("Substitute state needs exact one state to be selected.")
-            return False
+    selected_states = menubar.model.get_selected_state_machine_model().selection.get_states()
+    if selected_states and len(selected_states) == 1:
+        StateSubstituteChooseLibraryDialog(gui_singletons.library_manager_model, parent=menubar.get_root_window())
+        return True
+    else:
+        logger.warning("Substitute state needs exact one state to be selected.")
+        return False
 
 
 def substitute_library_with_template(menubar):
