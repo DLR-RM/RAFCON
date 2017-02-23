@@ -864,7 +864,6 @@ class ContainerState(State):
             raise ValueError("The state_id {0} to be substitute has to be in the states list of "
                              "respective parent state {1}.".format(state_id, self.get_path()))
 
-        print "substitute"
         [related_transitions, related_data_flows] = self.related_linkage_state(state_id)
 
         readjust_parent_of_ports = True if state.state_id != state.outcomes.items()[0][1].parent.state_id else False
