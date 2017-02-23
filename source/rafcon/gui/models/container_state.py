@@ -347,7 +347,9 @@ class ContainerStateModel(StateModel):
                     elif df_id in self.state.substitute_state.__func__.re_create_io_going_df_ids:
                         logger.warning("Data flow model with id {0} to set meta data could not be found.".format(df_id))
                 # TODO maybe refactor the signal usage to use the following one
-                # self.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True))
+                from rafcon.gui.models.signals import Notification
+                notification = Notification(self, "states", {'method_name': 'substitute_state'})
+                self.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
 
             del self.substitute_state.__func__.tmp_meta_data_storage
 

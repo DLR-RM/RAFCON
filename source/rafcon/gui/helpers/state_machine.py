@@ -601,14 +601,18 @@ def substitute_state(state, as_template=False):
         template.name = current_state_name
         parent_state.substitute_state(current_state.state_id, template)
 
-        # load meta data
-        from os.path import join
-        lib_os_path, _, _ = library_manager.get_os_path_to_library(state.library_path, state.library_name)
-        root_state_path = join(lib_os_path, orig_state_id)
-        template_m = parent_state_m.states[template.state_id]
-        template_m.load_meta_data(root_state_path)
-        # Causes the template to be resized
-        template_m.temp['gui']['editor']['template'] = True
+        # load meta data TODO fix the following code and related code/functions to the 'template' True flag
+        # from os.path import join
+        # lib_os_path, _, _ = library_manager.get_os_path_to_library(state.library_path, state.library_name)
+        # root_state_path = join(lib_os_path, orig_state_id)
+        # template_m = parent_state_m.states[template.state_id]
+        # template_m.load_meta_data(root_state_path)
+        # # parent_state_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True))
+        # # Causes the template to be resized
+        # template_m.temp['gui']['editor']['template'] = True
+        # from rafcon.gui.models.signals import Notification
+        # notification = Notification(parent_state_m, "states", {'method_name': 'substitute_state'})
+        # parent_state_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
         return True
 
 
