@@ -70,15 +70,16 @@ class StateSubstituteChooseLibraryDialog(RAFCONDialog):
         button_texts = ['As library', 'As template', 'Cancel']
         for button_text, option in zip(button_texts, ButtonDialog):
             self.add_button(button_text, option.value)
-        self.finalize(self.check_for_library_path)
 
         self.widget_view = LibraryTreeView()
         self.widget_ctrl = StateSubstituteChooseLibraryDialogTreeController(self.model, self.widget_view,
                                                                             dialog_widget=self)
 
         self.vbox.pack_start(self.widget_view, True, True, 0)
+
         self.widget_view.show()
 
+        self.finalize(self.check_for_library_path)
         self.grab_focus()
         self.run()
 
@@ -88,9 +89,6 @@ class StateSubstituteChooseLibraryDialog(RAFCONDialog):
         super(StateSubstituteChooseLibraryDialog, self).destroy()
 
     def check_for_library_path(self, widget, response_id):
-        if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value,
-                           ButtonDialog.OPTION_3.value, -4]:
-            self.destroy()
 
         if response_id == ButtonDialog.OPTION_1.value:
             logger.debug("Library substitute state as library triggered.")
@@ -102,4 +100,8 @@ class StateSubstituteChooseLibraryDialog(RAFCONDialog):
             pass
         else:
             logger.warning("Response id: {} is not considered".format(response_id))
+
+        if response_id in [ButtonDialog.OPTION_1.value, ButtonDialog.OPTION_2.value,
+                           ButtonDialog.OPTION_3.value, -4]:
+            self.destroy()
 
