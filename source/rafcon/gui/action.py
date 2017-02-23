@@ -406,7 +406,8 @@ class MetaAction:
         assert overview['type'] == 'signal'
 
         self.type = "change " + overview['meta_signal'][-1]['change']
-        overview['method_name'].append("change " + overview['meta_signal'][-1]['change'])
+        # overview['method_name'].append(overview['meta_signal'][-1]['origin'] + " meta change " + overview['meta_signal'][-1]['change'])
+        overview['method_name'].append("meta change " + overview['meta_signal'][-1]['change'])
         overview['info'][-1]['method_name'] = "change " + overview['meta_signal'][-1]['change']
         overview['instance'].append(overview['model'][-1])
         overview['info'][-1]['instance'] = overview['model'][-1]
@@ -457,14 +458,14 @@ class MetaAction:
         # logger.info("META-Action undo {}".format(state_m.state.get_path()))
         if self.before_overview['meta_signal'][-1]['affects_children']:
             insert_state_meta_data(meta_dict=self.before_storage, state_model=state_m)
-            state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))
+            state_m.meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", True))
             # if state_m.state.is_root_state:
             #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
         else:
             insert_state_meta_data(meta_dict=self.before_storage, state_model=state_m)
             # if state_m.state.is_root_state:
             #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
-            state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
+            state_m.meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
 
     def redo(self):
         # TODO check why levels are not working

@@ -9,6 +9,7 @@ from rafcon.core.states.container_state import ContainerState
 
 from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.state import StateModel
+from rafcon.gui.models.abstract_state import MetaSignalMsg
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -124,7 +125,7 @@ class Clipboard(Observable):
         for list_name in lists_to_insert:
             insert_dict[list_name] = insert_elements_from_model_copies_list(element_m_copy_lists[list_name],
                                                                             list_name[:-1])
-
+        target_state_m.meta_signal.emit(MetaSignalMsg("paste", "all", True))
         return insert_dict
 
     def do_cut_removal(self):

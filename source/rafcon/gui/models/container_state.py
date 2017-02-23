@@ -395,7 +395,7 @@ class ContainerStateModel(StateModel):
                 grouped_state_m.insert_meta_data_from_models_dict(tmp_models_dict)
 
                 # TODO maybe refactor the signal usage to use the following one
-                # grouped_state_m.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
+                grouped_state_m.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
 
             del self.group_state.__func__.tmp_models_storage
 
@@ -454,7 +454,7 @@ class ContainerStateModel(StateModel):
                 self.insert_meta_data_from_models_dict(tmp_models_dict)
 
                 # TODO maybe refactor the signal usage to use the following one
-                # self.meta_signal.emit(MetaSignalMsg("ungroup_state", "all", True))
+                self.meta_signal.emit(MetaSignalMsg("ungroup_state", "all", True))
 
             del self.ungroup_state.__func__.tmp_models_storage
 

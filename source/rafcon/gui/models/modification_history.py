@@ -448,11 +448,12 @@ class ModificationsHistoryModel(ModelMT):
             return
         if overview['meta_signal'][-1]['origin'] == 'load_meta_data':
             return
-
-        if self.active_action is None or overview['meta_signal'][-1]['change'] == 'append_initial_change':
+        if self.active_action is None or overview['meta_signal'][-1]['change'] in ['append_initial_change']:
             # update last actions after_storage -> meta-data
             self.re_initiate_meta_data()
-        elif self.active_action is None or overview['meta_signal'][-1]['change'] == 'append_to_last_change':
+        elif self.active_action is None or \
+                overview['meta_signal'][-1]['change'] in ['append_to_last_change'] or \
+                overview['meta_signal'][-1]['origin'] in ['group_states', 'ungroup_state', 'substitute_state']:
             # update last actions after_storage -> meta-data
             self.active_action.after_storage = self.active_action.get_storage()
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
