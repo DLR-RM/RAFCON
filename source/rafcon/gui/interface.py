@@ -5,10 +5,14 @@ from rafcon.gui.singleton import main_window_controller, library_manager
 
 def open_folder(query):
     import gtk
-    from os.path import expanduser
+    from os.path import expanduser, pathsep
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
+    selected_filename = None
     if not last_path:
         last_path = expanduser('~')
+    else:
+        selected_filename = last_path.split()[-1]
+        last_path = pathsep.join(last_path.split()[:-1])
 
     dialog = gtk.FileChooserDialog(query,
                                    None,
@@ -20,6 +24,9 @@ def open_folder(query):
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_current_folder(last_path)
+    if selected_filename is not None:
+        dialog.select_filename(selected_filename)
+
     dialog.set_show_hidden(False)
 
     library_paths = library_manager.library_paths
