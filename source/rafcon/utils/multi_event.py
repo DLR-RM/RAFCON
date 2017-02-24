@@ -1,3 +1,10 @@
+"""
+.. module:: multi_event
+   :platform: Unix, Windows
+   :synopsis: A module for creating multi_events that listen to several `threading.Event`s
+
+.. moduleauthor:: Sebastian Brunner, Franz Steinmetz
+"""
 import threading
 
 

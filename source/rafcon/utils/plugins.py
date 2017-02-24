@@ -1,3 +1,14 @@
+"""
+.. module:: plugins
+   :platform: Unix, Windows
+   :synopsis: This is a module which can load all plugins specified in the RAFCON_PLUGIN_PATH environment variable and
+            can run all pre- and post init methods of all registered plugins
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 import sys
 import os
 import importlib
