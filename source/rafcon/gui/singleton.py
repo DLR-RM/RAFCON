@@ -1,10 +1,6 @@
 """
 .. module:: singleton
-   :platform: Unix, Windows
    :synopsis: A module to hold all singletons of the GTK GUI
-
-.. moduleauthor:: Rico Belder, Franz Steinmetz
-
 
 """
 from rafcon.core import interface

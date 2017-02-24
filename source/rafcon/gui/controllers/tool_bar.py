@@ -1,10 +1,6 @@
 """
 .. module:: tool_bar
-   :platform: Unix, Windows
    :synopsis: A module that holds the tool bar controller with respective functionalities or links for each button.
-
-.. moduleauthor:: Franz Steinmetz
-
 
 """
 

@@ -1,10 +1,6 @@
 """
 .. module:: single_widget_window
-   :platform: Unix, Windows
    :synopsis: The module provides a template controller for single widget tests.
-
-.. moduleauthor:: Rico Belder
-
 
 """
 

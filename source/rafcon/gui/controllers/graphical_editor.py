@@ -1,10 +1,6 @@
 """
 .. module:: graphical_editor
-   :platform: Unix, Windows
    :synopsis: A module that holds the controller to graphically edit a state machine by the opengl library.
-
-.. moduleauthor:: Franz Steinmetz
-
 
 """
 

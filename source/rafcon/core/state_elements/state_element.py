@@ -1,10 +1,6 @@
 """
 .. module:: state_element
-   :platform: Unix, Windows
    :synopsis: A module to represent an abstract state element in the state machine
-
-.. moduleauthor:: Franz Steinmetz
-
 
 """
 

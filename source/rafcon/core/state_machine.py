@@ -1,10 +1,6 @@
 """
 .. module:: state_machine
-   :platform: Unix, Windows
    :synopsis: A module to organize a state machine with all its main components
-
-.. moduleauthor:: Rico Belder
-
 
 """
 

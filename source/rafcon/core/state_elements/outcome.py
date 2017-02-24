@@ -1,10 +1,6 @@
 """
 .. module:: outcome
-   :platform: Unix, Windows
    :synopsis: A module to represent an outcome in the state machine
-
-.. moduleauthor:: Sebastian Brunner
-
 
 """
 

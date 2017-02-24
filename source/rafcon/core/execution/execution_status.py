@@ -1,10 +1,6 @@
 """
 .. module:: state_machine_status
-   :platform: Unix, Windows
    :synopsis: A module to represent the state machine status
-
-.. moduleauthor:: Sebastian Brunner
-
 
 """
 from enum import Enum

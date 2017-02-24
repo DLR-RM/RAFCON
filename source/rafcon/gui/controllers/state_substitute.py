@@ -1,11 +1,7 @@
 """
 .. module:: state_substitute
-   :platform: Unix, Windows
    :synopsis: A module that holds the controller with the interface for the user to choose a library state
    that is used to substitute another state.
-
-.. moduleauthor:: Rico Belder
-
 
 """
 

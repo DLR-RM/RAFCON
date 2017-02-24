@@ -1,10 +1,6 @@
 """
 .. module:: main_window
-   :platform: Unix, Windows
    :synopsis: The module holds the main window controller giving footage to the overall gui.
-
-.. moduleauthor:: Franz Steinmetz
-
 
 """
 

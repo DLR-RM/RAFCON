@@ -1,10 +1,6 @@
 """
 .. module:: singleton
-   :platform: Unix, Windows
    :synopsis: A module holding a generic singleton abstract class
-
-.. moduleauthor:: Franz Steimetz
-
 
 """
 

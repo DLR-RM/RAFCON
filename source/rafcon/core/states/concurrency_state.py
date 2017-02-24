@@ -1,10 +1,6 @@
 """
 .. module:: concurrency_state
-   :platform: Unix, Windows
    :synopsis: A module to represent a concurrency state for the state machine
-
-.. moduleauthor:: Sebastian Brunner
-
 
 """
 import Queue

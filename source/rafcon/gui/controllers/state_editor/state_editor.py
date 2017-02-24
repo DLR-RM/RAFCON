@@ -1,10 +1,6 @@
 """
 .. module:: state_editor
-   :platform: Unix, Windows
    :synopsis: A module that holds the state editor controller which provides footage all sub-state-element-controllers.
-
-.. moduleauthor:: Rico Belder
-
 
 """
 

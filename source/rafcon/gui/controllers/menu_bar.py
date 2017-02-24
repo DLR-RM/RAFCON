@@ -1,10 +1,6 @@
 """
 .. module:: menu_bar
-   :platform: Unix, Windows
    :synopsis: A module that holds the menu bar controller with respective functionalities for each menu element.
-
-.. moduleauthor:: Franz Steinmetz
-
 
 """
 

@@ -1,10 +1,6 @@
 """
 .. module:: enums
-   :platform: Unix, Windows
    :synopsis: A module which holds all global enumerations for the state machine
-
-.. moduleauthor:: Sebastian Brunner
-
 
 """
 

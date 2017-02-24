@@ -2,11 +2,7 @@
 
 """
 .. module: a module to enable state machine execution from the command line
-   :platform: Unix, Windows
    :synopsis: A module to start arbitrary state machines without the GUI and several configurations options
-
-.. moduleauthor:: Sebastian Brunner
-
 
 """
 

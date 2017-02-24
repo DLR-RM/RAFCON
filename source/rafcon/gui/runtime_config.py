@@ -1,10 +1,6 @@
 """
 .. module:: config
-   :platform: Unix, Windows
    :synopsis: Configuration for runtime parameters, such as window size and position
-
-.. moduleauthor:: Franz Steinmetz
-
 
 """
 import gtk

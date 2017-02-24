@@ -1,10 +1,6 @@
 """
 .. module:: data_flow
-   :platform: Unix, Windows
    :synopsis: A module to represent a data flow in the state machine
-
-.. moduleauthor:: Sebastian Brunner
-
 
 """
 

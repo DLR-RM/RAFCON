@@ -1,11 +1,7 @@
 """
 .. module:: top_tool_bar
-   :platform: Unix, Windows
    :synopsis: A module that holds the top tool bar controller which controls the dock and un-dock feature for the
      left-bar-, right-bar- (States-Editor-Widget) and lower-console-widget.
-
-.. moduleauthor:: Mohmoud Akl
-
 
 """
 

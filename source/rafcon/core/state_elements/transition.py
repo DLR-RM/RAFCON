@@ -1,10 +1,6 @@
 """
 .. module:: transition
-   :platform: Unix, Windows
    :synopsis: A module to represent a transition in the state machine
-
-.. moduleauthor:: Franz Steinmetz
-
 
 """
 

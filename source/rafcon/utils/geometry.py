@@ -1,10 +1,6 @@
 """
 .. module:: geometry
-   :platform: Unix, Windows
    :synopsis: A module holding all utility functions concerning geometric drawing
-
-.. moduleauthor:: Franz Steinmetz
-
 
 """
 

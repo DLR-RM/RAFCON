@@ -1,9 +1,6 @@
 """
 .. module:: config_model
-   :platform: Unix, Windows
    :synopsis: a module which manages the configuration GUI
-
-.. moduleauthor:: Benno Voggenreiter, Franz Steinmetz
 
 """
 from os import path

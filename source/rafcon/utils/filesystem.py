@@ -1,10 +1,6 @@
 """
 .. module:: filesystem
-   :platform: Unix, Windows
    :synopsis: A module to hold all filesystem specific utility functions
-
-.. moduleauthor:: Franz Steinmetz
-
 
 """
 import os

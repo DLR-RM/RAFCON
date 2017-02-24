@@ -1,10 +1,6 @@
 """
 .. module:: library_state
-   :platform: Unix, Windows
    :synopsis: A module to represent a library state in the state machine
-
-.. moduleauthor:: Sebastian Brunner
-
 
 """
 from copy import copy

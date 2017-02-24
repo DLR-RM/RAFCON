@@ -1,10 +1,6 @@
 """
 .. module:: source_editor
-   :platform: Unix, Windows
    :synopsis: A module holds the controller to edit the state source script text.
-
-.. moduleauthor:: Rico Belder
-
 
 """
 

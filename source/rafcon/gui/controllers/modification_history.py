@@ -1,10 +1,6 @@
 """
 .. module:: modification_history
-   :platform: Unix, Windows
    :synopsis: A module that holds the controller to list and access the modification-history.
-
-.. moduleauthor:: Rico Belder
-
 
 """
 

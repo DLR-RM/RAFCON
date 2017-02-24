@@ -1,10 +1,6 @@
 """
 .. module:: undocked_window
-   :platform: Unix, Windows
    :synopsis: A module that holds the controller un-docked windows as part of the un- and re-dock feature.
-
-.. moduleauthor:: Mahmoud Akl
-
 
 """
 

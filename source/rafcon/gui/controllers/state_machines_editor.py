@@ -1,10 +1,6 @@
 """
 .. module:: state_machines_editor
-   :platform: Unix, Windows
    :synopsis: A module that holds the controller with the interface to the state machines notebook.
-
-.. moduleauthor:: Franz Steinmetz
-
 
 """
 

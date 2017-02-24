@@ -1,9 +1,6 @@
 """
 .. module:: config_window
-   :platform: Unix, Windows
    :synopsis: a module holding the controller for the configuration GUI
-
-.. moduleauthor:: Benno Voggenreiter, Franz Steinmetz
 
 """
 import gtk

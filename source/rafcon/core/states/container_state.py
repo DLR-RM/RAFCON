@@ -1,10 +1,6 @@
 """
 .. module:: container_state
-   :platform: Unix, Windows
    :synopsis: A module to represent a generic container state in the state machine
-
-.. moduleauthor:: Sebastian Brunner
-
 
 """
 import traceback

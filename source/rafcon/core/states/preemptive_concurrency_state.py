@@ -1,10 +1,6 @@
 """
 .. module:: preemptive_concurrency_state
-   :platform: Unix, Windows
    :synopsis: A module to represent a preemptive concurrency state for the state machine
-
-.. moduleauthor:: Sebastian Brunner
-
 
 """
 

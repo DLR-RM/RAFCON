@@ -1,10 +1,6 @@
 """
 .. module:: state_machine_tree
-   :platform: Unix, Windows
    :synopsis: A module that holds the controller to access a state machine overview by a TreeView.
-
-.. moduleauthor:: Rico Belder
-
 
 """
 

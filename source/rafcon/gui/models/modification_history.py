@@ -1,4 +1,6 @@
-""" The module provides classes to document, undo or redo state machine edit steps.
+"""
+.. module:: modification_history
+   :synopsis: The module provides classes to document, undo or redo state machine edit steps.
 
 The History-Class provides the observation functionalities to register and identify all core or gui (graphical) edit
 actions that are a actual change to the state machine. Those changes are stored as Action-Objects in the
@@ -6,6 +8,7 @@ ModificationsHistory-Class.
 
 The HistoryChanges-Class provides the functionalities to organize and access all actions of the edit process.
 Hereby the branching of the edit process is stored and should be accessible, too.
+
 """
 import copy
 
