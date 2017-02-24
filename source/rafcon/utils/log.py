@@ -1,11 +1,3 @@
-"""
-.. module:: log
-   :platform: Unix, Windows
-   :synopsis: A module caring about the logging capability of RAFCON
-
-.. moduleauthor:: Franz Steinmetz
-"""
-
 import logging
 import sys
 

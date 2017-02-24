@@ -1,13 +1,3 @@
-"""
-.. module:: constants
-   :platform: Unix, Windows
-   :synopsis: A module holding all constants of the RAFCON core
-
-.. moduleauthor:: Sebastian Brunner
-
-
-"""
-
 import tempfile
 import getpass
 import os

@@ -1,15 +1,3 @@
-"""
-.. module:: vividict
-   :platform: Unix, Windows
-   :synopsis: A module to represent hierarchical dictionaries which creates a new dictionary on the fly if a request
-            uses a key that does not exist yet.
-
-.. moduleauthor:: Franz Steimetz
-
-
-"""
-
-
 from yaml import YAMLObject
 from jsonconversion.jsonobject import JSONObject
 

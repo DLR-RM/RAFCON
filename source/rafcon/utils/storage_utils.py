@@ -1,13 +1,3 @@
-"""
-.. module:: storage_utils
-   :platform: Unix, Windows
-   :synopsis: Utility methods for storing and loading files from disk (supports several formats)
-
-.. moduleauthor:: Sebastian Brunner
-
-
-"""
-
 import json
 import yaml
 from time import gmtime, strftime

@@ -1,12 +1,3 @@
-"""
-.. module:: filesystem
-   :platform: Unix, Windows
-   :synopsis: A module to hold all filesystem specific utility functions
-
-.. moduleauthor:: Franz Steinmetz
-
-
-"""
 import os
 import shutil
 from os.path import realpath, dirname, join, expanduser
