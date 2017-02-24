@@ -1,6 +1,7 @@
+# coding=utf-8
+
 # Copyright
 
-# coding=utf-8
 import gtk
 import rafcon
 
