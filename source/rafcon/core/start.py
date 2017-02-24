@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 
+"""
+.. module: a module to enable state machine execution from the command line
+   :platform: Unix, Windows
+   :synopsis: A module to start arbitrary state machines without the GUI and several configurations options
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 import os
 import argparse
 from os.path import realpath, dirname, join, exists

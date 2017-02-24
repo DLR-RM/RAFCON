@@ -1,3 +1,13 @@
+"""
+.. module:: state_machine_manager
+   :platform: Unix, Windows
+   :synopsis: A module to organize a open state machine with all its main components
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 from gtkmvc import Observable
 
 from rafcon.core.state_machine import StateMachine

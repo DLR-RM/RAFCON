@@ -1,3 +1,13 @@
+"""
+.. module:: scoped_variable
+   :platform: Unix, Windows
+   :synopsis: A module for organizing the scoped variables in a container state
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 import datetime
 import time
 

@@ -1,3 +1,13 @@
+"""
+.. module:: state_element
+   :platform: Unix, Windows
+   :synopsis: A module to represent an abstract state element in the state machine
+
+.. moduleauthor:: Franz Steinmetz
+
+
+"""
+
 from weakref import ref
 from yaml import YAMLObject
 from gtkmvc import Observable

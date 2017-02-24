@@ -1,3 +1,12 @@
+"""
+.. module:: hierarchy_state
+   :platform: Unix, Windows
+   :synopsis: A module to represent a hierarchy state for the state machine
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
 import traceback
 import copy
 

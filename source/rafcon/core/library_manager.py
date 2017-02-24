@@ -1,3 +1,11 @@
+"""
+.. module:: library_manager
+   :platform: Unix, Windows
+   :synopsis: A module to handle all libraries for a state machine
+
+.. moduleauthor:: Sebastian Brunner
+"""
+
 import os
 import shutil
 from gtkmvc import Observable

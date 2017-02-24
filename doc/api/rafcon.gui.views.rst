@@ -57,6 +57,11 @@ ModificationHistoryView (in modification_history)
 
 .. automodule:: rafcon.gui.views.modification_history
 
+NetworkConnectionsView (in network_connections)
+-----------------------------------------------
+
+.. automodule:: rafcon.gui.views.network_connections
+
 StateMachineTreeView (in state_machine_tree)
 --------------------------------------------
 

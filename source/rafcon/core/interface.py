@@ -1,3 +1,14 @@
+"""
+.. module:: interface
+   :platform: Unix, Windows
+   :synopsis: This is a interface for user input. In absence of a GUI the input is read from stdin.
+                If e.g. a gtk GUI is implemented the function can be replaced with appropriate dialog boxes.
+
+.. moduleauthor:: Franz Steinmetz
+
+
+"""
+
 def open_folder_cmd_line(query):
     user_input = raw_input(query + ': ')
     if len(user_input) == 0:

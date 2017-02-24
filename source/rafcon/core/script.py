@@ -1,3 +1,11 @@
+"""
+.. module:: script
+   :platform: Unix, Windows
+   :synopsis: A module to represent the script file for each state in a state machine
+
+.. moduleauthor:: Sebastian Brunner
+"""
+
 import os
 import imp
 import yaml

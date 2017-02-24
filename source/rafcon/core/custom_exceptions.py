@@ -1,3 +1,13 @@
+"""
+.. module:: custom_exceptions
+   :platform: Unix, Windows
+   :synopsis: A module that holds all custom exceptions for the state machine core
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 
 class LibraryNotFoundException(Exception):
 

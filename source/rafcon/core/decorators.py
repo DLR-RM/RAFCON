@@ -1,3 +1,13 @@
+"""
+.. module:: decorators
+   :platform: Unix, Windows
+   :synopsis: A module to hold all decorators needed for the RAFCON core
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 global_lock_counter = 0
 
 

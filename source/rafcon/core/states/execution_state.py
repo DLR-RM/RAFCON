@@ -1,3 +1,13 @@
+"""
+.. module:: execution_state
+   :platform: Unix, Windows
+   :synopsis: A module to represent a state for executing arbitrary functions
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 import traceback
 import sys
 import os

@@ -1,3 +1,12 @@
+"""
+.. module:: config
+   :platform: Unix, Windows
+   :synopsis: Config module to specify global constants
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
 import yaml
 from os import path
 from gtkmvc import Observable

@@ -1,3 +1,12 @@
+"""
+.. module:: data_port
+   :platform: Unix, Windows
+   :synopsis: A module to represent data ports the state machine
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
 from enum import Enum
 from gtkmvc import Observable
 

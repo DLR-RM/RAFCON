@@ -1,3 +1,13 @@
+"""
+.. module:: outcome
+   :platform: Unix, Windows
+   :synopsis: A module to represent an outcome in the state machine
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 from gtkmvc import Observable
 
 from rafcon.core.state_elements.state_element import StateElement

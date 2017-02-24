@@ -1,3 +1,13 @@
+"""
+.. module:: data_flow
+   :platform: Unix, Windows
+   :synopsis: A module to represent a data flow in the state machine
+
+.. moduleauthor:: Sebastian Brunner
+
+
+"""
+
 from gtkmvc import Observable
 
 from rafcon.core.id_generator import generate_data_flow_id
