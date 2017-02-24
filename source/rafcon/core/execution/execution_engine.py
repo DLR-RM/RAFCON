@@ -1,12 +1,3 @@
-"""
-.. module:: execution_engine
-   :platform: Unix, Windows
-   :synopsis: A module that cares for the execution of the state machine
-
-.. moduleauthor:: Sebastian Brunner
-
-
-"""
 import copy
 import threading
 import time

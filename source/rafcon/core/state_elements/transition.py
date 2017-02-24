@@ -1,13 +1,3 @@
-"""
-.. module:: transition
-   :platform: Unix, Windows
-   :synopsis: A module to represent a transition in the state machine
-
-.. moduleauthor:: Franz Steinmetz
-
-
-"""
-
 from gtkmvc import Observable
 
 from rafcon.core.state_elements.state_element import StateElement

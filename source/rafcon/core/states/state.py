@@ -1,13 +1,3 @@
-"""
-.. module:: state
-   :platform: Unix, Windows
-   :synopsis: A module to represent an abstract state in the state machine
-
-.. moduleauthor:: Sebastian Brunner
-
-
-"""
-
 import Queue
 import copy
 import os

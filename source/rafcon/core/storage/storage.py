@@ -1,11 +1,3 @@
-"""
-.. module:: storage
-   :platform: Unix, Windows
-   :synopsis: Helper functions to store a state machine in the local file system and load it from there
-
-.. moduleauthor:: Sebastian Brunner
-"""
-
 import os
 import shutil
 import glob

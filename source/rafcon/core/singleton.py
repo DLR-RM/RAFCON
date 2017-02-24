@@ -1,13 +1,3 @@
-"""
-.. module:: singleton
-   :platform: Unix, Windows
-   :synopsis: A module to hold all singletons of the state machine
-
-.. moduleauthor:: Sebastian Brunner
-
-
-"""
-
 import sys
 import argparse
 

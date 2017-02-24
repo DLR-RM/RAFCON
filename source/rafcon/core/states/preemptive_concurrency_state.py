@@ -1,13 +1,3 @@
-"""
-.. module:: preemptive_concurrency_state
-   :platform: Unix, Windows
-   :synopsis: A module to represent a preemptive concurrency state for the state machine
-
-.. moduleauthor:: Sebastian Brunner
-
-
-"""
-
 import traceback
 
 from rafcon.core.state_elements.outcome import Outcome

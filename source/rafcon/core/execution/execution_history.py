@@ -1,12 +1,3 @@
-"""
-.. module:: execution_history
-   :platform: Unix, Windows
-   :synopsis: A module for the history of one thread during state machine execution
-
-.. moduleauthor:: Sebastian Brunner
-
-
-"""
 import time
 import copy
 from collections import Iterable, Sized
