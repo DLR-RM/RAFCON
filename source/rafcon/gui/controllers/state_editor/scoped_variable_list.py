@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: scoped_variable_list
    :synopsis: A module that holds the controller to list and edit all scoped_variables of a state.

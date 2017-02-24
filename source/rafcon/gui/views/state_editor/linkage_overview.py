@@ -1,3 +1,5 @@
+# Copyright
+
 from gtkmvc import View
 
 import rafcon.gui.helpers.label as gui_helper_label

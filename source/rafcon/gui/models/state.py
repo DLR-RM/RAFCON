@@ -1,3 +1,5 @@
+# Copyright
+
 from gtkmvc import ModelMT
 
 from rafcon.gui.models.abstract_state import AbstractStateModel

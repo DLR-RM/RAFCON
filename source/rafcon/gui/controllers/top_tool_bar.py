@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: top_tool_bar
    :synopsis: A module that holds the top tool bar controller which controls the dock and un-dock feature for the

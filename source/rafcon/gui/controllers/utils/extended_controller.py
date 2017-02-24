@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: extended_controller
    :synopsis: A module that holds all extensions in respect to the gtkmvc.Controller that are used in rafcon.gui.

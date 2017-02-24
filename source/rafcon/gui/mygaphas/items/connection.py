@@ -1,3 +1,5 @@
+# Copyright
+
 from weakref import ref
 
 from rafcon.gui.config import global_gui_config as gui_config

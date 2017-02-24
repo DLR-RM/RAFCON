@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: global_variable_manager
    :synopsis: A module to organize all global variables of the state machine

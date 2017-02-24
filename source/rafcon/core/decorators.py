@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: decorators
    :synopsis: A module to hold all decorators needed for the RAFCON core

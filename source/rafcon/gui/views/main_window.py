@@ -1,3 +1,5 @@
+# Copyright
+
 from gtkmvc import View
 
 from rafcon.gui.config import global_gui_config

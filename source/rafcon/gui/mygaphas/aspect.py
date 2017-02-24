@@ -1,3 +1,5 @@
+# Copyright
+
 from gaphas.geometry import distance_line_point, distance_rectangle_point
 from gaphas.segment import Segment
 from gaphas.aspect import HandleFinder, ItemHandleFinder, HandleSelection, ItemHandleSelection, ItemHandleInMotion, \

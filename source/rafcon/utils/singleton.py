@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: singleton
    :synopsis: A module holding a generic singleton abstract class

@@ -1,3 +1,5 @@
+# Copyright
+
 import datetime
 import time
 from rafcon.utils import constants

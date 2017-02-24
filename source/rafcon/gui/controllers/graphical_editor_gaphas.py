@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: graphical_editor_gaphas
    :synopsis: A module that holds the controller to graphically edit a state machine by the gaphas library.

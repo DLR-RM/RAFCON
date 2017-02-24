@@ -1,3 +1,5 @@
+# Copyright
+
 import os
 import gtk
 from gtkmvc import View

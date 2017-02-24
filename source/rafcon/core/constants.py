@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: enums
    :synopsis: A module which holds all global enumerations for the state machine

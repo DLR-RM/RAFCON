@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: interface
    :synopsis: This is a interface for user input. In absence of a GUI the input is read from stdin.

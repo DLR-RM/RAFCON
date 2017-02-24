@@ -1,3 +1,5 @@
+# Copyright
+
 from gtkmvc import ModelMT, Signal
 
 from rafcon.core.states.state import State

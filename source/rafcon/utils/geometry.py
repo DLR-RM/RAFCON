@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: geometry
    :synopsis: A module holding all utility functions concerning geometric drawing

@@ -1,3 +1,5 @@
+# Copyright
+
 from gtkmvc import View
 
 from rafcon.gui.helpers.label import create_label_widget_with_icon

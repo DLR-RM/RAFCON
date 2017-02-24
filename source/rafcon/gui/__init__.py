@@ -1,3 +1,4 @@
-import rafcon.gui.config
-import rafcon.gui.singleton
+# Copyright
+
+import rafcon.gui.configimport rafcon.gui.singleton
 import rafcon.gui.interface

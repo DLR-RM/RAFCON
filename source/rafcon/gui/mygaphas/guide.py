@@ -1,3 +1,5 @@
+# Copyright
+
 from gaphas.aspect import InMotion, HandleInMotion
 from gaphas.guide import GuidedItemInMotion, GuidedItemHandleInMotion, Guide, GuideMixin
 

@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: container_state
    :synopsis: A module to represent a generic container state in the state machine

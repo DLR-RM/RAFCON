@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: linkage_overview
    :synopsis: A module that holds the controller giving footage to the linkage overview.

@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: id_generator
    :synopsis: A module to generate different kinds of state machine ids

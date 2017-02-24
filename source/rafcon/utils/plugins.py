@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: plugins
    :synopsis: This is a module which can load all plugins specified in the RAFCON_PLUGIN_PATH environment variable and

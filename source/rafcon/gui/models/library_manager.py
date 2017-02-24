@@ -1,3 +1,5 @@
+# Copyright
+
 from gtkmvc import ModelMT
 from rafcon.utils.vividict import Vividict
 from rafcon.core.library_manager import LibraryManager

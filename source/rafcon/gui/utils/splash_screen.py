@@ -1,3 +1,5 @@
+# Copyright
+
 import gtk
 import os
 import random

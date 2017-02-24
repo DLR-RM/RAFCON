@@ -1,3 +1,5 @@
+# Copyright
+
 """Action class for history
 
 The Action-Class provides a general redo or undo functionality for any action, as long as the the class object was

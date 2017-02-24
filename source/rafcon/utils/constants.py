@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: constants
    :synopsis: A module holding all constants of the RAFCON core

@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: undocked_window
    :synopsis: A module that holds the controller un-docked windows as part of the un- and re-dock feature.

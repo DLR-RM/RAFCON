@@ -1,3 +1,5 @@
+# Copyright
+
 import gtk
 from enum import Enum
 from gaphas.aspect import HandleFinder, InMotion

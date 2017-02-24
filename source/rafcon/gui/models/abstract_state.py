@@ -1,3 +1,5 @@
+# Copyright
+
 import os.path
 from copy import copy, deepcopy
 from weakref import ref

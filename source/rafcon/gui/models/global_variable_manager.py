@@ -1,3 +1,5 @@
+# Copyright
+
 from gtkmvc import ModelMT
 
 from rafcon.core.singleton import global_variable_manager

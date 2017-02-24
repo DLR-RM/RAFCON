@@ -1,3 +1,5 @@
+# Copyright
+
 from collections import namedtuple
 
 MetaSignalMsg = namedtuple('MetaSignalMsg', ['origin', 'change', 'affects_children', 'notification'])

@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: preemptive_concurrency_state
    :synopsis: A module to represent a preemptive concurrency state for the state machine

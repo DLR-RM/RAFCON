@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: config
    :synopsis: Configuration for runtime parameters, such as window size and position

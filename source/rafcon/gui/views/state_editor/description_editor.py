@@ -1,3 +1,5 @@
+# Copyright
+
 from rafcon.gui.views.utils.editor import EditorView, gtksourceview2
 
 

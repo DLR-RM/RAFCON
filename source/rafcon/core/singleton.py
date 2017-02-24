@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: singleton
    :synopsis: A module to hold all singletons of the state machine

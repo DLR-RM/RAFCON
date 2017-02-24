@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: config_window
    :synopsis: a module holding the controller for the configuration GUI

@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: multi_event
    :synopsis: A module for creating multi_events that listen to several `threading.Event`s

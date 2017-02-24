@@ -1,3 +1,5 @@
+# Copyright
+
 import os
 from rafcon.utils import log
 logger = log.get_logger("start core")

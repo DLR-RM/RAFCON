@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: config_model
    :synopsis: a module which manages the configuration GUI

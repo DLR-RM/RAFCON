@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: menu_bar
    :synopsis: A module that holds the menu bar controller with respective functionalities for each menu element.

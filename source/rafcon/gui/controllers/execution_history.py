@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: execution_history
    :synopsis: A module holding a controller for the ExecutionHistoryView holding information about the

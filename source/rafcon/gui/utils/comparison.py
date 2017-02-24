@@ -1,3 +1,5 @@
+# Copyright
+
 
 def compare_variables(tree_model, iter1, iter2, user_data=None):
         """Triggered upon updating the list of global variables

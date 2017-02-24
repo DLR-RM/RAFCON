@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: log
    :synopsis: A module caring about the logging capability of RAFCON

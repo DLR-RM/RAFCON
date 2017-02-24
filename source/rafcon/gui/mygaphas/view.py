@@ -1,3 +1,5 @@
+# Copyright
+
 from gaphas.view import GtkView
 
 from rafcon.gui.mygaphas.painter import RAFCONBoundingBoxPainter

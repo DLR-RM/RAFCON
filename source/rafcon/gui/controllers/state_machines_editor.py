@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state_machines_editor
    :synopsis: A module that holds the controller with the interface to the state machines notebook.

@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: main_window
    :synopsis: The module holds the main window controller giving footage to the overall gui.

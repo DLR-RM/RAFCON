@@ -1,3 +1,5 @@
+# Copyright
+
 
 def limit_string(text, max_length, seperator="&#x2026;"):
     from xml.sax.saxutils import escape

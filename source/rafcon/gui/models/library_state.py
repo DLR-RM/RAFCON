@@ -1,3 +1,5 @@
+# Copyright
+
 from copy import copy, deepcopy
 from os.path import join
 

@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: storage
    :synopsis: Helper functions to store a state machine in the local file system and load it from there

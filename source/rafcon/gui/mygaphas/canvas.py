@@ -1,3 +1,5 @@
+# Copyright
+
 from gaphas.canvas import Canvas, VariableProjection
 
 

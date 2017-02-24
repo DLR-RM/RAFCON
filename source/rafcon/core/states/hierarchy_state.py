@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: hierarchy_state
    :synopsis: A module to represent a hierarchy state for the state machine

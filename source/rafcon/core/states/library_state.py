@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: library_state
    :synopsis: A module to represent a library state in the state machine

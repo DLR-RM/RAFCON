@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: transition
    :synopsis: A module to represent a transition in the state machine

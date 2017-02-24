@@ -1,3 +1,5 @@
+# Copyright
+
 #!/usr/bin/env python
 
 # default libraries

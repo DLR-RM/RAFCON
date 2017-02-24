@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state_machine
    :synopsis: A module to organize a state machine with all its main components

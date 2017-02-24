@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: single_widget_window
    :synopsis: The module provides a template controller for single widget tests.

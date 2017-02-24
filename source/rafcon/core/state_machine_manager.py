@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state_machine_manager
    :synopsis: A module to organize a open state machine with all its main components

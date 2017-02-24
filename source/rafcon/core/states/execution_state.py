@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: execution_state
    :synopsis: A module to represent a state for executing arbitrary functions

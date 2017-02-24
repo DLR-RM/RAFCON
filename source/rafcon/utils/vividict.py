@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: vividict
    :synopsis: A module to represent hierarchical dictionaries which creates a new dictionary on the fly if a request

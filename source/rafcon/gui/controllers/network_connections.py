@@ -1,3 +1,5 @@
+# Copyright
+
 # TODO: will be replaced soon
 # from rafcon.gui.controllers.extended_controller import ExtendedController
 # from rafcon.gui.models.state_machine_manager import StateMachineManagerModel

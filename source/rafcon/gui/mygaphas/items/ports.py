@@ -1,3 +1,5 @@
+# Copyright
+
 from weakref import ref
 from pango import SCALE, FontDescription
 

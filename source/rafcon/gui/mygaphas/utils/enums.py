@@ -1,3 +1,5 @@
+# Copyright
+
 from enum import Enum
 
 Direction = Enum('DIRECTION', 'UP DOWN LEFT RIGHT')

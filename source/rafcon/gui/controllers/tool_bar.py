@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: tool_bar
    :synopsis: A module that holds the tool bar controller with respective functionalities or links for each button.

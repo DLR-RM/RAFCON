@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: states_editor
    :synopsis: A module that holds the controller with the interface to the states editor notebook and controls

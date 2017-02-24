@@ -1,3 +1,5 @@
+# Copyright
+
 import gtk
 import threading
 from gtkmvc import View

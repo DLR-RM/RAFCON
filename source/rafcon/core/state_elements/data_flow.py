@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: data_flow
    :synopsis: A module to represent a data flow in the state machine

@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: scoped_variable
    :synopsis: A module for organizing the scoped variables in a container state

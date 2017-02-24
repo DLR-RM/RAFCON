@@ -1,3 +1,5 @@
+# Copyright
+
 import gtk
 
 from rafcon.core.singleton import state_machine_manager

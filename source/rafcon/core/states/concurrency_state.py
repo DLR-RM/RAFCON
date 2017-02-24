@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: concurrency_state
    :synopsis: A module to represent a concurrency state for the state machine

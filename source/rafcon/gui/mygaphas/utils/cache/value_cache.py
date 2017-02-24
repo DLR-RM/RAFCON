@@ -1,3 +1,5 @@
+# Copyright
+
 
 class ValueCache(object):
     """Cache holding values calculated from certain parameters

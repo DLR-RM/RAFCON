@@ -1,3 +1,5 @@
+# Copyright
+
 from copy import copy, deepcopy
 from gtkmvc import ModelMT
 

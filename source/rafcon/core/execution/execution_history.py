@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: execution_history
    :synopsis: A module for the history of one thread during state machine execution

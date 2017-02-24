@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state_machine_right_click_menu
    :synopsis: The module provides a menu by right click to edit states or its elements.

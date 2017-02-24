@@ -1,3 +1,5 @@
+# Copyright
+
 from cairo import ImageSurface, FORMAT_ARGB32, Context
 from gtk.gdk import CairoContext
 

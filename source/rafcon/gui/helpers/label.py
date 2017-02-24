@@ -1,3 +1,5 @@
+# Copyright
+
 import gtk
 from gtk import Container, Button
 

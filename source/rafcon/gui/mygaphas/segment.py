@@ -1,3 +1,5 @@
+# Copyright
+
 from gaphas.geometry import distance_point_point
 from gaphas.segment import LineSegment, Segment
 

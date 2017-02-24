@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state_transitions
    :synopsis: A module that holds the controller to list and edit all internal and related external transitions of a

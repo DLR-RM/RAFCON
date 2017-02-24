@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: graphical_editor
    :synopsis: A module that holds the controller to graphically edit a state machine by the opengl library.

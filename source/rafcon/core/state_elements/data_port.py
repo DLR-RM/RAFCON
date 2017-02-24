@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: data_port
    :synopsis: A module to represent data ports the state machine

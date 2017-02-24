@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state_outcomes
    :synopsis: A module that holds the controller to list and edit outcomes of a state and to add-remove or edit

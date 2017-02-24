@@ -1,3 +1,5 @@
+# Copyright
+
 import gtk
 from functools import partial
 

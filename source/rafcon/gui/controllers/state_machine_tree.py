@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state_machine_tree
    :synopsis: A module that holds the controller to access a state machine overview by a TreeView.

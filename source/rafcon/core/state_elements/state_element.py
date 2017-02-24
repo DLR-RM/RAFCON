@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state_element
    :synopsis: A module to represent an abstract state element in the state machine

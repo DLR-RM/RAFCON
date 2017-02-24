@@ -1,3 +1,5 @@
+# Copyright
+
 import locale
 import gettext
 

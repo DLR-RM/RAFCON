@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: outcome
    :synopsis: A module to represent an outcome in the state machine

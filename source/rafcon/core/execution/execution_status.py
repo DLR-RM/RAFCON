@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state_machine_status
    :synopsis: A module to represent the state machine status

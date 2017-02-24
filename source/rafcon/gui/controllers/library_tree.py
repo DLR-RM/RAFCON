@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: library_tree
    :synopsis: The module holds controller tree overview of all mounted libraries and access to general

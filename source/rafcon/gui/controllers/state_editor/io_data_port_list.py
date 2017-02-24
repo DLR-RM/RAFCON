@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: io_data_port_list
    :synopsis: A module that holds the controller to list and edit all input- and output-data-ports of a state.

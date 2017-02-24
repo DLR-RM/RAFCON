@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: type_helpers
    :synopsis: A module holding all utility functions for converting types

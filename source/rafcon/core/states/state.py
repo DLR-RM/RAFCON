@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state
    :synopsis: A module to represent an abstract state in the state machine

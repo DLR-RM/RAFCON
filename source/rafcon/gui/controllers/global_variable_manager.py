@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: global_variable_manager
    :synopsis: A module that holds the controller to access the GlobalVariableManager by a GUI based on the

@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state_overview
    :synopsis: A module that holds the controller to give access to basic state information and to edit state name,

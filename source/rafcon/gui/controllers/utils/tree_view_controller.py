@@ -1,3 +1,5 @@
+# Copyright
+
 import glib
 import gtk
 from gtk.gdk import CONTROL_MASK, SHIFT_MASK

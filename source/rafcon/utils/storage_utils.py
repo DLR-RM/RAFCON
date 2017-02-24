@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: storage_utils
    :synopsis: Utility methods for storing and loading files from disk (supports several formats)

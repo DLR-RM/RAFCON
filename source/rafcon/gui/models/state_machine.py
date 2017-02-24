@@ -1,3 +1,5 @@
+# Copyright
+
 import os
 import threading
 from copy import copy, deepcopy

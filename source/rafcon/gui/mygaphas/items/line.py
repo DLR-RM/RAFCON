@@ -1,3 +1,5 @@
+# Copyright
+
 from math import atan2, pi
 
 from gaphas.item import Line, NW, SE

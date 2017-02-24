@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: modification_history
    :synopsis: The module provides classes to document, undo or redo state machine edit steps.

@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: execution_engine
    :synopsis: A module that cares for the execution of the state machine

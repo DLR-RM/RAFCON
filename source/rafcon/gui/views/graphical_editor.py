@@ -1,3 +1,5 @@
+# Copyright
+
 
 from math import sin, cos, pi, atan2
 from enum import Enum

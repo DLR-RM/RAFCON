@@ -1,3 +1,5 @@
+# Copyright
+
 from math import sqrt
 from gaphas.connector import PointPort
 

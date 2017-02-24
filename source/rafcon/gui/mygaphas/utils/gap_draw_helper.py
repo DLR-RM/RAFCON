@@ -1,3 +1,5 @@
+# Copyright
+
 from math import pi
 
 from pango import SCALE, FontDescription

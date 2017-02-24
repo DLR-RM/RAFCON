@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state_data_flows
    :synopsis: A module that holds the controller to list and edit all internal and related external data flows of a

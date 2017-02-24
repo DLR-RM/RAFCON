@@ -1,3 +1,5 @@
+# Copyright
+
 #!/usr/bin/python
 
 import os

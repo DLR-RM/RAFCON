@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: filesystem
    :synopsis: A module to hold all filesystem specific utility functions

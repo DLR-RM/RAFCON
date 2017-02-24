@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: library_manager
    :synopsis: A module to handle all libraries for a state machine

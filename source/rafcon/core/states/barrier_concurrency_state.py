@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: barrier_concurrency_state
    :synopsis: A module to represent a barrier concurrency state for the state machine

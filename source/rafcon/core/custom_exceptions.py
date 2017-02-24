@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: custom_exceptions
    :synopsis: A module that holds all custom exceptions for the state machine core

@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state_editor
    :synopsis: A module that holds the state editor controller which provides footage all sub-state-element-controllers.

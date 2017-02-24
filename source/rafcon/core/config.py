@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: config
    :synopsis: Config module to specify global constants

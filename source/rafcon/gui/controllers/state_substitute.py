@@ -1,3 +1,5 @@
+# Copyright
+
 """
 .. module:: state_substitute
    :synopsis: A module that holds the controller with the interface for the user to choose a library state

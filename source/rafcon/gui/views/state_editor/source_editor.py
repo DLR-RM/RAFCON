@@ -1,3 +1,5 @@
+# Copyright
+
 import gtk
 
 from rafcon.gui.utils import constants
