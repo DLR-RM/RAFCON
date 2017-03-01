@@ -1,6 +1,6 @@
+#!/usr/bin/env python
 # Copyright
 
-#!/usr/bin/env python
 
 # default libraries
 import os

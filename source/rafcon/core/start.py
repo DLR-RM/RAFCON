@@ -1,6 +1,6 @@
-# Copyright
-
 #!/usr/bin/env python
+
+# Copyright
 
 """
 .. module: a module to enable state machine execution from the command line
