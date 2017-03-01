@@ -243,13 +243,13 @@ if __name__ == '__main__':
     while gtk.events_pending():
         gtk.main_iteration(False)
 
+    post_setup_plugins(user_input)
+
     if user_input.state_machine_paths:
         state_machine = open_state_machines(user_input.state_machine_paths)
 
     if user_input.new:
         create_new_state_machine()
-
-    post_setup_plugins(user_input)
 
     log_ready_output()
 
