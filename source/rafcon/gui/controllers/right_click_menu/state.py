@@ -16,6 +16,8 @@ import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+import rafcon.gui.helpers.state as gui_helper_state
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import create_image_menu_item, create_check_menu_item, append_sub_menu_to_parent_menu
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.utils import constants
@@ -158,6 +160,10 @@ class StateMachineRightClickMenu(object):
 
         self.insert_copy_cut_paste_in_menu(menu, shortcuts_dict, accel_group, no_paste=True)
 
+        menu.append(create_image_menu_item("Open separately", constants.BUTTON_OPEN,
+                                           self.on_open_activate,
+                                           accel_code=None, accel_group=accel_group))
+
         menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
                                            self.on_substitute_state_activate,
                                            accel_code=shortcuts_dict['substitute_state'][0], accel_group=accel_group))
@@ -226,14 +232,20 @@ class StateMachineRightClickMenu(object):
     @staticmethod
     def on_save_state_as_state_machine_activate(widget, data=None, path=None):
         # TODO if the state is a root state the state machine will get chosen path a physical system path?!
-        menu_bar_controller = gui_singletons.main_window_controller.get_controller('menu_bar_controller')
         if path is not None:
             old_last_path_open = gui_singletons.global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
             gui_singletons.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
-            menu_bar_controller.on_save_selected_state_as_activate()
+            gui_helper_state.save_selected_state_as()
             gui_singletons.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', old_last_path_open)
         else:
-            menu_bar_controller.on_save_selected_state_as_activate()
+            gui_helper_state.save_selected_state_as()
+
+    @staticmethod
+    def on_open_activate(widget, data=None):
+        state_m = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()[0]
+        path, _, _ = gui_singletons.library_manager.get_os_path_to_library(state_m.state.library_path,
+                                                                           state_m.state.library_name)
+        gui_helper_state_machine.open_state_machine(path)
 
     def on_substitute_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('substitute_state', None, None)
