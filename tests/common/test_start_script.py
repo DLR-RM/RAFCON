@@ -12,9 +12,13 @@ if os.path.exists(FILE_MODIFIED_BY_STATE_MACHINE):
 
 
 def test_start_script_open():
+    """ Test core.start.py script run on console which open a state machine, run it and final checks the output file on
+    consistency.
+    """
     script = os.path.join(dirname(realpath(rafcon.__file__)), "core", "start.py")
     start_path = testing_utils.get_test_sm_path("unit_test_state_machines/start_script_test")
-    cmd = sys.executable + " %s -o %s" % (script, start_path)
+    cmd = "%s -o %s" % (script, start_path)
+    print "\ntest_start_script_open: \n", cmd
     cmd_res = subprocess.call(cmd, shell=True)
     assert cmd_res == 0
     tmp_file = open(FILE_MODIFIED_BY_STATE_MACHINE, "r")
@@ -25,11 +29,15 @@ def test_start_script_open():
 
 
 def test_start_script_state():
+    """ Test core.start.py script run by python call which open a state machine, run from a specific state and  final
+    checks the output file on consistency.
+    """
     script = os.path.join(dirname(realpath(rafcon.__file__)), "core", "start.py")
     start_path = testing_utils.get_test_sm_path("unit_test_state_machines/start_script_test")
     state_path = "UTUOSC/AHWBOG"
     print start_path
     cmd = sys.executable + " %s -o %s -s %s" % (script, start_path, state_path)
+    print "\ntest_start_script_state: \n", cmd
     cmd_res = subprocess.call(cmd, shell=True)
     assert cmd_res == 0
     tmp_file = open(FILE_MODIFIED_BY_STATE_MACHINE, "r")
@@ -40,11 +48,14 @@ def test_start_script_state():
 
 
 def test_start_script_valid_config():
+    """ Test rafcon_start console call which run a rafcon instance with handed config.yaml file, open a state machine,
+    run it and final checks the output file on consistency.
+    """
     # valid config
-    script = os.path.join(dirname(realpath(rafcon.__file__)), "core", "start.py")
     start_path = testing_utils.get_test_sm_path("unit_test_state_machines/start_script_test")
     config = os.path.join(testing_utils.TESTS_PATH, "common", "configs_for_start_script_test", "valid_config", "config.yaml")
-    cmd = sys.executable + " %s -o %s -c %s" % (script, start_path, config)
+    cmd = "rafcon_start -o %s -c %s" % (start_path, config)
+    print "\ntest_start_script_valid_config: \n", cmd
     cmd_res = subprocess.call(cmd, shell=True)
     assert cmd_res == 0
     tmp = open(FILE_MODIFIED_BY_STATE_MACHINE, "r")
@@ -52,6 +63,23 @@ def test_start_script_valid_config():
     tmp.close()
     assert (res == "start, state, "), "start with valid config failed"
     os.remove(FILE_MODIFIED_BY_STATE_MACHINE)
+
+def test_start_script_print_help_with_gui():
+    """ Test rafcon_start_gui console call which run a RAFCON instance and let it print the helper message and checks
+    if the process terminates correctly.
+    """
+    script = os.path.join(dirname(realpath(rafcon.__file__)), "gui", "start.py")
+    # start_path = testing_utils.get_test_sm_path("unit_test_state_machines/start_script_test")
+    # cmd = "%s -o %s" % (script, start_path)
+    cmd = script + " -h"
+    print "\ntest_start_script_open_with_gui: ", cmd
+    rafcon_gui_process = subprocess.Popen(cmd, shell=True)
+
+    print "process PID: ", rafcon_gui_process.pid
+    # rafcon_gui_process.terminate()
+    rafcon_gui_process.wait()
+    assert rafcon_gui_process.returncode == 0
+
 
 '''
 def test_start_script_invalid_config(caplog):
