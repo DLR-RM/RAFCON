@@ -697,11 +697,11 @@ class StateView(Element):
         port_meta = scoped_variable_m.get_meta_data_editor()
         if not isinstance(port_meta['rel_pos'], tuple):
             # Distribute scoped variables on the top side of the state, starting from left
-            scoped_variable_port_v.side = SnappedSide.TOP
+            scoped_variable_port_v.side = SnappedSide.BOTTOM
             num_scoped_vars = len(self._scoped_variables_ports)
             pos_x = self._calculate_port_pos_on_line(num_scoped_vars, self.width,
                                                      port_width=self.border_width * 4)
-            pos_y = 0
+            pos_y = self.height
             port_meta = scoped_variable_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
         scoped_variable_port_v.handle.pos = port_meta['rel_pos']
 
