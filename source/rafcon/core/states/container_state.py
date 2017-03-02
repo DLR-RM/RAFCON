@@ -628,7 +628,7 @@ class ContainerState(State):
         # re-create scoped variables
         for sv in child_scoped_variables:
             name = sv.name
-            if name in [sv.name for sv in self.scoped_variables.itervalues()]:
+            if name in [parent_sv.name for parent_sv in self.scoped_variables.itervalues()]:
                 name = state_id + name
             new_sv_id = self.add_scoped_variable(name, sv.data_type, sv.default_value)
             sv_id_dict[sv.data_port_id] = new_sv_id
@@ -651,10 +651,11 @@ class ContainerState(State):
 
         # re-create data flow linkage
         for df in related_data_flows['internal']['enclosed']:
+            # print "enclosed: ", df
             new_df_id = self.add_data_flow(self.state_id if state_id == df.from_state else state_id_dict[df.from_state],
-                                           sv_id_dict[df.from_key] if self.state_id == df.from_state else df.from_key,
+                                           sv_id_dict[df.from_key] if state_id == df.from_state else df.from_key,
                                            self.state_id if state_id == df.to_state else state_id_dict[df.to_state],
-                                           sv_id_dict[df.to_key] if self.state_id == df.to_state else df.to_key)
+                                           sv_id_dict[df.to_key] if state_id == df.to_state else df.to_key)
             enclosed_df_id_dict[df.data_flow_id] = new_df_id
         for data_port_linkage in ingoing_data_linkage_for_port.itervalues():
             for ext_df in data_port_linkage['external']:
