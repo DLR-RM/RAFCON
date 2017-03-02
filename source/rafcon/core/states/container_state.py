@@ -627,7 +627,10 @@ class ContainerState(State):
             state_id_dict[state.state_id] = new_state_id
         # re-create scoped variables
         for sv in child_scoped_variables:
-            new_sv_id = self.add_scoped_variable(sv.name, sv.data_type, sv.default_value, sv.data_port_id)
+            name = sv.name
+            if name in [sv.name for sv in self.scoped_variables.itervalues()]:
+                name = state_id + name
+            new_sv_id = self.add_scoped_variable(name, sv.data_type, sv.default_value)
             sv_id_dict[sv.data_port_id] = new_sv_id
 
         # re-create transitions
