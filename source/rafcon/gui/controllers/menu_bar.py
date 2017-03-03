@@ -27,7 +27,7 @@ from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.state import StateModel
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
-from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
+from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.config_window import ConfigWindowView
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.views.utils.about_dialog import MyAboutDialog
@@ -341,7 +341,6 @@ class MenuBarController(ExtendedController):
     @staticmethod
     def on_substitute_selected_state_activate(widget=None, data=None, path=None):
         return gui_helper_state.substitute_selected_state()
-
     @staticmethod
     def on_substitute_library_with_template_activate(widget=None, data=None):
         return gui_helper_state.substitute_library_with_template()
@@ -362,20 +361,20 @@ class MenuBarController(ExtendedController):
     def stopped_state_machine_to_proceed(self):
 
             def on_message_dialog_response_signal(widget, response_id):
-                if response_id == ButtonDialog.OPTION_1.value:
+                if response_id == 1:
                     self.state_machine_execution_engine.stop()
                     widget.state_machine_stopped = True
-                elif response_id == ButtonDialog.OPTION_2.value:
+                elif response_id == 2:
                     logger.debug("State machine will stay running and no refresh will be performed!")
                     widget.state_machine_stopped = False
                 widget.destroy()
 
-            message_string = "A state machine is still running. The state machines can only be refeshed" \
+            message_string = "A state machine is still running. The state machines can only be refreshed" \
                              "if no state machine is running any more."
             dialog = RAFCONButtonDialog(message_string, ["Stop execution and refresh libraries",
-                                                "Keep running and do not refresh libraries"],
+                                                         "Keep running and do not refresh libraries"],
                                         on_message_dialog_response_signal,
-                                        type=gtk.MESSAGE_QUESTION,
+                                        message_type=gtk.MESSAGE_QUESTION,
                                         parent=self.get_root_window())
 
             state_machine_stopped = False
@@ -452,16 +451,15 @@ class MenuBarController(ExtendedController):
         if state_machine_manager.has_dirty_state_machine():
 
             def on_message_dialog_response_signal(widget, response_id):
-                if response_id == ButtonDialog.OPTION_1.value:
-                    widget.destroy()
+                if response_id == 1:
                     if not self.state_machine_execution_engine.finished_or_stopped():
                         self.check_sm_running()
                     else:
                         self.prepare_destruction()
                         self.on_destroy(None)
-                elif response_id == ButtonDialog.OPTION_2.value:
+                elif response_id == 2:
                     logger.debug("Close main window canceled")
-                    widget.destroy()
+                widget.destroy()
 
             message_string = "Are you sure you want to exit RAFCON?\n\n" \
                              "The following state machines have been modified and not saved. " \
@@ -470,7 +468,7 @@ class MenuBarController(ExtendedController):
                 if sm.marked_dirty:
                     message_string = "%s\n#%s: %s " % (message_string, str(sm_id), sm.root_state.name)
             RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"], on_message_dialog_response_signal,
-                               type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+                               message_type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             return True
         return False
 
@@ -478,9 +476,9 @@ class MenuBarController(ExtendedController):
         if not self.state_machine_execution_engine.finished_or_stopped():
 
             def on_message_dialog_response_signal(widget, response_id):
-                if response_id == ButtonDialog.OPTION_1.value:
+                if response_id == 1:
                     self.state_machine_execution_engine.stop()
-                elif response_id == ButtonDialog.OPTION_2.value:
+                elif response_id == 2:
                     logger.debug("State machine will stay running!")
                 widget.destroy()
                 self.prepare_destruction()
@@ -488,7 +486,7 @@ class MenuBarController(ExtendedController):
 
             message_string = "The state machine is still running. Do you want to stop the execution before closing?"
             RAFCONButtonDialog(message_string, ["Stop execution", "Keep running"], on_message_dialog_response_signal,
-                               type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+                               message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
             return True
         return False
 
