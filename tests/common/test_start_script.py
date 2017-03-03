@@ -64,6 +64,7 @@ def test_start_script_valid_config():
     assert (res == "start, state, "), "start with valid config failed"
     os.remove(FILE_MODIFIED_BY_STATE_MACHINE)
 
+
 def test_start_script_print_help_with_gui():
     """ Test rafcon_start_gui console call which run a RAFCON instance and let it print the helper message and checks
     if the process terminates correctly.
