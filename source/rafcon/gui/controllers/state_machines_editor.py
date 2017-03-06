@@ -19,9 +19,8 @@ from rafcon.gui.helpers import text_formatting
 from rafcon.gui.helpers.label import draw_for_all_gtk_states
 from rafcon.gui.models.state_machine import StateMachineModel, StateMachine
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
-from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.utils import constants
-from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
+from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.graphical_editor import GraphicalEditorView
 from rafcon.utils import log
 

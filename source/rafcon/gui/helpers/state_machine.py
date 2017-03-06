@@ -23,7 +23,7 @@ from rafcon.gui.models.outcome import OutcomeModel
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
+from rafcon.gui.utils.dialog import RAFCONButtonDialog
 import rafcon.gui.singleton
 from rafcon.utils import log
 
@@ -74,12 +74,15 @@ def open_state_machine(path=None):
 def save_state_machine(menubar, widget, save_as=False, delete_old_state_machine=False):
         def on_message_dialog_response_signal(widget, response_id, source_editor_ctrl):
             state = source_editor_ctrl.model.state
-            if response_id == ButtonDialog.OPTION_1.value:
+            if response_id == 1:
                 logger.debug("Applying source code changes of state '{}'".format(state.name))
                 source_editor_ctrl.apply_clicked(None)
 
-            elif response_id == ButtonDialog.OPTION_2.value:
+            elif response_id == 2:
                 logger.debug("Ignoring source code changes of state '{}'".format(state.name))
+            else:
+                logger.warning("Response id: {} is not considered".format(response_id))
+                return
             widget.destroy()
 
         state_machine_m = menubar.model.get_selected_state_machine_model()
@@ -101,8 +104,9 @@ def save_state_machine(menubar, widget, save_as=False, delete_old_state_machine=
             if global_gui_config.get_config_value("AUTO_APPLY_SOURCE_CODE_CHANGES", False):
                 dirty_source_editor_ctrl.apply_clicked(None)
             else:
-                RAFCONButtonDialog(message_string, ["Apply", "Ignore changes"], on_message_dialog_response_signal,
-                                   [dirty_source_editor_ctrl], type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
+                RAFCONButtonDialog(message_string, ["Apply", "Ignore changes"],
+                                   callback=on_message_dialog_response_signal, callback_args=[dirty_source_editor_ctrl],
+                                   message_type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
 
         save_path = state_machine_m.state_machine.file_system_path
         if save_path is None:
@@ -169,7 +173,7 @@ def refresh_all(menubar=None, force=False):
         if state_machine_manager.has_dirty_state_machine() or dirty_source_editor:
 
             def on_message_dialog_response_signal(widget, response_id):
-                if response_id == ButtonDialog.OPTION_1.value:
+                if response_id == 1:
                     menubar.refresh_libs_and_state_machines()
                 else:
                     logger.debug("Refresh canceled")
@@ -186,7 +190,7 @@ def refresh_all(menubar=None, force=False):
                 message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
                     message_string, ctrl.model.state.name, ctrl.model.state.get_path())
             RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"], on_message_dialog_response_signal,
-                               type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
+                               message_type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
         else:
             menubar.refresh_libs_and_state_machines()
 
