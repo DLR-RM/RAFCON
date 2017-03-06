@@ -313,7 +313,7 @@ class StateMachinesEditorController(ExtendedController):
 
         elif state_machine_m.state_machine.marked_dirty:
             def on_message_dialog_response_signal(widget, response_id, state_machine_m):
-                widget.destroy()
+
                 if response_id == 1:
                     if not state_machine_execution_engine.finished_or_stopped() \
                             and state_machine_manager.active_state_machine_id == \
@@ -323,6 +323,7 @@ class StateMachinesEditorController(ExtendedController):
                         self.remove_state_machine(state_machine_m)
                 else:
                     logger.debug("Closing of state machine model canceled")
+                widget.destroy()
 
             sm_id = get_state_machine_id(state_machine_m)
             root_state_name = state_machine_m.root_state.state.name

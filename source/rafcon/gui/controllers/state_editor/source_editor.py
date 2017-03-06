@@ -21,7 +21,7 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.controllers.utils.editor import EditorController
 from rafcon.gui.singleton import state_machine_manager_model
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.utils.dialog import RAFCONButtonDialog
+from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
 from rafcon.utils import filesystem
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
@@ -153,7 +153,6 @@ class SourceEditorController(EditorController):
 
             def open_text_window():
 
-                from rafcon.gui.utils.dialog import RAFCONInputDialog
                 markup_text = "No external editor specified. Please specify a shell command to open scripts externally"
 
                 # create a new RAFCONButtonInputDialog, add a checkbox and add the text 'remember' to it
@@ -171,7 +170,7 @@ class SourceEditorController(EditorController):
                     open_file_in_editor(text_input.return_text(), text_input)
 
                 else:
-                    # If Dialog is canceled either by the button or the cross, untoggle the button again and revert the
+                    # If Dialog is canceled either by the button or the cross, toggle back the button again and revert the
                     # lock, which is not implemented yet
                     set_editor_lock(False)
 
