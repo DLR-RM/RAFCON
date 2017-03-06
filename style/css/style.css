@@ -537,7 +537,7 @@ h5{
   z-index:999;
   background-color: rgb(43, 46, 59);
 }
-@media (min-width: 768px){
+@media (min-width: 990px){
   .contact-section{
     height:300px;
     z-index:999;
@@ -1159,7 +1159,7 @@ margin-left: 0px;
 .mobile-top{
 margin-top: -6px;
 }
-@media (min-width: 768px){
+@media (min-width: 990px){
   .mobile-top{
     margin-top: 100px;
   }
@@ -1169,7 +1169,7 @@ margin-top: -6px;
 .mobile-center{
 text-align:center;
 }
-@media (min-width: 768px){
+@media (min-width: 990px){
   .mobile-center{
     text-align:left;
   }
@@ -1179,7 +1179,7 @@ text-align:center;
 .mobile-height{
 height:155px;
 }
-@media (min-width: 768px){
+@media (min-width: 990px){
   .mobile-height{
     height:60px;
   }
@@ -1188,7 +1188,7 @@ height:155px;
 .mobile-contact{
 margin-top:53px;
 }
-@media (min-width: 768px){
+@media (min-width: 990px){
   .mobile-contact{
     margin-top: 100px;
   }
@@ -1198,7 +1198,7 @@ margin-top:53px;
 margin-top: 50px;
 
 }
-@media (min-width: 768px){
+@media (min-width: 990px){
   .mobile-logo{
     margin-top: 113px;
     margin-left:60px;
@@ -1381,5 +1381,15 @@ margin-top:0px;
     min-height: 1px;
     padding-right: 15px;
     padding-left: 15px;
+  }
+}
+
+
+.small-hide{
+  display:none;
+}
+@media (min-width: 990px){
+  .small-hide{
+    display:block;
   }
 }
