@@ -23,7 +23,13 @@ body{
 }
 
 .test{
-  color:red;}
+  color:red;
+  background-color: red;
+}
+
+#id2 {
+  color: red;
+}
 
 .navbar{
   background-color:rgb(47, 50, 65);
