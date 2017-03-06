@@ -4,6 +4,7 @@ import gtk
 
 from rafcon.gui.utils import constants
 from rafcon.utils import log
+from functools import partial
 logger = log.get_logger(__name__)
 
 
@@ -87,9 +88,9 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
 
         self.hbox = gtk.HBox(homogeneous=False, spacing=constants.GRID_SIZE)
         if button_texts:
-            for index, button in enumerate(button_texts):
+            for index, button in enumerate(button_texts, 1):
                     button = gtk.Button(button)
-                    button.connect('clicked', self.add_response, index)
+                    button.connect('clicked', self.forward_response, index)
                     self.hbox.pack_start(button, True, True, 1)
         else:
             logger.debug("No buttons where specified for the dialog from type or inheriting from RAFCONButtonDialog")
@@ -103,9 +104,8 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
         self.show_all()
         self.run() if standalone else None
 
-    def add_response(self, widget, index):
-        # add responses to the 'clicked' event of the button. First button gets 1 as response Second 2 etc.
-        self.response(index+1)
+    def forward_response(self, widget, index):
+        self.response(index)
 
 
 class RAFCONInputDialog(RAFCONButtonDialog):
@@ -146,7 +146,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
         # Hitting the enter button responds 1 from the widget
         # This is the same as the first button, so the first button should always be sth. approving the content of the
         # window. Probably a configurable flag would also make sense.
-        self.entry.connect('activate', self.add_response, 0)
+        self.entry.connect('activate', self.forward_response, 1)
         hbox.pack_start(self.entry, True, True, 1)
 
         self.check = None
@@ -229,6 +229,7 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
                  message_type=gtk.MESSAGE_QUESTION,
                  parent=None,
                  width=800, standalone=False):
-        super(RAFCONCheckBoxTableDialog, self).__init__(markup_text, button_texts, callback,callback_args, message_type, parent=parent, width=width)
+        super(RAFCONCheckBoxTableDialog, self).__init__(markup_text, button_texts, callback, callback_args, message_type,
+                                                        parent=parent, width=width)
 
 # TODO: Rico, please put your checkbox tree dialog here, i don't want to do it and "claim" the code by myself :)
