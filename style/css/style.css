@@ -377,12 +377,19 @@ h5{
 }
 
 .card-large{
-  background-color: white;
+  background-color: #f6f8f8;
   height:311px;
-  border: 1px solid #77C1FF;
+  border: 1px solid #F0F0F0;
   margin-bottom:20px;
   /*box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
 }
+.card-large:hover{
+  background-color: white;
+  height:311px;
+  border: 1px solid #77C1FF;
+  /*box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
+}
+
 
 @media (min-width: 768px){
   .card-large{
@@ -390,14 +397,16 @@ h5{
     height:340px;
     border: 1px solid #F0F0F0;
     }
+    .card-large:hover{
+      background-color: white;
+      height:340px;
+      border: 1px solid #77C1FF;
+      /*box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
+    }
+
   }
 
-.card-large:hover{
-  background-color: white;
-  height:340px;
-  border: 1px solid #77C1FF;
-  /*box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
-}
+
 
 
 .card-medium{
@@ -736,8 +745,8 @@ b{
 
 .post-content p{
   font-size: 17px;
-    color: #646464;
-    opacity: 0.7;
+    color: #959595;
+    opacity: 1;
 }
 
 .img-post{
@@ -758,6 +767,7 @@ b{
   color: #646464;
   font-size: 20px;
   font-weight: 200;
+
 }
 
 .post-content a.title-link:hover {
@@ -766,7 +776,18 @@ b{
   font-size: 20px;
   font-weight: 200;
   text-decoration: none;
+
 }
+@media (min-width: 990px){
+  .post-content a.title-link{
+    text-align: left;
+    color: #646464;
+    font-size: 20px;
+    font-weight: 200;
+
+  }
+}
+
 
 pre{
   border:none;
@@ -1424,5 +1445,14 @@ margin-top:0px;
   .mobile-overflow{
     overflow-x: visible;
     z-index: 2;
+  }
+}
+
+.mobile-picture{
+  padding-bottom: 10px;
+}
+@media (min-width: 990px){
+  .mobile-picture{
+    padding-bottom: 0px;
   }
 }
