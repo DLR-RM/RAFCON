@@ -98,6 +98,28 @@ def test_dialog_test(caplog):
     testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
 
+#TODO dialog tests in rafcon by mouse click and callback or only by callback and respective dialog objects response call
+
+# Following tests are useful to preserve functionality
+# RAFCONButtonDialog, RAFCONInputDialog and RAFCONCheckBoxTableDialog
+# - trigger of LibraryTreeController.delete_button_clicked and check of button responses (results in state machines e.g)
+# - trigger of MenuBarController.
+#   -> check_sm_modified and check of button responses (results in state machines e.g)
+#   -> check_sm_running and check of button responses (results in state machines e.g)
+#   -> stopped_state_machine_to_proceed and check of button responses (results in state machines e.g)
+# - trigger of StateMachinesEditorController
+#   -> on_close_clicked and check of button responses (results in state machines e.g)
+#   -> push_sm_running_dialog (in on_close_clicked) and check of button responses (results in state machines e.g)
+# - trigger of StateSubstituteChooseLibraryDialog and check of button responses (results in state machines e.g)
+# - trigger of SourceEditorController and check of button responses (results in state machines e.g)
+#   -> and in open_text_window RAFCONInputDialog think about a check
+# - trigger respective functions in gui helper state and state_machine (4 time ButtonDialog used)
+# - trigger auto_backup and test RAFCONCheckBoxTableDialog response and results
+#   -> 3 options as checkboxes and
+#   -> 3 options as buttons
+# RAFCONMessageDialog, and RAFCONColumnCheckboxDialog is not directly used in the RAFCON GUI but if there are
+# library states those maybe should be tested, too
+
 if __name__ == '__main__':
     test_dialog_test(None)
     # pytest.main([__file__, '-xs'])
