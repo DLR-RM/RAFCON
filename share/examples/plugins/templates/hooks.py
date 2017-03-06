@@ -13,8 +13,8 @@ def pre_init():
 
     logger.info("Run post-initiation hook of {} plugin.".format(__file__.split(os.path.sep)[-2]))
 
-    # Example: Monkey-Path rafcon.statemachine.script.Script class to print additional log-message while execution
-    from rafcon.statemachine.script import Script
+    # Example: Monkey-Path rafcon.core.script.Script class to print additional log-message while execution
+    from rafcon.core.script import Script
     old_execute_method = Script.execute
 
     def new_execute_method(self, state, inputs=None, outputs=None, backward_execution=False):

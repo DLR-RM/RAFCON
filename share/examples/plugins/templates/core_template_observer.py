@@ -1,6 +1,6 @@
-import rafcon.statemachine.singleton
-from rafcon.statemachine.states.container_state import ContainerState
-from rafcon.statemachine.states.library_state import LibraryState
+import rafcon.core.singleton
+from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.library_state import LibraryState
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -10,7 +10,7 @@ class ExecutionEngineObserver:
 
     def __init__(self):
         self.logger = log.get_logger(type(self).__name__)
-        self.execution_engine = rafcon.statemachine.singleton.state_machine_execution_engine
+        self.execution_engine = rafcon.core.singleton.state_machine_execution_engine
         self.register_observer()
 
     def register_observer(self):
@@ -38,9 +38,9 @@ class ExecutionStatusObserver:
     def __init__(self):
         self.logger = log.get_logger(type(self).__name__)
         self.logger.info("Initiate ExecutionStatusObserver")
-        for id, sm in rafcon.statemachine.singleton.state_machine_manager.state_machines.iteritems():
+        for id, sm in rafcon.core.singleton.state_machine_manager.state_machines.iteritems():
             self.register_states_of_state_machine(sm)
-        rafcon.statemachine.singleton.state_machine_manager.add_observer(self, "add_state_machine",
+        rafcon.core.singleton.state_machine_manager.add_observer(self, "add_state_machine",
                                                                          notify_after_function=self.on_add_state_machine_after)
 
     def register_states_of_state_machine(self, state_machine):

@@ -18,7 +18,7 @@ def on_dialog_key_press(dialog, event, key_mapping, buttons):
 def show_dialog(event, text, subtext, options, key_mapping, result):
     import gtk
     try:
-        from rafcon.mvc.singleton import main_window_controller
+        from rafcon.gui.singleton import main_window_controller
     except ImportError:
         main_window_controller = None
     dialog = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
