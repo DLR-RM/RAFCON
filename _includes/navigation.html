@@ -1,0 +1,58 @@
+<nav class="navbar navbar-default navbar-fixed-top">
+  <div class="container-fluid">
+
+      <div class="navbar-header">
+          <button id="changetoggle" type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+              <div id="navbar-hamburger" style="color:white; margin-top: -3px;">
+
+                  <span class="fa fa-bars" style="font-size: 18px;"></span>
+
+              </div>
+              <div id="navbar-close" class="hidden" style="color:#77C1FF; margin-top: -3px;  z-index:999;">
+                <span class="fa fa-times" style="font-size:18px; "></span>
+              </div>
+          </button>
+          <a class="navbar-brand" href="index.html" style="width: 118px;"><img src="../images/rafcon-logo-negativ.png" alt=""></a>
+      </div>
+
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+
+
+        <ul class="nav navbar-nav navbar-right nav-list-mobile">
+
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/news.html">News</a></li>
+            <li><a href="/publications.html">Publications</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="/plugins.html">Plugins</a></li>
+            <li><a href="/documentation.html">Docs</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a target="_blank" href="https://github.com"><span class="fa fa-github git-icon" style="font-size: 26px; line-height: 0.7;"></span></a></li>
+      
+
+        </ul>
+      </div>
+
+  </div>
+</nav>
+
+
+<script>
+
+var active = window.location.pathname;
+$(".nav a[href|='" + active + "']").parent().addClass("active");
+
+
+$(".nav a").on("click", function(){
+   $(".nav").find(".active").removeClass("active");
+   $(this).parent().addClass("active");
+});
+
+
+$(function() {
+  $('#changetoggle').click(function() {
+    $('#navbar-hamburger').toggleClass('hidden');
+    $('#navbar-close').toggleClass('hidden');
+  });
+});
+</script>

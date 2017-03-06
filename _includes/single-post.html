@@ -1,0 +1,84 @@
+<div class="container-fluid bright-max container-mobile container-nav" style="overflow-x:hidden; z-index:2;">
+
+  <div class="row">
+    <div class="col-md-12 placeholder-mobile"></div>
+  </div>
+
+  <div class="container container-mobile">
+
+    <div class="row">
+      <div class="col-md-3"></div>
+      <div class="col-md-6">
+        <h2 class="dark"><a class="breadcrumb-link" href="/news.html">News</a> | {{ page.title | date: '%B %Y' }}</h2>
+        <h2 class="dark"> </h2>
+      </div>
+      <div class="col-md-3"></div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12 placeholder-medium"></div>
+    </div>
+
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card-max">
+
+          <div class="row">
+            <div class="col-md-12 placeholder-key-features"></div>
+          </div>
+
+
+
+          <div class="row">
+            <div class="col-md-12 placeholder-key-features"></div>
+          </div>
+
+
+          <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+                    <ul id="post-list" class="mobile-list">
+
+                      <li class="post-content">
+                        <a class="title-link" href="{{ url }}">{{ page.title | date: '%B %Y' }}</a><br>
+                        <p></p>
+                        <i class="fa fa-calendar" style="color:#646464; float: left; font-size: 17px;" aria-hidden="true"></i><time class="show-date">{{ page.date | date: "%b %-d, %Y" }}</time>
+                        <p class="show-author">by {{ page.author }}</p>
+
+                        <div class="row">
+                          <div class="col-md-12 placeholder-little"></div>
+                        </div>
+
+                        {{ content }}
+
+
+                        <div class="row">
+                          <div class="col-md-12 placeholder-key-features"></div>
+                        </div>
+
+                        <a id="read-more" href="/news.html">Back to News</a><br><br>
+                      </li>
+
+                      <div class="row">
+                        <div class="col-md-12 placeholder-key-features"></div>
+                      </div>
+
+
+                  </ul>
+        </div>
+
+
+
+        </div>
+      </div>
+    </div>
+
+
+
+
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid bright-max placeholder-mobile-large mobile-hide"></div>

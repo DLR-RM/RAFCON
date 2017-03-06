@@ -1,0 +1,21 @@
+---
+layout: post
+title:  "Test Post from DLR"
+date:   2017-02-12 19:03:38 +0100
+categories: jekyll update
+author: Max Popp
+---
+Der Kern von RAFCON, das Konzept der Zustandsmaschine, ist getrennt von der grafischen Darstellung. Die Programmierschnittstelle (API) kann somit zur programmatischen Erstellung von Zustandsmaschinen benutzt werden. Diese Zustandsmaschinen können hierarchisch organisiert sein und Nebenläufigkeiten enthalten.
+
+
+
+![mars-robot](/images/mars-robot.jpg){:class="img-responsive"}
+
+
+
+Mittels eines Bibliothekskonzepts für Zustände können einmal erstellte Zustandsmaschinen in anderen Abläufen wiederverwendet werden. Der Datenfluss innerhalb einer Zustandsmaschine ist dabei durch Datenports und Datenflüsse explizit definiert. Darüber hinaus ist die Ausführung sehr flexibel: (Rückwärts-)Schritte, Pausen, Sprünge und weitere Eingriffsmöglichkeiten werden unterstützt. Mithilfe von `_posts` kann ein Roboter erstellt werden.
+
+
+[jekyll-docs]: http://jekyllrb.com/docs/home
+[jekyll-gh]:   https://github.com/jekyll/jekyll
+[jekyll-talk]: https://talk.jekyllrb.com/

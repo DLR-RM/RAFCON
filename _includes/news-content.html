@@ -1,0 +1,93 @@
+<div class="container-fluid bright-max container-mobile container-nav" style="overflow-x:hidden; z-index:2;">
+
+  <div class="row">
+    <div class="col-md-12 placeholder-mobile"></div>
+  </div>
+
+  <div class="container container-mobile">
+
+  <div class="row">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+      <h2 class="dark">News</h2>
+    </div>
+    <div class="col-md-3"></div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12 placeholder-medium"></div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card-max">
+
+        <div class="row">
+          <div class="col-md-12 placeholder-key-features"></div>
+        </div>
+
+
+
+        <div class="row">
+          <div class="col-md-12 placeholder-key-features"></div>
+        </div>
+
+
+
+      <div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-12">
+          <ul id="post-list" class="mobile-list">
+          {% for post in site.posts %}
+
+                    <li class="col-md-1"></li>
+                    <li class="col-md-3" style="float: left; margin-top: 7px;">
+                {% assign foundImage = 0 %}
+                {% assign images = post.content | split:"<img " %}
+                {% for image in images %}
+                  {% if image contains 'src' %}
+
+                      {% if foundImage == 0 %}
+                          {% assign html = image | split:"/>" | first %}
+                          <a href="{{ post.url }}"><img {{ html }} /></a>
+                          {% assign foundImage = 1 %}
+
+
+                      {% endif %}
+                  {% endif %}
+                {% endfor %}
+              </li>
+            <li class="post-content col-md-7">
+              <a class="title-link" href="{{ post.url }}">{{ post.title }}</a><br>
+              <p></p>
+              <i class="fa fa-calendar" style="color:#646464; float: left; font-size: 17px; opacity:0.6;" aria-hidden="true"></i><time class="show-date">{{ post.date | date: "%b %-d, %Y" }}</time>
+              <div class="author-mobile"><p class="show-author">by {{ post.author }}</p></div>
+              <div class="mobile-excerpt">{{ post.excerpt }}</div>
+
+              <div class="read-mobile"><a id="read-more" href="{{ post.url }}">Read more.</a><br><br></div>
+            </li>
+
+
+            <div class="row mobile-border">
+              <div class="col-md-12 placeholder-key-features"></div>
+            </div>
+
+          {% endfor %}
+
+        </ul>
+    </div>
+
+      </div>
+
+
+
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</div>
+
+<div class="container-fluid bright-max placeholder-mobile-large mobile-hide"></div>

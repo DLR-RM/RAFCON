@@ -1,0 +1,636 @@
+<h2 class="docs-head">3.0 Changelog</h2>
+
+
+<p class="docs-text">
+<a href="index.html">RAFCON</a> is getting closer to a "public" release version.
+Therefore, we now try to create beta release versions regularly. The
+versions can be found both on
+<a href="https://rmc-github.robotic.dlr.de/common/rafcon/releases">GitHub</a> and
+on <a href="https://rmintra01.robotic.dlr.de/wiki/Rmpm">RMPM</a> (software.common.rafcon).<br><br>
+
+Information about changes in each release will be published here. More
+details can be found in the <a href="https://rmc-github.robotic.dlr.de/common/rafcon/commits/master">GIT commit
+log</a>.
+</p>
+
+<div class="row">
+  <div class="col-md-12 placeholder-docs"></div>
+</div>
+
+<h2 class="docs-head">Patch releases 0.8.\*</h2>
+
+
+<h2 class="docs-head" style="font-size: 18px;">0.8.3</h2>
+<p class="docs-text">
+- Bug Fixes:<br>
+  - fix copy paste of library states, consisting of containers<br>
+  - fix error output of not matching output data types</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.8.2</h2>
+<p class="docs-text">
+- Bug Fixes:<br>
+  - fix copy and paste for ports<br>
+  - fix backward compatibility test</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.8.1</h2>
+
+<p class="docs-text">
+- Features:<br><br>
+
+  - renaming of module paths: core instead of state machine; gui instead of mvc<br>
+  - writing wrong data types into the outputs of the "execute" function produces an error now<br>
+  - Use external source editor: A button next to the source editor allows to open your code in an external editor, which you can configure<br>
+  - Gaphas: When resizing states, grid lines are shown helping states to bea aligned to each other (as when moving states)<br><br>
+
+- Improvements:<br><br>
+
+  - Gaphas: Change drawing order of state elements. Transitions are now drawn above states, Names of states are drawn
+    beneath everything. This should ease the manipulation of transitions.<br>
+  - Gaphas: States are easier to resize, as the corresponding handle is easier to grab<br>
+  - states are now saved in folder that are named after: state.name + $ + state.state_id<br><br>
+
+- API:<br><br>
+
+  - library paths can now be defined relative to the config file (this was possible before, but only if the path was prepended with "./"<br><br>
+
+- Documentation:<br><br>
+
+  - started creation of "Developer's Guide"<br>
+  - moved <b>odt</b> document about commit guidelines into <b>rst</b> file for "Developer's Guide"<br><br>
+
+- Fixes:<br><br>
+
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/5">#5 </a>: Fix connection bug<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/120">#120</a>: Make state machines thread safe using RLocks<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/154">#154</a>: Multi-Selection problems<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/159">#159</a>: Transitions cannot be selected<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/170">#179</a>: Allow external source editor<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/202">#202</a>: RAFCON crash<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/221">#221</a>: issue when dragging data flows<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/222">#222</a>: Cannot remove transition of root state in TransitionController<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/223">#223</a>: rafcon library config relative path undefined behaviour<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/224">#224</a>: Switch to respective state when trying to open a state which is already open.<br><br>
+
+- Refactoring:<br><br>
+
+  - Widgets have TreeViews not have a common base class. This allowed to get rid of a lot of duplicate code and made some implementations more robust<br>
+  - the code behind connection creation and modification in the Gaphas editor has been completely rewritten and made more robust
+</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.8.0</h2>
+
+<p class="docs-text">
+- deactivated as not compatible with 0.7.13</p>
+
+<div class="row">
+  <div class="col-md-12 placeholder-docs"></div>
+</div>
+
+<h2 class="docs-head">Patch releases 0.7.\*</h2>
+
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.13</h2>
+<p class="docs-text">
+- states are now saved in forlder that are named after: state.name + $ + state.state_id<br>
+- Hotfix:<br>
+    - fix unmovable windows for sled11 64bit</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.12</h2>
+
+<p class="docs-text">
+- Features:<br><br>
+
+  - Bidirectional graphical editor and states-editor selection with multi-selection support<br>
+  - Linkage overview widget redesign for optimized space usage and better interface<br><br>
+
+- Improvements:<br><br>
+
+  - Global variable manager and its type handling<br>
+  - Configuration GUI and its observation<br>
+  - State substitution: preserve default or runtime values of ports<br>
+  - Group/ungroup states<br>
+  - <b>LibraryManager</b> remembers missing ignored libraries<br>
+  - New config option <b>LIBRARY_TREE_PATH_HUMAN_READABLE</b>: Replaces underscores with spaces in Library tree<br>
+  - Update of transition and data flow widgets<br><br>
+
+- API:<br><br>
+
+  - <b>ExecutionHistory</b> is now observable<br>
+  - Configurations are now observable<br>
+  - allow to set <b>from_state_id</b> id <b>add_transition</b> method for start transitions<br><br>
+
+- Fixes<br><br>
+
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/177">#177</a>:
+    Data flow hiding not working<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/183">#183</a>:
+    Rafcon freeze after global variable delete<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/53">#53</a>:
+    Configurations GUI<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/181">#181</a>:
+    State type change not working<br>
+  - Several further fixes<br><br>
+
+- Refactorings, optimizations, clean ups
+</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.11</h2>
+
+<p class="docs-text">
+- Features:<br><br>
+
+  - Global variables can now be typed, see issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/81">#81</a><br>
+  - GUI for modifying the configurations<br>
+  - Config files can be im- and exported<br>
+  - Graphical editor can be shown in fullscreen mode (default with
+    F11), see issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/36">#36</a><br>
+  - I18n: RAFCON can be translated into other languages, rudimentary
+    German translation is available<br>
+  - RAFCON core can be started with several state machines<br><br>
+
+- Improvements:<br><br>
+
+  - Fix backward compatibility for old <b>statemachine.yaml</b> files<br>
+  - Undocked sidebars no longer have an entry in the task bar and are
+    shown on top with the main window, see issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/136">#136</a><br>
+  - Added tooltips<br>
+  - When starting RAFCON from the console, not only the path to, but
+    also the file name of a config file can be specified. This allows
+    several config files to be stored in one folder<br>
+  - Use correct last path in file/folder dialogs<br>
+  - Show root folder of libraries in the shortcut folder list of
+    file/folder dialogs<br>
+  - new actions in menu bar, menu bar shows shortcuts<br>
+  - Source and description editor remember cursor positions<br><br>
+
+- API:<br><br>
+
+  - State machines and their models can be hashed<br><br>
+
+- Fixes<br><br>
+
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/161">#161</a>:
+    When refreshing a running state machine, the refreshed one is
+    still running<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/168">#168</a>:
+    Undocked sidebars cause issues with is\_focus()<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/169">#169</a>:
+    Wrong dirty flag handling<br>
+  - <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/182">#182</a>:
+    Test start script waits infinitely<br>
+  - Several further fixes<br><br>
+
+- Refactorings, optimizations, clean ups</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.10</h2>
+<p class="docs-text">
+- Features<br><br>
+
+  - State substitution<br>
+  - Right click menu differentiate between states and library states<br><br>
+
+- Improvements<br><br>
+
+  - Graphical editor Gaphas:<br><br>
+
+  - way faster<br>
+  - more stable<br>
+  - connections are drawn behind states<br>
+  - small elements are hidden<br><br>
+
+  - BuildBot also runs tests on 32bit SLED slave<br>
+  - Core documentation<br><br>
+
+- Issues fixed<br><br>
+
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/143">#143</a><br>
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/139">#139</a><br>
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/146">#146</a><br>
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/145">#145</a><br>
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/122">#122</a><br>
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/149">#149</a><br>
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/119">#119</a><br>
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/151">#151</a><br>
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/155">#155</a><br>
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/17">#17</a><br><br>
+
+- Lots of further fixes and improvements<br><br>
+</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.9</h2>
+<p class="docs-text">
+- Features:<br><br>
+
+  - Grouping and ungrouping of states<br>
+  - Initial version of possibility to save arbitrary states as
+    libraries and to substitute one state with another one<br>
+  - Right click menu for graphical editor<br>
+  - add flags to <b>mvc.start.py</b> <a href="https://rmc-github.robotic.dlr.de/common/rafcon/commit/87e8cd7e64648aea8255db7b191112624a210c94">see commit 87e8cd7</a><br><br>
+
+- Bug fixes<br><br>
+
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/132">#132</a><br>
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/40">#40</a><br>
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/65">#65</a><br>
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/131">#131</a><br>
+  - Issue
+    <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/105">#105</a><br>
+  - Kill RAFCON with Ctrl+C<br>
+  - Resizing of states in Gaphas<br>
+  - Correctly distinguish string and unicode data port types when using library states (should fix issues with ROS)<br>
+  - Stepping starts a state machine if not started<br><br>
+
+- Improvements<br><br>
+
+  - Gaphas works more reliable, especially concerning copy'n'paste and selection<br>
+  - History<br><br>
+
+- Some changes in destruction hooks<br>
+- Refactorings<br><br>
+
+  - Many for Gaphas components, e.g. the border size of a state depends on the state size now<br>
+  - Obsolete models are deleted (=> less memory consumption)<br>
+  - Remove state\_helper.py<br><br>
+
+- New network tests<br>
+- Add missing GUI drafts of JÃ¼rgen<br></p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.8</h2>
+<p class="docs-text">
+- Add tests<br>
+- ExecutionEngine: Notify condition on all events except pause<br>
+</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.7</h2>
+<p class="docs-text">
+- Add three new hooks<br><br>
+
+  - <b>main_window_setup</b>: Passes reference to the main window controller and is called after the view has been registered<br>
+  - <b>pre_main_window_destruction</b>: Passes reference to the main window controller and is called right before the main window is destroyed<br>
+  - <b>post_main_window_destruction</b>: is called after the GTK main loop has been terminated<br>
+</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.6</h2>
+<p class="docs-text">
+- remove obsolete files<br>
+- properly destruct states on their deletion (+ test to check unctionality)<br>
+- jump to state on double-click in ExecutionHistory<br>
+- fixes in display of ExecutionHistory<br>
+- fix not shown description of LibraryStates<br>
+- fix crash on middle-click on state machine tab<br>
+- Fix copy & paste of ExecutionStates<br>
+- improve tests<br>
+- improve documentation (add missing elements)<br>
+- Show '+' for adding state machines<br>
+- example on abortion handling<br>
+- Add config option to hide data flow name<br>
+- Fix Issue <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/129">#129</a><br>
+- get rid of all plugin dependencies<br>
+- no more need to change into the mvc-directory when working with the GUI<br>
+- refactoring (especially in start.py)<br>
+- more fixes<br>
+</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.5</h2>
+<p class="docs-text">
+- Improve Execution-History visualization with proper hierarchical tree
+  view and improved data and logical outcome description (on
+  right-click)<br>
+- Improve auto-backup and add lock files to offer formal procedure to
+  recover state machine from temporary storage <a href="https://rmintra01.robotic.dlr.de/wiki/RAFCON#Auto_Backup">Auto Recovery</a><br>
+- Improve Description editor by undo/redo feature similar to the
+  SourceEditor<br>
+- Improve versions of "monitoring" and "execution hooks" plugins<br>
+- Improve graphical editor schemes (OpenGL and Gaphas) and Gaphas able
+  to undo/redo state meta data changes<br>
+- Introduce optional profiler to check for computation leaks in state
+  machine while execution<br>
+- Bug fixes<br>
+</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.4</h2>
+<p class="docs-text">
+- Improve performance of GUI while executing state machine with high
+  frequent state changes<br>
+- Fix issue
+  <a href="https://rmc-github.robotic.dlr.de/common/rafcon/issues/121">#121</a>:
+  Properly copy nested ExecutionStates<br>
+</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.3</h2>
+<p class="docs-text">
+- States are notified about pause and resume <a href="https://rmintra01.robotic.dlr.de/wiki/RAFCON/FAQ#How_does_preemption_work.3F_How_do_I_implement_preemptable_states_correctly.3F">(See FAQ here)</a>
+  and
+  <a href="https://rmintra01.robotic.dlr.de/wiki/RAFCON/FAQ#What_happens_if_the_state_machine_is_paused.3F_How_can_I_pause_running_services.2C_e._g._the_robot.3F">here</a><br>
+- Load libraries specified in <b>RAFCON_LIBRARY_PATH</b> <a href="https://rmintra01.robotic.dlr.de/wiki/RAFCON/Tutorials#How_to_create_and_re-use_a_library_state_machine">see this tutorial</a>
+  <br>
+- improve stability<br>
+- refactorings<br>
+- bug fixes<br>
+</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.2</h2>
+<p class="docs-text">
+- improved auto-backup to tmp-folder<br>
+- fix missing logger messages while loading configuration files<br>
+- introduced templates to build plugins<br>
+- re-organized examples to one folder -> share/examples, with examples for API, libraries, plugins and tutorials<br>
+- introduce short-cut for applying ExecutionState-Scripts<br>
+- smaller bug fixes<br>
+</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.1</h2>
+<p class="docs-text">
+- Allow multiple data flows to same input data ports (in order be
+  remain backward compatibility)<br>
+</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.7.0</h2>
+<p class="docs-text">
+This is a big minor release including many changes. State machines stored with version 0.6.\* are compatible with this version, but not state machines from older releases. Those have to be opened with 0.6.\* and then saved again. The following list is probably not complete:<br><br>
+
+- Support for <a href="https://rmintra01.robotic.dlr.de/wiki/OpenSUSE_Leap">openSUSE Leap</a><br>
+- Support for plugins<br>
+- Major design overhaul: agrees with drafts from design and looks consistent on all platforms<br>
+- Drag and Drop of states<br><br>
+
+  - Libraries from the library tree<br>
+  - Any type of state from the buttons below the graphical state editor<br>
+  - The drop position determines the location and the parent of the
+    new state<br><br>
+
+- All sidebars can now be undocked and moved to another screen<br>
+- Auto store state machine in background and recover after crash<br>
+- Improved history with branches<br>
+- New feature: run until state<br>
+- Extended stepping mode: step into, over and out<br>
+- Redesign remote execution of state machines: Native GUI can be used to execute state machine running on different host<br>
+- Drop support of YAML state machine files<br>
+- Rename state machine files<br>
+- Extend documentation<br>
+- <a href="https://rmintra01.robotic.dlr.de/wiki/Buildbot">RMC-BuildBot</a>support<br>
+- Many bug fixes<br>
+- A lot of refactorings, code optimizations, etc.<br>
+</p>
+
+<div class="row">
+  <div class="col-md-12 placeholder-docs"></div>
+</div>
+
+
+
+<h2 class="docs-head">Patch releases 0.6.\*</h2>
+
+<h2 class="docs-head" style="font-size: 18px;">0.6.0</h2>
+<p class="docs-text">
+- Prepare code and folder structure to allow theming (currently only dark theme available)<br>
+- Refactor GUI configuration and color handling<br>
+- Fix network\_connection initialization<br>
+- Use python2.7 by default when using RAFCON with RMPM<br>
+- Gaphas graphical editor:<br><br>
+
+  - change cursor when hovering different parts of the state machine<br>
+  - add hover effect for ports<br>
+  - no more traces of states/labels when moving/resizing states/ports<br>
+  - resize handles are scaled depending on zoom level and state hierarchy<br>
+  - do not show handles on lines that cannot be moved<br>
+  - improve behavior of line splitting<br>
+  - refactorings<br>
+  - minor bug fixes<br><br>
+
+- Fix many code issues (line spacing, comments, unused imports, line length, ...)<br>
+- fix bug in global variable manager, causing casual exception when two threads access the same variable<br>
+</p>
+<div class="row">
+  <div class="col-md-12 placeholder-docs"></div>
+</div>
+
+
+
+
+<h2 class="docs-head">Patch releases 0.5.\*</h2>
+
+<h2 class="docs-head" style="font-size: 18px;">0.5.5</h2>
+<p class="docs-text">
+fix start from selected state (the start-from-selected-state functionality modifies the start state of a hierarchy state on the initial execution of the statemachine; the start state was accidentally modified for each execution of the hierarchy state during one run leading to wrong execution of hierarchy states that were executed more often during the execution of a statemachine)
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.5.4</h2>
+<p class="docs-text">
+hotfix for mvc start.py launching with network support enabled
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.5.3</h2>
+<p class="docs-text">
+
+hotfix for rafcon server
+</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.5.1 + 0.5.2</h2>
+
+<p class="docs-text">
+feature: command line parameter to start state machine at an arbitrary state
+</p>
+
+<h2 class="docs-head" style="font-size: 18px;">0.5.0</h2>
+
+<p class="docs-text">
+- State-machines can be stored in JSON files instead of YAML files<br><br>
+
+  - Set <b>USE\_JSON</b> parameter in config to True<br>
+  - Loads state-machines approximately five times faster<br><br>
+
+- Removed some code ensuring backwards compatibility of old state-machines<br><br>
+
+  - If you are having trouble loading older state-machines, open them with the last version of the 0.4.\* branch<br>
+  - Save them and try again with the 0.5.\* branch<br>
+</p>
+  <div class="row">
+    <div class="col-md-12 placeholder-docs"></div>
+  </div>
+
+
+
+
+<h2 class="docs-head">Patch releases 0.4.\*</h2>
+
+<h2 class="docs-head" style="font-size: 18px;">0.4.6</h2>
+<p class="docs-text">
+- Add start scripts in bin folder<br>
+- When using RAFCON with RMPM, you can run RAFCON just with the commands <b>rafco_start</b> or <b>rafcon_start_gui</b><br>
+- Bug fixes for state type changes<br>
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.4.5</h2>
+<p class="docs-text">
+- Feature: Add late load for libraries<br>
+- State type changes work now with Gaphas graphical editor<br>
+- Minor code refactorings<br>
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.4.4</h2>
+<p class="docs-text">
+- Fix bug: changing the execution state of a statemachine does mark a statemachine as modified
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.4.3</h2>
+<p class="docs-text">
+- Fix bug: data port id generation<br>
+- Fix bug: runtime value handling<br>
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.4.2</h2>
+<p class="docs-text">
+
+- Feature: runtime values
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.4.1</h2>
+<p class="docs-text">
+- Fix bug: resize of libraries when loading state machine<br>
+- Fix bug: error when adding data port to empty root state<br>
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.4.0</h2>
+<p class="docs-text">
+- Show content of library states<br>
+- Keep library tree status when refreshing library<br>
+- Allow to easily navigate in table view of the GUI using the tab key<br>
+- Refactor logger (new handlers) and logger view<br>
+- Many refactorings for Gaphas graphical editor<br>
+- Introduce caching for Gaphas graphical editor => big speed up<br>
+- Require port names to be unique<br>
+- Highlight tab of running state machine<br>
+- Default values of library states can be set to be overwritten<br>
+- Improve dialogs<br>
+- make meta data observable<br>
+- many bug fixes<br>
+- clean code<br>
+- ...<br>
+</p>
+
+<div class="row">
+  <div class="col-md-12 placeholder-docs"></div>
+</div>
+
+
+
+<h2 class="docs-head">Patch releases 0.3.\*</h2>
+
+<h2 class="docs-head" style="font-size: 18px;">0.3.7</h2>
+<p class="docs-text">
+
+- rafcon no-gui start script also supports BarrierConcurrency and PreemptiveConcurrencyStates
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.3.6</h2>
+<p class="docs-text">
+- bugfix if no runtime\_config existing
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.3.5</h2>
+<p class="docs-text">
+- rafcon\_server can be launched from command line<br>
+- network config can be passed as an argument on startup<br>
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.3.4</h2>
+<p class="docs-text">
+- first version of rafcon server released
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.3.3</h2>
+<p class="docs-text">
+- state machines can be launched without GUI from the command line
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.3.2</h2>
+<p class="docs-text">
+- Extend and clean documentation (especially about MVC) and add it to the release<br>
+- Waypoints are moved with transition/data flows (OpenGL editor)<br>
+- data type of ports of libraries are updated in state machines when being changed in the library<br>
+- bug fix: error when moving waypoint<br>
+- bug fix: add new state, when no state is selected<br>
+</h2>
+<h2 class="docs-head" style="font-size: 18px;">0.3.1</h2>
+<p class="docs-text">
+- Support loading of old meta data<br>
+- bug fix: errors when removing connected outcome<br>
+- bug fix: network config not loaded<br>
+- code refactoring: remove old controllers, consistent naming of the rest<br>
+</h2>
+<h2 class="docs-head" style="font-size: 18px;">0.3.0</h2>
+<p class="docs-text">
+- RAFCON server to generate html/css/js files for remote viewer (inside browser)<br>
+- optimize workflow:<br><br>
+
+  - root state of new state machines is automatically selected<br>
+  - new states can directly be added with shortcuts, without using the mouse beforehand<br>
+  - A adds hierarchy state (A for execution states)<br><br>
+
+- support loading of state machines generated with the old editor in the new editor<br>
+- bug fixes for graphical editor using gaphas (especially concerning the state name)<br>
+- bug fixes for states editor<br>
+</p>
+
+<div class="row">
+  <div class="col-md-12 placeholder-docs"></div>
+</div>
+
+
+
+<h2 class="docs-head">Patch releases 0.2.\*</h2>
+
+<h2 class="docs-head" style="font-size: 18px;">0.2.5</h2>
+<p class="docs-text">
+- update LN include script (use pipe\_include and RMPM)<br>
+- allow configuration of shortcuts<br>
+- distinguish between empty string and None for ports of type str<br>
+- bug fixes in GUI (start state)<br>
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.2.4</h2>
+
+<p class="docs-text">
+- introduce env variables <b>RAFCON\_PATH and RAFCON\_LIB\_PATH</b><br>
+- automatically set by RMPM<br>
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.2.3</h2>
+<p class="docs-text">
+
+- use of seperate temp paths for different users<br>
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.2.2</h2>
+<p class="docs-text">
+- Allow RAFCON to be started from arbitrary paths<br>
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.2.1</h2>
+<p class="docs-text">
+- minor code refactoring<br>
+- RMPM release test<br>
+</p>
+<h2 class="docs-head" style="font-size: 18px;">0.2.0</h2>
+<p class="docs-text">
+- First release version<br>
+- Tool was renamed to RAFCON<br>
+</p>
+
+
+<div class="row">
+  <div class="col-md-12 placeholder-docs"></div>
+</div>
+
+<div class="row">
+  <div class="col-md-12 placeholder-docs"></div>
+</div>
+
+<div class="row">
+  <div class="col-md-12 placeholder-docs"></div>
+</div>
+
+<div class="row">
+  <div class="col-md-12 placeholder-docs"></div>
+</div>
