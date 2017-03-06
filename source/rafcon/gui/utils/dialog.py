@@ -1,10 +1,10 @@
 # Copyright
 
 import gtk
+import gobject
 
 from rafcon.gui.utils import constants
 from rafcon.utils import log
-from functools import partial
 logger = log.get_logger(__name__)
 
 
@@ -30,11 +30,12 @@ class RAFCONMessageDialog(gtk.MessageDialog):
 
         if parent:
             super(RAFCONMessageDialog, self).set_transient_for(parent)
-        if isinstance(markup_text, str):
+        if isinstance(markup_text, (str, unicode, basestring)):
             from cgi import escape
-            super(RAFCONMessageDialog, self).set_markup(escape(markup_text))
+            super(RAFCONMessageDialog, self).set_markup(escape(str(markup_text)))
         else:
-            logger.debug("The specified message text is not a String")
+            logger.debug("The specified message text is not a String is type {1} -> {0}".format(markup_text,
+                                                                                                type(markup_text)))
         if callback:
             self.add_callback(callback, *callback_args)
 
@@ -221,15 +222,93 @@ class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
 
 
 class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
-    def __init__(self,
-                 markup_text=None,
-                 button_texts=["Apply", "Remind me Later.", "Ignore -> Remove all Notifications/Locks."],
-                 callback=None, callback_args=None,
-                 table_header=None, table_data=None, toggled_callback=None,
-                 message_type=gtk.MESSAGE_QUESTION,
-                 parent=None,
-                 width=800, standalone=False):
-        super(RAFCONCheckBoxTableDialog, self).__init__(markup_text, button_texts, callback, callback_args, message_type,
-                                                        parent=parent, width=width)
+    """ The window creates a table with multiple rows of check box- and text field-columns.
 
-# TODO: Rico, please put your checkbox tree dialog here, i don't want to do it and "claim" the code by myself :)
+    The header is defined by a list of strings. The table data is defined by row-wise boolean and string elements.
+    Before creation the data is checked on consistency so that at index x in any row is the same type of value.
+    The table data tolerates one not bool or string values ate the end of the list to store complex python object
+    and thereby open more options in checkbox handling.
+
+    :param markup_text: The text inside the dialog
+    :param button_texts: A list containing all buttons_texts to be created as gtk Buttons
+    :param checkbox_texts: The labels for checkboxes, also defines the number of checkboxes
+    :param callback: A callback function which should be executed on the end of the run() method
+    :param callback_args: Arguments passed to the callback function
+    :param message_type: The gtk type of the dialog, e.g. gtk.MESSAGE_INFO, gtk.MESSAGE_QUESTION etc.
+    :param flags: gtk flags passed to the __init__ of gtk.MessageDialog
+    :param parent: The parent widget of this dialog
+    :param standalone: specify if the dialog should run by itself and is only cancelable by a callback function
+    """
+
+    def __init__(self, markup_text, button_texts, callback, callback_args=(), table_header=None, table_data=None,
+                 toggled_callback=None, message_type=gtk.MESSAGE_INFO, parent=None, width=None, standalone=True):
+
+        super(RAFCONCheckBoxTableDialog, self).__init__(markup_text, button_texts,
+                                                        callback=callback, callback_args=callback_args,
+                                                        message_type=message_type, parent=parent,
+                                                        width=width, standalone=False)
+        if table_header is None:
+            table_header = ["CheckBox", "Description"]
+        if table_data is None:
+            table_data = [[True, "That is true."]]
+        if toggled_callback is None:
+            # set default toggled callback
+            def on_toggled(cell, path, column_id):
+                self.list_store[path][column_id] = False if cell.get_active() else True
+
+            toggled_callback = on_toggled
+
+        # check if data is consistent
+        if not all(len(row) == len(table_header) or not isinstance(row[-1], (str, basestring, bool)) and
+                len(row) == 1 + len(table_header) for row in table_data):
+            raise ValueError("All rows of the table_data list has to be the same length as the table_header list "
+                             "(+1 data element), here length = {0}". format(len(table_header)))
+
+        if not all([isinstance(row_elem, (bool, str, basestring))
+                   for index, row_elem in enumerate(table_data[0]) if not index + 1 == len(table_data[0])]):
+            raise TypeError("All row elements have to be of type boolean or string except of last one.")
+
+        first_row_data_types = [type(row_elem) for row_elem in table_data[0]]
+        for row_index, row in enumerate(table_data):
+            for column_index, row_elem in enumerate(row):
+                if not isinstance(row_elem, first_row_data_types[column_index]):
+                    raise TypeError("All rows have to have the same type at the same column index. Here you have at "
+                                    "column index {0} and row_index {1} type: {2} and in row 0 at this index type: {3}"
+                                    "".format(column_index, row_index, type(row_elem), type(first_row_data_types[column_index])))
+
+        # create tree view
+        self.tree_view = gtk.TreeView()
+        self.vbox.pack_start(self.tree_view)
+        for index, column_type in enumerate(first_row_data_types):
+            if column_type is bool:
+                # create checkbox column
+                check_box_renderer = gtk.CellRendererToggle()
+                if toggled_callback is not None:
+                    check_box_renderer.connect("toggled", toggled_callback, index)
+                checkbox_column = gtk.TreeViewColumn(table_header[index], check_box_renderer, active=index)
+                self.tree_view.append_column(checkbox_column)
+            elif column_type in (str, basestring):
+                text_renderer = gtk.CellRendererText()
+                text_column = gtk.TreeViewColumn(table_header[index], text_renderer, text=index)
+                self.tree_view.append_column(text_column)
+            else:
+                if not len(first_row_data_types) == index + 1:
+                    logger.error("Unexpected case, the widget is not generate column of type: {0} and "
+                                 "the column is not the last in the list.".format(column_type))
+
+        # correct last list element if not boolean or string and table data length is +1 compared to table header
+        if first_row_data_types and len(first_row_data_types) == len(table_header) + 1 and \
+                not isinstance(first_row_data_types[-1], (bool, str, basestring)):
+            first_row_data_types[-1] = gobject.TYPE_PYOBJECT
+
+        # fill list store
+        self.list_store = gtk.ListStore(*first_row_data_types)
+        self.tree_view.set_model(self.list_store)
+        for row in table_data:
+            self.list_store.append(row)
+
+        self.vbox.show_all()
+        if standalone:
+            self.add_callback(callback, callback_args)
+            self.grab_focus()
+            self.run()
