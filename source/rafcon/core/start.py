@@ -22,7 +22,7 @@ from yaml_configuration.config import config_path
 import rafcon.utils.filesystem as filesystem
 
 from rafcon.core.config import global_config
-import rafcon.core.singleton as sm_singletons
+import rafcon.core.singleton as core_singletons
 from rafcon.core.storage import storage
 from rafcon.core.states.state import StateExecutionStatus
 
@@ -90,7 +90,7 @@ def setup_argument_parser():
     """
     home_path = filesystem.get_home_path()
 
-    parser = sm_singletons.argument_parser
+    parser = core_singletons.argument_parser
     parser.add_argument('-o', '--open', type=parse_state_machine_path, dest='state_machine_path', metavar='path',
                         nargs='+', help="specify directories of state-machines that shall be opened. The path must "
                                         "contain a statemachine.json file")
@@ -116,7 +116,7 @@ def setup_configuration(config_path):
         global_config.load(path=config_path)
 
     # Initialize libraries
-    sm_singletons.library_manager.initialize()
+    core_singletons.library_manager.initialize()
 
 
 def open_state_machine(state_machine_path):
@@ -126,14 +126,14 @@ def open_state_machine(state_machine_path):
     :return StateMachine: The loaded state machine
     """
     sm = storage.load_state_machine_from_path(state_machine_path)
-    sm_singletons.state_machine_manager.add_state_machine(sm)
+    core_singletons.state_machine_manager.add_state_machine(sm)
 
     return sm
 
 
 def start_state_machine(sm, start_state_path=None):
-    sm_singletons.state_machine_manager.active_state_machine_id = sm.state_machine_id
-    sm_singletons.state_machine_execution_engine.start(start_state_path=start_state_path)
+    core_singletons.state_machine_manager.active_state_machine_id = sm.state_machine_id
+    core_singletons.state_machine_execution_engine.start(start_state_path=start_state_path)
 
     if reactor_required():
         sm_thread = threading.Thread(target=stop_reactor_on_state_machine_finish, args=[sm, ])
@@ -189,8 +189,8 @@ def signal_handler(signal, frame):
     global _user_abort
 
     from rafcon.core.execution.execution_status import StateMachineExecutionStatus
-    state_machine_execution_engine = sm_singletons.state_machine_execution_engine
-    sm_singletons.shut_down_signal = signal
+    state_machine_execution_engine = core_singletons.state_machine_execution_engine
+    core_singletons.shut_down_signal = signal
 
     logger.info("Shutting down ...")
 

@@ -48,7 +48,7 @@ def start_server(interacting_function, queue_dict):
     from rafcon.utils import plugins
 
     from rafcon.core.config import global_config
-    import rafcon.core.singleton as sm_singletons
+    import rafcon.core.singleton as core_singletons
     from rafcon.core.storage import storage as global_storage
     # needed for yaml parsing
     from rafcon.core.states.hierarchy_state import HierarchyState
@@ -68,7 +68,7 @@ def start_server(interacting_function, queue_dict):
     global_config.load(path=os.path.dirname(os.path.abspath(__file__)))
 
     # Initialize libraries
-    sm_singletons.library_manager.initialize()
+    core_singletons.library_manager.initialize()
 
     import testing_utils
     state_machine = global_storage.load_state_machine_from_path(

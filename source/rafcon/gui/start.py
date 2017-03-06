@@ -25,7 +25,7 @@ from rafcon.core.start import parse_state_machine_path, setup_environment, react
 from rafcon.core.storage import storage
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.hierarchy_state import HierarchyState
-import rafcon.core.singleton as sm_singletons
+import rafcon.core.singleton as core_singletons
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.config import global_config
 
@@ -83,7 +83,7 @@ def start_stop_state_machine(state_machine, start_state_path, quit_flag):
     while gtk.events_pending():
         gtk.main_iteration(False)
 
-    state_machine_execution_engine = sm_singletons.state_machine_execution_engine
+    state_machine_execution_engine = core_singletons.state_machine_execution_engine
     state_machine_execution_engine.execute_state_machine_from_path(state_machine=state_machine,
                                                                    start_state_path=start_state_path,
                                                                    wait_for_execution_finished=True)
@@ -102,7 +102,7 @@ def setup_argument_parser():
     """
     home_path = filesystem.get_home_path()
 
-    parser = sm_singletons.argument_parser
+    parser = core_singletons.argument_parser
     parser.add_argument('-n', '--new', action='store_true', help=_("whether to create a new state-machine"))
     parser.add_argument('-o', '--open', action='store', nargs='*', type=parse_state_machine_path,
                         dest='state_machine_paths', metavar='path', help=_(
@@ -148,7 +148,7 @@ def open_state_machines(paths):
     for path in paths:
         try:
             sm = storage.load_state_machine_from_path(path)
-            sm_singletons.state_machine_manager.add_state_machine(sm)
+            core_singletons.state_machine_manager.add_state_machine(sm)
             if first_sm is None:
                 first_sm = sm
         except Exception as e:
@@ -159,7 +159,7 @@ def open_state_machines(paths):
 def create_new_state_machine():
     root_state = HierarchyState()
     state_machine = StateMachine(root_state)
-    sm_singletons.state_machine_manager.add_state_machine(state_machine)
+    core_singletons.state_machine_manager.add_state_machine(state_machine)
 
 
 def log_ready_output():
@@ -175,8 +175,8 @@ SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n) for n in dir(signal) if n.s
 
 def signal_handler(signal, frame):
     from rafcon.core.execution.execution_status import StateMachineExecutionStatus
-    state_machine_execution_engine = sm_singletons.state_machine_execution_engine
-    sm_singletons.shut_down_signal = signal
+    state_machine_execution_engine = core_singletons.state_machine_execution_engine
+    core_singletons.shut_down_signal = signal
 
     try:
         # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
@@ -284,9 +284,9 @@ if __name__ == '__main__':
             else:
                 logger.warning(_("External remove of lock file detected!"))
 
-    if sm_singletons.state_machine_execution_engine.status.execution_mode == StateMachineExecutionStatus.STARTED:
+    if core_singletons.state_machine_execution_engine.status.execution_mode == StateMachineExecutionStatus.STARTED:
         logger.info(_("Waiting for the state machine execution to finish"))
-        sm_singletons.state_machine_execution_engine.join()
+        core_singletons.state_machine_execution_engine.join()
         logger.info(_("State machine execution has finished"))
 
     logger.info(_("Exiting ..."))
