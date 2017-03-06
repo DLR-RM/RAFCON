@@ -11,7 +11,7 @@ import gtk
 
 from rafcon.gui.views.library_tree import LibraryTreeView
 from rafcon.gui.controllers.library_tree import LibraryTreeController
-from rafcon.gui.utils.dialog import RAFCONMessageDialog
+from rafcon.gui.utils.dialog import RAFCONButtonDialog
 
 from rafcon.utils import log
 
@@ -53,24 +53,21 @@ class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
             return True
 
 
-class StateSubstituteChooseLibraryDialog(RAFCONMessageDialog):
+class StateSubstituteChooseLibraryDialog(RAFCONButtonDialog):
 
     def __init__(self, model, width=500, height=500, pos=None, parent=None):
         self.model = model
 
-        super(StateSubstituteChooseLibraryDialog, self).__init__(message_type=gtk.MESSAGE_INFO,
-                                                                 buttons=gtk.BUTTONS_NONE,
+        super(StateSubstituteChooseLibraryDialog, self).__init__("Choose a Library to substitute the state with.",
+                                                                 ['As library', 'As template', 'Cancel'],
+                                                                 callback=self.check_for_library_path,
+                                                                 message_type=gtk.MESSAGE_INFO,
                                                                  flags=gtk.DIALOG_MODAL, parent=parent)
+
         self.set_title('Library choose dialog')
         self.resize(width=width, height=height)
         if pos is not None:
             self.set_position(pos)
-        self.set_markup("Choose a Library to substitute the state with.")
-
-        button_texts = ['As library', 'As template', 'Cancel']
-        for index, button_text in enumerate(button_texts):
-            self.add_button(button_text, index)
-        self.add_callback(self.check_for_library_path)
 
         self.widget_view = LibraryTreeView()
         self.widget_ctrl = StateSubstituteChooseLibraryDialogTreeController(self.model, self.widget_view,
@@ -78,8 +75,7 @@ class StateSubstituteChooseLibraryDialog(RAFCONMessageDialog):
 
         self.vbox.pack_start(self.widget_view, True, True, 0)
 
-        self.widget_view.show()
-
+        self.vbox.show_all()
         self.grab_focus()
         self.run()
 
