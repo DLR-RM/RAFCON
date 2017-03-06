@@ -327,12 +327,12 @@ h5{
 
 .bright{
   background-color:#F0F0F0;
-  height:1144px;
+  height:100%;
   border-top: none;
   border-bottom: none;
   border-color: #77C1FF;
 }
-@media (min-width: 768px){
+@media (min-width: 990px){
   .bright{
     background-color:#F0F0F0;
     height:630px;
@@ -1390,6 +1390,16 @@ margin-top:0px;
 }
 @media (min-width: 990px){
   .small-hide{
+    display:block;
+  }
+}
+
+
+.mobile-hide-small{
+  display:none;
+}
+@media (min-width: 990px){
+  .mobile-hide-small{
     display:block;
   }
 }
