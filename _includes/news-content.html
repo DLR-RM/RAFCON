@@ -36,7 +36,7 @@
 
       <div class="row">
     <div class="col-md-2"></div>
-    <div class="col-md-12">
+    <div class="col-md-12 mobile-positioning">
           <ul id="post-list" class="mobile-list">
           {% for post in site.posts %}
 
@@ -57,14 +57,16 @@
                   {% endif %}
                 {% endfor %}
               </li>
-            <li class="post-content col-md-7">
-              <a class="title-link" href="{{ post.url }}">{{ post.title }}</a><br>
-              <p></p>
-              <i class="fa fa-calendar" style="color:#646464; float: left; font-size: 17px; opacity:0.6;" aria-hidden="true"></i><time class="show-date">{{ post.date | date: "%b %-d, %Y" }}</time>
-              <div class="author-mobile"><p class="show-author">by {{ post.author }}</p></div>
-              <div class="mobile-excerpt">{{ post.excerpt }}</div>
+            <li class="post-content col-md-7" >
 
-              <div class="read-mobile"><a id="read-more" href="{{ post.url }}">Read more.</a><br><br></div>
+                  <a class="title-link" href="{{ post.url }}">{{ post.title }}</a><br>
+                  <p></p>
+                  <i class="fa fa-calendar" style="color:#646464; float: left; font-size: 17px; opacity:0.6;" aria-hidden="true"></i><time class="show-date">{{ post.date | date: "%b %-d, %Y" }}</time>
+                  <div class="author-mobile"><p class="show-author">by {{ post.author }}</p></div>
+                  <div class="mobile-excerpt">{{ post.excerpt }}</div>
+
+                  <div class="read-mobile"><a id="read-more" href="{{ post.url }}">Read more.</a><br><br></div>
+
             </li>
 
 
