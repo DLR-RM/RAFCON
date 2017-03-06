@@ -3,17 +3,16 @@
 import os
 import time
 import threading
-from sys import platform as _platform
 
 import gtk
 from gtkmvc import ModelMT
 
 from rafcon.core.storage import storage
-import rafcon.core.singleton as sm_singleton
+import rafcon.core.singleton as core_singletons
 
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.models.state_machine import StateMachineModel
-from rafcon.gui.utils.dialog import RAFCONMessageDialog, RAFCONCheckBoxTableDialog
+from rafcon.gui.utils.dialog import RAFCONCheckBoxTableDialog
 import rafcon.gui.singleton as gui_singletons
 
 
@@ -123,13 +122,11 @@ def check_for_crashed_rafcon_instances():
     #     print "Restorable state machines: \n" + '\n'.join([elem[0] for elem in restorable_sm if elem[0] is not None])
 
     if restorable_sm and any([path is not None for path, pid, lock_file, m_time, full_path_dirty_lock in restorable_sm]):
-        dialog = RAFCONMessageDialog(message_type=gtk.MESSAGE_WARNING, parent=mvc_singleton.main_window_controller.view.get_top_widget())
         message_string = "There have been found state machines of not correctly closed rafcon instances?\n\n" \
                          "This check and dialog can be disabled by setting 'AUTO_RECOVERY_CHECK': False " \
                          "in the GUI configuration file.\n\n" \
                          "The following state machines have been modified and not saved: \n"
 
-        dialog.set_markup(message_string)
         table_header = ["Open", "Decide Later", "Delete", "Last modified", "System path"]
         table_data = [(True if elem[0] is not None else False, False, False if elem[0] is not None else True,
                        str(elem[3]) if elem[0] is not None else "instance with pid: {0}".format(elem[1]),
@@ -154,7 +151,9 @@ def check_for_crashed_rafcon_instances():
                                            message_type=gtk.MESSAGE_QUESTION,
                                            parent=gui_singletons.main_window_controller.view.get_top_widget(),
                                            width=800, standalone=False)
-        dialog.finalize(on_message_dialog_response_signal, restorable_sm)
+        dialog.add_callback(on_message_dialog_response_signal, restorable_sm)
+        dialog.grab_focus()
+        dialog.activate()
 
     return restorable_sm
 
@@ -225,7 +224,7 @@ class AutoBackupModel(ModelMT):
     def destroy(self):
         logger.info('destroy auto backup ' + str(self.state_machine_model.state_machine.state_machine_id))
         self.cancel_timed_thread()
-        if not sm_singleton.shut_down_signal:
+        if not core_singletons.shut_down_signal:
             self.clean_lock_file(True)
 
     def prepare_destruction(self):
