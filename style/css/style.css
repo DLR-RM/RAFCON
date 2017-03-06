@@ -1311,7 +1311,7 @@ margin-top:0px;
 .mobile-padding-space{
   padding-bottom: 40px;
 }
-@media (min-width: 768px){
+@media (min-width: 990px){
   .mobile-padding-space{
   padding-bottom: 0px;
   }
@@ -1320,11 +1320,20 @@ margin-top:0px;
 .mobile-card{
   height:100%;
 }
-@media (min-width: 768px){
+
+.mobile-card:hover{
+  height:100%;
+}
+
+@media (min-width: 990px){
   .mobile-card{
   height: 568px;
   }
+  .mobile-card:hover{
+    height:568px;
+  }
 }
+
 
 
 .footnote{
