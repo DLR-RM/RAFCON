@@ -47,17 +47,19 @@ class RAFCONMessageDialog(gtk.MessageDialog):
             text_ctr.get_children()[0].set_size_request(width, -1)
             text_ctr.get_children()[1].set_size_request(width, -1)
 
+        self.show_grab_focus_and_run(standalone)
+
+    def add_callback(self, callback, *args):
+        self.connect('response', callback, *args)
+
+    def show_grab_focus_and_run(self, standalone=False):
         self.show_all()
         # Only grab focus in the highest class, the inheriting classes should have the focus as well because they all
         # execute the init of this class
         self.grab_focus()
-
         # Run by yourself if this is the requested dialog. If not,
         # it doesnt make sense because the window can't be destroyed properly
         self.run() if standalone else None
-
-    def add_callback(self, callback, *args):
-        self.connect('response', callback, *args)
 
 
 class RAFCONButtonDialog(RAFCONMessageDialog):
@@ -102,8 +104,7 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
         align_action_area.add(self.hbox)
         vbox.pack_end(align_action_area)
 
-        self.show_all()
-        self.run() if standalone else None
+        self.show_grab_focus_and_run(standalone)
 
     def forward_response(self, widget, index):
         self.response(index)
@@ -157,8 +158,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
             self.check = gtk.CheckButton(checkbox_text)
             hbox.pack_end(self.check, True, True, 1)
 
-        self.show_all()
-        self.run() if standalone else None
+        self.show_grab_focus_and_run(standalone)
 
     def get_entry(self):
         return self.entry.get_text()
@@ -307,8 +307,4 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
         for row in table_data:
             self.list_store.append(row)
 
-        self.vbox.show_all()
-        if standalone:
-            self.add_callback(callback, callback_args)
-            self.grab_focus()
-            self.run()
+        self.show_grab_focus_and_run(standalone)

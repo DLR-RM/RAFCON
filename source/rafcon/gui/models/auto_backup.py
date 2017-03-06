@@ -146,13 +146,11 @@ def check_for_crashed_rafcon_instances():
 
         dialog = RAFCONCheckBoxTableDialog(message_string,
                                            button_texts=("Apply", "Remind me Later.", "Ignore -> Remove all Notifications/Locks."),
-                                           callback=None, callback_args=None,
+                                           callback=on_message_dialog_response_signal, callback_args=[restorable_sm],
                                            table_header=table_header, table_data=table_data, toggled_callback=on_toggled,
                                            message_type=gtk.MESSAGE_QUESTION,
                                            parent=gui_singletons.main_window_controller.view.get_top_widget(),
                                            width=800, standalone=False)
-        dialog.add_callback(on_message_dialog_response_signal, restorable_sm)
-        dialog.grab_focus()
         dialog.activate()
 
     return restorable_sm
