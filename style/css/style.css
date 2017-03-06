@@ -53,15 +53,12 @@ body{
 
 .navbar .nav{
   margin: 20px auto 0 auto;
-
-  height: 350px;
   text-align:center;
 }
 @media (min-width: 768px){
   .navbar .nav {
     margin: 20px 110px 0 0;
     float:right;
-    height:0px;
   }
 }
 
@@ -87,8 +84,11 @@ a:hover{
 
 .navbar-header{
   width:200px;
-  margin-top: 38px;
+  padding-top: 38px;
+  height: 94px;
   margin-left:120px;
+  position: relative;
+  z-index: 9999;
 }
 
 .navbar-brand{
@@ -137,6 +137,7 @@ a:hover{
          -o-transition-property: opacity, visibility;
             transition-property: opacity, visibility;
 }
+
 @media (min-width: 768px){
   .navbar-collapse.in{
     overflow-y: auto;
@@ -1000,6 +1001,50 @@ border-radius: 4px;
       background-color:#292929; /*to change the background if you desire*/
    }
 }
+
+
+/* Navigation Hacks */
+
+@media (max-width: 990px){
+ 
+  .container-fluid>.navbar-collapse, .container-fluid>.navbar-header, .container>.navbar-collapse, .container>.navbar-header {
+    margin-right: -15px;
+    margin-left: -15px;
+  }
+  .collapse.navbar-collapse {
+    display: none !important;
+  }
+  .navbar .nav {
+    margin: 20px auto 0 auto;
+    float: none;
+    height: auto;
+    width: 100%;
+  }
+   .navbar-nav>li {
+      float: none;
+  }
+  .collapse.navbar-collapse.in {
+    display: block !important;
+    /*margin-top: 95px;*/
+  }
+}
+
+@media (min-width: 991px){
+ 
+  .container-fluid>.navbar-collapse, .container-fluid>.navbar-header, .container>.navbar-collapse, .container>.navbar-header {
+    margin-right: 0px;
+    margin-left: 0px;
+  }
+  .navbar .nav {
+    margin: 20px 110px 0 0;
+    float: right;
+  }
+   .navbar-nav>li {
+      float: left;
+  }
+}
+
+/* END Navigation Hacks */
 
 
 .mobile-hide{
