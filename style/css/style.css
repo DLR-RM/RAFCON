@@ -972,6 +972,7 @@ border-radius: 4px;
   -webkit-transition-property: height, opacity, visibility;
        -o-transition-property: height, opacity, visibility;
           transition-property: height, opacity, visibility;
+          width:100%;
 }
 
 .navbar-default .navbar-collapse, .navbar-default .navbar-form{
@@ -1008,7 +1009,7 @@ border-radius: 4px;
 /* Navigation Hacks */
 
 @media (max-width: 990px){
- 
+
   .container-fluid>.navbar-collapse, .container-fluid>.navbar-header, .container>.navbar-collapse, .container>.navbar-header {
     margin-right: -15px;
     margin-left: -15px;
@@ -1032,7 +1033,7 @@ border-radius: 4px;
 }
 
 @media (min-width: 991px){
- 
+
   .container-fluid>.navbar-collapse, .container-fluid>.navbar-header, .container>.navbar-collapse, .container>.navbar-header {
     margin-right: 0px;
     margin-left: 0px;
@@ -1067,11 +1068,20 @@ border-radius: 4px;
   }
 }
 
+.mobile-only-small{
+  display:block;
+}
+@media (min-width: 990px){
+  .mobile-only-small{
+    display:none;
+  }
+}
+
 .mobile-headline{
   color:#77C1FF;
   text-align:center;
 }
-@media (min-width: 768px){
+@media (min-width: 990px){
   .mobile-headline{
     color:#9E9E9E;
     text-align:left;
@@ -1090,6 +1100,7 @@ border-radius: 4px;
     font-size: 12px;
   }
 }
+
 
 
 .mobile-startup{
@@ -1401,5 +1412,17 @@ margin-top:0px;
 @media (min-width: 990px){
   .mobile-hide-small{
     display:block;
+  }
+}
+
+
+.mobile-overflow{
+  overflow-x: hidden;
+  z-index: 2;
+}
+@media (min-width: 768px){
+  .mobile-overflow{
+    overflow-x: visible;
+    z-index: 2;
   }
 }
