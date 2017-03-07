@@ -21,7 +21,7 @@ import time
 from rafcon.utils import log
 
 from rafcon.core.config import global_config
-import rafcon.core.singleton as sm_singletons
+import rafcon.core.singleton as core_singletons
 import rafcon.core.storage.storage as storage
 
 from rafcon.gui.controllers.main_window import MainWindowController
@@ -112,7 +112,7 @@ def convert(config_path, source_path, target_path=None):
     global_runtime_config.load(path=setup_config['gui_config_path'])
 
     # Initialize library
-    sm_singletons.library_manager.initialize()
+    core_singletons.library_manager.initialize()
 
     # Create the GUI
     main_window_view = MainWindowView()
@@ -124,7 +124,7 @@ def convert(config_path, source_path, target_path=None):
         for path in setup_config['source_path']:
             try:
                 state_machine = storage.load_state_machine_from_path(path)
-                sm_singletons.state_machine_manager.add_state_machine(state_machine)
+                core_singletons.state_machine_manager.add_state_machine(state_machine)
             except Exception as e:
                 logger.error("Could not load state machine {0}: {1}".format(path, e))
     else:

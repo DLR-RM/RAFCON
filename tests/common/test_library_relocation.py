@@ -10,7 +10,6 @@ from rafcon.core import interface, start
 from rafcon.core.custom_exceptions import LibraryNotFoundException
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
-import rafcon.core.singleton as sm_singletons
 # needed for yaml parsing
 from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.execution_state import ExecutionState

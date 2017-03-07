@@ -34,7 +34,7 @@ def start_client(interacting_function, queue_dict):
 
     from rafcon.gui.controllers.main_window import MainWindowController
     from rafcon.gui.views.main_window import MainWindowView
-    import rafcon.gui.singleton as mvc_singletons
+    import rafcon.gui.singleton as gui_singletons
     from rafcon.gui.runtime_config import global_runtime_config
     from rafcon.gui.start import signal_handler
 
@@ -46,7 +46,7 @@ def start_client(interacting_function, queue_dict):
     from rafcon.core.storage import storage as global_storage
     from rafcon.core.state_machine import StateMachine
     from rafcon.core.states.hierarchy_state import HierarchyState
-    import rafcon.core.singleton as sm_singletons
+    import rafcon.core.singleton as core_singletons
     from rafcon.core.start import setup_environment
 
     # load all plugins specified in the RAFCON_PLUGIN_PATH
@@ -81,7 +81,7 @@ def start_client(interacting_function, queue_dict):
     setup_config["net_config_path"] = os.path.abspath(path=os.path.dirname(os.path.abspath(__file__))+"/client")
 
     # Initialize library
-    sm_singletons.library_manager.initialize()
+    core_singletons.library_manager.initialize()
 
     # Create the GUI
     main_window_view = MainWindowView()
@@ -89,9 +89,9 @@ def start_client(interacting_function, queue_dict):
     state_machine = global_storage.load_state_machine_from_path(
         testing_utils.get_test_sm_path("unit_test_state_machines/99_bottles_of_beer_monitoring"))
 
-    sm_singletons.state_machine_manager.add_state_machine(state_machine)
+    core_singletons.state_machine_manager.add_state_machine(state_machine)
 
-    sm_manager_model = mvc_singletons.state_machine_manager_model
+    sm_manager_model = gui_singletons.state_machine_manager_model
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
 
     plugins.run_post_inits(setup_config)
@@ -115,7 +115,7 @@ def start_client(interacting_function, queue_dict):
     logger.info("Joined root state")
 
     # If there is a running state-machine, wait for it to be finished before exiting
-    sm = sm_singletons.state_machine_manager.get_active_state_machine()
+    sm = core_singletons.state_machine_manager.get_active_state_machine()
     if sm:
         sm.root_state.join()
 

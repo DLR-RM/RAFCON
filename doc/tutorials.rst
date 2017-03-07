@@ -451,3 +451,49 @@ After the connection we open the same statemachine on server and client.
 Now we are able to remote control the server by the client as like
 reverse. To connect two seperated systems, the ``<SERVER_IP:>`` has to
 be adjusted within the ``network_config.yaml`` files.
+
+How to use dialog states from the generic library
+-------------------------------------------------
+
+Sometimes it can be useful to await user confirmation before jumping into a state or
+request a textinput from the user. That is why RAFCON contains serveral dialog states 
+in its 'generic' library. This tutorial goes through serval of them and explains their
+characteristics.
+
+MessageDialog
+"""""""""""""
+
+This dialog prompts the user with a text which is defined by the string type input dataport 'message\_text'.
+The boolean type input dataport 'abort\_on\_quit' defines the states behaviour on force closing the dialog.
+If True, the state and if not defines otherwise the state machine execution will abort.
+
+2ButtonDialog
+"""""""""""""
+
+This dialog is features the same text option as the above one, but lets you define two buttons as a string list
+through its 'buttons' input dataport. Clicking the first button results in exiting with outcome 'button\_1', hitting
+the second with 'button\_1'.
+
+GenericButtonDialog
+"""""""""""""""""""
+
+This dialog equals the 2ButtonDialog in any way, except that it lets you define more than two buttons. On clicking a button,
+the dialog will always exit with outcome 'reponded' but puts the index of the clicked button in the output dataport 'response\_id'
+
+InputDialog
+"""""""""""
+
+This dialog contains buttons like the 2ButtonDialog but also features a text entry field and an optional checkbox 
+which could be used for a 'remember' option or something similar. The checkbox is only placed if a string is present
+at the 'checkbox\_text' input dataport. 
+The checkbox state is written to the boolean output dataport 'checkbox\_state', the entered text to 'entered\_text'.
+
+ColumnCheckboxDialog
+""""""""""""""""""""
+
+This dialog contains buttons like the 2ButtonDialog but also features a single columns of checkboxes 
+with labels attached to them. These labels are defined via the 'checkbox\_texts' input dataport as a list 
+of strings. The states of those checkboxes are emmitted as a bool list via the 'checkbox\_states' output
+data port. A checked chechbox returns 'True'
+
+

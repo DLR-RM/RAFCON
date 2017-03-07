@@ -33,7 +33,7 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.controllers.utils.editor import EditorController
 from rafcon.gui.singleton import state_machine_manager_model
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.utils.dialog import RAFCONButtonDialog, ButtonDialog
+from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
 from rafcon.utils import filesystem
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
@@ -165,12 +165,10 @@ class SourceEditorController(EditorController):
 
             def open_text_window():
 
-                from rafcon.gui.utils.dialog import RAFCONButtonInputDialog
                 markup_text = "No external editor specified. Please specify a shell command to open scripts externally"
 
                 # create a new RAFCONButtonInputDialog, add a checkbox and add the text 'remember' to it
-                text_input = RAFCONButtonInputDialog(markup_text, ["Apply", "Cancel"],
-                                                     checkbox=True, checkbox_text='remember')
+                text_input = RAFCONInputDialog(markup_text, ["Apply", "Cancel"], checkbox_text='remember')
 
                 # Run the text_input Dialog until a response is emitted. The apply button and the 'activate' signal of
                 # the textinput send response 1
@@ -184,7 +182,7 @@ class SourceEditorController(EditorController):
                     open_file_in_editor(text_input.return_text(), text_input)
 
                 else:
-                    # If Dialog is canceled either by the button or the cross, untoggle the button again and revert the
+                    # If Dialog is canceled either by the button or the cross, toggle back the button again and revert the
                     # lock, which is not implemented yet
                     set_editor_lock(False)
 
@@ -254,7 +252,7 @@ class SourceEditorController(EditorController):
 
         if json_report.messages:
             def on_message_dialog_response_signal(widget, response_id):
-                if response_id == ButtonDialog.OPTION_1.value:
+                if response_id == 1:
                     self.set_script_text(current_text)
                 else:
                     logger.debug("The script was not saved")
@@ -282,7 +280,7 @@ class SourceEditorController(EditorController):
 
             RAFCONButtonDialog(message_string, ["Save with errors", "Do not save"],
                                on_message_dialog_response_signal,
-                               type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+                               message_type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
         else:
             self.set_script_text(current_text)
 
