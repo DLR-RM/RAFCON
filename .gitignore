@@ -23,6 +23,8 @@ workspace.xml
 .doctrees
 _sources/
 _static/
+doc/documentation
+doc/*.pyc
 *.html
 *.js
 *.inv
