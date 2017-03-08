@@ -75,7 +75,7 @@ def setup_environment():
 
     if not os.environ.get('RAFCON_LIB_PATH', None):
         # set env variable RAFCON_LIB_PATH to the library directory of RAFCON (when not using RMPM)
-        os.environ['RAFCON_LIB_PATH'] = join(dirname(rafcon_root_path), 'libraries')
+        os.environ['RAFCON_LIB_PATH'] = join(dirname(dirname(rafcon_root_path)), 'share', 'libraries')
 
 
 def parse_state_machine_path(path):
