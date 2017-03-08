@@ -16,7 +16,7 @@ import rafcon.core.config
 import rafcon.core.singleton
 
 # general tool elements
-import rafcon.utils.filesystem as fs
+from rafcon.utils import filesystem
 import rafcon.utils.log as log
 
 # test environment elements
@@ -75,7 +75,7 @@ def trigger_source_editor_signals(main_window_controller):
     source_editor_controller = tab_list[state_identifier]['controller'].get_controller('source_ctrl')
 
     # ---check if the default text equals the default_script.py
-    default_content = fs.read_file(os.path.join(rafcon.__path__[0], 'core', 'default_script.py'))
+    default_content = filesystem.read_file(os.path.join(rafcon.__path__[0], 'core', 'default_script.py'))
     content = source_editor_controller.source_text
     assert content == default_content
 

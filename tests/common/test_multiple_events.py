@@ -1,3 +1,4 @@
+import os
 import pytest
 import threading
 import time
@@ -39,7 +40,7 @@ def test_multi_events(caplog):
     execution_trigger_thread.start()
 
     sm = state_machine_execution_engine.execute_state_machine_from_path(
-        path=testing_utils.get_test_sm_path("unit_test_state_machines/multi_events_test"))
+        path=testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "multi_events_test")))
 
     execution_trigger_thread.join()
     state_machine_manager.remove_state_machine(sm.state_machine_id)

@@ -1,4 +1,5 @@
 import os
+from os.path import join
 import pytest
 
 import rafcon
@@ -7,10 +8,10 @@ from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 import test_states as basic_state_machines
 import testing_utils
 
-FILES = [RAFCON_TEMP_PATH_BASE + '/state_generation_log_file.txt',
-         RAFCON_TEMP_PATH_BASE + '/state_del_log_file.txt',
-         RAFCON_TEMP_PATH_BASE + '/state_element_generation_log_file.txt',
-         RAFCON_TEMP_PATH_BASE + '/state_element_del_log_file.txt']
+FILES = [join(RAFCON_TEMP_PATH_BASE, 'state_generation_log_file.txt'),
+         join(RAFCON_TEMP_PATH_BASE, 'state_del_log_file.txt'),
+         join(RAFCON_TEMP_PATH_BASE, 'state_element_generation_log_file.txt'),
+         join(RAFCON_TEMP_PATH_BASE, 'state_element_del_log_file.txt')]
 
 old_state_init = rafcon.core.states.state.State.__init__
 old_state_del = None
@@ -24,13 +25,13 @@ if hasattr(rafcon.core.state_elements.state_element.StateElement, '__del__'):
 
 def get_log_elements(with_prints=False):
 
-    with open(RAFCON_TEMP_PATH_BASE + '/state_del_log_file.txt') as f:
+    with open(join(RAFCON_TEMP_PATH_BASE, 'state_del_log_file.txt')) as f:
         state_del_file = f.readlines()
-    with open(RAFCON_TEMP_PATH_BASE + '/state_element_del_log_file.txt') as f:
+    with open(join(RAFCON_TEMP_PATH_BASE, 'state_element_del_log_file.txt')) as f:
         state_element_del_file = f.readlines()
-    with open(RAFCON_TEMP_PATH_BASE + '/state_generation_log_file.txt') as f:
+    with open(join(RAFCON_TEMP_PATH_BASE, 'state_generation_log_file.txt')) as f:
         state_gen_file = f.readlines()
-    with open(RAFCON_TEMP_PATH_BASE + '/state_element_generation_log_file.txt') as f:
+    with open(join(RAFCON_TEMP_PATH_BASE, 'state_element_generation_log_file.txt')) as f:
         state_element_gen_file = f.readlines()
 
     for elem in state_gen_file:
@@ -74,13 +75,13 @@ def patch_core_classes_with_log():
             self._state_id = rafcon.core.states.state.state_id_generator()
         else:
             self._state_id = state_id
-        with open(RAFCON_TEMP_PATH_BASE + '/state_generation_log_file.txt', 'a+') as f:
+        with open(join(RAFCON_TEMP_PATH_BASE, 'state_generation_log_file.txt'), 'a+') as f:
             f.write("RUN STATE of {0} {1}\n".format(self, id(self)))
         old_state_init(self, name, self._state_id, input_data_ports, output_data_ports, outcomes, parent)
 
     def state_element_init(self, parent=None):
         self._patch = None
-        with open(RAFCON_TEMP_PATH_BASE + '/state_element_generation_log_file.txt', 'a+') as f:
+        with open(join(RAFCON_TEMP_PATH_BASE, 'state_element_generation_log_file.txt'), 'a+') as f:
             f.write("RUN STATE-ELEMENT of {0} {1}\n".format(self, id(self)))
         old_state_element_init(self, parent)
 
@@ -88,14 +89,14 @@ def patch_core_classes_with_log():
         if old_state_del is not None:
             old_state_del(self)
         if hasattr(self, '_patch'):
-            with open(RAFCON_TEMP_PATH_BASE + '/state_del_log_file.txt', 'a+') as f:
+            with open(join(RAFCON_TEMP_PATH_BASE, 'state_del_log_file.txt'), 'a+') as f:
                 f.write("RUN STATE of {0} {1}\n".format(self, id(self)))
 
     def state_element_del(self):
         if old_state_element_del is not None:
             old_state_element_del(self)
         if hasattr(self, '_patch'):
-            with open(RAFCON_TEMP_PATH_BASE + '/state_element_del_log_file.txt', 'a+') as f:
+            with open(join(RAFCON_TEMP_PATH_BASE, 'state_element_del_log_file.txt'), 'a+') as f:
                 f.write("RUN STATE-ELEMENT of {0} {1}\n".format(self, id(self)))
 
     rafcon.core.states.state.State.__init__ = state_init

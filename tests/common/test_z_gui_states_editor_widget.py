@@ -1,4 +1,3 @@
-import logging
 import gtk
 import threading
 import time
@@ -12,6 +11,7 @@ from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
 
 # core elements
+import rafcon.core.singleton
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.state_machine import StateMachine

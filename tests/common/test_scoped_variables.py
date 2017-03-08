@@ -1,5 +1,3 @@
-import os
-
 # core elements
 import rafcon.core.singleton
 from rafcon.core.states.execution_state import ExecutionState

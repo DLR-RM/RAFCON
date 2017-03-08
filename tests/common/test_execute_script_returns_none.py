@@ -1,5 +1,5 @@
+import os
 import pytest
-import signal
 
 # mvc
 import rafcon.gui.singleton
@@ -15,7 +15,8 @@ import testing_utils
 def test_execute_script_returns_none(caplog):
     testing_utils.initialize_environment()
 
-    state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/return_none_test_sm"))
+    state_machine = storage.load_state_machine_from_path(
+        testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "return_none_test_sm")))
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 

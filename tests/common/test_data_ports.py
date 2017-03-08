@@ -1,3 +1,4 @@
+import os
 import pytest
 # test for expected exceptions
 from pytest import raises
@@ -104,10 +105,8 @@ def test_default_values_of_data_ports(caplog):
 
 def test_last_wins_value_collection_for_data_ports(caplog):
 
-    storage_path = testing_utils.get_unique_temp_path()
-
-    sm_loaded = storage.load_state_machine_from_path(
-        testing_utils.get_test_sm_path("unit_test_state_machines/last_data_wins_test"))
+    sm_path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "last_data_wins_test"))
+    sm_loaded = storage.load_state_machine_from_path(sm_path)
 
     root_state = sm_loaded.root_state
 

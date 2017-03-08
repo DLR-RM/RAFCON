@@ -7,6 +7,7 @@ import datetime
 
 # gui elements
 import rafcon.core.singleton
+from rafcon.utils.constants import TEMP_PATH
 import rafcon.gui.singleton
 from rafcon.gui.models.global_variable_manager import GlobalVariableManagerModel
 
@@ -103,20 +104,20 @@ def test_backward_stepping_library_state(caplog):
     # config_path = os.path.join(testing_utils.TESTS_PATH, 'common', 'configs_for_start_script_test' ,'valid_config')
     # testing_utils.run_gui(core_config=('config.yaml', config_path),
     #                       gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    testing_utils.run_gui(core_config={'PROFILER_RESULT_PATH': "/tmp/rafcon_profiler_result.prf",
+    testing_utils.run_gui(core_config={'PROFILER_RESULT_PATH': os.path.join(TEMP_PATH, "rafcon_profiler_result.prf"),
                                        'PROFILER_RUN': False,
                                        'PROFILER_VIEWER': True
                                        },
                           gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
-                          libraries={'generic': "${RAFCON_LIB_PATH}/generic",
+                          libraries={'generic': os.path.join("${RAFCON_LIB_PATH}", "generic"),
                                      'unit_test': os.path.join(testing_utils.TESTS_PATH, 'assets',
                                                                'unit_test_state_machines',
                                                                'backward_step_library_execution_test', 'test_library')
                                      }
                           )
     logger, gvm_model = create_models()
-    state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines"
-                                                                                       "/backward_step_library_execution_test"))
+    state_machine = storage.load_state_machine_from_path(
+        testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_step_library_execution_test")))
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
     try:
         trigger_gui_signals_library_state(rafcon.gui.singleton.main_window_controller, logger)
@@ -188,8 +189,8 @@ def test_backward_stepping_preemptive_state(caplog):
 
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
     logger, gvm_model = create_models()
-    state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines"
-                                                                                       "/backward_step_preemtive_test"))
+    state_machine = storage.load_state_machine_from_path(
+        testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_step_preemtive_test")))
     rafcon.gui.singleton.state_machine_manager.add_state_machine(state_machine)
     try:
         trigger_gui_signals_preemptive_state(rafcon.gui.singleton.main_window_controller, logger)
@@ -259,8 +260,8 @@ def test_backward_stepping_barrier_state(caplog):
 
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
     logger, gvm_model = create_models()
-    state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines"
-                                                                                       "/backward_step_barrier_test"))
+    state_machine = storage.load_state_machine_from_path(
+        testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_step_barrier_test")))
     rafcon.gui.singleton.state_machine_manager.add_state_machine(state_machine)
     try:
         trigger_gui_signals_barrier_state(rafcon.gui.singleton.main_window_controller, logger)

@@ -1,3 +1,4 @@
+import os
 import time
 import pytest
 
@@ -19,8 +20,8 @@ logger = log.get_logger(__name__)
 def test_run_to_selected_state(caplog):
     testing_utils.initialize_environment()
 
-    sm = storage.load_state_machine_from_path(testing_utils.get_test_sm_path("unit_test_state_machines/"
-                                                                             "run_to_selected_state_test"))
+    sm_path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "run_to_selected_state_test"))
+    sm = storage.load_state_machine_from_path(sm_path)
     # select state machine for this purpose
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     rafcon.core.singleton.state_machine_execution_engine.run_to_selected_state("VVBPOY/AOZXRY",
@@ -34,7 +35,7 @@ def test_run_to_selected_state(caplog):
     # wait until the statemachine is executed until ABNQFK the state before AOZXRY, so it doesnt check for the file
     # before its even written
 
-    with open(RAFCON_TEMP_PATH_BASE + '/test_file', 'r') as test_file:
+    with open(os.path.join(RAFCON_TEMP_PATH_BASE, 'test_file'), 'r') as test_file:
         lines = test_file.readlines()
 
     # the state machines waits at ABNQFK with state WAIT_FOR_NEXT_STATE, so it needs to be stopped manually

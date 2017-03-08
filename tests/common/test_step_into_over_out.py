@@ -1,4 +1,6 @@
+import os
 import time
+import pytest
 
 # core elements
 from rafcon.core.storage import storage
@@ -8,7 +10,6 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 
 # test environment elements
 import testing_utils
-import pytest
 
 
 def wait_and_join(state_machine, state_id):
@@ -21,8 +22,8 @@ def test_custom_entry_point(caplog):
 
     testing_utils.initialize_environment()
 
-    state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path(
-        "unit_test_state_machines/stepping_test"))
+    state_machine = storage.load_state_machine_from_path(
+        testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "stepping_test")))
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 

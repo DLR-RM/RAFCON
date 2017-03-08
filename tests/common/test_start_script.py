@@ -1,5 +1,5 @@
 import pytest
-from os.path import realpath, dirname
+from os.path import realpath, dirname, join
 import rafcon
 import subprocess
 import os
@@ -15,8 +15,8 @@ def test_start_script_open():
     """ Test core.start.py script run on console which open a state machine, run it and final checks the output file on
     consistency.
     """
-    script = os.path.join(dirname(realpath(rafcon.__file__)), "core", "start.py")
-    start_path = testing_utils.get_test_sm_path("unit_test_state_machines/start_script_test")
+    script = join(dirname(realpath(rafcon.__file__)), "core", "start.py")
+    start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     cmd = "%s -o %s" % (script, start_path)
     print "\ntest_start_script_open: \n", cmd
     cmd_res = subprocess.call(cmd, shell=True)
@@ -32,8 +32,8 @@ def test_start_script_state():
     """ Test core.start.py script run by python call which open a state machine, run from a specific state and  final
     checks the output file on consistency.
     """
-    script = os.path.join(dirname(realpath(rafcon.__file__)), "core", "start.py")
-    start_path = testing_utils.get_test_sm_path("unit_test_state_machines/start_script_test")
+    script = join(dirname(realpath(rafcon.__file__)), "core", "start.py")
+    start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     state_path = "UTUOSC/AHWBOG"
     print start_path
     cmd = sys.executable + " %s -o %s -s %s" % (script, start_path, state_path)
@@ -52,8 +52,8 @@ def test_start_script_valid_config():
     run it and final checks the output file on consistency.
     """
     # valid config
-    start_path = testing_utils.get_test_sm_path("unit_test_state_machines/start_script_test")
-    config = os.path.join(testing_utils.TESTS_PATH, "common", "configs_for_start_script_test", "valid_config", "config.yaml")
+    start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
+    config = join(testing_utils.TESTS_PATH, "common", "configs_for_start_script_test", "valid_config", "config.yaml")
     cmd = "rafcon_start -o %s -c %s" % (start_path, config)
     print "\ntest_start_script_valid_config: \n", cmd
     cmd_res = subprocess.call(cmd, shell=True)
@@ -69,8 +69,8 @@ def test_start_script_print_help_with_gui():
     """ Test rafcon_start_gui console call which run a RAFCON instance and let it print the helper message and checks
     if the process terminates correctly.
     """
-    script = os.path.join(dirname(realpath(rafcon.__file__)), "gui", "start.py")
-    # start_path = testing_utils.get_test_sm_path("unit_test_state_machines/start_script_test")
+    script = join(dirname(realpath(rafcon.__file__)), "gui", "start.py")
+    # start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     # cmd = "%s -o %s" % (script, start_path)
     cmd = script + " -h"
     print "\ntest_start_script_open_with_gui: ", cmd
@@ -85,9 +85,9 @@ def test_start_script_print_help_with_gui():
 '''
 def test_start_script_invalid_config(caplog):
     # invalid config
-    script = os.path.join(dirname(realpath(rafcon.__file__)), "core", "start.py")
-    start_path = testing_utils.get_test_sm_path("unit_test_state_machines/start_script_test")
-    config = os.path.join(testing_utils.TESTS_PATH, "common", "configs_for_start_script_test", "invalid_config")
+    script = join(dirname(realpath(rafcon.__file__)), "core", "start.py")
+    start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
+    config = join(testing_utils.TESTS_PATH, "common", "configs_for_start_script_test", "invalid_config")
     cmd = "python %s -o %s -c %s" % (script, start_path, config)
     subprocess.call(cmd, shell=True)
     tmp = open("/tmp/rafcon_unit_tests/test_start_script.txt", "r")

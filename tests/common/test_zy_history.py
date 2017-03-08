@@ -163,15 +163,6 @@ def create_models(*args, **kargs):
     return logger, sm_m, state_dict
 
 
-def get_state_model_by_path(state_model, path):
-    path_elems = path.split('/')
-    path_elems.pop(0)
-    current_state_model = state_model
-    for element in path_elems:
-        current_state_model = current_state_model.states[element]
-    return current_state_model
-
-
 def test_add_remove_history(caplog):
     ##################
     # Root_state elements
@@ -325,7 +316,8 @@ def test_add_remove_history(caplog):
 
         ################
         # add transition from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id
-        new_transition_id1 = state_dict[state_name].add_transition(from_state_id=state4.state_id, from_outcome=outcome_state4,
+        new_transition_id1 = state_dict[state_name].add_transition(from_state_id=state4.state_id,
+                                                                   from_outcome=outcome_state4,
                                                                    to_state_id=state5.state_id, to_outcome=None)
         state_m = sm_model.get_state_model_by_path(state_path_dict[state_name])
         state = sm_model.state_machine.get_state_by_path(state_path_dict[state_name])

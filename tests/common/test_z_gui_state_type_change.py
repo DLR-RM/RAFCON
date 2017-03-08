@@ -11,6 +11,7 @@ from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
 
 # core elements
+import rafcon.core.singleton
 from rafcon.core.states.state import State
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.container_state import ContainerState
@@ -116,7 +117,7 @@ def create_models(*args, **kargs):
 def store_state_elements(state, state_m):
     """Stores all ids of elements in or outside of the actual state"""
     print "STORE state elements of %s, %s" % (state.name, state_m.state.name)
-
+    global store_elements_ignores
     state_elements = {}
     state_m_elements = {}
     state_elements['name'] = state.name
@@ -210,9 +211,11 @@ def store_state_elements(state, state_m):
             state_m_elements['states_meta'][s_m.state.state_id] = s_m.meta
         # -check if all states have a model otherwise check after change has to fail
         for s_id, s in state.states.iteritems():
-            # print s_id, model_id_store, s_id == UNIQUE_DECIDER_STATE_ID, s_id in model_id_store, "missing_decider_state_models" in store_elements_ignores
+            # print s_id, model_id_store, s_id == UNIQUE_DECIDER_STATE_ID, s_id in model_id_store,
+            # "missing_decider_state_models" in store_elements_ignores
             if not s_id == UNIQUE_DECIDER_STATE_ID or \
-                    s_id == UNIQUE_DECIDER_STATE_ID and (s_id not in model_id_store and "missing_decider_state_models" not in store_elements_ignores):
+                    s_id == UNIQUE_DECIDER_STATE_ID and (s_id not in model_id_store and
+                                                         "missing_decider_state_models" not in store_elements_ignores):
                 assert s_id in model_id_store
             else:
                 print "skip unique_state_id for model check"
@@ -250,7 +253,8 @@ def store_state_elements(state, state_m):
             # - store model meta data
             state_m_elements['transitions_meta'][t_m.transition.transition_id] = t_m.meta
         for t_id, t in state.transitions.iteritems():
-            if UNIQUE_DECIDER_STATE_ID not in [t.to_state, t.from_state]:  # TODO test needs to be improved to cover BarrierState, too
+            # TODO test needs to be improved to cover BarrierState, too
+            if UNIQUE_DECIDER_STATE_ID not in [t.to_state, t.from_state]:
                 assert t_id in model_id_store
 
     def is_related_transition(parent, state_id, t):
@@ -367,7 +371,8 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
         print "given model is not linked with given state"
         print "State-Model State-Type: ", state_m.state
         print "State-Type: ", state
-    if 'states' in check_list and isinstance(state, ContainerState):  # TODO last element of condition has to be deleted again
+    # TODO last element of condition has to be deleted again
+    if 'states' in check_list and isinstance(state, ContainerState):
         for s_id, s in state.states.iteritems():
             if not s_id == UNIQUE_DECIDER_STATE_ID:
                 assert s_id in stored_state_elements['states']
@@ -397,7 +402,8 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     # exit(0)
 
     # check scoped_variables
-    if 'scoped_variables' in check_list and isinstance(state, ContainerState):  # TODO last element of condition has to be deleted again:
+    # TODO last element of condition has to be deleted again:
+    if 'scoped_variables' in check_list and isinstance(state, ContainerState):
         for sv_id, sv, in state.scoped_variables.iteritems():
             assert sv_id in stored_state_elements['scoped_variables']
         # - check if the right models are there and only those
@@ -457,7 +463,8 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
             assert state.parent is None
 
     # check data_flows internal
-    if 'data_flows_internal' in check_list and isinstance(state, ContainerState):  # TODO last element of condition has to be deleted again::
+    # TODO last element of condition has to be deleted again
+    if 'data_flows_internal' in check_list and isinstance(state, ContainerState):
         # - all data_flows in the actual state should be in the stored_state_elements, too
         for df_id, df in state.data_flows.iteritems():
             assert df_id in stored_state_elements['data_flows']

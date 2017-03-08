@@ -2,6 +2,7 @@ import os
 import gtk
 import logging
 import shutil
+import pytest
 
 # mvc
 import rafcon.gui.singleton
@@ -23,7 +24,6 @@ from rafcon.utils import log
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
-import pytest
 
 logger = log.get_logger(__name__)
 
@@ -251,9 +251,11 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
         # check that there is exact one child state folder with this state_id in this folder
         elements_found = [elem for elem in os.listdir(folder) if state_id in elem]
         if len(elements_found) > 1:
-            logger.warning("Too many folders {2} for state_id: {0} in folder {1}".format(state_id, folder, elements_found))
+            logger.warning("Too many folders {2} for state_id: {0} in folder {1}".format(state_id, folder,
+                                                                                         elements_found))
         elif len(elements_found) < 1:
-            logger.warning("Too less folders {2} for state_id: {0} in folder {1}".format(state_id, folder, elements_found))
+            logger.warning("Too less folders {2} for state_id: {0} in folder {1}".format(state_id, folder,
+                                                                                         elements_found))
 
         # recursive check of child states
         if isinstance(current_state, ContainerState):
@@ -326,8 +328,8 @@ def test_storage_with_gui(caplog):
 def test_on_clean_storing_with_name_in_path(caplog):
     testing_utils.initialize_environment(gui_config={"AUTO_BACKUP_ENABLED": True})
 
-    path_old_format = testing_utils.get_test_sm_path("unit_test_state_machines/"
-                                                     "id_to_name_plus_id_storage_format_test_do_not_update")
+    path_old_format = testing_utils.get_test_sm_path(
+        os.path.join("unit_test_state_machines", "id_to_name_plus_id_storage_format_test_do_not_update"))
     path_new_format = os.path.join(testing_utils.get_unique_temp_path(),
                                    "id_to_name_plus_id_storage_format_test_do_not_update")
     shutil.copytree(path_old_format, path_new_format)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import pytest
 from pytest import raises
 import testing_utils
@@ -29,7 +30,9 @@ def open_folder(query):
     if "library2_for_relocation_test" in query:
         return None  # the first relocation has to be aborted
     else:
-        return testing_utils.get_test_sm_path("unit_test_state_machines/library_relocation_test_source/library1_for_relocation_test_relocated")
+        return testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines",
+                                                           "library_relocation_test_source",
+                                                           "library1_for_relocation_test_relocated"))
 
 
 def test_library_relocation(caplog):
@@ -41,7 +44,7 @@ def test_library_relocation(caplog):
     interface.show_notice_func = show_notice
 
     state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path(
-        "unit_test_state_machines/library_relocation_test"))
+        os.path.join("unit_test_state_machines", "library_relocation_test")))
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 

@@ -1,5 +1,6 @@
 import gtk
 import os
+from os.path import join
 import copy
 import time
 import threading
@@ -97,8 +98,8 @@ def create_models_lib():
 
     wait3 = LibraryState(name="Wait3", library_path="generic", library_name="wait")
     state_dict['Nested'].add_state(wait3)
-    dialog2 = LibraryState(name="2 Option", library_path="generic/dialog", library_name="Dialog [2 options]")
-    dialog3 = LibraryState(name="3 Option", library_path="generic/dialog", library_name="Dialog [3 options]")
+    dialog2 = LibraryState(name="2 Option", library_path=join("generic", "dialog"), library_name="Dialog [2 options]")
+    dialog3 = LibraryState(name="3 Option", library_path=join("generic", "dialog"), library_name="Dialog [3 options]")
     state_dict['Nested'].add_state(dialog2)
     state_dict['Container'].add_state(dialog3)
     last_wins = LibraryState(name="last wins", library_path="unit_test_state_machines", library_name="last_data_wins_test")
@@ -110,7 +111,8 @@ def create_models_lib():
         print state_m.state.state_id, state_m.state.get_path(), state_m.meta
     return sm_model.root_state, sm_model, state_dict
 
-    # sm_loaded = storage.load_state_machine_from_path(testing_utils.TEST_PATH + "assets/unit_test_state_machines/last_data_wins_test")
+    # sm_loaded = storage.load_state_machine_from_path(
+    #     os.path.join(testing_utils.TEST_PATH, "assets", "unit_test_state_machines", "last_data_wins_test"))
     # # root_state = sm_loaded.root_state
     # #
     # # state_machine = StateMachine(root_state)
@@ -298,9 +300,9 @@ def run_copy_test(*args):
     # RAFCON_TEMP_PATH_BASE = "/net/notos/home_local/dark_room"
     # RAFCON_TEMP_PATH_BASE = "/volume/USERSTORE/beld_rc/tmp"
     if sm.file_system_path is None:
-        tmp_sm_system_path = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/copy_test_' + str(sm.state_machine_id)
+        tmp_sm_system_path = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, 'copy_test_' + str(sm.state_machine_id))
     else:
-        tmp_sm_system_path = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/copy_test' + sm.file_system_path
+        tmp_sm_system_path = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, 'copy_test' + sm.file_system_path)
 
     new_sm_m.destroy()
     if len(args) > 1:
@@ -320,9 +322,9 @@ def run_copy_performance_test_and_check_storage_copy(*args):
     # RAFCON_TEMP_PATH_BASE = "/net/notos/home_local/dark_room"
     # RAFCON_TEMP_PATH_BASE = "/volume/USERSTORE/beld_rc/tmp"
     if sm.file_system_path is None:
-        tmp_sm_system_path = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/copy_test_' + str(sm.state_machine_id)
+        tmp_sm_system_path = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, 'copy_test_' + str(sm.state_machine_id))
     else:
-        tmp_sm_system_path = testing_utils.RAFCON_TEMP_PATH_TEST_BASE + '/copy_test' + sm.file_system_path
+        tmp_sm_system_path = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, 'copy_test' + sm.file_system_path)
 
     # performance tests
     time_only_storage_before = time.time()

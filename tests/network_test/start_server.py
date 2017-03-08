@@ -72,14 +72,15 @@ def start_server(interacting_function, queue_dict):
 
     import testing_utils
     state_machine = global_storage.load_state_machine_from_path(
-        testing_utils.get_test_sm_path("unit_test_state_machines/99_bottles_of_beer_monitoring"))
+        testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "99_bottles_of_beer_monitoring")))
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
     sm_thread = threading.Thread(target=check_for_sm_finished, args=[state_machine, ])
     sm_thread.start()
 
     setup_config = dict()
-    setup_config["net_config_path"] = os.path.abspath(path=os.path.dirname(os.path.abspath(__file__))+"/server")
+    setup_config["net_config_path"] = os.path.abspath(path=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                                        "server"))
 
     plugins.run_post_inits(setup_config)
 

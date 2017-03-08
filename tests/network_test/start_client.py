@@ -78,7 +78,8 @@ def start_client(interacting_function, queue_dict):
     global_runtime_config.load(path=os.path.dirname(os.path.abspath(__file__)))
 
     setup_config = dict()
-    setup_config["net_config_path"] = os.path.abspath(path=os.path.dirname(os.path.abspath(__file__))+"/client")
+    setup_config["net_config_path"] = os.path.abspath(path=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                                        "client"))
 
     # Initialize library
     core_singletons.library_manager.initialize()
@@ -87,7 +88,7 @@ def start_client(interacting_function, queue_dict):
     main_window_view = MainWindowView()
 
     state_machine = global_storage.load_state_machine_from_path(
-        testing_utils.get_test_sm_path("unit_test_state_machines/99_bottles_of_beer_monitoring"))
+        testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "99_bottles_of_beer_monitoring")))
 
     core_singletons.state_machine_manager.add_state_machine(state_machine)
 

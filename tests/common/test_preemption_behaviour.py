@@ -1,5 +1,6 @@
-import threading
+import os
 import time
+import threading
 
 # mvc
 import rafcon.gui.singleton
@@ -22,7 +23,7 @@ def test_preemption_behaviour_in_preemption_state(caplog):
     testing_utils.initialize_environment()
 
     sm = state_machine_execution_engine.execute_state_machine_from_path(
-        path=testing_utils.get_test_sm_path("unit_test_state_machines/preemption_behaviour_test_sm"))
+        path=testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "preemption_behaviour_test_sm")))
     rafcon.core.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
     from rafcon.core.singleton import global_variable_manager
     try:
@@ -41,8 +42,8 @@ def trigger_stop(sm, execution_engine):
 def test_preemption_behaviour_during_stop(caplog):
     testing_utils.initialize_environment()
 
-    state_machine = storage.load_state_machine_from_path(testing_utils.get_test_sm_path(
-        "unit_test_state_machines/preemption_behaviour_during_stop"))
+    path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "preemption_behaviour_during_stop"))
+    state_machine = storage.load_state_machine_from_path(path)
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
     thread = threading.Thread(target=trigger_stop, args=[state_machine,

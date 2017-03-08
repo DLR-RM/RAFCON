@@ -18,7 +18,7 @@ def setup_function(_):
     # set the test_libraries path temporarily to the correct value
     global_config.set_config_value("LIBRARY_RECOVERY_MODE", True)
     testing_utils.rewind_and_set_libraries({"unit_test_state_machines":
-                                            os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")})
+                                            join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")})
 
 
 def get_test_state_machine(name):

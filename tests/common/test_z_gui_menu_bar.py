@@ -1,11 +1,8 @@
-import sys
-import logging
 import gtk
 import threading
 from os.path import join
 
 # gui elements
-import rafcon.gui.config as gui_config
 import rafcon.gui.singleton
 from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
@@ -136,7 +133,8 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_new_activate, None)
 
     assert len(sm_manager_model.state_machines) == current_sm_length + 1
-    call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TUTORIAL_PATH, "basic_turtle_demo_sm"))
+    call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TUTORIAL_PATH,
+                                                                      "basic_turtle_demo_sm"))
     assert len(sm_manager_model.state_machines) == current_sm_length + 2
 
     sm_m = sm_manager_model.state_machines[first_sm_id + 2]
@@ -169,13 +167,15 @@ def trigger_gui_signals(*args):
 
     ##########################################################
     # create complex state with all elements
-    lib_state = LibraryState("generic/dialog", "Dialog [3 options]", "0.1", "Dialog [3 options]")
+    lib_state = LibraryState(join("generic", "dialog"), "Dialog [3 options]", "0.1", "Dialog [3 options]")
     call_gui_callback(state_machine_helper.insert_state, lib_state, True)
     assert len(state_m.state.states) == old_child_state_count + 2
 
+    state = None
     for state in state_m.state.states.values():
         if state.name == "Dialog [3 options]":
             break
+    assert state is not None
     new_template_state = state
     call_gui_callback(new_template_state.add_scoped_variable, 'scoopy', float, 0.3)
     state_m_to_copy = sm_m.get_state_model_by_path('CDMJPK/' + new_template_state.state_id)
