@@ -730,9 +730,11 @@ def scale_meta_data_according_state(models_dict):
     At the moment the scale_meta_data_according_state is only newly bias the position of all handed old elements
     in the dictionary.
     The method needs some generalisation to create methods to easily scale meta data according new parents or views
-    (e.g. to show inner elements of s library state).
-    It also should scale it if the size has changed according to the minimal
-    extension of the handed size. Also it should have a extension flag
+    (e.g. to show inner elements of a library state).
+    It also maybe should scale it if the size has changed according to the minimal extension (x or y) of the handed
+    size. Also it is of interest to have extension flag if the scaling should scale according the proportion
+    of a parent state (the handed state) or should keep the previous element x-y-ratios.
+    To keep the previous meta data proportion would be different then in the graphical editors.
 
     :param models_dict: dict that hold lists of meta data with state attribute consistent keys
     :return:
