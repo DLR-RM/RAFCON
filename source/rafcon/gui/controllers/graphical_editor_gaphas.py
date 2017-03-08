@@ -37,6 +37,8 @@ from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.mygaphas.canvas import MyCanvas
+# noinspection PyUnresolvedReferences
+from rafcon.gui.mygaphas import guide
 from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
 from rafcon.gui.mygaphas.items.ports import OutcomeView, DataPortView, ScopedVariablePortView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
