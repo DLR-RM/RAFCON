@@ -120,10 +120,9 @@ class MainWindowController(ExtendedController):
         ######################################################
         # modification history
         ######################################################
-        if gui_config.get_config_value('HISTORY_ENABLED'):
-            state_machine_history_controller = ModificationHistoryTreeController(state_machine_manager_model,
-                                                                                 view.state_machine_history)
-            self.add_controller('state_machine_history_controller', state_machine_history_controller)
+        state_machine_history_controller = ModificationHistoryTreeController(state_machine_manager_model,
+                                                                             view.state_machine_history)
+        self.add_controller('state_machine_history_controller', state_machine_history_controller)
         self.modification_history_was_focused = False
 
         ######################################################
