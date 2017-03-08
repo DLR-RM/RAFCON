@@ -298,14 +298,26 @@ HierarchyState and move the currently selected states into those. So you select 
 states to group on one hierarchical level and then use the group-shortcut
 typically STRG-G or the menu bar Edit->Group.
 
-A window can not be unmaximized what I can do?
-""""""""""""""""""""""""""""""""""""""""""""""
+Known Issues
+""""""""""""
+
+
+A window can not be un-maximized what I can do?
++++++++++++++++++++++++++++++++++++++++++++++++
 
 This is generally a problem the is related to your window manager of your desktop
 and can be caused by different screens sizes or similar nasty configurations.
 The fastest way to solve this problem is to delete your runtime_config.yaml file which
-is commonly situated at ~/.config/rafcon/runtime_config.yaml and which will be generated
+is commonly situated at ``~/.config/rafcon/runtime_config.yaml`` and which will be generated
 automatically and cleanly after removal.
+
+
+Why start of RAFCON GUI sometimes never finish?
++++++++++++++++++++++++++++++++++++++++++++++++
+
+This can happens on some distributions because of a ``.gtkrc`` file in the home directory so
+``~/.gtkrc``. Remove this file from your home directory and RAFCON should start correctly again.
+
 
 New Questions
 -------------
