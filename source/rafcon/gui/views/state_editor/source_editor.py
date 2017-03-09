@@ -33,7 +33,7 @@ class SourceEditorView(EditorView):
         except NameError:
             pass
         hbox = gtk.HBox()
-        pylint_check_button = gtk.CheckButton("Pylint-Check")
+        pylint_check_button = gtk.CheckButton("Validate")
         pylint_check_button.set_focus_on_click(False)
 
         open_external_button = gtk.ToggleButton("Open externally")
@@ -44,7 +44,7 @@ class SourceEditorView(EditorView):
         apply_button.set_focus_on_click(False)
         apply_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
 
-        cancel_button = gtk.Button("Cancel")
+        cancel_button = gtk.Button("Reset")
         cancel_button.set_focus_on_click(False)
         cancel_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
 
