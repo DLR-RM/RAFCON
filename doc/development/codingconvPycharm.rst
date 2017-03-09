@@ -10,64 +10,126 @@ Guide <http://www.python.org/dev/peps/pep-0008/>`__\
 
 **Excerpts of PEP-8**
 
-for further explanations refer to PEP-8.
+For further explanations refer to PEP-8. Here highlighted
 
--  use 4 spaces per indentation level  
+.. raw:: html
 
--  do not use tabs, only spaces!  
+    <div style="color:#008000;"> green are elements that are important to us </div> and
+    <div style="color:#ff0000;"> red are excerpts that we don't wanna follow that strictly. </div>
+..
 
--  Limit all lines to a maximum 120 of characters.  
+- .. raw:: html
 
--  Imports should usually be on separate lines. 
+    <div style="color:#008000;">
+        use 4 spaces per indentation level
+    </div>
+..
 
--  Avoid extraneous whitespace:  
+- .. raw:: html
 
-   -  Immediately inside parentheses, brackets or braces.  
+    <div style="color:#008000;">
+        do not use tabs, only spaces!
+    </div>
+..
 
-   -  Immediately before the open parenthesis that starts the argument
-      list of a function call:  
+- .. raw:: html
 
-   -  Immediately before the open parenthesis that starts an indexing
-      or slicing  
+    <div style="color:#ff0000;">
+        Limit all lines to a maximum 120 of characters.
+    </div>
+..
+- Imports should usually be on separate lines.
+- Avoid extraneous whitespace:
 
-   -  More than one space around an assignment (or other) operator to
-      align it with another.  
+    - .. raw:: html
 
--  Use spaces around arithmetic operators  
+        <div style="color:#008000;">
+            Immediately inside parentheses, brackets or braces.
+        </div>
+    ..
+    - .. raw:: html
 
--  Don't use spaces around the '=' sign when used to indicate a
-   keyword argument or a default parameter value.  
+        <div style="color:#008000;">
+            Immediately before the open parenthesis that starts the argument list of a function call
+        </div>
+    ..
+    - .. raw:: html
 
--  Compound statements (multiple statements on the same line) are
-   generally discouraged.  
+        <div style="color:#008000;">
+            Immediately before the open parenthesis that starts an indexing or slicing
+        </div>
+    ..
+    - .. raw:: html
 
--  While sometimes it's okay to put an if/for/while with a small body
-   on the same line, never do this for multi-clause statements. Also
-   avoid folding such long lines!  
+        <div style="color:#008000;">
+            More than one space around an assignment (or other) operator to align it with another.
+        </div>
+    ..
 
--  comments  
 
-   -  Comments that contradict the code are worse than no comments.
-      Always make a priority of keeping the comments up-to-date when the
-      code changes!  
+- .. raw:: html
 
-   -  Comments should be complete sentences.  
+    <div style="color:#008000;">
+        Use spaces around arithmetic operators
+    </div>
+..
 
-   -  If a comment is short, the period at the end can be omitted.  
+- .. raw:: html
 
-   -  Each line of a block comment starts with a # and a single space
-       
+    <div style="color:#008000;">
+        Don't use spaces around the '=' sign when used to indicate a keyword argument or a default parameter value.
+    </div>
+..
 
-   -  Use inline comments sparingly.  
+- .. raw:: html
 
--  docstrings (see
-   `PEP-0257 <http://www.python.org/dev/peps/pep-0257>`__)  
+    <div style="color:#008000;">
+        Compound statements (multiple statements on the same line) are generally discouraged.
+    </div>
+..
 
-   -  Write docstrings for all public modules, functions, classes, and
-      methods.  
+- .. raw:: html
+
+    <div style="color:#008000;">
+        While sometimes it's okay to put an if/for/while with a small body on
+        the same line, never do this for multi-clause statements. Also avoid
+        folding such long lines!
+    </div>
+..
+- Comments
+
+    - .. raw:: html
+
+        <div style="color:#00ff00;">
+            Comments that contradict the code are worse than no comments.
+            Always make a priority of keeping the comments up-to-date when the
+            code changes!
+        </div>
+    ..
+    - Comments should be complete sentences.
+    - If a comment is short, the period at the end can be omitted.
+    - .. raw:: html
+
+        <div style="color:#008000;">
+            Each line of a block comment starts with a # and a single space
+        </div>
+    ..
+    - .. raw:: html
+
+        <div style="color:#008000;">
+            Use inline comments sparingly.
+        </div>
+    ..
+- Docstrings (see `PEP-0257 <http://www.python.org/dev/peps/pep-0257>`__)
+
+    - .. raw:: html
+
+        <div style="color:#008000;">
+            Write docstrings for all public modules, functions, classes, and
+            methods.
+        </div>
 
 ...
- 
 
 http://www.python.org/dev/peps/pep-0263/
 
@@ -131,7 +193,6 @@ In our project we set the properties as follows to create a code which is unifor
 CTRL + Shift + L will reformat your code. By default on CTRL + ALT + L .
 Don't use it as you usually use CTRL-S to modify code like you were a batch script.
 
-# image of showing editor -> Code Style -> (General/Python)
 
 Editor -> Code Style
 ++++++++++++++++++++
@@ -141,142 +202,140 @@ The editor coding style can be found in the settings at Editor -> Code Style -> 
  
 **Python -> Tab and Indent**
 
-# picture with of Tab and Indent
-
-.. code:: Python
-
-    Use tab character:      No
-    Tab size:               4
-    Indent:                 4
-    Continuation Indent:    8
++----------------------+-----+----------------------------------------------------------+
+| **Tab and Indent**   |     |                                                          |
++----------------------+-----+                                                          |
+| Use tab character:   |  No |.. figure:: ../assets/pycharm_settings_tab_and_indent.png |
++----------------------+-----+   :width: 100%                                           |
+| Tab size:            |  4  |   :align: center                                         |
++----------------------+-----+                                                          |
+| Indent:              |  4  |                                                          |
++----------------------+-----+                                                          |
+| Continuation Indent: |  8  |                                                          |
++----------------------+-----+----------------------------------------------------------+
 
 
 **Python -> Spaces**
 
-# picture with of Spaces
++---------------------------------+-----+----------------------------------------------------------+
+| **Before Parentheses**          |     |.. figure:: ../assets/pycharm_settings_spaces.png         |
++---------------------------------+-----+   :width: 100%                                           |
+| Method declaration parentheses: | No  |   :align: center                                         |
++---------------------------------+-----+                                                          |
+| Method call parenthesis:        | No  |                                                          |
++---------------------------------+-----+                                                          |
+| Left bracket:                   | No  |                                                          |
++---------------------------------+-----+                                                          |
+| **Around Operators**            |     |                                                          |
++---------------------------------+-----+                                                          |
+| Equality operators:             | Yes |                                                          |
++---------------------------------+-----+                                                          |
+| Relation operators:             | Yes |                                                          |
++---------------------------------+-----+                                                          |
+| Bitwise operators:              | Yes |                                                          |
++---------------------------------+-----+                                                          |
+| Additive operators:             | Yes |                                                          |
++---------------------------------+-----+                                                          |
+| Multiplicative operators:       | Yes |                                                          |
++---------------------------------+-----+                                                          |
+| Shift operators (<<, >>, >>>):  | Yes |                                                          |
++---------------------------------+-----+                                                          |
+| Around = in named params:       | No  |                                                          |
++---------------------------------+-----+                                                          |
+| Around = in keyword args:       | No  |                                                          |
++---------------------------------+-----+                                                          |
+| **Within**                      |     |                                                          |
++---------------------------------+-----+                                                          |
+| Brackets:                       | No  |                                                          |
++---------------------------------+-----+                                                          |
+| Method call parentheses:        | No  |                                                          |
++---------------------------------+-----+                                                          |
+| Method declaration par.:        | No  |                                                          |
++---------------------------------+-----+                                                          |
+| Braces:                         | No  |                                                          |
++---------------------------------+-----+                                                          |
+| **Other**                       |     |                                                          |
++---------------------------------+-----+                                                          |
+| Before comma:                   | No  |                                                          |
++---------------------------------+-----+                                                          |
+| After comma:                    | Yes |                                                          |
++---------------------------------+-----+                                                          |
+| Before semicolon:               | No  |                                                          |
++---------------------------------+-----+                                                          |
+| Before „:“ :                    | No  |                                                          |
++---------------------------------+-----+                                                          |
+| After „:“ :                     | Yes |                                                          |
++---------------------------------+-----+                                                          |
+| Before \\ :                     | Yes |                                                          |
++---------------------------------+-----+                                                          |
+| Before # :                      | Yes |                                                          |
++---------------------------------+-----+                                                          |
+| After # :                       | Yes |                                                          |
++---------------------------------+-----+----------------------------------------------------------+
 
-Before Parentheses
-
-.. code:: Python
-
-    Method declaration parentheses: No
-    Method call parenthesis:        No
-    Left bracket:                   No
-
-
-Around Operators
-
-.. code:: Python
-
-    Equality operators:             Yes
-    Relation:                       Yes
-    Bitwise:                        Yes
-    Additive:                       Yes
-    Multiplicative:                 Yes
-    Shift:                          Yes
-    Around = in named parameter     No
-    Around = in keyword argument    No
-
- 
-
-Within
-
-.. code:: Python
-
-    Brackets:                  No
-    Method call parentheses:   No
-    Method declaration par.:   No
-    Braces:                    No
-
-
-Other
-
-.. code:: Python
-
-    Before comma:       No
-    After comma:        Yes
-    Before semicolon:   No
-    Before „:“ :        No
-    After „:“ :         Yes
-    Before \\ :         Yes
-    Before # :          Yes
-    After # :           Yes
- 
 
 **Python -> Wrapping and Braces**
 
-# picture with of Wrapping and Braces
++------------------------------------+-----+-----------------------------------------------------------+
+| **Right margin colomns**           | 120 |.. figure:: ../assets/pycharm_settings_wrapping_braces.png |
++------------------------------------+-----+   :width: 100%                                            |
+| **Wrap when reaching margin**      | No  |   :align: center                                          |
++------------------------------------+-----+                                                           |
+| **Keep when reformatting**         |     |                                                           |
++------------------------------------+-----+                                                           |
+| Line breaks:                       | Yes |                                                           |
++------------------------------------+-----+                                                           |
+| Ensure right margin:               | No  |                                                           |
++------------------------------------+-----+                                                           |
+| **Method declaration params**      |     |                                                           |
++------------------------------------+-----+                                                           |
+| align when multiline:              | Yes |                                                           |
++------------------------------------+-----+                                                           |
+| **Method call arguments**          |     |                                                           |
++------------------------------------+-----+                                                           |
+| align when multiline:              | Yes |                                                           |
++------------------------------------+-----+                                                           |
+| **Force new line after colon**     |     |                                                           |
++------------------------------------+-----+                                                           |
+| Single-clause statements:          | No  |                                                           |
++------------------------------------+-----+                                                           |
+| Multi-clause statements:           | Yes |                                                           |
++------------------------------------+-----+                                                           |
+| **Collections and Comprehensions** |     |                                                           |
++------------------------------------+-----+                                                           |
+| align when multi-line:             | Yes |                                                           |
++------------------------------------+-----+                                                           |
+| **Import statements**              |     |                                                           |
++------------------------------------+-----+                                                           |
+| align when multi-line:             | Yes |                                                           |
++------------------------------------+-----+                                                           |
+| **Dictionary literals**            |     |                                                           |
++------------------------------------+-----+                                                           |
+| New line after '{':                | No  |                                                           |
++------------------------------------+-----+                                                           |
+| Place '}' on new line:             | No  |                                                           |
++------------------------------------+-----+-----------------------------------------------------------+
 
-.. code:: Python
-
-    Right margin colomns:       120
-    Wrap when reaching margin:  No
-
-Keep when reformatting
-
-.. code:: Python
-
-    Line breaks:   Yes
-    Ensure right margin: No
- 
-
-Method declaration params
-
-.. code:: Python
-
-    align when multiline:  Yes
-
-
-Method call arguments
-
-.. code:: Python
-
-    align when multiline:  Yes
-
-
-Force new line after colon
-
-.. code:: Python
-
-    Single-clause statements  No
-    Multiclause statements Yes
-
-
-Collections and Comprehensions
-
-.. code:: Python
-
-    align when multiline:  Yes
-
- 
-
-Import statements
-
-.. code:: Python
-
-    align when multiline:  Yes
-
- 
 
 **Python -> Blank Lines**
 
-# picture with of Blank Lines
-
-Keep max Blank lines
-
-.. code:: Python
-
-    In declaration:  2
-    In code:  2
-
-Minimum Blank Lines
-
-.. code:: Python
-
-    After imports:    1
-    Around class:     1
-    Around method:    1
-    Around top-level: 2
++---------------------------------+-----+-----------------------------------------------------------+
+| **Keep max Blank lines**        |     |.. figure:: ../assets/pycharm_settings_blank_lines.png     |
++---------------------------------+-----+   :width: 100%                                            |
+| In declaration:                 |  2  |   :align: center                                          |
++---------------------------------+-----+                                                           |
+| In code:                        |  2  |                                                           |
++---------------------------------+-----+                                                           |
+| **Minimum Blank Lines**         |     |                                                           |
++---------------------------------+-----+                                                           |
+| After imports:                  |  1  |                                                           |
++---------------------------------+-----+                                                           |
+| Around class:                   |  1  |                                                           |
++---------------------------------+-----+                                                           |
+| Around method:                  |  1  |                                                           |
++---------------------------------+-----+                                                           |
+| Around top-level:               |  2  |                                                           |
++---------------------------------+-----+-----------------------------------------------------------+
 
 
 Following is nice to know (Preferences):
@@ -292,16 +351,45 @@ Following is nice to know (Preferences):
 
 **Inspections**
 
-Here you can define what PyCharm should remind you to check by highlight or underline code pieces.
+Here you can define what PyCharm should remind you to check by highlight or underline code pieces. In the following
+list you will find some elements highlighted
 
-#############################
-# picture with of Blank Lines 
+.. raw:: html
+
+    <div style="color:#008000;"> green (for recommend to enable it) </div> and
+    <div style="color:#ff0000;"> red (for recommend to disable or leave disabled). </div>
+
+We recommend to change some of the option to push the code style to be more readable while developing new features
+and using PyCharm.
+
+
+.. figure:: ../assets/pycharm_code_style_inspections.png
+   :width: 100%
+   :align: center
+
+
+**General**
+
+-  .. raw:: html
+
+    <div style="color:#008000;">
+        Line is longer than allowed by code style
+    </div>
+..
+
+
+**Python**
 
 -  Access to a protected member of a class
 
 -  Access to properties  
 
--  Argument passed to function is equal to default parameter value  
+- .. raw:: html
+
+   <div style="color:#008000;">
+        Argument passed to function is equal to default parameter value -> enable it!
+   </div>
+..
 
 -  Assigning function call that doesn't return anything  
 
@@ -325,9 +413,19 @@ Here you can define what PyCharm should remind you to check by highlight or unde
 
 -  Class specific decorator on method outside class  
 
--  Classic style class usage  
+-  .. raw:: html
 
--  Code compatibility inspection  
+    <div style="color:#ff0000;">
+        Classic style class usage
+    </div>
+..
+
+-  .. raw:: html
+
+    <div style="color:#008000;">
+        Code compatibility inspection
+    </div>
+..
 
 -  Comparison with None performed with equality operators  
 
@@ -373,9 +471,18 @@ Here you can define what PyCharm should remind you to check by highlight or unde
 
 -  Missed call to \_\_init\_\_ of super class  
 
--  Missing, empty or incorrect docstring  
+-  .. raw:: html
 
--  No encoding specified for file  
+    <div style="color:#008000;">
+        Missing, empty or incorrect docstring
+    </div>
+..
+-  .. raw:: html
+
+    <div style="color:#ff0000;">
+        No encoding specified for file
+    </div>
+..
 
 -  Old-style class contains new-style class features  
 
