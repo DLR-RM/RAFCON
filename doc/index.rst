@@ -45,7 +45,6 @@ robots, for skill programming and many more things.
    gui_guide.rst
    plugins.rst
    faq.rst
-   tutorials.rst
    development/development.rst
    api/rafcon.rst
 
