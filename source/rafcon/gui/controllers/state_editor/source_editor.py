@@ -29,6 +29,7 @@ from cStringIO import StringIO
 from astroid import MANAGER
 
 from rafcon.core.states.library_state import LibraryState
+from rafcon.core.storage import storage
 
 from rafcon.gui.controllers.utils.editor import EditorController
 from rafcon.gui.singleton import state_machine_manager_model
@@ -93,8 +94,8 @@ class SourceEditorController(EditorController):
         logger.debug("Opening path with command: {}".format(command))
 
         # This splits the command in a matter so that the editor gets called in a separate shell and thus
-        # doesnt lock the window.
-        args = shlex.split(command + ' "' + file_path + os.path.sep + 'script.py"')
+        # does not lock the window.
+        args = shlex.split('{0} "{1}"'.format(command, os.path.join(file_path, storage.SCRIPT_FILE)))
 
         try:
             subprocess.Popen(args)
@@ -116,7 +117,7 @@ class SourceEditorController(EditorController):
             # Save the file before opening it to update the applied changes. Use option create_full_path=True
             # to assure that temporary state_machines' script files are saved to
             # (their path doesnt exist when not saved)
-            filesystem.write_file(file_path + os.path.sep + 'script.py',
+            filesystem.write_file(os.path.join(file_path, storage.SCRIPT_FILE),
                                   self.view.get_text(), create_full_path=True)
         except IOError as e:
             # Only happens if the file doesnt exist yet and would be written to the temp folder.
@@ -202,8 +203,7 @@ class SourceEditorController(EditorController):
             set_editor_lock(False)
 
             # Load file contents after unlocking
-            # if os.path.exists(os.path.join(self.model.state.get_file_system_path(), 'script.py')):
-            content = filesystem.read_file(self.model.state.get_file_system_path(), 'script.py')
+            content = filesystem.read_file(self.model.state.get_file_system_path(), storage.SCRIPT_FILE)
             if content is not None:
                 self.set_script_text(content)
 
