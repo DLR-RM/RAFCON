@@ -1,16 +1,87 @@
-.eggs
-dist
-**runtime_config.yaml
-build_doc
+#
+# This .gitignore file is intended for Python projects
+# Source: https://github.com/github/gitignore/blob/master/Python.gitignore
+#
 
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Git Merge files:
+*.orig
+
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+build/
+build_doc/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+# Usually these files are written by a python script from a template
+# before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+
+#
+# This part is responsible for pycharm project files
+#
+
+**/.idea/*
+!**/.idea/runConfigurations
+
+#
+# Do not commit gui files or files with an deprecated format
+#
+
+**/gui_gtk.yaml
+**/gui_gtk.json
+**/meta.json
+**/meta.yaml
+**/statemachine.yaml
+**/meta_data.json
+**runtime_config.yaml
+
+# Various system/lock files
 *~
 ~$$*
-**/*.pdf
-!documents/paper/*.pdf
 .~*
-source/test/network_test/runtime_config.yaml
-
-workspace.xml
+*.swp
 
 # visio:
 .attribute*
@@ -19,23 +90,6 @@ workspace.xml
 # LN Manager
 *.lnc_process_window_positions
 
-# Sphinx
-.doctrees
-_sources/
-_static/
-doc/documentation
-doc/*.pyc
-*.html
-*.js
-*.inv
-
 # Profiler output
 *.prf
 
-.idea/
-.cache/
-
-*.swp
-
-*.pot
-/locale/
