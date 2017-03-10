@@ -16,29 +16,27 @@ For further explanations refer to PEP-8. Here highlighted
 
     <div style="color:#008000;"> green are elements that are important to us </div> and
     <div style="color:#ff0000;"> red are excerpts that we don't wanna follow that strictly. </div>
-..
 
 - .. raw:: html
 
     <div style="color:#008000;">
         use 4 spaces per indentation level
     </div>
-..
 
 - .. raw:: html
 
     <div style="color:#008000;">
         do not use tabs, only spaces!
     </div>
-..
 
 - .. raw:: html
 
     <div style="color:#ff0000;">
         Limit all lines to a maximum 120 of characters.
     </div>
-..
+
 - Imports should usually be on separate lines.
+
 - Avoid extraneous whitespace:
 
     - .. raw:: html
@@ -46,25 +44,21 @@ For further explanations refer to PEP-8. Here highlighted
         <div style="color:#008000;">
             Immediately inside parentheses, brackets or braces.
         </div>
-    ..
     - .. raw:: html
 
         <div style="color:#008000;">
             Immediately before the open parenthesis that starts the argument list of a function call
         </div>
-    ..
     - .. raw:: html
 
         <div style="color:#008000;">
             Immediately before the open parenthesis that starts an indexing or slicing
         </div>
-    ..
     - .. raw:: html
 
         <div style="color:#008000;">
             More than one space around an assignment (or other) operator to align it with another.
         </div>
-    ..
 
 
 - .. raw:: html
@@ -72,21 +66,18 @@ For further explanations refer to PEP-8. Here highlighted
     <div style="color:#008000;">
         Use spaces around arithmetic operators
     </div>
-..
 
 - .. raw:: html
 
     <div style="color:#008000;">
         Don't use spaces around the '=' sign when used to indicate a keyword argument or a default parameter value.
     </div>
-..
 
 - .. raw:: html
 
     <div style="color:#008000;">
         Compound statements (multiple statements on the same line) are generally discouraged.
     </div>
-..
 
 - .. raw:: html
 
@@ -95,7 +86,7 @@ For further explanations refer to PEP-8. Here highlighted
         the same line, never do this for multi-clause statements. Also avoid
         folding such long lines!
     </div>
-..
+
 - Comments
 
     - .. raw:: html
@@ -105,21 +96,23 @@ For further explanations refer to PEP-8. Here highlighted
             Always make a priority of keeping the comments up-to-date when the
             code changes!
         </div>
-    ..
+
     - Comments should be complete sentences.
+
     - If a comment is short, the period at the end can be omitted.
+
     - .. raw:: html
 
         <div style="color:#008000;">
             Each line of a block comment starts with a # and a single space
         </div>
-    ..
+
     - .. raw:: html
 
         <div style="color:#008000;">
             Use inline comments sparingly.
         </div>
-    ..
+
 - Docstrings (see `PEP-0257 <http://www.python.org/dev/peps/pep-0257>`__)
 
     - .. raw:: html
@@ -375,7 +368,6 @@ and using PyCharm.
     <div style="color:#008000;">
         Line is longer than allowed by code style
     </div>
-..
 
 
 **Python**
@@ -389,7 +381,6 @@ and using PyCharm.
    <div style="color:#008000;">
         Argument passed to function is equal to default parameter value -> enable it!
    </div>
-..
 
 -  Assigning function call that doesn't return anything  
 
@@ -418,14 +409,12 @@ and using PyCharm.
     <div style="color:#ff0000;">
         Classic style class usage
     </div>
-..
 
 -  .. raw:: html
 
     <div style="color:#008000;">
         Code compatibility inspection
     </div>
-..
 
 -  Comparison with None performed with equality operators  
 
@@ -476,13 +465,12 @@ and using PyCharm.
     <div style="color:#008000;">
         Missing, empty or incorrect docstring
     </div>
-..
+
 -  .. raw:: html
 
     <div style="color:#ff0000;">
         No encoding specified for file
     </div>
-..
 
 -  Old-style class contains new-style class features  
 

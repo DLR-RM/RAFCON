@@ -20,7 +20,7 @@ Developers
 - Benno Voggenreiter: Bachelor-student, monitoring plugin GUI, ROS plugin
 - Matthias Büttner: Master-student, graphical layout, first implementations of gaphas editor (feasibility study)
 - Mahmoud Akl: Werkstudent, (un-)dockable sidebar, refactoring
-- Annika Wollschläger: Werkstudent, drag'n'drop of all kinds of states, including libraries, RAFCON-Zero
+- Annika Wollschläger: Werkstudent, drag'n'drop of all kinds of states, including libraries
 
 
 GIT repository
@@ -40,7 +40,7 @@ report bugs. This page can also be used for feature requests.
 Code style
 ----------
 
-.. include:: codingconvPycharm.rst
+.. include:: coding_conventions.rst
 
 
 GIT commit Guidelines
