@@ -4,7 +4,7 @@ Tutorials
 99 Bottles of Beer. Or: How to create a simple state machine containing a loop
 ------------------------------------------------------------------------------
 
-.. figure:: assets/Tutorial_99_Bottles_of_Beer.png
+.. figure:: _static/Tutorial_99_Bottles_of_Beer.png
    :alt: Screenshot of the finished tutorial
    :width: 90 %
    :align: center
@@ -191,7 +191,7 @@ basic\_turtle\_state\_machine:
 
 A screenshot of how the state machine how it looks like is shown here.
 
-.. figure:: assets/BasicTurtleDemoScreenshot.png
+.. figure:: _static/BasicTurtleDemoScreenshot.png
    :alt: Screenshot of RAFCON with an example state machine
    :width: 90 %
    :align: center
@@ -229,7 +229,7 @@ Option 1
 This can be done in the `configuration of the
 core <https://rmintra01.robotic.dlr.de/wiki/RAFCON/Configuration#Core_configuration>`__.
 
-.. figure:: assets/EmptyLibraryPath_and_NewLibrary.jpg
+.. figure:: _static/EmptyLibraryPath_and_NewLibrary.jpg
    :alt: Screenshot of a empty library path and created 'Wait' state machine.
    :width: 90 %
    :align: center
@@ -293,7 +293,7 @@ Don't forget to create the input data ports used in the scripts
 ('info\_message' as string and 'duration' as float) and run them finally
 to test there functionality.
 
-.. figure:: assets/ReCombinedLibraries.jpg
+.. figure:: _static/ReCombinedLibraries.jpg
    :alt: Screenshot of the finished tutorial
    :width: 90 %
    :align: center
@@ -337,7 +337,7 @@ How to use concurrency barrier states
 In the following a short example on how to create a barrier concurrency
 state is explained.
 
-.. figure:: assets/BarrierConcurrencyState.png
+.. figure:: _static/BarrierConcurrencyState.png
    :alt: Screenshot of RAFCON with an example state machine
    :width: 90 %
    :align: center

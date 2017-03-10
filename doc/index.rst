@@ -1,5 +1,5 @@
 
-.. figure:: assets/RAFCON_Logo_Farbe_RGB.png
+.. figure:: _static/RAFCON_Logo_Farbe_RGB.png
    :alt: Official RAFCON logo
    :width: 90 %
    :align: center
@@ -16,7 +16,7 @@ like `Bubbles <https://rmintra01.robotic.dlr.de/wiki/Bubbles>`__ or `SMACH <http
 without inheriting their drawbacks.
 
 
-.. figure:: assets/RAFCON_GUI_screenshot.png
+.. figure:: _static/RAFCON_GUI_screenshot.png
    :width: 90 %
    :alt: Screenshot of RAFCON with an example state machine
    :align: center

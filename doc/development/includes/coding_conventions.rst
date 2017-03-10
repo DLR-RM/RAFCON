@@ -182,23 +182,23 @@ The editor coding style can be found in the settings at Editor -> Code Style -> 
  
 **Python -> Tab and Indent**
 
-+----------------------+-----+----------------------------------------------------------+
-| **Tab and Indent**   |     |                                                          |
-+----------------------+-----+                                                          |
-| Use tab character:   |  No |.. figure:: ../assets/pycharm_settings_tab_and_indent.png |
-+----------------------+-----+   :width: 100%                                           |
-| Tab size:            |  4  |   :align: center                                         |
-+----------------------+-----+                                                          |
-| Indent:              |  4  |                                                          |
-+----------------------+-----+                                                          |
-| Continuation Indent: |  8  |                                                          |
-+----------------------+-----+----------------------------------------------------------+
++----------------------+-----+-----------------------------------------------------------+
+| **Tab and Indent**   |     |                                                           |
++----------------------+-----+                                                           |
+| Use tab character:   |  No |.. figure:: ../_static/pycharm_settings_tab_and_indent.png |
++----------------------+-----+   :width: 100%                                            |
+| Tab size:            |  4  |   :align: center                                          |
++----------------------+-----+                                                           |
+| Indent:              |  4  |                                                           |
++----------------------+-----+                                                           |
+| Continuation Indent: |  8  |                                                           |
++----------------------+-----+-----------------------------------------------------------+
 
 
 **Python -> Spaces**
 
 +---------------------------------+-----+----------------------------------------------------------+
-| **Before Parentheses**          |     |.. figure:: ../assets/pycharm_settings_spaces.png         |
+| **Before Parentheses**          |     |.. figure:: ../_static/pycharm_settings_spaces.png        |
 +---------------------------------+-----+   :width: 100%                                           |
 | Method declaration parentheses: | No  |   :align: center                                         |
 +---------------------------------+-----+                                                          |
@@ -256,51 +256,51 @@ The editor coding style can be found in the settings at Editor -> Code Style -> 
 
 **Python -> Wrapping and Braces**
 
-+------------------------------------+-----+-----------------------------------------------------------+
-| **Right margin colomns**           | 120 |.. figure:: ../assets/pycharm_settings_wrapping_braces.png |
-+------------------------------------+-----+   :width: 100%                                            |
-| **Wrap when reaching margin**      | No  |   :align: center                                          |
-+------------------------------------+-----+                                                           |
-| **Keep when reformatting**         |     |                                                           |
-+------------------------------------+-----+                                                           |
-| Line breaks:                       | Yes |                                                           |
-+------------------------------------+-----+                                                           |
-| Ensure right margin:               | No  |                                                           |
-+------------------------------------+-----+                                                           |
-| **Method declaration params**      |     |                                                           |
-+------------------------------------+-----+                                                           |
-| align when multiline:              | Yes |                                                           |
-+------------------------------------+-----+                                                           |
-| **Method call arguments**          |     |                                                           |
-+------------------------------------+-----+                                                           |
-| align when multiline:              | Yes |                                                           |
-+------------------------------------+-----+                                                           |
-| **Force new line after colon**     |     |                                                           |
-+------------------------------------+-----+                                                           |
-| Single-clause statements:          | No  |                                                           |
-+------------------------------------+-----+                                                           |
-| Multi-clause statements:           | Yes |                                                           |
-+------------------------------------+-----+                                                           |
-| **Collections and Comprehensions** |     |                                                           |
-+------------------------------------+-----+                                                           |
-| align when multi-line:             | Yes |                                                           |
-+------------------------------------+-----+                                                           |
-| **Import statements**              |     |                                                           |
-+------------------------------------+-----+                                                           |
-| align when multi-line:             | Yes |                                                           |
-+------------------------------------+-----+                                                           |
-| **Dictionary literals**            |     |                                                           |
-+------------------------------------+-----+                                                           |
-| New line after '{':                | No  |                                                           |
-+------------------------------------+-----+                                                           |
-| Place '}' on new line:             | No  |                                                           |
-+------------------------------------+-----+-----------------------------------------------------------+
++------------------------------------+-----+------------------------------------------------------------+
+| **Right margin colomns**           | 120 |.. figure:: ../_static/pycharm_settings_wrapping_braces.png |
++------------------------------------+-----+   :width: 100%                                             |
+| **Wrap when reaching margin**      | No  |   :align: center                                           |
++------------------------------------+-----+                                                            |
+| **Keep when reformatting**         |     |                                                            |
++------------------------------------+-----+                                                            |
+| Line breaks:                       | Yes |                                                            |
++------------------------------------+-----+                                                            |
+| Ensure right margin:               | No  |                                                            |
++------------------------------------+-----+                                                            |
+| **Method declaration params**      |     |                                                            |
++------------------------------------+-----+                                                            |
+| align when multiline:              | Yes |                                                            |
++------------------------------------+-----+                                                            |
+| **Method call arguments**          |     |                                                            |
++------------------------------------+-----+                                                            |
+| align when multiline:              | Yes |                                                            |
++------------------------------------+-----+                                                            |
+| **Force new line after colon**     |     |                                                            |
++------------------------------------+-----+                                                            |
+| Single-clause statements:          | No  |                                                            |
++------------------------------------+-----+                                                            |
+| Multi-clause statements:           | Yes |                                                            |
++------------------------------------+-----+                                                            |
+| **Collections and Comprehensions** |     |                                                            |
++------------------------------------+-----+                                                            |
+| align when multi-line:             | Yes |                                                            |
++------------------------------------+-----+                                                            |
+| **Import statements**              |     |                                                            |
++------------------------------------+-----+                                                            |
+| align when multi-line:             | Yes |                                                            |
++------------------------------------+-----+                                                            |
+| **Dictionary literals**            |     |                                                            |
++------------------------------------+-----+                                                            |
+| New line after '{':                | No  |                                                            |
++------------------------------------+-----+                                                            |
+| Place '}' on new line:             | No  |                                                            |
++------------------------------------+-----+------------------------------------------------------------+
 
 
 **Python -> Blank Lines**
 
 +---------------------------------+-----+-----------------------------------------------------------+
-| **Keep max Blank lines**        |     |.. figure:: ../assets/pycharm_settings_blank_lines.png     |
+| **Keep max Blank lines**        |     |.. figure:: ../_static/pycharm_settings_blank_lines.png    |
 +---------------------------------+-----+   :width: 100%                                            |
 | In declaration:                 |  2  |   :align: center                                          |
 +---------------------------------+-----+                                                           |
@@ -333,7 +333,7 @@ We recommend to change some of the option to push the code style to be more read
 and using PyCharm.
 
 
-.. figure:: ../assets/pycharm_code_style_inspections.png
+.. figure:: ../_static/pycharm_code_style_inspections.png
    :width: 100%
    :align: center
 

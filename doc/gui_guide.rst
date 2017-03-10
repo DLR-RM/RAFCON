@@ -53,7 +53,7 @@ shortcuts.
 Modification History widget
 """""""""""""""""""""""""""
 
-.. figure:: assets/EditHistory.jpg
+.. figure:: _static/EditHistory.jpg
    :width: 25 %
    :alt: Screenshot showing the branching modification history
    :align: right
