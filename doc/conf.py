@@ -124,7 +124,21 @@ extlinks = {'issue': ('https://rmc-github.robotic.dlr.de/common/rafcon/issues/%s
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+#
+# Alabaster configuration
+#
+# See: https://alabaster.readthedocs.io/en/latest/
+#
+
+html_theme_options = {
+    'logo': 'RAFCON_Logo_Farbe_RGB.png',
+    'description': "Visually create and run hierarchical state-machines",
+    'github_user': 'DLR-RM',
+    'github_repo': 'RAFCON',
+    'show_related': True,
+    'fixed_sidebar': True,
+    'github_type': 'watch'
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -134,11 +148,11 @@ extlinks = {'issue': ('https://rmc-github.robotic.dlr.de/common/rafcon/issues/%s
 #html_title = None
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-html_short_title = "RAFCON"
+#html_short_title = "RAFCON"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+#html_logo = "_static/RAFCON_Logo_Farbe_RGB.png"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -148,7 +162,7 @@ html_short_title = "RAFCON"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['assets']
+html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -164,7 +178,15 @@ html_static_path = ['assets']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_sidebars = {
+    '**': [
+        'about.html',
+        'localtoc.html',
+        'navigation.html',
+        'relations.html',
+        'searchbox.html',
+    ]
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
