@@ -243,7 +243,7 @@ class ConfigWindowController(ExtendedController):
     def update_gui_config_list_store(self):
         """Create list store for the GUI configuration
         """
-        self._update_list_store(self.gui_config_model, self.gui_list_store, ['TYPE'])
+        self._update_list_store(self.gui_config_model, self.gui_list_store, ['TYPE', 'SHORTCUTS'])
 
     def update_libraries_list_store(self):
         """Creates the list store for the libraries
