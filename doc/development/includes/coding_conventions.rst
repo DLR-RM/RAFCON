@@ -4,18 +4,16 @@ RMC Python style guide → Internal
 **General**
 
 
-`PEP-8: Python Style
-Guide <http://www.python.org/dev/peps/pep-0008/>`__\ 
-\ `https://www.python.org/dev/peps/pep-0008/ <https://www.python.org/dev/peps/pep-0008/>`__
+`PEP-8: Python Style Guide <http://www.python.org/dev/peps/pep-0008/>`__
 
 **Excerpts of PEP-8**
 
-For further explanations refer to PEP-8. Here highlighted
+For further explanations refer to PEP-8. In this section, we highlight parts
 
 .. raw:: html
 
-    <div style="color:#008000;"> green are elements that are important to us </div> and
-    <div style="color:#ff0000;"> red are excerpts that we don't wanna follow that strictly. </div>
+    <div style="color:#008000;">in green that are important to us </div> and
+    <div style="color:#ff0000;">in red that we don't follow that strictly.</div>
 
 - .. raw:: html
 
@@ -96,7 +94,6 @@ For further explanations refer to PEP-8. Here highlighted
             Always make a priority of keeping the comments up-to-date when the
             code changes!
         </div>
-
     - Comments should be complete sentences.
 
     - If a comment is short, the period at the end can be omitted.
@@ -106,7 +103,6 @@ For further explanations refer to PEP-8. Here highlighted
         <div style="color:#008000;">
             Each line of a block comment starts with a # and a single space
         </div>
-
     - .. raw:: html
 
         <div style="color:#008000;">
@@ -124,54 +120,45 @@ For further explanations refer to PEP-8. Here highlighted
 
 ...
 
-http://www.python.org/dev/peps/pep-0263/
 
 
 DLR Python style guide
 """"""""""""""""""""""
 
-https://rmintra01.robotic.dlr.de/rmwiki/images/6/61/Code\_conventions\_python\_flyer.pdf
 
-Extern:
+`DLR internal Style Guide <https://rmintra01.robotic.dlr.de/wiki/File:Code_conventions_python_flyer.pdf>`__
 
-https://ci.sc.dlr.de/jenkins/job/Python-Project-Setup-Guide/lastReleaseBuild/Python\_Project\_Setup\_Guide/
 
- 
+
 Naming Conventions
 """"""""""""""""""
 
 This naming conventions we wanna follow.
  
-**ClassName**
+ClassName
+    Nouns
 
-- Nouns
-
- 
-**method\_name**
-
-- starts with verb
-
- 
-**function\_name**
-
-- starts with verb
-
- 
-**member\_var**
-
-- Nouns
-
- 
-**\_protected**
+method\_name
+    starts with verb
 
 
-**\_\_private**
+function\_name
+    starts with verb
 
+member\_var
+    Nouns
 
-**name\_conflict\_**
+\_protected
+    should not be accessed from outside
 
+\_\_private
+    enforces protection
 
-**\_\_builtIn\_\_**
+name\_conflict\_
+    e.g. useful for collisions with reserved names (`class_`)
+
+\_\_builtIn\_\_
+    like `__init__`
 
  
 
@@ -329,20 +316,10 @@ The editor coding style can be found in the settings at Editor -> Code Style -> 
 +---------------------------------+-----+                                                           |
 | Around top-level:               |  2  |                                                           |
 +---------------------------------+-----+-----------------------------------------------------------+
-
-
-Following is nice to know (Preferences):
-++++++++++++++++++++++++++++++++++++++++
-
-- exclusion of folders in projects in „Project Structure“ possible to reduce number of responses for "Find Usage"
-  requests
-
-- standard unit-test module in
-
-- IDE settings → intentions
  
 
-**Inspections**
+Inspections
++++++++++++
 
 Here you can define what PyCharm should remind you to check by highlight or underline code pieces. In the following
 list you will find some elements highlighted

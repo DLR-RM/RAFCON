@@ -18,9 +18,9 @@ Patch releases 0.8.\*
 """""
 
 - Improvements
-  - Meta data convert methods with clear interface from Gaphas to OpenGL and OpenGL to Gaphas
-    -> only one type of meta data hold
-  - Undocked side bars can be restored automatically after restart if RESTORE_UNDOCKED_SIDEBARS is set to True.
+
+  - Meta data convert methods with clear interface from Gaphas to OpenGL and OpenGL to Gaphas -> only one type of meta data hold
+  - Undocked side bars can be restored automatically after restart if `RESTORE_UNDOCKED_SIDEBARS` is set to True.
 
 - Bug Fixes
 

@@ -259,8 +259,11 @@ PORT\_SNAP\_DISTANCE
     used in Gaphas editor.
 
 LOGGING\_SHOW\_DEBUG
+
 LOGGING\_SHOW\_INFO
+
 LOGGING\_SHOW\_WARNING
+
 LOGGING\_SHOW\_ERROR
     Type: boolean
     Default: ``False`` for DEBUG, ``True`` for the rest
