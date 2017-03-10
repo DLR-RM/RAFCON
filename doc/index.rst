@@ -40,6 +40,7 @@ robots, for skill programming and many more things.
    getting_started.rst
    changelog.rst
    tutorials.rst
+   building_docs.rst
    configuration.rst
    autobackup.rst
    gui_guide.rst
