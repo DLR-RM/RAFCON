@@ -73,11 +73,20 @@ def copy_file_if_update_required(source_file, target_file):
 
 
 def read_file(file_path, filename=None):
+    """ Open file by path and optional filename
+
+    If no file name is given the path is interpreted as direct path to the file to be read.
+    If there is no file at location the return value will be None to offer a option for case handling.
+
+    :param str file_path: Path string.
+    :param str filename: File name of the file to be read.
+    :return: None or str
+    """
     file_path = os.path.realpath(file_path)
     if filename:
         file_path = os.path.join(file_path, filename)
 
-    file_content = ""
+    file_content = None
     if os.path.isfile(file_path):
         with open(file_path, 'r') as file_pointer:
             file_content = file_pointer.read()
