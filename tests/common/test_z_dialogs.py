@@ -30,9 +30,9 @@ def trigger_dialog_tests():
         # The entry gets the same response as the first button
         assert response_id == 1
         assert widget.entry.get_text() == test_text
-        assert widget.check.get_label() == test_text
+        assert widget.checkbox.get_label() == test_text
         # As gtk.CheckButton is a ToggleButton, get_active()=True represents the "checked" state
-        assert widget.check.get_active()
+        assert widget.checkbox.get_active()
 
     def on_checkbox_dialog_approval(widget, response_id):
         # Check if all checkboxes appeared and the modulo operation worked
@@ -66,7 +66,7 @@ def trigger_dialog_tests():
                                              checkbox_text=test_text,
                                              button_texts=button_texts)
     dialog_window.entry.set_text(test_text)
-    dialog_window.check.set_active(True)
+    dialog_window.checkbox.set_active(True)
     # Represents hitting the enter button
     dialog_window.entry.activate()
     dialog_window.destroy()

@@ -124,8 +124,8 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
 class RAFCONInputDialog(RAFCONButtonDialog):
     """A dialog containing the a number of buttons specified in button_texts, an optional checkbox specified in
     checkbox_text and an entry line to write in. The state of the checkbox can be returned by get_checkbox_state(),
-    the content of the entry box can be returned by get_entry(). Hitting the enter button results in the same response
-    signal as the first button, so it is recommended to use "ok" or sth. similar as first button.
+    the content of the entry box can be returned by get_entry_text(). Hitting the enter button results in the same
+    response signal as the first button, so it is recommended to use "ok" or sth. similar as first button.
 
     :param markup_text: The text inside the dialog
     :param button_texts: A list containing all buttons_texts to be created as gtk Buttons
@@ -162,21 +162,21 @@ class RAFCONInputDialog(RAFCONButtonDialog):
         self.entry.connect('activate', self.forward_response, 1)
         hbox.pack_start(self.entry, True, True, 1)
 
-        self.check = None
+        self.checkbox = None
 
         if isinstance(checkbox_text, str):
             # If a checkbox_text is specified by the caller, we can assume that one should be used.
-            self.check = gtk.CheckButton(checkbox_text)
-            hbox.pack_end(self.check, True, True, 1)
+            self.checkbox = gtk.CheckButton(checkbox_text)
+            hbox.pack_end(self.checkbox, True, True, 1)
 
         self.show_grab_focus_and_run(standalone)
 
-    def get_entry(self):
+    def get_entry_text(self):
         return self.entry.get_text()
 
     def get_checkbox_state(self):
-        if self.check:
-            return bool(self.check.get_state())
+        if self.checkbox:
+            return bool(self.checkbox.get_state())
         else:
             return False
 

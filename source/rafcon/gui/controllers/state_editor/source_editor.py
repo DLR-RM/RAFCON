@@ -79,7 +79,6 @@ class SourceEditorController(EditorController):
             view['apply_button'].set_sensitive(False)
             view['cancel_button'].set_sensitive(False)
 
-
     @property
     def source_text(self):
         return self.model.state.script_text
@@ -89,7 +88,7 @@ class SourceEditorController(EditorController):
         self.model.state.script_text = text
 
     # ===============================================================
-    def append_shell_command_to_path(self, command, file_path):
+    def execute_shell_command_with_path(self, command, file_path):
 
         logger.debug("Opening path with command: {}".format(command))
 
@@ -141,7 +140,7 @@ class SourceEditorController(EditorController):
             # Get the specified "Editor" as in shell command from the gui config yaml
             external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')
 
-            def open_file_in_editor(command, text_field):
+            def open_file_in_editor(cmd_to_open_editor, test_command=False):
 
                 file_path = self.model.state.get_file_system_path()
 
@@ -150,10 +149,9 @@ class SourceEditorController(EditorController):
                     self.save_script()
                     self.saved_initial = True
 
-                if not self.append_shell_command_to_path(command, file_path) and text_field:
+                if not self.execute_shell_command_with_path(cmd_to_open_editor, file_path) and test_command:
                     # If a text field exists destroy it. Errors can occur with a specified editor as well
                     # e.g Permission changes or sth.
-                    text_field.destroy()
                     global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', None)
                     global_gui_config.save_configuration()
 
@@ -176,10 +174,10 @@ class SourceEditorController(EditorController):
                     # If the response emitted from the Dialog is 1 than handle the 'OK'
 
                     # If the checkbox is activated, also save the textinput the the config
-                    if text_input.return_check():
-                        global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', text_input.return_text())
+                    if text_input.get_checkbox_state():
+                        global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', text_input.get_entry_text())
                         global_gui_config.save_configuration()
-                    open_file_in_editor(text_input.return_text(), text_input)
+                    open_file_in_editor(text_input.get_entry_text(), test_command=True)
 
                 else:
                     # If Dialog is canceled either by the button or the cross, toggle back the button again and revert the
@@ -198,14 +196,16 @@ class SourceEditorController(EditorController):
 
                 # If an editor is specified, open the path with the specified command. Also text_field is None, there is
                 # no active text field in the case of an already specified editor. Its needed for the SyntaxError catch
-                open_file_in_editor(external_editor, text_field=None)
+                open_file_in_editor(external_editor)
         else:
             # If button is clicked after one open a file in the external editor, unlock the internal editor to reload
             set_editor_lock(False)
 
             # Load file contents after unlocking
+            # if os.path.exists(os.path.join(self.model.state.get_file_system_path(), 'script.py')):
             content = filesystem.read_file(self.model.state.get_file_system_path(), 'script.py')
-            self.set_script_text(content)
+            if content is not None:
+                self.set_script_text(content)
 
             # After reload internal editor and external editor is preferred lock internal editor again
             set_editor_lock(prefer_external_editor)

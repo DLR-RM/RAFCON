@@ -85,7 +85,7 @@ def trigger_source_editor_signals(main_window_controller):
     assert content == source_editor_controller.source_text
 
     # ---check if a wrong shell command returns false by the append_...() method
-    assert not t_u.call_gui_callback(source_editor_controller.append_shell_command_to_path, 'gibberish', 'foo.txt')
+    assert not t_u.call_gui_callback(source_editor_controller.execute_shell_command_with_path, 'gibberish', 'foo.txt')
 
     source_view = source_editor_controller.view
     test_text = 'apply_test'

@@ -14,7 +14,7 @@ def execute(self, inputs, outputs, gvm):
     
     response_id = dialog_window.run()
     
-    outputs['entered_text'] = dialog_window.get_entry()
+    outputs['entered_text'] = dialog_window.get_entry_text()
     outputs['checkbox_state'] = dialog_window.get_checkbox_state()
     
     dialog_window.destroy()
