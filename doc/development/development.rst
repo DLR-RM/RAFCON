@@ -40,26 +40,26 @@ report bugs. This page can also be used for feature requests.
 Code style
 ----------
 
-.. include:: coding_conventions.rst
+.. include:: includes/coding_conventions.rst
 
 
 GIT commit Guidelines
 ---------------------
 
-.. include:: commit_guidelines.rst
+.. include:: includes/commit_guidelines.rst
 
 
 Steps for releasing
 -------------------
 
-.. include:: release_steps.rst
+.. include:: includes/release_steps.rst
 
 HowTo on creating a splashscreen
 --------------------------------
 
-.. include:: splashscreen.rst
+.. include:: includes/splashscreen.rst
 
 Discussion
 ----------
 
-.. include:: discussion.rst
+.. include:: includes/discussion.rst
