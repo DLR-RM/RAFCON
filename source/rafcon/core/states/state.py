@@ -61,7 +61,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     :ivar dict State.input_data_ports: holds the input data ports of the state
     :ivar dict State.output_data_ports: holds the output data ports of the state
     :ivar dict State.outcomes: holds the state outcomes, which are the connection points for transitions
-    :ivar State.parent: a reference to the parent state
+    :ivar rafcon.core.states.container_state.ContainerState State.parent: a reference to the parent state or None
 
     """
 
@@ -284,7 +284,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def get_default_input_values_for_state(self, state):
         """ Computes the default input values for a state
 
-        :param state: the state to get the default input values for
+        :param State state: the state to get the default input values for
 
         """
         from rafcon.core.states.library_state import LibraryState
@@ -337,10 +337,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def add_input_data_port(self, name, data_type=None, default_value=None, data_port_id=None):
         """Add a new input data port to the state.
 
-        :param name: the name of the new input data port
-        :param data_type: the type of the new input data port
+        :param str name: the name of the new input data port
+        :param data_type: the type of the new output data port considered of class :class:`type` or
+                          :class:`str` which has to be convertible to :class:`type`
         :param default_value: the default value of the data port
-        :param data_port_id: the data_port_id of the new data port
+        :param int data_port_id: the data_port_id of the new data port
         :return: data_port_id of new input data port
         :rtype: int
         :raises exceptions.ValueError: if name of the input port is not unique
@@ -363,7 +364,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def remove_input_data_port(self, data_port_id, force=False):
         """Remove an input data port from the state
 
-        :param data_port_id: the id or the output data port to remove
+        :param int data_port_id: the id or the output data port to remove
         :param bool force: if the removal should be forced without checking constraints
         :raises exceptions.AttributeError: if the specified input data port does not exist
         """
@@ -397,10 +398,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def add_output_data_port(self, name, data_type, default_value=None, data_port_id=None):
         """Add a new output data port to the state
 
-        :param name: the name of the new output data port
-        :param data_type: the type of the new output data port
+        :param str name: the name of the new output data port
+        :param data_type: the type of the new output data port considered of class :class:`type` or
+                          :class:`str` which has to be convertible to :class:`type`
         :param default_value: the default value of the data port
-        :param data_port_id: the data_port_id of the new data port
+        :param int data_port_id: the data_port_id of the new data port
         :return: data_port_id of new output data port
         :rtype: int
         :raises exceptions.ValueError: if name of the output port is not unique
@@ -423,7 +425,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def remove_output_data_port(self, data_port_id, force=False):
         """Remove an output data port from the state
 
-        :param data_port_id: the id of the output data port to remove
+        :param int data_port_id: the id of the output data port to remove
         :raises exceptions.AttributeError: if the specified input data port does not exist
         """
         if data_port_id in self._output_data_ports:
@@ -458,7 +460,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """Search for the given data port id in the data ports of the state
 
         The method tries to find a data port in the input and output data ports.
-        :param data_port_id: the unique id of the data port
+        :param int data_port_id: the unique id of the data port
         :return: the data port with the searched id or None if it is not found
         """
         if data_port_id in self.input_data_ports:
@@ -552,6 +554,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def get_file_system_path(self):
         """Calculates the path in the filesystem where the state is stored
 
+        :rtype: str
         :return: the path on the filesystem where the state is stored
         """
         if not self.get_state_machine() or self.get_state_machine().file_system_path is None:
@@ -595,8 +598,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def add_outcome(self, name, outcome_id=None):
         """Add a new outcome to the state
 
-        :param name: the name of the outcome to add
-        :param outcome_id: the optional outcome_id of the new outcome
+        :param str name: the name of the outcome to add
+        :param int outcome_id: the optional outcome_id of the new outcome
 
         :return: outcome_id: the outcome if of the generated state
         :rtype: int
@@ -634,7 +637,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def remove_outcome(self, outcome_id, force=False):
         """Remove an outcome from the state
 
-        :param outcome_id: the id of the outcome to remove
+        :param int outcome_id: the id of the outcome to remove
         :raises exceptions.AttributeError: if the specified outcome does not exist or
                                             equals the aborted or preempted outcome
         """
@@ -695,7 +698,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         Checks whether the id or the name of the outcome is already used by another outcome within the state.
 
-        :param check_outcome: The outcome to be checked
+        :param rafcon.core.outcome.Outcome check_outcome: The outcome to be checked
         :return bool validity, str message: validity is True, when the outcome is valid, False else. message gives more
             information especially if the outcome is not valid
         """
@@ -713,7 +716,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         Checks whether the data flows connected to the port do not conflict with the data types.
 
-        :param check_data_port: The data port to be checked
+        :param rafcon.core.data_port.DataPort check_data_port: The data port to be checked
         :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
             more information especially if the data port is not valid
         """
@@ -814,9 +817,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @lock_state_machine
     def change_state_id(self, state_id=None):
-        """
-        Changes the id of the state to a new id. If now state_id is passed as parameter, a new state id is generated.
-        :param state_id: The new state if of the state
+        """Changes the id of the state to a new id
+
+        If no state_id is passed as parameter, a new state id is generated.
+
+        :param str state_id: The new state id of the state
         :return:
         """
         if state_id is None:
@@ -828,16 +833,18 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self._state_id = state_id
 
     def get_states_statistics(self, hierarchy_level):
-        """
-        Returns the numer of child states. As per default states do not have child states return 1.
-        :return:
+        """Get states statistic tuple
+
+        :rtype: tuple
+        :return: The number of child states. As per default states do not have child states return 1.
         """
         return 1, hierarchy_level + 1
 
     def get_number_of_transitions(self):
-        """
-        Return the number of transitions for a state. Per default states do not have transitions.
-        :return:
+        """Generate the number of transitions
+
+        :rtype: int
+        :return: The number of transitions for a state. Per default states do not have transitions.
         """
         return 0
 
@@ -872,6 +879,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def name(self):
         """Property for the _name field
 
+        :rtype: str
+        :return: Name of state
         """
         return self._name
 
@@ -898,6 +907,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def parent(self):
         """Property for the _parent field
 
+        :rtype: rafcon.core.states.container_state.ContainerState
+        :return: A ContainState or value None if there is no parent or the parent is
+                 :class:`rafcon.core.state_machine.StateMachine`
         """
         if not self._parent:
             return None
