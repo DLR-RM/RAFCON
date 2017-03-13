@@ -14,12 +14,18 @@
    :synopsis: A module to hold all decorators needed for the RAFCON core
 
 """
+from gtkmvc.support import decorators
 
 global_lock_counter = 0
 
 
+@decorators.good_decorator_accepting_args
 def lock_state_machine(func):
     def func_wrapper(*args, **kwargs):
+        """ Decorate method to observable core edit methods. If the core method of rafcon core object is called
+        the respective state machine object edition will be locked by the respective thread until the handed function
+        execution is finished.
+        """
         from rafcon.core.state_elements.state_element import StateElement
         from rafcon.core.states.state import State
         global global_lock_counter
