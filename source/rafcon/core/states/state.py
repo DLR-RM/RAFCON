@@ -56,12 +56,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar str name: the name of the state
-    :ivar str state_id: the id of the state
-    :ivar dict input_data_ports: holds the input data ports of the state
-    :ivar dict output_data_ports: holds the output data ports of the state
-    :ivar dict outcomes: holds the state outcomes, which are the connection points for transitions
-    :ivar parent: a reference to the parent state
+    :ivar str State.name: the name of the state
+    :ivar str State.state_id: the id of the state
+    :ivar dict State.input_data_ports: holds the input data ports of the state
+    :ivar dict State.output_data_ports: holds the output data ports of the state
+    :ivar dict State.outcomes: holds the state outcomes, which are the connection points for transitions
+    :ivar State.parent: a reference to the parent state
 
     """
 
@@ -342,6 +342,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param default_value: the default value of the data port
         :param data_port_id: the data_port_id of the new data port
         :return: data_port_id of new input data port
+        :rtype: int
         :raises exceptions.ValueError: if name of the input port is not unique
         """
         if data_port_id is None:
@@ -363,7 +364,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """Remove an input data port from the state
 
         :param data_port_id: the id or the output data port to remove
-        :param bool force: if the removal should be forced without checking contraints
+        :param bool force: if the removal should be forced without checking constraints
         :raises exceptions.AttributeError: if the specified input data port does not exist
         """
         if data_port_id in self._input_data_ports:
@@ -401,6 +402,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param default_value: the default value of the data port
         :param data_port_id: the data_port_id of the new data port
         :return: data_port_id of new output data port
+        :rtype: int
         :raises exceptions.ValueError: if name of the output port is not unique
         """
         if data_port_id is None:
@@ -597,7 +599,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param outcome_id: the optional outcome_id of the new outcome
 
         :return: outcome_id: the outcome if of the generated state
-
+        :rtype: int
         """
         if outcome_id is None:
             outcome_id = generate_outcome_id(self.outcomes.keys())
@@ -794,12 +796,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def check_output_data_type(self):
         """Check the output data types of the state
 
-        Checks all output data ports if the handed data is not of the specified type and generate an error logger message
-        with details of the found type conflict.
+        Checks all output data ports if the handed data is not of the specified type and generate an error logger
+        message with details of the found type conflict.
         """
         for data_port in self.output_data_ports.itervalues():
             if data_port.name in self.output_data and self.output_data[data_port.name] is not None:
-                #check for class
+                # check for class
                 if not isinstance(self.output_data[data_port.name], data_port.data_type):
                     logger.error("{0} had an data port error: Output of execute function must be of type {1} not {2} "
                                  "as current value {3}".format(self, data_port.data_type,
@@ -923,7 +925,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         The method does check validity of the elements by calling the parent-setter and in case of failure cancel
         the operation and recover old _input_data_ports.
 
-        :return: Dictionary input_data_ports[data_port_id] of :class:`rafcon.core.state_elements.data_port.InputDataPort`
+        :return: Dictionary input_data_ports[:class:`int`, :class:`rafcon.core.state_elements.data_port.InputDataPort`]
+                 that maps :class:`int` data_port_ids onto values of type InputDataPort
         :rtype: dict
         """
         return self._input_data_ports
@@ -936,7 +939,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         See Property.
 
-        :param dict input_data_ports: Dictionary of :class:`rafcon.core.state_elements.data_port.InputDataPort`
+        :param dict input_data_ports: Dictionary that maps :class:`int` data_port_ids onto values of type
+                                      :class:`rafcon.core.state_elements.data_port.InputDataPort`
         :raises exceptions.TypeError: if the input_data_ports parameter has the wrong type
         :raises exceptions.AttributeError: if the key of the input dictionary and the id of the data port do not match
         """
@@ -973,7 +977,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         validity of the elements by calling the parent-setter and in case of failure cancel the operation and recover
         old _output_data_ports.
 
-        :return: Dictionary output_data_ports[data_port_id] of :class:`rafcon.core.state_elements.data_port.OutputDataPort`
+        :return: Dictionary output_data_ports[:class:`int`,
+                 :class:`rafcon.core.state_elements.data_port.OutputDataPort`]
+                 that maps :class:`int` data_port_ids onto values of type OutputDataPort
         :rtype: dict
         """
         return self._output_data_ports
@@ -986,7 +992,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         See property
 
-        :param Dictionary output_data_ports[data_port_id] of :class:`rafcon.core.state_elements.data_port.OutputDataPort`
+        :param dict output_data_ports: Dictionary that maps :class:`int` data_port_ids onto values of type
+                                      :class:`rafcon.core.state_elements.data_port.OutputDataPort`
         :raises exceptions.TypeError: if the output_data_ports parameter has the wrong type
         :raises exceptions.AttributeError: if the key of the output dictionary and the id of the data port do not match
         """
@@ -1023,7 +1030,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         The method does check validity of the elements by calling the parent-setter and in case of failure cancel
         the operation and recover old outcomes.
 
-        :return: Dictionary outcomes[outcome_id] of :class:`rafcon.core.state_elements.outcome.Outcome`
+        :return: Dictionary outcomes[:class:`int`, :class:`rafcon.core.state_elements.outcome.Outcome`]
+                 that maps :class:`int` outcome_ids onto values of type Outcome
         :rtype: dict
         """
         return self._outcomes
@@ -1036,7 +1044,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         See property.
 
-        :param dict outcomes: Dictionary outcomes[outcome_id] of :class:`rafcon.core.state_elements.outcome.Outcome`
+        :param dict outcomes: Dictionary outcomes[outcome_id] that maps :class:`int` outcome_ids onto values of type
+                              :class:`rafcon.core.state_elements.outcome.Outcome`
         :raises exceptions.TypeError: if outcomes parameter has the wrong type
         :raises exceptions.AttributeError: if the key of the outcome dictionary and the id of the outcome do not match
         """
