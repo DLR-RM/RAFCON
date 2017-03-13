@@ -12,15 +12,20 @@ Developers
 - Sebastian Brunner
 - Franz Steinmetz
 - Rico Belder
-- Michael Vilzmann
+- Michael Vilzmann (since 2016)
 
 **Former**
 
-- Lukas Becker: Bachelor-student as intern, splash screen, external editor, new shortcuts, refactoring of dialogs and helper
-- Benno Voggenreiter: Bachelor-student, monitoring plugin GUI, ROS plugin
-- Matthias Büttner: Master-student, graphical layout, first implementations of gaphas editor (feasibility study)
-- Mahmoud Akl: Werkstudent, (un-)dockable sidebar, refactoring
-- Annika Wollschläger: Werkstudent, drag'n'drop of all kinds of states, including libraries
+- Lukas Becker (2016-10 to 2017-02) Bachelor-student as Intern:
+    - splash screen, external editor, new shortcuts, refactoring of dialogs and helper
+- Benno Voggenreiter (2015-12 to 2016-03) as Bachelor-student:
+    - monitoring plugin GUI, ROS plugin
+- Matthias Büttner (2015-03 to 2015-08) as Master-student:
+    - graphical layout, first implementations of gaphas editor (feasibility study)
+- Mahmoud Akl (2015-12 to 2016-03) as  working student:
+    - (un-)dockable sidebar, refactoring
+- Annika Wollschläger (2015-12 to 2016-02) as working student:
+    - drag'n'drop of all kinds of states, including libraries
 
 
 GIT repository
