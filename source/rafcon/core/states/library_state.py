@@ -40,11 +40,10 @@ class LibraryState(State):
     The constructor uses an exceptions.AttributeError if the passed version of the library and the version found in
     the library paths do not match.
 
-    :ivar library_path: the path of the library relative to a certain library path (e.g. lwr/gripper/)
-    :ivar library_name: the name of the library between all child states: (e.g. open, or close)
-    :ivar version: the version of the needed library
-    :ivar name: the name of the library state
-    :ivar state_id: the id of the library state
+    :ivar str library_path: the path of the library relative to a certain library path (e.g. lwr/gripper/)
+    :ivar str library_name: the name of the library between all child states: (e.g. open, or close)
+    :ivar str State.name: the name of the library state
+    :ivar str State.state_id: the id of the library state
     :ivar dict input_data_port_runtime_values: a dict to store all the runtime values for the input data ports
     :ivar dict use_runtime_value_input_data_ports: flags to indicate if the runtime or the default value should be used
                                                     for a specific input data port

@@ -29,12 +29,12 @@ class DataFlow(StateElement):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar str from_state: the id of the source state of the data flow connection
-    :ivar str to_state: the id of the target state of the data flow connection
-    :ivar int from_key: the id of the data port / scoped variable of the source state
-    :ivar int to_key: the id of the data port /scoped variable of the target state
-    :ivar int data_flow_id: the id of the data port, must be unique for the parent state
-    :ivar rafcon.core.states.container_state.ContainerState parent: reference to the parent state
+    :ivar str DataFlow.from_state: the id of the source state of the data flow connection
+    :ivar str DataFlow.to_state: the id of the target state of the data flow connection
+    :ivar int DataFlow.from_key: the id of the data port / scoped variable of the source state
+    :ivar int DataFlow.to_key: the id of the data port /scoped variable of the target state
+    :ivar int DataFlow.data_flow_id: the id of the data port, must be unique for the parent state
+    :ivar rafcon.core.states.container_state.ContainerState DataFlow.parent: reference to the parent state
     """
 
     yaml_tag = u'!DataFlow'

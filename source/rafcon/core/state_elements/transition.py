@@ -32,16 +32,14 @@ class Transition(StateElement):
 
     It inherits from Observable to make a change of its fields observable.
 
-    Raises an exceptions.TypeError if the transtion_id is not of type int.
+    Raises an exceptions.TypeError if the transition_id is not of type int.
 
-    :ivar transition_id: the id of the transition, must be unique for the parent state
-    :ivar _from_state: the source state of the transition
-    :ivar _from_outcome: the outcome of the source state
-    :ivar _to_state: the target state of the transition
-    :ivar _to_outcome: the outcome of the target state
-    :ivar rafcon.core.states.container_state.ContainerState parent: reference to the parent state
-
-
+    :ivar int transition_id: the id of the transition, must be unique for the parent state
+    :ivar str Transition.from_state: the source state of the transition
+    :ivar int Transition.from_outcome: the outcome of the source state
+    :ivar str Transition.to_state: the target state of the transition
+    :ivar int Transition.to_outcome: the outcome of the target state
+    :ivar rafcon.core.states.container_state.ContainerState StateElement.parent: reference to the parent state
     """
 
     yaml_tag = u'!Transition'

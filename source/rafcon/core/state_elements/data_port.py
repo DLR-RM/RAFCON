@@ -31,14 +31,16 @@ logger = log.get_logger(__name__)
 class DataPort(StateElement):
     """A class for representing a data ports in a state
 
-    :ivar str name: the name of the data port
-    :ivar data_type: the value type of the data port
-    :ivar default_value: the default value of the data port
+    :ivar str DataPort.name: the name of the data port
+    :ivar type DataPort.data_type: the value type of the data port can be handed as convertible :class:`str` too
+    :ivar DataPort.default_value: the default value of the data port
     :ivar int data_port_id: the id of the data port, must be unique for the parent state
-    :ivar rafcon.core.states.state.State parent: reference to the parent state
-    :ivar bool force_type: if true the DataPort type exception is not raised while initiation (backward compatibility)
-    :ivar bool init_without_default_value_type_exceptions: if true it is allowed to initiate with any default value type
-        Used to load not matching default value data types and correct them using the GUI.
+    :ivar rafcon.core.states.state.State DataPort.parent: reference to the parent state
+    :ivar bool DataPort.force_type: if true the DataPort type exception is not raised while initiation
+                                    (backward compatibility)
+    :ivar bool DataPort.init_without_default_value_type_exceptions: if true it is allowed to initiate with any default
+                                                                    value type used to load not matching default value
+                                                                    data types and correct them using the GUI.
     """
 
     # Define all parameters and set their default values
@@ -210,9 +212,9 @@ class DataPort(StateElement):
                 self._default_value = None
 
     def check_default_value(self, default_value, data_type=None):
-        """Check whether the passed default value suits to the passed data type. If no data type is passed, the data type
-        of the data port is used. If the default value does not fit, an exception is thrown. If the default value is of
-        type string, it is tried to convert that value to the data type.
+        """Check whether the passed default value suits to the passed data type. If no data type is passed, the
+        data type of the data port is used. If the default value does not fit, an exception is thrown. If the default
+        value is of type string, it is tried to convert that value to the data type.
 
         :param default_value: The default value to check
         :param data_type: The data type to use

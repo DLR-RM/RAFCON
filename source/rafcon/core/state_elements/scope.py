@@ -50,13 +50,13 @@ class ScopedVariable(DataPort):
     It inherits from the DataPort class as it needs exactly the same class fields.
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar str name: the name of the scoped variable
-    :ivar data_type: specifies the type of the scoped variable (data port); the setter of _value will only allow
-                assignments that satisfies the type constraint
-    :ivar default_value: specifies the default value of the scoped variable (data port)
-    :ivar int data_port_id: the id of the scoped variable (data port), must be unique for the parent state
-    :ivar rafcon.core.states.container_state.ContainerState parent: reference to the parent state
-
+    :ivar str DataPort.name: the name of the scoped variable
+    :ivar type DataPort.data_type: specifies the type of the scoped variable (data port); the setter of _value will
+                                   only allow assignments that satisfies the type constraint
+    :ivar DataPort.default_value: specifies the default value of the scoped variable (data port)
+    :ivar int scoped_variable_id: the id of the scoped variable (see DataPort.data_port_id),
+                                  must be unique for the parent state
+    :ivar rafcon.core.states.container_state.ContainerState StateElement.parent: reference to the parent state
     """
 
     yaml_tag = u'!ScopedVariable'
@@ -103,13 +103,13 @@ class ScopedData(Observable):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar name: the name of the scoped data
-    :ivar from_state: the state_id of the state that wrote to the scoped data last
-    :ivar value_type: specifies the type of self._value; the setter of __value will
-            only allow assignments that satisfies the data_type constraint
+    :ivar str ScopedData.name: the name of the scoped data
+    :ivar str ScopedData.from_state: the state_id of the state that wrote to the scoped data last
+    :ivar type value_type: specifies the type of self._value; the setter of __value will
+                           only allow assignments that satisfies the data_type constraint
     :ivar value: the current value of the scoped data
     :ivar data_port_type: the type of the data port that wrote to the scoped data last
-    :ivar _timestamp: the timestamp when the scoped data was written to last
+    :ivar str timestamp: the timestamp when the scoped data was written to last
 
     """
 

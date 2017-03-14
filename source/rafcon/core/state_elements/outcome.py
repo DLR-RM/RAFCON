@@ -35,9 +35,9 @@ class Outcome(StateElement):
 
     The constructor raises an exceptions.TypeError if the outcome_id is not of type int.
 
-    :ivar int outcome_id: the id of the outcome, must be unique on one hierarchy level
-    :ivar str name: the human readable name of the outcome
-    :ivar rafcon.core.states.state.State parent: reference to the parent state
+    :ivar int Outcome.outcome_id: the id of the outcome, must be unique on one hierarchy level
+    :ivar str Outcome.name: the human readable name of the outcome
+    :ivar rafcon.core.states.state.State Outcome.parent: reference to the parent state
     """
 
     yaml_tag = u'!Outcome'

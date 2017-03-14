@@ -39,7 +39,7 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
 
     It raises an exceptions.NotImplementedError if the type of the class instance is type(self).
 
-    :ivar rafcon.core.states.state.State parent: Parent state of the state element
+    :ivar rafcon.core.states.state.State StateElement.parent: Parent state of the state element
     """
     _parent = None
 

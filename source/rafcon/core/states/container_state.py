@@ -57,11 +57,11 @@ class ContainerState(State):
 
     Only the variables are listed that are not already contained in the state base class
 
-    :ivar dict states: the child states of the container state of the state
-    :ivar dict transitions: transitions between all child states
-    :ivar dict data_flows: data flows between all child states
-    :ivar str start_state_id: the state to start with when the hierarchy state is executed
-    :ivar dict scoped_variables: the scoped variables of the container
+    :ivar dict ContainerState.states: the child states of the container state of the state
+    :ivar dict ContainerState.transitions: transitions between all child states
+    :ivar dict ContainerState.data_flows: data flows between all child states
+    :ivar str ContainerState.start_state_id: the state to start with when the hierarchy state is executed
+    :ivar dict ContainerState.scoped_variables: the scoped variables of the container
 
     """
 
