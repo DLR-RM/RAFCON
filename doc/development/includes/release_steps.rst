@@ -29,7 +29,7 @@ Steps to perform, when releasing a new version of RAFCON:
 
 6. Check the changelog
 
-  Open ``[project directory]/Changelog.rst`` and verify that all changes are included within the correct version number. Compare with ``git lg`` and the latest closed issues on GitHub. Commit your changes.
+  Open ``[project directory]/doc/Changelog.rst`` and verify that all changes are included within the correct version number. Compare with ``git lg`` and the latest closed issues on GitHub. Commit your changes.
 
 7. Apply the version number
 
