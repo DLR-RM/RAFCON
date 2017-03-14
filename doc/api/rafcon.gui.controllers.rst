@@ -12,8 +12,8 @@ inherits from the controller class of GTKMVC.
 .. contents::
     :backlinks: top
 
-Subpackages
------------
+Subpackages (in rafcon.gui.controllers)
+---------------------------------------
 
 .. toctree::
 

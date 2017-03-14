@@ -135,9 +135,10 @@ class EditorView(View):
     def set_enabled(self, on, text=None):
         """ Set the default input or deactivated (disabled) style scheme
 
-         The method triggers the signal 'changed' by using set_text. Therefore, the method use the while_in_set_enabled
-         flag to make activities of the method observable. If a method trigger this method and was triggered by a
-         changed-signal this flag is supposed to avoid recursive calls.
+        The method triggers the signal 'changed' by using set_text. Therefore, the method use the while_in_set_enabled
+        flag to make activities of the method observable. If a method trigger this method and was triggered by a
+        changed-signal this flag is supposed to avoid recursive calls.
+
         :param bool on: enable flag.
         :param str text: optional text to insert.
         :return:

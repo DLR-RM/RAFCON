@@ -17,8 +17,7 @@ import gtk
 import rafcon
 
 
-
-class MyAboutDialog(gtk.AboutDialog):
+class AboutDialogView(gtk.AboutDialog):
     def __init__(self):
         gtk.AboutDialog.__init__(self)
 

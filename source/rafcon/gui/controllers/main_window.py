@@ -471,14 +471,15 @@ class MainWindowController(ExtendedController):
 
     def undock_sidebar(self, window_name, widget_name, undock_button_name, return_button_name,
                        hide_function, replacement_name, widget, event=None):
-        """Triggered when the undock button of the sidebar is clicked.
+        """Undock/separate sidebar into independent window
 
         The sidebar is undocked and put into a separate new window. The sidebar is hidden in the main-window by
-        triggering the method on_*_hide_clicked(). Triggering this method shows the '*_return_button' in the
-        main-window, which doesn't serve any purpose when the bar is undocked. This button is therefore deliberately
+        triggering the method on_[widget_name]_hide_clicked(). Triggering this method shows the
+        [widget_name]_return_button in the main-window, which does not serve any purpose when the bar is undocked.
+        This button is therefore deliberately
         hidden. The undock button, which is also part of the sidebar is hidden, because the re-dock button is
         included in the top_tool_bar of the newly opened window. Not hiding it will result in two re-dock buttons
-        visible in the new window. The new window's size and position are loaded from runtime_config, if they exist.
+        visible in the new window. The new window size and position are loaded from runtime_config, if they exist.
         """
         self.docked[widget_name] = False
         window_view = getattr(self.view, window_name.lower())
@@ -499,7 +500,7 @@ class MainWindowController(ExtendedController):
 
     def redock_sidebar(self, window_name, widget_name, sidebar_name, undock_button_name, return_function,
                        replacement_name, controller_name, widget, event=None):
-        """Triggered when the redock button of the sidebar window is clicked.
+        """Redock/embed sidebar into main window
 
         The size & position of the open window are saved to the runtime_config file, the sidebar is redocked back
         to the main-window, and the left-bar window is hidden. The undock button of the bar is made visible again.

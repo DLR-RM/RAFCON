@@ -4,8 +4,8 @@ MVC View Utils  (rafcon.gui.views.utils)
 .. contents::
     :backlinks: top
 
-MyAboutDialog (in about_dialog)
--------------------------------
+AboutDialogView (in about_dialog)
+---------------------------------
 
 .. automodule:: rafcon.gui.views.utils.about_dialog
 

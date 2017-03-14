@@ -22,8 +22,8 @@ custom_exceptions
 -----------------
 .. automodule:: rafcon.core.custom_exceptions
 
-constants
----------
+constants (in rafcon.core)
+--------------------------
 .. automodule:: rafcon.core.constants
 
 global_variable_manager
@@ -46,8 +46,8 @@ script
 ------
 .. automodule:: rafcon.core.script
 
-singleton
----------
+singleton (in rafcon.core)
+--------------------------
 .. automodule:: rafcon.core.singleton
 
 state_machine

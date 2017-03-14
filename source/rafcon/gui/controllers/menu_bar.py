@@ -45,7 +45,7 @@ from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.config_window import ConfigWindowView
 from rafcon.gui.views.main_window import MainWindowView
-from rafcon.gui.views.utils.about_dialog import MyAboutDialog
+from rafcon.gui.views.utils.about_dialog import AboutDialogView
 from rafcon.utils import log
 from rafcon.utils import plugins
 
@@ -711,7 +711,7 @@ class MenuBarController(ExtendedController):
     ######################################################
     @staticmethod
     def on_about_activate(widget, data=None):
-        about = MyAboutDialog()
+        about = AboutDialogView()
         gui_helper_label.set_button_children_size_request(about)
         response = about.run()
         if response == gtk.RESPONSE_DELETE_EVENT or response == gtk.RESPONSE_CANCEL:

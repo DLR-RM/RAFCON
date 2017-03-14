@@ -28,6 +28,7 @@ def is_execution_status_update_notification_from_state_machine_model(prop_name, 
     if prop_name == 'state_machine' and 'method_name' in info and info['method_name'] == '_add_new_execution_history':
         return True
 
+
 def is_execution_status_update_notification_from_state_model(prop_name, info):
     # avoid updates or checks because of execution status updates -> prop_name in ['state', 'states']
     if prop_name == 'states' and 'kwargs' in info and 'method_name' in info['kwargs'] and \
@@ -35,9 +36,11 @@ def is_execution_status_update_notification_from_state_model(prop_name, info):
             prop_name == 'state' and 'method_name' in info and info['method_name'] in EXECUTION_TRIGGERED_METHODS:
         return True
 
+
 def is_execution_status_update_notification(prop_name, info):
     return is_execution_status_update_notification_from_state_machine_model(prop_name, info) or \
            is_execution_status_update_notification_from_state_model(prop_name, info)
+
 
 class NotificationOverview(dict):
     empty_info = {'before': True, 'model': None, 'method_name': None, 'instance': None,

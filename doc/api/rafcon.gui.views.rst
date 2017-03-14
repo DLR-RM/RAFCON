@@ -4,8 +4,8 @@ MVC Views (in rafcon.gui.views)
 .. contents::
     :backlinks: top
 
-Subpackages
------------
+Subpackages (in rafcon.gui.views)
+---------------------------------
 
 .. toctree::
 
@@ -56,11 +56,6 @@ ModificationHistoryView (in modification_history)
 -------------------------------------------------
 
 .. automodule:: rafcon.gui.views.modification_history
-
-NetworkConnectionsView (in network_connections)
------------------------------------------------
-
-.. automodule:: rafcon.gui.views.network_connections
 
 StateMachineTreeView (in state_machine_tree)
 --------------------------------------------

@@ -4,14 +4,15 @@ The GUI: ``mvc``
 .. contents::
     :backlinks: top
 
-Subpackages
------------
+Subpackages (in rafcon.gui)
+---------------------------
 
 .. toctree::
 
     rafcon.gui.controllers
     rafcon.gui.models
     rafcon.gui.views
+    rafcon.gui.helpers
     rafcon.gui.mygaphas
 
 action
@@ -35,16 +36,9 @@ shortcut_manager
     :undoc-members:
     :show-inheritance:
 
-singleton
----------
+singleton (in rafcon.gui)
+-------------------------
 .. automodule:: rafcon.gui.singleton
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-state_machine_helper
---------------------
-.. automodule:: rafcon.gui.state_machine_helper
     :members:
     :undoc-members:
     :show-inheritance:
