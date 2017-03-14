@@ -35,7 +35,7 @@ class DataPort(StateElement):
     :ivar type DataPort.data_type: the value type of the data port can be handed as convertible :class:`str` too
     :ivar DataPort.default_value: the default value of the data port
     :ivar int data_port_id: the id of the data port, must be unique for the parent state
-    :ivar rafcon.core.states.state.State DataPort.parent: reference to the parent state
+    :ivar rafcon.core.states.state.State StateElement.parent: reference to the parent state
     :ivar bool DataPort.force_type: if true the DataPort type exception is not raised while initiation
                                     (backward compatibility)
     :ivar bool DataPort.init_without_default_value_type_exceptions: if true it is allowed to initiate with any default

@@ -34,7 +34,7 @@ class DataFlow(StateElement):
     :ivar int DataFlow.from_key: the id of the data port / scoped variable of the source state
     :ivar int DataFlow.to_key: the id of the data port /scoped variable of the target state
     :ivar int DataFlow.data_flow_id: the id of the data port, must be unique for the parent state
-    :ivar rafcon.core.states.container_state.ContainerState DataFlow.parent: reference to the parent state
+    :ivar rafcon.core.states.container_state.ContainerState StateElement.parent: reference to the parent state
     """
 
     yaml_tag = u'!DataFlow'

@@ -37,7 +37,7 @@ class Outcome(StateElement):
 
     :ivar int Outcome.outcome_id: the id of the outcome, must be unique on one hierarchy level
     :ivar str Outcome.name: the human readable name of the outcome
-    :ivar rafcon.core.states.state.State Outcome.parent: reference to the parent state
+    :ivar rafcon.core.states.state.State StateElement.parent: reference to the parent state
     """
 
     yaml_tag = u'!Outcome'
