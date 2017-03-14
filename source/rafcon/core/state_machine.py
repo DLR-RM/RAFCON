@@ -43,9 +43,9 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     It inherits from Observable to make a change of its fields observable.
 
-    :ivar state_machine_id: the id of the state machine
-    :ivar root_state: the root state of the state machine
-    :ivar base_path: the path, where to save the state machine
+    :ivar int StateMachine.state_machine_id: the id of the state machine
+    :ivar rafcon.core.states.state StateMachine.root_state: the root state of the state machine
+    :ivar str StateMachine.base_path: the path, where to save the state machine
     """
 
     state_machine_id = None
