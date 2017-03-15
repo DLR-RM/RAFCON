@@ -56,6 +56,7 @@
 .slick-next:focus:before
 {
     opacity: 1;
+
 }
 .slick-prev.slick-disabled:before,
 .slick-next.slick-disabled:before
@@ -71,7 +72,7 @@
     line-height: 1;
 
     opacity: .75;
-    color: white;
+    color: #2F3241;
 
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -121,7 +122,7 @@
 
 .slick-dots
 {
-    
+
     bottom: -25px;
 
     display: block;

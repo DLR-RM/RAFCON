@@ -1471,7 +1471,3 @@ margin-top:0px;
     padding-bottom: 0px;
   }
 }
-
-.slick-prev:before, .slick-next:before{
-    color:red;
-}
