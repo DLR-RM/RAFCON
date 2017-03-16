@@ -954,10 +954,6 @@ border-radius: 4px;
     }
   }
 
-  .slick-prev:before{
-    background-color:white;
-  }
-
   .slick-dots {
     top: 550px;
     left:auto;
@@ -1163,6 +1159,14 @@ border-radius: 4px;
   }
 }
 
+.placeholder-mobile-head{
+  height: 109px;
+}
+@media (min-width: 768px){
+  .placeholder-mobile-head{
+    height: 70px;
+  }
+}
 
 
 
