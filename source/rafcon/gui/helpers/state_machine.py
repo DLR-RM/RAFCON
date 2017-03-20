@@ -97,6 +97,7 @@ def save_state_machine(menubar, widget, save_as=False, delete_old_state_machine=
 
         state_machine_m = menubar.model.get_selected_state_machine_model()
         if state_machine_m is None:
+            logger.warning("Can not 'save state machine' because no state machine is selected.")
             return
 
         all_tabs = menubar.states_editor_ctrl.tabs.values()
@@ -138,6 +139,9 @@ def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
     if not menubar:
         error_no_menubar("save_state_machine_as")
         return
+    if menubar.model.get_selected_state_machine_model() is None:
+        logger.warning("Can not 'save state machine as' because no state machine is selected.")
+        return
 
     if path is None:
         if interface.create_folder_func is None:
@@ -146,6 +150,7 @@ def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
         path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
         if path is None:
             return False
+
     menubar.model.get_selected_state_machine_model().state_machine.file_system_path = path
     save_state_machine(menubar=menubar, widget=widget, save_as=True, delete_old_state_machine=True)
 
