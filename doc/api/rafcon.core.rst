@@ -1,5 +1,5 @@
-The core: ``statemachine``
-==========================
+The ``core``
+============
 
 .. contents::
     :backlinks: top

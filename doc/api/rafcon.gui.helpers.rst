@@ -1,5 +1,5 @@
-Helpers (rafcon.gui.helpers)
-============================
+Helper functions: ``rafcon.gui.helpers``
+========================================
 
 This package contains all GUI helper modules.
 

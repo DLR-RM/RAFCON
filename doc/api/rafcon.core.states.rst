@@ -1,5 +1,5 @@
-States
-======
+States: ``states``
+==================
 
 .. contents::
     :backlinks: top

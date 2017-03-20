@@ -1,5 +1,5 @@
-Gaphas extensions for RAFCON
-============================
+Gaphas extensions for RAFCON: ``rafcon.gui.mygaphas``
+=====================================================
 
 Gaphas is a Python library for state-machine editors using Canvas: https://github.com/amolenaar/gaphas
 

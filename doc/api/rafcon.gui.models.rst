@@ -1,5 +1,5 @@
-MVC Models (rafcon.gui.models)
-==============================
+MVC Models: ``rafcon.gui.models``
+=================================
 
 This package contains all models of the MVC architecture.
 

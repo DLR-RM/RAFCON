@@ -1,11 +1,11 @@
-The GUI: ``mvc``
+The GUI: ``gui``
 ================
 
 .. contents::
     :backlinks: top
 
-Subpackages (in rafcon.gui)
----------------------------
+Subpackages
+-----------
 
 .. toctree::
 

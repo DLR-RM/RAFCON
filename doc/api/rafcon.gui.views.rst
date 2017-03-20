@@ -1,5 +1,5 @@
-MVC Views (in rafcon.gui.views)
-=====================================
+MVC Views: ``rafcon.gui.views``
+===============================
 
 .. contents::
     :backlinks: top

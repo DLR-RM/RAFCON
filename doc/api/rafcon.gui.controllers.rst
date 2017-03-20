@@ -1,5 +1,5 @@
-MVC Controllers (rafcon.gui.controllers)
-========================================
+MVC Controllers: ``rafcon.gui.controllers``
+===========================================
 
 All controllers of the MVC architecture.
 
@@ -12,8 +12,8 @@ inherits from the controller class of GTKMVC.
 .. contents::
     :backlinks: top
 
-Subpackages (in rafcon.gui.controllers)
----------------------------------------
+Subpackages
+-----------
 
 .. toctree::
 

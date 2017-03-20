@@ -1,5 +1,5 @@
-Storage
-=======
+Storage: ``storage``
+====================
 
 storage (in rafcon.core.storage)
 --------------------------------
