@@ -32,6 +32,8 @@ from rafcon.gui.runtime_config import global_runtime_config
 
 from rafcon.core.start import setup_environment
 
+import testing_utils
+
 
 def setup_logger():
     import sys
@@ -73,11 +75,13 @@ def call_gui_callback(callback, *args):
 
 
 def trigger_gui_signals(*args):
+    sm_manager_model = args[0]
     main_window_controller = args[1]
     setup_config = args[2]
     state_machine = args[3]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     try:
+        sm_manager_model.selected_state_machine_id = state_machine.state_machine_id
         menubar_ctrl.on_save_as_activate(None, None, setup_config['target_path'][0])
         while state_machine.marked_dirty:
             time.sleep(0.1)
