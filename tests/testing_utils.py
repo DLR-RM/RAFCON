@@ -29,9 +29,11 @@ RAFCON_PATH = realpath(rafcon.__path__[0])
 LIBRARY_SM_PATH = join(TESTS_PATH, '..', 'share', 'libraries')
 EXAMPLES_PATH = join(TESTS_PATH, '..', 'share', 'examples')
 TEST_ASSETS_PATH = join(TESTS_PATH, 'assets')
-TEST_SCRIPT_PATH =  join(TESTS_PATH, 'assets', 'scripts')
+TEST_SCRIPT_PATH = join(TESTS_PATH, 'assets', 'scripts')
 TUTORIAL_PATH = join(TESTS_PATH, "..", "share", "examples", "tutorials")
 RAFCON_SHARED_LIBRARY_PATH = join(dirname(RAFCON_PATH), '..', 'share', 'libraries')
+print LIBRARY_SM_PATH
+print RAFCON_SHARED_LIBRARY_PATH
 
 
 def get_unique_temp_path():
@@ -138,7 +140,8 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
 
     :param core_config: Tuple pointing to config-file or dictionary for partly or all parameters of respective config.
     :param gui_config: Tuple pointing to config-file or dictionary for partly or all parameters of respective config.
-    :param runtime_config: Tuple pointing to config-file or dictionary for partly or all parameters of respective config.
+    :param runtime_config: Tuple pointing to config-file or dictionary for partly or all parameters of
+                           respective config.
     :param libraries: Dictionary with library mounting labels and hard drive paths.
     :return:
     """
@@ -198,8 +201,9 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
      can be shutdown/recovered as easy as it was initialized before.
      Therefore (recovering/reload default configs) it helps to avoid site effects with not properly initialized test
      runs, too.
-     As long as the test stuck when one test is not releasing its multi-threading lock the function integrates a optional
-     caplog error and warning message count and check. This raise the Assertion error reliable and release the lock, too.
+     As long as the test stuck when one test is not releasing its multi-threading lock the function integrates a
+     optional caplog error and warning message count and check. This raise the Assertion error reliable and release
+     the lock, too.
 
     :param bool config: Flag to reload core config from default path.
     :param bool gui_config: Flag to reload gui config from default path.
