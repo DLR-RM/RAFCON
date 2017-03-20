@@ -14,13 +14,20 @@
    :synopsis: A module to hold all decorators needed for the RAFCON core
 
 """
-from gtkmvc.support import decorators
+
+import functools
+import itertools
+
+
+def wraps_safely(obj, attr_names=functools.WRAPPER_ASSIGNMENTS):
+    # Solves problem with missing attributes: http://stackoverflow.com/a/28752007
+    return functools.wraps(obj, assigned=itertools.ifilter(functools.partial(hasattr, obj), attr_names))
 
 global_lock_counter = 0
 
 
-@decorators.good_decorator_accepting_args
 def lock_state_machine(func):
+    @wraps_safely(func)
     def func_wrapper(*args, **kwargs):
         """ Decorate method to observable core edit methods. If the core method of rafcon core object is called
         the respective state machine object edition will be locked by the respective thread until the handed function
