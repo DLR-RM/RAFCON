@@ -4,8 +4,8 @@ The GUI: ``gui``
 .. contents::
     :backlinks: top
 
-Subpackages
------------
+Subpackages of ``rafcon.gui``
+-----------------------------
 
 .. toctree::
 

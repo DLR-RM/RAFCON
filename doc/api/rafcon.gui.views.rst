@@ -4,8 +4,8 @@ MVC Views: ``rafcon.gui.views``
 .. contents::
     :backlinks: top
 
-Subpackages (in rafcon.gui.views)
----------------------------------
+Subpackages of ``rafcon.gui.views``
+-----------------------------------
 
 .. toctree::
 
