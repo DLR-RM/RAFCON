@@ -126,22 +126,23 @@ class SegmentHandleFinder(ItemHandleFinder):
 
     def get_handle_at_point(self, pos):
         view = self.view
-        item = view.hovered_item
+        connection_v = view.hovered_item
         handle = None
 
-        end_handles = item.end_handles(include_waypoints=True)
-
+        end_handles = connection_v.end_handles(include_waypoints=True)
         if len(end_handles) == 4:
             from_handle, from_handle_waypoint, to_handle_waypoint, to_handle = end_handles
-            state_v = item.parent
-            cur_pos = self.view.get_matrix_v2i(item).transform_point(*pos)
+            cur_pos = self.view.get_matrix_v2i(connection_v).transform_point(*pos)
+
+            max_distance = connection_v.line_width / 2.
 
             distance_from_segment, _ = distance_line_point(from_handle.pos, from_handle_waypoint.pos, cur_pos)
-            if distance_from_segment < state_v.border_width:
-                return item, from_handle
+            if distance_from_segment < max_distance:
+                return connection_v, from_handle
+
             distance_to_segment, _ = distance_line_point(to_handle.pos, to_handle_waypoint.pos, cur_pos)
-            if distance_to_segment < state_v.border_width:
-                return item, to_handle
+            if distance_to_segment < max_distance:
+                return connection_v, to_handle
 
         try:
             segment = Segment(self.item, self.view)
@@ -151,8 +152,8 @@ class SegmentHandleFinder(ItemHandleFinder):
             handle = segment.split(pos)
 
         if not handle:
-            item, handle = super(SegmentHandleFinder, self).get_handle_at_point(pos)
-        return item, handle
+            connection_v, handle = super(SegmentHandleFinder, self).get_handle_at_point(pos)
+        return connection_v, handle
 
 
 @HandleSelection.when_type(ConnectionView)
