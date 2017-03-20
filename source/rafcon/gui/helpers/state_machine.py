@@ -82,57 +82,57 @@ def open_state_machine(path=None):
 
 
 def save_state_machine(menubar, widget, save_as=False, delete_old_state_machine=False):
-        def on_message_dialog_response_signal(widget, response_id, source_editor_ctrl):
-            state = source_editor_ctrl.model.state
-            if response_id == 1:
-                logger.debug("Applying source code changes of state '{}'".format(state.name))
-                source_editor_ctrl.apply_clicked(None)
+    def on_message_dialog_response_signal(widget, response_id, source_editor_ctrl):
+        state = source_editor_ctrl.model.state
+        if response_id == 1:
+            logger.debug("Applying source code changes of state '{}'".format(state.name))
+            source_editor_ctrl.apply_clicked(None)
 
-            elif response_id == 2:
-                logger.debug("Ignoring source code changes of state '{}'".format(state.name))
-            else:
-                logger.warning("Response id: {} is not considered".format(response_id))
-                return
-            widget.destroy()
+        elif response_id == 2:
+            logger.debug("Ignoring source code changes of state '{}'".format(state.name))
+        else:
+            logger.warning("Response id: {} is not considered".format(response_id))
+            return
+        widget.destroy()
 
-        state_machine_m = menubar.model.get_selected_state_machine_model()
-        if state_machine_m is None:
-            logger.warning("Can not 'save state machine' because no state machine is selected.")
+    state_machine_m = menubar.model.get_selected_state_machine_model()
+    if state_machine_m is None:
+        logger.warning("Can not 'save state machine' because no state machine is selected.")
+        return
+
+    all_tabs = menubar.states_editor_ctrl.tabs.values()
+    all_tabs.extend(menubar.states_editor_ctrl.closed_tabs.values())
+    dirty_source_editor_ctrls = [tab_dict['controller'].get_controller('source_ctrl') for tab_dict in all_tabs if
+                                 tab_dict['source_code_view_is_dirty'] is True and
+                                 tab_dict['state_m'].state.get_state_machine().state_machine_id ==
+                                 state_machine_m.state_machine.state_machine_id]
+
+    for dirty_source_editor_ctrl in dirty_source_editor_ctrls:
+        state = dirty_source_editor_ctrl.model.state
+        message_string = "The source code of the state '{}' (path: {}) has net been applied yet and would " \
+                         "therefore not be stored.\n\nDo you want to apply the changes now?".format(state.name,
+                                                                                                 state.get_path())
+        if global_gui_config.get_config_value("AUTO_APPLY_SOURCE_CODE_CHANGES", False):
+            dirty_source_editor_ctrl.apply_clicked(None)
+        else:
+            RAFCONButtonDialog(message_string, ["Apply", "Ignore changes"],
+                               callback=on_message_dialog_response_signal, callback_args=[dirty_source_editor_ctrl],
+                               message_type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
+
+    save_path = state_machine_m.state_machine.file_system_path
+    if save_path is None:
+        if not menubar.on_save_as_activate(widget, data=None):
             return
 
-        all_tabs = menubar.states_editor_ctrl.tabs.values()
-        all_tabs.extend(menubar.states_editor_ctrl.closed_tabs.values())
-        dirty_source_editor_ctrls = [tab_dict['controller'].get_controller('source_ctrl') for tab_dict in all_tabs if
-                                     tab_dict['source_code_view_is_dirty'] is True and
-                                     tab_dict['state_m'].state.get_state_machine().state_machine_id ==
-                                     state_machine_m.state_machine.state_machine_id]
+    logger.debug("Saving state machine to {0}".format(save_path))
 
-        for dirty_source_editor_ctrl in dirty_source_editor_ctrls:
-            state = dirty_source_editor_ctrl.model.state
-            message_string = "The source code of the state '{}' (path: {}) has net been applied yet and would " \
-                             "therefore not be stored.\n\nDo you want to apply the changes now?".format(state.name,
-                                                                                                     state.get_path())
-            if global_gui_config.get_config_value("AUTO_APPLY_SOURCE_CODE_CHANGES", False):
-                dirty_source_editor_ctrl.apply_clicked(None)
-            else:
-                RAFCONButtonDialog(message_string, ["Apply", "Ignore changes"],
-                                   callback=on_message_dialog_response_signal, callback_args=[dirty_source_editor_ctrl],
-                                   message_type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
+    state_machine = menubar.model.get_selected_state_machine_model().state_machine
+    storage.save_state_machine_to_path(state_machine, state_machine.file_system_path,
+                                       delete_old_state_machine=delete_old_state_machine, save_as=save_as)
 
-        save_path = state_machine_m.state_machine.file_system_path
-        if save_path is None:
-            if not menubar.on_save_as_activate(widget, data=None):
-                return
-
-        logger.debug("Saving state machine to {0}".format(save_path))
-
-        state_machine = menubar.model.get_selected_state_machine_model().state_machine
-        storage.save_state_machine_to_path(state_machine, state_machine.file_system_path,
-                                           delete_old_state_machine=delete_old_state_machine, save_as=save_as)
-
-        menubar.model.get_selected_state_machine_model().store_meta_data()
-        logger.debug("Successfully saved state machine and its meta data.")
-        return True
+    menubar.model.get_selected_state_machine_model().store_meta_data()
+    logger.debug("Successfully saved state machine and its meta data.")
+    return True
 
 
 def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
