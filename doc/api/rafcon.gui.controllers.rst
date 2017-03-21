@@ -51,6 +51,11 @@ GlobalVariableManagerController (in global_variable_manager)
 
 .. automodule:: rafcon.gui.controllers.global_variable_manager
 
+LoggingConsoleController (in logging_console)
+---------------------------------------------
+
+.. automodule:: rafcon.gui.controllers.logging_console
+
 LibraryTreeController (in library_tree)
 ---------------------------------------
 

@@ -37,10 +37,10 @@ LibraryTreeView (in library_tree)
 
 .. automodule:: rafcon.gui.views.library_tree
 
-LoggingView (in logging)
-------------------------
+LoggingConsoleView (in logging_console)
+---------------------------------------
 
-.. automodule:: rafcon.gui.views.logging
+.. automodule:: rafcon.gui.views.logging_console
 
 MainWindowView (in main_window)
 -------------------------------

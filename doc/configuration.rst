@@ -268,7 +268,7 @@ LOGGING\_SHOW\_ERROR
     Type: boolean
     Default: ``False`` for DEBUG, ``True`` for the rest
     The flags decide which message log levels to show in the logging
-    view.
+    console view.
 
 LIBRARY\_TREE\_PATH\_HUMAN\_READABLE
     Type: boolean
