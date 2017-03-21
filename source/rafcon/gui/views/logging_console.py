@@ -19,14 +19,13 @@ from rafcon.utils import log
 from rafcon.gui.config import global_gui_config
 
 
-class LoggingView(View):
+class LoggingConsoleView(View):
     top = 'main_frame'
 
     def __init__(self):
         View.__init__(self)
 
         self._lock = threading.Lock()
-        self._log_entries = []
 
         self.text_view = gtk.TextView()
         self.text_view.set_property('editable', False)
@@ -43,38 +42,20 @@ class LoggingView(View):
         scrollable.add(self.text_view)
         self.text_view.show()
 
-        self.info = global_gui_config.get_config_value('LOGGING_SHOW_INFO', True)
-        self.debug = global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True)
-        self.warning = global_gui_config.get_config_value('LOGGING_SHOW_WARNING', True)
-        self.error = global_gui_config.get_config_value('LOGGING_SHOW_ERROR', True)
+        self.info = self.debug = self.warning = self.error = True
+        self.read_enables()
 
         self['scrollable'] = scrollable
         self.quit_flag = False
 
-        self.text_view.connect('populate_popup', self.add_clear_menu_item)
+    def clean_buffer(self):
+        self.text_view.set_buffer(self.filtered_buffer)
 
-        log.register_logging_view('main', self)
-
-    def add_clear_menu_item(self, widget, menu):
-        clear_item = gtk.MenuItem("Clear Logging View")
-        separator_item = gtk.SeparatorMenuItem()
-        menu.append(separator_item)
-        menu.append(clear_item)
-        clear_item.connect('activate', self._clear_buffer)
-        separator_item.show()
-        clear_item.show()
-
-    def _clear_buffer(self, widget, data=None):
-        self._log_entries = []
-        self.print_filtered_buffer()
-        self.text_view.scroll_mark_onscreen(self.text_view.get_buffer().get_insert())
+        start, end = self.filtered_buffer.get_bounds()
+        self.filtered_buffer.delete(start, end)
 
     def print_message(self, message, log_level, new=True):
-        # return
         self._lock.acquire()
-        # Store all new log entries
-        if new:
-            self._log_entries.append((log_level, message))
         if log_level <= log.logging.DEBUG and self.debug:
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
                           priority=glib.PRIORITY_LOW)
@@ -130,23 +111,8 @@ class LoggingView(View):
         text_buffer.create_tag("set_white_text", foreground="#ffffff")
         return text_buffer
 
-    def update_filtered_buffer(self):
+    def read_enables(self):
         self.info = global_gui_config.get_config_value('LOGGING_SHOW_INFO', True)
         self.debug = global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True)
         self.warning = global_gui_config.get_config_value('LOGGING_SHOW_WARNING', True)
         self.error = global_gui_config.get_config_value('LOGGING_SHOW_ERROR', True)
-
-        self.print_filtered_buffer()
-
-        self.text_view.scroll_mark_onscreen(self.text_view.get_buffer().get_insert())
-
-    def print_filtered_buffer(self):
-        self.text_view.set_buffer(self.filtered_buffer)
-
-        start, end = self.filtered_buffer.get_bounds()
-        self.filtered_buffer.delete(start, end)
-
-        for entry in self._log_entries:
-            level = entry[0]
-            message = entry[1]
-            self.print_message(message, level, new=False)

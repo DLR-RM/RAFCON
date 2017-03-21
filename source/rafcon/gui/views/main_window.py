@@ -24,7 +24,7 @@ from rafcon.gui.utils import constants
 from rafcon.gui.views.execution_history import ExecutionHistoryView
 from rafcon.gui.views.global_variable_editor import GlobalVariableEditorView
 from rafcon.gui.views.library_tree import LibraryTreeView
-from rafcon.gui.views.logging import LoggingView
+from rafcon.gui.views.logging_console import LoggingConsoleView
 from rafcon.gui.views.menu_bar import MenuBarView
 from rafcon.gui.views.modification_history import ModificationHistoryView
 from rafcon.gui.views.state_icons import StateIconView
@@ -139,10 +139,10 @@ class MainWindowView(View):
         ######################################################
         # Logging
         ######################################################
-        self.logging_view = LoggingView()
+        self.logging_console_view = LoggingConsoleView()
         self['console'].remove(self['console_scroller'])
-        self['console'].pack_start(self.logging_view.get_top_widget(), True, True, 0)
-        self.logging_view.get_top_widget().show()
+        self['console'].pack_start(self.logging_console_view.get_top_widget(), True, True, 0)
+        self.logging_console_view.get_top_widget().show()
 
         ##################################################
         # menu bar view
@@ -225,8 +225,6 @@ class MainWindowView(View):
         self['button_show_debug'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True))
         self['button_show_warning'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_WARNING', True))
         self['button_show_error'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_ERROR', True))
-
-        self.logging_view.update_filtered_buffer()
 
         self.left_bar_window = UndockedWindowView('left_bar_window')
         self.right_bar_window = UndockedWindowView('right_bar_window')

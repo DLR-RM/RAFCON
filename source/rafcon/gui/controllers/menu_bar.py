@@ -69,7 +69,7 @@ class MenuBarController(ExtendedController):
             get_controller('state_machines_editor_ctrl')
         self.states_editor_ctrl = gui_singletons.main_window_controller.get_controller('states_editor_ctrl')
         self.shortcut_manager = shortcut_manager
-        self.logging_view = view.logging_view
+        self.logging_console_view = view.logging_console_view
         self.main_window_view = view
         self.observe_model(gui_singletons.core_config_model)
         self.observe_model(gui_singletons.gui_config_model)
@@ -543,7 +543,7 @@ class MenuBarController(ExtendedController):
         core_singletons.state_machine_manager.delete_all_state_machines()
         # Recursively destroys the main window
         gui_singletons.main_window_controller.destroy()
-        self.logging_view.quit_flag = True
+        self.logging_console_view.quit_flag = True
         glib.idle_add(log.unregister_logging_view, 'main')
 
     ######################################################

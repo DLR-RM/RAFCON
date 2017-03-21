@@ -34,6 +34,7 @@ from rafcon.gui.controllers.global_variable_manager import GlobalVariableManager
 from rafcon.gui.controllers.library_tree import LibraryTreeController
 from rafcon.gui.controllers.menu_bar import MenuBarController
 from rafcon.gui.controllers.modification_history import ModificationHistoryTreeController
+from rafcon.gui.controllers.logging_console import LoggingConsoleController
 from rafcon.gui.controllers.state_icons import StateIconController
 from rafcon.gui.controllers.state_machine_tree import StateMachineTreeController
 from rafcon.gui.controllers.state_machines_editor import StateMachinesEditorController
@@ -83,14 +84,19 @@ class MainWindowController(ExtendedController):
         # shortcut manager
         self.shortcut_manager = ShortcutManager(view['main_window'])
 
+        ######################################################
+        # logging console
+        ######################################################
+        self.logging_console_controller = LoggingConsoleController(None, view.logging_console_view)
+        self.add_controller('logging_console_controller', self.logging_console_controller)
+
+        ######################################################
         # library tree
+        ######################################################
         self.library_manager_model = gui_singletons.library_manager_model
         library_controller = LibraryTreeController(self.library_manager_model, view.library_tree,
                                                    state_machine_manager_model)
         self.add_controller('library_controller', library_controller)
-        # view['main_window'].add_events(
-        #    gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
-        #    gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
 
         ######################################################
         # state icons
@@ -99,20 +105,28 @@ class MainWindowController(ExtendedController):
                                                     self.shortcut_manager)
         self.add_controller('state_icon_controller', state_icon_controller)
 
+        ######################################################
         # state machine tree
+        ######################################################
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
 
+        ######################################################
         # states editor
+        ######################################################
         states_editor_ctrl = StatesEditorController(state_machine_manager_model, view.states_editor)
         self.add_controller('states_editor_ctrl', states_editor_ctrl)
 
+        ######################################################
         # state machines editor
+        ######################################################
         state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
                                                                    view.state_machines_editor)
         self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
 
+        ######################################################
         # global variable editor
+        ######################################################
         global_variable_manager_ctrl = GlobalVariableManagerController(gui_singletons.global_variable_manager_model,
                                                                        view.global_var_editor)
         self.add_controller('global_variable_manager_ctrl', global_variable_manager_ctrl)
@@ -546,7 +560,7 @@ class MainWindowController(ExtendedController):
 
     def on_log_button_toggled(self, log_button, config_key):
         gui_config.set_config_value(config_key, log_button.get_active())
-        self.view.logging_view.update_filtered_buffer()
+        self.logging_console_controller.update_filtered_buffer()
 
     def update_log_button_state(self):
         for level in ["debug", "info", "warning", "error"]:
