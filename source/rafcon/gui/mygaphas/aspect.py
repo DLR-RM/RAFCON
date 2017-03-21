@@ -124,7 +124,7 @@ class SegmentHandleFinder(ItemHandleFinder):
     the SegmentPainter.
     """
 
-    def get_handle_at_point(self, pos):
+    def get_handle_at_point(self, pos, split=True):
         view = self.view
         connection_v = view.hovered_item
         handle = None
@@ -144,12 +144,13 @@ class SegmentHandleFinder(ItemHandleFinder):
             if distance_to_segment < max_distance:
                 return connection_v, to_handle
 
-        try:
-            segment = Segment(self.item, self.view)
-        except TypeError:
-            pass
-        else:
-            handle = segment.split(pos)
+        if split:
+            try:
+                segment = Segment(self.item, self.view)
+            except TypeError:
+                pass
+            else:
+                handle = segment.split(pos)
 
         if not handle:
             connection_v, handle = super(SegmentHandleFinder, self).get_handle_at_point(pos)
