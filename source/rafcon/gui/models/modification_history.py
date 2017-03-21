@@ -43,7 +43,7 @@ from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
 
 from rafcon.utils import log
-from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
+from rafcon.utils.constants import TEMP_PATH, RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 
 logger = log.get_logger(__name__)
 
@@ -135,7 +135,6 @@ class ModificationsHistoryModel(ModelMT):
         self.busy = True
         self.modifications.all_time_history[version_id].action.undo()
         self.modifications.trail_pointer -= 1
-        self.modifications.all_time_pointer -= 1
         self.busy = False
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
             # logger.debug("StateMachineAction Undo")
@@ -162,7 +161,6 @@ class ModificationsHistoryModel(ModelMT):
         self.busy = True
         self.modifications.all_time_history[version_id].action.redo()
         self.modifications.trail_pointer += 1
-        self.modifications.all_time_pointer += 1
         self.busy = False
         if self.modifications.trail_history is not None \
                 and self.modifications.trail_pointer < len(self.modifications.trail_history) \
@@ -623,7 +621,6 @@ class ModificationsHistoryModel(ModelMT):
             else:
                 logger.error("HISTORY after not count [states] -> For every before there should be a after.")
 
-
     @ModelMT.observe("state", before=True)
     @ModelMT.observe("outcomes", before=True)
     @ModelMT.observe("is_start", before=True)
@@ -755,10 +752,11 @@ class HistoryTreeElement(object):
 
 
 class ModificationsHistory(Observable):
-    """The Class holds a all time history and a trail history. The trail history holds directly all modifications made since
-    the last reset until the actual last active change and the undone modifications of this branch of modifications.
+    """The Class holds a all time history and a trail history. The trail history holds directly all modifications made
+    since the last reset until the actual last active change and the undone modifications of this branch of
+    modifications.
     So the all time history holds a list of all modifications ordered by time whereby the list elements are TreeElements
-    that now respective previous action's list id and the possible next action list ids (multiple branches). Hereby a
+    that know respective previous action's list id and the possible next action list ids (multiple branches). Hereby a
     fast search from a actual active branch (trail history) to specific version_id (some branch) can be performed and
     all recovery steps collected.
     Additionally there will be implemented functionalities that never forget a single
@@ -767,46 +765,46 @@ class ModificationsHistory(Observable):
     - all_actions is a type of a tree # prev_id, action, next_id, old_next_ids
     """
 
-    # TODO remove explizit trail-history -> next_id is holding the same information and old_next_ids the branching
+    # TODO remove explicit trail-history -> next_id is holding the same information and old_next_ids the branching
     def __init__(self):
         Observable.__init__(self)
         self.trail_history = []
         self.all_time_history = []
 
         self.trail_pointer = None
-        self.all_time_pointer = None
-        self.counter = 0
 
         self.with_prints = False
+
+        # self.test_action_dumps = False
+        # self._tmp_file = TEMP_PATH + '/test_mod_history.txt'
 
         # insert initial dummy element
         self.insert_action(ActionDummy())
 
     @Observable.observed
     def insert_action(self, action):
-        # insert new element in
-        action.version_id = self.counter
-        if self.counter == 0:
-            prev_id = None
-        else:
+
+        prev_id = None
+        if self.all_time_history:
             prev_id = self.trail_history[self.trail_pointer].version_id
 
+        action.version_id = len(self.all_time_history)
         self.all_time_history.append(HistoryTreeElement(prev_id=prev_id, action=action))
-        self.counter += 1
 
         # set pointer of previous element
-        if self.all_time_pointer is not None:
+        if prev_id is not None:
             prev_tree_elem = self.all_time_history[prev_id]
             prev_old_next_ids = copy.deepcopy(prev_tree_elem.old_next_ids)
             if self.with_prints:
-                logger.info("new pointer {0} element {1}\nnew next_id {2}".format(self.all_time_history[self.trail_pointer].action.version_id,
-                                                                                  prev_tree_elem,
-                                                                                  len(self.all_time_history) - 1))
+                logger.info("new pointer {0} element {1}\nnew next_id {2}"
+                            "".format(self.all_time_history[self.trail_pointer].action.version_id,
+                                      prev_tree_elem,
+                                      len(self.all_time_history) - 1))
             prev_tree_elem.next_id = len(self.all_time_history) - 1
             if not prev_old_next_ids == prev_tree_elem.old_next_ids:
-                logger.info("This action has been created a new branch in the state machine modification-history")
+                logger.info("This action has created a new branch in the state machine modification-history")
 
-        # do single trail history
+        # check single trail history and reduce trail history if the trail_pointer does not point on the last element
         if self.trail_pointer is not None:
             if self.trail_pointer > len(self.trail_history) - 1 or self.trail_pointer < 0:
                 logger.error('History is broken may!!! %s' % self.trail_pointer)
@@ -814,42 +812,42 @@ class ModificationsHistory(Observable):
                 if self.with_prints:
                     print "pointer: %s %s" % (self.trail_pointer, len(self.trail_history))
                 self.trail_history.pop()
+        # append new action to trail history and set actual trail pointer
         self.trail_history.append(action)
+        self.trail_pointer = None if len(self.trail_history) == 0 else len(self.trail_history) - 1
 
-        self.trail_pointer = len(self.trail_history) - 1
-        if self.trail_pointer == -1:
-            self.trail_pointer = None
-        self.all_time_pointer = len(self.all_time_history) - 1  # general should be equal to self.counter and version_id
         if self.with_prints and action is not None:
             logger.info("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
+        # self.write_trail_history_to_file()
+
+    # def write_trail_history_to_file(self):
+    #     if self.test_action_dumps:
+    #         with open(self._tmp_file, 'w+') as f:
+    #             for a in self.trail_history:
+    #                 h_elem = self.all_time_history[a.version_id]
+    #                 s = str(h_elem.summary()) + "--{#}--" + h_elem.as_json_string() + '\n'
+    #                 # print '\n'.join(s.split("--{#}--"))
+    #                 f.write(s)
 
     @Observable.observed
     def undo(self):
-        # logger.debug("try undo: undo_pointer: %s history lenght: %s" % (self.trail_pointer, len(self.trail_history)))
-        if self.trail_pointer is not None and not self.trail_pointer < 0 and \
-                self.trail_history[self.trail_pointer] is not None:
-            self.trail_history[self.trail_pointer].undo()
-            self.trail_pointer -= 1
-            self.all_time_pointer -= 1
-        elif self.trail_pointer is not None or self.trail_history[self.trail_pointer].action is None:
-            logger.warning("No UNDO left over!!!")
-        else:
-            logger.error("History undo FAILURE")
+        if not self.trail_history or self.trail_pointer == 0 or not self.trail_pointer < len(self.trail_history):
+            logger.debug("There is no more action that can be undone")
+            return
+
+        self.trail_history[self.trail_pointer].undo()
+        self.trail_pointer -= 1
         if self.with_prints:
             logger.info("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
 
     @Observable.observed
     def redo(self):
-        # logger.debug("try redo: undo_pointer: %s history lenght: %s" % (self.trail_pointer, len(self.trail_history)))
-        if self.trail_history is not None and self.trail_pointer + 1 < len(self.trail_history) and \
-                self.trail_history[self.trail_pointer + 1] is not None:
-            self.trail_history[self.trail_pointer + 1].redo()
-            self.trail_pointer += 1
-            self.all_time_pointer += 1
-        elif self.trail_history is not None or self.trail_history[self.trail_pointer + 1] is None:
-            logger.warning("No REDO left over!!!")
-        else:
-            logger.error("History redo FAILURE")
+        if not self.trail_history or self.trail_history and not self.trail_pointer + 1 < len(self.trail_history):
+            logger.debug("There is no more action that can be redone")
+            return
+
+        self.trail_history[self.trail_pointer + 1].redo()
+        self.trail_pointer += 1
         if self.with_prints:
             logger.info("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
 
@@ -961,8 +959,6 @@ class ModificationsHistory(Observable):
         self.all_time_history = []
 
         self.trail_pointer = None
-        self.all_time_pointer = None
-        self.counter = 0
 
         # insert initial dummy element
         self.insert_action(ActionDummy())

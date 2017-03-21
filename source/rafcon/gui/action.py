@@ -21,8 +21,8 @@ This general Action (one procedure for all possible edition) procedure is expans
 to define specific _-Action-Classes for simple/specific edit actions.
 """
 import copy
-import difflib
 import json
+import difflib
 
 from gtkmvc import ModelMT
 from jsonconversion.decoder import JSONObjectDecoder
@@ -65,26 +65,29 @@ core_object_list = [Transition, DataFlow, Outcome, InputDataPort, OutputDataPort
 DEBUG_META_REFERENCES = False
 HISTORY_DEBUG_LOG_FILE = RAFCON_TEMP_PATH_BASE + '/test_file.txt'
 
+STATE_TUPLE_JSON_STR_INDEX = 0
+STATE_TUPLE_CHILD_STATES_INDEX = 1
+STATE_TUPLE_META_DICT_INDEX = 2
+STATE_TUPLE_PATH_INDEX = 3
+STATE_TUPLE_SCRIPT_TEXT_INDEX = 4
+
 
 def get_state_tuple(state, state_m=None):
     """ Generates a tuple that holds the state as yaml-strings and its meta data in a dictionary.
     The tuple consists of:
-    [0] yaml_str for state,
+    [0] json_str for state,
     [1] dict of child_state tuples,
-    [2] script of state,
-    [3] dict of model_meta-data of self and elements
-    [4] path of state in state machine
-    [5] script_text
+    [2] dict of model_meta-data of self and elements
+    [3] path of state in state machine
+    [4] script_text
     #   states-meta - [state-, transitions-, data_flows-, outcomes-, inputs-, outputs-, scopes, states-meta]
 
     :param rafcon.core.states.state.State state: The state that should be stored
     :return: state_tuple tuple
     """
-    # state_str = yaml.dump(state)
     state_str = json.dumps(state, cls=JSONObjectEncoder,
                            indent=4, check_circular=False, sort_keys=True)
 
-    # print "++++++++++", state
     state_tuples_dict = {}
     if isinstance(state, ContainerState):
         # print state.states, "\n"
@@ -92,30 +95,21 @@ def get_state_tuple(state, state_m=None):
             # print "child_state: %s" % child_state_id, child_state, "\n"
             state_tuples_dict[child_state_id] = get_state_tuple(child_state)
 
-    if state_m is not None:
-        state_meta_dict = get_state_element_meta(state_m)
-    else:
-        state_meta_dict = {}
+    state_meta_dict = {} if state_m is None else get_state_element_meta(state_m)
 
-    if not isinstance(state, ExecutionState):
-        script_content = "Dummy Script"
-        script = Script(parent=None)
-    else:
-        script_content = state.script.script
-        script = state.script
-    state_tuple = (state_str, state_tuples_dict, script, state_meta_dict, state.get_path(), script_content)
+    script_content = state.script.script if isinstance(state, ExecutionState) else None
+
+    state_tuple = (state_str, state_tuples_dict, state_meta_dict, state.get_path(), script_content)
 
     return state_tuple
 
 
 def get_state_from_state_tuple(state_tuple):
-    # print "++++ new state", state_tuple
-
     # Transitions and data flows are not added, as also states are not added
     # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
     # validity checks for transitions and data flows would fail
-    # state_info = yaml.load(state_tuple[0])
-    state_info = json.loads(state_tuple[0], cls=JSONObjectDecoder, substitute_modules=substitute_modules)
+    state_info = json.loads(state_tuple[STATE_TUPLE_JSON_STR_INDEX],
+                            cls=JSONObjectDecoder, substitute_modules=substitute_modules)
     if not isinstance(state_info, tuple):
         state = state_info
     else:
@@ -125,7 +119,7 @@ def get_state_from_state_tuple(state_tuple):
 
     if isinstance(state, BarrierConcurrencyState):
         # logger.debug("\n\ninsert decider_state\n\n")
-        child_state = get_state_from_state_tuple(state_tuple[1][UNIQUE_DECIDER_STATE_ID])
+        child_state = get_state_from_state_tuple(state_tuple[STATE_TUPLE_CHILD_STATES_INDEX][UNIQUE_DECIDER_STATE_ID])
         # do_storage_test(child_state)
         for t in state.transitions.values():
             if UNIQUE_DECIDER_STATE_ID in [t.from_state, t.to_state]:
@@ -137,11 +131,10 @@ def get_state_from_state_tuple(state_tuple):
                 logger.error("Could not insert DeciderState!!! while it is in NOT in already!!! {0} {1}".format(
                     UNIQUE_DECIDER_STATE_ID in state.states, child_state.state_id == UNIQUE_DECIDER_STATE_ID))
 
-    # state.script = state_tuple[2]
     if isinstance(state, ExecutionState):
-        state.script_text = state_tuple[5]
+        state.script_text = state_tuple[STATE_TUPLE_SCRIPT_TEXT_INDEX]
     # print "------------- ", state
-    for child_state_id, child_state_tuple in state_tuple[1].iteritems():
+    for child_state_id, child_state_tuple in state_tuple[STATE_TUPLE_CHILD_STATES_INDEX].iteritems():
         child_state = get_state_from_state_tuple(child_state_tuple)
         # do_storage_test(child_state)
 
@@ -391,57 +384,89 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
     check_state_model_for_is_start_state(state_model)
 
 
-class ActionDummy:
-    def __init__(self, overview=None):
-        if overview is None:
-            self.before_overview = NotificationOverview()
+class CoreObjectIdentifier:
+    # TODO generalize and include into utils
+
+    type_related_list_name_dict = {InputDataPort.__name__: 'input_data_ports',
+                                   OutputDataPort.__name__: 'output_data_ports',
+                                   ScopedVariable.__name__: 'scoped_variables',
+                                   DataFlow.__name__: 'data_flows',
+                                   Outcome.__name__: 'outcomes',
+                                   Transition.__name__: 'transitions',
+                                   State.__name__: 'states',
+                                   DeciderState.__name__: 'states'}
+
+    def __init__(self, core_obj_or_cls):
+        if not(type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list):
+            logger.warning("\n{0}\n{1}\n{2}".format(core_obj_or_cls, type(core_obj_or_cls),core_object_list))
+        assert type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list
+        self._sm_id = None
+        self._path = None
+        # type can be, object types (of type Transition e.g.) or class
+        self._type = None
+        self._id = None
+        self._list_name = None
+
+        if type(core_obj_or_cls) in core_object_list:
+            self._type = type(core_obj_or_cls).__name__
         else:
-            self.before_overview = overview
-        self.after_overview = None
+            self._type = 'class'
 
-    def set_after(self, overview=None):
-        self.after_overview = overview
+        if not self._type == 'class':
+            if self._type in ['ExecutionState', 'HierarchyState', 'BarrierConcurrencyState',
+                              'PreemptiveConcurrencyState', 'LibraryState', 'DeciderState']:
+                self._path = core_obj_or_cls.get_path()
+                self._id = core_obj_or_cls.state_id
+                self._sm_id = core_obj_or_cls.get_state_machine().state_machine_id
+            else:
+                if isinstance(core_obj_or_cls.parent, State):
+                    self._path = core_obj_or_cls.parent.get_path()
+                    if core_obj_or_cls.parent.get_state_machine() is None:
+                        logger.warning('state has no state machine -> {0} {1}'.format(core_obj_or_cls.parent.name, core_obj_or_cls.parent.get_path()))
+                    else:
+                        self._sm_id = core_obj_or_cls.parent.get_state_machine().state_machine_id
+                else:
+                    logger.warning("identifier of core object {0} without parent is mostly useless".format(self._type))
 
-    def get_storage(self):
-        pass
+            if self._type in ['InputDataPort', 'OutputDataPort', 'ScopedVariable']:
+                self._id = core_obj_or_cls.data_port_id
+                self._list_name = self.type_related_list_name_dict[self._type]
+            elif self._type == 'Transition':
+                self._id = core_obj_or_cls.transition_id
+                self._list_name = self.type_related_list_name_dict[self._type]
+            elif self._type == 'DataFlow':
+                self._id = core_obj_or_cls.data_flow_id
+                self._list_name = self.type_related_list_name_dict[self._type]
+            elif self._type == 'Outcome':
+                self._id = core_obj_or_cls.outcome_id
+                self._list_name = self.type_related_list_name_dict[self._type]
+            elif self._type == 'StateMachine':
+                # self.__sm_id = core_obj_cls.state_machine_id
+                pass
+            elif self._type == 'GlobalVariableManager':
+                pass
+            elif self._type == 'LibraryManager':
+                pass
+            else:
+                pass
 
-    def undo(self):
-        pass
-
-    def redo(self):
-        pass
+    def __str__(self):
+        return "{0}:{1}:{2}:{3}".format(self._type, self._sm_id, self._path, self._id)
 
 
-class MetaAction:
+class AbstractAction(object):
+    __version_id = None
 
-    def __init__(self, parent_path, state_machine_model, overview):
-
-        assert isinstance(overview, NotificationOverview)
-        assert overview['type'] == 'signal'
-
-        self.type = "change " + overview['meta_signal'][-1]['change']
-        # overview['method_name'].append(overview['meta_signal'][-1]['origin'] + " meta change " + overview['meta_signal'][-1]['change'])
-        overview['method_name'].append("meta change " + overview['meta_signal'][-1]['change'])
-        overview['info'][-1]['method_name'] = "change " + overview['meta_signal'][-1]['change']
-        overview['instance'].append(overview['model'][-1])
-        overview['info'][-1]['instance'] = overview['model'][-1]
-
-        meta_str = json.dumps(overview['model'][-1].meta, cls=JSONObjectEncoder,
-                              indent=4, check_circular=False, sort_keys=True)
-        # print meta_str
-        self.meta = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
-
-        self.state_machine = state_machine_model.state_machine
+    def __init__(self, parent_path, state_machine_model, overview=None):
+        self.action_type = None
         self.state_machine_model = state_machine_model
         self.parent_path = parent_path
 
-        self.before_overview = overview
+        self.before_overview = NotificationOverview() if overview is None else overview
         self.before_storage = self.get_storage()  # tuple of state and states-list of storage tuple
 
         self.after_overview = None
         self.after_storage = None  # tuple of state and states-list of storage tuple
-
-        self.__version_id = None
 
     @property
     def version_id(self):
@@ -454,9 +479,52 @@ class MetaAction:
         else:
             logger.warning("The version_id of an action is not allowed to be modify after first assignment")
 
+    def description(self):
+        return "{0} {1} {2}".format(self.action_type, self.parent_path, self.__class__.__name__)
+
+    def as_dict(self):
+        return {"parent_path": self.parent_path,
+                "before_overview": self.before_overview, "after_overview": self.after_overview,
+                "before_storage": self.before_storage, "after_storage": self.after_storage}
+
     def set_after(self, overview):
         self.after_overview = overview
-        self.after_storage = self.get_storage()  # tuple of state and states-list of storage tuple
+        self.after_storage = self.get_storage()
+
+    def get_storage(self):
+        pass
+
+    def undo(self):
+        pass
+
+    def redo(self):
+        pass
+
+
+class ActionDummy(AbstractAction):
+    def __init__(self, parent_path=None, state_machine_model=None, overview=None):
+        AbstractAction.__init__(self, parent_path, state_machine_model, overview)
+        self.action_type = 'do_nothing'
+
+
+class MetaAction(AbstractAction):
+
+    def __init__(self, parent_path, state_machine_model, overview):
+
+        assert isinstance(overview, NotificationOverview)
+        assert overview['type'] == 'signal'
+        AbstractAction.__init__(self, parent_path, state_machine_model, overview)
+        self.action_type = "change " + overview['meta_signal'][-1]['change']
+
+        overview['method_name'].append("change " + overview['meta_signal'][-1]['change'])
+        overview['info'][-1]['method_name'] = "change " + overview['meta_signal'][-1]['change']
+        overview['instance'].append(overview['model'][-1])
+        overview['info'][-1]['instance'] = overview['model'][-1]
+
+        meta_str = json.dumps(overview['model'][-1].meta, cls=JSONObjectEncoder,
+                              indent=4, check_circular=False, sort_keys=True)
+        # print meta_str
+        self.meta = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
 
     def get_storage(self):
         state_model = self.state_machine_model.get_state_model_by_path(self.parent_path)
@@ -498,54 +566,20 @@ class MetaAction:
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
 
 
-class Action(ModelMT):
-    __version_id = None
+class Action(ModelMT, AbstractAction):
 
     def __init__(self, parent_path, state_machine_model, overview):
         ModelMT.__init__(self)
         assert isinstance(overview, NotificationOverview)
-        self.type = overview['method_name'][-1]
+        AbstractAction.__init__(self, parent_path, state_machine_model, overview)
         self.state_machine = state_machine_model.state_machine
-        self.state_machine_model = state_machine_model
-        self.parent_path = parent_path
-
-        self.before_overview = overview
-        self.before_model = overview['model'][0]
-        self.before_prop_name = overview['prop_name'][-1]
+        self.action_type = overview['method_name'][-1]
         self.before_info = overview['info'][-1]
-        self.before_storage = self.get_storage()  # tuple of state and states-list of storage tuple
-
-        self.after_overview = None
-        self.after_model = None
-        self.after_prop_name = None
-        self.after_info = None
-        self.after_storage = None  # tuple of state and states-list of storage tuple
-
-        # self.__version_id = None
-
-    @property
-    def version_id(self):
-        return self.__version_id
-
-    @version_id.setter
-    def version_id(self, value):
-        if self.__version_id is None:
-            self.__version_id = value
-        else:
-            logger.warning("The version_id of an action is not allowed to be modify after first assignment")
-
-    def set_after(self, overview):
-        self.after_overview = overview
-        self.after_model = overview['model'][0]
-        self.after_prop_name = overview['prop_name'][0]
-        self.after_info = overview['info'][-1]
-        self.after_storage = self.get_storage()  # tuple of state and states-list of storage tuple
 
     def get_storage(self):
-
-        state_tuple = get_state_tuple(self.state_machine.get_state_by_path(self.parent_path))
+        state_tuple = get_state_tuple(self.state_machine_model.state_machine.get_state_by_path(self.parent_path))
         state_model = self.state_machine_model.get_state_model_by_path(self.parent_path)
-        state_tuple[3].update(get_state_element_meta(state_model))
+        state_tuple[STATE_TUPLE_META_DICT_INDEX].update(get_state_element_meta(state_model))
         return state_tuple
 
     def get_state_changed(self):
@@ -610,22 +644,24 @@ class Action(ModelMT):
             logger.debug("Gaphas-Graphical-Editor can not be imported: {0}".format(e))
 
     def redo(self):
-        """ General Redo, that takes all elements in the parent path state stored of the before action state machine status.
+        """ General Redo, that takes all elements in the parent path state stored of the before action state machine
+        status.
         :return:
         """
 
         self.set_state_to_version(self.get_state_changed(), self.after_storage)
 
     def undo(self):
-        """ General Undo, that takes all elements in the parent path state stored of the after action state machine status.
+        """ General Undo, that takes all elements in the parent path state stored of the after action state machine
+        status.
         :return:
         """
 
         self.set_state_to_version(self.get_state_changed(), self.before_storage)
 
     def set_state_to_version(self, state, storage_version):
-        # print state.get_path(), '\n', storage_version[4]
-        assert state.get_path() == storage_version[4]
+        # print state.get_path(), '\n', storage_version[STATE_TUPLE_PATH_INDEX]
+        assert state.get_path() == storage_version[STATE_TUPLE_PATH_INDEX]
         # print self.parent_path, self.parent_path.split('/'), len(self.parent_path.split('/'))
         path_of_state = state.get_path()
         storage_version_of_state = get_state_from_state_tuple(storage_version)
@@ -634,22 +670,20 @@ class Action(ModelMT):
 
         g_sm_editor = self.stop_graphical_viewer()
 
-        # if self.type == 'change_state_type':
+        # if self.action_type == 'change_state_type':
         #     self.storage_version_for_state_type_change_signal_hook = storage_version
         #     assert isinstance(self.state_machine_model.root_state.state, State)
         #     state_parent = self.before_overview["instance"][-1]
         #     old_state_changed_ref = self.before_overview["args"][-1][1]
         #     state = self.state_machine.get_state_by_path(old_state_changed_ref.get_path())
         #     old_state_changed_in_storage = storage_version_of_state.states[state.state_id]
-        #     if isinstance(old_state_changed_in_storage, state_machine_helper.HierarchyState):
-        #         new_state_class = state_machine_helper.HierarchyState
-        #     elif isinstance(old_state_changed_in_storage, state_machine_helper.BarrierConcurrencyState):
-        #         new_state_class = state_machine_helper.BarrierConcurrencyState
-        #     elif isinstance(old_state_changed_in_storage, state_machine_helper.PreemptiveConcurrencyState):
-        #         new_state_class = state_machine_helper.PreemptiveConcurrencyState
+        #     if isinstance(old_state_changed_in_storage, (HierarchyState,
+        #                                                  BarrierConcurrencyState,
+        #                                                  PreemptiveConcurrencyState)):
+        #         new_state_class = old_state_changed_in_storage.__class__
         #     else:
         #         logger.info("SM set_root_state_to_version: with NO type change")
-        #         new_state_class = state_machine_helper.ExecutionState
+        #         new_state_class = ExecutionState
         #
         #     old_root_state_m = self.state_machine_model.root_state
         #     self.observe_model(self.state_machine_model.root_state)
@@ -664,7 +698,7 @@ class Action(ModelMT):
 
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model)
+        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=actual_state_model)
 
         self.run_graphical_viewer(g_sm_editor, actual_state_model)
 
@@ -679,7 +713,7 @@ class Action(ModelMT):
 
         self.update_state(new_state_m.state, root_state_version_from_storage)
 
-        insert_state_meta_data(meta_dict=storage_version[3], state_model=new_state_m)  # self.state_machine_model.root_state)
+        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
 
     def update_state(self, state, stored_state):
 
@@ -879,22 +913,20 @@ class StateMachineAction(Action, ModelMT):
         if self.with_print:
             print "\n#H# TRY STATE_HELPER ", type(root_state_version_from_storage), \
                 isinstance(root_state_version_from_storage, HierarchyState), "\n"
-        if isinstance(root_state_version_from_storage, HierarchyState):
-            new_state_class = HierarchyState
-        elif isinstance(root_state_version_from_storage, BarrierConcurrencyState):
-            new_state_class = BarrierConcurrencyState
-        elif isinstance(root_state_version_from_storage, PreemptiveConcurrencyState):
-            new_state_class = PreemptiveConcurrencyState
+        if isinstance(root_state_version_from_storage, (HierarchyState,
+                                                        BarrierConcurrencyState,
+                                                        PreemptiveConcurrencyState)):
+            new_state_class = root_state_version_from_storage.__class__
         else:
             if self.with_print:
                 logger.info("SM set_root_state_to_version: with NO type change")
             new_state_class = ExecutionState
-        logger.debug("DO root version change " + self.type)
+        logger.debug("DO root version change " + self.action_type)
                  # logger.debug("DO root version change")
         # observe root state model (type change signal)
         g_sm_editor = self.stop_graphical_viewer()
 
-        if self.type == 'change_root_state_type':
+        if self.action_type == 'change_root_state_type':
             self.storage_version_for_state_type_change_signal_hook = storage_version
             assert isinstance(self.state_machine_model.root_state.state, State)
             old_root_state_m = self.state_machine_model.root_state
@@ -909,8 +941,8 @@ class StateMachineAction(Action, ModelMT):
             self.update_state(new_state, root_state_version_from_storage)
 
             self.state_machine.root_state = new_state  # root_state_version_fom_storage
-            # self.state_machine.root_state.script = storage_version[2]
-            insert_state_meta_data(meta_dict=storage_version[3], state_model=self.state_machine_model.root_state)
+            insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
+                                   state_model=self.state_machine_model.root_state)
 
         self.run_graphical_viewer(g_sm_editor, self.state_machine_model.root_state)
 
@@ -925,7 +957,7 @@ class StateMachineAction(Action, ModelMT):
 
         self.update_state(new_state_m.state, root_state_version_from_storage)
 
-        insert_state_meta_data(meta_dict=storage_version[3], state_model=new_state_m)  # self.state_machine_model.root_state)
+        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
 
     def redo(self):
         # print "#H# STATE_MACHINE_REDO STARTED"
@@ -979,14 +1011,15 @@ class AddObjectAction(Action):
 
     def redo(self):
         """
-        :return:Redo of adding object action is simply done by adding the object again from the after_storage of the parent state.
+        :return: Redo of adding object action is simply done by adding the object again from the after_storage of the
+                 parent state.
         """
         # logger.info("RUN REDO AddObject " + self.before_info['method_name'])
 
         state = self.get_state_changed()
         storage_version = self.after_storage
 
-        assert state.get_path() == storage_version[4]
+        assert state.get_path() == storage_version[STATE_TUPLE_PATH_INDEX]
         path_of_state = state.get_path()
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
@@ -995,13 +1028,14 @@ class AddObjectAction(Action):
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
                                                                              storage_version_of_state,
-                                                                             storage_path=storage_version[4])
-        list_name = self.type.replace('add_', '') + 's'
+                                                                             storage_path=storage_version[STATE_TUPLE_PATH_INDEX])
+        list_name = self.action_type.replace('add_', '') + 's'
         core_obj = getattr(storage_version_of_state, list_name)[self.added_object_identifier._id]
         self.add_core_object_to_state(state, core_obj)
 
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model, level=1)
+        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
+                               state_model=actual_state_model, level=1)
 
         self.run_graphical_viewer(g_sm_editor, actual_state_model)
 
@@ -1011,16 +1045,18 @@ class AddObjectAction(Action):
         state = self.get_state_changed()
         storage_version = self.after_storage
 
-        assert state.get_path() == storage_version[4]
+        assert state.get_path() == storage_version[STATE_TUPLE_PATH_INDEX]
         path_of_state = state.get_path()
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
         g_sm_editor = self.stop_graphical_viewer()
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
-            [state, storage_version_of_state] = self.correct_reference_state(state, storage_version_of_state, storage_version[4])
+            [state, storage_version_of_state] = self.correct_reference_state(state,
+                                                                             storage_version_of_state,
+                                                                             storage_path=storage_version[STATE_TUPLE_PATH_INDEX])
 
-        list_name = self.type.replace('add_', '') + 's'
+        list_name = self.action_type.replace('add_', '') + 's'
         core_obj = getattr(storage_version_of_state, list_name)[self.added_object_identifier._id]
         # logger.info(str(type(core_obj)) + str(core_obj))
         # undo
@@ -1028,7 +1064,8 @@ class AddObjectAction(Action):
 
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model, level=1)
+        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
+                               state_model=actual_state_model, level=1)
 
         self.run_graphical_viewer(g_sm_editor, actual_state_model)
 
@@ -1043,76 +1080,6 @@ class AddObjectAction(Action):
             # logger.info("state is now: {0} {1}".format(state.state_id, storage_version_of_state.state_id))
 
         return state, storage_version_of_state
-
-
-class CoreObjectIdentifier:
-    # TODO generalize and include into utils
-
-    type_related_list_name_dict = {InputDataPort.__name__: 'input_data_ports',
-                                   OutputDataPort.__name__: 'output_data_ports',
-                                   ScopedVariable.__name__: 'scoped_variables',
-                                   DataFlow.__name__: 'data_flows',
-                                   Outcome.__name__: 'outcomes',
-                                   Transition.__name__: 'transitions',
-                                   State.__name__: 'states',
-                                   DeciderState.__name__: 'states'}
-
-    def __init__(self, core_obj_or_cls):
-        if not(type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list):
-            logger.warning("\n{0}\n{1}\n{2}".format(core_obj_or_cls, type(core_obj_or_cls),core_object_list))
-        assert type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list
-        self._sm_id = None
-        self._path = None
-        # type can be, object types (of type Transition e.g.) or class
-        self._type = None
-        self._id = None
-        self._list_name = None
-
-        if type(core_obj_or_cls) in core_object_list:
-            self._type = type(core_obj_or_cls).__name__
-        else:
-            self._type = 'class'
-
-        if not self._type == 'class':
-            if self._type in ['ExecutionState', 'HierarchyState', 'BarrierConcurrencyState',
-                              'PreemptiveConcurrencyState', 'LibraryState', 'DeciderState']:
-                self._path = core_obj_or_cls.get_path()
-                self._id = core_obj_or_cls.state_id
-                self._sm_id = core_obj_or_cls.get_state_machine().state_machine_id
-            else:
-                if isinstance(core_obj_or_cls.parent, State):
-                    self._path = core_obj_or_cls.parent.get_path()
-                    if core_obj_or_cls.parent.get_state_machine() is None:
-                        logger.warning('state has no state machine -> {0} {1}'.format(core_obj_or_cls.parent.name, core_obj_or_cls.parent.get_path()))
-                    else:
-                        self._sm_id = core_obj_or_cls.parent.get_state_machine().state_machine_id
-                else:
-                    logger.warning("identifier of core object {0} without parent is mostly useless".format(self._type))
-
-            if self._type in ['InputDataPort', 'OutputDataPort', 'ScopedVariable']:
-                self._id = core_obj_or_cls.data_port_id
-                self._list_name = self.type_related_list_name_dict[self._type]
-            elif self._type == 'Transition':
-                self._id = core_obj_or_cls.transition_id
-                self._list_name = self.type_related_list_name_dict[self._type]
-            elif self._type == 'DataFlow':
-                self._id = core_obj_or_cls.data_flow_id
-                self._list_name = self.type_related_list_name_dict[self._type]
-            elif self._type == 'Outcome':
-                self._id = core_obj_or_cls.outcome_id
-                self._list_name = self.type_related_list_name_dict[self._type]
-            elif self._type == 'StateMachine':
-                # self.__sm_id = core_obj_cls.state_machine_id
-                pass
-            elif self._type == 'GlobalVariableManager':
-                pass
-            elif self._type == 'LibraryManager':
-                pass
-            else:
-                pass
-
-    def __str__(self):
-        return "{0}:{1}:{2}:{3}".format(self._type, self._sm_id, self._path, self._id)
 
 
 class RemoveObjectAction(Action):
@@ -1148,6 +1115,14 @@ class RemoveObjectAction(Action):
                               'external': {'transitions': [], 'data_flows': []}}
         self.store_related_elements(self.before_linkage)
 
+    def as_dict(self):
+        d = Action.as_dict(self)
+        d.update({"before_linkage": self.before_linkage,
+                  "after_linkage": self.after_linkage,
+                  "removed_linkage": self.removed_linkage,
+                  "added_linkage": self.added_linkage})
+        return d
+
     def set_after(self, overview):
         Action.set_after(self, overview)
         self.store_related_elements(self.after_linkage)
@@ -1176,7 +1151,7 @@ class RemoveObjectAction(Action):
         state = self.get_state_changed()
         storage_version = self.before_storage
 
-        assert state.get_path() == storage_version[4]
+        assert state.get_path() == storage_version[STATE_TUPLE_PATH_INDEX]
         path_of_state = state.get_path()
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
@@ -1185,22 +1160,24 @@ class RemoveObjectAction(Action):
         if self.removed_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
                                                                              storage_version_of_state,
-                                                                             storage_path=storage_version[4])
-        list_name = self.type.replace('remove_', '') + 's'
+                                                                             storage_path=storage_version[STATE_TUPLE_PATH_INDEX])
+        list_name = self.action_type.replace('remove_', '') + 's'
         core_obj = getattr(storage_version_of_state, list_name)[self.removed_object_identifier._id]
         # logger.info(str(type(core_obj)) + str(core_obj))
-        if self.type not in ['remove_transition', 'remove_data_flow']:
+        if self.action_type not in ['remove_transition', 'remove_data_flow']:
             self.add_core_object_to_state(state, core_obj)
 
         self.adjust_linkage()
 
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model, level=1)
+        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
+                               state_model=actual_state_model, level=1)
 
         self.run_graphical_viewer(g_sm_editor, actual_state_model)
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        insert_state_meta_data(meta_dict=storage_version[3], state_model=actual_state_model, level=1)
+        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
+                               state_model=actual_state_model, level=1)
 
         self.run_graphical_viewer(g_sm_editor, actual_state_model)
 
@@ -1208,7 +1185,7 @@ class RemoveObjectAction(Action):
 
         g_sm_editor = self.stop_graphical_viewer()
 
-        if self.type == 'remove_state':
+        if self.action_type == 'remove_state':
             state = self.state_machine.get_state_by_path(self.parent_path)
             state.remove_state(self.removed_object_identifier._id)
         else:
@@ -1219,7 +1196,8 @@ class RemoveObjectAction(Action):
         state = self.get_state_changed()
         path_of_state = state.get_path()
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        insert_state_meta_data(meta_dict=self.after_storage[3], state_model=actual_state_model, level=1)
+        insert_state_meta_data(meta_dict=self.after_storage[STATE_TUPLE_META_DICT_INDEX],
+                               state_model=actual_state_model, level=1)
 
         self.run_graphical_viewer(g_sm_editor, actual_state_model)
 
@@ -1306,35 +1284,63 @@ class RemoveObjectAction(Action):
         assert self.added_linkage['external']['data_flows'] == []
 
 
-class DataFlowAction(Action):
+class StateElementAction(AbstractAction):
+
+    possible_method_names = []
+    possible_args = []
+    _object_class = None
+
+    def __init__(self, parent_path, state_machine_model, overview):
+        AbstractAction.__init__(self, parent_path, state_machine_model, overview)
+
+        # validate class type
+        assert isinstance(self.before_overview['instance'][-1], self._object_class)
+
+        # validate method call -- action type
+        self.action_type = overview['method_name'][-1]
+        if not self.action_type in self.possible_method_names:
+            logger.error("{0} is not possible with overview {1}".format(self.__class__.__name__, overview))
+        assert self.action_type in self.possible_method_names
+
+        # validate object path
+        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
+        assert self.parent_path == self.object_identifier._path
+
+        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
+        self.after_arguments = None
+
+        self.state_machine = state_machine_model.state_machine
+
+    def as_dict(self):
+        d = AbstractAction.as_dict(self)
+        d.update({"before_arguments": self.before_arguments,
+                  "after_arguments": self.after_arguments})
+        return d
+
+    @staticmethod
+    def get_set_of_arguments(elem):
+        raise NotImplementedError()
+
+    def set_after(self, overview):
+        self.after_overview = overview
+        assert isinstance(self.after_overview['instance'][-1], self._object_class)
+        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
+
+
+class DataFlowAction(StateElementAction):
 
     possible_method_names = ['modify_origin', 'from_state', 'from_key',
                              'modify_target', 'to_state', 'to_key']
     possible_args = ['from_state', 'from_key', 'to_state', 'to_key']
+    _object_class = DataFlow
 
     def __init__(self, parent_path, state_machine_model, overview):
-        # Action.__init__(self, parent_path, state_machine_model, overview)
-        self.parent_path = parent_path
-        self.action_type = overview['method_name'][-1]
-        self.before_overview = overview
-        self.state_machine_model = state_machine_model
-        self.state_machine = state_machine_model.state_machine
-
-        assert self.action_type in self.possible_method_names
-        assert isinstance(self.before_overview['instance'][-1], DataFlow)
-        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
-        assert self.parent_path == self.object_identifier._path
-        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
-        self.after_arguments = None
+        StateElementAction.__init__(self, parent_path, state_machine_model, overview)
 
     @staticmethod
     def get_set_of_arguments(df):
         return {'from_state': df.from_state, 'from_key': df.from_key, 'to_state': df.to_state, 'to_key': df.to_key,
                 'data_flow_id': df.data_flow_id}
-
-    def set_after(self, overview):
-        self.after_overview = overview
-        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
 
     def undo(self):
         # if the data_flow_id would be changed and this considered in the core parent element self.after_argument here would be used
@@ -1353,37 +1359,23 @@ class DataFlowAction(Action):
         elif self.action_type == 'modify_target':
             df.modify_target(to_state=arguments['to_state'], to_key=arguments['to_key'])
         else:
-            assert False
+            raise TypeError("Only types of the following list are allowed. {0}".format(self.possible_method_names))
 
 
-class TransitionAction(Action):
+class TransitionAction(StateElementAction):
 
     possible_method_names = ['modify_origin', 'from_state', 'from_outcome',
                              'modify_target', 'to_state', 'to_outcome']
     possible_args = ['from_state', 'from_outcome', 'to_state', 'to_key']
+    _object_class = Transition
 
     def __init__(self, parent_path, state_machine_model, overview):
-        # Action.__init__(self, parent_path, state_machine_model, overview)
-        self.parent_path = parent_path
-        self.action_type = overview['method_name'][-1]
-        self.before_overview = overview
-        self.state_machine_model = state_machine_model
-        self.state_machine = state_machine_model.state_machine
+        StateElementAction.__init__(self, parent_path, state_machine_model, overview)
 
-        assert self.action_type in self.possible_method_names
-        assert isinstance(self.before_overview['instance'][-1], Transition)
-        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
-        assert self.parent_path == self.object_identifier._path
-        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
-        self.after_arguments = None
-
-    def get_set_of_arguments(self, t):
+    @staticmethod
+    def get_set_of_arguments(t):
         return {'from_state': t.from_state, 'from_outcome': t.from_outcome, 'to_state': t.to_state, 'to_outcome': t.to_outcome,
                 'transition_id': t.transition_id}
-
-    def set_after(self, overview):
-        self.after_overview = overview
-        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
 
     def undo(self):
         # if the transition_id would be changed and this considered in the core parent element self.after_argument here would be used
@@ -1402,36 +1394,22 @@ class TransitionAction(Action):
         elif self.action_type == 'modify_target':
             t.modify_target(to_state=arguments['to_state'], to_outcome=arguments['to_outcome'])
         else:
-            assert False
+            raise TypeError("Only types of the following list are allowed. {0}".format(self.possible_method_names))
 
 
-class DataPortAction(Action):
+class DataPortAction(StateElementAction):
 
     possible_method_names = ['name', 'data_type', 'default_value', 'change_data_type']
     possible_args = ['name', 'default_value']
+    _object_class = DataPort
 
     def __init__(self, parent_path, state_machine_model, overview):
-        # Action.__init__(self, parent_path, state_machine_model, overview)
-        self.parent_path = parent_path
-        self.action_type = overview['method_name'][-1]
-        self.before_overview = overview
-        self.state_machine = state_machine_model.state_machine
+        StateElementAction.__init__(self, parent_path, state_machine_model, overview)
 
-        assert self.action_type in self.possible_method_names
-        assert isinstance(self.before_overview['instance'][-1], DataPort)
-        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
-        assert self.parent_path == self.object_identifier._path
-        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
-        self.after_arguments = None
-
-    def get_set_of_arguments(self, dp):
+    @staticmethod
+    def get_set_of_arguments(dp):
         return {'name': dp.name, 'data_type': dp.data_type, 'default_value': dp.default_value,
                 'data_port_id': dp.data_port_id}
-
-    def set_after(self, overview):
-        self.after_overview = overview
-        assert isinstance(self.after_overview['instance'][-1], DataPort)
-        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
 
     def undo(self):
         dp = self.state_machine.get_state_by_path(self.parent_path).get_data_port_by_id(self.before_arguments['data_port_id'])
@@ -1450,7 +1428,7 @@ class DataPortAction(Action):
         elif self.action_type == 'change_data_type':
             dp.change_data_type(data_type=arguments['data_type'], default_value=arguments['default_value'])
         else:
-            assert False
+            raise TypeError("Only types of the following list are allowed. {0}".format(self.possible_method_names))
 
 
 class ScopedVariableAction(DataPortAction):
@@ -1459,50 +1437,33 @@ class ScopedVariableAction(DataPortAction):
         DataPortAction.__init__(self, parent_path, state_machine_model, overview)
 
 
-class OutcomeAction(Action):
+class OutcomeAction(StateElementAction):
 
     possible_method_names = ['name']
     possible_args = ['name']
+    _object_class = Outcome
 
     def __init__(self, parent_path, state_machine_model, overview):
-        # Action.__init__(self, parent_path, state_machine_model, overview)
-        self.parent_path = parent_path
-        self.action_type = overview['method_name'][-1]
-        self.before_overview = overview
-        self.state_machine = state_machine_model.state_machine
-
-        if not self.action_type in self.possible_method_names:
-            logger.error("Outcome Action is not possible with with overview {0}".format(overview))
-        assert self.action_type in self.possible_method_names
-        assert isinstance(self.before_overview['instance'][-1], Outcome)
-        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
-        assert self.parent_path == self.object_identifier._path
-        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
-        self.after_arguments = None
+        StateElementAction.__init__(self, parent_path, state_machine_model, overview)
 
     @staticmethod
     def get_set_of_arguments(oc):
         return {'name': oc.name, 'outcome_id': oc.outcome_id}
 
-    def set_after(self, overview):
-        self.after_overview = overview
-        assert isinstance(self.after_overview['instance'][-1], Outcome)
-        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
-
     def undo(self):
         # if the outcome_id would be changed and this considered in the core parent element self.after_argument here would be used
         oc = self.state_machine.get_state_by_path(self.parent_path).outcomes[self.before_arguments['outcome_id']]
-        self.set_data_port_version(oc, self.before_arguments)
+        self.set_outcome_version(oc, self.before_arguments)
 
     def redo(self):
         oc = self.state_machine.get_state_by_path(self.parent_path).outcomes[self.before_arguments['outcome_id']]
-        self.set_data_port_version(oc, self.after_arguments)
+        self.set_outcome_version(oc, self.after_arguments)
 
-    def set_data_port_version(self, oc, arguments):
+    def set_outcome_version(self, oc, arguments):
         if self.action_type in self.possible_args:
             exec "oc.{0} = arguments['{0}']".format(self.action_type)
         else:
-            assert False
+            raise TypeError("Only types of the following list are allowed. {0}".format(self.possible_method_names))
 
 
 class StateAction(Action):
@@ -1540,9 +1501,7 @@ class StateAction(Action):
             if isinstance(overview['instance'][-1].parent, State):
                 parent_path = overview['instance'][-1].parent.get_path()
         Action.__init__(self, parent_path, state_machine_model, overview)
-        self.parent_path = parent_path
-        self.action_type = overview['method_name'][-1]
-        self.before_overview = overview
+
         self.state_machine = state_machine_model.state_machine
         if self.action_type not in self.possible_method_names:
             logger.error("action_type: '{0}' not in {1}".format(self.action_type, self.possible_method_names))
@@ -1569,6 +1528,11 @@ class StateAction(Action):
             self.description_diff = '\n'.join(diff)
         else:
             self.description_diff = None
+
+    def as_dict(self):
+        d = Action.as_dict(self)
+        d.update({"before_arguments": self.before_arguments, "after_arguments": self.after_arguments})
+        return d
 
     @staticmethod
     def get_set_of_arguments(s):
