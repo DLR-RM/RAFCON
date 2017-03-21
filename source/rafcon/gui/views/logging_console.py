@@ -54,7 +54,7 @@ class LoggingConsoleView(View):
         start, end = self.filtered_buffer.get_bounds()
         self.filtered_buffer.delete(start, end)
 
-    def print_message(self, message, log_level, new=True):
+    def print_message(self, message, log_level):
         self._lock.acquire()
         if log_level <= log.logging.DEBUG and self.debug:
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
