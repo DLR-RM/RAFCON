@@ -13,7 +13,7 @@
 from math import atan2, pi
 
 from gaphas.item import Line, NW, SE
-from cairo import ANTIALIAS_SUBPIXEL
+from cairo import ANTIALIAS_SUBPIXEL, LINE_CAP_ROUND
 from pango import SCALE
 
 from rafcon.gui.config import global_gui_config
@@ -187,6 +187,7 @@ class PerpLine(Line):
             cr.restore()
         self.line_width = self._calc_line_width()
         cr = context.cairo
+        cr.set_line_cap(LINE_CAP_ROUND)
         cr.set_line_width(self.line_width)
 
         # Draw connection tail (line perpendicular to from_port)
