@@ -790,16 +790,16 @@ class GraphicalEditorController(ExtendedController):
 
     @lock_state_machine
     def setup_state(self, state_m, parent=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
-
         """Draws a (container) state with all its content
 
         Mainly contains the logic for drawing (e. g. reading and calculating values). The actual drawing process is
         done in the view, which is called from this method with the appropriate arguments.
 
         :param rafcon.gui.models.state.StateModel state_m: The state to be drawn
+        :param rafcon.gui.models.state.StateModel parent: The parent state of `state_m`
         :param tuple rel_pos: The default relative position (x, y) if there is no relative position stored
         :param tuple size: The default size (width, height) if there is no size stored
-        :param float depth: The hierarchy level of the state
+        :param float hierarchy_level: The hierarchy level of the state
         """
         assert isinstance(state_m, AbstractStateModel)
         state_meta = state_m.get_meta_data_editor()
