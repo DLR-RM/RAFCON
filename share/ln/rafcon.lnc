@@ -1,0 +1,19 @@
+#!/volume/software/common/packages/links_and_nodes/latest/scripts/ln_manager -c
+
+instance
+name: RAFCON process examples
+manager: %(shell hostname):%(get_port_from_string %(instance_name))
+
+defines
+rafcon_root: /volume/software/common/packages/rafcon/latest/source/rafcon
+
+include %(rafcon_root)/share/rafcon.inc.lnc
+
+process RAFCON
+	use_template: rafcon_template("", "")
+
+process RAFCON with new state machine
+	use_template: rafcon_template("True", "")
+
+process RAFCON with existing state machine
+	use_template: rafcon_template("", "/volume/software/common/packages/rafcon/latest/share/libraries/generic/wait")
