@@ -28,8 +28,8 @@ process RAFCON
 use_template: rafcon_environment
 node: localhost 
 
-pass_environment: HOME, USER, ARCH, DISPLAY
-command: python2.7 %(RAFCON_ROOT_PATH)/source/rafcon/gui/start.py %(RAFCON_NEW_STATE_MACHINE) -o %(RAFCON_OPEN_STATE_MACHINES) -c %(RAFCON_CONFIG_PATH) -g %(RAFCON_GUI_CONFIG_PATH)
-# warning_regex: WARNING
-flags: no_error_on_stop
+pass_environment: HOME, USER, DISPLAY
+command: %(ifexists "/usr/bin/python2.7", "/usr/bin/python2.7", "/opt/python/python2.7/bin/python2.7") %(RAFCON_ROOT_PATH)/source/rafcon/gui/start.py %(RAFCON_NEW_STATE_MACHINE) -o %(RAFCON_OPEN_STATE_MACHINES) -c %(RAFCON_CONFIG_PATH) -g %(RAFCON_GUI_CONFIG_PATH)
+line_highlight_regexes: WARNING, ERROR
+flags: no_error_on_stop, start_in_shell, forward_x11
 ready_regex: Ready
