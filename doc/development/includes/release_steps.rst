@@ -49,7 +49,7 @@ Steps to perform, when releasing a new version of RAFCON:
   Make sure, everything is pushed (``git push``). Then copy the release notes for the specific version into a temporary file, e.g. ``/tmp/release_notes.rst``. Finally do:
 
   - ``cd [projet directory]]``
-  - ``rmpm_do release --domain common -F /tmp/release_notes.rst``
+  - ``rmpm_do release --domain software.common -F /tmp/release_notes.rst``
 
 10. Merge to develop
 
