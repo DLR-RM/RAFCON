@@ -139,10 +139,9 @@ def trigger_source_editor_signals(main_window_controller):
 
 def test_gui(caplog):
     t_u.initialize_environment(gui_config={'GAPHAS_EDITOR': True,
-                                      'AUTO_BACKUP_ENABLED': False,
-                                      'CHECK_PYTHON_FILES_WITH_PYLINT': False,
-                                      'PREFER_EXTERNAL_EDITOR': False})
-
+                                           'AUTO_BACKUP_ENABLED': False,
+                                           'CHECK_PYTHON_FILES_WITH_PYLINT': False,
+                                           'PREFER_EXTERNAL_EDITOR': False})
 
     main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
@@ -159,8 +158,8 @@ def test_gui(caplog):
     thread.join()
     result = queue.get()
     
-    # The queue exists because I want to catch the return value of my test method. This enables printing the error about 
-    # the nonexistence of my required editor while still being able to finish the test in a "passed" state
+    # The queue exists because I want to catch the return value of my test method. This enables printing the error
+    # about the nonexistence of my required editor while still being able to finish the test in a "passed" state
     
     errors = 1
     if not result:
