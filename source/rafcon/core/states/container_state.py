@@ -241,10 +241,12 @@ class ContainerState(State):
         self.add_input_data_to_scoped_data(self.input_data)
 
     def handle_no_transition(self, state):
-        """ This function handles the case that there is no transition for a specific outcome of a substate. It waits on a
-        condition variable to a new transition that will be connected by the programmer or GUI-user.
+        """ This function handles the case that there is no transition for a specific outcome of a sub-state.
 
-        :param state: The substate to find a transition for
+        The method waits on a condition variable to a new transition that will be connected by the programmer or
+        GUI-user.
+
+        :param state: The sub-state to find a transition for
         :return: The transition for the target state.
         :raises exceptions.RuntimeError: if the execution engine is stopped
                                         (this will be caught at the end of the run method)
