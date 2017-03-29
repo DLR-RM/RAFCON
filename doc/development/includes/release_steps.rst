@@ -33,12 +33,7 @@ Steps to perform, when releasing a new version of RAFCON:
 
 7. Apply the version number
 
-  Currently, there are several instances, to which the version number must be written manually:
-
-  - ``[project directory]/rafcon.pt`` (line ``VERSION = ...``)
-  - ``[project directory]/source/rafcon/conf.py`` (line ``version = ...`` and ``release = ...``)
-  - ``[project directory]/source/rafcon/gui/views/utils/about_dialog.py`` (line ``self.set_version(...)``)
-
+  Update the version number in: ``[project directory]/rafcon.pt`` (line ``VERSION = ...``).
   Commit your changes.
 
 8. Merge to master
