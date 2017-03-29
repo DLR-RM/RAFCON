@@ -8,7 +8,7 @@ from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
 from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
-import rafcon.gui.state_machine_helper as state_machine_helper
+import rafcon.gui.helpers.state_machine as state_machine_helper
 
 # core elements
 import rafcon.core.config
