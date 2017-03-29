@@ -19,7 +19,7 @@ from gtkmvc import ModelMT
 from rafcon.core.states.container_state import ContainerState
 from rafcon.gui.models.abstract_state import AbstractStateModel, diff_for_state_element_lists, MetaSignalMsg
 from rafcon.gui.models.abstract_state import get_state_model_class_for_state
-from rafcon.gui.models.data_flow import DataFlowModel
+from rafcon.gui.models.data_flow import DataFlowModel, StateElementModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.signals import StateTypeChangeSignalMsg
 from rafcon.gui.models.state import StateModel
@@ -97,6 +97,22 @@ class ContainerStateModel(StateModel):
             return all(diff_states) and self.state == other.state and self.meta == other.meta
         else:
             return False
+
+    def __contains__(self, item):
+        """Checks whether `item` is an element of the container state model
+
+        Following child items are checked: outcomes, input data ports, output data ports, scoped variables, states,
+        transitions, data flows
+
+        :param item: :class:`StateModel` or :class:`StateElementModel`
+        :return: Whether item is a direct child of this state
+        :rtype: bool
+        """
+        if not isinstance(item, (StateModel, StateElementModel)):
+            return False
+        return super(ContainerStateModel, self).__contains__(item) or item in self.states.values() \
+               or item in self.transitions or item in self.data_flows \
+               or item in self.scoped_variables
 
     def prepare_destruction(self):
         """Prepares the model for destruction

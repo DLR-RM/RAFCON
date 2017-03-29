@@ -17,6 +17,7 @@ from gtkmvc import ModelMT, Signal
 
 from rafcon.gui.models.signals import MetaSignalMsg, Notification
 from rafcon.gui.models.meta import MetaModel
+from rafcon.gui.models.state_element import StateElementModel
 
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.library_state import LibraryState
@@ -134,6 +135,19 @@ class AbstractStateModel(MetaModel, Hashable):
             return self.state == other.state and self.meta == other.meta
         else:
             return False
+
+    def __contains__(self, item):
+        """Checks whether `item` is an element of the state model
+
+        Following child items are checked: outcomes, input data ports, output data ports
+
+        :param item: :class:`StateModel` or :class:`StateElementModel`
+        :return: Whether item is a direct child of this state
+        :rtype: bool
+        """
+        if not isinstance(item, StateElementModel):
+            return False
+        return item in self.outcomes or item in self.input_data_ports or item in self.output_data_ports
 
     def __copy__(self):
         state = copy(self.state)
