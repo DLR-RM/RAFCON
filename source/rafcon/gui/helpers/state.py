@@ -141,3 +141,22 @@ def save_selected_state_as():
     else:
         logger.warning("Multiple states can not be saved as state machine directly. Group them before.")
         return False
+
+
+def change_state_type(model, target_class):
+    if target_class != type(model.state):
+        state_name = model.state.name
+        logger.debug("Change type of State '{0}' from {1} to {2}".format(state_name,
+                                                                         type(model.state).__name__,
+                                                                         target_class.__name__))
+        try:
+            if model.state.is_root_state:
+                model.state.parent.change_root_state_type(target_class)
+            else:
+                model.state.parent.change_state_type(model.state, target_class)
+        except Exception as e:
+            logger.error("An error occurred while changing the state type: {0}".format(e))
+    else:
+        logger.debug("DON'T Change type of State '{0}' from {1} to {2}".format(model.state.name,
+                                                                               type(model.state).__name__,
+                                                                               target_class.__name__))

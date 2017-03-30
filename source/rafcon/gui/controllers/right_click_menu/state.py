@@ -116,6 +116,19 @@ class StateMachineRightClickMenu(object):
                                                accel_code=shortcuts_dict['substitute_state'][0],
                                                accel_group=accel_group))
 
+            from rafcon.gui.controllers.state_editor.overview import StateOverviewController
+            state_type_class_dict = StateOverviewController.change_state_type_class_dict(state_m_list[0].state)
+            if len(state_type_class_dict) > 1:
+                change_type_sub_menu_item, change_type_sub_menu = append_sub_menu_to_parent_menu("Change state type",
+                                                                                                 menu,
+                                                                                                 constants.BUTTON_EXCHANGE)
+                for class_key, item in state_type_class_dict.iteritems():
+                    class_item = create_image_menu_item(class_key, constants.SIGN_LIB,
+                                                        partial(self.on_type_change_activate, target_class=item['class']),
+                                                        accel_code=None, accel_group=accel_group)
+                    if isinstance(state_m_list[0].state, item['class']):
+                        class_item.set_sensitive(False)
+                    change_type_sub_menu.append(class_item)
         menu.append(gtk.SeparatorMenuItem())
 
         save_as_sub_menu_item, save_as_sub_menu = append_sub_menu_to_parent_menu("Save state as", menu,
@@ -271,6 +284,11 @@ class StateMachineRightClickMenu(object):
 
     def on_substitute_library_with_template_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('substitute_library_with_template', None, None)
+
+    def on_type_change_activate(self, widget, data=None, target_class=None):
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
+        if len(selection.get_all()) == 1 and len(selection.get_states()) == 1:
+            gui_helper_state.change_state_type(selection.get_states()[0], target_class)
 
     def mouse_click(self, widget, event=None):
         from rafcon.gui.models.library_state import LibraryStateModel

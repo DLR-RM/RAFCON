@@ -59,25 +59,31 @@ class StateOverviewController(ExtendedController, Model):
         self.state_types_dict = {}
         self.with_is_start_state_check_box = with_is_start_state_check_box
 
+    @staticmethod
+    def change_state_type_class_dict(state):
+        state_types_dict = {}
+        if isinstance(state, DeciderState):
+            # logger.info(str(StateType))
+            state_types_dict[str(StateType.DECIDER_STATE).split('.')[1]] = {
+                'Enum': StateType.DECIDER_STATE, 'class': DeciderState}
+        else:
+            state_types_dict[str(StateType.EXECUTION).split('.')[1]] = {
+                'Enum': StateType.EXECUTION, 'class': ExecutionState}
+            state_types_dict[str(StateType.HIERARCHY).split('.')[1]] = {
+                'Enum': StateType.HIERARCHY, 'class': HierarchyState}
+            state_types_dict[str(StateType.BARRIER_CONCURRENCY).split('.')[1]] = {
+                'Enum': StateType.BARRIER_CONCURRENCY, 'class': BarrierConcurrencyState}
+            state_types_dict[str(StateType.PREEMPTION_CONCURRENCY).split('.')[1]] = {
+                'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
+        return state_types_dict
+
     def register_view(self, view):
         """Called when the View was registered
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
         # prepare State Type Change ComboBox
-        if isinstance(self.model.state, DeciderState):
-            # logger.info(str(StateType))
-            self.state_types_dict[str(StateType.DECIDER_STATE).split('.')[1]] = {
-                'Enum': StateType.DECIDER_STATE, 'class': DeciderState}
-        else:
-            self.state_types_dict[str(StateType.EXECUTION).split('.')[1]] = {
-                'Enum': StateType.EXECUTION, 'class': ExecutionState}
-            self.state_types_dict[str(StateType.HIERARCHY).split('.')[1]] = {
-                'Enum': StateType.HIERARCHY, 'class': HierarchyState}
-            self.state_types_dict[str(StateType.BARRIER_CONCURRENCY).split('.')[1]] = {
-                'Enum': StateType.BARRIER_CONCURRENCY, 'class': BarrierConcurrencyState}
-            self.state_types_dict[str(StateType.PREEMPTION_CONCURRENCY).split('.')[1]] = {
-                'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
+        self.state_types_dict = self.change_state_type_class_dict(self.model.state)
 
         view['entry_name'].connect('focus-out-event', self.on_focus_out)
         view['entry_name'].connect('key-press-event', self.check_for_enter)
@@ -188,23 +194,8 @@ class StateOverviewController(ExtendedController, Model):
             return
 
         target_class = self.state_types_dict[type_text]['class']
-        if target_class != type(self.model.state):
-            state_name = self.model.state.name
-            logger.debug("Change type of State '{0}' from {1} to {2}".format(state_name,
-                                                                             type(self.model.state).__name__,
-                                                                             target_class.__name__))
-            try:
-                if self.model.state.is_root_state:
-                    self.model.state.parent.change_root_state_type(target_class)
-                else:
-                    self.model.state.parent.change_state_type(self.model.state, target_class)
-            except Exception as e:
-                logger.error("An error occurred while changing the state type: {0}".format(e))
-
-        else:
-            logger.debug("DON'T Change type of State '{0}' from {1} to {2}".format(self.model.state.name,
-                                                                                   type(self.model.state).__name__,
-                                                                                   target_class.__name__))
+        import rafcon.gui.helpers.state as gui_helper_state
+        gui_helper_state.change_state_type(self.model, target_class)
 
     def check_for_enter(self, entry, event):
         key_name = keyval_name(event.keyval)
