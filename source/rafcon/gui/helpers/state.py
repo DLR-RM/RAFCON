@@ -46,7 +46,7 @@ def substitute_library_with_template():
         lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_states[0].state))
         gui_helper_state_machine.substitute_state(lib_state, as_template=True)
         # TODO find out why the following generates a problem (e.g. lose of outcomes)
-        # state_machine_helper.substitute_state(selected_states[0].state, as_template=True)
+        # gui_helper_state_machine.substitute_state(selected_states[0].state, as_template=True)
         return True
     else:
         logger.warning("Substitute library state with template needs exact one library state to be selected.")
