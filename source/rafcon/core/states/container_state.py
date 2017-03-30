@@ -325,6 +325,9 @@ class ContainerState(State):
         if scoped_variables is None:
             scoped_variables = []
         assert all([p_id in self.scoped_variables.keys() for p_id in scoped_variables])
+        from rafcon.core.states.barrier_concurrency_state import DeciderState
+        if any(isinstance(self.states[child_state_id], DeciderState) for child_state_id in state_ids):
+            raise ValueError("State of type DeciderState can not be grouped.")
 
         def create_name(name_str, used_names):
             number_str = ""
@@ -625,7 +628,9 @@ class ContainerState(State):
                     if (ext_df.from_state, ext_df.from_key) == (df.to_state, df.to_key):
                         outgoing_data_linkage_for_port[(df.to_state, df.to_key)]['external'].append(ext_df)
         # hold states and scoped variables to rebuild
-        child_states = [state.states[child_state_id] for child_state_id in state.states]
+        from rafcon.core.states.barrier_concurrency_state import DeciderState
+        child_states = [state.states[child_state_id] for child_state_id in state.states
+                        if not isinstance(state.states[child_state_id], DeciderState)]
         child_scoped_variables = [sv for sv_id, sv in state.scoped_variables.iteritems()]
 
         # remove state that should be ungrouped
@@ -881,6 +886,9 @@ class ContainerState(State):
         if state_id not in self.states:
             raise ValueError("The state_id {0} to be substitute has to be in the states list of "
                              "respective parent state {1}.".format(state_id, self.get_path()))
+        from rafcon.core.states.barrier_concurrency_state import DeciderState
+        if isinstance(self.states[state_id], DeciderState):
+            raise ValueError("State of type DeciderState can not be substituted.")
 
         [related_transitions, related_data_flows] = self.related_linkage_state(state_id)
 

@@ -578,10 +578,13 @@ class MenuBarController(ExtendedController):
             logger.debug("do group")
             state_ids_of_selected_states = [state_m.state.state_id for state_m in state_m_list]
             dp_ids_of_selected_sv = [sv.data_port_id for sv in selected_sv]
-            if state_m_list:
-                state_m_list[0].parent.state.group_states(state_ids_of_selected_states, dp_ids_of_selected_sv)
-            else:
-                selected_sv[0].parent.group_states(state_ids_of_selected_states, dp_ids_of_selected_sv)
+            try:
+                if state_m_list:
+                    state_m_list[0].parent.state.group_states(state_ids_of_selected_states, dp_ids_of_selected_sv)
+                else:
+                    selected_sv[0].parent.group_states(state_ids_of_selected_states, dp_ids_of_selected_sv)
+            except:
+                pass
 
     def on_ungroup_state_activate(self, widget, data=None):
         logger.debug("try to ungroup")
@@ -589,7 +592,10 @@ class MenuBarController(ExtendedController):
         if len(state_m_list) == 1 and isinstance(state_m_list[0], ContainerStateModel) and \
                 not state_m_list[0].state.is_root_state:
             logger.debug("do ungroup")
-            state_m_list[0].parent.state.ungroup_state(state_m_list[0].state.state_id)
+            try:
+                state_m_list[0].parent.state.ungroup_state(state_m_list[0].state.state_id)
+            except:
+                pass
 
     def on_undo_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action("undo", None, None)
