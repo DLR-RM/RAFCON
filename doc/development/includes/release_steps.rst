@@ -33,12 +33,7 @@ Steps to perform, when releasing a new version of RAFCON:
 
 7. Apply the version number
 
-  Currently, there are several instances, to which the version number must be written manually:
-
-  - ``[project directory]/rafcon.pt`` (line ``VERSION = ...``)
-  - ``[project directory]/source/rafcon/conf.py`` (line ``version = ...`` and ``release = ...``)
-  - ``[project directory]/source/rafcon/gui/views/utils/about_dialog.py`` (line ``self.set_version(...)``)
-
+  Update the version number in: ``[project directory]/rafcon.pt`` (line ``VERSION = ...``).
   Commit your changes.
 
 8. Merge to master
@@ -54,7 +49,7 @@ Steps to perform, when releasing a new version of RAFCON:
   Make sure, everything is pushed (``git push``). Then copy the release notes for the specific version into a temporary file, e.g. ``/tmp/release_notes.rst``. Finally do:
 
   - ``cd [projet directory]]``
-  - ``rmpm_do release --domain common -F /tmp/release_notes.rst``
+  - ``rmpm_do release --domain software.common -F /tmp/release_notes.rst``
 
 10. Merge to develop
 

@@ -1,0 +1,23 @@
+# This include file can be used to create RAFCON processes. For this, it provides a process_template named
+# "rafcon_template", taking two parameters:
+# * "new_state_machine", if "True", a new state machine will be created when starting the process
+# * "open_state_machines", space separated list of paths to state machines that are opened with RAFCON
+#
+# Further customization can be done with the following defines before including this file:
+#   RAFCON_CONFIG_PATH:
+#     (optional) specify path to config file config.yaml
+#     defaults to ~/.config/rafcon
+#   RAFCON_GUI_CONFIG_PATH:
+#     (optional) specify path to GUI config file gui_config.yaml
+#     defaults to ~/.config/rafcon
+
+pipe_include rmpm_do env --env-format ln rafcon
+
+process_template rafcon_template(new_state_machine, open_state_machines)
+    use_template: rafcon_environment
+    pass_environment: HOME, USER, DISPLAY
+    command: %(ifexists "/usr/bin/python2.7", "/usr/bin/python2.7", "/opt/python/python2.7/bin/python2.7") %(RAFCON_ROOT_PATH)/source/rafcon/gui/start.py %(ifeq "%(new_state_machine)", "True", "-n", "") -o %(open_state_machines) -c %(RAFCON_CONFIG_PATH) -g %(RAFCON_GUI_CONFIG_PATH)
+    line_highlight_regexes: WARNING, ERROR
+    flags: no_error_on_stop, start_in_shell, forward_x11
+    ready_regex: Ready
+    node: localhost

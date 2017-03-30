@@ -11,6 +11,28 @@ Information about changes in each release will be published here. More
 details can be found in the `GIT commit
 log <https://rmc-github.robotic.dlr.de/common/rafcon/commits/master>`__.
 
+
+Patch releases 0.9.\*
+---------------------
+
+0.9.0
+"""""
+
+- Improvements
+
+  - Consistent storage format
+  - Renamed modules: mvc to gui and core to statemachine
+  - External editor
+  - Substitute State
+  - Open externally
+  - Save selected state as library
+
+- Bug Fixes
+
+  - :issue:`299`: State labels can be placed outside the state borders
+  - :issue:`298`: Child states can be placed outside hierarchy states
+  
+
 Patch releases 0.8.\*
 ---------------------
 
