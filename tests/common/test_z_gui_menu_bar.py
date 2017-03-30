@@ -8,7 +8,7 @@ from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
 from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
-import rafcon.gui.helpers.state_machine as state_machine_helper
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 # core elements
 import rafcon.core.config
@@ -168,7 +168,7 @@ def trigger_gui_signals(*args):
     ##########################################################
     # create complex state with all elements
     lib_state = LibraryState(join("generic", "dialog"), "Dialog [3 options]", "0.1", "Dialog [3 options]")
-    call_gui_callback(state_machine_helper.insert_state, lib_state, True)
+    call_gui_callback(gui_helper_state_machine.insert_state, lib_state, True)
     assert len(state_m.state.states) == old_child_state_count + 2
 
     state = None
@@ -313,7 +313,6 @@ def test_gui(caplog):
     thread.join()
 
     testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
-
 
 
 if __name__ == '__main__':
