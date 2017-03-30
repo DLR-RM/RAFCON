@@ -276,7 +276,7 @@ class ContainerStateModel(StateModel):
         # from the old state model
         else:  # after
             if isinstance(info.result, Exception):
-                logger.exception("Container state type change failed {0}".format(info.result))
+                logger.exception("Container state type change failed -> {0}".format(info.result))
             else:
                 # The new state is returned by the core state class method 'change_state_type'
                 new_state = info.result
@@ -345,7 +345,7 @@ class ContainerStateModel(StateModel):
             self.substitute_state.__func__.tmp_meta_data_storage = tmp_meta_data
         else:
             if isinstance(info.result, Exception):
-                logger.exception("State substitution failed {0}".format(info.result))
+                logger.exception("State substitution failed -> {0}".format(info.result))
             else:
                 state_id = info.result
                 tmp_meta_data = self.substitute_state.__func__.tmp_meta_data_storage
@@ -395,7 +395,7 @@ class ContainerStateModel(StateModel):
             self.group_state.__func__.tmp_models_storage = tmp_models_dict
         else:
             if isinstance(info.result, Exception):
-                logger.exception("State ungroup failed {0}".format(info.result))
+                logger.exception("State ungroup failed -> {0}".format(info.result))
             else:
                 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 

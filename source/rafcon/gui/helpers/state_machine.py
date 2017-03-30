@@ -587,6 +587,9 @@ def get_state_machine_model_for_state(state):
 def substitute_state(state, as_template=False):
 
     assert isinstance(state, State)
+    from rafcon.core.states.barrier_concurrency_state import DeciderState
+    if isinstance(state, DeciderState):
+        raise ValueError("State of type DeciderState can not be substituted.")
 
     smm_m = rafcon.gui.singleton.state_machine_manager_model
 

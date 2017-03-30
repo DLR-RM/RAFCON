@@ -100,6 +100,7 @@ class StateMachineRightClickMenu(object):
 
         self.insert_copy_cut_paste_in_menu(menu, shortcuts_dict, accel_group)
 
+        from rafcon.core.states.barrier_concurrency_state import DeciderState
         state_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
         all_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_all()
         if all([isinstance(elem, (AbstractStateModel, ScopedVariableModel)) for elem in all_m_list]):
@@ -111,10 +112,11 @@ class StateMachineRightClickMenu(object):
                 menu.append(create_image_menu_item("Ungroup states", constants.BUTTON_UNGR,
                                                    self.on_ungroup_state_activate,
                                                    accel_code=shortcuts_dict['ungroup'][0], accel_group=accel_group))
-            menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
-                                               self.on_substitute_state_activate,
-                                               accel_code=shortcuts_dict['substitute_state'][0],
-                                               accel_group=accel_group))
+            if not isinstance(state_m_list[0].state, DeciderState):
+                menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
+                                                   self.on_substitute_state_activate,
+                                                   accel_code=shortcuts_dict['substitute_state'][0],
+                                                   accel_group=accel_group))
 
             from rafcon.gui.controllers.state_editor.overview import StateOverviewController
             state_type_class_dict = StateOverviewController.change_state_type_class_dict(state_m_list[0].state)
