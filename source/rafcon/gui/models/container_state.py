@@ -21,9 +21,10 @@ from rafcon.gui.models.abstract_state import AbstractStateModel, diff_for_state_
 from rafcon.gui.models.abstract_state import get_state_model_class_for_state
 from rafcon.gui.models.data_flow import DataFlowModel, StateElementModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
-from rafcon.gui.models.signals import StateTypeChangeSignalMsg
+from rafcon.gui.models.signals import StateTypeChangeSignalMsg, ActionSignalMsg
 from rafcon.gui.models.state import StateModel
 from rafcon.gui.models.transition import TransitionModel
+
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -117,7 +118,7 @@ class ContainerStateModel(StateModel):
     def prepare_destruction(self):
         """Prepares the model for destruction
 
-        Recursively unregisters all observers and removes references to child models. Extends the destroy method of
+        Recursively un-registers all observers and removes references to child models. Extends the destroy method of
         the base class by child elements of a container state.
         """
         super(ContainerStateModel, self).prepare_destruction()
@@ -280,13 +281,29 @@ class ContainerStateModel(StateModel):
         # Before the state type is actually changed, we extract the information from the old state model and remove
         # the model from the selection
         if 'before' in info:
+            from rafcon.utils.vividict import Vividict
+
+            def list_dict_to_list(list_or_dict):
+                if isinstance(list_or_dict, dict) and not isinstance(list_or_dict, Vividict):
+                    return list_or_dict.values()
+                elif isinstance(list_or_dict, list):
+                    return list_or_dict
+                else:
+                    return []
+
+            # Extract child models of state, as they have to be applied to the new state model
+            child_models = gui_helper_state_machine.extract_child_models_of_of_state(state_m, new_state_class)
+            affected_models = [state_m, ]
+            for list_or_dict in child_models.itervalues():
+                affected_models.extend(list_dict_to_list(list_or_dict))
+            self.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model', target=self,
+                                                    affected_models=affected_models, after=False))
             state_m.unregister_observer(state_m)
             # remove selection from StateMachineModel.selection -> find state machine model
             state_machine_m.selection.remove(state_m)
 
-            # Extract child models of state, as they have to be applied to the new state model
-            child_models = gui_helper_state_machine.extract_child_models_of_of_state(state_m, new_state_class)
             self.change_state_type.__func__.child_models = child_models  # static variable of class method
+            self.change_state_type.__func__.affected_models = affected_models
 
         # After the state has been changed in the core, we create a new model for it with all information extracted
         # from the old state model
@@ -305,25 +322,36 @@ class ContainerStateModel(StateModel):
                 self.states[state_id] = new_state_m
                 self.check_is_start_state()
 
+                affected_models = self.change_state_type.__func__.affected_models
+                affected_models.append(new_state_m)
                 state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
+                self.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model', target=self,
+                                                        affected_models=affected_models, after=True))
 
                 state_machine_m.selection.add(new_state_m)
                 # self.meta_signal.emit(MetaSignalMsg("state_type_change", "all", True))
 
+            # del self.change_state_type.__func__.child_models
+            del self.change_state_type.__func__.affected_models
+
     def insert_meta_data_from_models_dict(self, source_models_dict):
 
+        related_models = []
         if 'state' in source_models_dict:
             self.meta = source_models_dict['state'].meta
+            related_models.append(self)
         if 'states' in source_models_dict:
             for child_state_id, child_state_m in source_models_dict['states'].iteritems():
                 if child_state_id in self.states:
                     self.states[child_state_id].meta = child_state_m.meta
+                    related_models.append(self.states[child_state_id])
                 else:
                     logger.warning("state model to set meta data could not be found -> {0}".format(child_state_m.state))
         if 'scoped_variables' in source_models_dict:
             for sv_data_port_id, sv_m in source_models_dict['scoped_variables'].iteritems():
                 if self.get_scoped_variable_m(sv_data_port_id):
                     self.get_scoped_variable_m(sv_data_port_id).meta = sv_m.meta
+                    related_models.append(self.get_scoped_variable_m(sv_data_port_id))
                 else:
                     logger.warning("scoped variable model to set meta data could not be found"
                                    " -> {0}".format(sv_m.scoped_variable))
@@ -331,12 +359,14 @@ class ContainerStateModel(StateModel):
             for t_id, t_m in source_models_dict['transitions'].iteritems():
                 if self.get_transition_m(t_id) is not None:
                     self.get_transition_m(t_id).meta = t_m.meta
+                    related_models.append(self.get_transition_m(t_id))
                 else:
                     logger.warning("transition model to set meta data could not be found -> {0}".format(t_m.transition))
         if 'data_flows' in source_models_dict:
             for df_id, df_m in source_models_dict['data_flows'].iteritems():
                 if self.get_data_flow_m(df_id) is not None:
                     self.get_data_flow_m(df_id).meta = df_m.meta
+                    related_models.append(self.get_data_flow_m(df_id))
                 else:
                     logger.warning("data flow model to set meta data could not be found -> {0}".format(df_m.data_flow))
 
@@ -352,39 +382,55 @@ class ContainerStateModel(StateModel):
                     state_id = info['args'][1]
                 else:
                     state_id = info['args'][0]
+            old_state_m = self.states[state_id]
+            old_state_m.action_signal.emit(ActionSignalMsg(action='substitute_state', origin='model', target=self,
+                                                           affected_models=[old_state_m, ], after=False))
             related_transitions, related_data_flows = self.state.related_linkage_state(state_id)
-            tmp_meta_data['state'] = self.states[state_id].meta
+            tmp_meta_data['state'] = old_state_m.meta
             for t in related_transitions['external']['ingoing'] + related_transitions['external']['outgoing']:
                 tmp_meta_data['transitions'][t.transition_id] = self.get_transition_m(t.transition_id).meta
             for df in related_data_flows['external']['ingoing'] + related_data_flows['external']['outgoing']:
                 tmp_meta_data['data_flows'][df.data_flow_id] = self.get_data_flow_m(df.data_flow_id).meta
             self.substitute_state.__func__.tmp_meta_data_storage = tmp_meta_data
+            self.substitute_state.__func__.old_state_m = old_state_m
         else:
             if isinstance(info.result, Exception):
                 logger.exception("State substitution failed {0}".format(info.result))
             else:
                 state_id = info.result
                 tmp_meta_data = self.substitute_state.__func__.tmp_meta_data_storage
+                old_state_m = self.substitute_state.__func__.old_state_m
+                changed_models = []
                 self.states[state_id].meta = tmp_meta_data['state']
+                changed_models.append(self.states[state_id])
                 for t_id, t_meta in tmp_meta_data['transitions'].iteritems():
                     if self.get_transition_m(t_id) is not None:
                         self.get_transition_m(t_id).meta = t_meta
+                        changed_models.append(self.get_transition_m(t_id))
                     elif t_id in self.state.substitute_state.__func__.re_create_io_going_t_ids:
                         logger.warning("Transition model with id {0} to set meta data could not be found.".format(t_id))
                 for df_id, df_meta in tmp_meta_data['data_flows'].iteritems():
                     if self.get_data_flow_m(df_id) is not None:
                         self.get_data_flow_m(df_id).meta = df_meta
+                        changed_models.append(self.get_data_flow_m(df_id))
                     elif df_id in self.state.substitute_state.__func__.re_create_io_going_df_ids:
                         logger.warning("Data flow model with id {0} to set meta data could not be found.".format(df_id))
                 # TODO maybe refactor the signal usage to use the following one
                 from rafcon.gui.models.signals import Notification
                 notification = Notification(self, "states", {'method_name': 'substitute_state'})
                 self.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
+                msg = ActionSignalMsg(action='substitute_state', origin='model', target=self,
+                                      affected_models=changed_models, after=True)
+                old_state_m.action_signal.emit(msg)
+                # print "XXXmodels", self.states
+                # print "XXX", msg.affected_models
+                self.action_signal.emit(msg)
 
             del self.substitute_state.__func__.tmp_meta_data_storage
+            del self.substitute_state.__func__.old_state_m
 
     @ModelMT.observe("state", after=True, before=True)
-    def group_state(self, model, prop_name, info):
+    def group_states(self, model, prop_name, info):
         if info.method_name != 'group_states':
             return
         if 'before' in info:
@@ -408,28 +454,45 @@ class ContainerStateModel(StateModel):
                 tmp_models_dict['transitions'][t.transition_id] = self.get_transition_m(t.transition_id)
             for df in related_data_flows['enclosed']:
                 tmp_models_dict['data_flows'][df.data_flow_id] = self.get_data_flow_m(df.data_flow_id)
-            self.group_state.__func__.tmp_models_storage = tmp_models_dict
+
+            affected_models = []
+            for elemets_dict in tmp_models_dict.itervalues():
+                if isinstance(elemets_dict, dict):
+                    affected_models.extend(elemets_dict.itervalues())
+                elif isinstance(elemets_dict, AbstractStateModel):
+                    affected_models.extend(elemets_dict)
+
+            self.action_signal.emit(ActionSignalMsg(action='group_states', origin='model', target=self,
+                                                    affected_models=affected_models, after=False))
+
+            self.group_states.__func__.tmp_models_storage = tmp_models_dict
+            self.group_states.__func__.affected_models = affected_models
         else:
             if isinstance(info.result, Exception):
                 logger.exception("State ungroup failed {0}".format(info.result))
             else:
                 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
-                tmp_models_dict = self.group_state.__func__.tmp_models_storage
+                tmp_models_dict = self.group_states.__func__.tmp_models_storage
                 state_id = info.result
                 grouped_state_m = self.states[state_id]
                 tmp_models_dict['state'] = grouped_state_m
                 # TODO do implement OpenGL and Gaphas support meta data scaling
                 if not gui_helper_state_machine.scale_meta_data_according_states(tmp_models_dict):
-                    del self.group_state.__func__.tmp_models_storage
+                    del self.group_states.__func__.tmp_models_storage
                     return
 
                 grouped_state_m.insert_meta_data_from_models_dict(tmp_models_dict)
 
                 # TODO maybe refactor the signal usage to use the following one
-                grouped_state_m.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
+                # grouped_state_m.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
+                affected_models = self.group_states.__func__.affected_models
+                affected_models.append(grouped_state_m)
+                self.action_signal.emit(ActionSignalMsg(action='group_states', origin='model', target=self,
+                                                        affected_models=affected_models, after=True))
 
-            del self.group_state.__func__.tmp_models_storage
+            del self.group_states.__func__.tmp_models_storage
+            del self.group_states.__func__.affected_models
 
     @ModelMT.observe("state", after=True, before=True)
     def ungroup_state(self, model, prop_name, info):
@@ -454,7 +517,11 @@ class ContainerStateModel(StateModel):
                 tmp_models_dict['transitions'][t.transition_id] = self.states[state_id].get_transition_m(t.transition_id)
             for df in related_data_flows['internal']['enclosed']:
                 tmp_models_dict['data_flows'][df.data_flow_id] = self.states[state_id].get_data_flow_m(df.data_flow_id)
+            affected_models = [self.states[state_id], ]
+            self.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model', target=self,
+                                                    affected_models=affected_models, after=False))
             self.ungroup_state.__func__.tmp_models_storage = tmp_models_dict
+            self.group_states.__func__.affected_models = affected_models
         else:
             if isinstance(info.result, Exception):
                 logger.exception("State ungroup failed {0}".format(info.result))
@@ -486,9 +553,15 @@ class ContainerStateModel(StateModel):
                 self.insert_meta_data_from_models_dict(tmp_models_dict)
 
                 # TODO maybe refactor the signal usage to use the following one
-                self.meta_signal.emit(MetaSignalMsg("ungroup_state", "all", True))
+                # self.meta_signal.emit(MetaSignalMsg("ungroup_state", "all", True))
+                affected_models = self.group_states.__func__.affected_models
+                for elemets_dict in tmp_models_dict.itervalues():
+                    affected_models.extend(elemets_dict.itervalues())
+                self.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model', target=self,
+                                                        affected_models=affected_models, after=True))
 
             del self.ungroup_state.__func__.tmp_models_storage
+            del self.group_states.__func__.affected_models
 
     def get_scoped_variable_m(self, data_port_id):
         """Returns the scoped variable model for the given data port id

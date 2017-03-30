@@ -89,7 +89,7 @@ class ModificationsHistoryModel(ModelMT):
     def prepare_destruction(self):
         """Prepares the model for destruction
 
-        Unregisters itself as observer from the state machine and the root state
+        Un-registers itself as observer from the state machine and the root state
         """
         try:
             self.relieve_model(self.state_machine_model)
@@ -117,7 +117,7 @@ class ModificationsHistoryModel(ModelMT):
         logger.info("Going to history status #{0}".format(pointer_on_version_to_recover))
         undo_redo_list = self.modifications.get_undo_redo_list_from_active_trail_history_item_to_version_id(pointer_on_version_to_recover)
         logger.debug("Multiple undo and redo to reach modification history element of version {0} "
-                    "-> undo-redo-list is: {1}".format(pointer_on_version_to_recover, undo_redo_list))
+                     "-> undo-redo-list is: {1}".format(pointer_on_version_to_recover, undo_redo_list))
         self.state_machine_model.storage_lock.acquire()
         for elem in undo_redo_list:
             if elem[1] == 'undo':
@@ -505,12 +505,22 @@ class ModificationsHistoryModel(ModelMT):
             self.locked = False
             self.state_machine_model.storage_lock.release()
 
+    # @ModelMT.observe("action_signal", signal=True)
+    # def action_signal(self, model, prop_name, info):
+    #     print "state: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
+    #
+    # @ModelMT.observe("state_action_signal", signal=True)
+    # def state_action_signal(self, model, prop_name, info):
+    #     print "state machine: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
+
     @ModelMT.observe("state_machine", before=True)
     def assign_notification_change_type_root_state_before(self, model, prop_name, info):
         if info.method_name != "root_state_change":
             return
         if self.busy:  # if proceeding undo or redo
             return
+        # print model, prop_name
+        # print "type change", NotificationOverview(info, self.with_prints, self.__class__.__name__)
 
         if info['kwargs']['method_name'] == "change_root_state_type":
             overview = NotificationOverview(info, self.with_prints, self.__class__.__name__)

@@ -200,6 +200,7 @@ class StateOverviewController(ExtendedController, Model):
                     self.model.state.parent.change_state_type(self.model.state, target_class)
             except Exception as e:
                 logger.error("An error occurred while changing the state type: {0}".format(e))
+                raise
 
         else:
             logger.debug("DON'T Change type of State '{0}' from {1} to {2}".format(self.model.state.name,

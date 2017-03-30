@@ -22,7 +22,7 @@ from rafcon.core.states.container_state import ContainerState
 
 from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.state import StateModel
-from rafcon.gui.models.abstract_state import MetaSignalMsg
+from rafcon.gui.models.signals import MetaSignalMsg, ActionSignalMsg
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -83,12 +83,14 @@ class Clipboard(Observable):
         The method checks whether the target state is a execution state or a container state and inserts respective
         elements and notifies the user if the parts can not be insert to the target state.
         - for ExecutionStates outcomes, input- and output-data ports can be insert
-        - for ContainerState additional states, scoped variables and data flows and/or transitions (if related) can be insert
+        - for ContainerState additional states, scoped variables and data flows and/or transitions (if related) can be
+          insert
 
         Related data flows and transitions are determined by origin and target keys and respective objects which has to
         be in the state machine selection, too. So transitions or data flows without the related objects are not copied.
         :param target_state_m: state in which the copied/cut elements should be insert
-        :param cursor_position: cursor position used to adapt meta data positioning of elements e.g states and via points
+        :param cursor_position: cursor position used to adapt meta data positioning of elements e.g states and via
+               points
         :return:
         """
         assert isinstance(target_state_m, StateModel)
@@ -99,7 +101,8 @@ class Clipboard(Observable):
 
         element_m_copy_lists = self.model_copies
         self.prepare_new_copy()  # threaded in future -> important that the copy is prepared here!!!
-
+        # target_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model', target=target_state_m,
+        #                                                   affected_models=[], after=False))
         self.state_id_mapping_dict[self.copy_parent_state_id] = target_state_m.state.state_id
 
         # prepare list of lists to copy for limited or converted paste of objects
@@ -139,6 +142,11 @@ class Clipboard(Observable):
             insert_dict[list_name] = insert_elements_from_model_copies_list(element_m_copy_lists[list_name],
                                                                             list_name[:-1])
         target_state_m.meta_signal.emit(MetaSignalMsg("paste", "all", True))
+        affected_models = []
+        for elemets_list in insert_dict.itervalues():
+            affected_models.extend(elemets_list)
+        # target_state_m.action_signal.emit(ActionSignalMsg(action='paste', origin='clipboard', target=target_state_m,
+        #                                                   affected_models=affected_models, after=True))
         return insert_dict
 
     def do_cut_removal(self):
@@ -232,7 +240,8 @@ class Clipboard(Observable):
                                      orig_data_port_copy_m, ScopedVariable)
 
     def reset_clipboard(self):
-        """ Resets the clipboard, so that old elements do not pollute the new selection that is copied into the clipboard.
+        """ Resets the clipboard, so that old elements do not pollute the new selection that is copied into the
+        clipboard.
         :return:
         """
         # reset selections
@@ -300,7 +309,6 @@ class Clipboard(Observable):
             from_port = data_flow.parent.get_data_port(data_flow.from_state, data_flow.from_key)
             to_port = data_flow.parent.get_data_port(data_flow.to_state, data_flow.to_key)
             return from_port, to_port
-
 
         def get_states_related_to_transition(transition):
             if transition.from_state == transition.parent.state_id or transition.from_state is None:

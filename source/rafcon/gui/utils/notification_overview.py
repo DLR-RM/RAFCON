@@ -12,6 +12,7 @@
 import datetime
 import time
 from rafcon.utils import constants
+from rafcon.gui.models.signals import MetaSignalMsg, ActionSignalMsg
 
 
 EXECUTION_TRIGGERED_METHODS = constants.BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
@@ -145,6 +146,27 @@ class NotificationOverview(dict):
                                                                               overview))
             return s
 
+        def get_nice_action_signal_msg_tuple_string(meta_signal_msg_tuple, level, overview):
+            meta_signal_dict = {}
+            # after
+            s = "\n{0}after={1}".format(level + "\t", meta_signal_msg_tuple.after)
+            meta_signal_dict['after'] = meta_signal_msg_tuple.after
+            # action
+            s += "\n{0}action={1}".format(level + "\t", meta_signal_msg_tuple.action)
+            meta_signal_dict['action'] = meta_signal_msg_tuple.action
+            # origin
+            s += "\n{0}origin={1}".format(level + "\t", meta_signal_msg_tuple.origin)
+            meta_signal_dict['origin'] = meta_signal_msg_tuple.origin
+            # origin
+            s += "\n{0}target={1}".format(level + "\t", meta_signal_msg_tuple.target)
+            meta_signal_dict['target'] = meta_signal_msg_tuple.origin
+            # change
+            s += "\n{0}affected_models={1}".format(level + "\t", meta_signal_msg_tuple.affected_models)
+            meta_signal_dict['affected_models'] = meta_signal_msg_tuple.affected_models
+
+            return s
+
+
         overview_was_none = False
         if overview is None:
             overview_was_none = True
@@ -206,11 +228,22 @@ class NotificationOverview(dict):
                     overview['others'][len(overview['others'])-1][key] = info[key]
         else:
             overview['kwargs'].append({})
-            overview['meta_signal'].append(info['arg'])
-            s += "\n{0}'arg': MetaSignalMsg({1}".format(level,
-                                                        get_nice_meta_signal_msg_tuple_string(info['arg'],
-                                                                                              level,
-                                                                                              overview))
+            # print info
+            # print info['arg']
+            if isinstance(info['arg'], MetaSignalMsg):
+                overview['meta_signal'].append(info['arg'])
+                s += "\n{0}'arg': MetaSignalMsg({1}".format(level,
+                                                            get_nice_meta_signal_msg_tuple_string(info['arg'],
+                                                                                                  level,
+                                                                                                  overview))
+            elif isinstance(info['arg'], ActionSignalMsg):
+                overview['meta_signal'].append(info['arg'])
+                s += "\n{0}'arg': ActionSignalMsg({1}".format(level,
+                                                              get_nice_action_signal_msg_tuple_string(info['arg'],
+                                                                                                      level,
+                                                                                                      overview))
+            else:
+                raise str(info)
 
         if overview_was_none:
             return s, overview

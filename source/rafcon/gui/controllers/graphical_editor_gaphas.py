@@ -332,6 +332,29 @@ class GraphicalEditorController(ExtendedController):
         else:
             logger.info("Meta data operation on state model without view: {}".format(state_m))
 
+    @ExtendedController.observe("state_action_signal", signal=True)
+    def state_action_signal(self, model, prop_name, info):
+        # print model, prop_name, info
+        # print "GSME state_action_signal: ", info['arg'] if 'arg' in info else "XXX" + str(info)
+        if 'arg' in info and info['arg'].action in ['state_type_change', 'group_states', 'ungroup_state',
+                                                    'substitute_state', 'paste']:
+            if info['arg'].after is False:
+                # self._change_state_type = True
+                if info['arg'].affected_models:
+                    state_model_to_be_changed = info['arg'].affected_models[0]
+                    self.observe_model(state_model_to_be_changed)
+                    # print "GSME observe: ", state_model_to_be_changed
+                # assert not hasattr(self.state_action_signal.__func__, "affected_models")
+                # assert not hasattr(self.state_action_signal.__func__, "target")
+                self.state_action_signal.__func__.affected_models = info['arg'].affected_models
+                self.state_action_signal.__func__.target = info['arg'].target
+            else:
+                # self._change_state_type = False
+                # print "GSME adapt to change"
+                self.adapt_complex_action(self.state_action_signal.__func__.target, info['arg'].target)
+                # del self.state_action_signal.__func__.affected_models
+                # del self.state_action_signal.__func__.target
+
     @ExtendedController.observe("state_machine", before=True)
     def state_machine_change_before(self, model, prop_name, info):
         if 'method_name' in info and info['method_name'] == 'root_state_change':
@@ -564,12 +587,16 @@ class GraphicalEditorController(ExtendedController):
                     logger.error('Error while trying to emit meta data signal {}'.format(e))
 
     @ExtendedController.observe("state_type_changed_signal", signal=True)
-    @lock_state_machine
     def state_type_changed(self, old_state_m, prop_name, info):
         self._change_state_type = False
         self.relieve_model(old_state_m)
         signal_msg = info['arg']
         new_state_m = signal_msg.new_state_m
+        # print "state_type_changed relieve observer"
+        self.adapt_complex_action(old_state_m, new_state_m)
+
+    @lock_state_machine
+    def adapt_complex_action(self, old_state_m, new_state_m):
         state_v = self.canvas.get_view_for_model(old_state_m)
 
         # If the root state has been changed, we recreate the whole state machine view

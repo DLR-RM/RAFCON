@@ -17,7 +17,6 @@ from gtkmvc import ModelMT, Signal
 
 from rafcon.gui.models.signals import MetaSignalMsg, Notification
 from rafcon.gui.models.meta import MetaModel
-from rafcon.gui.models.state_element import StateElementModel
 
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.library_state import LibraryState
@@ -92,9 +91,10 @@ class AbstractStateModel(MetaModel, Hashable):
     output_data_ports = []
     meta_signal = Signal()
     state_type_changed_signal = Signal()
+    action_signal = Signal()
 
     __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start", "meta_signal",
-                       "state_type_changed_signal")
+                       "state_type_changed_signal", "action_signal")
 
     def __init__(self, state, parent=None, meta=None):
         if type(self) == AbstractStateModel:
@@ -112,6 +112,7 @@ class AbstractStateModel(MetaModel, Hashable):
         self.parent = parent
 
         self.state_type_changed_signal = Signal()
+        self.action_signal = Signal()
 
         self.register_observer(self)
 
@@ -145,6 +146,7 @@ class AbstractStateModel(MetaModel, Hashable):
         :return: Whether item is a direct child of this state
         :rtype: bool
         """
+        from rafcon.gui.models.state_element import StateElementModel
         if not isinstance(item, StateElementModel):
             return False
         return item in self.outcomes or item in self.input_data_ports or item in self.output_data_ports
@@ -165,7 +167,7 @@ class AbstractStateModel(MetaModel, Hashable):
     def prepare_destruction(self):
         """Prepares the model for destruction
 
-        Recursively unregisters all observers and removes references to child models
+        Recursively un-registers all observers and removes references to child models
         """
         try:
             self.unregister_observer(self)
@@ -284,26 +286,79 @@ class AbstractStateModel(MetaModel, Hashable):
         if self.parent is not None:
             self.parent.model_changed(model, prop_name, info)
 
+    @ModelMT.observe("action_signal", signal=True)
+    def action_signal_triggered(self, model, prop_name, info):
+        """This method notifies the parent state and child state models about complex actions
+        """
+        msg = info.arg
+        # print "action_signal_triggered state: ", self.state.state_id, model, prop_name, info
+        if msg.action.startswith('sm_notification_'):
+            return
+        # affected child propagation from state
+        # if hasattr(self, 'states'):
+        #     for m in info['arg'].affected_models:
+        #         print m, self.states
+        #         print [m is mm for mm in self.states.itervalues()], [m in self for m in info['arg'].affected_models], \
+        #             [m in self.states.values() for m in info['arg'].affected_models]
+        if any([m in self for m in info['arg'].affected_models]):
+            if not msg.action.startswith('parent_notification_'):
+                new_msg = msg._replace(action='parent_notification_' + msg.action)
+            else:
+                new_msg = msg
+            for m in info['arg'].affected_models:
+                # print '???propagate it to', m, m.parent
+                if isinstance(m, AbstractStateModel) and m in self:
+                    # print '!!!propagate it from {0} to {1} {2}'.format(self.state.state_id, m.state.state_id, m)
+                    m.action_signal.emit(new_msg)
+
+        if msg.action.startswith('parent_notification_'):
+            return
+
+        # recursive propagation of action signal TODO remove finally
+        if self.parent is not None:
+            # Notify parent about change of meta data
+            info.arg = msg
+            self.parent.action_signal_triggered(model, prop_name, info)
+            # print "DONE1 ", msg
+        # state machine propagation of action signal (indirect) TODO remove finally
+        elif not msg.action.startswith('sm_notification_'):  # Prevent recursive call
+            # If we are the root state, inform the state machine model by emitting our own meta signal.
+            # To make the signal distinguishable for a change of meta data to our state, the change property of
+            # the message is prepended with 'sm_notification_'
+            new_msg = msg._replace(action='sm_notification_' + msg.action)
+            self.action_signal.emit(new_msg)
+            # print "DONE2 ", msg
+        else:
+            # print "DONE3 NOTHING"
+            pass
+
     @ModelMT.observe("meta_signal", signal=True)
     def meta_changed(self, model, prop_name, info):
         """This method notifies the parent state about changes made to the meta data
         """
         msg = info.arg
+        # print "meta_changed state: ", model, prop_name, info
         if msg.notification is None:
             # Meta data of this state was changed, add information about notification to the signal message
             notification = Notification(model, prop_name, info)
             msg = msg._replace(notification=notification)
+            # print "DONE0 ", msg
 
         if self.parent is not None:
             # Notify parent about change of meta data
             info.arg = msg
             self.parent.meta_changed(model, prop_name, info)
+            # print "DONE1 ", msg
         elif not msg.change.startswith('sm_notification_'):  # Prevent recursive call
             # If we are the root state, inform the state machine model by emitting our own meta signal.
             # To make the signal distinguishable for a change of meta data to our state, the change property of
             # the message is prepended with 'sm_notification_'
             msg = msg._replace(change='sm_notification_' + msg.change)
             self.meta_signal.emit(msg)
+            # print "DONE2 ", msg
+        else:
+            # print "DONE3 NOTHING"
+            pass
 
     def _mark_state_machine_as_dirty(self):
         state_machine = self.state.get_state_machine()

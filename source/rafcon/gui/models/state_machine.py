@@ -27,7 +27,7 @@ from rafcon.core.storage import storage
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.models import ContainerStateModel, StateModel
 from rafcon.gui.models.selection import Selection
-from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg
+from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
 from rafcon.utils import log
 from rafcon.utils import storage_utils
 from rafcon.utils.hashable import Hashable
@@ -49,11 +49,14 @@ class StateMachineModel(ModelMT, Hashable):
     root_state = None
     meta_signal = Signal()
     state_meta_signal = Signal()
+    action_signal = Signal()
+    state_action_signal = Signal()
     sm_selection_changed_signal = Signal()
 
     suppress_new_root_state_model_one_time = False
 
-    __observables__ = ("state_machine", "root_state", "meta_signal", "state_meta_signal", "sm_selection_changed_signal")
+    __observables__ = ("state_machine", "root_state", "meta_signal", "state_meta_signal", "sm_selection_changed_signal",
+                       "action_signal", "state_action_signal")
 
     def __init__(self, state_machine, sm_manager_model, meta=None, load_meta_data=True):
         """Constructor
@@ -78,6 +81,8 @@ class StateMachineModel(ModelMT, Hashable):
             self.meta = Vividict()
         self.meta_signal = Signal()
         self.state_meta_signal = Signal()
+        self.action_signal = Signal()
+        self.state_action_signal = Signal()
         self.sm_selection_changed_signal = Signal()
 
         self.temp = Vividict()
@@ -200,15 +205,32 @@ class StateMachineModel(ModelMT, Hashable):
 
     @ModelMT.observe("meta_signal", signal=True)
     def meta_changed(self, model, prop_name, info):
-        # When the meta was changed, we have to set the dirty flag, as the changes are unsaved
+        """When the meta was changed, we have to set the dirty flag, as the changes are unsaved"""
         self.state_machine.marked_dirty = True
         if model is not self:  # Signal was caused by the root state
             # Emit state_meta_signal to inform observing controllers about changes made to the meta data within the
             # state machine
+            # -> removes mark of "sm_notification_"-prepend to mark root-state msg forwarded to state machine label
             msg = info.arg
-            change = msg.change
-            msg = msg._replace(change=change.replace('sm_notification_', '', 1))
+            msg = msg._replace(change=msg.change.replace('sm_notification_', '', 1))
             self.state_meta_signal.emit(msg)
+
+    @ModelMT.observe("action_signal", signal=True)
+    def action_signal_triggered(self, model, prop_name, info):
+        """When the action was performed, we have to set the dirty flag, as the changes are unsaved"""
+        # print "action_signal_triggered state machine: ", model, prop_name, info
+        self.state_machine.marked_dirty = True
+        msg = info.arg
+        if model is not self:  # Signal was caused by the root state
+            # Emit state_action_signal to inform observing controllers about changes made to the state within the
+            # state machine
+            # -> removes mark of "sm_notification_"-prepend to mark root-state msg forwarded to state machine label
+            msg = msg._replace(action=msg.action.replace('sm_notification_', '', 1))
+            # print "DONE1", msg
+        else:
+            # print "DONE2", msg
+            pass
+        self.state_action_signal.emit(msg)
 
     @staticmethod
     def _list_modified(prop_name, info):
@@ -278,6 +300,9 @@ class StateMachineModel(ModelMT, Hashable):
             else:
                 new_state_class = info.kwargs['new_state_class']
 
+            # print "emit change_root_state_type before msg: "
+            self.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model', target=self,
+                                    affected_models=[state_m, ], after=False))
             state_m.unregister_observer(self)
             self.selection.remove(state_m)
 
@@ -303,6 +328,10 @@ class StateMachineModel(ModelMT, Hashable):
                 self.root_state = new_state_m
 
                 state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
+
+                # print "emit change_root_state_type after msg: "
+                self.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
+                                        target=self, affected_models=[new_state_m, ], after=True))
 
                 self.selection.add(new_state_m)
 
