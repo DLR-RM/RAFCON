@@ -403,6 +403,9 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
 
         # in case the new state is an execution state remove of child states (for observable notifications)
         if current_state_is_container and issubclass(target_state_class, ExecutionState):
+            if isinstance(source_state, BarrierConcurrencyState):
+                source_state.remove_state(UNIQUE_DECIDER_STATE_ID, force=True)
+                assert UNIQUE_DECIDER_STATE_ID not in source_state.states
             for state_id in source_state.states.keys():
                 if isinstance(source_state, BarrierConcurrencyState):
                     source_state.remove_state(UNIQUE_DECIDER_STATE_ID, force=True)
