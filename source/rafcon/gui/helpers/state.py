@@ -23,6 +23,7 @@ from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibrary
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.models.library_state import LibraryStateModel
+from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.utils import log
 
@@ -150,13 +151,162 @@ def change_state_type(model, target_class):
                                                                          type(model.state).__name__,
                                                                          target_class.__name__))
         try:
-            if model.state.is_root_state:
-                model.state.parent.change_root_state_type(target_class)
-            else:
-                model.state.parent.change_state_type(model.state, target_class)
+            model_change_state_type(model, target_class)
         except Exception as e:
             logger.error("An error occurred while changing the state type: {0}".format(e))
+            raise
     else:
         logger.debug("DON'T Change type of State '{0}' from {1} to {2}".format(model.state.name,
                                                                                type(model.state).__name__,
                                                                                target_class.__name__))
+
+
+def model_change_state_type(model, target_class):
+
+    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+    import rafcon.gui.singleton as gui_singletons
+    from rafcon.utils.vividict import Vividict
+
+    is_root_state = model.state.is_root_state
+
+    old_state = model.state
+    old_state_m = model
+
+    if is_root_state:
+
+        # state_m = model
+        state_machine_m = gui_singletons.state_machine_manager_model.get_state_machine_model(model)
+        state_m = state_machine_m.root_state
+        action_root_m = state_machine_m
+
+        # Before the root state type is actually changed, we extract the information from the old state model and remove
+        # the model from the selection
+        old_state_m.unregister_observer(old_state_m)
+
+        # print "emit change_root_state_type before msg: "
+        old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
+                                                       target=action_root_m,
+                                                       affected_models=[old_state_m, ],
+                                                       after=False,
+                                                       args=[target_class]))
+        old_state_m.unregister_observer(state_machine_m)
+        # state_machine_m.unregister_observer(state_machine_m)
+        logger.info("UNREGISTER OBSERVER")
+        state_machine_m.selection.remove(old_state_m)
+
+        # Extract child models of state, as they have to be applied to the new state model
+        child_models = gui_helper_state_machine.extract_child_models_of_of_state(state_m, target_class)
+        state_machine_m.change_root_state_type.__func__.child_models = child_models  # static variable of class method
+        state_machine_m.suppress_new_root_state_model_one_time = True
+        logger.info("FINISH BEFORE")
+    else:
+
+        action_root_state_m = model.parent
+        action_root_state = model.parent.state
+
+        # BEFORE
+        new_state_class = target_class
+        state_id = old_state.state_id
+        state_m = action_root_state_m.states[state_id]
+        state_machine_m = gui_singletons.state_machine_manager_model.get_state_machine_model(state_m)
+
+        # Before the state type is actually changed, we extract the information from the old state model and remove
+        # the model from the selection
+
+        def list_dict_to_list(list_or_dict):
+            if isinstance(list_or_dict, dict) and not isinstance(list_or_dict, Vividict):
+                return list_or_dict.values()
+            elif isinstance(list_or_dict, list):
+                return list_or_dict
+            else:
+                return []
+
+        # Extract child models of state, as they have to be applied to the new state model
+        child_models = gui_helper_state_machine.extract_child_models_of_of_state(state_m, new_state_class)
+        affected_models = [state_m, ]
+        for list_or_dict in child_models.itervalues():
+            affected_models.extend(list_dict_to_list(list_or_dict))
+        old_state_m.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model',
+                                                       target=action_root_state_m,
+                                                       affected_models=affected_models,
+                                                       after=False,
+                                                       args=[model.state, target_class, ]))
+        state_m.unregister_observer(state_m)
+        # remove selection from StateMachineModel.selection -> find state machine model
+        state_machine_m.selection.remove(state_m)
+
+        action_root_state_m.change_state_type.__func__.child_models = child_models  # static variable of class method
+        action_root_state_m.change_state_type.__func__.affected_models = affected_models
+
+    # CORE
+    new_state = e = None
+    try:
+        if is_root_state:
+            new_state = model.state.parent.change_root_state_type(target_class)
+            # new_state = state_machine_m.state_machine.change_root_state_type(target_class)
+        else:
+            new_state = model.state.parent.change_state_type(old_state, target_class)
+    except Exception as e:
+        raise
+
+    # AFTER MODEL
+    # After the state has been changed in the core, we create a new model for it with all information extracted
+    # from the old state model
+    old_state = model.state
+    state_id = old_state.state_id
+    if is_root_state:
+
+        if new_state is None:
+            logger.exception("Root state type change failed {0}".format(e))
+        else:
+            logger.info("start after TO STATE TYPE CHANGE")
+            # Create a new state model based on the new state and apply the extracted child models
+            child_models = state_machine_m.change_root_state_type.__func__.child_models
+            new_state_m = gui_helper_state_machine.create_state_model_for_state(new_state, child_models)
+
+            new_state_m.register_observer(state_machine_m)
+            # state_machine_m.register_observer(state_machine_m)
+            logger.info("ASSIGN after TO STATE TYPE CHANGE")
+            state_machine_m.root_state = new_state_m
+            logger.info("ASSIGNED after TO STATE TYPE CHANGE")
+            old_state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
+
+            # print "emit change_root_state_type after msg: "
+            old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
+                                                           target=state_machine_m,
+                                                           affected_models=[new_state_m, ],
+                                                           after=True))
+
+            state_machine_m.selection.add(new_state_m)
+    else:
+        # state_m = action_root_state_m.states[state_id]
+        if new_state is None:
+            logger.exception("Container state type change failed -> {0}".format(e))
+        else:
+            # Create a new state model based on the new state and apply the extracted child models
+            child_models = action_root_state_m.change_state_type.__func__.child_models
+            new_state_m = gui_helper_state_machine.create_state_model_for_state(new_state, child_models)
+            # Set this state model (action_root_state_m) to be the parent of our new state model
+            new_state_m.parent = action_root_state_m
+            # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
+            action_root_state_m.states[state_id] = new_state_m
+            action_root_state_m.check_is_start_state()
+
+            affected_models = action_root_state_m.change_state_type.__func__.affected_models
+            affected_models.append(new_state_m)
+            old_state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
+            old_state_m.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model',
+                                                           target=action_root_state_m,
+                                                           affected_models=affected_models,
+                                                           after=True))
+
+            state_machine_m.selection.add(new_state_m)
+            # action_root_state_m.meta_signal.emit(MetaSignalMsg("state_type_change", "all", True))
+
+        # del action_root_state_m.change_state_type.__func__.child_models
+        del action_root_state_m.change_state_type.__func__.affected_models
+
+    if is_root_state:
+        state_machine_m._send_root_state_notification(state_machine_m.change_root_state_type.__func__.last_notification_model,
+                                                      state_machine_m.change_root_state_type.__func__.last_notification_prop_name,
+                                                      state_machine_m.change_root_state_type.__func__.last_notification_info)

@@ -407,11 +407,7 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
                 source_state.remove_state(UNIQUE_DECIDER_STATE_ID, force=True)
                 assert UNIQUE_DECIDER_STATE_ID not in source_state.states
             for state_id in source_state.states.keys():
-                if isinstance(source_state, BarrierConcurrencyState):
-                    source_state.remove_state(UNIQUE_DECIDER_STATE_ID, force=True)
-                    assert UNIQUE_DECIDER_STATE_ID not in source_state.states
-                else:
-                    source_state.remove_state(state_id=state_id)
+                source_state.remove_state(state_id)
 
         new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
                                        input_data_ports=source_state.input_data_ports,

@@ -585,6 +585,7 @@ class GraphicalEditorController(ExtendedController):
                     self._meta_data_changed(None, model, 'append_to_last_change', True)
                 except Exception as e:
                     logger.error('Error while trying to emit meta data signal {}'.format(e))
+                    raise
 
     @ExtendedController.observe("state_type_changed_signal", signal=True)
     def state_type_changed(self, old_state_m, prop_name, info):

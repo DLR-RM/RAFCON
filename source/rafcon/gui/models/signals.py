@@ -15,7 +15,8 @@ from collections import namedtuple
 MetaSignalMsg = namedtuple('MetaSignalMsg', ['origin', 'change', 'affects_children', 'notification'])
 MetaSignalMsg.__new__.__defaults__ = (False, None)  # Make last two parameters optional
 
-ActionSignalMsg = namedtuple('ActionSignalMsg', ['action', 'origin', 'target', 'affected_models', 'after'])
+ActionSignalMsg = namedtuple('ActionSignalMsg', ['action', 'origin', 'target', 'affected_models', 'after', 'args'])
+ActionSignalMsg.__new__.__defaults__ = ([], )
 
 StateTypeChangeSignalMsg = namedtuple('StateTypeChangeSignalMsg', ['new_state_m'])
 

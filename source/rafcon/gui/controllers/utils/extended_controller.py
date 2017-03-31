@@ -168,7 +168,9 @@ class ExtendedController(Controller):
         self.relieve_all_models()
         if self.parent:
             self.__parent = None
-        self.view.get_top_widget().destroy()
+        # TODO remove this check if possible -> insert to tolerate bad habit new action_signal and related functions
+        if self.view is not None:
+            self.view.get_top_widget().destroy()
 
     def observe_model(self, model):
         """Make this model observable within the controller

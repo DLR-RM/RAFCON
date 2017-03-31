@@ -178,7 +178,8 @@ class StateModel(AbstractStateModel):
         :param core_objects_dict: new dictionary of one type of core-elements (rafcon.core)
         :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
         :param model_class: model-class of the elements that should be insert
-        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element (e.g. 'state_id')
+        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element
+                          (e.g. 'state_id')
         :return:
         """
         for _ in range(len(model_list_or_dict)):
@@ -200,7 +201,8 @@ class StateModel(AbstractStateModel):
         :param core_objects_dict: dictionary of one type of core-elements (rafcon.core)
         :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
         :param model_class: model-class of the elements that should be insert
-        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element (e.g. 'state_id')
+        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element
+                          (e.g. 'state_id')
         :return:
         """
         for core_object in core_objects_dict.itervalues():
@@ -227,7 +229,8 @@ class StateModel(AbstractStateModel):
         :param model_list_or_dict: could be a list or dictionary of one model type
         :param core_objects_dict: dictionary of one type of core-elements (rafcon.core)
         :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
-        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element (e.g. 'state_id')
+        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element
+                          (e.g. 'state_id')
         :return:
         """
         for model_or_key in model_list_or_dict:

@@ -347,6 +347,7 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
         for state_id, state_m in state_model.states.iteritems():
             if with_prints:
                 print "FIN: ", state_id, state_m.state.state_id, meta_dict['states'].keys(), state_model.state.state_id
+            # TODO check if decider miss the meta or it has to be like that UNDO, REDO?
             if state_m.state.state_id in meta_dict['states']:
                 if level is None:
                     insert_state_meta_data(meta_dict['states'][state_m.state.state_id], state_m, with_prints)
@@ -355,7 +356,8 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
                 else:
                     pass
             else:
-                logger.warning("no meta data for STATE: '{0}' in storage".format(state_m.state.state_id))
+                if not UNIQUE_DECIDER_STATE_ID == state_m.state.state_id:
+                    logger.warning("no meta data for STATE: '{0}' in storage".format(state_m.state.state_id))
 
             if with_prints:
                 print "FINISHED META for STATE: ", state_m.state.state_id
@@ -363,8 +365,10 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
             if elem.transition.transition_id in meta_dict['transitions']:
                 elem.meta = meta_dump_or_deepcopy(meta_dict['transitions'][elem.transition.transition_id])
             else:
-                missing_meta_data_warning(state_model, elem.transition, meta_dict, 'transitions',
-                                          [t_m.transition.transition_id for t_m in state_model.transitions])
+                # TODO check if BarrierState miss the meta or it has to be like that UNDO, REDO?
+                if not isinstance(state_model.state, BarrierConcurrencyState):
+                    missing_meta_data_warning(state_model, elem.transition, meta_dict, 'transitions',
+                                              [t_m.transition.transition_id for t_m in state_model.transitions])
 
         for elem in state_model.data_flows:
             if elem.data_flow.data_flow_id in meta_dict['data_flows']:
@@ -514,10 +518,10 @@ class MetaAction(AbstractAction):
         assert isinstance(overview, NotificationOverview)
         assert overview['type'] == 'signal'
         AbstractAction.__init__(self, parent_path, state_machine_model, overview)
-        self.action_type = "change " + overview['meta_signal'][-1]['change']
+        self.action_type = "change " + overview['signal'][-1]['change']
 
-        overview['method_name'].append("change " + overview['meta_signal'][-1]['change'])
-        overview['info'][-1]['method_name'] = "change " + overview['meta_signal'][-1]['change']
+        overview['method_name'].append("change " + overview['signal'][-1]['change'])
+        overview['info'][-1]['method_name'] = "change " + overview['signal'][-1]['change']
         overview['instance'].append(overview['model'][-1])
         overview['info'][-1]['instance'] = overview['model'][-1]
 
@@ -538,7 +542,7 @@ class MetaAction(AbstractAction):
         # TODO in future emit signal only for respective model
         state_m = self.get_state_model_changed()
         # logger.info("META-Action undo {}".format(state_m.state.get_path()))
-        if self.before_overview['meta_signal'][-1]['affects_children']:
+        if self.before_overview['signal'][-1]['affects_children']:
             insert_state_meta_data(meta_dict=self.before_storage, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", True))
             # if state_m.state.is_root_state:
@@ -554,7 +558,7 @@ class MetaAction(AbstractAction):
         # TODO in future emit signal only for respective model
         state_m = self.get_state_model_changed()
         # logger.info("META-Action undo {}".format(state_m.state.get_path()))
-        if self.before_overview['meta_signal'][-1]['affects_children']:
+        if self.before_overview['signal'][-1]['affects_children']:
             insert_state_meta_data(meta_dict=self.after_storage, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))
             # if state_m.state.is_root_state:
@@ -648,7 +652,7 @@ class Action(ModelMT, AbstractAction):
         status.
         :return:
         """
-
+        print "KILLER REDO"
         self.set_state_to_version(self.get_state_changed(), self.after_storage)
 
     def undo(self):
@@ -656,7 +660,7 @@ class Action(ModelMT, AbstractAction):
         status.
         :return:
         """
-
+        print "KILLER UNDO"
         self.set_state_to_version(self.get_state_changed(), self.before_storage)
 
     def set_state_to_version(self, state, storage_version):
@@ -702,12 +706,25 @@ class Action(ModelMT, AbstractAction):
 
         self.run_graphical_viewer(g_sm_editor, actual_state_model)
 
+    @ModelMT.observe("action_signal", signal=True)
+    def action_signal(self, model, prop_name, info):
+        if info['arg'].action == 'change_root_state_type':
+            if info['arg'].after:
+                new_state_m = info['arg'].affected_models[0]
+                logger.info("action state-type-change action-signal hook for root {}".format(new_state_m))
+                storage_version = self.storage_version_for_state_type_change_signal_hook
+                root_state_version_from_storage = get_state_from_state_tuple(storage_version)
+
+                self.update_state(new_state_m.state, root_state_version_from_storage)
+
+                insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
+
     @ModelMT.observe("state_type_changed_signal", signal=True)
     def hook_for_type_change_operation(self, model, prop_name, info):
         g_sm_editor = self.stop_graphical_viewer()
         msg = info['arg']
         new_state_m = msg.new_state_m
-        logger.info("action state-type-change hook for root {}".format(new_state_m))
+        logger.info("action state-type-change state-type-change-signal hook for root {}".format(new_state_m))
         storage_version = self.storage_version_for_state_type_change_signal_hook
         root_state_version_from_storage = get_state_from_state_tuple(storage_version)
 
@@ -716,7 +733,7 @@ class Action(ModelMT, AbstractAction):
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
 
     def update_state(self, state, stored_state):
-
+        logger.info("PPP\n{0}\n{1}".format(state, stored_state))
         assert type(stored_state) is type(state)
 
         is_root = state.is_root_state
@@ -926,32 +943,50 @@ class StateMachineAction(Action, ModelMT):
         # observe root state model (type change signal)
         g_sm_editor = self.stop_graphical_viewer()
 
+        import rafcon.gui.helpers.state as gui_helper_state
         if self.action_type == 'change_root_state_type':
             self.storage_version_for_state_type_change_signal_hook = storage_version
             assert isinstance(self.state_machine_model.root_state.state, State)
             old_root_state_m = self.state_machine_model.root_state
             self.observe_model(self.state_machine_model.root_state)
 
-            self.state_machine.change_root_state_type(new_state_class)
+            # self.state_machine.change_root_state_type(new_state_class)
+            gui_helper_state.change_state_type(old_root_state_m, new_state_class)
             self.storage_version_for_state_type_change_signal_hook = None
             self.relieve_model(old_root_state_m)
         else:
-            new_state = gui_helper_state_machine.create_new_state_from_state_with_type(state, new_state_class)
-
-            self.update_state(new_state, root_state_version_from_storage)
-
-            self.state_machine.root_state = new_state  # root_state_version_fom_storage
-            insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
-                                   state_model=self.state_machine_model.root_state)
+            raise TypeError("Wrong action type")
+        # else:
+        #     new_state = gui_helper_state_machine.create_new_state_from_state_with_type(state, new_state_class)
+        #
+        #     self.update_state(new_state, root_state_version_from_storage)
+        #
+        #     self.state_machine.root_state = new_state  # root_state_version_fom_storage
+        #     insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
+        #                            state_model=self.state_machine_model.root_state)
 
         self.run_graphical_viewer(g_sm_editor, self.state_machine_model.root_state)
+
+    @ModelMT.observe("action_signal", signal=True)
+    def action_signal(self, model, prop_name, info):
+        print "#H# STATE_MACHINE_REDO_UNDO: ", NotificationOverview(info, False, self.__class__.__name__)
+        if info['arg'].action == 'change_root_state_type':
+            if info['arg'].after:
+                new_state_m = info['arg'].affected_models[0]
+                logger.info("action state-type-change action-signal hook for root {}".format(new_state_m))
+                storage_version = self.storage_version_for_state_type_change_signal_hook
+                root_state_version_from_storage = get_state_from_state_tuple(storage_version)
+
+                self.update_state(new_state_m.state, root_state_version_from_storage)
+
+                insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
 
     @ModelMT.observe("state_type_changed_signal", signal=True)
     def hook_for_type_change_operation(self, model, prop_name, info):
         g_sm_editor = self.stop_graphical_viewer()
         msg = info['arg']
         new_state_m = msg.new_state_m
-        logger.info("action state-type-change hook for root {}".format(new_state_m))
+        logger.info("action state-type-change state-type-changed-signal hook for root {}".format(new_state_m))
         storage_version = self.storage_version_for_state_type_change_signal_hook
         root_state_version_from_storage = get_state_from_state_tuple(storage_version)
 
@@ -960,21 +995,21 @@ class StateMachineAction(Action, ModelMT):
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
 
     def redo(self):
-        # print "#H# STATE_MACHINE_REDO STARTED"
+        print "#H# STATE_MACHINE_REDO STARTED"
         state = self.state_machine.root_state
 
         self.set_root_state_to_version(state, self.after_storage)
-        # print "#H# STATE_MACHINE_REDO FINISHED"
+        print "#H# STATE_MACHINE_REDO FINISHED"
 
     def undo(self):
         """ General Undo, that takes all elements in the parent and
         :return:
         """
-        # print "#H# STATE_MACHINE_UNDO STARTED"
+        print "#H# STATE_MACHINE_UNDO STARTED"
         state = self.state_machine.root_state
 
         self.set_root_state_to_version(state, self.before_storage)
-        # print "#H# STATE_MACHINE_UNDO FINISHED"
+        print "#H# STATE_MACHINE_UNDO FINISHED"
 
 
 class AddObjectAction(Action):

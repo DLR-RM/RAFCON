@@ -122,7 +122,7 @@ class NotificationOverview(dict):
             # affects_children
             s += "\n{0}affects_children={1}".format(level + "\t", meta_signal_msg_tuple.affects_children)
             meta_signal_dict['affects_children'] = meta_signal_msg_tuple.affects_children
-            overview['meta_signal'].append(meta_signal_dict)
+            overview['signal'].append(meta_signal_dict)
 
             # notification (tuple)
             notification_dict = {}
@@ -180,7 +180,7 @@ class NotificationOverview(dict):
                 overview['result'] = []
             else:  # 'signal' in info:
                 overview['type'] = 'signal'
-                overview['meta_signal'] = []
+                overview['signal'] = []
 
         if ('after' in info or 'before' in info or 'signal' in info) and 'model' in info:
             if 'before' in info:
@@ -231,13 +231,17 @@ class NotificationOverview(dict):
             # print info
             # print info['arg']
             if isinstance(info['arg'], MetaSignalMsg):
-                overview['meta_signal'].append(info['arg'])
+                overview['signal'].append(info['arg'])
                 s += "\n{0}'arg': MetaSignalMsg({1}".format(level,
                                                             get_nice_meta_signal_msg_tuple_string(info['arg'],
                                                                                                   level,
                                                                                                   overview))
             elif isinstance(info['arg'], ActionSignalMsg):
-                overview['meta_signal'].append(info['arg'])
+                print "\n\nSSS\n", info
+                overview['instance'].append(info['arg'].target.core_element)
+                overview['method_name'].append(info['arg'].action)
+                overview['signal'].append(info['arg'])
+                overview['args'].append(info['arg'].args)
                 s += "\n{0}'arg': ActionSignalMsg({1}".format(level,
                                                               get_nice_action_signal_msg_tuple_string(info['arg'],
                                                                                                       level,

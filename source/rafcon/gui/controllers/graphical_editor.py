@@ -209,11 +209,24 @@ class GraphicalEditorController(ExtendedController):
     def suspend_drawing(self, value):
         self._suspend_drawing = value
 
-    @ExtendedController.observe("state_machine", before=True)
-    def state_machine_before_change(self, model, prop_name, info):
-        if 'method_name' in info and info['method_name'] == 'root_state_change':
-            if info['kwargs']['method_name'] in ['change_state_type', 'change_root_state_type']:
+    @ExtendedController.observe("state_action_signal", signal=True)
+    def state_action_signal_before(self, model, prop_name, info):
+        # from rafcon.gui.utils.notification_overview import NotificationOverview
+        # logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
+        if info['arg'].action in ['change_state_type', 'change_root_state_type']:
+            if not info['arg'].after:
                 self.suspend_drawing = True
+                self.observe_model(info['arg'].affected_models[0])
+
+    @ExtendedController.observe("action_signal", signal=True)
+    def action_signal_after(self, model, prop_name, info):
+        # from rafcon.gui.utils.notification_overview import NotificationOverview
+        # logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
+        if info['arg'].action in ['change_state_type', 'change_root_state_type']:
+            if info['arg'].after:
+                self.suspend_drawing = False
+                self.relieve_model(model)
+                self._redraw()
 
     @ExtendedController.observe("state_machine", after=True)
     @ExtendedController.observe("meta_signal", signal=True)  # meta data of state machine changed
@@ -229,11 +242,6 @@ class GraphicalEditorController(ExtendedController):
         :param dict info: Information about the change
         """
         if 'method_name' in info:
-            if self.suspend_drawing:
-                if info['method_name'] == 'root_state_change':
-                    if info['kwargs']['method_name'] in ['change_state_type', 'change_root_state_type']:
-                        self.suspend_drawing = False
-                        self._redraw()
             if info['method_name'] == 'root_state_change':
                 self._redraw()
             elif info['method_name'] == 'marked_dirty' and info['args'][1]:

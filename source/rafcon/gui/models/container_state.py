@@ -21,7 +21,7 @@ from rafcon.gui.models.abstract_state import AbstractStateModel, diff_for_state_
 from rafcon.gui.models.abstract_state import get_state_model_class_for_state
 from rafcon.gui.models.data_flow import DataFlowModel, StateElementModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
-from rafcon.gui.models.signals import StateTypeChangeSignalMsg, ActionSignalMsg
+from rafcon.gui.models.signals import ActionSignalMsg
 from rafcon.gui.models.state import StateModel
 from rafcon.gui.models.transition import TransitionModel
 
@@ -243,6 +243,8 @@ class ContainerStateModel(StateModel):
                 model_name = "state"
                 # Defer state type from class type (Execution, Hierarchy, ...)
                 model_class = None
+                if len(info.args) < 2:
+                    print "XXXX", info
                 if not isinstance(info.args[1], (str, unicode, dict)) and info.args[1] is not None:
                     model_class = get_state_model_class_for_state(info.args[1])
                 model_key = "state_id"
@@ -269,70 +271,10 @@ class ContainerStateModel(StateModel):
     def change_state_type(self, model, prop_name, info):
         if info.method_name != 'change_state_type':
             return
-        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-        import rafcon.gui.singleton as gui_singletons
 
-        old_state = info.args[1]
-        new_state_class = info.args[2]
-        state_id = old_state.state_id
-        state_m = self.states[state_id]
-        state_machine_m = gui_singletons.state_machine_manager_model.get_state_machine_model(state_m)
-
-        # Before the state type is actually changed, we extract the information from the old state model and remove
-        # the model from the selection
-        if 'before' in info:
-            from rafcon.utils.vividict import Vividict
-
-            def list_dict_to_list(list_or_dict):
-                if isinstance(list_or_dict, dict) and not isinstance(list_or_dict, Vividict):
-                    return list_or_dict.values()
-                elif isinstance(list_or_dict, list):
-                    return list_or_dict
-                else:
-                    return []
-
-            # Extract child models of state, as they have to be applied to the new state model
-            child_models = gui_helper_state_machine.extract_child_models_of_of_state(state_m, new_state_class)
-            affected_models = [state_m, ]
-            for list_or_dict in child_models.itervalues():
-                affected_models.extend(list_dict_to_list(list_or_dict))
-            self.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model', target=self,
-                                                    affected_models=affected_models, after=False))
-            state_m.unregister_observer(state_m)
-            # remove selection from StateMachineModel.selection -> find state machine model
-            state_machine_m.selection.remove(state_m)
-
-            self.change_state_type.__func__.child_models = child_models  # static variable of class method
-            self.change_state_type.__func__.affected_models = affected_models
-
-        # After the state has been changed in the core, we create a new model for it with all information extracted
-        # from the old state model
-        else:  # after
-            if isinstance(info.result, Exception):
-                logger.exception("Container state type change failed -> {0}".format(info.result))
-            else:
-                # The new state is returned by the core state class method 'change_state_type'
-                new_state = info.result
-                # Create a new state model based on the new state and apply the extracted child models
-                child_models = self.change_state_type.__func__.child_models
-                new_state_m = gui_helper_state_machine.create_state_model_for_state(new_state, child_models)
-                # Set this state model (self) to be the parent of our new state model
-                new_state_m.parent = self
-                # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
-                self.states[state_id] = new_state_m
-                self.check_is_start_state()
-
-                affected_models = self.change_state_type.__func__.affected_models
-                affected_models.append(new_state_m)
-                state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
-                self.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model', target=self,
-                                                        affected_models=affected_models, after=True))
-
-                state_machine_m.selection.add(new_state_m)
-                # self.meta_signal.emit(MetaSignalMsg("state_type_change", "all", True))
-
-            # del self.change_state_type.__func__.child_models
-            del self.change_state_type.__func__.affected_models
+        self.change_state_type.__func__.last_notification_model = model
+        self.change_state_type.__func__.last_notification_prop_name = prop_name
+        self.change_state_type.__func__.last_notification_info = info
 
     def insert_meta_data_from_models_dict(self, source_models_dict):
 

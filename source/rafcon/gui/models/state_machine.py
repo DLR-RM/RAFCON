@@ -188,7 +188,7 @@ class StateMachineModel(ModelMT, Hashable):
     @ModelMT.observe("scoped_variables", before=True)
     def root_state_model_before_change(self, model, prop_name, info):
         if not self._list_modified(prop_name, info):
-            self.__send_root_state_notification(model, prop_name, info)
+            self._send_root_state_notification(model, prop_name, info)
 
     @ModelMT.observe("state", after=True)
     @ModelMT.observe("outcomes", after=True)
@@ -201,7 +201,7 @@ class StateMachineModel(ModelMT, Hashable):
     @ModelMT.observe("scoped_variables", after=True)
     def root_state_model_after_change(self, model, prop_name, info):
         if not self._list_modified(prop_name, info):
-            self.__send_root_state_notification(model, prop_name, info)
+            self._send_root_state_notification(model, prop_name, info)
 
     @ModelMT.observe("meta_signal", signal=True)
     def meta_changed(self, model, prop_name, info):
@@ -286,58 +286,18 @@ class StateMachineModel(ModelMT, Hashable):
     def change_root_state_type(self, model, prop_name, info):
         if info.method_name != 'change_root_state_type':
             return
-        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
-        state_m = self.root_state
+        self.change_root_state_type.__func__.last_notification_model = model
+        self.change_root_state_type.__func__.last_notification_prop_name = prop_name
+        self.change_root_state_type.__func__.last_notification_info = info
 
-        # Before the root state type is actually changed, we extract the information from the old state model and remove
-        # the model from the selection
         if 'before' in info:
-            state_m.unregister_observer(state_m)
-            # robust check for new_state_class-argument
-            if len(info.args) > 1:
-                new_state_class = info.args[1]
-            else:
-                new_state_class = info.kwargs['new_state_class']
+            # logger.info("BEFORE {0}".format(info.method_name))
+            self._send_root_state_notification(model, prop_name, info)
+        else:
+            logger.info("AFTER {0}".format(info.method_name))
 
-            # print "emit change_root_state_type before msg: "
-            self.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model', target=self,
-                                    affected_models=[state_m, ], after=False))
-            state_m.unregister_observer(self)
-            self.selection.remove(state_m)
-
-            # Extract child models of state, as they have to be applied to the new state model
-            child_models = gui_helper_state_machine.extract_child_models_of_of_state(state_m, new_state_class)
-            self.change_root_state_type.__func__.child_models = child_models  # static variable of class method
-            self.suppress_new_root_state_model_one_time = True
-
-        # After the state has been changed in the core, we create a new model for it with all information extracted
-        # from the old state model
-        else:  # after
-            if isinstance(info.result, Exception):
-                logger.exception("Root state type change failed {0}".format(info.result))
-            else:
-                # The new state is returned by the core state class method 'change_state_type'
-                new_state = info.result
-
-                # Create a new state model based on the new state and apply the extracted child models
-                child_models = self.change_root_state_type.__func__.child_models
-                new_state_m = gui_helper_state_machine.create_state_model_for_state(new_state, child_models)
-
-                new_state_m.register_observer(self)
-                self.root_state = new_state_m
-
-                state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
-
-                # print "emit change_root_state_type after msg: "
-                self.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
-                                        target=self, affected_models=[new_state_m, ], after=True))
-
-                self.selection.add(new_state_m)
-
-        self.__send_root_state_notification(model, prop_name, info)
-
-    def __send_root_state_notification(self, model, prop_name, info):
+    def _send_root_state_notification(self, model, prop_name, info):
         cause = 'root_state_change'
         try:
             if 'before' in info:

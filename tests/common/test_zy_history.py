@@ -1248,6 +1248,7 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(*args):
+    import rafcon.gui.helpers.state as gui_helper_state
     with_gui = bool(args[4])
     # if with_gui:
     #     time.sleep(1.0)
@@ -1316,7 +1317,8 @@ def trigger_state_type_change_tests(*args):
         state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        state_dict[parent_of_type_change].change_state_type(state_m.state, BarrierConcurrencyState)
+        gui_helper_state.change_state_type(state_m, BarrierConcurrencyState)
+        # state_dict[parent_of_type_change].change_state_type(state_m.state, BarrierConcurrencyState)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
@@ -1376,7 +1378,8 @@ def trigger_state_type_change_tests(*args):
         state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        state_dict[parent_of_type_change].change_state_type(new_state_m.state, HierarchyState)
+        gui_helper_state.change_state_type(new_state_m, HierarchyState)
+        # state_dict[parent_of_type_change].change_state_type(new_state_m.state, HierarchyState)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
@@ -1439,7 +1442,8 @@ def trigger_state_type_change_tests(*args):
         state_type_row_id = list_store_id_from_state_type_dict['PREEMPTION_CONCURRENCY']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        state_dict[parent_of_type_change].change_state_type(new_state_m.state, PreemptiveConcurrencyState)
+        gui_helper_state.change_state_type(new_state_m, PreemptiveConcurrencyState)
+        # state_dict[parent_of_type_change].change_state_type(new_state_m.state, PreemptiveConcurrencyState)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
@@ -1500,7 +1504,8 @@ def trigger_state_type_change_tests(*args):
         state_type_row_id = list_store_id_from_state_type_dict['EXECUTION']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        state_dict[parent_of_type_change].change_state_type(new_state_m.state, ExecutionState)
+        gui_helper_state.change_state_type(new_state_m, ExecutionState)
+        # state_dict[parent_of_type_change].change_state_type(new_state_m.state, ExecutionState)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
@@ -1572,7 +1577,8 @@ def trigger_state_type_change_tests(*args):
         state_type_row_id = list_store_id_from_state_type_dict['BARRIER_CONCURRENCY']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        sm_m.state_machine.change_root_state_type(BarrierConcurrencyState)
+        gui_helper_state.change_state_type(sm_m.root_state, BarrierConcurrencyState)
+        # sm_m.state_machine.change_root_state_type(BarrierConcurrencyState)
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
 
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
@@ -1628,7 +1634,8 @@ def trigger_state_type_change_tests(*args):
         state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        sm_m.state_machine.change_root_state_type(HierarchyState)
+        gui_helper_state.change_state_type(sm_m.root_state, HierarchyState)
+        # sm_m.state_machine.change_root_state_type(HierarchyState)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
 
@@ -1678,7 +1685,8 @@ def trigger_state_type_change_tests(*args):
         state_type_row_id = list_store_id_from_state_type_dict['PREEMPTION_CONCURRENCY']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        sm_m.state_machine.change_root_state_type(PreemptiveConcurrencyState)
+        gui_helper_state.change_state_type(sm_m.root_state, PreemptiveConcurrencyState)
+        # sm_m.state_machine.change_root_state_type(PreemptiveConcurrencyState)
         state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
 
     assert len(sm_model.history.modifications.single_trail_history()) == 8
@@ -1727,7 +1735,8 @@ def trigger_state_type_change_tests(*args):
         state_type_row_id = list_store_id_from_state_type_dict['EXECUTION']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
-        sm_m.state_machine.change_root_state_type(ExecutionState)
+        gui_helper_state.change_state_type(sm_m.root_state, ExecutionState)
+        # sm_m.state_machine.change_root_state_type(ExecutionState)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
 
