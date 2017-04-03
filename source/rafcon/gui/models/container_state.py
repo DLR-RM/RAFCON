@@ -325,7 +325,7 @@ class ContainerStateModel(StateModel):
                 else:
                     state_id = info['args'][0]
             old_state_m = self.states[state_id]
-            old_state_m.action_signal.emit(ActionSignalMsg(action='substitute_state', origin='model', target=self,
+            old_state_m.action_signal.emit(ActionSignalMsg(action='substitute_state', origin='model', action_root_m=self,
                                                            affected_models=[old_state_m, ], after=False))
             related_transitions, related_data_flows = self.state.related_linkage_state(state_id)
             tmp_meta_data['state'] = old_state_m.meta
@@ -361,7 +361,7 @@ class ContainerStateModel(StateModel):
                 from rafcon.gui.models.signals import Notification
                 notification = Notification(self, "states", {'method_name': 'substitute_state'})
                 self.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
-                msg = ActionSignalMsg(action='substitute_state', origin='model', target=self,
+                msg = ActionSignalMsg(action='substitute_state', origin='model', action_root_m=self,
                                       affected_models=changed_models, after=True)
                 old_state_m.action_signal.emit(msg)
                 # print "XXXmodels", self.states
@@ -404,7 +404,7 @@ class ContainerStateModel(StateModel):
                 elif isinstance(elemets_dict, AbstractStateModel):
                     affected_models.extend(elemets_dict)
 
-            self.action_signal.emit(ActionSignalMsg(action='group_states', origin='model', target=self,
+            self.action_signal.emit(ActionSignalMsg(action='group_states', origin='model', action_root_m=self,
                                                     affected_models=affected_models, after=False))
 
             self.group_states.__func__.tmp_models_storage = tmp_models_dict
@@ -430,7 +430,7 @@ class ContainerStateModel(StateModel):
                 # grouped_state_m.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
                 affected_models = self.group_states.__func__.affected_models
                 affected_models.append(grouped_state_m)
-                self.action_signal.emit(ActionSignalMsg(action='group_states', origin='model', target=self,
+                self.action_signal.emit(ActionSignalMsg(action='group_states', origin='model', action_root_m=self,
                                                         affected_models=affected_models, after=True))
 
             del self.group_states.__func__.tmp_models_storage
@@ -460,7 +460,7 @@ class ContainerStateModel(StateModel):
             for df in related_data_flows['internal']['enclosed']:
                 tmp_models_dict['data_flows'][df.data_flow_id] = self.states[state_id].get_data_flow_m(df.data_flow_id)
             affected_models = [self.states[state_id], ]
-            self.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model', target=self,
+            self.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model', action_root_m=self,
                                                     affected_models=affected_models, after=False))
             self.ungroup_state.__func__.tmp_models_storage = tmp_models_dict
             self.group_states.__func__.affected_models = affected_models
@@ -499,7 +499,7 @@ class ContainerStateModel(StateModel):
                 affected_models = self.group_states.__func__.affected_models
                 for elemets_dict in tmp_models_dict.itervalues():
                     affected_models.extend(elemets_dict.itervalues())
-                self.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model', target=self,
+                self.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model', action_root_m=self,
                                                         affected_models=affected_models, after=True))
 
             del self.ungroup_state.__func__.tmp_models_storage

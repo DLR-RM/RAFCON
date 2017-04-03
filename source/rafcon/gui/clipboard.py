@@ -101,7 +101,8 @@ class Clipboard(Observable):
 
         element_m_copy_lists = self.model_copies
         self.prepare_new_copy()  # threaded in future -> important that the copy is prepared here!!!
-        # target_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model', target=target_state_m,
+        # target_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
+        #                                                   action_root_m=target_state_m,
         #                                                   affected_models=[], after=False))
         self.state_id_mapping_dict[self.copy_parent_state_id] = target_state_m.state.state_id
 
@@ -145,7 +146,8 @@ class Clipboard(Observable):
         affected_models = []
         for elemets_list in insert_dict.itervalues():
             affected_models.extend(elemets_list)
-        # target_state_m.action_signal.emit(ActionSignalMsg(action='paste', origin='clipboard', target=target_state_m,
+        # target_state_m.action_signal.emit(ActionSignalMsg(action='paste', origin='clipboard',
+        #                                                   action_root_m=target_state_m,
         #                                                   affected_models=affected_models, after=True))
         return insert_dict
 

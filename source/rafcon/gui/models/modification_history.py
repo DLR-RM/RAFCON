@@ -524,8 +524,9 @@ class ModificationsHistoryModel(ModelMT):
 
                 overview['instance'].insert(0, self.state_machine_model.state_machine)
                 overview['model'].insert(0, self.state_machine_model)
-                self.active_action = StateMachineAction(parent_path=info['arg'].target.root_state.state.get_path(),
-                                                        state_machine_model=self.state_machine_model,
+                assert info['arg'].action_root_m is self.state_machine_model
+                self.active_action = StateMachineAction(parent_path=info['arg'].action_root_m.root_state.state.get_path(),
+                                                        state_machine_model=info['arg'].action_root_m,
                                                         overview=overview)
                 print "CREATE STATE MACHINE ACTION:", self.active_action
                 self.before_count()
