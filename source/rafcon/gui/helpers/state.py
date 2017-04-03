@@ -16,6 +16,7 @@ import copy
 from rafcon.core import interface
 from rafcon.core.singleton import state_machine_manager, library_manager
 from rafcon.core.state_machine import StateMachine
+from rafcon.core.states.state import State
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
 from rafcon.gui import singleton as gui_singletons
@@ -303,3 +304,124 @@ def model_change_state_type(model, target_class):
         state_machine_m._send_root_state_notification(state_machine_m.change_root_state_type.__func__.last_notification_model,
                                                       state_machine_m.change_root_state_type.__func__.last_notification_prop_name,
                                                       state_machine_m.change_root_state_type.__func__.last_notification_info)
+
+
+def substitute_state(state, as_template=False):
+
+    assert isinstance(state, State)
+    from rafcon.core.states.barrier_concurrency_state import DeciderState
+    if isinstance(state, DeciderState):
+        raise ValueError("State of type DeciderState can not be substituted.")
+
+    smm_m = gui_singletons.state_machine_manager_model
+
+    if not smm_m.selected_state_machine_id:
+        logger.error("Please select a container state within a state machine first")
+        return False
+
+    current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
+    selected_state_models = current_selection.get_states()
+    if len(selected_state_models) > 1:
+        logger.error("Please select exactly one state for the substitution")
+        return False
+
+    if len(selected_state_models) == 0:
+        logger.error("Please select a state for the substitution")
+        return False
+
+    current_state_m = selected_state_models[0]
+    current_state = current_state_m.state
+    current_state_name = current_state.name
+    parent_state_m = current_state_m.parent
+    parent_state = current_state.parent
+
+    if not as_template:
+        model_substitute_state(parent_state_m.states[current_state.state_id], state)
+        state.name = current_state_name
+        return True
+    # If inserted as template, we have to extract the state_copy and load the meta data manually
+    else:
+        template = state.state_copy
+        orig_state_id = template.state_id
+        template.change_state_id()
+        template.name = current_state_name
+        model_substitute_state(parent_state_m.states[current_state.state_id], template)
+
+        # # load meta data TODO fix the following code and related code/functions to the 'template' True flag
+        # from os.path import join
+        # lib_os_path, _, _ = library_manager.get_os_path_to_library(state.library_path, state.library_name)
+        # root_state_path = join(lib_os_path, orig_state_id)
+        # template_m = parent_state_m.states[template.state_id]
+        # template_m.load_meta_data(root_state_path)
+        # # Causes the template to be resized
+        # template_m.temp['gui']['editor']['template'] = True
+        # from rafcon.gui.models.signals import Notification
+        # notification = Notification(parent_state_m, "states", {'method_name': 'substitute_state'})
+        # parent_state_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
+
+        return True
+
+def model_substitute_state(model, state_to_insert):
+
+    action_root_m = model.parent
+    old_state_m = model
+    old_state = old_state_m.state
+    state_id = old_state.state_id
+
+    # BEFORE MODEL
+    tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'state': None}
+    old_state_m = action_root_m.states[state_id]
+    old_state_m.action_signal.emit(ActionSignalMsg(action='substitute_state', origin='model', action_root_m=action_root_m,
+                                                   affected_models=[old_state_m, ], after=False))
+    related_transitions, related_data_flows = action_root_m.state.related_linkage_state(state_id)
+    tmp_meta_data['state'] = old_state_m.meta
+    for t in related_transitions['external']['ingoing'] + related_transitions['external']['outgoing']:
+        tmp_meta_data['transitions'][t.transition_id] = action_root_m.get_transition_m(t.transition_id).meta
+    for df in related_data_flows['external']['ingoing'] + related_data_flows['external']['outgoing']:
+        tmp_meta_data['data_flows'][df.data_flow_id] = action_root_m.get_data_flow_m(df.data_flow_id).meta
+    action_root_m.substitute_state.__func__.tmp_meta_data_storage = tmp_meta_data
+    action_root_m.substitute_state.__func__.old_state_m = old_state_m
+
+    # CORE
+    new_state = e = None
+    try:
+        new_state = action_root_m.state.substitute_state(state_id, state_to_insert)
+        assert new_state is state_to_insert
+    except Exception as e:
+        raise
+
+    # AFTER MODEL
+    if new_state is None:
+        logger.exception("State substitution failed -> {0}".format(e))
+    else:
+        state_id = new_state.state_id
+        tmp_meta_data = action_root_m.substitute_state.__func__.tmp_meta_data_storage
+        old_state_m = action_root_m.substitute_state.__func__.old_state_m
+        changed_models = []
+        action_root_m.states[state_id].meta = tmp_meta_data['state']
+        changed_models.append(action_root_m.states[state_id])
+        for t_id, t_meta in tmp_meta_data['transitions'].iteritems():
+            if action_root_m.get_transition_m(t_id) is not None:
+                action_root_m.get_transition_m(t_id).meta = t_meta
+                changed_models.append(action_root_m.get_transition_m(t_id))
+            elif t_id in action_root_m.state.substitute_state.__func__.re_create_io_going_t_ids:
+                logger.warning("Transition model with id {0} to set meta data could not be found.".format(t_id))
+        for df_id, df_meta in tmp_meta_data['data_flows'].iteritems():
+            if action_root_m.get_data_flow_m(df_id) is not None:
+                action_root_m.get_data_flow_m(df_id).meta = df_meta
+                changed_models.append(action_root_m.get_data_flow_m(df_id))
+            elif df_id in action_root_m.state.substitute_state.__func__.re_create_io_going_df_ids:
+                logger.warning("Data flow model with id {0} to set meta data could not be found.".format(df_id))
+        # TODO maybe refactor the signal usage to use the following one
+        from rafcon.gui.models.signals import Notification
+        notification = Notification(action_root_m, "states", {'method_name': 'substitute_state'})
+        action_root_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
+        msg = ActionSignalMsg(action='substitute_state', origin='model', action_root_m=action_root_m,
+                              affected_models=changed_models, after=True)
+        old_state_m.action_signal.emit(msg)
+        # print "XXXmodels", action_root_m.states
+        # print "XXX", msg.affected_models
+        action_root_m.action_signal.emit(msg)
+
+    del action_root_m.substitute_state.__func__.tmp_meta_data_storage
+    del action_root_m.substitute_state.__func__.old_state_m

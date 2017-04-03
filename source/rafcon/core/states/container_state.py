@@ -982,7 +982,7 @@ class ContainerState(State):
         self.substitute_state.__func__.re_create_io_going_t_ids = re_create_io_going_t_ids
         self.substitute_state.__func__.re_create_io_going_df_ids = re_create_io_going_df_ids
         logger.info("substitute finished")
-        return state_id
+        return self.states[state_id]
 
     @lock_state_machine
     @Observable.observed

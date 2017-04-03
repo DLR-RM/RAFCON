@@ -283,10 +283,12 @@ class LibraryTreeController(ExtendedController):
         return False
 
     def substitute_as_library_clicked(self, widget):
-        gui_helper_state_machine.substitute_state(self._get_selected_library_state(), as_template=False)
+        import rafcon.gui.helpers.state as gui_helper_state
+        gui_helper_state.substitute_state(self._get_selected_library_state(), as_template=False)
 
     def substitute_as_template_clicked(self, widget):
-        gui_helper_state_machine.substitute_state(self._get_selected_library_state(), as_template=True)
+        import rafcon.gui.helpers.state as gui_helper_state
+        gui_helper_state.substitute_state(self._get_selected_library_state(), as_template=True)
 
     def _get_selected_library_state(self):
         """Returns the LibraryState which was selected in the LibraryTree

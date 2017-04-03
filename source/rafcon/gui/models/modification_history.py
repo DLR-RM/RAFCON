@@ -515,19 +515,23 @@ class ModificationsHistoryModel(ModelMT):
         if self.busy:  # if proceeding undo or redo
             return
         if isinstance(model, AbstractStateModel) and isinstance(info['arg'], ActionSignalMsg) and \
-                info['arg'].action == 'change_root_state_type':
+                info['arg'].action in ['change_root_state_type', 'substitute_state']:
             if not info['arg'].after:
                 overview = NotificationOverview(info, self.with_prints, self.__class__.__name__)
                 if self.with_debug_logs:
                     self.store_test_log_file(str(overview) + "\n")
-                l = list()
 
                 overview['instance'].insert(0, self.state_machine_model.state_machine)
                 overview['model'].insert(0, self.state_machine_model)
-                assert info['arg'].action_root_m is self.state_machine_model
-                self.active_action = StateMachineAction(parent_path=info['arg'].action_root_m.root_state.state.get_path(),
-                                                        state_machine_model=info['arg'].action_root_m,
-                                                        overview=overview)
+                if info['arg'].action == 'change_root_state_type':
+                    assert info['arg'].action_root_m is self.state_machine_model
+                    self.active_action = StateMachineAction(parent_path=info['arg'].action_root_m.root_state.state.get_path(),
+                                                            state_machine_model=info['arg'].action_root_m,
+                                                            overview=overview)
+                else:
+                    self.active_action = StateMachineAction(parent_path=info['arg'].action_root_m.state.get_path(),
+                                                            state_machine_model=self.state_machine_model,
+                                                            overview=overview)
                 print "CREATE STATE MACHINE ACTION:", self.active_action
                 self.before_count()
             else:

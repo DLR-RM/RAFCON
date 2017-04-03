@@ -587,61 +587,6 @@ def get_state_machine_model_for_state(state):
     return state_machine_m
 
 
-def substitute_state(state, as_template=False):
-
-    assert isinstance(state, State)
-    from rafcon.core.states.barrier_concurrency_state import DeciderState
-    if isinstance(state, DeciderState):
-        raise ValueError("State of type DeciderState can not be substituted.")
-
-    smm_m = rafcon.gui.singleton.state_machine_manager_model
-
-    if not smm_m.selected_state_machine_id:
-        logger.error("Please select a container state within a state machine first")
-        return False
-
-    current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
-    selected_state_models = current_selection.get_states()
-    if len(selected_state_models) > 1:
-        logger.error("Please select exactly one state for the substitution")
-        return False
-
-    if len(selected_state_models) == 0:
-        logger.error("Please select a state for the substitution")
-        return False
-
-    current_state_m = selected_state_models[0]
-    current_state = current_state_m.state
-    current_state_name = current_state.name
-    parent_state_m = current_state_m.parent
-    parent_state = current_state.parent
-
-    if not as_template:
-        parent_state.substitute_state(current_state.state_id, state)
-        state.name = current_state_name
-        return True
-    # If inserted as template, we have to extract the state_copy and load the meta data manually
-    else:
-        template = state.state_copy
-        orig_state_id = template.state_id
-        template.change_state_id()
-        template.name = current_state_name
-        parent_state.substitute_state(current_state.state_id, template)
-
-        # load meta data TODO fix the following code and related code/functions to the 'template' True flag
-        # from os.path import join
-        # lib_os_path, _, _ = library_manager.get_os_path_to_library(state.library_path, state.library_name)
-        # root_state_path = join(lib_os_path, orig_state_id)
-        # template_m = parent_state_m.states[template.state_id]
-        # template_m.load_meta_data(root_state_path)
-        # # Causes the template to be resized
-        # template_m.temp['gui']['editor']['template'] = True
-        # from rafcon.gui.models.signals import Notification
-        # notification = Notification(parent_state_m, "states", {'method_name': 'substitute_state'})
-        # parent_state_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
-        return True
-
-
 def insert_state(state, as_template=False):
     """Adds a State to the selected state
 

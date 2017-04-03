@@ -225,6 +225,7 @@ class MainWindowController(ExtendedController):
 
     @staticmethod
     def configure_event(widget, event, name):
+        # print "configure event", widget, event, name
         global_runtime_config.store_widget_properties(widget, name)
 
     def register_view(self, view):
