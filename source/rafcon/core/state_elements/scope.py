@@ -21,6 +21,7 @@ import time
 
 from gtkmvc import Observable
 
+from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.state_elements.data_port import DataPortType
 from rafcon.core.state_elements.data_port import DataPort
 from rafcon.core.decorators import lock_state_machine
@@ -98,7 +99,7 @@ class ScopedVariable(DataPort):
         }
 
 
-class ScopedData(Observable):
+class ScopedData(StateElement):
     """A class for representing scoped data of a container state
 
     It inherits from Observable to make a change of its fields observable.
@@ -112,32 +113,52 @@ class ScopedData(Observable):
     :ivar str timestamp: the timestamp when the scoped data was written to last
 
     """
+    _from_state = None
+    _name = None
+    _value_type = type(None)
+    _value = None
+    _data_port_type = None
+    _primary_key = None
 
     def __init__(self, name, value, value_type, from_state, data_port_type):
 
         Observable.__init__(self)
 
-        self._from_state = None
-        self._name = None
         self.from_state = from_state
         self.name = name
 
-        self._value_type = type(None)
         if value_type is not None:
             self.value_type = value_type
-        self._value = None
         self.value = value
 
-        self._data_port_type = None
         self.data_port_type = data_port_type
 
         self._timestamp = generate_time_stamp()
         # for storage purpose inside the container states (generated from key_name and from_state)
-        self._primary_key = None
+
+    @property
+    def state_element_id(self):
+        return self._primary_key
 
     def __str__(self):
         return "ScopedData: \n name: %s \n data_type: %s \n value: %s \n from_state %s" % \
                (self.name, self.value_type, self.value, self.from_state)
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        return ScopedData(dictionary['name'],
+                          dictionary['value'], dictionary['value_type'],
+                          dictionary['from_state'], dictionary['data_port_type'])
+
+    @staticmethod
+    def state_element_to_dict(state_element):
+        return {
+            'name': state_element.name,
+            'value': state_element.value,
+            'value_type': state_element.value_type,
+            'from_state': state_element.from_state,
+            'data_port_type': state_element.data_port_type
+        }
 
     #########################################################################
     # Properties for all class field that must be observed by the gtkmvc
@@ -209,10 +230,10 @@ class ScopedData(Observable):
     @lock_state_machine
     @Observable.observed
     def from_state(self, from_state):
-        if not from_state is None:
+        if from_state is not None:
             if not isinstance(from_state, basestring):
                 raise TypeError("from_state must be of type str")
-            if not self.name is None:  # this will just happen in __init__ when key_name is not yet initialized
+            if self.name is not None:  # this will just happen in __init__ when key_name is not yet initialized
                 # update key
                 self._primary_key = self.name + self._from_state
         self._from_state = from_state

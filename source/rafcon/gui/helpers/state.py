@@ -13,7 +13,7 @@
 import gtk
 import copy
 
-from rafcon.core import interface
+from rafcon.core import interface, id_generator
 from rafcon.core.singleton import state_machine_manager, library_manager
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.state import State
@@ -23,7 +23,7 @@ from rafcon.core.storage import storage
 from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-from rafcon.gui.models.state_machine import StateMachineModel
+from rafcon.gui.models.state_machine import StateMachineModel, ContainerStateModel
 from rafcon.gui.models.library_state import LibraryStateModel
 from rafcon.gui.models.container_state import ContainerStateModel, AbstractStateModel, StateModel, ScopedVariableModel
 from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
@@ -31,6 +31,54 @@ from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
+
+
+def add_data_port_to_selected_states(data_port_type, data_type=None):
+    data_type = 'int' if data_type is None else data_type
+    for state_m in gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states():
+        # save name with generated data port id
+        data_port_id = id_generator.generate_data_port_id(state_m.state.get_data_port_ids())
+        if data_port_type == 'INPUT':
+            name = 'input_' + str(data_port_id)
+            try:
+                state_m.state.add_input_data_port(name=name, data_type=data_type, data_port_id=data_port_id)
+            except ValueError as e:
+                logger.warn("The input data port couldn't be added: {0}".format(e))
+        elif data_port_type == 'OUTPUT':
+            name = 'output_' + str(data_port_id)
+            try:
+                state_m.state.add_output_data_port(name=name, data_type=data_type, data_port_id=data_port_id)
+            except ValueError as e:
+                logger.warn("The output data port couldn't be added: {0}".format(e))
+        else:
+            return
+    return
+
+
+def add_scoped_variable_to_selected_states(data_type=None):
+    data_type = 'int' if data_type is None else data_type
+    for state_m in gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states():
+        if not isinstance(state_m, ContainerStateModel):
+            continue
+        # save name with generated data port id
+        data_port_id = id_generator.generate_data_port_id(state_m.state.get_data_port_ids())
+        try:
+            state_m.state.add_scoped_variable("scoped_{0}".format(data_port_id), data_type, 0)
+        except ValueError as e:
+            logger.warn("The scoped variable couldn't be added: {0}".format(e))
+    return
+
+
+def add_outcome_to_selected_states():
+    for state_m in gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states():
+        # save name with generated outcome id
+        outcome_id = id_generator.generate_outcome_id(state_m.state.outcomes.keys())
+        name = "outcome_" + str(outcome_id)
+        try:
+            state_m.state.add_outcome(name=name, outcome_id=outcome_id)
+        except ValueError as e:
+            logger.warn("The outcome couldn't be added: {0}".format(e))
+    return
 
 
 def save_selected_state_as():
