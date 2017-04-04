@@ -1,16 +1,13 @@
-import os
-
 # core elements
 import rafcon.core.singleton
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.state import DataPortType
 from rafcon.core.storage import storage
 from rafcon.core.state_machine import StateMachine
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 
 # test environment elements
 import testing_utils
-import pytest
 
 
 def create_hierarchy_state():
@@ -29,13 +26,13 @@ def create_hierarchy_state():
     input_data_port_id = state2.add_input_data_port("input1", "float", 42.0, data_port_id=42)
     state2.add_output_data_port("output1", "float")
     state2.add_data_flow(state2.state_id,
-                         state2.get_io_data_port_id_from_name_and_type("input1", DataPortType.INPUT),
+                         state2.get_io_data_port_id_from_name_and_type("input1", InputDataPort),
                          state1.state_id,
-                         state1.get_io_data_port_id_from_name_and_type("data_input_port1", DataPortType.INPUT))
+                         state1.get_io_data_port_id_from_name_and_type("data_input_port1", InputDataPort))
     state2.add_data_flow(state1.state_id,
-                         state1.get_io_data_port_id_from_name_and_type("data_output_port1", DataPortType.OUTPUT),
+                         state1.get_io_data_port_id_from_name_and_type("data_output_port1", OutputDataPort),
                          state2.state_id,
-                         state2.get_io_data_port_id_from_name_and_type("output1", DataPortType.OUTPUT))
+                         state2.get_io_data_port_id_from_name_and_type("output1", OutputDataPort))
     return state2
 
 

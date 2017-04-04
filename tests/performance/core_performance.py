@@ -9,7 +9,7 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
-from rafcon.core.states.state import DataPortType
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.state_machine import StateMachine
 
 import testing_utils
@@ -45,25 +45,25 @@ def create_hierarchy_state(number_child_states=10, sleep=False):
             hierarchy.set_start_state(state.state_id)
             hierarchy.add_data_flow(hierarchy.state_id,
                                     hierarchy.get_io_data_port_id_from_name_and_type("hierarchy_input_port1",
-                                                                                     DataPortType.INPUT),
+                                                                                     InputDataPort),
                                     state.state_id,
-                                    state.get_io_data_port_id_from_name_and_type("input1", DataPortType.INPUT))
+                                    state.get_io_data_port_id_from_name_and_type("input1", InputDataPort))
         else:
             hierarchy.add_transition(last_state.state_id, 0, state.state_id, None)
             # connect data ports state 1
             hierarchy.add_data_flow(last_state.state_id,
-                                 last_state.get_io_data_port_id_from_name_and_type("output1", DataPortType.OUTPUT),
+                                 last_state.get_io_data_port_id_from_name_and_type("output1", OutputDataPort),
                                  state.state_id,
-                                 state.get_io_data_port_id_from_name_and_type("input1", DataPortType.INPUT))
+                                 state.get_io_data_port_id_from_name_and_type("input1", InputDataPort))
 
         last_state = state
 
     hierarchy.add_data_flow(last_state.state_id,
                             last_state.get_io_data_port_id_from_name_and_type("output1",
-                                                                              DataPortType.OUTPUT),
+                                                                              OutputDataPort),
                             hierarchy.state_id,
                             hierarchy.get_io_data_port_id_from_name_and_type("hierarchy_output_port1",
-                                                                             DataPortType.OUTPUT))
+                                                                             OutputDataPort))
 
     hierarchy.add_transition(last_state.state_id, 0, hierarchy.state_id, 1)
 
