@@ -556,7 +556,7 @@ h5{
 }
 
 
-@media (max-width: 990px) {
+@media (max-width: 1059px) {
 
     .navbar-toggle {
         display: block;
@@ -1026,7 +1026,7 @@ border-radius: 4px;
 
 /* Navigation Hacks */
 
-@media (max-width: 990px){
+@media (max-width: 1060px){
 
   .container-fluid>.navbar-collapse, .container-fluid>.navbar-header, .container>.navbar-collapse, .container>.navbar-header {
     margin-right: -15px;
