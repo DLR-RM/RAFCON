@@ -1077,6 +1077,15 @@ border-radius: 4px;
   }
 }
 
+.tablet-hide{
+  display:none;
+}
+@media (min-width: 990px){
+  .tablet-hide{
+    display:block;
+  }
+}
+
 .mobile-only{
   display:block;
 }
