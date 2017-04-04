@@ -23,7 +23,7 @@ from rafcon.core.storage import storage
 from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-from rafcon.gui.models.state_machine import StateMachineModel, ContainerStateModel
+from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.models.library_state import LibraryStateModel
 from rafcon.gui.models.container_state import ContainerStateModel, AbstractStateModel, StateModel, ScopedVariableModel
 from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg

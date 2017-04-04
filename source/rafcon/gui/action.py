@@ -652,7 +652,6 @@ class Action(ModelMT, AbstractAction):
         status.
         :return:
         """
-        print "KILLER REDO"
         self.set_state_to_version(self.get_state_changed(), self.after_storage)
 
     def undo(self):
@@ -660,7 +659,6 @@ class Action(ModelMT, AbstractAction):
         status.
         :return:
         """
-        print "KILLER UNDO"
         self.set_state_to_version(self.get_state_changed(), self.before_storage)
 
     def set_state_to_version(self, state, storage_version):
@@ -969,7 +967,7 @@ class StateMachineAction(Action, ModelMT):
 
     @ModelMT.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
-        print "#H# STATE_MACHINE_REDO_UNDO: ", NotificationOverview(info, False, self.__class__.__name__)
+        # print "#H# STATE_MACHINE_REDO_UNDO: ", NotificationOverview(info, False, self.__class__.__name__)
         if info['arg'].action == 'change_root_state_type':
             if info['arg'].after:
                 new_state_m = info['arg'].affected_models[0]
@@ -995,21 +993,21 @@ class StateMachineAction(Action, ModelMT):
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
 
     def redo(self):
-        print "#H# STATE_MACHINE_REDO STARTED"
+        # print "#H# STATE_MACHINE_REDO STARTED"
         state = self.state_machine.root_state
 
         self.set_root_state_to_version(state, self.after_storage)
-        print "#H# STATE_MACHINE_REDO FINISHED"
+        # print "#H# STATE_MACHINE_REDO FINISHED"
 
     def undo(self):
         """ General Undo, that takes all elements in the parent and
         :return:
         """
-        print "#H# STATE_MACHINE_UNDO STARTED"
+        # print "#H# STATE_MACHINE_UNDO STARTED"
         state = self.state_machine.root_state
 
         self.set_root_state_to_version(state, self.before_storage)
-        print "#H# STATE_MACHINE_UNDO FINISHED"
+        # print "#H# STATE_MACHINE_UNDO FINISHED"
 
 
 class AddObjectAction(Action):

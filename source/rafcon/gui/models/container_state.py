@@ -228,8 +228,9 @@ class ContainerStateModel(StateModel):
             model_name = "state"
             # Defer state type from class type (Execution, Hierarchy, ...)
             model_class = None
-            if len(info.args) < 2:
-                print "XXXX", info
+            # TODO this if cause is not working if keys are used for arguments
+            # if len(info.args) < 2:
+            #     print "XXXX", info
             if not isinstance(info.args[1], (str, unicode, dict)) and info.args[1] is not None:
                 model_class = get_state_model_class_for_state(info.args[1])
             model_key = "state_id"

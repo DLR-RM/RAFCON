@@ -134,7 +134,7 @@ class ModificationsHistoryModel(ModelMT):
 
     def _undo(self, version_id):
         self.busy = True
-        print "undo 1", self.modifications, self.modifications.all_time_history[version_id].action
+        # print "undo 1", self.modifications, self.modifications.all_time_history[version_id].action
         self.modifications.all_time_history[version_id].action.undo()
         self.modifications.trail_pointer -= 1
         self.busy = False
@@ -150,7 +150,7 @@ class ModificationsHistoryModel(ModelMT):
             return
         self.state_machine_model.storage_lock.acquire()
         self.busy = True
-        print "undo 2", self.modifications
+        # print "undo 2", self.modifications
         self.modifications.undo()
         self.busy = False
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
@@ -511,7 +511,7 @@ class ModificationsHistoryModel(ModelMT):
 
     @ModelMT.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
-        print "state: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
+        # print "state: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
         if self.busy:  # if proceeding undo or redo
             return
         if isinstance(model, AbstractStateModel) and isinstance(info['arg'], ActionSignalMsg) and \
@@ -533,7 +533,7 @@ class ModificationsHistoryModel(ModelMT):
                     self.active_action = StateMachineAction(parent_path=info['arg'].action_root_m.state.get_path(),
                                                             state_machine_model=self.state_machine_model,
                                                             overview=overview)
-                print "CREATE STATE MACHINE ACTION:", self.active_action
+                # print "CREATE STATE MACHINE ACTION:", self.active_action
                 self.before_count()
             else:
                 overview = NotificationOverview(info, self.with_prints, "History state_machine_AFTER")
@@ -543,7 +543,7 @@ class ModificationsHistoryModel(ModelMT):
                     if self.count_before == 0:
                         self.finish_new_action(overview)
                         self._re_initiate_observation()
-                        print "HISTORY COUNT WAS OF SUCCESS FOR STATE MACHINE"
+                        # print "HISTORY COUNT WAS OF SUCCESS FOR STATE MACHINE"
                         if self.with_prints:
                             print "HISTORY COUNT WAS OF SUCCESS FOR STATE MACHINE"
                 else:
@@ -551,7 +551,8 @@ class ModificationsHistoryModel(ModelMT):
 
     @ModelMT.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
-        print "state machine: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
+        # print "state machine: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
+        pass
 
     # @ModelMT.observe("state_machine", before=True)
     # def assign_notification_change_type_root_state_before(self, model, prop_name, info):
@@ -884,7 +885,7 @@ class ModificationsHistory(Observable):
         if not self.trail_history or self.trail_pointer == 0 or not self.trail_pointer < len(self.trail_history):
             logger.debug("There is no more action that can be undone")
             return
-        print "MODEHISTORY UNDO", self.trail_history[self.trail_pointer]
+        # print "MODEHISTORY UNDO", self.trail_history[self.trail_pointer]
         self.trail_history[self.trail_pointer].undo()
         self.trail_pointer -= 1
         if self.with_prints:
@@ -895,7 +896,7 @@ class ModificationsHistory(Observable):
         if not self.trail_history or self.trail_history and not self.trail_pointer + 1 < len(self.trail_history):
             logger.debug("There is no more action that can be redone")
             return
-        print "MODEHISTORY REDO", self.trail_history[self.trail_pointer]
+        # print "MODEHISTORY REDO", self.trail_history[self.trail_pointer]
         self.trail_history[self.trail_pointer + 1].redo()
         self.trail_pointer += 1
         if self.with_prints:
