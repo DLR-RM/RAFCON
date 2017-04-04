@@ -39,14 +39,14 @@ body{
 
 
 .navbar .nav > li > a:hover {
-  color:#77C1FF;
+  color:#008CFF;
   text-decoration: none;
   text-shadow: none;
   font-size: 16px;
 }
 
 .navbar .nav > li > a:focus {
-  color:#77C1FF;
+  color:#008CFF;
   text-decoration: none;
   text-shadow: none;
   font-size: 16px;
@@ -188,7 +188,7 @@ footer > a:hover {
   float: left;
   margin-top:20px;
   margin-left:200px;
-  color:#77C1FF;
+  color:#008CFF;
 }
 
 .content{
@@ -243,7 +243,7 @@ img{
 }
 
 h1{
-  color:#77C1FF;
+  color:#008CFF;
   font-size:25px;
   text-align: center;
   font-weight: normal;
@@ -284,19 +284,19 @@ h5{
 .btn-default{
   color: white;
   background-color: #2b2e3b;
-  border-color: #77C1FF;
+  border-color: #008CFF;
 }
 
 .btn-default:hover{
   color: white;
-  background-color: #77C1FF;
-  border-color: #77C1FF;
+  background-color: #008CFF;
+  border-color: #008CFF;
 }
 
 .btn-default:focus{
   color: white;
   background-color: #2b2e3b;
-  border-color: #77C1FF;
+  border-color: #008CFF;
 }
 
 
@@ -330,7 +330,7 @@ h5{
   height:100%;
   border-top: none;
   border-bottom: none;
-  border-color: #77C1FF;
+  border-color: #008CFF;
 }
 @media (min-width: 990px){
   .bright{
@@ -338,7 +338,7 @@ h5{
     height:630px;
     border-top: none;
     border-bottom: none;
-    border-color: #77C1FF;
+    border-color: #008CFF;
     }
   }
 
@@ -347,7 +347,7 @@ h5{
   height:100%;
   border-top: none;
   border-bottom: none;
-  border-color: #77C1FF;
+  border-color: #008CFF;
 }
 
 .overlap{
@@ -372,7 +372,7 @@ h5{
 .card-small:hover{
   background-color: white;
   height:200px;
-  border: 1px solid #77C1FF;
+  border: 1px solid #008CFF;
   /*box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
 }
 
@@ -386,7 +386,7 @@ h5{
 .card-large:hover{
   background-color: white;
   height:311px;
-  border: 1px solid #77C1FF;
+  border: 1px solid #008CFF;
   /*box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
 }
 
@@ -400,7 +400,7 @@ h5{
     .card-large:hover{
       background-color: white;
       height:340px;
-      border: 1px solid #77C1FF;
+      border: 1px solid #008CFF;
       /*box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
     }
 
@@ -419,7 +419,7 @@ h5{
 .card-medium:hover{
   background-color: white;
   height:568px;
-  border: 1px solid #77C1FF;
+  border: 1px solid #008CFF;
   /*box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
 }
 
@@ -430,7 +430,7 @@ h5{
   margin-right:auto;
   padding-top: 40px;
   width:100%;
-  color: #77C1FF;
+  color: #008CFF;
 }
 
 .card-heading-projects{
@@ -440,7 +440,7 @@ h5{
   margin-right:auto;
   padding-top: 20px;
   width:100%;
-  color: #77C1FF;
+  color: #008CFF;
 }
 
 .card-icon{
@@ -536,7 +536,7 @@ h5{
 }
 
 .getintouch{
-  color:#77C1FF;
+  color:#008CFF;
   margin-top:100px;
   text-align: left;
 }
@@ -571,22 +571,22 @@ h5{
 
 .active{
   background-color:none;
-  color: #77C1FF;
+  color: #008CFF;
 }
 
 .active:hover{
   background-color:none;
-  color: #77C1FF;
+  color: #008CFF;
 }
 
 .navbar-default .navbar-nav > .active > a {
   background:none;
-  color: #77C1FF;
+  color: #008CFF;
 }
 
 .navbar-default .navbar-nav > .active > a:hover{
   background-color:none;
-  color: #77C1FF;
+  color: #008CFF;
 }
 
 .navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:focus, .navbar-default .navbar-nav > .active > a:hover{
@@ -608,14 +608,14 @@ h5{
 }
 
 .btn-info{
-  border-color: #77C1FF;
-  background-color: #77C1FF;
+  border-color: #008CFF;
+  background-color: #008CFF;
   color: white;
 }
 
 .btn-info:hover {
-  border-color: #77C1FF;
-  background-color: #77C1FF;
+  border-color: #008CFF;
+  background-color: #008CFF;
   color: rgb(47, 50, 65);
 }
 
@@ -644,7 +644,7 @@ h5{
 }
 
 .side a:hover{
-  color: #77C1FF;
+  color: #008CFF;
   opacity:1;
 }
 
@@ -679,7 +679,7 @@ h5{
 }
 
 .sub-nav > .active-sub{
-  color:#77C1FF;
+  color:#008CFF;
   opacity:1;
 }
 
@@ -729,17 +729,17 @@ b{
 }
 
 .sub-nav > a:focus{
-  color:#77C1FF;
+  color:#008CFF;
   opacity:1;
 }
 
 .navbar-default .navbar-nav>.active>a{
-  color:#77C1FF;
+  color:#008CFF;
 }
 
 
 .navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:focus, .navbar-default .navbar-nav>.active>a:hover{
-  color:#77C1FF;
+  color:#008CFF;
 }
 
 
@@ -772,7 +772,7 @@ b{
 
 .post-content a.title-link:hover {
   text-align: left;
-  color: #77C1FF;
+  color: #008CFF;
   font-size: 20px;
   font-weight: 200;
   text-decoration: none;
@@ -827,7 +827,7 @@ pre{
 .mail{
   margin-left:10px;
   font-size: 14px;
-  color:#77C1FF;
+  color:#008CFF;
   float: left;
   padding-right: 6px;
   opacity:1;
@@ -859,7 +859,7 @@ pre{
 
 .post-content a#read-more{
   font-size:14px;
-  color: #77C1FF;
+  color: #008CFF;
   z-index:999;
 }
 
@@ -876,7 +876,7 @@ ul#post-list {
 }
 
 .breadcrumb-link:hover{
-  color: #77C1FF;
+  color: #008CFF;
   font-size: 20px;
   text-align: center;
   font-weight: 200;
@@ -968,7 +968,7 @@ border-radius: 4px;
   }
 
 .navbar-toggle:hover .icon-bar{
-  background-color: #77C1FF;
+  background-color: #008CFF;
 }
 
 
@@ -1095,7 +1095,7 @@ border-radius: 4px;
 }
 
 .mobile-headline{
-  color:#77C1FF;
+  color:#008CFF;
   text-align:center;
 }
 @media (min-width: 990px){
@@ -1106,7 +1106,7 @@ border-radius: 4px;
 }
 
 .mobile-headline-rafcon{
-  color:#77C1FF;
+  color:#008CFF;
   text-align:center;
   margin-left: auto;
   margin-right: auto;
