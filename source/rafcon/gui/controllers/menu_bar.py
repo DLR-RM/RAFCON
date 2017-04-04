@@ -355,10 +355,11 @@ class MenuBarController(ExtendedController):
 
     @staticmethod
     def on_substitute_selected_state_activate(widget=None, data=None, path=None):
-        return gui_helper_state.substitute_selected_state()
+        return gui_helper_state.substitute_selected_state_and_use_choice_dialog()
+
     @staticmethod
     def on_substitute_library_with_template_activate(widget=None, data=None):
-        return gui_helper_state.substitute_library_with_template()
+        return gui_helper_state.substitute_selected_library_state_with_template()
 
     @staticmethod
     def on_save_selected_state_as_activate(widget=None, data=None, path=None):

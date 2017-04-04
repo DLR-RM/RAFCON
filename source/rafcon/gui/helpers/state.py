@@ -33,30 +33,6 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-def substitute_selected_state():
-    selected_states = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
-    if selected_states and len(selected_states) == 1:
-        StateSubstituteChooseLibraryDialog(gui_singletons.library_manager_model,
-                                           parent=gui_singletons.main_window_controller.get_root_window())
-        return True
-    else:
-        logger.warning("Substitute state needs exact one state to be selected.")
-        return False
-
-
-def substitute_library_with_template():
-    selected_states = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
-    if selected_states and len(selected_states) == 1 and isinstance(selected_states[0], LibraryStateModel):
-        lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_states[0].state))
-        gui_helper_state_machine.substitute_state(lib_state, as_template=True)
-        # TODO find out why the following generates a problem (e.g. lose of outcomes)
-        # gui_helper_state_machine.substitute_state(selected_states[0].state, as_template=True)
-        return True
-    else:
-        logger.warning("Substitute library state with template needs exact one library state to be selected.")
-        return False
-
-
 def save_selected_state_as():
     state_machine_manager_model = gui_singletons.state_machine_manager_model
     selected_states = state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
@@ -148,23 +124,6 @@ def save_selected_state_as():
 
 
 def change_state_type(model, target_class):
-    if target_class != type(model.state):
-        state_name = model.state.name
-        logger.debug("Change type of State '{0}' from {1} to {2}".format(state_name,
-                                                                         type(model.state).__name__,
-                                                                         target_class.__name__))
-        try:
-            model_change_state_type(model, target_class)
-        except Exception as e:
-            logger.error("An error occurred while changing the state type: {0}".format(e))
-            raise
-    else:
-        logger.debug("DON'T Change type of State '{0}' from {1} to {2}".format(model.state.name,
-                                                                               type(model.state).__name__,
-                                                                               target_class.__name__))
-
-
-def model_change_state_type(model, target_class):
 
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     import rafcon.gui.singleton as gui_singletons
@@ -307,6 +266,91 @@ def model_change_state_type(model, target_class):
                                                       state_machine_m.change_root_state_type.__func__.last_notification_info)
 
 
+def change_state_type_with_error_handling_and_logger_messages(model, target_class):
+    if target_class != type(model.state):
+        state_name = model.state.name
+        logger.debug("Change type of State '{0}' from {1} to {2}".format(state_name,
+                                                                         type(model.state).__name__,
+                                                                         target_class.__name__))
+        try:
+            change_state_type(model, target_class)
+        except Exception as e:
+            logger.error("An error occurred while changing the state type: {0}".format(e))
+            raise
+    else:
+        logger.debug("DON'T Change type of State '{0}' from {1} to {2}".format(model.state.name,
+                                                                               type(model.state).__name__,
+                                                                               target_class.__name__))
+
+
+def substitute_state(target_state_m, state_to_insert):
+
+    action_root_m = target_state_m.parent
+    old_state_m = target_state_m
+    old_state = old_state_m.state
+    state_id = old_state.state_id
+
+    # BEFORE MODEL
+    tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'state': None}
+    old_state_m = action_root_m.states[state_id]
+    old_state_m.action_signal.emit(ActionSignalMsg(action='substitute_state', origin='model',
+                                                   action_root_m=action_root_m,
+                                                   affected_models=[old_state_m, ], after=False,
+                                                   args=[state_id, state_to_insert]))
+    related_transitions, related_data_flows = action_root_m.state.related_linkage_state(state_id)
+    tmp_meta_data['state'] = old_state_m.meta
+    for t in related_transitions['external']['ingoing'] + related_transitions['external']['outgoing']:
+        tmp_meta_data['transitions'][t.transition_id] = action_root_m.get_transition_m(t.transition_id).meta
+    for df in related_data_flows['external']['ingoing'] + related_data_flows['external']['outgoing']:
+        tmp_meta_data['data_flows'][df.data_flow_id] = action_root_m.get_data_flow_m(df.data_flow_id).meta
+    action_root_m.substitute_state.__func__.tmp_meta_data_storage = tmp_meta_data
+    action_root_m.substitute_state.__func__.old_state_m = old_state_m
+
+    # CORE
+    new_state = e = None
+    try:
+        new_state = action_root_m.state.substitute_state(state_id, state_to_insert)
+        assert new_state is state_to_insert
+    except Exception as e:
+        pass
+
+    # AFTER MODEL
+    if new_state is None:
+        logger.exception("State substitution failed -> {0}".format(e))
+    else:
+        state_id = new_state.state_id
+        tmp_meta_data = action_root_m.substitute_state.__func__.tmp_meta_data_storage
+        old_state_m = action_root_m.substitute_state.__func__.old_state_m
+        changed_models = []
+        action_root_m.states[state_id].meta = tmp_meta_data['state']
+        changed_models.append(action_root_m.states[state_id])
+        for t_id, t_meta in tmp_meta_data['transitions'].iteritems():
+            if action_root_m.get_transition_m(t_id) is not None:
+                action_root_m.get_transition_m(t_id).meta = t_meta
+                changed_models.append(action_root_m.get_transition_m(t_id))
+            elif t_id in action_root_m.state.substitute_state.__func__.re_create_io_going_t_ids:
+                logger.warning("Transition model with id {0} to set meta data could not be found.".format(t_id))
+        for df_id, df_meta in tmp_meta_data['data_flows'].iteritems():
+            if action_root_m.get_data_flow_m(df_id) is not None:
+                action_root_m.get_data_flow_m(df_id).meta = df_meta
+                changed_models.append(action_root_m.get_data_flow_m(df_id))
+            elif df_id in action_root_m.state.substitute_state.__func__.re_create_io_going_df_ids:
+                logger.warning("Data flow model with id {0} to set meta data could not be found.".format(df_id))
+        # TODO maybe refactor the signal usage to use the following one
+        from rafcon.gui.models.signals import Notification
+        notification = Notification(action_root_m, "states", {'method_name': 'substitute_state'})
+        action_root_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
+        msg = ActionSignalMsg(action='substitute_state', origin='model', action_root_m=action_root_m,
+                              affected_models=changed_models, after=True)
+        old_state_m.action_signal.emit(msg)
+        # print "XXXmodels", action_root_m.states
+        # print "XXX", msg.affected_models
+        action_root_m.action_signal.emit(msg)
+
+    del action_root_m.substitute_state.__func__.tmp_meta_data_storage
+    del action_root_m.substitute_state.__func__.old_state_m
+
+
 def substitute_selected_state(state, as_template=False):
 
     assert isinstance(state, State)
@@ -363,91 +407,31 @@ def substitute_selected_state(state, as_template=False):
         return True
 
 
-def substitute_state(model, state_to_insert):
-
-    action_root_m = model.parent
-    old_state_m = model
-    old_state = old_state_m.state
-    state_id = old_state.state_id
-
-    # BEFORE MODEL
-    tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'state': None}
-    old_state_m = action_root_m.states[state_id]
-    old_state_m.action_signal.emit(ActionSignalMsg(action='substitute_state', origin='model', action_root_m=action_root_m,
-                                                   affected_models=[old_state_m, ], after=False))
-    related_transitions, related_data_flows = action_root_m.state.related_linkage_state(state_id)
-    tmp_meta_data['state'] = old_state_m.meta
-    for t in related_transitions['external']['ingoing'] + related_transitions['external']['outgoing']:
-        tmp_meta_data['transitions'][t.transition_id] = action_root_m.get_transition_m(t.transition_id).meta
-    for df in related_data_flows['external']['ingoing'] + related_data_flows['external']['outgoing']:
-        tmp_meta_data['data_flows'][df.data_flow_id] = action_root_m.get_data_flow_m(df.data_flow_id).meta
-    action_root_m.substitute_state.__func__.tmp_meta_data_storage = tmp_meta_data
-    action_root_m.substitute_state.__func__.old_state_m = old_state_m
-
-    # CORE
-    new_state = e = None
-    try:
-        new_state = action_root_m.state.substitute_state(state_id, state_to_insert)
-        assert new_state is state_to_insert
-    except Exception as e:
-        pass
-
-    # AFTER MODEL
-    if new_state is None:
-        logger.exception("State substitution failed -> {0}".format(e))
+def substitute_selected_state_and_use_choice_dialog():
+    selected_states = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+    if selected_states and len(selected_states) == 1:
+        StateSubstituteChooseLibraryDialog(gui_singletons.library_manager_model,
+                                           parent=gui_singletons.main_window_controller.get_root_window())
+        return True
     else:
-        state_id = new_state.state_id
-        tmp_meta_data = action_root_m.substitute_state.__func__.tmp_meta_data_storage
-        old_state_m = action_root_m.substitute_state.__func__.old_state_m
-        changed_models = []
-        action_root_m.states[state_id].meta = tmp_meta_data['state']
-        changed_models.append(action_root_m.states[state_id])
-        for t_id, t_meta in tmp_meta_data['transitions'].iteritems():
-            if action_root_m.get_transition_m(t_id) is not None:
-                action_root_m.get_transition_m(t_id).meta = t_meta
-                changed_models.append(action_root_m.get_transition_m(t_id))
-            elif t_id in action_root_m.state.substitute_state.__func__.re_create_io_going_t_ids:
-                logger.warning("Transition model with id {0} to set meta data could not be found.".format(t_id))
-        for df_id, df_meta in tmp_meta_data['data_flows'].iteritems():
-            if action_root_m.get_data_flow_m(df_id) is not None:
-                action_root_m.get_data_flow_m(df_id).meta = df_meta
-                changed_models.append(action_root_m.get_data_flow_m(df_id))
-            elif df_id in action_root_m.state.substitute_state.__func__.re_create_io_going_df_ids:
-                logger.warning("Data flow model with id {0} to set meta data could not be found.".format(df_id))
-        # TODO maybe refactor the signal usage to use the following one
-        from rafcon.gui.models.signals import Notification
-        notification = Notification(action_root_m, "states", {'method_name': 'substitute_state'})
-        action_root_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
-        msg = ActionSignalMsg(action='substitute_state', origin='model', action_root_m=action_root_m,
-                              affected_models=changed_models, after=True)
-        old_state_m.action_signal.emit(msg)
-        # print "XXXmodels", action_root_m.states
-        # print "XXX", msg.affected_models
-        action_root_m.action_signal.emit(msg)
-
-    del action_root_m.substitute_state.__func__.tmp_meta_data_storage
-    del action_root_m.substitute_state.__func__.old_state_m
+        logger.warning("Substitute state needs exact one state to be selected.")
+        return False
 
 
-def group_selected_states_and_scoped_variables():
-    logger.debug("try to group")
-    sm_m = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
-    selected_state_m_list = sm_m.selection.get_states()
-    selected_sv_m = [elem for elem in sm_m.selection.get_all() if isinstance(elem, ScopedVariableModel)]
-    if selected_state_m_list and isinstance(selected_state_m_list[0].parent, StateModel) or selected_sv_m:
-        # # check if all elements have the same parent or leave it to the parent
-        # parent_list = []
-        # for state_m in selected_state_m_list:
-        #     parent_list.append(state_m.state)
-        # for sv_m in selected_sv_m:
-        #     parent_list.append(sv_m.scoped_variable.parent)
-        # assert len(set(parent_list))
-        logger.debug("do group")
-
-        model_group_states(selected_state_m_list, selected_sv_m)
+def substitute_selected_library_state_with_template():
+    selected_states = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+    if selected_states and len(selected_states) == 1 and isinstance(selected_states[0], LibraryStateModel):
+        lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_states[0].state))
+        substitute_selected_state(lib_state, as_template=True)
+        # TODO find out why the following generates a problem (e.g. lose of outcomes)
+        # gui_helper_state_machine.substitute_state(selected_states[0].state, as_template=True)
+        return True
+    else:
+        logger.warning("Substitute library state with template needs exact one library state to be selected.")
+        return False
 
 
-def model_group_states(state_m_list, sv_m_list):
+def group_states_and_scoped_variables(state_m_list, sv_m_list):
 
     state_ids = [state_m.state.state_id for state_m in state_m_list]
     sv_ids = [sv.scoped_variable.data_port_id for sv in sv_m_list]
@@ -519,16 +503,25 @@ def model_group_states(state_m_list, sv_m_list):
     del action_root_m.group_states.__func__.affected_models
 
 
-def ungroup_selected_state():
-    logger.debug("try to ungroup")
-    state_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
-    if len(state_m_list) == 1 and isinstance(state_m_list[0], ContainerStateModel) and \
-            not state_m_list[0].state.is_root_state:
-        logger.debug("do ungroup")
-        model_ungroup_state(state_m_list[0])
+def group_selected_states_and_scoped_variables():
+    logger.debug("try to group")
+    sm_m = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
+    selected_state_m_list = sm_m.selection.get_states()
+    selected_sv_m = [elem for elem in sm_m.selection.get_all() if isinstance(elem, ScopedVariableModel)]
+    if selected_state_m_list and isinstance(selected_state_m_list[0].parent, StateModel) or selected_sv_m:
+        # # check if all elements have the same parent or leave it to the parent
+        # parent_list = []
+        # for state_m in selected_state_m_list:
+        #     parent_list.append(state_m.state)
+        # for sv_m in selected_sv_m:
+        #     parent_list.append(sv_m.scoped_variable.parent)
+        # assert len(set(parent_list))
+        logger.debug("do group")
+
+        group_states_and_scoped_variables(selected_state_m_list, selected_sv_m)
 
 
-def model_ungroup_state(state_m):
+def ungroup_state(state_m):
 
     action_root_m = state_m.parent
     state_id = state_m.state.state_id
@@ -549,7 +542,7 @@ def model_ungroup_state(state_m):
     affected_models = [action_root_m.states[state_id], ]
     action_root_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
                                                      action_root_m=action_root_m,
-                                                     affected_models=affected_models, after=False))
+                                                     affected_models=affected_models, after=False, args=[state_id, ]))
     action_root_m.ungroup_state.__func__.tmp_models_storage = tmp_models_dict
     action_root_m.group_states.__func__.affected_models = affected_models
 
@@ -602,3 +595,12 @@ def model_ungroup_state(state_m):
 
     del action_root_m.ungroup_state.__func__.tmp_models_storage
     del action_root_m.group_states.__func__.affected_models
+
+
+def ungroup_selected_state():
+    logger.debug("try to ungroup")
+    state_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+    if len(state_m_list) == 1 and isinstance(state_m_list[0], ContainerStateModel) and \
+            not state_m_list[0].state.is_root_state:
+        logger.debug("do ungroup")
+        ungroup_state(state_m_list[0])
