@@ -32,7 +32,6 @@ from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MA
 from gtk.gdk import keyval_name
 from math import sin, cos, atan2
 
-import rafcon.core.id_generator as idgen
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.states.state import StateType
@@ -41,6 +40,7 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuControllerOpenGLEditor
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+import rafcon.gui.helpers.state as gui_helper_state
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models import ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.abstract_state import AbstractStateModel
@@ -2269,55 +2269,26 @@ class GraphicalEditorController(ExtendedController):
             self._redraw()
             return True
 
+    def check_focus_and_sm_selection_according_event(self, event):
+        if not react_to_event(self.view, self.view.editor, event):
+            return False
+        if not gui_helper_state.gui_singletons.state_machine_manager_model.selected_state_machine_id == \
+                self.model.state_machine.state_machine_id:
+            return False
+        return True
+
     @lock_state_machine
     def _add_data_port_to_selected_state(self, *event, **kwargs):
-        if not len(self.model.selection.get_states()) > 0:
-            return
-        if not react_to_event(self.view, self.view.editor, event):
-            return
-
-        data_port_type = None if 'data_port_type' not in kwargs else kwargs['data_port_type']
-        data_type = None if 'data_type' not in kwargs else kwargs['data_type']
-
-        for model in self.model.selection.get_states():
-            name = str(idgen.generate_data_port_id(model.state.get_data_port_ids()))
-            if data_port_type == 'INPUT':
-                name = 'input_' + name
-                model.state.add_input_data_port(name=name, data_type=data_type)
-            elif data_port_type == 'OUTPUT':
-                name = 'output_' + name
-                model.state.add_output_data_port(name=name, data_type=data_type)
-            else:
-                return
-        return
+        if self.check_focus_and_sm_selection_according_event(event):
+            data_port_type = None if 'data_port_type' not in kwargs else kwargs['data_port_type']
+            gui_helper_state.add_data_port_to_selected_states(data_port_type)
 
     @lock_state_machine
     def _add_scoped_variable_to_selected_state(self, *event):
-        if not len(self.model.selection.get_states()) > 0:
-            return
-        if not react_to_event(self.view, self.view.editor, event):
-            return
-        for single_model in self.model.selection.get_states():
-            if not isinstance(single_model, ContainerStateModel):
-                continue
-            num_data_ports = len(single_model.state.scoped_variables)
-            for run_id in range(num_data_ports + 1, 0, -1):
-                try:
-                    single_model.state.add_scoped_variable("scoped_%s" % run_id, "int", 0)
-                    break
-                except ValueError as e:
-                    if run_id == num_data_ports:
-                        logger.warn("The scoped variable couldn't be added: {0}".format(e))
-                        return
-        return
+        if self.check_focus_and_sm_selection_according_event(event):
+            gui_helper_state.add_scoped_variable_to_selected_states()
 
     @lock_state_machine
     def _add_outcome_to_selected_state(self, *event):
-        if not len(self.model.selection.get_states()) > 0:
-            return
-        if not react_to_event(self.view, self.view.editor, event):
-            return
-        for model in self.model.selection.get_states():
-            name = "outcome_" + str(idgen.generate_outcome_id(model.state.outcomes.keys()))
-            model.state.add_outcome(name=name)
-        return
+        if self.check_focus_and_sm_selection_according_event(event):
+            gui_helper_state.add_outcome_to_selected_states()
