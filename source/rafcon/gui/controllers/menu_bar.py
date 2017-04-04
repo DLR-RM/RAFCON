@@ -570,19 +570,10 @@ class MenuBarController(ExtendedController):
         self.shortcut_manager.trigger_action("add_execution_state", None, None)
 
     def on_group_states_activate(self, widget, data=None):
-        logger.debug("try to group")
-        gui_helper_state.group_states()
+        gui_helper_state.group_selected_states_and_scoped_variables()
 
     def on_ungroup_state_activate(self, widget, data=None):
-        logger.debug("try to ungroup")
-        state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
-        if len(state_m_list) == 1 and isinstance(state_m_list[0], ContainerStateModel) and \
-                not state_m_list[0].state.is_root_state:
-            logger.debug("do ungroup")
-            try:
-                state_m_list[0].parent.state.ungroup_state(state_m_list[0].state.state_id)
-            except:
-                pass
+        gui_helper_state.ungroup_selected_state()
 
     def on_undo_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action("undo", None, None)

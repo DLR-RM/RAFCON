@@ -307,7 +307,7 @@ def model_change_state_type(model, target_class):
                                                       state_machine_m.change_root_state_type.__func__.last_notification_info)
 
 
-def substitute_state(state, as_template=False):
+def substitute_selected_state(state, as_template=False):
 
     assert isinstance(state, State)
     from rafcon.core.states.barrier_concurrency_state import DeciderState
@@ -337,7 +337,7 @@ def substitute_state(state, as_template=False):
     parent_state = current_state.parent
 
     if not as_template:
-        model_substitute_state(parent_state_m.states[current_state.state_id], state)
+        substitute_state(parent_state_m.states[current_state.state_id], state)
         state.name = current_state_name
         return True
     # If inserted as template, we have to extract the state_copy and load the meta data manually
@@ -346,7 +346,7 @@ def substitute_state(state, as_template=False):
         orig_state_id = template.state_id
         template.change_state_id()
         template.name = current_state_name
-        model_substitute_state(parent_state_m.states[current_state.state_id], template)
+        substitute_state(parent_state_m.states[current_state.state_id], template)
 
         # # load meta data TODO fix the following code and related code/functions to the 'template' True flag
         # from os.path import join
@@ -363,7 +363,7 @@ def substitute_state(state, as_template=False):
         return True
 
 
-def model_substitute_state(model, state_to_insert):
+def substitute_state(model, state_to_insert):
 
     action_root_m = model.parent
     old_state_m = model
@@ -429,7 +429,8 @@ def model_substitute_state(model, state_to_insert):
     del action_root_m.substitute_state.__func__.old_state_m
 
 
-def group_states():
+def group_selected_states_and_scoped_variables():
+    logger.debug("try to group")
     sm_m = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
     selected_state_m_list = sm_m.selection.get_states()
     selected_sv_m = [elem for elem in sm_m.selection.get_all() if isinstance(elem, ScopedVariableModel)]
@@ -492,7 +493,6 @@ def model_group_states(state_m_list, sv_m_list):
     except Exception as e:
         pass
 
-
     # AFTER MODEL
     if new_state is None:
         logger.exception("State ungroup failed -> {0}".format(e))
@@ -516,4 +516,89 @@ def model_group_states(state_m_list, sv_m_list):
                                                          affected_models=affected_models, after=True))
 
     del action_root_m.group_states.__func__.tmp_models_storage
+    del action_root_m.group_states.__func__.affected_models
+
+
+def ungroup_selected_state():
+    logger.debug("try to ungroup")
+    state_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+    if len(state_m_list) == 1 and isinstance(state_m_list[0], ContainerStateModel) and \
+            not state_m_list[0].state.is_root_state:
+        logger.debug("do ungroup")
+        model_ungroup_state(state_m_list[0])
+
+
+def model_ungroup_state(state_m):
+
+    action_root_m = state_m.parent
+    state_id = state_m.state.state_id
+
+    # BEFORE MODEL
+    tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
+
+    related_transitions, related_data_flows = action_root_m.state.related_linkage_state(state_id)
+    tmp_models_dict['state'] = action_root_m.states[state_id]
+    for s_id, s_m in action_root_m.states[state_id].states.iteritems():
+        tmp_models_dict['states'][s_id] = s_m
+    for sv_m in action_root_m.states[state_id].scoped_variables:
+        tmp_models_dict['scoped_variables'][sv_m.scoped_variable.data_port_id] = sv_m
+    for t in related_transitions['internal']['enclosed']:
+        tmp_models_dict['transitions'][t.transition_id] = action_root_m.states[state_id].get_transition_m(t.transition_id)
+    for df in related_data_flows['internal']['enclosed']:
+        tmp_models_dict['data_flows'][df.data_flow_id] = action_root_m.states[state_id].get_data_flow_m(df.data_flow_id)
+    affected_models = [action_root_m.states[state_id], ]
+    action_root_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
+                                                     action_root_m=action_root_m,
+                                                     affected_models=affected_models, after=False))
+    action_root_m.ungroup_state.__func__.tmp_models_storage = tmp_models_dict
+    action_root_m.group_states.__func__.affected_models = affected_models
+
+    # CORE
+    new_state = None
+    try:
+        new_state_id = state_m.parent.state.ungroup_state(state_m.state.state_id)
+        new_state = state_m.state.states[new_state_id]
+    except Exception as e:
+        pass
+
+    # AFTER MODEL
+    if new_state is None:
+        logger.exception("State ungroup failed {0}".format(e))
+    else:
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+        tmp_models_dict = action_root_m.ungroup_state.__func__.tmp_models_storage
+        # TODO do implement Gaphas support meta data scaling
+        if not gui_helper_state_machine.scale_meta_data_according_state(tmp_models_dict):
+            del action_root_m.ungroup_state.__func__.tmp_models_storage
+            return
+
+        # reduce tmp models by not applied state meta data
+        tmp_models_dict.pop('state')
+
+        # correct state element ids with new state element ids to set meta data on right state element
+        tmp_models_dict['states'] = \
+            {new_state_id: tmp_models_dict['states'][old_state_id]
+             for old_state_id, new_state_id in action_root_m.state.ungroup_state.__func__.state_id_dict.iteritems()}
+        tmp_models_dict['scoped_variables'] = \
+            {new_sv_id: tmp_models_dict['scoped_variables'][old_sv_id]
+             for old_sv_id, new_sv_id in action_root_m.state.ungroup_state.__func__.sv_id_dict.iteritems()}
+        tmp_models_dict['transitions'] = \
+            {new_t_id: tmp_models_dict['transitions'][old_t_id]
+             for old_t_id, new_t_id in action_root_m.state.ungroup_state.__func__.enclosed_t_id_dict.iteritems()}
+        tmp_models_dict['data_flows'] = \
+            {new_df_id: tmp_models_dict['data_flows'][old_df_id]
+             for old_df_id, new_df_id in action_root_m.state.ungroup_state.__func__.enclosed_df_id_dict.iteritems()}
+
+        action_root_m.insert_meta_data_from_models_dict(tmp_models_dict)
+
+        # TODO maybe refactor the signal usage to use the following one
+        # action_root_m.meta_signal.emit(MetaSignalMsg("ungroup_state", "all", True))
+        affected_models = action_root_m.group_states.__func__.affected_models
+        for elemets_dict in tmp_models_dict.itervalues():
+            affected_models.extend(elemets_dict.itervalues())
+        action_root_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
+                                                         action_root_m=action_root_m,
+                                                         affected_models=affected_models, after=True))
+
+    del action_root_m.ungroup_state.__func__.tmp_models_storage
     del action_root_m.group_states.__func__.affected_models

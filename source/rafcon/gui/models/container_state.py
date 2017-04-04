@@ -319,77 +319,13 @@ class ContainerStateModel(StateModel):
 
     @ModelMT.observe("state", after=True, before=True)
     def group_states(self, model, prop_name, info):
-        if info.method_name != 'group_states':
+        if info.method_name != 'group_selected_states_and_scoped_variables':
             return
 
     @ModelMT.observe("state", after=True, before=True)
     def ungroup_state(self, model, prop_name, info):
         if info.method_name != 'ungroup_state':
             return
-        if 'before' in info:
-            tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
-            state_id = info['kwargs'].get('state_id', None)
-            if state_id is None:
-                if 'state' not in info['kwargs']:
-                    state_id = info['args'][1]
-                else:
-                    state_id = info['args'][0]
-
-            related_transitions, related_data_flows = self.state.related_linkage_state(state_id)
-            tmp_models_dict['state'] = self.states[state_id]
-            for s_id, s_m in self.states[state_id].states.iteritems():
-                tmp_models_dict['states'][s_id] = s_m
-            for sv_m in self.states[state_id].scoped_variables:
-                tmp_models_dict['scoped_variables'][sv_m.scoped_variable.data_port_id] = sv_m
-            for t in related_transitions['internal']['enclosed']:
-                tmp_models_dict['transitions'][t.transition_id] = self.states[state_id].get_transition_m(t.transition_id)
-            for df in related_data_flows['internal']['enclosed']:
-                tmp_models_dict['data_flows'][df.data_flow_id] = self.states[state_id].get_data_flow_m(df.data_flow_id)
-            affected_models = [self.states[state_id], ]
-            self.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model', action_root_m=self,
-                                                    affected_models=affected_models, after=False))
-            self.ungroup_state.__func__.tmp_models_storage = tmp_models_dict
-            self.group_states.__func__.affected_models = affected_models
-        else:
-            if isinstance(info.result, Exception):
-                logger.exception("State ungroup failed {0}".format(info.result))
-            else:
-                import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-                tmp_models_dict = self.ungroup_state.__func__.tmp_models_storage
-                # TODO do implement Gaphas support meta data scaling
-                if not gui_helper_state_machine.scale_meta_data_according_state(tmp_models_dict):
-                    del self.ungroup_state.__func__.tmp_models_storage
-                    return
-
-                # reduce tmp models by not applied state meta data
-                tmp_models_dict.pop('state')
-
-                # correct state element ids with new state element ids to set meta data on right state element
-                tmp_models_dict['states'] = \
-                    {new_state_id: tmp_models_dict['states'][old_state_id]
-                     for old_state_id, new_state_id in self.state.ungroup_state.__func__.state_id_dict.iteritems()}
-                tmp_models_dict['scoped_variables'] = \
-                    {new_sv_id: tmp_models_dict['scoped_variables'][old_sv_id]
-                     for old_sv_id, new_sv_id in self.state.ungroup_state.__func__.sv_id_dict.iteritems()}
-                tmp_models_dict['transitions'] = \
-                    {new_t_id: tmp_models_dict['transitions'][old_t_id]
-                     for old_t_id, new_t_id in self.state.ungroup_state.__func__.enclosed_t_id_dict.iteritems()}
-                tmp_models_dict['data_flows'] = \
-                    {new_df_id: tmp_models_dict['data_flows'][old_df_id]
-                     for old_df_id, new_df_id in self.state.ungroup_state.__func__.enclosed_df_id_dict.iteritems()}
-
-                self.insert_meta_data_from_models_dict(tmp_models_dict)
-
-                # TODO maybe refactor the signal usage to use the following one
-                # self.meta_signal.emit(MetaSignalMsg("ungroup_state", "all", True))
-                affected_models = self.group_states.__func__.affected_models
-                for elemets_dict in tmp_models_dict.itervalues():
-                    affected_models.extend(elemets_dict.itervalues())
-                self.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model', action_root_m=self,
-                                                        affected_models=affected_models, after=True))
-
-            del self.ungroup_state.__func__.tmp_models_storage
-            del self.group_states.__func__.affected_models
 
     def get_scoped_variable_m(self, data_port_id):
         """Returns the scoped variable model for the given data port id

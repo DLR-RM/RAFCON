@@ -218,7 +218,7 @@ class GraphicalEditorController(ExtendedController):
                 self.suspend_drawing = True
                 logger.info("drawing suspended: {0}".format(self.suspend_drawing))
                 self.observe_model(info['arg'].affected_models[0])
-        if info['arg'].action in ['group_states']:
+        if info['arg'].action in ['group_states', 'ungroup_state']:
             if not info['arg'].after:
                 self.suspend_drawing = True
                 logger.info("drawing suspended: {0}".format(self.suspend_drawing))
@@ -228,8 +228,8 @@ class GraphicalEditorController(ExtendedController):
     def action_signal_after(self, model, prop_name, info):
         from rafcon.gui.utils.notification_overview import NotificationOverview
         logger.info("XXXOPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
-        print info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'group_states']
-        if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'group_states']:
+        if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'group_states',
+                                  'ungroup_state']:
             if info['arg'].after:
                 self.suspend_drawing = False
                 self.relieve_model(model)
