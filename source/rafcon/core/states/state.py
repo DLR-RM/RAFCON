@@ -33,7 +33,6 @@ from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
-from rafcon.core.state_elements.data_port import DataPortType
 from rafcon.core.id_generator import *
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
@@ -442,12 +441,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :return: the data port specified by the name and the type
         :raises exceptions.AttributeError: if the specified data port does not exist in the input or output data ports
         """
-        if data_port_type is DataPortType.INPUT:
+        if data_port_type is InputDataPort:
             for ip_id, output_port in self.input_data_ports.iteritems():
                 if output_port.name == name:
                     return ip_id
             raise AttributeError("Name '{0}' is not in input_data_ports".format(name))
-        elif data_port_type is DataPortType.OUTPUT:
+        elif data_port_type is OutputDataPort:
             for op_id, output_port in self.output_data_ports.iteritems():
                 if output_port.name == name:
                     return op_id

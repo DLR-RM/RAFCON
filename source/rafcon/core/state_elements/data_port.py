@@ -258,6 +258,3 @@ class InputDataPort(DataPort):
 class OutputDataPort(DataPort):
 
     yaml_tag = u'!OutputDataPort'
-
-
-DataPortType = Enum('DATA_PORT_TYPE', 'INPUT OUTPUT SCOPED')

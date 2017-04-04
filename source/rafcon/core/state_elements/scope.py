@@ -22,7 +22,6 @@ import time
 from gtkmvc import Observable
 
 from rafcon.core.state_elements.state_element import StateElement
-from rafcon.core.state_elements.data_port import DataPortType
 from rafcon.core.state_elements.data_port import DataPort
 from rafcon.core.decorators import lock_state_machine
 from rafcon.utils import type_helpers
@@ -249,8 +248,8 @@ class ScopedData(StateElement):
     @lock_state_machine
     @Observable.observed
     def data_port_type(self, data_port_type):
-        if not isinstance(data_port_type, DataPortType):
-            raise TypeError("data_port_type must be of type DataPortType")
+        if not issubclass(data_port_type, DataPort):
+            raise TypeError("data_port_type must be a subclass of DataPort")
         self._data_port_type = data_port_type
 
     @property

@@ -31,9 +31,9 @@ from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.id_generator import *
 from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.state_elements.data_flow import DataFlow
-from rafcon.core.state_elements.data_port import DataPortType
 from rafcon.core.state_elements.outcome import Outcome
 from rafcon.core.state_elements.scope import ScopedData, ScopedVariable
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.state_elements.transition import Transition
 from rafcon.core.states.library_state import LibraryState
@@ -1477,7 +1477,7 @@ class ContainerState(State):
             for input_data_port_key, data_port in self.input_data_ports.iteritems():
                 if dict_key == data_port.name:
                     self.scoped_data[str(input_data_port_key) + self.state_id] = \
-                        ScopedData(data_port.name, value, type(value), self.state_id, DataPortType.INPUT)
+                        ScopedData(data_port.name, value, type(value), self.state_id, ScopedVariable)
                     # forward the data to scoped variables
                     for data_flow_key, data_flow in self.data_flows.iteritems():
                         if data_flow.from_key == input_data_port_key and data_flow.from_state == self.state_id:
@@ -1485,7 +1485,7 @@ class ContainerState(State):
                                 current_scoped_variable = self.scoped_variables[data_flow.to_key]
                                 self.scoped_data[str(data_flow.to_key) + self.state_id] = \
                                     ScopedData(current_scoped_variable.name, value, type(value), self.state_id,
-                                               DataPortType.SCOPED)
+                                               ScopedVariable)
 
     @lock_state_machine
     def add_state_execution_output_to_scoped_data(self, dictionary, state):
@@ -1504,7 +1504,7 @@ class ContainerState(State):
                             logger.error("The data type of output port {0} should be of type {1}, but is of type {2}".
                                          format(output_name, data_port.data_type, type(value)))
                     self.scoped_data[str(output_data_port_key) + state.state_id] = \
-                        ScopedData(data_port.name, value, type(value), state.state_id, DataPortType.OUTPUT)
+                        ScopedData(data_port.name, value, type(value), state.state_id, OutputDataPort)
 
     @lock_state_machine
     def add_default_values_of_scoped_variables_to_scoped_data(self):
@@ -1514,7 +1514,7 @@ class ContainerState(State):
         for key, scoped_var in self.scoped_variables.iteritems():
             self.scoped_data[str(scoped_var.data_port_id) + self.state_id] = \
                 ScopedData(scoped_var.name, scoped_var.default_value, scoped_var.data_type, self.state_id,
-                           DataPortType.SCOPED)
+                           ScopedVariable)
 
     @lock_state_machine
     def update_scoped_variables_with_output_dictionary(self, dictionary, state):
@@ -1541,7 +1541,7 @@ class ContainerState(State):
                             current_scoped_variable = self.scoped_variables[data_flow.to_key]
                             self.scoped_data[str(data_flow.to_key) + self.state_id] = \
                                 ScopedData(current_scoped_variable.name, value, type(value), state.state_id,
-                                           DataPortType.SCOPED)
+                                           ScopedVariable)
 
     # ---------------------------------------------------------------------------------------------
     # ------------------------ functions to modify the scoped data end ----------------------------
@@ -1592,7 +1592,7 @@ class ContainerState(State):
 
         """
         for output_name, value in self.output_data.iteritems():
-            output_port_id = self.get_io_data_port_id_from_name_and_type(output_name, DataPortType.OUTPUT)
+            output_port_id = self.get_io_data_port_id_from_name_and_type(output_name, OutputDataPort)
             actual_value = None
             actual_value_time = 0
             for data_flow_id, data_flow in self.data_flows.iteritems():
