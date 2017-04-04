@@ -103,16 +103,16 @@ class StateMachineRightClickMenu(object):
         from rafcon.core.states.barrier_concurrency_state import DeciderState
         state_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
         all_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_all()
-        if all([isinstance(elem, (AbstractStateModel, ScopedVariableModel)) for elem in all_m_list]):
+        if all([isinstance(elem, (AbstractStateModel, ScopedVariableModel)) for elem in all_m_list]) and \
+                not any([state_m.state.is_root_state for state_m in state_m_list]):
             menu.append(create_image_menu_item("Group states", constants.BUTTON_GROUP, self.on_group_states_activate,
                                                accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
-        if len(state_m_list) == 1 and isinstance(state_m_list[0], AbstractStateModel) and \
-                not state_m_list[0].state.is_root_state:
-            if isinstance(state_m_list[0], ContainerStateModel):
+        if len(state_m_list) == 1 and isinstance(state_m_list[0], AbstractStateModel):
+            if isinstance(state_m_list[0], ContainerStateModel) and not state_m_list[0].state.is_root_state:
                 menu.append(create_image_menu_item("Ungroup states", constants.BUTTON_UNGR,
                                                    self.on_ungroup_state_activate,
                                                    accel_code=shortcuts_dict['ungroup'][0], accel_group=accel_group))
-            if not isinstance(state_m_list[0].state, DeciderState):
+            if not isinstance(state_m_list[0].state, DeciderState) and not state_m_list[0].state.is_root_state:
                 menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
                                                    self.on_substitute_state_activate,
                                                    accel_code=shortcuts_dict['substitute_state'][0],
@@ -126,8 +126,10 @@ class StateMachineRightClickMenu(object):
                                                                                                  constants.BUTTON_EXCHANGE)
                 for class_key, item in state_type_class_dict.iteritems():
                     class_item = create_image_menu_item(class_key, constants.SIGN_LIB,
-                                                        partial(self.on_type_change_activate, target_class=item['class']),
-                                                        accel_code=None, accel_group=accel_group)
+                                                        partial(self.on_type_change_activate,
+                                                                target_class=item['class']),
+                                                                accel_code=None,
+                                                                accel_group=accel_group)
                     if isinstance(state_m_list[0].state, item['class']):
                         class_item.set_sensitive(False)
                     change_type_sub_menu.append(class_item)
