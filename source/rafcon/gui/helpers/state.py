@@ -17,6 +17,7 @@ from rafcon.core import interface
 from rafcon.core.singleton import state_machine_manager, library_manager
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.state import State
+from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
 from rafcon.gui import singleton as gui_singletons
@@ -24,7 +25,7 @@ from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibrary
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.models.library_state import LibraryStateModel
-from rafcon.gui.models.container_state import ContainerStateModel
+from rafcon.gui.models.container_state import ContainerStateModel, AbstractStateModel, StateModel, ScopedVariableModel
 from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.utils import log
@@ -243,7 +244,7 @@ def model_change_state_type(model, target_class):
         else:
             new_state = old_state_m.parent.state.change_state_type(old_state, target_class)
     except Exception as e:
-        raise
+        pass
 
     # AFTER MODEL
     # After the state has been changed in the core, we create a new model for it with all information extracted
@@ -361,6 +362,7 @@ def substitute_state(state, as_template=False):
 
         return True
 
+
 def model_substitute_state(model, state_to_insert):
 
     action_root_m = model.parent
@@ -388,7 +390,7 @@ def model_substitute_state(model, state_to_insert):
         new_state = action_root_m.state.substitute_state(state_id, state_to_insert)
         assert new_state is state_to_insert
     except Exception as e:
-        raise
+        pass
 
     # AFTER MODEL
     if new_state is None:
@@ -425,3 +427,93 @@ def model_substitute_state(model, state_to_insert):
 
     del action_root_m.substitute_state.__func__.tmp_meta_data_storage
     del action_root_m.substitute_state.__func__.old_state_m
+
+
+def group_states():
+    sm_m = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
+    selected_state_m_list = sm_m.selection.get_states()
+    selected_sv_m = [elem for elem in sm_m.selection.get_all() if isinstance(elem, ScopedVariableModel)]
+    if selected_state_m_list and isinstance(selected_state_m_list[0].parent, StateModel) or selected_sv_m:
+        # # check if all elements have the same parent or leave it to the parent
+        # parent_list = []
+        # for state_m in selected_state_m_list:
+        #     parent_list.append(state_m.state)
+        # for sv_m in selected_sv_m:
+        #     parent_list.append(sv_m.scoped_variable.parent)
+        # assert len(set(parent_list))
+        logger.debug("do group")
+
+        model_group_states(selected_state_m_list, selected_sv_m)
+
+
+def model_group_states(state_m_list, sv_m_list):
+
+    state_ids = [state_m.state.state_id for state_m in state_m_list]
+    sv_ids = [sv.scoped_variable.data_port_id for sv in sv_m_list]
+
+    action_root_m = state_m_list[0].parent if state_m_list else sv_m_list[0].parent
+
+    assert isinstance(action_root_m, ContainerStateModel)
+
+    # BEFORE MODEL
+    tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
+    related_transitions, related_data_flows = \
+        action_root_m.state.related_linkage_states_and_scoped_variables(state_ids, sv_ids)
+    for state_id in state_ids:
+        tmp_models_dict['states'][state_id] = action_root_m.states[state_id]
+    for sv_id in sv_ids:
+        tmp_models_dict['scoped_variables'][sv_id] = action_root_m.get_scoped_variable_m(sv_id)
+    for t in related_transitions['enclosed']:
+        tmp_models_dict['transitions'][t.transition_id] = action_root_m.get_transition_m(t.transition_id)
+    for df in related_data_flows['enclosed']:
+        tmp_models_dict['data_flows'][df.data_flow_id] = action_root_m.get_data_flow_m(df.data_flow_id)
+
+    affected_models = []
+    for elemets_dict in tmp_models_dict.itervalues():
+        if isinstance(elemets_dict, dict):
+            affected_models.extend(elemets_dict.itervalues())
+        elif isinstance(elemets_dict, AbstractStateModel):
+            affected_models.extend(elemets_dict)
+
+    action_root_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
+                                                     action_root_m=action_root_m,
+                                                     affected_models=affected_models, after=False,
+                                                     args=[state_ids, sv_ids]))
+
+    action_root_m.group_states.__func__.tmp_models_storage = tmp_models_dict
+    action_root_m.group_states.__func__.affected_models = affected_models
+
+    # CORE
+    new_state = None
+    try:
+        assert isinstance(action_root_m.state, ContainerState)
+        new_state_id = action_root_m.state.group_states(state_ids, sv_ids)
+        new_state = action_root_m.state.states[new_state_id]
+    except Exception as e:
+        pass
+
+
+    # AFTER MODEL
+    if new_state is None:
+        logger.exception("State ungroup failed -> {0}".format(e))
+    else:
+        tmp_models_dict = action_root_m.group_states.__func__.tmp_models_storage
+        grouped_state_m = action_root_m.states[new_state.state_id]
+        tmp_models_dict['state'] = grouped_state_m
+        # TODO do implement OpenGL and Gaphas support meta data scaling
+        if not gui_helper_state_machine.scale_meta_data_according_states(tmp_models_dict):
+            del action_root_m.group_states.__func__.tmp_models_storage
+            return
+
+        grouped_state_m.insert_meta_data_from_models_dict(tmp_models_dict)
+
+        # TODO maybe refactor the signal usage to use the following one
+        # grouped_state_m.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
+        affected_models = action_root_m.group_states.__func__.affected_models
+        affected_models.append(grouped_state_m)
+        action_root_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
+                                                         action_root_m=action_root_m,
+                                                         affected_models=affected_models, after=True))
+
+    del action_root_m.group_states.__func__.tmp_models_storage
+    del action_root_m.group_states.__func__.affected_models

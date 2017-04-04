@@ -515,7 +515,7 @@ class ModificationsHistoryModel(ModelMT):
         if self.busy:  # if proceeding undo or redo
             return
         if isinstance(model, AbstractStateModel) and isinstance(info['arg'], ActionSignalMsg) and \
-                info['arg'].action in ['change_root_state_type', 'substitute_state']:
+                info['arg'].action in ['change_root_state_type', 'substitute_state', 'group_states']:
             if not info['arg'].after:
                 overview = NotificationOverview(info, self.with_prints, self.__class__.__name__)
                 if self.with_debug_logs:

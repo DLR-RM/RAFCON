@@ -211,23 +211,29 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_action_signal", signal=True)
     def state_action_signal_before(self, model, prop_name, info):
-        # from rafcon.gui.utils.notification_overview import NotificationOverview
-        # logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
+        from rafcon.gui.utils.notification_overview import NotificationOverview
+        logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
         if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state']:
             if not info['arg'].after:
                 self.suspend_drawing = True
-                # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
+                logger.info("drawing suspended: {0}".format(self.suspend_drawing))
                 self.observe_model(info['arg'].affected_models[0])
+        if info['arg'].action in ['group_states']:
+            if not info['arg'].after:
+                self.suspend_drawing = True
+                logger.info("drawing suspended: {0}".format(self.suspend_drawing))
+                self.observe_model(info['arg'].action_root_m)
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal_after(self, model, prop_name, info):
-        # from rafcon.gui.utils.notification_overview import NotificationOverview
-        # logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
-        if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state']:
+        from rafcon.gui.utils.notification_overview import NotificationOverview
+        logger.info("XXXOPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
+        print info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'group_states']
+        if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'group_states']:
             if info['arg'].after:
                 self.suspend_drawing = False
                 self.relieve_model(model)
-                # logger.info("drawing suspended: {0} redraw".format(self.suspend_drawing))
+                logger.info("drawing suspended: {0} redraw".format(self.suspend_drawing))
                 self._redraw()
 
     @ExtendedController.observe("state_machine", after=True)

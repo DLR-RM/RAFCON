@@ -321,66 +321,6 @@ class ContainerStateModel(StateModel):
     def group_states(self, model, prop_name, info):
         if info.method_name != 'group_states':
             return
-        if 'before' in info:
-            tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
-            state_ids = info['kwargs'].get('state_ids', None)
-            scoped_variables = info['kwargs'].get('scoped_variables', [])
-            # print "info['kwargs']: ", info['kwargs']
-            # print "info['args']: ", info['args']
-            if state_ids is None:
-                if 'scoped_variables' not in info['kwargs'] and len(info['args']) > 2:
-                    scoped_variables = info['args'][2]
-                state_ids = info['args'][1]
-
-            related_transitions, related_data_flows = \
-                self.state.related_linkage_states_and_scoped_variables(state_ids, scoped_variables)
-            for state_id in state_ids:
-                tmp_models_dict['states'][state_id] = self.states[state_id]
-            for sv_id in scoped_variables:
-                tmp_models_dict['scoped_variables'][sv_id] = self.get_scoped_variable_m(sv_id)
-            for t in related_transitions['enclosed']:
-                tmp_models_dict['transitions'][t.transition_id] = self.get_transition_m(t.transition_id)
-            for df in related_data_flows['enclosed']:
-                tmp_models_dict['data_flows'][df.data_flow_id] = self.get_data_flow_m(df.data_flow_id)
-
-            affected_models = []
-            for elemets_dict in tmp_models_dict.itervalues():
-                if isinstance(elemets_dict, dict):
-                    affected_models.extend(elemets_dict.itervalues())
-                elif isinstance(elemets_dict, AbstractStateModel):
-                    affected_models.extend(elemets_dict)
-
-            self.action_signal.emit(ActionSignalMsg(action='group_states', origin='model', action_root_m=self,
-                                                    affected_models=affected_models, after=False))
-
-            self.group_states.__func__.tmp_models_storage = tmp_models_dict
-            self.group_states.__func__.affected_models = affected_models
-        else:
-            if isinstance(info.result, Exception):
-                logger.exception("State ungroup failed -> {0}".format(info.result))
-            else:
-                import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-
-                tmp_models_dict = self.group_states.__func__.tmp_models_storage
-                state_id = info.result
-                grouped_state_m = self.states[state_id]
-                tmp_models_dict['state'] = grouped_state_m
-                # TODO do implement OpenGL and Gaphas support meta data scaling
-                if not gui_helper_state_machine.scale_meta_data_according_states(tmp_models_dict):
-                    del self.group_states.__func__.tmp_models_storage
-                    return
-
-                grouped_state_m.insert_meta_data_from_models_dict(tmp_models_dict)
-
-                # TODO maybe refactor the signal usage to use the following one
-                # grouped_state_m.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
-                affected_models = self.group_states.__func__.affected_models
-                affected_models.append(grouped_state_m)
-                self.action_signal.emit(ActionSignalMsg(action='group_states', origin='model', action_root_m=self,
-                                                        affected_models=affected_models, after=True))
-
-            del self.group_states.__func__.tmp_models_storage
-            del self.group_states.__func__.affected_models
 
     @ModelMT.observe("state", after=True, before=True)
     def ungroup_state(self, model, prop_name, info):

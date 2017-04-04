@@ -571,20 +571,7 @@ class MenuBarController(ExtendedController):
 
     def on_group_states_activate(self, widget, data=None):
         logger.debug("try to group")
-        state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
-        all_elements = self.model.get_selected_state_machine_model().selection.get_all()
-        selected_sv = [elem.scoped_variable for elem in all_elements if isinstance(elem, ScopedVariableModel)]
-        if state_m_list and isinstance(state_m_list[0].parent, StateModel) or selected_sv:
-            logger.debug("do group")
-            state_ids_of_selected_states = [state_m.state.state_id for state_m in state_m_list]
-            dp_ids_of_selected_sv = [sv.data_port_id for sv in selected_sv]
-            try:
-                if state_m_list:
-                    state_m_list[0].parent.state.group_states(state_ids_of_selected_states, dp_ids_of_selected_sv)
-                else:
-                    selected_sv[0].parent.group_states(state_ids_of_selected_states, dp_ids_of_selected_sv)
-            except:
-                pass
+        gui_helper_state.group_states()
 
     def on_ungroup_state_activate(self, widget, data=None):
         logger.debug("try to ungroup")
