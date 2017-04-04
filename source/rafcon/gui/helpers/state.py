@@ -26,8 +26,9 @@ import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.models.library_state import LibraryStateModel
 from rafcon.gui.models.container_state import ContainerStateModel, AbstractStateModel, StateModel, ScopedVariableModel
-from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
+from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg, Notification
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
+from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -172,10 +173,6 @@ def save_selected_state_as():
 
 
 def change_state_type(model, target_class):
-
-    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-    import rafcon.gui.singleton as gui_singletons
-    from rafcon.utils.vividict import Vividict
 
     old_state = model.state
     old_state_m = model
@@ -385,7 +382,7 @@ def substitute_state(target_state_m, state_to_insert):
             elif df_id in action_root_m.state.substitute_state.__func__.re_create_io_going_df_ids:
                 logger.warning("Data flow model with id {0} to set meta data could not be found.".format(df_id))
         # TODO maybe refactor the signal usage to use the following one
-        from rafcon.gui.models.signals import Notification
+
         notification = Notification(action_root_m, "states", {'method_name': 'substitute_state'})
         action_root_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
         msg = ActionSignalMsg(action='substitute_state', origin='model', action_root_m=action_root_m,
@@ -448,7 +445,6 @@ def substitute_selected_state(state, as_template=False):
         # template_m.load_meta_data(root_state_path)
         # # Causes the template to be resized
         # template_m.temp['gui']['editor']['template'] = True
-        # from rafcon.gui.models.signals import Notification
         # notification = Notification(parent_state_m, "states", {'method_name': 'substitute_state'})
         # parent_state_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
 
@@ -606,7 +602,6 @@ def ungroup_state(state_m):
     if new_state is None:
         logger.exception("State ungroup failed {0}".format(e))
     else:
-        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         tmp_models_dict = action_root_m.ungroup_state.__func__.tmp_models_storage
         # TODO do implement Gaphas support meta data scaling
         if not gui_helper_state_machine.scale_meta_data_according_state(tmp_models_dict):
