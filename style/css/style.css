@@ -54,12 +54,13 @@ body{
 
 .navbar .nav{
   margin: 20px auto 0 auto;
-  text-align:center;
+  text-align: left;
 }
 @media (min-width: 768px){
   .navbar .nav {
     margin: 20px 110px 0 0;
     float:right;
+
   }
 }
 
@@ -1474,4 +1475,32 @@ margin-top:0px;
   .mobile-picture{
     padding-bottom: 0px;
   }
+}
+
+.navbar-right .dropdown-menu{
+  right: auto;
+  left: auto;
+  /*background-color: #2f3241;*/
+}
+
+.desktophide{
+  display: block;
+}
+@media (min-width: 768px){
+  .desktophide{
+    display: none;
+  }
+}
+
+.navbar-default .navbar-nav .open .dropdown-menu > li > a{
+  color: white;
+}
+@media (min-width: 768px){
+  .navbar-default .navbar-nav .open .dropdown-menu > li > a{
+    color: #646464;
+  }
+}
+
+.navbar-nav .open .dropdown-menu{
+  margin-left: 16px;
 }
