@@ -25,7 +25,7 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.state_editor.data_flows import StateDataFlowsEditorController
 from rafcon.gui.controllers.state_editor.description_editor import DescriptionEditorController
-from rafcon.gui.controllers.state_editor.io_data_port_list import DataPortListController
+from rafcon.gui.controllers.state_editor.io_data_port_list import InputPortListController, OutputPortListController
 from rafcon.gui.controllers.state_editor.linkage_overview import LinkageOverviewController
 from rafcon.gui.controllers.state_editor.outcomes import StateOutcomesEditorController
 from rafcon.gui.controllers.state_editor.overview import StateOverviewController
@@ -63,13 +63,13 @@ class StateEditorController(ExtendedController):
 
         self.add_controller('properties_ctrl', StateOverviewController(model, view['properties_view']))
 
-        self.inputs_ctrl = DataPortListController(model, view['inputs_view'], "input")
-        self.add_controller('inputs_ctrl', self.inputs_ctrl)
-        self.outputs_ctrl = DataPortListController(model, view['outputs_view'], "output")
-        self.add_controller('outputs_ctrl', self.outputs_ctrl)
+        self.inputs_ctrl = InputPortListController(model, view['inputs_view'])
+        self.add_controller('input_data_ports', self.inputs_ctrl)
+        self.outputs_ctrl = OutputPortListController(model, view['outputs_view'])
+        self.add_controller('output_data_ports', self.outputs_ctrl)
         self.scopes_ctrl = ScopedVariableListController(model, view['scopes_view'])
-        self.add_controller('scopes_ctrl', self.scopes_ctrl)
-        self.add_controller('outcomes_ctrl', StateOutcomesEditorController(model, view['outcomes_view']))
+        self.add_controller('scoped_variables', self.scopes_ctrl)
+        self.add_controller('outcomes', StateOutcomesEditorController(model, view['outcomes_view']))
 
         self.add_controller('transitions_ctrl', StateTransitionsEditorController(model, view['transitions_view']))
         self.add_controller('data_flows_ctrl', StateDataFlowsEditorController(model, view['data_flows_view']))
