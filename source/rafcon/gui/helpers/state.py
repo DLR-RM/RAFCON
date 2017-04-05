@@ -197,7 +197,6 @@ def change_state_type(state_m, target_class):
                                                        args=[target_class]))
         old_state_m.unregister_observer(state_machine_m)
         logger.info("UNREGISTER OBSERVER")
-        state_machine_m.selection.remove(old_state_m)
 
         # Extract child models of state, as they have to be applied to the new state model
         child_models = gui_helper_state_machine.extract_child_models_of_of_state(old_state_m, target_class)
@@ -235,7 +234,6 @@ def change_state_type(state_m, target_class):
                                                        args=[state_m.state, target_class, ]))
         old_state_m.unregister_observer(old_state_m)
         # remove selection from StateMachineModel.selection -> find state machine model
-        state_machine_m.selection.remove(old_state_m)
 
         action_root_m.change_state_type.__func__.child_models = child_models  # static variable of class method
         action_root_m.change_state_type.__func__.affected_models = affected_models
@@ -276,7 +274,6 @@ def change_state_type(state_m, target_class):
                                                            affected_models=[new_state_m, ],
                                                            after=True))
 
-            state_machine_m.selection.add(new_state_m)
     else:
         # state_m = action_root_state_m.states[state_id]
         if new_state is None:
@@ -299,7 +296,6 @@ def change_state_type(state_m, target_class):
                                                            affected_models=affected_models,
                                                            after=True))
 
-            state_machine_m.selection.add(new_state_m)
             # action_root_m.meta_signal.emit(MetaSignalMsg("state_type_change", "all", True))
 
         # del action_root_m.change_state_type.__func__.child_models
@@ -318,7 +314,10 @@ def change_state_type_with_error_handling_and_logger_messages(state_m, target_cl
                                                                          type(state_m.state).__name__,
                                                                          target_class.__name__))
         try:
+            state_machine_m = gui_singletons.state_machine_manager_model.get_state_machine_model(state_m)
+            state_machine_m.selection.remove(state_m)
             new_state_m = change_state_type(state_m, target_class)
+            state_machine_m.selection.set([new_state_m, ])
         except Exception as e:
             logger.error("An error occurred while changing the state type: {0}".format(e))
             raise
