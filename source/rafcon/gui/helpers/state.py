@@ -172,16 +172,16 @@ def save_selected_state_as():
         return False
 
 
-def change_state_type(model, target_class):
+def change_state_type(state_m, target_class):
 
-    old_state = model.state
-    old_state_m = model
+    old_state = state_m.state
+    old_state_m = state_m
     state_id = old_state.state_id
     is_root_state = old_state.is_root_state
 
+    # TODO ??? maybe separate again into state machine function and state function in respective helper module
     if is_root_state:
 
-        # state_m = model
         state_machine_m = gui_singletons.state_machine_manager_model.get_state_machine_model(old_state_m)
         assert state_machine_m.root_state is old_state_m
 
@@ -232,7 +232,7 @@ def change_state_type(model, target_class):
                                                        action_root_m=action_root_m,
                                                        affected_models=affected_models,
                                                        after=False,
-                                                       args=[model.state, target_class, ]))
+                                                       args=[state_m.state, target_class, ]))
         old_state_m.unregister_observer(old_state_m)
         # remove selection from StateMachineModel.selection -> find state machine model
         state_machine_m.selection.remove(old_state_m)
@@ -241,7 +241,7 @@ def change_state_type(model, target_class):
         action_root_m.change_state_type.__func__.affected_models = affected_models
 
     # CORE
-    new_state = e = None
+    new_state = new_state_m = e = None
     try:
         if is_root_state:
             new_state = state_machine_m.state_machine.change_root_state_type(target_class)
@@ -300,7 +300,7 @@ def change_state_type(model, target_class):
                                                            after=True))
 
             state_machine_m.selection.add(new_state_m)
-            # action_root_state_m.meta_signal.emit(MetaSignalMsg("state_type_change", "all", True))
+            # action_root_m.meta_signal.emit(MetaSignalMsg("state_type_change", "all", True))
 
         # del action_root_m.change_state_type.__func__.child_models
         del action_root_m.change_state_type.__func__.affected_models
@@ -309,23 +309,22 @@ def change_state_type(model, target_class):
         state_machine_m._send_root_state_notification(state_machine_m.change_root_state_type.__func__.last_notification_model,
                                                       state_machine_m.change_root_state_type.__func__.last_notification_prop_name,
                                                       state_machine_m.change_root_state_type.__func__.last_notification_info)
+    return new_state_m
 
 
-def change_state_type_with_error_handling_and_logger_messages(model, target_class):
-    if target_class != type(model.state):
-        state_name = model.state.name
-        logger.debug("Change type of State '{0}' from {1} to {2}".format(state_name,
-                                                                         type(model.state).__name__,
+def change_state_type_with_error_handling_and_logger_messages(state_m, target_class):
+    if not isinstance(state_m.state, target_class):
+        logger.debug("Change type of State '{0}' from {1} to {2}".format(state_m.state.name,
+                                                                         type(state_m.state).__name__,
                                                                          target_class.__name__))
         try:
-            change_state_type(model, target_class)
+            new_state_m = change_state_type(state_m, target_class)
         except Exception as e:
             logger.error("An error occurred while changing the state type: {0}".format(e))
             raise
     else:
-        logger.debug("DON'T Change type of State '{0}' from {1} to {2}".format(model.state.name,
-                                                                               type(model.state).__name__,
-                                                                               target_class.__name__))
+        logger.info("State type of State '{0}' will not change because target_class: {1} == state_class: {2}"
+                    "".format(state_m.state.name, type(state_m.state).__name__, target_class.__name__))
 
 
 def substitute_state(target_state_m, state_to_insert):
