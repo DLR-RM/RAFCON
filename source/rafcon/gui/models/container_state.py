@@ -397,14 +397,14 @@ class ContainerStateModel(StateModel):
             if isinstance(info.result, Exception):
                 logger.exception("State ungroup failed -> {0}".format(info.result))
             else:
-                import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+                import rafcon.gui.helpers.meta_data as gui_helper_meta_data
 
                 tmp_models_dict = self.group_state.__func__.tmp_models_storage
                 state_id = info.result
                 grouped_state_m = self.states[state_id]
                 tmp_models_dict['state'] = grouped_state_m
                 # TODO do implement OpenGL and Gaphas support meta data scaling
-                if not gui_helper_state_machine.scale_meta_data_according_states(tmp_models_dict):
+                if not gui_helper_meta_data.scale_meta_data_according_states(tmp_models_dict):
                     del self.group_state.__func__.tmp_models_storage
                     return
 
@@ -443,10 +443,10 @@ class ContainerStateModel(StateModel):
             if isinstance(info.result, Exception):
                 logger.exception("State ungroup failed {0}".format(info.result))
             else:
-                import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+                import rafcon.gui.helpers.meta_data as gui_helper_meta_data
                 tmp_models_dict = self.ungroup_state.__func__.tmp_models_storage
                 # TODO do implement Gaphas support meta data scaling
-                if not gui_helper_state_machine.scale_meta_data_according_state(tmp_models_dict):
+                if not gui_helper_meta_data.scale_meta_data_according_state(tmp_models_dict):
                     del self.ungroup_state.__func__.tmp_models_storage
                     return
 
