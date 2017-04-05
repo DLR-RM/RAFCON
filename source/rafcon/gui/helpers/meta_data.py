@@ -43,49 +43,6 @@ def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', c
         pass
 
 
-def scale_meta_data_according_state(models_dict):
-    """ The full meta data of state elements is biased according the area used indicated by the state meta data.
-
-    The function is used at the moment by the ungroup method of the ContainerStateModel, only.
-    It is supposed to be use for a meta data set of a state not the StateModel it self to scale (reduce) the size of
-    scoped_variables, states and transition and data_flows. New- and old-state models, or new- and old-state element
-    models can be different. So the models the data is taken from can be different then the models the data is written
-    on it depends how the dictionary was filled before.
-    At the moment the scale_meta_data_according_state is only newly bias the position of all handed old elements
-    in the dictionary.
-    The method needs some generalisation to create methods to easily scale meta data according new parents or views
-    (e.g. to show inner elements of a library state).
-    It also maybe should scale it if the size has changed according to the minimal extension (x or y) of the handed
-    size. Also it is of interest to have extension flag if the scaling should scale according the proportion
-    of a parent state (the handed state) or should keep the previous element x-y-ratios.
-    To keep the previous meta data proportion would be different then in the graphical editors.
-
-    :param models_dict: dict that hold lists of meta data with state attribute consistent keys
-    :return:
-    """
-    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
-    old_parent_rel_pos = models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
-
-    for state_m in models_dict['states'].itervalues():
-        old_rel_pos = state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
-        state_m.set_meta_data_editor('rel_pos', add_pos(old_rel_pos, old_parent_rel_pos), from_gaphas=gaphas_editor)
-
-    for scoped_variable_m in models_dict['scoped_variables'].itervalues():
-        if not gaphas_editor:
-            old_rel_pos = scoped_variable_m.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']
-            scoped_variable_m.set_meta_data_editor('inner_rel_pos', add_pos(old_rel_pos, old_parent_rel_pos), False)
-
-    connection_models = models_dict['transitions'].values() + models_dict['data_flows'].values()
-    for connection_m in connection_models:
-        old_waypoints = connection_m.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
-        new_waypoints = []
-        for waypoint in old_waypoints:
-            new_waypoints.append(add_pos(waypoint, old_parent_rel_pos))
-        connection_m.set_meta_data_editor('waypoints', new_waypoints, from_gaphas=gaphas_editor)
-
-    return True
-
-
 def get_boundaries_of_elements_in_dict(models_dict, parent_size):
     """ Get boundaries of all handed models
     :param models_dict: dict of all handed models
@@ -134,25 +91,8 @@ def get_boundaries_of_elements_in_dict(models_dict, parent_size):
     return left, right, top, bottom
 
 
-def scale_meta_data_according_states(models_dict):
-    """ The full meta data of state elements newly biased according the area used indicated by the states and
-    maybe scoped variables (in case of OpenGL editor) meta data.
-
-    Method is used by group states to set the offset/bias for the elements in the new container state.
-    The method needs some generalisation to create methods to easily scale meta data according new parents or views
-    (e.g. to show inner elements of s library state).
-
-    :param models_dict: dictionary that hold lists of meta data with state attribute consistent keys
-    :return:
-    """
-    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+def cal_frame_according_boundaries(left, right, top, bottom, parent_size, gaphas_editor):
     y_axis_mirror = 1 if gaphas_editor else -1
-
-    state_m = models_dict['state']
-    parent_state_m = models_dict['state'].parent
-    parent_size = parent_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
-
-    left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict, parent_size=parent_size)
 
     margin = min(parent_size) / 20.
     # Add margin and ensure that the upper left corner is within the state
@@ -161,22 +101,20 @@ def scale_meta_data_according_states(models_dict):
     size = (min(right - left + 2 * margin, parent_size[0] - rel_pos[0]),
             min(bottom - top + 2 * margin, parent_size[1] - y_axis_mirror * rel_pos[1]))
 
-    # Set size and position of new container state
-    state_m.set_meta_data_editor('rel_pos', rel_pos, from_gaphas=gaphas_editor)
-    state_m.set_meta_data_editor('size', size, from_gaphas=gaphas_editor)
+    return margin, rel_pos, size
 
+
+def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor):
     # Update relative position of states within the container in order to maintain their absolute position
     for child_state_m in models_dict['states'].itervalues():
         old_rel_pos = child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
-        new_rel_pos = subtract_pos(old_rel_pos, rel_pos)
-        child_state_m.set_meta_data_editor('rel_pos', new_rel_pos, from_gaphas=gaphas_editor)
+        child_state_m.set_meta_data_editor('rel_pos', add_pos(old_rel_pos, pos_offset), from_gaphas=gaphas_editor)
 
     # Do the same for scoped variable
     if not gaphas_editor:
         for scoped_variable_m in models_dict['scoped_variables'].itervalues():
             old_rel_pos = scoped_variable_m.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']
-            new_rel_pos = subtract_pos(old_rel_pos, rel_pos)
-            scoped_variable_m.set_meta_data_editor('inner_rel_pos', new_rel_pos, from_gaphas=gaphas_editor)
+            scoped_variable_m.set_meta_data_editor('inner_rel_pos', add_pos(old_rel_pos, pos_offset), gaphas_editor)
 
     # Do the same for all connections (transitions and data flows)
     connection_models = models_dict['transitions'].values() + models_dict['data_flows'].values()
@@ -184,9 +122,50 @@ def scale_meta_data_according_states(models_dict):
         old_waypoints = connection_m.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
         new_waypoints = []
         for waypoint in old_waypoints:
-            new_waypoints.append(subtract_pos(waypoint, rel_pos))
+            new_waypoints.append(add_pos(waypoint, pos_offset))
         connection_m.set_meta_data_editor('waypoints', new_waypoints, from_gaphas=gaphas_editor)
 
-    # new_frame.width/new_frame
+
+def offset_rel_pos_of_models_meta_data_according_parent_state(models_dict):
+    """ Offset meta data of state elements according the area used indicated by the state meta data.
+
+    The offset_rel_pos_of_models_meta_data_according_parent_state offset the position of all handed old elements
+    in the dictionary.
+
+    :param models_dict: dict that hold lists of meta data with state attribute consistent keys
+    :return:
+    """
+    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    old_parent_rel_pos = models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
+    offset = old_parent_rel_pos
+    offset_rel_pos_of_all_models_in_dict(models_dict, offset, gaphas_editor)
+
+    return True
+
+
+def scale_meta_data_according_states(models_dict):
+    """ Offset meta data of state elements according the area used indicated by the states and
+    maybe scoped variables (in case of OpenGL editor) meta data.
+
+    Method is used by group states to set the offset for the elements in the new container state.
+    The method needs some generalisation to create methods to easily scale meta data according new parents or views
+    (e.g. to show inner elements of s library state).
+
+    :param models_dict: dictionary that hold lists of meta data with state attribute consistent keys
+    :return:
+    """
+    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+
+    parent_size = models_dict['state'].parent.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
+
+    left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict, parent_size=parent_size)
+
+    _, rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, parent_size, gaphas_editor)
+
+    # Set size and position of new container state
+    models_dict['state'].set_meta_data_editor('rel_pos', rel_pos, from_gaphas=gaphas_editor)
+    models_dict['state'].set_meta_data_editor('size', size, from_gaphas=gaphas_editor)
+    offset = (-rel_pos[0], -rel_pos[1])
+    offset_rel_pos_of_all_models_in_dict(models_dict, offset, gaphas_editor)
 
     return True

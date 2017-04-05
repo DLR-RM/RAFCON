@@ -446,7 +446,7 @@ class ContainerStateModel(StateModel):
                 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
                 tmp_models_dict = self.ungroup_state.__func__.tmp_models_storage
                 # TODO do implement Gaphas support meta data scaling
-                if not gui_helper_meta_data.scale_meta_data_according_state(tmp_models_dict):
+                if not gui_helper_meta_data.offset_rel_pos_of_models_meta_data_according_parent_state(tmp_models_dict):
                     del self.ungroup_state.__func__.tmp_models_storage
                     return
 
