@@ -525,12 +525,12 @@ class ModificationsHistoryModel(ModelMT):
                 overview['instance'].insert(0, self.state_machine_model.state_machine)
                 overview['model'].insert(0, self.state_machine_model)
                 if info['arg'].action == 'change_root_state_type':
-                    assert info['arg'].action_root_m is self.state_machine_model
-                    self.active_action = StateMachineAction(parent_path=info['arg'].action_root_m.root_state.state.get_path(),
-                                                            state_machine_model=info['arg'].action_root_m,
+                    assert info['arg'].action_parent_m is self.state_machine_model
+                    self.active_action = StateMachineAction(parent_path=info['arg'].action_parent_m.root_state.state.get_path(),
+                                                            state_machine_model=info['arg'].action_parent_m,
                                                             overview=overview)
                 else:
-                    self.active_action = StateMachineAction(parent_path=info['arg'].action_root_m.state.get_path(),
+                    self.active_action = StateMachineAction(parent_path=info['arg'].action_parent_m.state.get_path(),
                                                             state_machine_model=self.state_machine_model,
                                                             overview=overview)
                 # print "CREATE STATE MACHINE ACTION:", self.active_action

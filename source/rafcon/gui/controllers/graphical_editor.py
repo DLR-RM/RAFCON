@@ -222,7 +222,7 @@ class GraphicalEditorController(ExtendedController):
             if not info['arg'].after:
                 self.suspend_drawing = True
                 # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
-                self.observe_model(info['arg'].action_root_m)
+                self.observe_model(info['arg'].action_parent_m)
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal_after(self, model, prop_name, info):

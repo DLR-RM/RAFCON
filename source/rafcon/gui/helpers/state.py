@@ -191,7 +191,7 @@ def change_state_type(state_m, target_class):
 
         # print "emit change_root_state_type before msg: "
         old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
-                                                       action_root_m=state_machine_m,
+                                                       action_parent_m=state_machine_m,
                                                        affected_models=[old_state_m, ],
                                                        after=False,
                                                        args=[target_class]))
@@ -205,8 +205,8 @@ def change_state_type(state_m, target_class):
         logger.info("FINISH BEFORE")
     else:
 
-        action_root_m = old_state_m.parent
-        assert isinstance(action_root_m, ContainerStateModel)
+        action_parent_m = old_state_m.parent
+        assert isinstance(action_parent_m, ContainerStateModel)
 
         # BEFORE
         state_machine_m = gui_singletons.state_machine_manager_model.get_state_machine_model(old_state_m)
@@ -228,15 +228,15 @@ def change_state_type(state_m, target_class):
         for list_or_dict in child_models.itervalues():
             affected_models.extend(list_dict_to_list(list_or_dict))
         old_state_m.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model',
-                                                       action_root_m=action_root_m,
+                                                       action_parent_m=action_parent_m,
                                                        affected_models=affected_models,
                                                        after=False,
                                                        args=[state_m.state, target_class, ]))
         old_state_m.unregister_observer(old_state_m)
         # remove selection from StateMachineModel.selection -> find state machine model
 
-        action_root_m.change_state_type.__func__.child_models = child_models  # static variable of class method
-        action_root_m.change_state_type.__func__.affected_models = affected_models
+        action_parent_m.change_state_type.__func__.child_models = child_models  # static variable of class method
+        action_parent_m.change_state_type.__func__.affected_models = affected_models
 
     # CORE
     new_state = new_state_m = e = None
@@ -270,7 +270,7 @@ def change_state_type(state_m, target_class):
 
             # print "emit change_root_state_type after msg: "
             old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
-                                                           action_root_m=state_machine_m,
+                                                           action_parent_m=state_machine_m,
                                                            affected_models=[new_state_m, ],
                                                            after=True))
 
@@ -280,26 +280,26 @@ def change_state_type(state_m, target_class):
             logger.exception("Container state type change failed -> {0}".format(e))
         else:
             # Create a new state model based on the new state and apply the extracted child models
-            child_models = action_root_m.change_state_type.__func__.child_models
+            child_models = action_parent_m.change_state_type.__func__.child_models
             new_state_m = gui_helper_state_machine.create_state_model_for_state(new_state, child_models)
             # Set this state model (action_root_state_m) to be the parent of our new state model
-            new_state_m.parent = action_root_m
+            new_state_m.parent = action_parent_m
             # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
-            action_root_m.states[state_id] = new_state_m
-            action_root_m.check_is_start_state()
+            action_parent_m.states[state_id] = new_state_m
+            action_parent_m.check_is_start_state()
 
-            affected_models = action_root_m.change_state_type.__func__.affected_models
+            affected_models = action_parent_m.change_state_type.__func__.affected_models
             affected_models.append(new_state_m)
             old_state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
             old_state_m.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model',
-                                                           action_root_m=action_root_m,
+                                                           action_parent_m=action_parent_m,
                                                            affected_models=affected_models,
                                                            after=True))
 
-            # action_root_m.meta_signal.emit(MetaSignalMsg("state_type_change", "all", True))
+            # action_parent_m.meta_signal.emit(MetaSignalMsg("state_type_change", "all", True))
 
-        # del action_root_m.change_state_type.__func__.child_models
-        del action_root_m.change_state_type.__func__.affected_models
+        # del action_parent_m.change_state_type.__func__.child_models
+        del action_parent_m.change_state_type.__func__.affected_models
 
     if is_root_state:
         state_machine_m._send_root_state_notification(state_machine_m.change_root_state_type.__func__.last_notification_model,
@@ -328,31 +328,31 @@ def change_state_type_with_error_handling_and_logger_messages(state_m, target_cl
 
 def substitute_state(target_state_m, state_to_insert):
 
-    action_root_m = target_state_m.parent
+    action_parent_m = target_state_m.parent
     old_state_m = target_state_m
     old_state = old_state_m.state
     state_id = old_state.state_id
 
     # BEFORE MODEL
     tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'state': None}
-    old_state_m = action_root_m.states[state_id]
+    old_state_m = action_parent_m.states[state_id]
     old_state_m.action_signal.emit(ActionSignalMsg(action='substitute_state', origin='model',
-                                                   action_root_m=action_root_m,
+                                                   action_parent_m=action_parent_m,
                                                    affected_models=[old_state_m, ], after=False,
                                                    args=[state_id, state_to_insert]))
-    related_transitions, related_data_flows = action_root_m.state.related_linkage_state(state_id)
+    related_transitions, related_data_flows = action_parent_m.state.related_linkage_state(state_id)
     tmp_meta_data['state'] = old_state_m.meta
     for t in related_transitions['external']['ingoing'] + related_transitions['external']['outgoing']:
-        tmp_meta_data['transitions'][t.transition_id] = action_root_m.get_transition_m(t.transition_id).meta
+        tmp_meta_data['transitions'][t.transition_id] = action_parent_m.get_transition_m(t.transition_id).meta
     for df in related_data_flows['external']['ingoing'] + related_data_flows['external']['outgoing']:
-        tmp_meta_data['data_flows'][df.data_flow_id] = action_root_m.get_data_flow_m(df.data_flow_id).meta
-    action_root_m.substitute_state.__func__.tmp_meta_data_storage = tmp_meta_data
-    action_root_m.substitute_state.__func__.old_state_m = old_state_m
+        tmp_meta_data['data_flows'][df.data_flow_id] = action_parent_m.get_data_flow_m(df.data_flow_id).meta
+    action_parent_m.substitute_state.__func__.tmp_meta_data_storage = tmp_meta_data
+    action_parent_m.substitute_state.__func__.old_state_m = old_state_m
 
     # CORE
     new_state = e = None
     try:
-        new_state = action_root_m.state.substitute_state(state_id, state_to_insert)
+        new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
         assert new_state is state_to_insert
     except Exception as e:
         pass
@@ -362,36 +362,36 @@ def substitute_state(target_state_m, state_to_insert):
         logger.exception("State substitution failed -> {0}".format(e))
     else:
         state_id = new_state.state_id
-        tmp_meta_data = action_root_m.substitute_state.__func__.tmp_meta_data_storage
-        old_state_m = action_root_m.substitute_state.__func__.old_state_m
+        tmp_meta_data = action_parent_m.substitute_state.__func__.tmp_meta_data_storage
+        old_state_m = action_parent_m.substitute_state.__func__.old_state_m
         changed_models = []
-        action_root_m.states[state_id].meta = tmp_meta_data['state']
-        changed_models.append(action_root_m.states[state_id])
+        action_parent_m.states[state_id].meta = tmp_meta_data['state']
+        changed_models.append(action_parent_m.states[state_id])
         for t_id, t_meta in tmp_meta_data['transitions'].iteritems():
-            if action_root_m.get_transition_m(t_id) is not None:
-                action_root_m.get_transition_m(t_id).meta = t_meta
-                changed_models.append(action_root_m.get_transition_m(t_id))
-            elif t_id in action_root_m.state.substitute_state.__func__.re_create_io_going_t_ids:
+            if action_parent_m.get_transition_m(t_id) is not None:
+                action_parent_m.get_transition_m(t_id).meta = t_meta
+                changed_models.append(action_parent_m.get_transition_m(t_id))
+            elif t_id in action_parent_m.state.substitute_state.__func__.re_create_io_going_t_ids:
                 logger.warning("Transition model with id {0} to set meta data could not be found.".format(t_id))
         for df_id, df_meta in tmp_meta_data['data_flows'].iteritems():
-            if action_root_m.get_data_flow_m(df_id) is not None:
-                action_root_m.get_data_flow_m(df_id).meta = df_meta
-                changed_models.append(action_root_m.get_data_flow_m(df_id))
-            elif df_id in action_root_m.state.substitute_state.__func__.re_create_io_going_df_ids:
+            if action_parent_m.get_data_flow_m(df_id) is not None:
+                action_parent_m.get_data_flow_m(df_id).meta = df_meta
+                changed_models.append(action_parent_m.get_data_flow_m(df_id))
+            elif df_id in action_parent_m.state.substitute_state.__func__.re_create_io_going_df_ids:
                 logger.warning("Data flow model with id {0} to set meta data could not be found.".format(df_id))
         # TODO maybe refactor the signal usage to use the following one
 
-        notification = Notification(action_root_m, "states", {'method_name': 'substitute_state'})
-        action_root_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
-        msg = ActionSignalMsg(action='substitute_state', origin='model', action_root_m=action_root_m,
+        notification = Notification(action_parent_m, "states", {'method_name': 'substitute_state'})
+        action_parent_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
+        msg = ActionSignalMsg(action='substitute_state', origin='model', action_parent_m=action_parent_m,
                               affected_models=changed_models, after=True)
         old_state_m.action_signal.emit(msg)
-        # print "XXXmodels", action_root_m.states
+        # print "XXXmodels", action_parent_m.states
         # print "XXX", msg.affected_models
-        action_root_m.action_signal.emit(msg)
+        action_parent_m.action_signal.emit(msg)
 
-    del action_root_m.substitute_state.__func__.tmp_meta_data_storage
-    del action_root_m.substitute_state.__func__.old_state_m
+    del action_parent_m.substitute_state.__func__.tmp_meta_data_storage
+    del action_parent_m.substitute_state.__func__.old_state_m
 
 
 def substitute_selected_state(state, as_template=False):
@@ -478,22 +478,22 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
     state_ids = [state_m.state.state_id for state_m in state_m_list]
     sv_ids = [sv.scoped_variable.data_port_id for sv in sv_m_list]
 
-    action_root_m = state_m_list[0].parent if state_m_list else sv_m_list[0].parent
+    action_parent_m = state_m_list[0].parent if state_m_list else sv_m_list[0].parent
 
-    assert isinstance(action_root_m, ContainerStateModel)
+    assert isinstance(action_parent_m, ContainerStateModel)
 
     # BEFORE MODEL
     tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
     related_transitions, related_data_flows = \
-        action_root_m.state.related_linkage_states_and_scoped_variables(state_ids, sv_ids)
+        action_parent_m.state.related_linkage_states_and_scoped_variables(state_ids, sv_ids)
     for state_id in state_ids:
-        tmp_models_dict['states'][state_id] = action_root_m.states[state_id]
+        tmp_models_dict['states'][state_id] = action_parent_m.states[state_id]
     for sv_id in sv_ids:
-        tmp_models_dict['scoped_variables'][sv_id] = action_root_m.get_scoped_variable_m(sv_id)
+        tmp_models_dict['scoped_variables'][sv_id] = action_parent_m.get_scoped_variable_m(sv_id)
     for t in related_transitions['enclosed']:
-        tmp_models_dict['transitions'][t.transition_id] = action_root_m.get_transition_m(t.transition_id)
+        tmp_models_dict['transitions'][t.transition_id] = action_parent_m.get_transition_m(t.transition_id)
     for df in related_data_flows['enclosed']:
-        tmp_models_dict['data_flows'][df.data_flow_id] = action_root_m.get_data_flow_m(df.data_flow_id)
+        tmp_models_dict['data_flows'][df.data_flow_id] = action_parent_m.get_data_flow_m(df.data_flow_id)
 
     affected_models = []
     for elemets_dict in tmp_models_dict.itervalues():
@@ -502,20 +502,20 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         elif isinstance(elemets_dict, AbstractStateModel):
             affected_models.extend(elemets_dict)
 
-    action_root_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
-                                                     action_root_m=action_root_m,
+    action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
+                                                     action_parent_m=action_parent_m,
                                                      affected_models=affected_models, after=False,
                                                      args=[state_ids, sv_ids]))
 
-    action_root_m.group_states.__func__.tmp_models_storage = tmp_models_dict
-    action_root_m.group_states.__func__.affected_models = affected_models
+    action_parent_m.group_states.__func__.tmp_models_storage = tmp_models_dict
+    action_parent_m.group_states.__func__.affected_models = affected_models
 
     # CORE
     new_state = None
     try:
-        assert isinstance(action_root_m.state, ContainerState)
-        new_state_id = action_root_m.state.group_states(state_ids, sv_ids)
-        new_state = action_root_m.state.states[new_state_id]
+        assert isinstance(action_parent_m.state, ContainerState)
+        new_state_id = action_parent_m.state.group_states(state_ids, sv_ids)
+        new_state = action_parent_m.state.states[new_state_id]
     except Exception as e:
         pass
 
@@ -523,26 +523,26 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
     if new_state is None:
         logger.exception("State ungroup failed -> {0}".format(e))
     else:
-        tmp_models_dict = action_root_m.group_states.__func__.tmp_models_storage
-        grouped_state_m = action_root_m.states[new_state.state_id]
+        tmp_models_dict = action_parent_m.group_states.__func__.tmp_models_storage
+        grouped_state_m = action_parent_m.states[new_state.state_id]
         tmp_models_dict['state'] = grouped_state_m
         # TODO do implement OpenGL and Gaphas support meta data scaling
         if not gui_helper_state_machine.scale_meta_data_according_states(tmp_models_dict):
-            del action_root_m.group_states.__func__.tmp_models_storage
+            del action_parent_m.group_states.__func__.tmp_models_storage
             return
 
         grouped_state_m.insert_meta_data_from_models_dict(tmp_models_dict)
 
         # TODO maybe refactor the signal usage to use the following one
         # grouped_state_m.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
-        affected_models = action_root_m.group_states.__func__.affected_models
+        affected_models = action_parent_m.group_states.__func__.affected_models
         affected_models.append(grouped_state_m)
-        action_root_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
-                                                         action_root_m=action_root_m,
+        action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
+                                                         action_parent_m=action_parent_m,
                                                          affected_models=affected_models, after=True))
 
-    del action_root_m.group_states.__func__.tmp_models_storage
-    del action_root_m.group_states.__func__.affected_models
+    del action_parent_m.group_states.__func__.tmp_models_storage
+    del action_parent_m.group_states.__func__.affected_models
 
 
 def group_selected_states_and_scoped_variables():
@@ -565,28 +565,28 @@ def group_selected_states_and_scoped_variables():
 
 def ungroup_state(state_m):
 
-    action_root_m = state_m.parent
+    action_parent_m = state_m.parent
     state_id = state_m.state.state_id
 
     # BEFORE MODEL
     tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
 
-    related_transitions, related_data_flows = action_root_m.state.related_linkage_state(state_id)
-    tmp_models_dict['state'] = action_root_m.states[state_id]
-    for s_id, s_m in action_root_m.states[state_id].states.iteritems():
+    related_transitions, related_data_flows = action_parent_m.state.related_linkage_state(state_id)
+    tmp_models_dict['state'] = action_parent_m.states[state_id]
+    for s_id, s_m in action_parent_m.states[state_id].states.iteritems():
         tmp_models_dict['states'][s_id] = s_m
-    for sv_m in action_root_m.states[state_id].scoped_variables:
+    for sv_m in action_parent_m.states[state_id].scoped_variables:
         tmp_models_dict['scoped_variables'][sv_m.scoped_variable.data_port_id] = sv_m
     for t in related_transitions['internal']['enclosed']:
-        tmp_models_dict['transitions'][t.transition_id] = action_root_m.states[state_id].get_transition_m(t.transition_id)
+        tmp_models_dict['transitions'][t.transition_id] = action_parent_m.states[state_id].get_transition_m(t.transition_id)
     for df in related_data_flows['internal']['enclosed']:
-        tmp_models_dict['data_flows'][df.data_flow_id] = action_root_m.states[state_id].get_data_flow_m(df.data_flow_id)
-    affected_models = [action_root_m.states[state_id], ]
-    action_root_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
-                                                     action_root_m=action_root_m,
+        tmp_models_dict['data_flows'][df.data_flow_id] = action_parent_m.states[state_id].get_data_flow_m(df.data_flow_id)
+    affected_models = [action_parent_m.states[state_id], ]
+    action_parent_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
+                                                     action_parent_m=action_parent_m,
                                                      affected_models=affected_models, after=False, args=[state_id, ]))
-    action_root_m.ungroup_state.__func__.tmp_models_storage = tmp_models_dict
-    action_root_m.group_states.__func__.affected_models = affected_models
+    action_parent_m.ungroup_state.__func__.tmp_models_storage = tmp_models_dict
+    action_parent_m.group_states.__func__.affected_models = affected_models
 
     # CORE
     new_state = None
@@ -600,10 +600,10 @@ def ungroup_state(state_m):
     if new_state is None:
         logger.exception("State ungroup failed {0}".format(e))
     else:
-        tmp_models_dict = action_root_m.ungroup_state.__func__.tmp_models_storage
+        tmp_models_dict = action_parent_m.ungroup_state.__func__.tmp_models_storage
         # TODO do implement Gaphas support meta data scaling
         if not gui_helper_state_machine.scale_meta_data_according_state(tmp_models_dict):
-            del action_root_m.ungroup_state.__func__.tmp_models_storage
+            del action_parent_m.ungroup_state.__func__.tmp_models_storage
             return
 
         # reduce tmp models by not applied state meta data
@@ -612,30 +612,30 @@ def ungroup_state(state_m):
         # correct state element ids with new state element ids to set meta data on right state element
         tmp_models_dict['states'] = \
             {new_state_id: tmp_models_dict['states'][old_state_id]
-             for old_state_id, new_state_id in action_root_m.state.ungroup_state.__func__.state_id_dict.iteritems()}
+             for old_state_id, new_state_id in action_parent_m.state.ungroup_state.__func__.state_id_dict.iteritems()}
         tmp_models_dict['scoped_variables'] = \
             {new_sv_id: tmp_models_dict['scoped_variables'][old_sv_id]
-             for old_sv_id, new_sv_id in action_root_m.state.ungroup_state.__func__.sv_id_dict.iteritems()}
+             for old_sv_id, new_sv_id in action_parent_m.state.ungroup_state.__func__.sv_id_dict.iteritems()}
         tmp_models_dict['transitions'] = \
             {new_t_id: tmp_models_dict['transitions'][old_t_id]
-             for old_t_id, new_t_id in action_root_m.state.ungroup_state.__func__.enclosed_t_id_dict.iteritems()}
+             for old_t_id, new_t_id in action_parent_m.state.ungroup_state.__func__.enclosed_t_id_dict.iteritems()}
         tmp_models_dict['data_flows'] = \
             {new_df_id: tmp_models_dict['data_flows'][old_df_id]
-             for old_df_id, new_df_id in action_root_m.state.ungroup_state.__func__.enclosed_df_id_dict.iteritems()}
+             for old_df_id, new_df_id in action_parent_m.state.ungroup_state.__func__.enclosed_df_id_dict.iteritems()}
 
-        action_root_m.insert_meta_data_from_models_dict(tmp_models_dict)
+        action_parent_m.insert_meta_data_from_models_dict(tmp_models_dict)
 
         # TODO maybe refactor the signal usage to use the following one
-        # action_root_m.meta_signal.emit(MetaSignalMsg("ungroup_state", "all", True))
-        affected_models = action_root_m.group_states.__func__.affected_models
+        # action_parent_m.meta_signal.emit(MetaSignalMsg("ungroup_state", "all", True))
+        affected_models = action_parent_m.group_states.__func__.affected_models
         for elemets_dict in tmp_models_dict.itervalues():
             affected_models.extend(elemets_dict.itervalues())
-        action_root_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
-                                                         action_root_m=action_root_m,
+        action_parent_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
+                                                         action_parent_m=action_parent_m,
                                                          affected_models=affected_models, after=True))
 
-    del action_root_m.ungroup_state.__func__.tmp_models_storage
-    del action_root_m.group_states.__func__.affected_models
+    del action_parent_m.ungroup_state.__func__.tmp_models_storage
+    del action_parent_m.group_states.__func__.affected_models
 
 
 def ungroup_selected_state():

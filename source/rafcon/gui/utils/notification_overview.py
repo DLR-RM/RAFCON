@@ -158,8 +158,8 @@ class NotificationOverview(dict):
             s += "\n{0}origin={1}".format(level + "\t", meta_signal_msg_tuple.origin)
             meta_signal_dict['origin'] = meta_signal_msg_tuple.origin
             # origin
-            s += "\n{0}action_root_m={1}".format(level + "\t", meta_signal_msg_tuple.action_root_m)
-            meta_signal_dict['action_root_m'] = meta_signal_msg_tuple.origin
+            s += "\n{0}action_parent_m={1}".format(level + "\t", meta_signal_msg_tuple.action_parent_m)
+            meta_signal_dict['action_parent_m'] = meta_signal_msg_tuple.origin
             # change
             s += "\n{0}affected_models={1}".format(level + "\t", meta_signal_msg_tuple.affected_models)
             meta_signal_dict['affected_models'] = meta_signal_msg_tuple.affected_models
@@ -238,7 +238,7 @@ class NotificationOverview(dict):
                                                                                                   overview))
             elif isinstance(info['arg'], ActionSignalMsg):
                 print "\n\nSSS\n", info
-                overview['instance'].append(info['arg'].action_root_m.core_element)
+                overview['instance'].append(info['arg'].action_parent_m.core_element)
                 overview['method_name'].append(info['arg'].action)
                 overview['signal'].append(info['arg'])
                 overview['args'].append(info['arg'].args)
