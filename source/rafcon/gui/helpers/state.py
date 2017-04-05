@@ -194,7 +194,7 @@ def change_state_type(state_m, target_class):
                                                        action_parent_m=state_machine_m,
                                                        affected_models=[old_state_m, ],
                                                        after=False,
-                                                       args=[target_class]))
+                                                       kwargs={'target_class': target_class}))
         old_state_m.unregister_observer(state_machine_m)
         logger.info("UNREGISTER OBSERVER")
 
@@ -231,7 +231,7 @@ def change_state_type(state_m, target_class):
                                                        action_parent_m=action_parent_m,
                                                        affected_models=affected_models,
                                                        after=False,
-                                                       args=[state_m.state, target_class, ]))
+                                                       kwargs={'state': old_state, 'target_class': target_class}))
         old_state_m.unregister_observer(old_state_m)
         # remove selection from StateMachineModel.selection -> find state machine model
 
@@ -339,7 +339,7 @@ def substitute_state(target_state_m, state_to_insert):
     old_state_m.action_signal.emit(ActionSignalMsg(action='substitute_state', origin='model',
                                                    action_parent_m=action_parent_m,
                                                    affected_models=[old_state_m, ], after=False,
-                                                   args=[state_id, state_to_insert]))
+                                                   kwargs={'state_id': state_id, 'state': state_to_insert}))
     related_transitions, related_data_flows = action_parent_m.state.related_linkage_state(state_id)
     tmp_meta_data['state'] = old_state_m.meta
     for t in related_transitions['external']['ingoing'] + related_transitions['external']['outgoing']:
@@ -503,9 +503,9 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
             affected_models.extend(elemets_dict)
 
     action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
-                                                     action_parent_m=action_parent_m,
-                                                     affected_models=affected_models, after=False,
-                                                     args=[state_ids, sv_ids]))
+                                                       action_parent_m=action_parent_m,
+                                                       affected_models=affected_models, after=False,
+                                                       kwargs={'state_ids': state_ids, 'scoped_variables': sv_ids}))
 
     action_parent_m.group_states.__func__.tmp_models_storage = tmp_models_dict
     action_parent_m.group_states.__func__.affected_models = affected_models
@@ -538,8 +538,8 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         affected_models = action_parent_m.group_states.__func__.affected_models
         affected_models.append(grouped_state_m)
         action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
-                                                         action_parent_m=action_parent_m,
-                                                         affected_models=affected_models, after=True))
+                                                           action_parent_m=action_parent_m,
+                                                           affected_models=affected_models, after=True))
 
     del action_parent_m.group_states.__func__.tmp_models_storage
     del action_parent_m.group_states.__func__.affected_models
@@ -583,8 +583,9 @@ def ungroup_state(state_m):
         tmp_models_dict['data_flows'][df.data_flow_id] = action_parent_m.states[state_id].get_data_flow_m(df.data_flow_id)
     affected_models = [action_parent_m.states[state_id], ]
     action_parent_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
-                                                     action_parent_m=action_parent_m,
-                                                     affected_models=affected_models, after=False, args=[state_id, ]))
+                                                       action_parent_m=action_parent_m,
+                                                       affected_models=affected_models, after=False,
+                                                       kwargs={'state_id': state_id}))
     action_parent_m.ungroup_state.__func__.tmp_models_storage = tmp_models_dict
     action_parent_m.group_states.__func__.affected_models = affected_models
 

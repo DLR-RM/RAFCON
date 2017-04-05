@@ -241,7 +241,11 @@ class NotificationOverview(dict):
                 overview['instance'].append(info['arg'].action_parent_m.core_element)
                 overview['method_name'].append(info['arg'].action)
                 overview['signal'].append(info['arg'])
-                overview['args'].append(info['arg'].args)
+                overview['kwargs'].append(info['arg'].kwargs)
+                # TODO check again this stuff
+                args = [info['arg'].action_parent_m.core_element, ]
+                args.extend(info['arg'].kwargs.values())
+                overview['args'].append(args)
                 s += "\n{0}'arg': ActionSignalMsg({1}".format(level,
                                                               get_nice_action_signal_msg_tuple_string(info['arg'],
                                                                                                       level,

@@ -311,20 +311,20 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def group_states(self, state_ids, scoped_variables=None):
+    def group_states(self, state_ids, scoped_variable_ids=None):
         """ Group states and scoped variables into a new hierarchy state and remain internal connections.
             Interconnecting transitions and data flows to parent and other child states are removed, at the moment.
 
         :param state_ids: state_id's of all states that are to be grouped.
-        :param scoped_variables: data_port_id's of all scoped variables that are to be grouped, too.
+        :param scoped_variable_ids: data_port_id's of all scoped variables that are to be grouped, too.
         :return:
         """
         # TODO remain all related linkage by adding outcomes and input output port to new hierarchy state
         # TODO remember changed state or state element ids and provide them for the model functionalities
         assert all([state_id in self.states.keys() for state_id in state_ids])
-        if scoped_variables is None:
-            scoped_variables = []
-        assert all([p_id in self.scoped_variables.keys() for p_id in scoped_variables])
+        if scoped_variable_ids is None:
+            scoped_variable_ids = []
+        assert all([p_id in self.scoped_variables.keys() for p_id in scoped_variable_ids])
         from rafcon.core.states.barrier_concurrency_state import DeciderState
         if any(isinstance(self.states[child_state_id], DeciderState) for child_state_id in state_ids):
             raise ValueError("State of type DeciderState can not be grouped.")
@@ -338,12 +338,12 @@ class ContainerState(State):
             return name_str + number_str
 
         [related_transitions, related_data_flows] = self.related_linkage_states_and_scoped_variables(state_ids,
-                                                                                                     scoped_variables)
+                                                                                                     scoped_variable_ids)
 
         # all states
         states_to_group = {state_id: self.states[state_id] for state_id in state_ids}
         # all internal scoped variables
-        scoped_variables_to_group = {dp_id: self.scoped_variables[dp_id] for dp_id in scoped_variables}
+        scoped_variables_to_group = {dp_id: self.scoped_variables[dp_id] for dp_id in scoped_variable_ids}
         # all internal transitions
         transitions_internal = {t.transition_id: t for t in related_transitions['enclosed']}
         # all internal data flows
@@ -464,7 +464,7 @@ class ContainerState(State):
 
         ############################# CREATE NEW STATE #############################
         [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
-        [self.remove_scoped_variable(sv_id) for sv_id in scoped_variables]
+        [self.remove_scoped_variable(sv_id) for sv_id in scoped_variable_ids]
         # TODO if the version is final create the ingoing and outgoing internal linkage before and hand it while state creation
         from rafcon.core.states.hierarchy_state import HierarchyState
         s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,

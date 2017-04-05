@@ -243,7 +243,7 @@ class ModificationHistoryTreeController(ExtendedController):
                     # logger.info(action.before_overview._overview_dict)
                     parameters.append(str(action.meta))
                 elif isinstance(action.before_overview['signal'][-1], ActionSignalMsg):
-                    parameters.append(str(action.before_overview['signal'][-1].args))
+                    parameters.append(str(action.before_overview['signal'][-1].kwargs))
                 else:
                     logger.warning("no parameters defined for signal: {0}".format(action.before_overview['signal']))
                     for index, signal in enumerate(action.before_overview['signal']):
