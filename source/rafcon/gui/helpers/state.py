@@ -320,7 +320,6 @@ def change_state_type_with_error_handling_and_logger_messages(state_m, target_cl
             state_machine_m.selection.set([new_state_m, ])
         except Exception as e:
             logger.error("An error occurred while changing the state type: {0}".format(e))
-            raise
     else:
         logger.info("State type of State '{0}' will not change because target_class: {1} == state_class: {2}"
                     "".format(state_m.state.name, type(state_m.state).__name__, target_class.__name__))
