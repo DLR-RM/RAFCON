@@ -67,17 +67,20 @@ def test_start_script_valid_config():
 
 
 def test_start_script_valid_rmpm_env():
-    """ Test rafcon_start console call which run a rafcon instance with handed config.yaml file, open a state machine,
-    run it and final checks the output file on consistency.
+    """Tests the execution of rafcon_start in an environment created by RMPM
     """
-    # valid config
-    bin_path = join(dirname(testing_utils.RAFCON_PATH), "..", "bin")
+    import distutils.spawn
+    rmpm_env = os.environ.copy()
+    rmpm_env["PATH"] = "/volume/software/common/packages/rmpm/latest/bin/{}:".format(os.getenv(
+        "DLRRM_HOST_PLATFORM", "osl42-x86_64")) + rmpm_env["PATH"]
+    if not distutils.spawn.find_executable("rmpm_do"):
+        print "Could not find rmpm_do, skipping test"
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     config = join(testing_utils.TESTS_PATH, "common", "configs_for_start_script_test", "valid_config", "config.yaml")
-    cmd = "rmpm_do env rafcon > {3}/rafcon_env && source {3}/rafcon_env && rafcon_start -o {1} -c {2}" \
-          "".format(bin_path, start_path, config, testing_utils.RAFCON_TEMP_PATH_TEST_BASE)
+    cmd = "eval `rmpm_do env --env-format=embed_sh sw.common.rafcon` && rafcon_start -o {0} -c {1}" \
+          "".format(start_path, config)
     print "\ntest_start_script_valid_config: \n", cmd
-    rafcon_process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    rafcon_process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, env=rmpm_env)
     rafcon_process.wait()
     output = rafcon_process.communicate()[0]
     print "LOG: \n", output
