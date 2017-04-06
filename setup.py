@@ -46,7 +46,10 @@ class PyTest(TestCommand):
         sys.exit(error_number)
 
 
-global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion']
+global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion>=0.2', 'yaml_configuration',
+                       'python-gtkmvc==1.99.1', 'gaphas>=0.7']
+
+tarball_url = "https://rmc-intra02.robotic.dlr.de/~stei_fn/tarballs/"
 
 setup(
     name='RAFCON',
@@ -67,14 +70,14 @@ setup(
         'mvc': ['glade/*.glade'],
     },
 
-    # Project uses reStructuredText, so ensure that the docutils get
-    # installed or upgraded on the target machine
-    # install_requires=['docutils>=0.3', 'numpy', 'OpenGL', 'twisted', 'gtkmvc', 'parser', 'gtk', 'astroid', 'json',
-    #                   'pyyaml'],
-
     setup_requires=['Sphinx>=1.4', 'Pygments>=2.0'] + global_requirements,
     tests_require=['pytest', 'pytest-catchlog'] + global_requirements,
     install_requires=global_requirements,
+
+    dependency_links=[
+        tarball_url + "common-python_yaml_configuration-0.0.5-5-gb8feb9f.tar.gz#egg=yaml_configuration-0.0.5",
+        tarball_url + "common-gtkmvc_dlr-e6663d8.tar.gz#egg=python-gtkmvc-1.99.1"
+    ],
 
     cmdclass={'test': PyTest}
 )
