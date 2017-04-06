@@ -55,7 +55,7 @@ def get_boundaries_of_elements_in_dict(models_dict):
     # Determine outer coordinates of elements in models_dict -> states, scoped variables and transitions are relevant
     right = 0.
     bottom = 0.
-    if models_dict['states']:
+    if 'states' in models_dict and models_dict['states']:
         left = models_dict['states'].items()[0][1].get_meta_data_editor(gaphas_editor)['rel_pos'][0]
     else:
         left = models_dict['scoped_variables'].items()[0][1].get_meta_data_editor(gaphas_editor)['inner_rel_pos'][0]
@@ -70,8 +70,8 @@ def get_boundaries_of_elements_in_dict(models_dict):
         return max_x, max_y
 
     def cal_min(min_x, min_y, rel_pos, size):
-        min_x = size[0] + rel_pos[0] if size[0] + rel_pos[0] < min_x else min_x
-        min_y = y_axis_mirror * rel_pos[1] + size[1] if y_axis_mirror * rel_pos[1] + size[1] < min_y else min_y
+        min_x = rel_pos[0] if rel_pos[0] < min_x else min_x
+        min_y = y_axis_mirror * rel_pos[1] if y_axis_mirror * rel_pos[1] < min_y else min_y
         return min_x, min_y
 
     parts = ['states', 'transitions', 'data_flows']
@@ -97,15 +97,22 @@ def get_boundaries_of_elements_in_dict(models_dict):
     return left, right, top, bottom
 
 
-def cal_frame_according_boundaries(left, right, top, bottom, parent_size, gaphas_editor):
+def cal_frame_according_boundaries(left, right, top, bottom, parent_size, gaphas_editor, group=True):
     y_axis_mirror = 1 if gaphas_editor else -1
 
     margin = min(parent_size) / 20.
     # Add margin and ensure that the upper left corner is within the state
-    rel_pos = max(left - margin, 0), y_axis_mirror * max(top - margin, 0)
-    # Add margin and ensure that the lower right corner is within the state
-    size = (min(right - left + 2 * margin, parent_size[0] - rel_pos[0]),
-            min(bottom - top + 2 * margin, parent_size[1] - y_axis_mirror * rel_pos[1]))
+    if group:
+        # frame of grouped state
+        rel_pos = max(left - margin, 0), y_axis_mirror * max(top - margin, 0)
+        # Add margin and ensure that the lower right corner is within the state
+        size = (min(right - left + 2 * margin, parent_size[0] - rel_pos[0]),
+                min(bottom - top + 2 * margin, parent_size[1] - y_axis_mirror * rel_pos[1]))
+    else:
+        # frame inside of state
+        # rel_pos = max(margin, 0), y_axis_mirror * max(margin, 0)
+        rel_pos = left, top
+        size = right - left, bottom - top
 
     return margin, rel_pos, size
 
