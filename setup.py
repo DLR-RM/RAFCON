@@ -80,8 +80,24 @@ setup(
         tarball_url + "common-gtkmvc_dlr-e6663d8.tar.gz#egg=python-gtkmvc-1.99.1"
     ],
 
-    cmdclass={'test': PyTest}
+    cmdclass={'test': PyTest},
+
+    keywords=('state machine', 'robotic', 'FSM', 'development', 'GUI', 'visual programming'),
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Environment :: X11 Applications',
+        'Framework :: Robot Framework',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Education',
+        'Intended Audience :: Manufacturing',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved',
+        'Natural Language :: English',
+        'Operating System :: Unix',
+        'Programming Language :: Python :: 2 :: Only',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Software Development',
+        'Topic :: Utilities'
+    ]
 )
-
-
-
