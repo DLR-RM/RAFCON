@@ -10,6 +10,11 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from pkg_resources import get_distribution, DistributionNotFound
+
 __all__ = ["gui", "core", "utils"]
 
-__version__ = "0.9.1"
+try:
+    __version__ = get_distribution("rafcon").version
+except DistributionNotFound:
+    __version__ = "unknown"

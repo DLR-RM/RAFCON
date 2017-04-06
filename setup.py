@@ -6,8 +6,6 @@ from os import path
 import os
 import sys
 
-from rafcon import __version__
-
 
 class PyTest(TestCommand):
     """Run py.test with RAFCON tests
@@ -43,7 +41,7 @@ tarball_url = "https://rmc-intra02.robotic.dlr.de/~stei_fn/tarballs/"
 
 setup(
     name='RAFCON',
-    version=__version__,
+    version='0.9.1',
     url='https://github.com/DLR-RM/RAFCON',
     license='EPL',
     author='Sebastian Brunner, Rico Belder, Franz Steinmetz',
