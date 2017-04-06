@@ -165,10 +165,19 @@ class HierarchyState(ContainerState):
             self.last_child.state_execution_status = StateExecutionStatus.INACTIVE
 
         if not self.backward_execution:  # only add history item if it is not a backward execution
+            # TODO:
+            # generate id
+            # pass id to call_history_item
+            # pass id to state on start => run_id = call_history_item_id
+            # pass different id for return_history_item
+            self.child_state.generate_run_id()
             self.execution_history.push_call_history_item(
                 self.child_state, CallType.EXECUTE, self, self.child_state.input_data)
+            self.child_state.start(self.execution_history, backward_execution=self.backward_execution,
+                               generate_run_id=False)
+        else:
+            self.child_state.start(self.execution_history, backward_execution=self.backward_execution)
 
-        self.child_state.start(self.execution_history, backward_execution=self.backward_execution)
         self.child_state.join()
 
         if self.preempted:
@@ -219,6 +228,9 @@ class HierarchyState(ContainerState):
         """
         self.add_state_execution_output_to_scoped_data(self.child_state.output_data, self.child_state)
         self.update_scoped_variables_with_output_dictionary(self.child_state.output_data, self.child_state)
+        #TODO:
+        # generate new id
+        # pass to history item
         self.execution_history.push_return_history_item(
             self.child_state, CallType.EXECUTE, self, self.child_state.output_data)
         # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
