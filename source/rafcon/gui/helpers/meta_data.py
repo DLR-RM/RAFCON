@@ -43,50 +43,56 @@ def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', c
         pass
 
 
-def get_boundaries_of_elements_in_dict(models_dict, parent_size):
+def get_boundaries_of_elements_in_dict(models_dict):
     """ Get boundaries of all handed models
     :param models_dict: dict of all handed models
-    :param parent_size: size of the parent so maximum relative positions of elements
     :return: tuple of left, right, top and bottom value
     """
 
     gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
     y_axis_mirror = 1 if gaphas_editor else -1
 
-    # Determine outer coordinates of elements that are to be grouped
-    # Use borders of the parent state as initial coordinates
-    left = parent_size[0]
-    right = 0.0
-    top = parent_size[1]
-    bottom = 0.0
+    # Determine outer coordinates of elements in models_dict -> states, scoped variables and transitions are relevant
+    right = 0.
+    bottom = 0.
+    if models_dict['states']:
+        left = models_dict['states'].items()[0][1].get_meta_data_editor(gaphas_editor)['rel_pos'][0]
+    else:
+        left = models_dict['scoped_variables'].items()[0][1].get_meta_data_editor(gaphas_editor)['inner_rel_pos'][0]
+    if models_dict['states']:
+        top = y_axis_mirror * models_dict['states'].items()[0][1].get_meta_data_editor(gaphas_editor)['rel_pos'][1]
+    else:
+        top = y_axis_mirror * models_dict['scoped_variables'].items()[0][1].get_meta_data_editor(gaphas_editor)['inner_rel_pos'][1]
 
-    # Update outer coordinates regarding all states
-    for child_state_m in models_dict['states'].itervalues():
-        rel_pos = child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
-        size = child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
-        left = min(rel_pos[0], left)
-        right = max(rel_pos[0] + size[0], right)
-        top = min(y_axis_mirror * rel_pos[1], top)
-        bottom = max(y_axis_mirror * rel_pos[1] + size[1], bottom)
+    def cal_max(max_x, max_y, rel_pos, size):
+        max_x = size[0] + rel_pos[0] if size[0] + rel_pos[0] > max_x else max_x
+        max_y = y_axis_mirror * rel_pos[1] + size[1] if y_axis_mirror * rel_pos[1] + size[1] > max_y else max_y
+        return max_x, max_y
 
-    # Update outer coordinates regarding all scoped variables
+    def cal_min(min_x, min_y, rel_pos, size):
+        min_x = size[0] + rel_pos[0] if size[0] + rel_pos[0] < min_x else min_x
+        min_y = y_axis_mirror * rel_pos[1] + size[1] if y_axis_mirror * rel_pos[1] + size[1] < min_y else min_y
+        return min_x, min_y
+
+    parts = ['states', 'transitions', 'data_flows']
     if not gaphas_editor:
-        for scoped_variable_m in models_dict['scoped_variables'].itervalues():
-            rel_pos = scoped_variable_m.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']
-            left = min(rel_pos[0], left)
-            right = max(rel_pos[0], right)
-            top = min(y_axis_mirror * rel_pos[1], top)
-            bottom = max(y_axis_mirror * rel_pos[1], bottom)
+        parts.append('scoped_variables')
+    for key in parts:
+        elems_dict = models_dict[key]
+        rel_positions = []
+        for model in elems_dict.itervalues():
+            _size = (0., 0.)
+            if key == 'states':
+                rel_positions = [model.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']]
+                _size = model.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
+            elif key == 'scoped_variables':
+                rel_positions = [model.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']]
+            elif key in ['transitions', 'data_flows']:
+                rel_positions = model.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
 
-    # Update outer coordinates regarding all connections (waypoints)
-    connection_models = models_dict['transitions'].values() + models_dict['data_flows'].values()
-    for connection_m in connection_models:
-        waypoints = connection_m.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
-        for waypoint in waypoints:
-            left = min(waypoint[0], left)
-            right = max(waypoint[0], right)
-            top = min(y_axis_mirror * waypoint[1], top)
-            bottom = max(y_axis_mirror * waypoint[1], bottom)
+            for rel_position in rel_positions:
+                right, bottom = cal_max(right, bottom, rel_position, _size)
+                left, top = cal_min(left, top, rel_position, _size)
 
     return left, right, top, bottom
 
@@ -156,10 +162,9 @@ def scale_meta_data_according_states(models_dict):
     """
     gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
 
+    left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)
+
     parent_size = models_dict['state'].parent.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
-
-    left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict, parent_size=parent_size)
-
     _, rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, parent_size, gaphas_editor)
 
     # Set size and position of new container state
