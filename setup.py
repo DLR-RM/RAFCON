@@ -68,6 +68,15 @@ setup(
         tarball_url + "common-gtkmvc_dlr-e6663d8.tar.gz#egg=python-gtkmvc-1.99.1"
     ],
 
+    entry_points={
+        'console_scripts': [
+            'rafcon_start = rafcon.core.start:main'
+        ],
+        'gui_scripts': [
+            'rafcon_start_gui = rafcon.gui.start:main'
+        ]
+    },
+
     cmdclass={'test': PyTest},
 
     keywords=('state machine', 'robotic', 'FSM', 'development', 'GUI', 'visual programming'),
