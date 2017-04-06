@@ -6,17 +6,7 @@ from os import path
 import os
 import sys
 
-
-def read_version_from_pt_file():
-    pt_file_name = 'rafcon.pt'
-    pt_file_path = path.join(path.dirname(path.realpath(__file__)), pt_file_name)
-    with open(pt_file_path) as pt_file:
-        for line in pt_file:
-            if line.strip().startswith('VERSION'):
-                parts = line.split('=')
-                version = parts[1].strip()
-                return version
-    return 0
+from rafcon import __version__
 
 
 class PyTest(TestCommand):
@@ -53,7 +43,7 @@ tarball_url = "https://rmc-intra02.robotic.dlr.de/~stei_fn/tarballs/"
 
 setup(
     name='RAFCON',
-    version=read_version_from_pt_file(),
+    version=__version__,
     url='https://github.com/DLR-RM/RAFCON',
     license='EPL',
     author='Sebastian Brunner, Rico Belder, Franz Steinmetz',
