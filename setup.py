@@ -99,5 +99,7 @@ setup(
         'Topic :: Scientific/Engineering',
         'Topic :: Software Development',
         'Topic :: Utilities'
-    ]
+    ],
+
+    zip_safe=False
 )
