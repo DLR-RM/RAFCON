@@ -64,7 +64,7 @@ class TransitionModel(StateElementModel):
     def __copy__(self):
         transition = copy(self.transition)
         transition_m = self.__class__(transition, parent=None, meta=None)
-        transition.meta = deepcopy(self.meta)
+        transition_m.meta = deepcopy(self.meta)
         return transition_m
 
     def __deepcopy__(self, memo=None, _nil=[]):
