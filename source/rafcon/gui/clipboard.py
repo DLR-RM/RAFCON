@@ -75,7 +75,21 @@ class Clipboard(Observable):
         self.do_cut_removal()
 
     def prepare_new_copy(self):
+        print "\n", '#'*50,  " start prepare copy \n"
+        from rafcon.gui.config import global_gui_config
+        gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+        for model in self.model_copies['states']:
+            print model.get_meta_data_editor(for_gaphas=gaphas_editor), model.core_element
+        for model in self.model_copies['transitions']:
+            print model.get_meta_data_editor(for_gaphas=gaphas_editor), model.core_element
         self.model_copies = deepcopy(self.model_copies)
+        print "finished prepare copy \n"
+        for model in self.model_copies['states']:
+            print model.get_meta_data_editor(for_gaphas=gaphas_editor), model.core_element
+        for model in self.model_copies['transitions']:
+            print model.get_meta_data_editor(for_gaphas=gaphas_editor), model.core_element
+        print '#'*50, "\n"
+
 
     def paste(self, target_state_m, cursor_position=None, limited=None, convert=False):
         """Paste objects to target state
@@ -106,6 +120,8 @@ class Clipboard(Observable):
         if isinstance(target_state_m.state, ContainerState):
             tolerated_lists = self._container_state_unlimited
         else:
+            if element_m_copy_lists['states']:
+                logger.info("The clipboard stack holds states that are ignored if paste is applied on a ExecutionState.")
             tolerated_lists = self._execution_state_unlimited
         if limited and all([list_name in tolerated_lists for list_name in limited]):
             if len(limited) == 1 and limited[0] in ['input_data_ports', 'output_data_ports', 'scoped_variables'] and convert:
@@ -138,6 +154,20 @@ class Clipboard(Observable):
         for list_name in lists_to_insert:
             insert_dict[list_name] = insert_elements_from_model_copies_list(element_m_copy_lists[list_name],
                                                                             list_name[:-1])
+        import rafcon.gui.helpers.meta_data as gui_helpers_meta_data
+        models_dict = {'state': target_state_m}
+        for key, elems_list in insert_dict.iteritems():
+            print key, elems_list
+            models_dict[key] = {elem[1].core_element.core_element_id: elem[1] for elem in elems_list}
+        print models_dict.keys()
+        gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
+        for key, elems_list in insert_dict.iteritems():
+            print key, elems_list
+            for elem in elems_list:
+                elem[0].meta = elem[1].meta
+                from rafcon.gui.config import global_gui_config
+                gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+                print elem[1].get_meta_data_editor(for_gaphas=gaphas_editor), elem
         target_state_m.meta_signal.emit(MetaSignalMsg("paste", "all", True))
         return insert_dict
 
@@ -387,9 +417,14 @@ class Clipboard(Observable):
         # store all lists of selection
         for list_name in self._container_state_unlimited:
             self.selected_models[list_name] = getattr(selection, list_name)
+            for model in self.selected_models['transitions']:
+                print model.meta, model.core_element
 
         # copy all selected elements
+        print "#### DEEPCOPY #####"
         self.model_copies = deepcopy(self.selected_models)
+        for model in self.model_copies['transitions']:
+            print model.meta, model.core_element
         # for list_name in self._container_state_unlimited:
         #     print list_name, ": ", self.selected_models[list_name]
 

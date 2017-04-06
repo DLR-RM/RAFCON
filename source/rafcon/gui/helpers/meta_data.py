@@ -14,6 +14,14 @@ def subtract_pos(pos1, pos2):
     return pos1[0] - pos2[0], pos1[1] - pos2[1]
 
 
+def mult_two_vectors(vec1, vec2):
+    return tuple([vec1[i] * vec2[i] for i in range(len(vec2))])
+
+
+def divide_two_vectors(vec1, vec2):
+    return tuple([vec1[i] / vec2[i] for i in range(len(vec2))])
+
+
 def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', combined_action=False):
 
     try:
@@ -85,6 +93,7 @@ def get_boundaries_of_elements_in_dict(models_dict):
             if key == 'states':
                 rel_positions = [model.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']]
                 _size = model.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
+                # print "states", rel_positions, _size
             elif key == 'scoped_variables':
                 rel_positions = [model.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']]
             elif key in ['transitions', 'data_flows']:
@@ -118,10 +127,13 @@ def cal_frame_according_boundaries(left, right, top, bottom, parent_size, gaphas
 
 
 def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor):
+    print "\n", "#"*30, "offset models", pos_offset, "#"*30
     # Update relative position of states within the container in order to maintain their absolute position
     for child_state_m in models_dict['states'].itervalues():
         old_rel_pos = child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
+        print "old_rel_pos", old_rel_pos, child_state_m
         child_state_m.set_meta_data_editor('rel_pos', add_pos(old_rel_pos, pos_offset), from_gaphas=gaphas_editor)
+        print "new_rel_pos", child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor), child_state_m
 
     # Do the same for scoped variable
     if not gaphas_editor:
@@ -137,6 +149,54 @@ def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor)
         for waypoint in old_waypoints:
             new_waypoints.append(add_pos(waypoint, pos_offset))
         connection_m.set_meta_data_editor('waypoints', new_waypoints, from_gaphas=gaphas_editor)
+    print "END", "#"*30, "offset models", pos_offset, "#"*30, "\n"
+
+
+def resize_state_meta(state_m, factor, gaphas_editor):
+    # TODO substitute this with method in models that also include ports, outcomes, child states & inner connections
+    # print "START RESIZE OF STATE", state_m.get_meta_data_editor(for_gaphas=gaphas_editor), state_m
+    old_size = state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
+    # print old_size, type(old_size)
+    state_m.set_meta_data_editor('size', mult_two_vectors(factor, old_size), from_gaphas=gaphas_editor)
+    # print "new_size", state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
+    if gaphas_editor:
+        old_rel_pos = state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['income']['rel_pos']
+        state_m.set_meta_data_editor('income.rel_pos', mult_two_vectors(factor, old_rel_pos), from_gaphas=gaphas_editor)
+        old_rel_pos = state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['name']['rel_pos']
+        state_m.set_meta_data_editor('name.rel_pos', mult_two_vectors(factor, old_rel_pos), from_gaphas=gaphas_editor)
+        old_size = state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['name']['size']
+        state_m.set_meta_data_editor('name.size', mult_two_vectors(factor, old_size), from_gaphas=gaphas_editor)
+
+
+def resize_of_all_models_in_dict(models_dict, factor, gaphas_editor):
+    print "\n", "#"*30, "resize models", factor, "#"*30,
+
+    # Update relative position of states within the container in order to maintain their absolute position
+    for child_state_m in models_dict['states'].itervalues():
+        old_rel_pos = child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
+        print "old_rel_pos state", old_rel_pos, child_state_m.core_element
+        child_state_m.set_meta_data_editor('rel_pos', mult_two_vectors(factor, old_rel_pos), from_gaphas=gaphas_editor)
+        print "new_rel_pos state", child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor), child_state_m.core_element
+        resize_state_meta(child_state_m, factor, gaphas_editor)
+        print "re-sized state", child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor), child_state_m.core_element
+
+    # Do the same for scoped variable
+    if not gaphas_editor:
+        for scoped_variable_m in models_dict['scoped_variables'].itervalues():
+            old_rel_pos = scoped_variable_m.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']
+            scoped_variable_m.set_meta_data_editor('inner_rel_pos', mult_two_vectors(factor, old_rel_pos), gaphas_editor)
+
+    # Do the same for all connections (transitions and data flows)
+    connection_models = models_dict['transitions'].values() + models_dict['data_flows'].values()
+    for connection_m in connection_models:
+        print "old_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element
+        old_waypoints = connection_m.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
+        new_waypoints = []
+        for waypoint in old_waypoints:
+            new_waypoints.append(mult_two_vectors(factor, waypoint))
+        connection_m.set_meta_data_editor('waypoints', new_waypoints, from_gaphas=gaphas_editor)
+        print "new_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element
+    print "END", "#"*30, "resize models", factor, "#"*30, "\n"
 
 
 def offset_rel_pos_of_models_meta_data_according_parent_state(models_dict):
@@ -177,7 +237,119 @@ def scale_meta_data_according_states(models_dict):
     # Set size and position of new container state
     models_dict['state'].set_meta_data_editor('rel_pos', rel_pos, from_gaphas=gaphas_editor)
     models_dict['state'].set_meta_data_editor('size', size, from_gaphas=gaphas_editor)
-    offset = (-rel_pos[0], -rel_pos[1])
+    offset = mult_two_vectors((-1., -1.), rel_pos)
     offset_rel_pos_of_all_models_in_dict(models_dict, offset, gaphas_editor)
 
     return True
+
+
+def scale_meta_data_according_state(models_dict, rel_pos=None):
+    # TODO Documentation needed....
+    """ Define a
+    """
+
+    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    y_axis_mirror = 1. if gaphas_editor else -1.
+
+    if 'states' in models_dict or 'scoped_variables' in models_dict:
+        left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)
+        parent_size = models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['size']
+        margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, (), gaphas_editor, False)
+        automatic_mode = True if rel_pos is None else False
+        rel_pos = (margin, margin) if rel_pos is None else rel_pos
+        assert parent_size[0] > rel_pos[0]
+        assert parent_size[1] > rel_pos[1]
+        print "edges:", left, right, top, bottom
+        print "margin:", margin, "rel_pos:", rel_pos, "old_rel_pos", old_rel_pos, "size:", size
+
+        parent_width, parent_height = parent_size
+
+        boundary_width, boundary_height = size
+        print "parent width:   {0}, parent_height:   {1}".format(parent_width, parent_height)
+        print "boundary width: {0}, boundary_height: {1}".format(boundary_width, boundary_height)
+
+        # no site scale
+        if parent_width - rel_pos[0] > boundary_width and parent_height - rel_pos[1] > boundary_height:
+            if automatic_mode:
+                resize_factor = 1.
+                boundary_width_in_parent = boundary_width*resize_factor
+                print boundary_width, resize_factor, boundary_width*resize_factor, boundary_height*resize_factor + margin*2, parent_height
+                print "left over width: ", parent_width - boundary_width_in_parent - rel_pos[0] - margin
+                width_pos_offset_to_middle = (parent_width - boundary_width_in_parent - rel_pos[0] - margin)/2.
+                rel_pos = add_pos(rel_pos, (width_pos_offset_to_middle, 0.))
+                boundary_height_in_parent = boundary_height*resize_factor
+                height_pos_offset_to_middle = (parent_height - boundary_height_in_parent - rel_pos[1] - margin)/2.
+                rel_pos = add_pos(rel_pos, (0., height_pos_offset_to_middle))
+            offset = subtract_pos((0., 0.), subtract_pos(old_rel_pos, rel_pos))
+            offset_rel_pos_of_all_models_in_dict(models_dict, offset, gaphas_editor)
+        # smallest site scale
+        else:
+            if (parent_height - rel_pos[1] - margin)/boundary_height < \
+                    (parent_width - rel_pos[0] - margin)/boundary_width:
+                # print "#"*20, 1, "#"*20, rel_pos
+                resize_factor = (parent_height - rel_pos[1] - margin)/boundary_height
+                boundary_width_in_parent = boundary_width*resize_factor
+                print boundary_width, resize_factor, boundary_width*resize_factor, boundary_height*resize_factor + margin*2, parent_height
+                print "left over width: ", parent_width - boundary_width_in_parent - rel_pos[0] - margin
+                width_pos_offset_to_middle = (parent_width - boundary_width_in_parent - rel_pos[0] - margin)/2.
+                rel_pos = add_pos(rel_pos, (width_pos_offset_to_middle, 0.))
+                print resize_factor, rel_pos
+            else:
+                # print "#"*20, 2, "#"*20, rel_pos
+                resize_factor = (parent_width - rel_pos[0] - margin)/boundary_width
+                boundary_height_in_parent = boundary_height*resize_factor
+                height_pos_offset_to_middle = (parent_height - boundary_height_in_parent - rel_pos[1] - margin)/2.
+                rel_pos = add_pos(rel_pos, (0., height_pos_offset_to_middle))
+                # print resize_factor, rel_pos
+            frame = {'rel_pos': rel_pos, 'size': mult_two_vectors((resize_factor, resize_factor), size)}
+            print models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos'], \
+                parent_size, models_dict['state'].parent.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
+            print "frame", frame, resize_factor
+            # rel_pos = mult_two_vectors((1, -1), frame['rel_pos'])
+            offset = subtract_pos((0., 0.), mult_two_vectors((1., y_axis_mirror), old_rel_pos))
+            offset_rel_pos_of_all_models_in_dict(models_dict, offset, gaphas_editor)
+
+            resize_of_all_models_in_dict(models_dict, (resize_factor, resize_factor), gaphas_editor)
+
+            offset_rel_pos_of_all_models_in_dict(models_dict, mult_two_vectors((1., y_axis_mirror), frame['rel_pos']), gaphas_editor)
+            # scale_meta_data_according_frame(models_dict, frame)
+
+
+def scale_meta_data_according_frame(models_dict, frame):
+    # TODO Documentation needed....
+    """
+
+    :param models_dict: dictionary that hold lists of meta data with state attribute consistent keys
+    :return:
+    """
+    # TODO check if this is working
+    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    y_axis_mirror = 1. if gaphas_editor else -1.
+
+    left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)
+    margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, (), gaphas_editor, False)
+    old_frame = {'rel_pos': old_rel_pos, 'size': size}
+
+    # cal offset and resize factor in between
+    offset = subtract_pos((0., 0.), old_frame['rel_pos'])
+    resize_factor = divide_two_vectors(frame['size'], old_frame['size'])
+
+    offset_rel_pos_of_all_models_in_dict(models_dict, offset, gaphas_editor)
+    resize_of_all_models_in_dict(models_dict, (resize_factor, resize_factor), gaphas_editor)
+    offset_rel_pos_of_all_models_in_dict(models_dict, mult_two_vectors((1., y_axis_mirror), frame['rel_pos']), gaphas_editor)
+    return True
+
+# Something to remember maybe
+#
+# The function is used at the moment by the ungroup method of the ContainerStateModel, only.
+# It is supposed to be use for a meta data set of a state not the StateModel it self to scale (reduce) the size of
+# scoped_variables, states and transition and data_flows. New- and old-state models, or new- and old-state element
+# models can be different. So the models the data is taken from can be different then the models the data is written
+# on it depends how the dictionary was filled before.
+#
+# The method needs some generalisation to create methods to easily scale meta data according new parents or views
+# (e.g. to show inner elements of a library state).
+# It also maybe should scale it if the size has changed according to the minimal extension (x or y) of the handed
+# size. Also it is of interest to have extension flag if the scaling should scale according the proportion
+# of a parent state (the handed state) or should keep the previous element x-y-ratios.
+# To keep the previous meta data proportion would be different then in the graphical editors.
