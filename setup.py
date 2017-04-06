@@ -54,11 +54,12 @@ tarball_url = "https://rmc-intra02.robotic.dlr.de/~stei_fn/tarballs/"
 setup(
     name='RAFCON',
     version=read_version_from_pt_file(),
-    url='https://rmintra01.robotic.dlr.de/wiki/RAFCON',
-    license='',
+    url='https://github.com/DLR-RM/RAFCON',
+    license='EPL',
     author='Sebastian Brunner, Rico Belder, Franz Steinmetz',
     author_email='sebastian.brunner@dlr.de, rico.belder@dlr.de, franz.steinmetz@dlr.de',
-    description='RMC awesome flow control -- This is a package to program and visualize complex robot tasks.',
+    description='Develop your robotic tasks with hierarchical state machines using an intuitive graphical user '
+                'interface',
 
     packages=find_packages('source'),  # include all packages under src
     package_dir={'': 'source'},   # tell distutils packages are under src
