@@ -225,10 +225,24 @@ class ExecutionHistoryTreeController(ExtendedController):
         for execution_number, execution_history in enumerate(active_sm.execution_histories):
             if len(execution_history) > 0:
                 first_history_item = execution_history[0]
-                tree_item = self.history_tree_store.insert_after(
-                    None, None, (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
-                                 first_history_item))
-                self.insert_execution_history(tree_item, execution_history, is_root=True)
+                if first_history_item.item_type == 'StateMachineStartItem':
+                    if len(execution_history) > 1:
+                        first_history_item = execution_history[1]
+                        tree_item = self.history_tree_store.insert_after(
+                            None,
+                            None,
+                            (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
+                             first_history_item))
+                        self.insert_execution_history(tree_item, execution_history[1:], is_root=True)
+                    else:
+                        pass # there was only the Start item in the history
+                else:
+                    tree_item = self.history_tree_store.insert_after(
+                        None,
+                        None,
+                        (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
+                         first_history_item))
+                    self.insert_execution_history(tree_item, execution_history, is_root=True)
 
     def insert_history_item(self, parent, history_item, description, dummy=False):
         """Enters a single history item into the tree store

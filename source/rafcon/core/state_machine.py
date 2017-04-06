@@ -29,11 +29,12 @@ from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 
 import rafcon
-from rafcon.core.execution.execution_history import ExecutionHistory
-from rafcon.core.id_generator import generate_state_machine_id
+from rafcon.core.execution.execution_history import ExecutionHistory, ExecutionHistoryStorage
+from rafcon.core.id_generator import generate_state_machine_id, run_id_generator
 from rafcon.utils import log
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.storage_utils import get_current_time_string
+import time
 
 logger = log.get_logger(__name__)
 
@@ -128,11 +129,13 @@ class StateMachine(Observable, JSONObject, Hashable):
         self._root_state.input_data = self._root_state.get_default_input_values_for_state(self._root_state)
         self._root_state.output_data = self._root_state.create_output_dictionary_for_state(self._root_state)
         new_execution_history = self._add_new_execution_history()
+        new_execution_history.push_statemachine_start_item(self, run_id_generator())
         self._root_state.start(new_execution_history)
 
     def join(self):
         """Wait for root state to finish execution"""
         self._root_state.join()
+        # self._execution_histories[-1].execution_history_storage.close()
         from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
@@ -198,6 +201,16 @@ class StateMachine(Observable, JSONObject, Hashable):
     @Observable.observed
     def _add_new_execution_history(self):
         new_execution_history = ExecutionHistory()
+        if(len(self._execution_histories) == 0):
+            execution_history_store = ExecutionHistoryStorage('/tmp/rafcon_execution_log-%s-%s.shelve' % (self.state_machine_id, time.time()))
+            new_execution_history.set_execution_history_storage(execution_history_store)
+            pass
+        else:
+
+            new_execution_history.set_execution_history_storage(
+                self._execution_histories[-1].execution_history_storage)
+            new_execution_history.execution_history_storage.flush()
+
         self._execution_histories.append(new_execution_history)
         return new_execution_history
 
