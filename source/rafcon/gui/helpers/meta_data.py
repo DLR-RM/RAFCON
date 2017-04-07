@@ -1,5 +1,6 @@
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.config import global_gui_config
+from rafcon.gui.utils import constants
 from rafcon.utils import log
 
 
@@ -109,7 +110,7 @@ def get_boundaries_of_elements_in_dict(models_dict):
 def cal_frame_according_boundaries(left, right, top, bottom, parent_size, gaphas_editor, group=True):
     y_axis_mirror = 1 if gaphas_editor else -1
 
-    margin = min(parent_size) / 20.
+    margin = min(parent_size[0], parent_size[1]) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
     # Add margin and ensure that the upper left corner is within the state
     if group:
         # frame of grouped state
@@ -254,7 +255,8 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
     if 'states' in models_dict or 'scoped_variables' in models_dict:
         left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)
         parent_size = models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['size']
-        margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, (), gaphas_editor, False)
+        margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, parent_size,
+                                                                   gaphas_editor, False)
         automatic_mode = True if rel_pos is None else False
         rel_pos = (margin, margin) if rel_pos is None else rel_pos
         assert parent_size[0] > rel_pos[0]
@@ -327,7 +329,7 @@ def scale_meta_data_according_frame(models_dict, frame):
     y_axis_mirror = 1. if gaphas_editor else -1.
 
     left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)
-    margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, (), gaphas_editor, False)
+    margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, (0., 0.), gaphas_editor, False)
     old_frame = {'rel_pos': old_rel_pos, 'size': size}
 
     # cal offset and resize factor in between
