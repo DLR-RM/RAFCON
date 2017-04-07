@@ -348,11 +348,11 @@ class GraphicalEditorController(ExtendedController):
                 # assert not hasattr(self.state_action_signal.__func__, "affected_models")
                 # assert not hasattr(self.state_action_signal.__func__, "target")
                 self.state_action_signal.__func__.affected_models = info['arg'].affected_models
-                self.state_action_signal.__func__.target = info['arg'].target
+                self.state_action_signal.__func__.target = info['arg'].action_parent_m
             else:
                 # self._change_state_type = False
                 # print "GSME adapt to change"
-                self.adapt_complex_action(self.state_action_signal.__func__.target, info['arg'].target)
+                self.adapt_complex_action(self.state_action_signal.__func__.target, info['arg'].action_parent_m)
                 # del self.state_action_signal.__func__.affected_models
                 # del self.state_action_signal.__func__.target
 
