@@ -254,7 +254,7 @@ def change_state_type(state_m, target_class):
     if is_root_state:
 
         if new_state is None:
-            logger.exception("Root state type change failed {0}".format(e))
+            logger.exception("Root state type change failed")
         else:
             logger.info("start after TO STATE TYPE CHANGE")
             # Create a new state model based on the new state and apply the extracted child models
@@ -277,7 +277,7 @@ def change_state_type(state_m, target_class):
     else:
         # state_m = action_root_state_m.states[state_id]
         if new_state is None:
-            logger.exception("Container state type change failed -> {0}".format(e))
+            logger.exception("Container state type change failed")
         else:
             # Create a new state model based on the new state and apply the extracted child models
             child_models = action_parent_m.change_state_type.__func__.child_models
@@ -319,7 +319,7 @@ def change_state_type_with_error_handling_and_logger_messages(state_m, target_cl
             new_state_m = change_state_type(state_m, target_class)
             state_machine_m.selection.set([new_state_m, ])
         except Exception as e:
-            logger.error("An error occurred while changing the state type: {0}".format(e))
+            logger.exception("An error occurred while changing the state type")
     else:
         logger.info("State type of State '{0}' will not change because target_class: {1} == state_class: {2}"
                     "".format(state_m.state.name, type(state_m.state).__name__, target_class.__name__))
@@ -358,7 +358,7 @@ def substitute_state(target_state_m, state_to_insert):
 
     # AFTER MODEL
     if new_state is None:
-        logger.exception("State substitution failed -> {0}".format(e))
+        logger.exception("State substitution failed")
     else:
         state_id = new_state.state_id
         tmp_meta_data = action_parent_m.substitute_state.__func__.tmp_meta_data_storage
@@ -520,7 +520,7 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
 
     # AFTER MODEL
     if new_state is None:
-        logger.exception("State ungroup failed -> {0}".format(e))
+        logger.exception("State ungroup failed")
     else:
         tmp_models_dict = action_parent_m.group_states.__func__.tmp_models_storage
         grouped_state_m = action_parent_m.states[new_state.state_id]
@@ -598,7 +598,7 @@ def ungroup_state(state_m):
 
     # AFTER MODEL
     if new_state is None:
-        logger.exception("State ungroup failed {0}".format(e))
+        logger.exception("State ungroup failed")
     else:
         tmp_models_dict = action_parent_m.ungroup_state.__func__.tmp_models_storage
         # TODO do implement Gaphas support meta data scaling
