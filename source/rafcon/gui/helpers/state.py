@@ -239,23 +239,20 @@ def change_state_type(state_m, target_class):
         action_parent_m.change_state_type.__func__.affected_models = affected_models
 
     # CORE
-    new_state = new_state_m = e = None
+    new_state = new_state_m = None
     try:
         if is_root_state:
             new_state = state_machine_m.state_machine.change_root_state_type(target_class)
         else:
             new_state = old_state_m.parent.state.change_state_type(old_state, target_class)
-    except Exception as e:
-        pass
+    except Exception:
+        logger.exception("Root state type change failed" if is_root_state else "Container state type change failed")
 
     # AFTER MODEL
     # After the state has been changed in the core, we create a new model for it with all information extracted
     # from the old state model
     if is_root_state:
-
-        if new_state is None:
-            logger.exception("Root state type change failed")
-        else:
+        if new_state:
             logger.info("start after TO STATE TYPE CHANGE")
             # Create a new state model based on the new state and apply the extracted child models
             child_models = state_machine_m.change_root_state_type.__func__.child_models
@@ -274,11 +271,10 @@ def change_state_type(state_m, target_class):
                                                            affected_models=[new_state_m, ],
                                                            after=True))
 
+        del state_machine_m.change_root_state_type.__func__.child_models
+
     else:
-        # state_m = action_root_state_m.states[state_id]
-        if new_state is None:
-            logger.exception("Container state type change failed")
-        else:
+        if new_state:
             # Create a new state model based on the new state and apply the extracted child models
             child_models = action_parent_m.change_state_type.__func__.child_models
             new_state_m = gui_helper_state_machine.create_state_model_for_state(new_state, child_models)
@@ -298,7 +294,7 @@ def change_state_type(state_m, target_class):
 
             # action_parent_m.meta_signal.emit(MetaSignalMsg("state_type_change", "all", True))
 
-        # del action_parent_m.change_state_type.__func__.child_models
+        del action_parent_m.change_state_type.__func__.child_models
         del action_parent_m.change_state_type.__func__.affected_models
 
     if is_root_state:
@@ -349,17 +345,16 @@ def substitute_state(target_state_m, state_to_insert):
     action_parent_m.substitute_state.__func__.old_state_m = old_state_m
 
     # CORE
-    new_state = e = None
+    new_state = None
     try:
         new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
         assert new_state is state_to_insert
-    except Exception as e:
+    except Exception:
+        logger.exception("State substitution failed")
         pass
 
-    # AFTER MODEL
-    if new_state is None:
-        logger.exception("State substitution failed")
-    else:
+    if new_state:
+        # AFTER MODEL
         state_id = new_state.state_id
         tmp_meta_data = action_parent_m.substitute_state.__func__.tmp_meta_data_storage
         old_state_m = action_parent_m.substitute_state.__func__.old_state_m
@@ -515,13 +510,11 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         assert isinstance(action_parent_m.state, ContainerState)
         new_state_id = action_parent_m.state.group_states(state_ids, sv_ids)
         new_state = action_parent_m.state.states[new_state_id]
-    except Exception as e:
-        pass
+    except Exception:
+        logger.exception("State ungroup failed")
 
     # AFTER MODEL
-    if new_state is None:
-        logger.exception("State ungroup failed")
-    else:
+    if new_state:
         tmp_models_dict = action_parent_m.group_states.__func__.tmp_models_storage
         grouped_state_m = action_parent_m.states[new_state.state_id]
         tmp_models_dict['state'] = grouped_state_m
@@ -589,17 +582,14 @@ def ungroup_state(state_m):
     action_parent_m.group_states.__func__.affected_models = affected_models
 
     # CORE
-    new_state = None
+    e = None
     try:
-        new_state_id = state_m.parent.state.ungroup_state(state_m.state.state_id)
-        new_state = state_m.state.states[new_state_id]
+        state_m.parent.state.ungroup_state(state_m.state.state_id)
     except Exception as e:
-        pass
+        logger.exception("State ungroup failed")
 
     # AFTER MODEL
-    if new_state is None:
-        logger.exception("State ungroup failed")
-    else:
+    if e is None:
         tmp_models_dict = action_parent_m.ungroup_state.__func__.tmp_models_storage
         # TODO do implement Gaphas support meta data scaling
         if not gui_helper_state_machine.scale_meta_data_according_state(tmp_models_dict):
@@ -631,8 +621,8 @@ def ungroup_state(state_m):
         for elemets_dict in tmp_models_dict.itervalues():
             affected_models.extend(elemets_dict.itervalues())
         action_parent_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
-                                                         action_parent_m=action_parent_m,
-                                                         affected_models=affected_models, after=True))
+                                                           action_parent_m=action_parent_m,
+                                                           affected_models=affected_models, after=True))
 
     del action_parent_m.ungroup_state.__func__.tmp_models_storage
     del action_parent_m.group_states.__func__.affected_models
