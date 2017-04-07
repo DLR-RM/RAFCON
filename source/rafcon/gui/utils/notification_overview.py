@@ -237,7 +237,6 @@ class NotificationOverview(dict):
                                                                                                   level,
                                                                                                   overview))
             elif isinstance(info['arg'], ActionSignalMsg):
-                print "\n\nSSS\n", info
                 overview['instance'].append(info['arg'].action_parent_m.core_element)
                 overview['method_name'].append(info['arg'].action)
                 overview['signal'].append(info['arg'])

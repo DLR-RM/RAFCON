@@ -246,8 +246,8 @@ class ModificationHistoryTreeController(ExtendedController):
                     parameters.append(str(action.before_overview['signal'][-1].kwargs))
                 else:
                     logger.warning("no parameters defined for signal: {0}".format(action.before_overview['signal']))
-                    for index, signal in enumerate(action.before_overview['signal']):
-                        print "\n", index, signal
+                    # for index, signal in enumerate(action.before_overview['signal']):
+                    #     print "\n", index, signal
             else:
                 for index, value in enumerate(action.before_overview['args'][-1]):
                     if not index == 0:

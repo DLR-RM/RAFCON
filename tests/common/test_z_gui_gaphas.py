@@ -59,8 +59,9 @@ def trigger_copy_delete_bug_signals(*args):
     logger.info("States of root state: {}".format(root_state_m.states.values()))
     new_state_m = root_state_m.states.values()[0]
     call_gui_callback(sm_m.selection.set, new_state_m)
-    call_gui_callback(root_state_m.state.change_state_type, new_state_m.state, HierarchyState)
-    logger.info("States of root state after type change: {}".format(root_state_m.states.values()))
+    import rafcon.gui.helpers.state as gui_helpers_state
+    call_gui_callback(gui_helpers_state.change_state_type, new_state_m, HierarchyState)
+    logger.info("States of root state after type change: {}".format([str(state_m.state) for state_m in root_state_m.states.values()]))
     new_hstate_m = root_state_m.states.values()[0]
     call_gui_callback(sm_m.selection.set, new_hstate_m)
     call_gui_callback(menubar_ctrl.on_add_state_activate, None)
