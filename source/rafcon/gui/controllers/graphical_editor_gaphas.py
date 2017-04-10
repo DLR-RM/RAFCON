@@ -315,6 +315,8 @@ class GraphicalEditorController(ExtendedController):
         notification = meta_signal_message.notification
         if not notification:    # For changes applied to the root state, there are always two notifications
             return              # Ignore the one with less information
+        if self._change_state_type:
+            return
         model = notification.model
         view = self.canvas.get_view_for_model(model)
         if isinstance(view, StateView):
@@ -340,7 +342,7 @@ class GraphicalEditorController(ExtendedController):
         if 'arg' in info and info['arg'].action in ['state_type_change', 'group_states', 'ungroup_state',
                                                     'substitute_state', 'paste']:
             if info['arg'].after is False:
-                # self._change_state_type = True
+                self._change_state_type = True
                 if info['arg'].affected_models:
                     state_model_to_be_changed = info['arg'].affected_models[0]
                     self.observe_model(state_model_to_be_changed)
@@ -350,7 +352,7 @@ class GraphicalEditorController(ExtendedController):
                 self.state_action_signal.__func__.affected_models = info['arg'].affected_models
                 self.state_action_signal.__func__.target = info['arg'].action_parent_m
             else:
-                # self._change_state_type = False
+                self._change_state_type = False
                 # print "GSME adapt to change"
                 self.adapt_complex_action(self.state_action_signal.__func__.target, info['arg'].action_parent_m)
                 # del self.state_action_signal.__func__.affected_models
