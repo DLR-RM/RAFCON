@@ -64,7 +64,7 @@ setup(
     install_requires=global_requirements,
 
     dependency_links=[
-        tarball_url + "common-python_yaml_configuration-0.0.5-5-gb8feb9f.tar.gz#egg=yaml_configuration-0.0.5",
+        tarball_url + "common-python_yaml_configuration-0.0.6.tar.gz#egg=yaml_configuration-0.0.6",
         tarball_url + "common-gtkmvc_dlr-e6663d8.tar.gz#egg=python-gtkmvc-1.99.1"
     ],
 
