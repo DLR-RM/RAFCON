@@ -40,7 +40,7 @@ global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion>
 tarball_url = "https://rmc-intra02.robotic.dlr.de/~stei_fn/tarballs/"
 
 setup(
-    name='RAFCON',
+    name='rafcon',
     version='0.9.1',
     url='https://github.com/DLR-RM/RAFCON',
     license='EPL',
