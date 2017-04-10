@@ -135,7 +135,7 @@ class StateMachine(Observable, JSONObject, Hashable):
     def join(self):
         """Wait for root state to finish execution"""
         self._root_state.join()
-        # self._execution_histories[-1].execution_history_storage.close()
+        self._execution_histories[-1].execution_history_storage.close()
         from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
@@ -201,15 +201,19 @@ class StateMachine(Observable, JSONObject, Hashable):
     @Observable.observed
     def _add_new_execution_history(self):
         new_execution_history = ExecutionHistory()
-        if(len(self._execution_histories) == 0):
-            execution_history_store = ExecutionHistoryStorage('/tmp/rafcon_execution_log-%s-%s.shelve' % (self.state_machine_id, time.time()))
-            new_execution_history.set_execution_history_storage(execution_history_store)
-            pass
-        else:
+        execution_history_store = ExecutionHistoryStorage('/tmp/rafcon-execution-log_%s_%s.shelve' %
+                                                          (self.root_state.name.replace(' ', '-'),
+                                                           time.asctime().replace(' ', '-')))
+        new_execution_history.set_execution_history_storage(execution_history_store)
+        # if(len(self._execution_histories) == 0):
+        #     execution_history_store = ExecutionHistoryStorage('/tmp/rafcon_execution_log-%s-%s.shelve' % (self.state_machine_id, time.time()))
+        #     new_execution_history.set_execution_history_storage(execution_history_store)
+        #     pass
+        # else:
 
-            new_execution_history.set_execution_history_storage(
-                self._execution_histories[-1].execution_history_storage)
-            new_execution_history.execution_history_storage.flush()
+        #     new_execution_history.set_execution_history_storage(
+        #         self._execution_histories[-1].execution_history_storage)
+        #     new_execution_history.execution_history_storage.flush()
 
         self._execution_histories.append(new_execution_history)
         return new_execution_history

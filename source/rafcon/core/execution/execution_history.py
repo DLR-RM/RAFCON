@@ -25,6 +25,7 @@ import shelve
 from threading import Lock
 from enum import Enum
 from gtkmvc import Observable
+import traceback
 
 from rafcon.core.id_generator import hist_item_id_generator
 #from rafcon.statemachine.states import hierarchy_state, barrier_concurrency_state, preemptive_concurrency_state
@@ -35,31 +36,50 @@ logger = log.get_logger(__name__)
 class ExecutionHistoryStorage(object):
     def __init__(self, filename):
         self.filename = filename
-        self.store = shelve.open(filename, flag='c', protocol=2, writeback=False)
         self.store_lock = Lock()
+        try:
+            self.store = shelve.open(filename, flag='c', protocol=2, writeback=False)
+            logger.info('Openend log file for writing %s' % self.filename)
+        except Exception as e:
+            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
 
     def store_item(self, key, value):
         self.store_lock.acquire()
         try:
             self.store[key] = value
+        except Exception as e:
+            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
             self.store_lock.release()
-
-    def store_item_2(self, key, value):
-        pass
 
     def flush(self):
         self.store_lock.acquire()
         try:
             self.store.close()
             self.store = shelve.open(self.filename, flag='c', protocol=2, writeback=False)
+            logger.info('Flushed log file %s' % self.filename)
+        except Exception as e:
+            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
+        finally:
+            self.store_lock.release()
+
+    def close(self):
+        self.store_lock.acquire()
+        try:
+            self.store.close()
+            logger.info('Closed log file %s' % self.filename)
+        except Exception as e:
+            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
             self.store_lock.release()
     
     def __del__(self):
+        self.store_lock.acquire()
         try:
-            self.store_lock.acquire()
             self.store.close()
+            logger.info('Closed log file %s' % self.filename)
+        except Exception as e:
+            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
             self.store_lock.release()
 
@@ -279,8 +299,20 @@ class ScopedDataItem(HistoryItem):
             record['scoped_data'] = e.message
 
         try:
-            record['input_output_data'] = json.dumps(self.child_state_input_output_data, cls=JSONObjectEncoder)
+            print 'in out data', self.child_state_input_output_data
+            print 'dtype', type(self.child_state_input_output_data)
+            print 'true?', self.child_state_input_output_data.has_key('error')
+            if 'error' in self.child_state_input_output_data and \
+                    isinstance(self.child_state_input_output_data['error'], BaseException):
+                # manually serialize Exceptions
+                export_dict_ = copy.deepcopy(self.child_state_input_output_data)
+                export_dict_['error'] = {'message': self.child_state_input_output_data['error'].message ,
+                                         'type': str(type(self.child_state_input_output_data['error']))}
+                record['input_output_data'] = json.dumps(export_dict_, cls=JSONObjectEncoder)
+            else:
+                record['input_output_data'] = json.dumps(self.child_state_input_output_data, cls=JSONObjectEncoder)
         except TypeError as e:
+            logger.error('TypeError: ' + str(e) + str(traceback.format_exc()))
             record['input_output_data'] = e.message
 
         record['call_type'] = self.call_type_str
@@ -329,7 +361,6 @@ class ReturnItem(ScopedDataItem):
             record['outcome_name'] = 'None'
             record['outcome_id'] = -1
         return record
-
 
 class ConcurrencyItem(HistoryItem):
     """A class to hold all the data for an invocation of several concurrent threads.
