@@ -34,6 +34,10 @@ class PyTest(TestCommand):
         sys.exit(error_number)
 
 
+def get_files_in_path(path):
+    return [os.path.join(path, filename) for filename in os.listdir(path)]
+
+
 global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion>=0.2', 'yaml_configuration',
                        'python-gtkmvc==1.99.1', 'gaphas>=0.7']
 
@@ -54,10 +58,14 @@ setup(
 
     package_data={
         # Include all config files
-        '': ['*.yaml'],
+        'rafcon.core': ['config.yaml'],
         # Include all glade files
-        'mvc': ['glade/*.glade'],
+        'rafcon.gui': ['gui_config.yaml', 'glade/*.glade'],
     },
+
+    data_files=[
+        ('rafcon/gui/icons', get_files_in_path('source/rafcon/gui/themes/icons'))
+    ],
 
     setup_requires=['Sphinx>=1.4', 'Pygments>=2.0'] + global_requirements,
     tests_require=['pytest', 'pytest-catchlog'] + global_requirements,
