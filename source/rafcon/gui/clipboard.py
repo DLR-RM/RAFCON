@@ -78,18 +78,15 @@ class Clipboard(Observable):
         print "\n", '#'*50,  " start prepare copy \n"
         from rafcon.gui.config import global_gui_config
         gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
-        for model in self.model_copies['states']:
-            print model.get_meta_data_editor(for_gaphas=gaphas_editor), model.core_element
-        for model in self.model_copies['transitions']:
-            print model.get_meta_data_editor(for_gaphas=gaphas_editor), model.core_element
+        for key, list_of_models in self.model_copies.iteritems():
+            for model in list_of_models:
+                print model.__class__.__name__, model.get_meta_data_editor(for_gaphas=gaphas_editor), model.core_element
         self.model_copies = deepcopy(self.model_copies)
         print "finished prepare copy \n"
-        for model in self.model_copies['states']:
-            print model.get_meta_data_editor(for_gaphas=gaphas_editor), model.core_element
-        for model in self.model_copies['transitions']:
-            print model.get_meta_data_editor(for_gaphas=gaphas_editor), model.core_element
+        for key, list_of_models in self.model_copies.iteritems():
+            for model in list_of_models:
+                print model.__class__.__name__, model.get_meta_data_editor(for_gaphas=gaphas_editor), model.core_element
         print '#'*50, "\n"
-
 
     def paste(self, target_state_m, cursor_position=None, limited=None, convert=False):
         """Paste objects to target state
@@ -338,7 +335,6 @@ class Clipboard(Observable):
             to_port = data_flow.parent.get_data_port(data_flow.to_state, data_flow.to_key)
             return from_port, to_port
 
-
         def get_states_related_to_transition(transition):
             if transition.from_state == transition.parent.state_id or transition.from_state is None:
                 from_state = transition.parent
@@ -425,13 +421,13 @@ class Clipboard(Observable):
         for list_name in self._container_state_unlimited:
             self.selected_models[list_name] = getattr(selection, list_name)
             for model in self.selected_models['transitions']:
-                print model.meta, model.core_element
+                print model.__class__.__name__, model.meta, model.core_element
 
         # copy all selected elements
         print "#### DEEPCOPY #####"
         self.model_copies = deepcopy(self.selected_models)
         for model in self.model_copies['transitions']:
-            print model.meta, model.core_element
+            print model.__class__.__name__, model.meta, model.core_element
         # for list_name in self._container_state_unlimited:
         #     print list_name, ": ", self.selected_models[list_name]
 

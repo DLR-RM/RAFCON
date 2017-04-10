@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+from rafcon.gui.models.transition import mirror_waypoints
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils import constants
@@ -94,15 +97,21 @@ def get_boundaries_of_elements_in_dict(models_dict):
             if key == 'states':
                 rel_positions = [model.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']]
                 _size = model.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
-                # print "states", rel_positions, _size
+                # print key, rel_positions, _size
             elif key == 'scoped_variables':
                 rel_positions = [model.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']]
             elif key in ['transitions', 'data_flows']:
-                rel_positions = model.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
+                if gaphas_editor and key is "data_flows":
+                    # take into account the meta data positions of opengl if there is some (always in opengl format)
+                    rel_positions = mirror_waypoints(deepcopy(model.get_meta_data_editor(for_gaphas=gaphas_editor)))['waypoints']
+                else:
+                    rel_positions = model.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
+                print key, rel_positions, _size, model.meta
 
             for rel_position in rel_positions:
                 right, bottom = cal_max(right, bottom, rel_position, _size)
                 left, top = cal_min(left, top, rel_position, _size)
+                print "new edges:", left, right, top, bottom, key
 
     return left, right, top, bottom
 
@@ -148,7 +157,11 @@ def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor)
         old_waypoints = connection_m.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
         new_waypoints = []
         for waypoint in old_waypoints:
-            new_waypoints.append(add_pos(waypoint, pos_offset))
+            from rafcon.gui.models.data_flow import DataFlowModel
+            if isinstance(connection_m, DataFlowModel) and gaphas_editor:
+                new_waypoints.append(add_pos(waypoint, (pos_offset[0], -pos_offset[1])))
+            else:
+                new_waypoints.append(add_pos(waypoint, pos_offset))
         connection_m.set_meta_data_editor('waypoints', new_waypoints, from_gaphas=gaphas_editor)
     print "END", "#"*30, "offset models", pos_offset, "#"*30, "\n"
 
@@ -280,10 +293,11 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
                 width_pos_offset_to_middle = (parent_width - boundary_width_in_parent - rel_pos[0] - margin)/2.
                 rel_pos = add_pos(rel_pos, (width_pos_offset_to_middle, 0.))
                 boundary_height_in_parent = boundary_height*resize_factor
+                print "left over height: ", parent_height - boundary_height_in_parent - rel_pos[0] - margin
                 height_pos_offset_to_middle = (parent_height - boundary_height_in_parent - rel_pos[1] - margin)/2.
                 rel_pos = add_pos(rel_pos, (0., height_pos_offset_to_middle))
             offset = subtract_pos((0., 0.), subtract_pos(old_rel_pos, rel_pos))
-            offset_rel_pos_of_all_models_in_dict(models_dict, offset, gaphas_editor)
+            offset_rel_pos_of_all_models_in_dict(models_dict, mult_two_vectors((1., y_axis_mirror), offset), gaphas_editor)
         # smallest site scale
         else:
             if (parent_height - rel_pos[1] - margin)/boundary_height < \
@@ -291,7 +305,7 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
                 # print "#"*20, 1, "#"*20, rel_pos
                 resize_factor = (parent_height - rel_pos[1] - margin)/boundary_height
                 boundary_width_in_parent = boundary_width*resize_factor
-                print boundary_width, resize_factor, boundary_width*resize_factor, boundary_height*resize_factor + margin*2, parent_height
+                print boundary_width, resize_factor, boundary_width*resize_factor
                 print "left over width: ", parent_width - boundary_width_in_parent - rel_pos[0] - margin
                 width_pos_offset_to_middle = (parent_width - boundary_width_in_parent - rel_pos[0] - margin)/2.
                 rel_pos = add_pos(rel_pos, (width_pos_offset_to_middle, 0.))
@@ -300,6 +314,8 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
                 # print "#"*20, 2, "#"*20, rel_pos
                 resize_factor = (parent_width - rel_pos[0] - margin)/boundary_width
                 boundary_height_in_parent = boundary_height*resize_factor
+                print boundary_width, resize_factor, boundary_width*resize_factor
+                print "left over height: ", parent_height - boundary_height_in_parent - rel_pos[0] - margin
                 height_pos_offset_to_middle = (parent_height - boundary_height_in_parent - rel_pos[1] - margin)/2.
                 rel_pos = add_pos(rel_pos, (0., height_pos_offset_to_middle))
                 # print resize_factor, rel_pos
