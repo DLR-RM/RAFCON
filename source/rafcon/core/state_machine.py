@@ -275,6 +275,15 @@ class StateMachine(Observable, JSONObject, Hashable):
             prev_state_id = state_id
         return state
 
+    def get_last_execution_log_filename(self):
+        if len(self._execution_histories) > 0:
+            for i in range(len(self._execution_histories) - 1, -1, -1):
+                if self._execution_histories[i].execution_history_storage is not None:
+                    return self._execution_histories[i].execution_history_storage.filename
+            return None
+        else:
+            return None
+
     @property
     def file_system_path(self):
         """Property for the _file_system_path field
