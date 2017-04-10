@@ -17,7 +17,7 @@ from gtkmvc import Observable
 
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.state_elements.scope import ScopedVariable
-from rafcon.core.id_generator import state_id_generator
+from rafcon.core.id_generator import state_id_generator, generate_data_port_id
 from rafcon.core.states.container_state import ContainerState
 
 from rafcon.gui.models.selection import Selection
@@ -97,12 +97,14 @@ class Clipboard(Observable):
         The method checks whether the target state is a execution state or a container state and inserts respective
         elements and notifies the user if the parts can not be insert to the target state.
         - for ExecutionStates outcomes, input- and output-data ports can be insert
-        - for ContainerState additional states, scoped variables and data flows and/or transitions (if related) can be insert
+        - for ContainerState additional states, scoped variables and data flows and/or transitions (if related) can be
+          insert
 
         Related data flows and transitions are determined by origin and target keys and respective objects which has to
         be in the state machine selection, too. So transitions or data flows without the related objects are not copied.
         :param target_state_m: state in which the copied/cut elements should be insert
-        :param cursor_position: cursor position used to adapt meta data positioning of elements e.g states and via points
+        :param cursor_position: cursor position used to adapt meta data positioning of elements e.g states and
+                                via points
         :return:
         """
         assert isinstance(target_state_m, StateModel)
@@ -243,7 +245,11 @@ class Clipboard(Observable):
     def insert_data_port(self, target_state_m, add_data_port_method, orig_data_port_copy_m, instance_to_check_for):
         data_port = orig_data_port_copy_m.core_element
         old_port_tuple = (self.copy_parent_state_id, data_port.data_port_id)
-        data_port_id = add_data_port_method(data_port.name, data_port.data_type, data_port.default_value)
+        if data_port.name in [target_state_m.state.get_data_port_by_id(dp_id).name for dp_id in target_state_m.state.get_data_port_ids()]:
+            name = data_port.name + '_' + str(generate_data_port_id(target_state_m.state.get_data_port_ids()))
+        else:
+            name = data_port.name
+        data_port_id = add_data_port_method(name, data_port.data_type, data_port.default_value)
         self.port_id_mapping_dict[old_port_tuple] = data_port_id
         if isinstance(orig_data_port_copy_m.core_element, instance_to_check_for):
             target_state_m.get_data_port_m(data_port_id).meta = orig_data_port_copy_m.meta
@@ -262,7 +268,8 @@ class Clipboard(Observable):
                                      orig_data_port_copy_m, ScopedVariable)
 
     def reset_clipboard(self):
-        """ Resets the clipboard, so that old elements do not pollute the new selection that is copied into the clipboard.
+        """ Resets the clipboard, so that old elements do not pollute the new selection that is copied into the
+            clipboard.
         :return:
         """
         # reset selections
