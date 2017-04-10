@@ -115,6 +115,7 @@ def call_gui_callback(callback, *args):
     condition.wait()
     condition.release()
 
+
 def rewind_and_set_libraries(libraries=None):
     """ Clear libraries, set new libraries and secure default libraries set."""
     from rafcon.core.config import global_config

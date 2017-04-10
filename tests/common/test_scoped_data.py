@@ -2,7 +2,7 @@
 import rafcon.core.singleton
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.state import DataPortType
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.storage import storage
 from rafcon.core.state_machine import StateMachine
 
@@ -32,17 +32,17 @@ def create_state_machine():
     state3.add_input_data_port("data_input_port1", "float", 22.0)
     state3.add_output_data_port("data_output_port1", "float")
     state3.add_data_flow(state3.state_id,
-                         state3.get_io_data_port_id_from_name_and_type("data_input_port1", DataPortType.INPUT),
+                         state3.get_io_data_port_id_from_name_and_type("data_input_port1", InputDataPort),
                          state1.state_id,
-                         state1.get_io_data_port_id_from_name_and_type("data_input_port1", DataPortType.INPUT))
+                         state1.get_io_data_port_id_from_name_and_type("data_input_port1", InputDataPort))
     state3.add_data_flow(state1.state_id,
-                         state1.get_io_data_port_id_from_name_and_type("data_output_port1", DataPortType.OUTPUT),
+                         state1.get_io_data_port_id_from_name_and_type("data_output_port1", OutputDataPort),
                          state2.state_id,
-                         state2.get_io_data_port_id_from_name_and_type("data_input_port1", DataPortType.INPUT))
+                         state2.get_io_data_port_id_from_name_and_type("data_input_port1", InputDataPort))
     state3.add_data_flow(state2.state_id,
-                         state2.get_io_data_port_id_from_name_and_type("data_output_port1", DataPortType.OUTPUT),
+                         state2.get_io_data_port_id_from_name_and_type("data_output_port1", OutputDataPort),
                          state3.state_id,
-                         state3.get_io_data_port_id_from_name_and_type("data_output_port1", DataPortType.OUTPUT))
+                         state3.get_io_data_port_id_from_name_and_type("data_output_port1", OutputDataPort))
     return StateMachine(state3)
 
 

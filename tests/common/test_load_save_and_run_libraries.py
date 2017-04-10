@@ -9,7 +9,7 @@ import rafcon.core.singleton
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.library_state import LibraryState
-from rafcon.core.states.state import DataPortType
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.storage import storage
 from rafcon.core.state_machine import StateMachine
 
@@ -98,10 +98,10 @@ def create_execution_state_library_state_machine():
                                           lib_container_input,
                                           lib_state.state_id,
                                           lib_state.get_io_data_port_id_from_name_and_type("data_input_port1",
-                                                                                           DataPortType.INPUT))
+                                                                                           InputDataPort))
     library_container_state.add_data_flow(lib_state.state_id,
                                           lib_state.get_io_data_port_id_from_name_and_type("data_output_port1",
-                                                                                           DataPortType.OUTPUT),
+                                                                                           OutputDataPort),
                                           library_container_state.state_id,
                                           lib_container_output)
     return StateMachine(library_container_state)
@@ -140,10 +140,10 @@ def create_hierarchy_state_library_state_machine():
                                           lib_container_input,
                                           lib_state.state_id,
                                           lib_state.get_io_data_port_id_from_name_and_type("data_input_port1",
-                                                                                           DataPortType.INPUT))
+                                                                                           InputDataPort))
     library_container_state.add_data_flow(lib_state.state_id,
                                           lib_state.get_io_data_port_id_from_name_and_type("data_output_port1",
-                                                                                           DataPortType.OUTPUT),
+                                                                                           OutputDataPort),
                                           library_container_state.state_id,
                                           lib_container_output)
     return StateMachine(library_container_state)
