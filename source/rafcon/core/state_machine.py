@@ -205,16 +205,6 @@ class StateMachine(Observable, JSONObject, Hashable):
                                                           (self.root_state.name.replace(' ', '-'),
                                                            time.asctime().replace(' ', '-')))
         new_execution_history.set_execution_history_storage(execution_history_store)
-        # if(len(self._execution_histories) == 0):
-        #     execution_history_store = ExecutionHistoryStorage('/tmp/rafcon_execution_log-%s-%s.shelve' % (self.state_machine_id, time.time()))
-        #     new_execution_history.set_execution_history_storage(execution_history_store)
-        #     pass
-        # else:
-
-        #     new_execution_history.set_execution_history_storage(
-        #         self._execution_histories[-1].execution_history_storage)
-        #     new_execution_history.execution_history_storage.flush()
-
         self._execution_histories.append(new_execution_history)
         return new_execution_history
 

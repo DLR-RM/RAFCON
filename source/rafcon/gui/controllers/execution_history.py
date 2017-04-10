@@ -225,6 +225,8 @@ class ExecutionHistoryTreeController(ExtendedController):
         for execution_number, execution_history in enumerate(active_sm.execution_histories):
             if len(execution_history) > 0:
                 first_history_item = execution_history[0]
+                # the next lines filter out the StateMachineStartItem, which is not intended to
+                # be displayed, but merely as convenient entry point in the saved log file
                 if first_history_item.item_type == 'StateMachineStartItem':
                     if len(execution_history) > 1:
                         first_history_item = execution_history[1]

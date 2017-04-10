@@ -39,7 +39,7 @@ class ExecutionHistoryStorage(object):
         self.store_lock = Lock()
         try:
             self.store = shelve.open(filename, flag='c', protocol=2, writeback=False)
-            logger.info('Openend log file for writing %s' % self.filename)
+            logger.debug('Openend log file for writing %s' % self.filename)
         except Exception as e:
             logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
 
@@ -57,7 +57,7 @@ class ExecutionHistoryStorage(object):
         try:
             self.store.close()
             self.store = shelve.open(self.filename, flag='c', protocol=2, writeback=False)
-            logger.info('Flushed log file %s' % self.filename)
+            logger.debug('Flushed log file %s' % self.filename)
         except Exception as e:
             logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
@@ -67,7 +67,7 @@ class ExecutionHistoryStorage(object):
         self.store_lock.acquire()
         try:
             self.store.close()
-            logger.info('Closed log file %s' % self.filename)
+            logger.debug('Closed log file %s' % self.filename)
         except Exception as e:
             logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
@@ -77,7 +77,7 @@ class ExecutionHistoryStorage(object):
         self.store_lock.acquire()
         try:
             self.store.close()
-            logger.info('Closed log file %s' % self.filename)
+            logger.debug('Closed log file %s' % self.filename)
         except Exception as e:
             logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
@@ -294,14 +294,12 @@ class ScopedDataItem(HistoryItem):
     def to_dict(self):
         record = HistoryItem.to_dict(self)
         try:
-            record['scoped_data'] = 'Waiting for pull request' # json.dumps(self.scoped_data, cls=JSONObjectEncoder)
+            record['scoped_data'] = json.dumps(self.scoped_data, cls=JSONObjectEncoder)
         except TypeError as e:
-            record['scoped_data'] = e.message
+            logger.error('TypeError: ' + str(e) + str(traceback.format_exc()))
+            record['scoped_data'] = json.dumps({'TypeError': e.message}, cls=JSONObjectEncoder)
 
         try:
-            print 'in out data', self.child_state_input_output_data
-            print 'dtype', type(self.child_state_input_output_data)
-            print 'true?', self.child_state_input_output_data.has_key('error')
             if 'error' in self.child_state_input_output_data and \
                     isinstance(self.child_state_input_output_data['error'], BaseException):
                 # manually serialize Exceptions
@@ -310,10 +308,11 @@ class ScopedDataItem(HistoryItem):
                                          'type': str(type(self.child_state_input_output_data['error']))}
                 record['input_output_data'] = json.dumps(export_dict_, cls=JSONObjectEncoder)
             else:
-                record['input_output_data'] = json.dumps(self.child_state_input_output_data, cls=JSONObjectEncoder)
+                record['input_output_data'] = json.dumps(self.child_state_input_output_data,
+                                                         cls=JSONObjectEncoder)
         except TypeError as e:
             logger.error('TypeError: ' + str(e) + str(traceback.format_exc()))
-            record['input_output_data'] = e.message
+            record['input_output_data'] = json.dumps({'TypeError': e.message}, cls=JSONObjectEncoder)
 
         record['call_type'] = self.call_type_str
         return record
