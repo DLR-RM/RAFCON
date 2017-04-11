@@ -210,7 +210,7 @@ class StateMachine(Observable, JSONObject, Hashable):
 
         new_state = create_new_state_from_state_with_type(state, new_state_class)
         assert new_state.state_id == state_id
-        logger.info("ASSIGN NEW STATE")
+        # logger.info("ASSIGN NEW STATE")
         self.root_state = new_state  # Also sets the parent of root_state to self
 
         return new_state

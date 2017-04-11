@@ -58,7 +58,7 @@ class GraphicalEditorController(ExtendedController):
         element
     """
 
-    _change_state_type = False
+    _complex_action = False
 
     def __init__(self, model, view):
         """Constructor"""
@@ -221,48 +221,7 @@ class GraphicalEditorController(ExtendedController):
         """
         if react_to_event(self.view, self.view.editor, event):
             logger.debug("Paste")
-
-            selection = self.model.selection
-            selected_states = selection.get_states()
-            if len(selection) != 1 or len(selected_states) < 1:
-                logger.error("Please select a single container state for pasting the clipboard")
-                return
-
-            # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
-            target_state_m = selection.get_states()[0]
-            insert_dict = global_clipboard.paste(target_state_m)
-
-            if 'states' not in insert_dict:
-                return
-
-            for new_state_m_copy, orig_state_m_copy in insert_dict['states']:
-
-                # Adjust size of new state
-                old_size = orig_state_m_copy.get_meta_data_editor()['size']
-                target_size = target_state_m.get_meta_data_editor()['size']
-
-                # Use the old size, if it is smaller than the target state
-                if old_size[0]*2 < target_size[0] and old_size[1]*2 < target_size[1]:
-                    new_size = old_size
-                # Resize to 1/3 of the target state, but keep the size ratio
-                else:
-                    new_size = (target_size[0] / 4., target_size[1] / 4.)
-                    old_size_ratio = old_size[0] / old_size[1]
-                    if old_size_ratio < new_size[0] / new_size[1]:
-                        new_size = (new_size[1] * old_size_ratio, new_size[1])
-                    else:
-                        new_size = (new_size[0], new_size[0] / old_size_ratio)
-
-                new_state_v = self.canvas.get_view_for_model(new_state_m_copy)
-                new_state_v.width = new_size[0]
-                new_state_v.height = new_size[1]
-                new_state_m_copy.set_meta_data_editor('size', (new_state_v.width, new_state_v.height))
-
-                new_state_v.resize_all_children(old_size, True)
-                self._meta_data_changed(new_state_v, new_state_m_copy, 'all', True)
-
-            self.canvas.perform_update()
-
+            gui_helper_state_machine.paste_into_selected_state(self.model)
             return True
 
     def _update_selection_from_gaphas(self, view, selected_items):
@@ -315,7 +274,7 @@ class GraphicalEditorController(ExtendedController):
         notification = meta_signal_message.notification
         if not notification:    # For changes applied to the root state, there are always two notifications
             return              # Ignore the one with less information
-        if self._change_state_type:
+        if self._complex_action:
             return
         model = notification.model
         view = self.canvas.get_view_for_model(model)
@@ -337,26 +296,32 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
-        # print model, prop_name, info
         # print "GSME state_action_signal: ", info['arg'] if 'arg' in info else "XXX" + str(info)
-        if 'arg' in info and info['arg'].action in ['state_type_change', 'group_states', 'ungroup_state',
-                                                    'substitute_state', 'paste']:
+        if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state'
+                                                    'group_states', 'ungroup_state', 'paste']:
             if info['arg'].after is False:
-                self._change_state_type = True
-                if info['arg'].affected_models:
-                    state_model_to_be_changed = info['arg'].affected_models[0]
-                    self.observe_model(state_model_to_be_changed)
-                    # print "GSME observe: ", state_model_to_be_changed
+                self._complex_action = True
+                if info['arg'].action in ['group_states', 'paste']:
+                    self.observe_model(info['arg'].action_parent_m)
+                    # print "GSME observe: ", info['arg'].action_parent_m
+                else:
+                    self.observe_model(info['arg'].affected_models[0])
+                    # print "GSME observe: ", info['arg'].affected_models[0]
+
                 # assert not hasattr(self.state_action_signal.__func__, "affected_models")
                 # assert not hasattr(self.state_action_signal.__func__, "target")
                 self.state_action_signal.__func__.affected_models = info['arg'].affected_models
                 self.state_action_signal.__func__.target = info['arg'].action_parent_m
-            else:
-                self._change_state_type = False
-                # print "GSME adapt to change"
-                self.adapt_complex_action(self.state_action_signal.__func__.target, info['arg'].action_parent_m)
-                # del self.state_action_signal.__func__.affected_models
-                # del self.state_action_signal.__func__.target
+
+    @ExtendedController.observe("action_signal", signal=True)
+    def action_signal(self, model, prop_name, info):
+        if isinstance(model, AbstractStateModel) and 'arg' in info and \
+                info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state'
+                                       'group_states', 'ungroup_state', 'paste']:
+            self._complex_action = False
+            self.relieve_model(model)
+            self.adapt_complex_action(self.state_action_signal.__func__.target, info['arg'].action_parent_m)
+            # print "GSME ACTION adapt to change"
 
     @ExtendedController.observe("state_machine", before=True)
     def state_machine_change_before(self, model, prop_name, info):
@@ -364,7 +329,7 @@ class GraphicalEditorController(ExtendedController):
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
             if method_name in ['change_state_type', 'change_root_state_type']:
-                self._change_state_type = True
+                self._complex_action = True
                 if method_name == 'change_root_state_type':
                     state_model_to_be_changed = model.root_state
                 else:
@@ -387,7 +352,7 @@ class GraphicalEditorController(ExtendedController):
         if 'method_name' in info and info['method_name'] == 'root_state_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
-            if self._change_state_type:
+            if self._complex_action:
                 return
 
             # The method causing the change raised an exception, thus nothing was changed
@@ -592,7 +557,7 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_type_changed_signal", signal=True)
     def state_type_changed(self, old_state_m, prop_name, info):
-        self._change_state_type = False
+        self._complex_action = False
         self.relieve_model(old_state_m)
         signal_msg = info['arg']
         new_state_m = signal_msg.new_state_m

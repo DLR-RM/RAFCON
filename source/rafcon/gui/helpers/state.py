@@ -23,6 +23,8 @@ from rafcon.core.storage import storage
 from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.models.library_state import LibraryStateModel
 from rafcon.gui.models.container_state import ContainerStateModel, AbstractStateModel, StateModel, ScopedVariableModel
@@ -130,7 +132,7 @@ def save_selected_state_as():
                     gui_helper_state_machine.refresh_libraries()
                     [library_path, library_name] = library_manager.get_library_path_and_name_for_os_path(path)
                     state = library_manager.get_library_instance(library_path, library_name)
-                    gui_helper_state_machine.substitute_state(state, as_template=False)
+                    substitute_selected_state(state, as_template=False)
                 elif response_id in [2, -4]:
                     pass
                 else:
@@ -185,34 +187,28 @@ def change_state_type(state_m, target_class):
         state_machine_m = gui_singletons.state_machine_manager_model.get_state_machine_model(old_state_m)
         assert state_machine_m.root_state is old_state_m
 
-        # Before the root state type is actually changed, we extract the information from the old state model and remove
-        # the model from the selection
-        old_state_m.unregister_observer(old_state_m)
 
-        # print "emit change_root_state_type before msg: "
+
+        # print "\n\nEMIT-BEFORE OLDSTATE\n\n"
         old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
                                                        action_parent_m=state_machine_m,
                                                        affected_models=[old_state_m, ],
                                                        after=False,
                                                        kwargs={'target_class': target_class}))
+        old_state_m.unregister_observer(old_state_m)
         old_state_m.unregister_observer(state_machine_m)
-        logger.info("UNREGISTER OBSERVER")
+        # logger.info("UNREGISTER OBSERVER")
 
+        # Before the root state type is actually changed, we extract the information from the old state model
         # Extract child models of state, as they have to be applied to the new state model
         child_models = gui_helper_state_machine.extract_child_models_of_of_state(old_state_m, target_class)
         state_machine_m.change_root_state_type.__func__.child_models = child_models  # static variable of class method
         state_machine_m.suppress_new_root_state_model_one_time = True
-        logger.info("FINISH BEFORE")
     else:
 
         action_parent_m = old_state_m.parent
         assert isinstance(action_parent_m, ContainerStateModel)
-
-        # BEFORE
         state_machine_m = gui_singletons.state_machine_manager_model.get_state_machine_model(old_state_m)
-
-        # Before the state type is actually changed, we extract the information from the old state model and remove
-        # the model from the selection
 
         def list_dict_to_list(list_or_dict):
             if isinstance(list_or_dict, dict) and not isinstance(list_or_dict, Vividict):
@@ -222,11 +218,13 @@ def change_state_type(state_m, target_class):
             else:
                 return []
 
+        # Before the state type is actually changed, we extract the information from the old state model
         # Extract child models of state, as they have to be applied to the new state model
         child_models = gui_helper_state_machine.extract_child_models_of_of_state(old_state_m, target_class)
         affected_models = [old_state_m, ]
         for list_or_dict in child_models.itervalues():
             affected_models.extend(list_dict_to_list(list_or_dict))
+        # print "\n\nEMIT-BEFORE OLDSTATE\n\n"
         old_state_m.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model',
                                                        action_parent_m=action_parent_m,
                                                        affected_models=affected_models,
@@ -253,19 +251,18 @@ def change_state_type(state_m, target_class):
     # from the old state model
     if is_root_state:
         if new_state:
-            logger.info("start after TO STATE TYPE CHANGE")
+            # logger.info("start after TO STATE TYPE CHANGE")
             # Create a new state model based on the new state and apply the extracted child models
             child_models = state_machine_m.change_root_state_type.__func__.child_models
             new_state_m = gui_helper_state_machine.create_state_model_for_state(new_state, child_models)
 
             new_state_m.register_observer(state_machine_m)
             # state_machine_m.register_observer(state_machine_m)
-            logger.info("ASSIGN after TO STATE TYPE CHANGE")
             state_machine_m.root_state = new_state_m
-            logger.info("ASSIGNED after TO STATE TYPE CHANGE")
-            old_state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
+            # logger.info("ASSIGNED after TO STATE TYPE CHANGE")
 
-            # print "emit change_root_state_type after msg: "
+            old_state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
+            # print "\n\nEMIT-AFTER OLDSTATE\n\n"
             old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
                                                            action_parent_m=state_machine_m,
                                                            affected_models=[new_state_m, ],
@@ -286,13 +283,12 @@ def change_state_type(state_m, target_class):
 
             affected_models = action_parent_m.change_state_type.__func__.affected_models
             affected_models.append(new_state_m)
+
             old_state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
             old_state_m.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model',
                                                            action_parent_m=action_parent_m,
                                                            affected_models=affected_models,
                                                            after=True))
-
-            # action_parent_m.meta_signal.emit(MetaSignalMsg("state_type_change", "all", True))
 
         del action_parent_m.change_state_type.__func__.child_models
         del action_parent_m.change_state_type.__func__.affected_models
@@ -321,8 +317,9 @@ def change_state_type_with_error_handling_and_logger_messages(state_m, target_cl
                     "".format(state_m.state.name, type(state_m.state).__name__, target_class.__name__))
 
 
-def substitute_state(target_state_m, state_to_insert):
+def substitute_state(target_state_m, state_m_to_insert):
 
+    state_to_insert = state_m_to_insert.state
     action_parent_m = target_state_m.parent
     old_state_m = target_state_m
     old_state = old_state_m.state
@@ -331,6 +328,7 @@ def substitute_state(target_state_m, state_to_insert):
     # BEFORE MODEL
     tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'state': None}
     old_state_m = action_parent_m.states[state_id]
+    # print "EMIT-BEFORE ON OLD_STATE ", state_id
     old_state_m.action_signal.emit(ActionSignalMsg(action='substitute_state', origin='model',
                                                    action_parent_m=action_parent_m,
                                                    affected_models=[old_state_m, ], after=False,
@@ -348,19 +346,19 @@ def substitute_state(target_state_m, state_to_insert):
     new_state = None
     try:
         new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
+        # assert new_state.state_id is state_id
         assert new_state is state_to_insert
     except Exception:
         logger.exception("State substitution failed")
-        pass
 
     if new_state:
         # AFTER MODEL
-        state_id = new_state.state_id
+        new_state_m = action_parent_m.states[new_state.state_id]
         tmp_meta_data = action_parent_m.substitute_state.__func__.tmp_meta_data_storage
         old_state_m = action_parent_m.substitute_state.__func__.old_state_m
         changed_models = []
-        action_parent_m.states[state_id].meta = tmp_meta_data['state']
-        changed_models.append(action_parent_m.states[state_id])
+        new_state_m.meta = tmp_meta_data['state']
+        changed_models.append(new_state_m)
         for t_id, t_meta in tmp_meta_data['transitions'].iteritems():
             if action_parent_m.get_transition_m(t_id) is not None:
                 action_parent_m.get_transition_m(t_id).meta = t_meta
@@ -373,16 +371,27 @@ def substitute_state(target_state_m, state_to_insert):
                 changed_models.append(action_parent_m.get_data_flow_m(df_id))
             elif df_id in action_parent_m.state.substitute_state.__func__.re_create_io_going_df_ids:
                 logger.warning("Data flow model with id {0} to set meta data could not be found.".format(df_id))
-        # TODO maybe refactor the signal usage to use the following one
+
+        # TODO re-organize and use partly the expected_models pattern the next lines
+        if isinstance(state_m_to_insert, ContainerStateModel):
+            models_dict = {'state': new_state_m}
+            for key in global_clipboard.Clipboard._container_state_unlimited:
+                elems_list = getattr(state_m_to_insert, key)
+                elems_list = elems_list.values() if hasattr(elems_list, 'keys') else elems_list
+                models_dict[key] = {elem.core_element.core_element_id: elem for elem in elems_list}
+            gui_helper_meta_data.scale_meta_data_according_state(models_dict)
+            for key in global_clipboard._container_state_unlimited:
+                elems_list = getattr(new_state_m, key)
+                elems_list = elems_list.values() if hasattr(elems_list, 'keys') else elems_list
+                for elem in elems_list:
+                    elem.meta = models_dict[key][elem.core_element.core_element_id].meta
 
         notification = Notification(action_parent_m, "states", {'method_name': 'substitute_state'})
         action_parent_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
         msg = ActionSignalMsg(action='substitute_state', origin='model', action_parent_m=action_parent_m,
                               affected_models=changed_models, after=True)
+        # print "EMIT-AFTER OLDSTATE", msg
         old_state_m.action_signal.emit(msg)
-        # print "XXXmodels", action_parent_m.states
-        # print "XXX", msg.affected_models
-        action_parent_m.action_signal.emit(msg)
 
     del action_parent_m.substitute_state.__func__.tmp_meta_data_storage
     del action_parent_m.substitute_state.__func__.old_state_m
@@ -418,27 +427,37 @@ def substitute_selected_state(state, as_template=False):
     parent_state = current_state.parent
 
     if not as_template:
-        substitute_state(parent_state_m.states[current_state.state_id], state)
+        if isinstance(state, ContainerState):
+            state_m = ContainerStateModel(state)
+        else:
+            state_m = StateModel(state)
+        substitute_state(parent_state_m.states[current_state.state_id], state_m)
         state.name = current_state_name
         return True
     # If inserted as template, we have to extract the state_copy and load the meta data manually
     else:
+        assert isinstance(state, LibraryState)
         template = state.state_copy
         orig_state_id = template.state_id
         template.change_state_id()
         template.name = current_state_name
-        substitute_state(parent_state_m.states[current_state.state_id], template)
+        if isinstance(state.state_copy, ContainerState):
+            template_m = ContainerStateModel(state.state_copy)
+            # load meta data TODO fix the following code and related code/functions to the 'template' True flag
+            import os.path
+            lib_os_path, _, _ = library_manager.get_os_path_to_library(state.library_path, state.library_name)
+            root_state_path = os.path.join(lib_os_path, orig_state_id)
 
-        # # load meta data TODO fix the following code and related code/functions to the 'template' True flag
-        # from os.path import join
-        # lib_os_path, _, _ = library_manager.get_os_path_to_library(state.library_path, state.library_name)
-        # root_state_path = join(lib_os_path, orig_state_id)
-        # template_m = parent_state_m.states[template.state_id]
-        # template_m.load_meta_data(root_state_path)
-        # # Causes the template to be resized
-        # template_m.temp['gui']['editor']['template'] = True
-        # notification = Notification(parent_state_m, "states", {'method_name': 'substitute_state'})
-        # parent_state_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
+            def load_models_recursive(state_m, path):
+                state_m.load_meta_data(path)
+                if isinstance(state_m, ContainerStateModel):
+                    for child_state_id, child_state_m in state_m.states.iteritems():
+                        load_models_recursive(child_state_m, os.path.join(path, child_state_id))
+            load_models_recursive(template_m, root_state_path)
+        else:
+            template_m = StateModel(state)
+
+        substitute_state(parent_state_m.states[current_state.state_id], template_m)
 
         return True
 
@@ -459,8 +478,6 @@ def substitute_selected_library_state_with_template():
     if selected_states and len(selected_states) == 1 and isinstance(selected_states[0], LibraryStateModel):
         lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_states[0].state))
         substitute_selected_state(lib_state, as_template=True)
-        # TODO find out why the following generates a problem (e.g. lose of outcomes)
-        # gui_helper_state_machine.substitute_state(selected_states[0].state, as_template=True)
         return True
     else:
         logger.warning("Substitute library state with template needs exact one library state to be selected.")
@@ -496,6 +513,7 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         elif isinstance(elemets_dict, AbstractStateModel):
             affected_models.extend(elemets_dict)
 
+    # print "EMIT-BEFORE ON ACTION PARENT"
     action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
                                                        action_parent_m=action_parent_m,
                                                        affected_models=affected_models, after=False,
@@ -518,17 +536,16 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         tmp_models_dict = action_parent_m.group_states.__func__.tmp_models_storage
         grouped_state_m = action_parent_m.states[new_state.state_id]
         tmp_models_dict['state'] = grouped_state_m
-        # TODO do implement OpenGL and Gaphas support meta data scaling
-        if not gui_helper_state_machine.scale_meta_data_according_states(tmp_models_dict):
+        # TODO re-organize and use partly the expected_models pattern the next lines
+        if not gui_helper_meta_data.scale_meta_data_according_states(tmp_models_dict):
             del action_parent_m.group_states.__func__.tmp_models_storage
             return
 
         grouped_state_m.insert_meta_data_from_models_dict(tmp_models_dict)
 
-        # TODO maybe refactor the signal usage to use the following one
-        # grouped_state_m.meta_signal.emit(MetaSignalMsg("group_states", "all", True))
         affected_models = action_parent_m.group_states.__func__.affected_models
         affected_models.append(grouped_state_m)
+        # print "EMIT-AFTER ON ACTION PARENT"
         action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
                                                            action_parent_m=action_parent_m,
                                                            affected_models=affected_models, after=True))
@@ -559,6 +576,7 @@ def ungroup_state(state_m):
 
     action_parent_m = state_m.parent
     state_id = state_m.state.state_id
+    old_state_m = state_m
 
     # BEFORE MODEL
     tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
@@ -574,10 +592,11 @@ def ungroup_state(state_m):
     for df in related_data_flows['internal']['enclosed']:
         tmp_models_dict['data_flows'][df.data_flow_id] = action_parent_m.states[state_id].get_data_flow_m(df.data_flow_id)
     affected_models = [action_parent_m.states[state_id], ]
-    action_parent_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
-                                                       action_parent_m=action_parent_m,
-                                                       affected_models=affected_models, after=False,
-                                                       kwargs={'state_id': state_id}))
+    # print "EMIT-BEFORE ON OLD_STATE ", state_id
+    old_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
+                                                   action_parent_m=action_parent_m,
+                                                   affected_models=affected_models, after=False,
+                                                   kwargs={'state_id': state_id}))
     action_parent_m.ungroup_state.__func__.tmp_models_storage = tmp_models_dict
     action_parent_m.group_states.__func__.affected_models = affected_models
 
@@ -591,8 +610,8 @@ def ungroup_state(state_m):
     # AFTER MODEL
     if e is None:
         tmp_models_dict = action_parent_m.ungroup_state.__func__.tmp_models_storage
-        # TODO do implement Gaphas support meta data scaling
-        if not gui_helper_state_machine.scale_meta_data_according_state(tmp_models_dict):
+        # TODO re-organize and use partly the expected_models pattern the next lines
+        if not gui_helper_meta_data.offset_rel_pos_of_models_meta_data_according_parent_state(tmp_models_dict):
             del action_parent_m.ungroup_state.__func__.tmp_models_storage
             return
 
@@ -615,14 +634,13 @@ def ungroup_state(state_m):
 
         action_parent_m.insert_meta_data_from_models_dict(tmp_models_dict)
 
-        # TODO maybe refactor the signal usage to use the following one
-        # action_parent_m.meta_signal.emit(MetaSignalMsg("ungroup_state", "all", True))
         affected_models = action_parent_m.group_states.__func__.affected_models
         for elemets_dict in tmp_models_dict.itervalues():
             affected_models.extend(elemets_dict.itervalues())
-        action_parent_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
-                                                           action_parent_m=action_parent_m,
-                                                           affected_models=affected_models, after=True))
+        # print "EMIT-AFTER ON OLD_STATE ", state_id
+        old_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
+                                                       action_parent_m=action_parent_m,
+                                                       affected_models=affected_models, after=True))
 
     del action_parent_m.ungroup_state.__func__.tmp_models_storage
     del action_parent_m.group_states.__func__.affected_models

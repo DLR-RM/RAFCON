@@ -587,7 +587,7 @@ class ContainerState(State):
                 self.add_data_flow(from_state_id=s.state_id, from_data_port_id=args['data_port_id'],
                                    to_state_id=df.to_state, to_data_port_id=df.to_key, data_flow_id=df.data_flow_id)
 
-        return state_id
+        return self.states[state_id]
 
     @lock_state_machine
     @Observable.observed

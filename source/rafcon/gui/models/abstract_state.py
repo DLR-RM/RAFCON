@@ -111,6 +111,7 @@ class AbstractStateModel(MetaModel, Hashable):
 
         self.parent = parent
 
+        self.meta_signal = Signal()
         self.state_type_changed_signal = Signal()
         self.action_signal = Signal()
 
@@ -215,7 +216,7 @@ class AbstractStateModel(MetaModel, Hashable):
                     return sm_m
                 else:
                     logger.debug("State model requesting its state machine model parent seems to be obsolete. "
-                                   "This is a hint to duplicated models and dirty coding")
+                                 "This is a hint to duplicated models and dirty coding")
 
         return None
 
@@ -294,7 +295,7 @@ class AbstractStateModel(MetaModel, Hashable):
         # print "action_signal_triggered state: ", self.state.state_id, model, prop_name, info
         if msg.action.startswith('sm_notification_'):
             return
-        # affected child propagation from state
+        # # affected child propagation from state
         # if hasattr(self, 'states'):
         #     for m in info['arg'].affected_models:
         #         print m, self.states
@@ -318,16 +319,18 @@ class AbstractStateModel(MetaModel, Hashable):
         if self.parent is not None:
             # Notify parent about change of meta data
             info.arg = msg
+            # print "DONE1", self.state.state_id, msg
             self.parent.action_signal_triggered(model, prop_name, info)
-            # print "DONE1 ", msg
+            # print "FINISH DONE1", self.state.state_id, msg
         # state machine propagation of action signal (indirect) TODO remove finally
         elif not msg.action.startswith('sm_notification_'):  # Prevent recursive call
             # If we are the root state, inform the state machine model by emitting our own meta signal.
             # To make the signal distinguishable for a change of meta data to our state, the change property of
             # the message is prepended with 'sm_notification_'
+            # print "DONE2", self.state.state_id, msg
             new_msg = msg._replace(action='sm_notification_' + msg.action)
             self.action_signal.emit(new_msg)
-            # print "DONE2 ", msg
+            # print "FINISH DONE2", self.state.state_id, msg
         else:
             # print "DONE3 NOTHING"
             pass

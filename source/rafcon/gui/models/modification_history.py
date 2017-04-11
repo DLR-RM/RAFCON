@@ -479,13 +479,17 @@ class ModificationsHistoryModel(ModelMT):
                 changed_parent_model = overview['model'][-1]
             else:
                 changed_parent_model = overview['model'][-1].parent
-            self.active_action = MetaAction(changed_parent_model.state.get_path(),
-                                            state_machine_model=self.state_machine_model,
-                                            overview=overview)
-            # b_tuple = self.actual_action.before_storage
-            meta_dict = self.get_state_element_meta_from_internal_tmp_storage(changed_parent_model.state.get_path())
-            self.active_action.before_storage = meta_dict
-            self.finish_new_action(overview)
+            if self.count_before == 0:
+                self.active_action = MetaAction(changed_parent_model.state.get_path(),
+                                                state_machine_model=self.state_machine_model,
+                                                overview=overview)
+                # b_tuple = self.actual_action.before_storage
+                meta_dict = self.get_state_element_meta_from_internal_tmp_storage(changed_parent_model.state.get_path())
+                self.active_action.before_storage = meta_dict
+
+                self.finish_new_action(overview)
+            else:
+                logger.info('Meta data change signal was emitted while other action was is performed. \n{0}'.format(overview))
 
     def manual_changed_notify_before(self, change_type, changed_parent_model, changed_model, recursive_changes):
         pass
@@ -509,94 +513,70 @@ class ModificationsHistoryModel(ModelMT):
             self.locked = False
             self.state_machine_model.storage_lock.release()
 
-    @ModelMT.observe("action_signal", signal=True)
-    def action_signal(self, model, prop_name, info):
+    @ModelMT.observe("state_action_signal", signal=True)
+    def state_action_signal(self, model, prop_name, info):
+        # print "PSTATE: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
+        if self.busy:  # if proceeding undo or redo
+            return
         # print "state: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
+        if isinstance(model, StateMachineModel) and isinstance(info['arg'], ActionSignalMsg) and \
+                not info['arg'].after and info['arg'].action in ['change_root_state_type', 'change_state_type', 'paste',
+                                                                 'substitute_state', 'group_states', 'ungroup_state']:
+
+            overview = NotificationOverview(info, self.with_prints, self.__class__.__name__)
+            if self.with_debug_logs:
+                self.store_test_log_file(str(overview) + "\n")
+
+            overview['instance'].insert(0, self.state_machine_model.state_machine)
+            overview['model'].insert(0, self.state_machine_model)
+            if info['arg'].action == 'change_root_state_type':
+                assert info['arg'].action_parent_m is self.state_machine_model
+                self.active_action = StateMachineAction(parent_path=info['arg'].action_parent_m.root_state.state.get_path(),
+                                                        state_machine_model=info['arg'].action_parent_m,
+                                                        overview=overview)
+            else:
+                self.active_action = StateAction(parent_path=info['arg'].action_parent_m.state.get_path(),
+                                                 state_machine_model=self.state_machine_model,
+                                                 overview=overview)
+            # print "CREATE STATE MACHINE ACTION:", self.active_action
+            # print "\n\nBEFORE\n\n"
+            self.before_count()
+            if info['arg'].action in ['group_states', 'paste']:
+                self.observe_model(info['arg'].action_parent_m)
+                # print "OBSERVE MODEL", info['arg'].action_parent_m
+            else:
+                self.observe_model(info['arg'].affected_models[0])
+                # print "OBSERVE MODEL", info['arg'].affected_models[0]
+
+    @ModelMT.observe("action_signal", signal=True)
+    def action_signal_after_complex_action(self, model, prop_name, info):
+        # print "ACTION SIGNAL: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
         if self.busy:  # if proceeding undo or redo
             return
         if isinstance(model, AbstractStateModel) and isinstance(info['arg'], ActionSignalMsg) and \
-                info['arg'].action in ['change_root_state_type', 'change_state_type',
-                                       'substitute_state', 'group_states', 'ungroup_state']:
-            if not info['arg'].after:
-                overview = NotificationOverview(info, self.with_prints, self.__class__.__name__)
-                if self.with_debug_logs:
-                    self.store_test_log_file(str(overview) + "\n")
+                info['arg'].after and info['arg'].action in ['change_root_state_type', 'change_state_type', 'paste',
+                                                             'substitute_state', 'group_states', 'ungroup_state']:
+            # print "\n\nIN AFTER\n\n", info['arg'].action
+            overview = NotificationOverview(info, self.with_prints, "History state_machine_AFTER")
+            if info['arg'].action in ['change_state_type', 'paste',
+                                      'substitute_state', 'group_states', 'ungroup_state']:
 
-                overview['instance'].insert(0, self.state_machine_model.state_machine)
-                overview['model'].insert(0, self.state_machine_model)
-                if info['arg'].action == 'change_root_state_type':
-                    assert info['arg'].action_parent_m is self.state_machine_model
-                    self.active_action = StateMachineAction(parent_path=info['arg'].action_parent_m.root_state.state.get_path(),
-                                                            state_machine_model=info['arg'].action_parent_m,
-                                                            overview=overview)
-                else:
-                    self.active_action = StateMachineAction(parent_path=info['arg'].action_parent_m.state.get_path(),
-                                                            state_machine_model=self.state_machine_model,
-                                                            overview=overview)
-                # print "CREATE STATE MACHINE ACTION:", self.active_action
-                self.before_count()
-            else:
-                overview = NotificationOverview(info, self.with_prints, "History state_machine_AFTER")
-                # decrease counter and finish action if count_before = 0
-                if self.locked:
-                    self.after_count()
-                    if self.count_before == 0:
-                        self.finish_new_action(overview)
+                self.relieve_model(model)
+                # print "RELIEVE MODEL", model
+            # decrease counter and finish action if count_before = 0
+            if self.locked:
+                self.after_count()
+                if self.count_before == 0:
+                    # print "\n\nAFTER\n\n"
+                    self.finish_new_action(overview)
+                    if info['arg'].action == 'change_root_state_type':
                         self._re_initiate_observation()
-                        # print "HISTORY COUNT WAS OF SUCCESS FOR STATE MACHINE"
-                        if self.with_prints:
-                            print "HISTORY COUNT WAS OF SUCCESS FOR STATE MACHINE"
-                else:
-                    logger.error("HISTORY after not count [state_machine] -> For every before there should be a after.")
-
-    @ModelMT.observe("state_action_signal", signal=True)
-    def state_action_signal(self, model, prop_name, info):
-        # print "state machine: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
-        pass
-
-    # @ModelMT.observe("state_machine", before=True)
-    # def assign_notification_change_type_root_state_before(self, model, prop_name, info):
-    #     if info.method_name != "root_state_change":
-    #         return
-    #     if self.busy:  # if proceeding undo or redo
-    #         return
-    #     # print model, prop_name
-    #     # print "type change", NotificationOverview(info, self.with_prints, self.__class__.__name__)
-    #
-    #     if info['kwargs']['method_name'] == "change_root_state_type":
-    #         overview = NotificationOverview(info, self.with_prints, self.__class__.__name__)
-    #         if self.with_debug_logs:
-    #             self.store_test_log_file(str(overview) + "\n")
-    #         assert overview['method_name'][-1]
-    #         self.active_action = StateMachineAction(parent_path=overview['instance'][-1].root_state.get_path(),
-    #                                                 state_machine_model=self.state_machine_model,
-    #                                                 overview=overview)
-    #         self.before_count()
-
-    # @ModelMT.observe("state_machine", after=True)
-    # def assign_notification_change_type_root_state_after(self, model, prop_name, info):
-    #     if info.method_name != "root_state_change":
-    #         return
-    #     if info.result == "CRASH in FUNCTION" or isinstance(info.result, Exception):
-    #         return self._interrupt_active_action(info)
-    #
-    #     if self.busy:  # if proceeding undo or redo
-    #         return
-    #
-    #     if info['kwargs']['method_name'] == "change_root_state_type":
-    #         overview = NotificationOverview(info, self.with_prints, "History state_machine_AFTER")
-    #         assert overview['method_name'][-1] == "change_root_state_type"
-    #
-    #         # decrease counter and finish action if count_before = 0
-    #         if self.locked:
-    #             self.after_count()
-    #             if self.count_before == 0:
-    #                 self.finish_new_action(overview)
-    #                 self._re_initiate_observation()
-    #                 if self.with_prints:
-    #                     print "HISTORY COUNT WAS OF SUCCESS FOR STATE MACHINE"
-    #         else:
-    #             logger.error("HISTORY after not count [state_machine] -> For every before there should be a after.")
+                    # print "HISTORY COUNT WAS OF SUCCESS FOR STATE MACHINE"
+                    if self.with_prints:
+                        print "HISTORY COUNT WAS OF SUCCESS FOR STATE MACHINE"
+            else:
+                logger.error("HISTORY after not count [state_machine] -> For every before there should be a after."
+                             "{0}".format(NotificationOverview(info)))
 
     @ModelMT.observe("states", before=True)
     def assign_notification_states_before(self, model, prop_name, info):

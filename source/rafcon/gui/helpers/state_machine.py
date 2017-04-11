@@ -33,6 +33,7 @@ from rafcon.gui.models.outcome import OutcomeModel
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
+from rafcon.gui.clipboard import global_clipboard
 import rafcon.gui.singleton
 from rafcon.utils import log
 
@@ -269,6 +270,18 @@ def delete_selected_elements(state_machine_m):
         delete_models(state_machine_m.selection.get_all())
         state_machine_m.selection.clear()
         return True
+
+
+def paste_into_selected_state(state_machine_m):
+    selection = state_machine_m.selection
+    selected_states = selection.get_states()
+    if len(selection) != 1 or len(selected_states) < 1:
+        logger.error("Please select a single container state for pasting the clipboard")
+        return
+
+    # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
+    target_state_m = selection.get_states()[0]
+    global_clipboard.paste(target_state_m)
 
 
 def selected_state_toggle_is_start_state():

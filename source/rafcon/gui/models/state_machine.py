@@ -207,11 +207,11 @@ class StateMachineModel(ModelMT, Hashable):
     def meta_changed(self, model, prop_name, info):
         """When the meta was changed, we have to set the dirty flag, as the changes are unsaved"""
         self.state_machine.marked_dirty = True
-        if model is not self:  # Signal was caused by the root state
+        msg = info.arg
+        if model is not self and msg.change.startswith('sm_notification_'):  # Signal was caused by the root state
             # Emit state_meta_signal to inform observing controllers about changes made to the meta data within the
             # state machine
             # -> removes mark of "sm_notification_"-prepend to mark root-state msg forwarded to state machine label
-            msg = info.arg
             msg = msg._replace(change=msg.change.replace('sm_notification_', '', 1))
             self.state_meta_signal.emit(msg)
 
@@ -221,16 +221,17 @@ class StateMachineModel(ModelMT, Hashable):
         # print "action_signal_triggered state machine: ", model, prop_name, info
         self.state_machine.marked_dirty = True
         msg = info.arg
-        if model is not self:  # Signal was caused by the root state
+        if model is not self and msg.action.startswith('sm_notification_'):  # Signal was caused by the root state
             # Emit state_action_signal to inform observing controllers about changes made to the state within the
             # state machine
+            # print "DONE1 S", self.state_machine.state_machine_id, msg, model
             # -> removes mark of "sm_notification_"-prepend to mark root-state msg forwarded to state machine label
             msg = msg._replace(action=msg.action.replace('sm_notification_', '', 1))
-            # print "DONE1", msg
+            self.state_action_signal.emit(msg)
+            # print "FINISH DONE1 S", self.state_machine.state_machine_id, msg
         else:
-            # print "DONE2", msg
+            # print "DONE2 S", self.state_machine.state_machine_id, msg
             pass
-        self.state_action_signal.emit(msg)
 
     @staticmethod
     def _list_modified(prop_name, info):
@@ -294,8 +295,8 @@ class StateMachineModel(ModelMT, Hashable):
         if 'before' in info:
             # logger.info("BEFORE {0}".format(info.method_name))
             self._send_root_state_notification(model, prop_name, info)
-        else:
-            logger.info("AFTER {0}".format(info.method_name))
+        # else:
+        #     logger.info("AFTER {0}".format(info.method_name))
 
     def _send_root_state_notification(self, model, prop_name, info):
         cause = 'root_state_change'

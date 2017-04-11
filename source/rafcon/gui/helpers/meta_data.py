@@ -72,6 +72,8 @@ def get_boundaries_of_elements_in_dict(models_dict):
     else:
         left = models_dict['scoped_variables'].items()[0][1].get_meta_data_editor(gaphas_editor)['inner_rel_pos'][0]
     if models_dict['states']:
+        # print models_dict['states'].items()[0][1].get_meta_data_editor(gaphas_editor)
+        # print models_dict['states'].items()[0][1].get_meta_data_editor(gaphas_editor)['rel_pos'][1]
         top = y_axis_mirror * models_dict['states'].items()[0][1].get_meta_data_editor(gaphas_editor)['rel_pos'][1]
     else:
         top = y_axis_mirror * models_dict['scoped_variables'].items()[0][1].get_meta_data_editor(gaphas_editor)['inner_rel_pos'][1]
@@ -106,12 +108,12 @@ def get_boundaries_of_elements_in_dict(models_dict):
                     rel_positions = mirror_waypoints(deepcopy(model.get_meta_data_editor(for_gaphas=gaphas_editor)))['waypoints']
                 else:
                     rel_positions = model.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
-                print key, rel_positions, _size, model.meta
+                # print key, rel_positions, _size, model.meta
 
             for rel_position in rel_positions:
                 right, bottom = cal_max(right, bottom, rel_position, _size)
                 left, top = cal_min(left, top, rel_position, _size)
-                print "new edges:", left, right, top, bottom, key
+                # print "new edges:", left, right, top, bottom, key
 
     return left, right, top, bottom
 
@@ -137,13 +139,13 @@ def cal_frame_according_boundaries(left, right, top, bottom, parent_size, gaphas
 
 
 def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor):
-    print "\n", "#"*30, "offset models", pos_offset, "#"*30
+    # print "\n", "#"*30, "offset models", pos_offset, "#"*30
     # Update relative position of states within the container in order to maintain their absolute position
     for child_state_m in models_dict['states'].itervalues():
         old_rel_pos = child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
-        print "old_rel_pos", old_rel_pos, child_state_m
+        # print "old_rel_pos", old_rel_pos, child_state_m
         child_state_m.set_meta_data_editor('rel_pos', add_pos(old_rel_pos, pos_offset), from_gaphas=gaphas_editor)
-        print "new_rel_pos", child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor), child_state_m
+        # print "new_rel_pos", child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor), child_state_m
 
     # Do the same for scoped variable
     if not gaphas_editor:
@@ -163,7 +165,7 @@ def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor)
             else:
                 new_waypoints.append(add_pos(waypoint, pos_offset))
         connection_m.set_meta_data_editor('waypoints', new_waypoints, from_gaphas=gaphas_editor)
-    print "END", "#"*30, "offset models", pos_offset, "#"*30, "\n"
+    # print "END", "#"*30, "offset models", pos_offset, "#"*30, "\n"
 
 
 def resize_state_meta(state_m, factor, gaphas_editor):
@@ -183,16 +185,16 @@ def resize_state_meta(state_m, factor, gaphas_editor):
 
 
 def resize_of_all_models_in_dict(models_dict, factor, gaphas_editor):
-    print "\n", "#"*30, "resize models", factor, "#"*30,
+    # print "\n", "#"*30, "resize models", factor, "#"*30,
 
     # Update relative position of states within the container in order to maintain their absolute position
     for child_state_m in models_dict['states'].itervalues():
         old_rel_pos = child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
-        print "old_rel_pos state", old_rel_pos, child_state_m.core_element
+        # print "old_rel_pos state", old_rel_pos, child_state_m.core_element
         child_state_m.set_meta_data_editor('rel_pos', mult_two_vectors(factor, old_rel_pos), from_gaphas=gaphas_editor)
-        print "new_rel_pos state", child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor), child_state_m.core_element
+        # print "new_rel_pos state", child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor), child_state_m.core_element
         resize_state_meta(child_state_m, factor, gaphas_editor)
-        print "re-sized state", child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor), child_state_m.core_element
+        # print "re-sized state", child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor), child_state_m.core_element
 
     # Do the same for scoped variable
     if not gaphas_editor:
@@ -203,14 +205,14 @@ def resize_of_all_models_in_dict(models_dict, factor, gaphas_editor):
     # Do the same for all connections (transitions and data flows)
     connection_models = models_dict['transitions'].values() + models_dict['data_flows'].values()
     for connection_m in connection_models:
-        print "old_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element
+        # print "old_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element
         old_waypoints = connection_m.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
         new_waypoints = []
         for waypoint in old_waypoints:
             new_waypoints.append(mult_two_vectors(factor, waypoint))
         connection_m.set_meta_data_editor('waypoints', new_waypoints, from_gaphas=gaphas_editor)
-        print "new_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element
-    print "END", "#"*30, "resize models", factor, "#"*30, "\n"
+    #     print "new_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element
+    # print "END", "#"*30, "resize models", factor, "#"*30, "\n"
 
 
 def offset_rel_pos_of_models_meta_data_according_parent_state(models_dict):
@@ -274,26 +276,26 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
         rel_pos = (margin, margin) if rel_pos is None else rel_pos
         assert parent_size[0] > rel_pos[0]
         assert parent_size[1] > rel_pos[1]
-        print "edges:", left, right, top, bottom
-        print "margin:", margin, "rel_pos:", rel_pos, "old_rel_pos", old_rel_pos, "size:", size
+        # print "edges:", left, right, top, bottom
+        # print "margin:", margin, "rel_pos:", rel_pos, "old_rel_pos", old_rel_pos, "size:", size
 
         parent_width, parent_height = parent_size
 
         boundary_width, boundary_height = size
-        print "parent width:   {0}, parent_height:   {1}".format(parent_width, parent_height)
-        print "boundary width: {0}, boundary_height: {1}".format(boundary_width, boundary_height)
+        # print "parent width:   {0}, parent_height:   {1}".format(parent_width, parent_height)
+        # print "boundary width: {0}, boundary_height: {1}".format(boundary_width, boundary_height)
 
         # no site scale
         if parent_width - rel_pos[0] > boundary_width and parent_height - rel_pos[1] > boundary_height:
             if automatic_mode:
                 resize_factor = 1.
                 boundary_width_in_parent = boundary_width*resize_factor
-                print boundary_width, resize_factor, boundary_width*resize_factor, boundary_height*resize_factor + margin*2, parent_height
-                print "left over width: ", parent_width - boundary_width_in_parent - rel_pos[0] - margin
+                # print boundary_width, resize_factor, boundary_width*resize_factor, boundary_height*resize_factor + margin*2, parent_height
+                # print "left over width: ", parent_width - boundary_width_in_parent - rel_pos[0] - margin
                 width_pos_offset_to_middle = (parent_width - boundary_width_in_parent - rel_pos[0] - margin)/2.
                 rel_pos = add_pos(rel_pos, (width_pos_offset_to_middle, 0.))
                 boundary_height_in_parent = boundary_height*resize_factor
-                print "left over height: ", parent_height - boundary_height_in_parent - rel_pos[0] - margin
+                # print "left over height: ", parent_height - boundary_height_in_parent - rel_pos[0] - margin
                 height_pos_offset_to_middle = (parent_height - boundary_height_in_parent - rel_pos[1] - margin)/2.
                 rel_pos = add_pos(rel_pos, (0., height_pos_offset_to_middle))
             offset = subtract_pos((0., 0.), subtract_pos(old_rel_pos, rel_pos))
@@ -305,25 +307,25 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
                 # print "#"*20, 1, "#"*20, rel_pos
                 resize_factor = (parent_height - rel_pos[1] - margin)/boundary_height
                 boundary_width_in_parent = boundary_width*resize_factor
-                print boundary_width, resize_factor, boundary_width*resize_factor
-                print "left over width: ", parent_width - boundary_width_in_parent - rel_pos[0] - margin
+                # print boundary_width, resize_factor, boundary_width*resize_factor
+                # print "left over width: ", parent_width - boundary_width_in_parent - rel_pos[0] - margin
                 width_pos_offset_to_middle = (parent_width - boundary_width_in_parent - rel_pos[0] - margin)/2.
                 rel_pos = add_pos(rel_pos, (width_pos_offset_to_middle, 0.))
-                print resize_factor, rel_pos
+                # print resize_factor, rel_pos
             else:
                 # print "#"*20, 2, "#"*20, rel_pos
                 resize_factor = (parent_width - rel_pos[0] - margin)/boundary_width
                 boundary_height_in_parent = boundary_height*resize_factor
-                print boundary_width, resize_factor, boundary_width*resize_factor
-                print "left over height: ", parent_height - boundary_height_in_parent - rel_pos[0] - margin
+                # print boundary_width, resize_factor, boundary_width*resize_factor
+                # print "left over height: ", parent_height - boundary_height_in_parent - rel_pos[0] - margin
                 height_pos_offset_to_middle = (parent_height - boundary_height_in_parent - rel_pos[1] - margin)/2.
                 rel_pos = add_pos(rel_pos, (0., height_pos_offset_to_middle))
                 # print resize_factor, rel_pos
             frame = {'rel_pos': rel_pos, 'size': mult_two_vectors((resize_factor, resize_factor), size)}
-            print models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos'], \
-                parent_size, models_dict['state'].parent.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
-            print "frame", frame, resize_factor
-            # rel_pos = mult_two_vectors((1, -1), frame['rel_pos'])
+            # print models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos'], \
+            #     parent_size, models_dict['state'].parent.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
+            # print "frame", frame, resize_factor
+            # # rel_pos = mult_two_vectors((1, -1), frame['rel_pos'])
             offset = subtract_pos((0., 0.), mult_two_vectors((1., y_axis_mirror), old_rel_pos))
             offset_rel_pos_of_all_models_in_dict(models_dict, offset, gaphas_editor)
 
@@ -331,6 +333,7 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
 
             offset_rel_pos_of_all_models_in_dict(models_dict, mult_two_vectors((1., y_axis_mirror), frame['rel_pos']), gaphas_editor)
             # scale_meta_data_according_frame(models_dict, frame)
+    return True
 
 
 def scale_meta_data_according_frame(models_dict, frame):

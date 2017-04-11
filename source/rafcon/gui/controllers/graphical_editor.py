@@ -213,12 +213,12 @@ class GraphicalEditorController(ExtendedController):
     def state_action_signal_before(self, model, prop_name, info):
         # from rafcon.gui.utils.notification_overview import NotificationOverview
         # logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
-        if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state']:
+        if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'ungroup_state']:
             if not info['arg'].after:
                 self.suspend_drawing = True
                 # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
                 self.observe_model(info['arg'].affected_models[0])
-        if info['arg'].action in ['group_states', 'ungroup_state', 'paste']:
+        if info['arg'].action in ['group_states', 'paste']:
             if not info['arg'].after:
                 self.suspend_drawing = True
                 # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
@@ -2252,38 +2252,7 @@ class GraphicalEditorController(ExtendedController):
         """
         if react_to_event(self.view, self.view.editor, event):
             logger.debug("Paste")
-
-            selection = self.model.selection
-            selected_states = selection.get_states()
-            if len(selection) != 1 or len(selected_states) < 1:
-                logger.error("Please select a single container state for pasting the clipboard")
-                return
-
-            # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
-            target_state_m = selection.get_states()[0]
-            insert_dict = global_clipboard.paste(target_state_m)
-
-            if 'states' not in insert_dict:  # An error occurred while pasting
-                return
-
-            for new_state_m_copy, orig_state_m_copy in insert_dict['states']:
-
-                # Adjust size of new state
-                old_size = orig_state_m_copy.get_meta_data_editor(for_gaphas=False)['size']
-                target_size = target_state_m.get_meta_data_editor(for_gaphas=False)['size']
-
-                new_size = calculate_size(old_size, (target_size[0] / 5., target_size[1] / 5.))
-
-                rel_pos_x, rel_pos_y = new_state_m_copy.get_meta_data_editor(for_gaphas=False)['rel_pos']
-                rel_pos_x = target_size[0] * 4 / 5. if rel_pos_x > target_size[0] * 4 / 5. else rel_pos_x
-                rel_pos_y = -target_size[1] * 4 / 5. if rel_pos_y < -target_size[1] * 4 / 5. else rel_pos_y
-                pos = self._get_absolute_position(new_state_m_copy.parent, (rel_pos_x, rel_pos_y))
-                new_state_m_copy.set_meta_data_editor('rel_pos', (rel_pos_x, rel_pos_y), from_gaphas=False)
-                new_state_m_copy.temp['gui']['editor']['pos'] = pos
-                new_corner_pos = add_pos(new_state_m_copy.temp['gui']['editor']['pos'], new_size)
-                self._resize_state(new_state_m_copy, new_corner_pos, keep_ratio=True, resize_content=True, publish_changes=True)
-
-            self._redraw()
+            gui_helper_state_machine.paste_into_selected_state(self.model)
             return True
 
     def check_focus_and_sm_selection_according_event(self, event):
