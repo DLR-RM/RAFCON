@@ -63,8 +63,11 @@ class GuiConfig(ObservableConfig):
     def load(self, config_file=None, path=None):
         using_default_config = False
         if config_file is None:
-            using_default_config = True
-            path, config_file = os.path.split(resource_filename(__name__, CONFIG_FILE))
+            if path is None:
+                using_default_config = True
+                path, config_file = os.path.split(resource_filename(__name__, CONFIG_FILE))
+            else:
+                config_file = CONFIG_FILE
         super(GuiConfig, self).load(config_file, path)
 
         # fill up shortcuts

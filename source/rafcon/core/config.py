@@ -85,7 +85,10 @@ class Config(ObservableConfig):
         :param path: the path to the config file
         """
         if config_file is None:
-            path, config_file = split(resource_filename(__name__, CONFIG_FILE))
+            if path is None:
+                path, config_file = split(resource_filename(__name__, CONFIG_FILE))
+            else:
+                config_file = CONFIG_FILE
         super(Config, self).load(config_file, path)
 
 
