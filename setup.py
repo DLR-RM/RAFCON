@@ -67,6 +67,7 @@ setup(
 
     data_files=[
         ('rafcon/gui/icons', get_files_in_path(themes_folder, 'icons')),
+        ('rafcon/gui/splashscreens', get_files_in_path(themes_folder, 'splashscreens')),
         ('rafcon/gui/themes/dark/gtk-2.0', [os.path.join(themes_folder, 'dark', 'gtk-2.0', 'gtkrc')]),
         ('rafcon/gui/themes/dark', [os.path.join(themes_folder, 'dark', 'colors.json')]),
         ('rafcon/gui/themes/dark/gtk-sourceview', get_files_in_path(themes_folder, 'dark', 'gtksw-styles')),

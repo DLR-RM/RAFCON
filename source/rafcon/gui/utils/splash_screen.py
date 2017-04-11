@@ -11,10 +11,10 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import gtk
-import os
 import random
-import rafcon
+from pkg_resources import resource_filename, resource_listdir
 
+import rafcon.gui
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -70,21 +70,19 @@ class SplashScreen(gtk.Window):
         else:
             logger.debug("Splash screen image path is None")
 
-    def rotate_image(self, random_=True, image_folder=None):
+    def rotate_image(self, random_=True):
+        images = []
+        for image_filename in resource_listdir(rafcon.gui.__name__, "splashscreens"):
+            images.append(resource_filename(rafcon.gui.__name__, "splashscreens/" + image_filename))
 
-        if not image_folder:
-            image_folder = os.path.join(rafcon.__path__[0], 'gui', 'themes', 'splashscreens')
-
-        # get content of the specified img folder
-        paths = os.listdir(image_folder)
         # if random mode is specified, choose a picture out of the target folder. Else switch through the pictures
         if random_:
-            image_path = paths[int(random.uniform(0.0, len(paths)))]
+            image_path = images[int(random.uniform(0.0, len(images)))]
         else:
-            if self.image_index >= len(paths):
+            if self.image_index >= len(images):
                 self.image_index = 0
-            image_path = paths[self.image_index]
+            image_path = images[self.image_index]
             self.image_index += 1
 
-        self.load_image(os.path.join(image_folder, image_path))
+        self.load_image(image_path)
 
