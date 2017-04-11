@@ -14,12 +14,13 @@
 
 from gtkmvc import View
 
+from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
 
 
 class StateTransitionsListView(View):
-    builder = constants.get_glade_path("transition_list_widget.glade")
+    builder = glade.get_glade_path("transition_list_widget.glade")
     top = 'tree_view'
 
     def __init__(self):
@@ -31,7 +32,7 @@ class StateTransitionsListView(View):
 
 
 class StateTransitionsEditorView(View):
-    builder = constants.get_glade_path("state_transitions_widget.glade")
+    builder = glade.get_glade_path("state_transitions_widget.glade")
     top = 'vbox2'
 
     def __init__(self):

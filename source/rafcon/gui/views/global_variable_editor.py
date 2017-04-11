@@ -11,11 +11,13 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gtkmvc import View
+
+from rafcon.gui import glade
 from rafcon.gui.utils import constants
 
 
 class GlobalVariableEditorView(View):
-    builder = constants.get_glade_path("global_variable_editor_widget.glade")
+    builder = glade.get_glade_path("global_variable_editor_widget.glade")
     top = 'global_variable_vbox'
 
     def __init__(self):

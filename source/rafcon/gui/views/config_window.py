@@ -11,11 +11,11 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gtkmvc import View
-from rafcon.gui.utils import constants
+from rafcon.gui import glade
 
 
 class ConfigWindowView(View):
-    builder = constants.get_glade_path("config_window.glade")
+    builder = glade.get_glade_path("config_window.glade")
     top = 'properties_window'
 
     def __init__(self):

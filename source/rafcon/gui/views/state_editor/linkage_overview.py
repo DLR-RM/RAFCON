@@ -14,12 +14,13 @@
 
 from gtkmvc import View
 
+from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
 
 
 class LinkageOverviewDataView(View):
-    builder = constants.get_glade_path("linkage_overview_data.glade")
+    builder = glade.get_glade_path("linkage_overview_data.glade")
     top = 'tree_view'
 
     def __init__(self):
@@ -27,7 +28,7 @@ class LinkageOverviewDataView(View):
 
 
 class LinkageOverviewLogicView(View):
-    builder = constants.get_glade_path("linkage_overview_logic.glade")
+    builder = glade.get_glade_path("linkage_overview_logic.glade")
     top = 'tree_view'
 
     def __init__(self):
@@ -37,7 +38,7 @@ class LinkageOverviewLogicView(View):
 
 
 class LinkageOverviewView(View):
-    builder = constants.get_glade_path("linkage_overview_one.glade")
+    builder = glade.get_glade_path("linkage_overview_one.glade")
     top = 'linkage_container'
 
     def __init__(self):

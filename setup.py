@@ -59,10 +59,11 @@ setup(
     package_dir={'': 'source'},  # tell distutils packages are under src
 
     package_data={
-        # Include core config
+        # Include core and GUI config
         'rafcon.core': ['config.yaml'],
-        # Include all GUI files, i.e. GUI config and all glade files
-        'rafcon.gui': ['gui_config.yaml', 'glade/*.glade'],
+        'rafcon.gui': ['gui_config.yaml'],
+        # Include all glade files
+        'rafcon.gui.glade': ['*.glade']
     },
 
     data_files=[
@@ -114,5 +115,5 @@ setup(
         'Topic :: Utilities'
     ],
 
-    zip_safe=False
+    zip_safe=True
 )

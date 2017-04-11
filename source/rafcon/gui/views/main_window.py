@@ -20,6 +20,7 @@ from gtkmvc import View
 
 from rafcon.gui.config import global_gui_config
 import rafcon.gui.helpers.label as gui_helper_label
+from rafcon.gui import glade
 from rafcon.gui.utils import constants
 from rafcon.gui.views.execution_history import ExecutionHistoryView
 from rafcon.gui.views.global_variable_editor import GlobalVariableEditorView
@@ -38,7 +39,7 @@ from rafcon.utils.i18n import _
 
 
 class MainWindowView(View):
-    builder = constants.get_glade_path("main_window.glade")
+    builder = glade.get_glade_path("main_window.glade")
     top = 'main_window'
 
     def __init__(self):

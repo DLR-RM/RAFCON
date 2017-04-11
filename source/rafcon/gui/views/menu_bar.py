@@ -17,13 +17,14 @@
 import gtk
 from gtkmvc import View
 
+from rafcon.gui import glade
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.helpers.label import set_label_markup
 from rafcon.gui.utils import constants
 
 
 class MenuBarView(View):
-    builder = constants.get_glade_path("menu_bar.glade")
+    builder = glade.get_glade_path("menu_bar.glade")
     top = 'menubar'
 
     buttons = {
