@@ -17,7 +17,7 @@ import sys
 import re
 import gtk
 import yaml
-from pkg_resources import resource_filename, resource_listdir, resource_exists
+from pkg_resources import resource_filename, resource_listdir, resource_exists, resource_string
 from yaml_configuration.config import ConfigError
 
 from rafcon.core.config import ObservableConfig
@@ -30,7 +30,7 @@ logger = log.get_logger(__name__)
 
 CONFIG_FILE = "gui_config.yaml"
 
-DEFAULT_CONFIG = filesystem.read_file(os.path.dirname(__file__), CONFIG_FILE)
+DEFAULT_CONFIG = resource_string(__name__, CONFIG_FILE)
 
 
 class GuiConfig(ObservableConfig):
@@ -50,7 +50,7 @@ class GuiConfig(ObservableConfig):
 
     def __init__(self, logger_object=None):
         super(GuiConfig, self).__init__(DEFAULT_CONFIG, logger_object)
-        self.load(CONFIG_FILE)
+        self.load()
         if self.get_config_value("TYPE") != "GUI_CONFIG":
             raise ConfigError("Type should be GUI_CONFIG for GUI configuration. "
                               "Please add \"TYPE: GUI_CONFIG\" to your gui_config.yaml file.")
@@ -61,12 +61,14 @@ class GuiConfig(ObservableConfig):
         self.configure_colors()
 
     def load(self, config_file=None, path=None):
+        using_default_config = False
         if config_file is None:
-            config_file = CONFIG_FILE
+            using_default_config = True
+            path, config_file = os.path.split(resource_filename(__name__, CONFIG_FILE))
         super(GuiConfig, self).load(config_file, path)
 
         # fill up shortcuts
-        if not (config_file == CONFIG_FILE and path == os.path.dirname(__file__)):
+        if not using_default_config:
             default_gui_config = yaml.load(self.default_config) if self.default_config else {}
             shortcuts_dict = self.get_config_value('SHORTCUTS')
             for shortcut_name, shortcuts_list in default_gui_config.get('SHORTCUTS', {}).iteritems():
