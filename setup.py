@@ -34,7 +34,8 @@ class PyTest(TestCommand):
         sys.exit(error_number)
 
 
-def get_files_in_path(path):
+def get_files_in_path(*path):
+    path = os.path.join(*path)
     return [os.path.join(path, filename) for filename in os.listdir(path)]
 
 
@@ -42,6 +43,7 @@ global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion>
                        'python-gtkmvc==1.99.1', 'gaphas>=0.7']
 
 tarball_url = "https://rmc-intra02.robotic.dlr.de/~stei_fn/tarballs/"
+themes_folder = os.path.join('source', 'rafcon', 'gui', 'themes')
 
 setup(
     name='rafcon',
@@ -64,7 +66,12 @@ setup(
     },
 
     data_files=[
-        ('rafcon/gui/icons', get_files_in_path('source/rafcon/gui/themes/icons'))
+        ('rafcon/gui/icons', get_files_in_path(themes_folder, 'icons')),
+        ('rafcon/gui/themes/dark/gtk-2.0', [os.path.join(themes_folder, 'dark', 'gtk-2.0', 'gtkrc')]),
+        ('rafcon/gui/themes/dark', [os.path.join(themes_folder, 'dark', 'colors.json')]),
+        ('rafcon/gui/themes/dark/gtk-sourceview', get_files_in_path(themes_folder, 'dark', 'gtksw-styles')),
+        ('rafcon/gui/themes/common/fonts/DIN Next LT Pro', get_files_in_path(themes_folder, 'fonts', 'DIN Next LT Pro')),
+        ('rafcon/gui/themes/common/fonts/FontAwesome', get_files_in_path(themes_folder, 'fonts', 'FontAwesome'))
     ],
 
     setup_requires=['Sphinx>=1.4', 'Pygments>=2.0'] + global_requirements,

@@ -17,7 +17,7 @@ import sys
 import re
 import gtk
 import yaml
-from pkg_resources import resource_filename
+from pkg_resources import resource_filename, resource_listdir, resource_exists
 from yaml_configuration.config import ConfigError
 
 from rafcon.core.config import ObservableConfig
@@ -76,17 +76,12 @@ class GuiConfig(ObservableConfig):
                     shortcuts_dict[shortcut_name] = shortcuts_list if isinstance(shortcuts_list, list) else [shortcuts_list]
 
     def configure_gtk(self):
-        import gtk
-        theme_path = os.path.join(self.path_to_tool, "themes")
-        logo_path = os.path.join(theme_path, "icons")
-        theme = self.get_config_value('THEME', 'dark')
-        gtkrc_file_path = os.path.join(theme_path, theme, 'gtk-2.0', 'gtkrc')
-        print "name", __name__
-        gtk.window_set_default_icon_from_file(resource_filename(__name__,
-                                                                "icons/RAFCON_figurative_mark_negative.svg"))
-        # gtk.window_set_default_icon_from_file(os.path.join(logo_path, "RAFCON_figurative_mark_negative.svg"))
-        if not os.path.exists(gtkrc_file_path):
-            raise ValueError("GTK theme '{0}' does not exist".format(theme))
+        if not resource_exists(__name__, self.get_theme_path("gtk-2.0", "gtkrc")):
+            raise ValueError("GTK theme does not exist")
+        gtkrc_file_path = resource_filename(__name__, self.get_theme_path("gtk-2.0", "gtkrc"))
+        filename = resource_filename(__name__, "icons/RAFCON_figurative_mark_negative.svg")
+        gtk.window_set_default_icon_from_file(filename)
+
         # wait for all gtk events being processed before parsing the gtkrc file
         while gtk.events_pending():
             gtk.main_iteration(False)
@@ -112,21 +107,20 @@ class GuiConfig(ObservableConfig):
                 logger.debug("Font '{0}' found".format(font_name))
                 continue
 
-            logger.debug("Copy font '{0}' to '{1}'".format(font_name, font_user_folder))
+            logger.debug("Installing font '{0}' to '{1}'".format(font_name, font_user_folder))
             if not os.path.isdir(font_user_folder):
                 os.makedirs(font_user_folder)
-            font_origin = os.path.join(self.path_to_tool, 'themes', 'fonts', font_name)
 
             # A font is a folder one or more font faces
-            font_faces = os.listdir(font_origin)
-            for font_face in font_faces:
+            fonts_folder = self.get_theme_path("fonts", font_name, common=True)
+            for font_face in resource_listdir(__name__, fonts_folder):
                 target_font_file = os.path.join(font_user_folder, font_face)
-                source_font_file = os.path.join(font_origin, font_face)
+                source_font_file = resource_filename(__name__, "/".join((fonts_folder, font_face)))
                 filesystem.copy_file_if_update_required(source_font_file, target_font_file)
             font_copied = True
 
         if font_copied:
-            logger.info("Restart application to apply new fonts")
+            logger.info("Restarting RAFCON to apply new fonts...")
             python = sys.executable
             os.execl(python, python, *sys.argv)
 
@@ -134,26 +128,23 @@ class GuiConfig(ObservableConfig):
         source_view_style_user_folder = os.path.join(os.path.expanduser('~'), '.local', 'share', 'gtksourceview-2.0',
                                                      'styles')
         filesystem.create_path(source_view_style_user_folder)
-        theme = self.get_config_value('THEME', 'dark')
-        source_view_style_theme_folder = os.path.join(self.path_to_tool, 'themes', theme, 'gtksw-styles')
+
+        source_view_folder = self.get_theme_path("gtk-sourceview")
 
         # Copy all .xml source view style files from theme to local user styles folder
-        for style in os.listdir(source_view_style_theme_folder):
-            source_view_style_theme_path = os.path.join(source_view_style_theme_folder, style)
-            if not os.path.isfile(source_view_style_theme_path) or not style.endswith(".xml"):
+        for style_filename in resource_listdir(__name__, source_view_folder):
+            if not style_filename.endswith(".xml"):
                 continue
-
-            source_view_style_user_path = os.path.join(source_view_style_user_folder, style)
+            source_view_style_theme_path = resource_filename(__name__, "/".join((source_view_folder, style_filename)))
+            source_view_style_user_path = os.path.join(source_view_style_user_folder, style_filename)
             filesystem.copy_file_if_update_required(source_view_style_theme_path, source_view_style_user_path)
 
     def configure_colors(self):
-        theme = self.get_config_value('THEME', 'dark')
-
         # Get colors from GTKrc file
-        gtkrc_file_path = os.path.join(self.path_to_tool, 'themes', theme, 'gtk-2.0', 'gtkrc')
-        if not os.path.exists(gtkrc_file_path):
-            raise ValueError("GTK theme '{0}' does not exist".format(theme))
+        if not resource_exists(__name__, self.get_theme_path("gtk-2.0", "gtkrc")):
+            raise ValueError("GTK theme does not exist")
 
+        gtkrc_file_path = resource_filename(__name__, self.get_theme_path("gtk-2.0", "gtkrc"))
         with open(gtkrc_file_path) as f:
             lines = f.readlines()
 
@@ -166,17 +157,23 @@ class GuiConfig(ObservableConfig):
                 self.gtk_colors[color[0].upper()] = gtk.gdk.Color(color[1])
 
         # Get color definitions
-        color_file_path = os.path.join(self.path_to_tool, 'themes', theme, 'colors.json')
+        color_file_path = resource_filename(__name__, self.get_theme_path(filename="colors.json"))
         try:
             colors = storage_utils.load_objects_from_json(color_file_path)
         except IOError:
-            raise ValueError("No color definitions for theme '{0}' found".format(theme))
+            raise ValueError("No color definitions found")
 
         # replace unicode strings with str strings
         colors = {str(key): str(value) for key, value in colors.iteritems()}
         gtk_colors = {str(key): gtk.gdk.Color(str(value)) for key, value in colors.iteritems()}
         self.gtk_colors.update(gtk_colors)
         self.colors.update(colors)
+
+    def get_theme_path(self, folder=None, filename=None, common=False):
+        theme = "common" if common else self.get_config_value('THEME', 'dark')
+        folder = "/" + folder if folder else ""
+        filename = filename if filename else ""
+        return "themes/{theme}{folder}/{filename}".format(theme=theme, folder=folder, filename=filename)
 
 
 global_gui_config = GuiConfig(logger)
