@@ -81,10 +81,11 @@ class GuiConfig(ObservableConfig):
                     shortcuts_dict[shortcut_name] = shortcuts_list if isinstance(shortcuts_list, list) else [shortcuts_list]
 
     def configure_gtk(self):
-        if not resource_exists(__name__, self.get_theme_path("gtk-2.0", "gtkrc")):
+        if not resource_exists(__name__, self.get_assets_path("gtk-2.0", "gtkrc")):
             raise ValueError("GTK theme does not exist")
-        gtkrc_file_path = resource_filename(__name__, self.get_theme_path("gtk-2.0", "gtkrc"))
-        filename = resource_filename(__name__, "icons/RAFCON_figurative_mark_negative.svg")
+        gtkrc_file_path = resource_filename(__name__, self.get_assets_path("gtk-2.0", "gtkrc"))
+        filename = resource_filename(__name__, self.get_assets_path("icons", "RAFCON_figurative_mark_negative.svg",
+                                                                    for_theme=False))
         gtk.window_set_default_icon_from_file(filename)
 
         # wait for all gtk events being processed before parsing the gtkrc file
@@ -117,7 +118,7 @@ class GuiConfig(ObservableConfig):
                 os.makedirs(font_user_folder)
 
             # A font is a folder one or more font faces
-            fonts_folder = self.get_theme_path("fonts", font_name, common=True)
+            fonts_folder = self.get_assets_path("fonts", font_name, for_theme=False)
             for font_face in resource_listdir(__name__, fonts_folder):
                 target_font_file = os.path.join(font_user_folder, font_face)
                 source_font_file = resource_filename(__name__, "/".join((fonts_folder, font_face)))
@@ -134,7 +135,7 @@ class GuiConfig(ObservableConfig):
                                                      'styles')
         filesystem.create_path(source_view_style_user_folder)
 
-        source_view_folder = self.get_theme_path("gtk-sourceview")
+        source_view_folder = self.get_assets_path("gtk-sourceview")
 
         # Copy all .xml source view style files from theme to local user styles folder
         for style_filename in resource_listdir(__name__, source_view_folder):
@@ -146,10 +147,10 @@ class GuiConfig(ObservableConfig):
 
     def configure_colors(self):
         # Get colors from GTKrc file
-        if not resource_exists(__name__, self.get_theme_path("gtk-2.0", "gtkrc")):
+        if not resource_exists(__name__, self.get_assets_path("gtk-2.0", "gtkrc")):
             raise ValueError("GTK theme does not exist")
 
-        gtkrc_file_path = resource_filename(__name__, self.get_theme_path("gtk-2.0", "gtkrc"))
+        gtkrc_file_path = resource_filename(__name__, self.get_assets_path("gtk-2.0", "gtkrc"))
         with open(gtkrc_file_path) as f:
             lines = f.readlines()
 
@@ -162,7 +163,7 @@ class GuiConfig(ObservableConfig):
                 self.gtk_colors[color[0].upper()] = gtk.gdk.Color(color[1])
 
         # Get color definitions
-        color_file_path = resource_filename(__name__, self.get_theme_path(filename="colors.json"))
+        color_file_path = resource_filename(__name__, self.get_assets_path(filename="colors.json"))
         try:
             colors = storage_utils.load_objects_from_json(color_file_path)
         except IOError:
@@ -174,11 +175,11 @@ class GuiConfig(ObservableConfig):
         self.gtk_colors.update(gtk_colors)
         self.colors.update(colors)
 
-    def get_theme_path(self, folder=None, filename=None, common=False):
-        theme = "common" if common else self.get_config_value('THEME', 'dark')
-        folder = "/" + folder if folder else ""
+    def get_assets_path(self, folder=None, filename=None, for_theme=True):
+        theme = "themes/{}/".format(self.get_config_value('THEME', 'dark')) if for_theme else ""
+        folder = folder + "/" if folder else ""
         filename = filename if filename else ""
-        return "themes/{theme}{folder}/{filename}".format(theme=theme, folder=folder, filename=filename)
+        return "assets/{theme}{folder}{filename}".format(theme=theme, folder=folder, filename=filename)
 
 
 global_gui_config = GuiConfig(logger)

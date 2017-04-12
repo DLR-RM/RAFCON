@@ -43,7 +43,8 @@ global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion>
                        'python-gtkmvc==1.99.1', 'gaphas>=0.7']
 
 tarball_url = "https://rmc-intra02.robotic.dlr.de/~stei_fn/tarballs/"
-themes_folder = os.path.join('source', 'rafcon', 'gui', 'themes')
+assets_folder = os.path.join('source', 'rafcon', 'gui', 'assets')
+themes_folder = os.path.join(assets_folder, 'themes')
 
 setup(
     name='rafcon',
@@ -67,13 +68,13 @@ setup(
     },
 
     data_files=[
-        ('rafcon/gui/icons', get_files_in_path(themes_folder, 'icons')),
-        ('rafcon/gui/splashscreens', get_files_in_path(themes_folder, 'splashscreens')),
-        ('rafcon/gui/themes/dark/gtk-2.0', [os.path.join(themes_folder, 'dark', 'gtk-2.0', 'gtkrc')]),
-        ('rafcon/gui/themes/dark', [os.path.join(themes_folder, 'dark', 'colors.json')]),
-        ('rafcon/gui/themes/dark/gtk-sourceview', get_files_in_path(themes_folder, 'dark', 'gtksw-styles')),
-        ('rafcon/gui/themes/common/fonts/DIN Next LT Pro', get_files_in_path(themes_folder, 'fonts', 'DIN Next LT Pro')),
-        ('rafcon/gui/themes/common/fonts/FontAwesome', get_files_in_path(themes_folder, 'fonts', 'FontAwesome'))
+        ('rafcon/gui/assets/icons', get_files_in_path(assets_folder, 'icons')),
+        ('rafcon/gui/assets/fonts/DIN Next LT Pro', get_files_in_path(assets_folder, 'fonts', 'DIN Next LT Pro')),
+        ('rafcon/gui/assets/fonts/FontAwesome', get_files_in_path(assets_folder, 'fonts', 'FontAwesome')),
+        ('rafcon/gui/assets/splashscreens', get_files_in_path(assets_folder, 'splashscreens')),
+        ('rafcon/gui/assets/themes/dark/gtk-2.0', [os.path.join(themes_folder, 'dark', 'gtk-2.0', 'gtkrc')]),
+        ('rafcon/gui/assets/themes/dark', [os.path.join(themes_folder, 'dark', 'colors.json')]),
+        ('rafcon/gui/assets/themes/dark/gtk-sourceview', get_files_in_path(themes_folder, 'dark', 'gtk-sourceview'))
     ],
 
     setup_requires=['Sphinx>=1.4', 'Pygments>=2.0'] + global_requirements,
