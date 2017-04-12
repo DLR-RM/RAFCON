@@ -34,9 +34,22 @@ class PyTest(TestCommand):
         sys.exit(error_number)
 
 
-def get_files_in_path(*path):
+def get_data_files_tuple(*path, **kwargs):
+    """Return a tuple which can be used for setup.py's data_files
+    
+    :param tuple path: List of path elements pointing to a file or a directory of files
+    :param dict kwargs: Set path_to_file to True is `path` points to a file 
+    :return: tuple of install directory and list of source files
+    :rtype: tuple(str, [str])
+    """
     path = os.path.join(*path)
-    return [os.path.join(path, filename) for filename in os.listdir(path)]
+    target_path = os.path.join(*path.split(os.sep)[1:])  # remove source/ (package_dir)
+    if "path_to_file" in kwargs and kwargs["path_to_file"]:
+        source_files = [path]
+        target_path = os.path.dirname(target_path)
+    else:
+        source_files = [os.path.join(path, filename) for filename in os.listdir(path)]
+    return target_path, source_files
 
 
 global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion>=0.2', 'yaml_configuration',
@@ -68,13 +81,13 @@ setup(
     },
 
     data_files=[
-        ('rafcon/gui/assets/icons', get_files_in_path(assets_folder, 'icons')),
-        ('rafcon/gui/assets/fonts/DIN Next LT Pro', get_files_in_path(assets_folder, 'fonts', 'DIN Next LT Pro')),
-        ('rafcon/gui/assets/fonts/FontAwesome', get_files_in_path(assets_folder, 'fonts', 'FontAwesome')),
-        ('rafcon/gui/assets/splashscreens', get_files_in_path(assets_folder, 'splashscreens')),
-        ('rafcon/gui/assets/themes/dark/gtk-2.0', [os.path.join(themes_folder, 'dark', 'gtk-2.0', 'gtkrc')]),
-        ('rafcon/gui/assets/themes/dark', [os.path.join(themes_folder, 'dark', 'colors.json')]),
-        ('rafcon/gui/assets/themes/dark/gtk-sourceview', get_files_in_path(themes_folder, 'dark', 'gtk-sourceview'))
+        get_data_files_tuple(assets_folder, 'icons'),
+        get_data_files_tuple(assets_folder, 'fonts', 'DIN Next LT Pro'),
+        get_data_files_tuple(assets_folder, 'fonts', 'FontAwesome'),
+        get_data_files_tuple(assets_folder, 'splashscreens'),
+        get_data_files_tuple(themes_folder, 'dark', 'gtk-2.0', 'gtkrc', path_to_file=True),
+        get_data_files_tuple(themes_folder, 'dark', 'colors.json', path_to_file=True),
+        get_data_files_tuple(themes_folder, 'dark', 'gtk-sourceview'),
     ],
 
     setup_requires=['Sphinx>=1.4', 'Pygments>=2.0'] + global_requirements,
