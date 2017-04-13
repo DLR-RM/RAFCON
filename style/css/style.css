@@ -1,7 +1,7 @@
 body{
   font-family: 'Roboto', sans-serif;
   background-color: rgb(255, 255, 255);
-  background-image: url("/images/robot-bg-2.jpg");
+  background-image: url("../../images/robot-bg-2.jpg");
   background-size: 100%;
   background-repeat: no-repeat;
   width:100%;
@@ -194,7 +194,7 @@ footer > a:hover {
 
 .content{
   margin-top:-16px;
-  background-image: url("/images/background-mobile.jpg");
+  background-image: url("../../images/background-mobile.jpg");
   background-size: cover;
   background-repeat: no-repeat;
   background-color: #2f3241;

@@ -9,7 +9,7 @@ Der Kern von RAFCON, das Konzept der Zustandsmaschine, ist getrennt von der graf
 
 
 
-![mars-robot](/images/mars-robot.jpg){:class="img-responsive"}
+![mars-robot](images/mars-robot.jpg){:class="img-responsive"}
 
 
 
