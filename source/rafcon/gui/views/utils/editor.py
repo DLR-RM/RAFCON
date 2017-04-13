@@ -29,7 +29,6 @@ except ImportError:
 
 
 class EditorView(View):
-    top = 'editor_frame'
 
     def __init__(self, name='SOURCE EDITOR', language='idl', editor_style="SOURCE_EDITOR_STYLE"):
         View.__init__(self)
@@ -86,6 +85,7 @@ class EditorView(View):
         self.scrollable = scrollable
 
         self['editor_frame'] = vbox
+        self.top = 'editor_frame'
 
     def new_buffer(self):
         style_scheme_manager = gtksourceview2.StyleSchemeManager()

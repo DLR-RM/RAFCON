@@ -20,7 +20,6 @@ from rafcon.gui.config import global_gui_config
 
 
 class LoggingConsoleView(View):
-    top = 'main_frame'
 
     def __init__(self):
         View.__init__(self)
@@ -46,6 +45,7 @@ class LoggingConsoleView(View):
         self.read_enables()
 
         self['scrollable'] = scrollable
+        self.top = 'scrollable'
         self.quit_flag = False
 
     def clean_buffer(self):

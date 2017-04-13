@@ -21,9 +21,6 @@ from rafcon.gui.views.top_tool_bar import TopToolBarView
 
 
 class UndockedWindowView(View):
-    """
-
-    """
     builder = glade.get_glade_path("undocked_window.glade")
     top = 'undock_window'
 
