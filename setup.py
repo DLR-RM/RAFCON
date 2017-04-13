@@ -53,7 +53,7 @@ def get_data_files_tuple(*path, **kwargs):
 
 
 global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion>=0.2', 'yaml_configuration',
-                       'python-gtkmvc==1.99.1', 'gaphas>=0.7']
+                       'python-gtkmvc-dlr==1.99.1', 'gaphas>=0.7']
 
 tarball_url = "https://rmc-intra02.robotic.dlr.de/~stei_fn/tarballs/"
 assets_folder = os.path.join('source', 'rafcon', 'gui', 'assets')
@@ -96,7 +96,7 @@ setup(
 
     dependency_links=[
         tarball_url + "common-python_yaml_configuration-0.0.6.tar.gz#egg=yaml_configuration-0.0.6",
-        tarball_url + "common-gtkmvc_dlr-e6663d8.tar.gz#egg=python-gtkmvc-1.99.1"
+        tarball_url + "python-gtkmvc-dlr-1.99.1.tar.gz#egg=python-gtkmvc-dlr-1.99.1"
     ],
 
     entry_points={
