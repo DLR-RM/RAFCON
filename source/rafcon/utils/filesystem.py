@@ -110,19 +110,6 @@ def get_home_path():
     return None
 
 
-def read_version_from_pt_file():
-    import rafcon
-    pt_file_name = 'rafcon.pt'
-    pt_file_path = join(dirname(dirname(dirname(realpath(rafcon.__file__)))), pt_file_name)
-    with open(pt_file_path) as pt_file:
-        for line in pt_file:
-            if line.strip().startswith('VERSION'):
-                parts = line.split('=')
-                version = parts[1].strip()
-                return version
-    return 0
-
-
 def separate_folder_path_and_file_name(path):
     if os.path.isdir(path):
         return path, None

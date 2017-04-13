@@ -7,14 +7,10 @@
 #
 # Contributors:
 # Franz Steinmetz <franz.steinmetz@dlr.de>
-# Rico Belder <rico.belder@dlr.de>
-# Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from pkg_resources import get_distribution, DistributionNotFound
 
-__all__ = ["gui", "core", "utils"]
+from pkg_resources import resource_filename
 
-try:
-    __version__ = get_distribution("rafcon").version
-except DistributionNotFound:
-    __version__ = "unknown"
+
+def get_glade_path(glade_file):
+    return resource_filename(__name__, glade_file)

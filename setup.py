@@ -7,18 +7,6 @@ import os
 import sys
 
 
-def read_version_from_pt_file():
-    pt_file_name = 'rafcon.pt'
-    pt_file_path = path.join(path.dirname(path.realpath(__file__)), pt_file_name)
-    with open(pt_file_path) as pt_file:
-        for line in pt_file:
-            if line.strip().startswith('VERSION'):
-                parts = line.split('=')
-                version = parts[1].strip()
-                return version
-    return 0
-
-
 class PyTest(TestCommand):
     """Run py.test with RAFCON tests
 
@@ -46,38 +34,99 @@ class PyTest(TestCommand):
         sys.exit(error_number)
 
 
-global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion']
+def get_data_files_tuple(*path, **kwargs):
+    """Return a tuple which can be used for setup.py's data_files
+    
+    :param tuple path: List of path elements pointing to a file or a directory of files
+    :param dict kwargs: Set path_to_file to True is `path` points to a file 
+    :return: tuple of install directory and list of source files
+    :rtype: tuple(str, [str])
+    """
+    path = os.path.join(*path)
+    target_path = os.path.join(*path.split(os.sep)[1:])  # remove source/ (package_dir)
+    if "path_to_file" in kwargs and kwargs["path_to_file"]:
+        source_files = [path]
+        target_path = os.path.dirname(target_path)
+    else:
+        source_files = [os.path.join(path, filename) for filename in os.listdir(path)]
+    return target_path, source_files
+
+
+global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion>=0.2', 'yaml_configuration',
+                       'python-gtkmvc-dlr==1.99.1', 'gaphas>=0.7']
+
+tarball_url = "https://github.com/DLR-RM/gtkmvc3/releases/download/gtkmvc_dlr_1.99.1/"
+assets_folder = os.path.join('source', 'rafcon', 'gui', 'assets')
+themes_folder = os.path.join(assets_folder, 'themes')
 
 setup(
-    name='RAFCON',
-    version=read_version_from_pt_file(),
-    url='https://rmintra01.robotic.dlr.de/wiki/RAFCON',
-    license='',
+    name='rafcon',
+    version='0.9.1',
+    url='https://github.com/DLR-RM/RAFCON',
+    license='EPL',
     author='Sebastian Brunner, Rico Belder, Franz Steinmetz',
     author_email='sebastian.brunner@dlr.de, rico.belder@dlr.de, franz.steinmetz@dlr.de',
-    description='RMC awesome flow control -- This is a package to program and visualize complex robot tasks.',
+    description='Develop your robotic tasks with hierarchical state machines using an intuitive graphical user '
+                'interface',
 
-    packages=find_packages('source'),  # include all packages under src
-    package_dir={'': 'source'},   # tell distutils packages are under src
+    packages=find_packages('source'),
+    package_dir={'': 'source'},  # tell distutils packages are under src
 
     package_data={
-        # Include all config files
-        '': ['*.yaml'],
+        # Include core and GUI config
+        'rafcon.core': ['config.yaml'],
+        'rafcon.gui': ['gui_config.yaml'],
         # Include all glade files
-        'mvc': ['glade/*.glade'],
+        'rafcon.gui.glade': ['*.glade']
     },
 
-    # Project uses reStructuredText, so ensure that the docutils get
-    # installed or upgraded on the target machine
-    # install_requires=['docutils>=0.3', 'numpy', 'OpenGL', 'twisted', 'gtkmvc', 'parser', 'gtk', 'astroid', 'json',
-    #                   'pyyaml'],
+    data_files=[
+        get_data_files_tuple(assets_folder, 'icons'),
+        get_data_files_tuple(assets_folder, 'fonts', 'DIN Next LT Pro'),
+        get_data_files_tuple(assets_folder, 'fonts', 'FontAwesome'),
+        get_data_files_tuple(assets_folder, 'splashscreens'),
+        get_data_files_tuple(themes_folder, 'dark', 'gtk-2.0', 'gtkrc', path_to_file=True),
+        get_data_files_tuple(themes_folder, 'dark', 'colors.json', path_to_file=True),
+        get_data_files_tuple(themes_folder, 'dark', 'gtk-sourceview'),
+    ],
 
     setup_requires=['Sphinx>=1.4', 'Pygments>=2.0'] + global_requirements,
     tests_require=['pytest', 'pytest-catchlog'] + global_requirements,
     install_requires=global_requirements,
 
-    cmdclass={'test': PyTest}
+    dependency_links=[
+        tarball_url + "python-gtkmvc-dlr-1.99.1.tar.gz#egg=python-gtkmvc-dlr-1.99.1"
+    ],
+
+    entry_points={
+        'console_scripts': [
+            'rafcon_start = rafcon.core.start:main'
+        ],
+        'gui_scripts': [
+            'rafcon_start_gui = rafcon.gui.start:main'
+        ]
+    },
+
+    cmdclass={'test': PyTest},
+
+    keywords=('state machine', 'robotic', 'FSM', 'development', 'GUI', 'visual programming'),
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Environment :: X11 Applications',
+        'Framework :: Robot Framework',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Education',
+        'Intended Audience :: Manufacturing',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved',
+        'Natural Language :: English',
+        'Operating System :: Unix',
+        'Programming Language :: Python :: 2 :: Only',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Software Development',
+        'Topic :: Utilities'
+    ],
+
+    zip_safe=True
 )
-
-
-

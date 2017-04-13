@@ -14,12 +14,13 @@
 
 from gtkmvc import View
 
+from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
 
 
 class StateDataFlowsListView(View):
-    builder = constants.get_glade_path("data_flow_list_widget.glade")
+    builder = glade.get_glade_path("data_flow_list_widget.glade")
     top = 'tree_view'
 
     def __init__(self):
@@ -31,7 +32,7 @@ class StateDataFlowsListView(View):
 
 
 class StateDataFlowsEditorView(View):
-    builder = constants.get_glade_path("state_data_flows_widget.glade")
+    builder = glade.get_glade_path("state_data_flows_widget.glade")
     top = 'data_flows_container'
 
     def __init__(self):

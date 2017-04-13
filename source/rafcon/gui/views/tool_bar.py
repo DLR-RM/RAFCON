@@ -15,13 +15,14 @@
 
 from gtkmvc import View
 
+from rafcon.gui import glade
 from rafcon.gui.helpers.label import create_label_widget_with_icon
 from rafcon.gui.utils import constants
 from rafcon.utils.i18n import _
 
 
 class ToolBarView(View):
-    builder = constants.get_glade_path("tool_bar.glade")
+    builder = glade.get_glade_path("tool_bar.glade")
     top = 'toolbar'
 
     def __init__(self):

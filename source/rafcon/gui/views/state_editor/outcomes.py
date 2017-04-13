@@ -15,12 +15,13 @@
 import gtk
 from gtkmvc import View
 
+from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
 
 
 class StateOutcomesTreeView(View):
-    builder = constants.get_glade_path("outcome_list_widget.glade")
+    builder = glade.get_glade_path("outcome_list_widget.glade")
     top = 'tree_view'
 
     def __init__(self):

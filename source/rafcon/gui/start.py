@@ -217,7 +217,8 @@ def signal_handler(signal, frame):
 
     plugins.run_hook("post_destruction")
 
-if __name__ == '__main__':
+
+def main():
     register_signal_handlers(signal_handler)
 
     splash_screen = SplashScreen(contains_image=True, width=530, height=350)
@@ -309,3 +310,7 @@ if __name__ == '__main__':
     # this is a ugly process shutdown method but works if gtk or twisted process are still blocking
     # import os
     # os._exit(0)
+
+
+if __name__ == '__main__':
+    main()
