@@ -17,7 +17,6 @@ from rafcon.gui.utils import constants
 
 
 class StateIconView(View, gtk.IconView):
-    top = 'state_icon_view'
     states = ["HS", "ES", "PS", "BS"]
     tooltips = {"HS": "Hierarchy State", "ES": "Execution State",
                 "PS": "Preemptive Concurrency State", "BS": "Barrier Concurrency State"}
@@ -43,3 +42,4 @@ class StateIconView(View, gtk.IconView):
                               "Add/Drag and Drop " + self.tooltips[state]])
 
         self['state_icon_view'] = self
+        self.top = 'state_icon_view'

@@ -31,7 +31,6 @@ logger = log.get_logger(__name__)
 
 
 class GraphicalEditorView(View, gobject.GObject):
-    top = 'main_frame'
 
     def __init__(self):
         """View holding the graphical editor
@@ -68,6 +67,7 @@ class GraphicalEditorView(View, gobject.GObject):
         self.v_box.pack_end(self.scroller)
 
         self['main_frame'] = self.v_box
+        self.top = 'main_frame'
 
     def setup_canvas(self, canvas, zoom):
         self.editor.canvas = canvas

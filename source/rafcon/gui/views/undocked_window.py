@@ -20,9 +20,6 @@ from rafcon.gui.utils import constants
 
 
 class UndockedWindowView(View):
-    """
-
-    """
     builder = constants.get_glade_path("undocked_window.glade")
     top = 'undock_window'
 

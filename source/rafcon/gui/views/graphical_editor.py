@@ -133,7 +133,6 @@ class Color:
 
 
 class GraphicalEditorView(View):
-    top = 'main_frame'
 
     def __init__(self):
         """View holding the graphical editor
@@ -162,6 +161,7 @@ class GraphicalEditorView(View):
         self.v_box.pack_end(self.editor)
 
         self['main_frame'] = self.v_box
+        self.top = 'main_frame'
 
 
 class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
