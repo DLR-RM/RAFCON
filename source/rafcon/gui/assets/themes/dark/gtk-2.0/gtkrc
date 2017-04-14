@@ -269,11 +269,11 @@ style "rafcon-notebook" {
 widget_class "*Notebook" style : highest "rafcon-notebook"
 
 style "rafcon-space" {
-    bg[ACTIVE]        = @pane
+    bg[ACTIVE]        = @accent
     bg[INSENSITIVE]   = @background_space
     bg[NORMAL]        = @background_space
-    bg[PRELIGHT]      = @pane
-    bg[SELECTED]      = @pane
+    bg[PRELIGHT]      = @accent
+    bg[SELECTED]      = @accent
 }
 widget_class "*Paned"  style : highest "rafcon-space"
 widget "*logic_vpaned"  style : highest "rafcon-space"
