@@ -32,13 +32,13 @@ logger = log.get_logger(__name__)
 
 def create_state_machine(*args, **kargs):
 
-    state1 = ExecutionState('State1')
+    state1 = ExecutionState('State1', state_id='STATE1')
     state2 = ExecutionState('State2')
     state4 = ExecutionState('Nested')
     output_state4 = state4.add_output_data_port("out", "int")
     state5 = ExecutionState('Nested2')
     input_state5 = state5.add_input_data_port("in", "int", 0)
-    state3 = HierarchyState(name='State3')
+    state3 = HierarchyState(name='State3', state_id='STATE3')
     state3.add_state(state4)
     state3.add_state(state5)
     state3.set_start_state(state4)
@@ -47,7 +47,7 @@ def create_state_machine(*args, **kargs):
     state3.add_transition(state5.state_id, 0, state3.state_id, 0)
     state3.add_data_flow(state4.state_id, output_state4, state5.state_id, input_state5)
 
-    ctr_state = HierarchyState(name="Container")
+    ctr_state = HierarchyState(name="Container", state_id='ROOTSTATE')
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
