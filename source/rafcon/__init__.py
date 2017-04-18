@@ -17,4 +17,14 @@ __all__ = ["gui", "core", "utils"]
 try:
     __version__ = get_distribution("rafcon").version
 except DistributionNotFound:
-    __version__ = "unknown"
+    # the version cannot be found via pip which means rafcon was not installed yet on the system via the setup.py or pip
+    # thus try to parse it from the version.py file directly
+    import os
+    file_path = os.path.join(os.path.dirname(__file__), "../../version.py")
+    if os.path.exists(file_path):
+        import imp
+        foo = imp.load_source('version', file_path)
+        __version__ = foo.version
+    else:
+        # this case must not happen, else state machines cannot be loaded from the file system
+        __version__ = "unknown"

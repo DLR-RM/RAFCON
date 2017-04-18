@@ -6,6 +6,8 @@ from os import path
 import os
 import sys
 
+from version import version
+
 
 class PyTest(TestCommand):
     """Run py.test with RAFCON tests
@@ -61,7 +63,7 @@ themes_folder = os.path.join(assets_folder, 'themes')
 
 setup(
     name='rafcon',
-    version='0.9.1',
+    version=version,
     url='https://github.com/DLR-RM/RAFCON',
     license='EPL',
     author='Sebastian Brunner, Rico Belder, Franz Steinmetz',
