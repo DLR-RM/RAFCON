@@ -15,6 +15,7 @@
 
 from gtkmvc import View
 
+from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
 from rafcon.gui.views.state_editor.data_flows import StateDataFlowsEditorView
@@ -30,7 +31,7 @@ from rafcon.gui.views.state_editor.transitions import StateTransitionsEditorView
 
 
 class StateEditorView(View):
-    builder = constants.get_glade_path("state_editor_ld_widget_tab.glade")
+    builder = glade.get_glade_path("state_editor_ld_widget_tab.glade")
     top = 'main_frame_vbox'
 
     def __init__(self):

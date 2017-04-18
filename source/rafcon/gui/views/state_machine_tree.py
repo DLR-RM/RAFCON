@@ -15,7 +15,6 @@ from gtkmvc import View
 
 
 class StateMachineTreeView(View, gtk.TreeView):
-    top = 'state_machine_tree_view'
 
     def __init__(self):
         View.__init__(self)
@@ -44,3 +43,4 @@ class StateMachineTreeView(View, gtk.TreeView):
         tvcolumn.add_attribute(cell, 'text', 2)
 
         self['state_machine_tree_view'] = self
+        self.top = 'state_machine_tree_view'

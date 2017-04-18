@@ -231,7 +231,7 @@ def register_signal_handlers(callback):
     signal.signal(signal.SIGTERM, callback)
 
 
-if __name__ == '__main__':
+def main():
     register_signal_handlers(signal_handler)
 
     logger.info("initialize RAFCON ... ")
@@ -284,3 +284,7 @@ if __name__ == '__main__':
             result_path = global_config.get_config_value("PROFILER_RESULT_PATH")
             view = global_config.get_config_value("PROFILER_VIEWER")
             profiler.stop("global", result_path, view)
+
+
+if __name__ == '__main__':
+    main()

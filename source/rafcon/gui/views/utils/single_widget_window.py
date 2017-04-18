@@ -35,6 +35,7 @@ class SingleWidgetWindowView(View):
         w.show_all()
 
         self['main_frame'] = self.widget_view
+        self.top = 'main_frame'
         self['main_window'] = w
 
     pass  # class end

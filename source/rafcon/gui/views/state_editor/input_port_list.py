@@ -11,11 +11,12 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gtkmvc import View
-from rafcon.gui.utils import constants
+
+from rafcon.gui import glade
 
 
 class InputPortsListView(View):
-    builder = constants.get_glade_path("input_ports_list_widget.glade")
+    builder = glade.get_glade_path("input_ports_list_widget.glade")
     top = 'input_ports_tree_view'
 
     def __init__(self):

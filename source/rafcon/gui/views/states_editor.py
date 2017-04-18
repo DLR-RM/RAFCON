@@ -22,7 +22,6 @@ gobject.signal_new("tab_close_event", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, No
 
 
 class StatesEditorView(View):
-    top = 'notebook'
 
     def __init__(self):
         View.__init__(self)
@@ -36,6 +35,7 @@ class StatesEditorView(View):
         self.notebook.connect("button_press_event", self.button_released)
 
         self['notebook'] = self.notebook
+        self.top = 'notebook'
 
     def button_released(self, widget, event=None):
         x, y = event.x, event.y

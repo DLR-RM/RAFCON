@@ -19,7 +19,6 @@ from rafcon.gui.config import global_gui_config as gui_config
 
 
 class StateMachinesEditorView(View):
-    top = 'notebook'
 
     def __init__(self):
         View.__init__(self)
@@ -29,7 +28,9 @@ class StateMachinesEditorView(View):
         self.notebook.set_scrollable(True)
         self.notebook.set_name("state_machines_notebook")
         self.notebook.show()
+
         self['notebook'] = self.notebook
+        self.top = 'notebook'
 
 
 # gobject.signal_new("add_state_machine", gtk.VBox, gobject.SIGNAL_RUN_FIRST, None, (gtk.VBox,))

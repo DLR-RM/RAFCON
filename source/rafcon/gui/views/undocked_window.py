@@ -15,15 +15,13 @@
 import os
 import gtk
 from gtkmvc import View
+
+from rafcon.gui import glade
 from rafcon.gui.views.top_tool_bar import TopToolBarView
-from rafcon.gui.utils import constants
 
 
 class UndockedWindowView(View):
-    """
-
-    """
-    builder = constants.get_glade_path("undocked_window.glade")
+    builder = glade.get_glade_path("undocked_window.glade")
     top = 'undock_window'
 
     def __init__(self, title):

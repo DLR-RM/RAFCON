@@ -27,6 +27,7 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.core.state_elements.scope import ScopedVariable
 
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController, react_to_event
+from rafcon.gui.views.state_editor.scoped_variables_list import ScopedVariablesListView
 from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.clipboard import global_clipboard
 
@@ -77,7 +78,7 @@ class ScopedVariableListController(ListViewController):
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', self.DATA_TYPE_NAME_STORAGE_ID)
         if not isinstance(self.model.state, LibraryState):
             view['data_type_text'].set_property("editable", True)
-        if view['default_value_col'] and view['default_value_text']:
+        if isinstance(view, ScopedVariablesListView):
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', self.DEFAULT_VALUE_STORAGE_ID)
             if not isinstance(self.model.state, LibraryState):
                 view['default_value_text'].set_property("editable", True)

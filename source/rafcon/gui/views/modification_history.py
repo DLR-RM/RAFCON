@@ -16,7 +16,6 @@ from rafcon.gui.utils import constants
 
 
 class HistoryTreeView(View, gtk.TreeView):
-    top = 'history_treeview'
 
     def __init__(self):
         View.__init__(self)
@@ -38,10 +37,10 @@ class HistoryTreeView(View, gtk.TreeView):
         self.append_column(tvcolumn)
 
         self['history_treeview'] = self
+        self.top = 'history_treeview'
 
 
 class ModificationHistoryView(View, gtk.ScrolledWindow):
-    top = 'history_view'
 
     def __init__(self):
         View.__init__(self)
@@ -86,3 +85,4 @@ class ModificationHistoryView(View, gtk.ScrolledWindow):
         self['reset_button'] = reset_button
         self['branch_checkbox'] = branch_checkbox
         self['folded_checkbox'] = folded_checkbox
+        self.top = 'history_view'

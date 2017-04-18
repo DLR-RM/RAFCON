@@ -29,6 +29,7 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController, react_to_event
+from rafcon.gui.views.state_editor.outcomes import StateOutcomesTreeView, StateOutcomesEditorView
 from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.utils import log
 
@@ -84,7 +85,7 @@ class StateOutcomesListController(ListViewController):
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
         super(StateOutcomesListController, self).register_view(view)
-        if view['to_state_col'] and view['to_outcome_col'] and view['to_state_combo'] and view['to_outcome_combo']:
+        if isinstance(view, StateOutcomesTreeView):
             view['to_state_combo'].connect("edited", self.on_to_state_edited)
             view['to_outcome_combo'].connect("edited", self.on_to_outcome_edited)
 
@@ -293,13 +294,13 @@ class StateOutcomesListController(ListViewController):
             self.list_store.append([outcome.outcome_id, outcome.name, to_state, to_outcome,
                                     outcome, self.model.state, self.model.get_outcome_m(outcome.outcome_id)])
 
-        if self.view and self.view['to_state_col'] and self.view['to_state_combo']:
+        if isinstance(self.view, StateOutcomesTreeView):
             for cell_renderer in self.view['to_state_col'].get_cell_renderers():
                 cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_state_combo_list)
                 cell_renderer.set_property("text-column", self.ID_STORAGE_ID)
                 cell_renderer.set_property("has-entry", False)
-        if self.view and self.view['to_outcome_col'] and self.view['to_outcome_combo']:
+        if self.view and isinstance(self.view, StateOutcomesTreeView):
             for cell_renderer in self.view['to_outcome_col'].get_cell_renderers():
                 cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_outcome_combo_list)
@@ -336,8 +337,7 @@ class StateOutcomesEditorController(ExtendedController):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-
-        if view['add_button'] and view['remove_button']:
+        if isinstance(view, StateOutcomesEditorView):
             view['add_button'].connect("clicked", self.oc_list_ctrl.on_add)
             view['remove_button'].connect("clicked", self.oc_list_ctrl.on_remove)
 
