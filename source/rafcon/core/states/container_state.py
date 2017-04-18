@@ -601,6 +601,9 @@ class ContainerState(State):
         :return:
         """
         state = self.states[state_id]
+        from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, UNIQUE_DECIDER_STATE_ID
+        if isinstance(state, BarrierConcurrencyState):
+            state.remove_state(state_id=UNIQUE_DECIDER_STATE_ID, force=True)
         [related_transitions, related_data_flows] = self.related_linkage_state(state_id)
 
         # ingoing logical linkage to rebuild -> related_transitions['external']['ingoing']
