@@ -13,7 +13,6 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import os
-import sys
 import re
 import gtk
 import yaml
@@ -23,7 +22,6 @@ from yaml_configuration.config import ConfigError
 from rafcon.core.config import ObservableConfig
 from rafcon.utils import filesystem
 from rafcon.utils import storage_utils
-from rafcon.gui.utils import constants
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -56,7 +54,6 @@ class GuiConfig(ObservableConfig):
                               "Please add \"TYPE: GUI_CONFIG\" to your gui_config.yaml file.")
         self.path_to_tool = os.path.dirname(os.path.realpath(__file__))
         self.configure_gtk()
-        self.configure_fonts()
         self.configure_source_view_styles()
         self.configure_colors()
 
@@ -92,43 +89,6 @@ class GuiConfig(ObservableConfig):
         while gtk.events_pending():
             gtk.main_iteration(False)
         gtk.rc_parse(gtkrc_file_path)
-
-    def configure_fonts(self):
-        tv = gtk.TextView()
-        try:
-            context = tv.get_pango_context()
-        except Exception:
-            return
-        if not context:  # A Pango context is not always available
-            return
-        existing_fonts = context.list_families()
-        existing_font_names = [font.get_name() for font in existing_fonts]
-
-        font_user_folder = os.path.join(os.path.expanduser('~'), '.fonts')
-
-        font_copied = False
-
-        for font_name in constants.FONTS:
-            if font_name in existing_font_names:
-                logger.debug("Font '{0}' found".format(font_name))
-                continue
-
-            logger.debug("Installing font '{0}' to '{1}'".format(font_name, font_user_folder))
-            if not os.path.isdir(font_user_folder):
-                os.makedirs(font_user_folder)
-
-            # A font is a folder one or more font faces
-            fonts_folder = self.get_assets_path("fonts", font_name, for_theme=False)
-            for font_face in resource_listdir(__name__, fonts_folder):
-                target_font_file = os.path.join(font_user_folder, font_face)
-                source_font_file = resource_filename(__name__, "/".join((fonts_folder, font_face)))
-                filesystem.copy_file_if_update_required(source_font_file, target_font_file)
-            font_copied = True
-
-        if font_copied:
-            logger.info("Restarting RAFCON to apply new fonts...")
-            python = sys.executable
-            os.execl(python, python, *sys.argv)
 
     def configure_source_view_styles(self):
         source_view_style_user_folder = os.path.join(os.path.expanduser('~'), '.local', 'share', 'gtksourceview-2.0',

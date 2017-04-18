@@ -2,9 +2,24 @@
 
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
+from setuptools.command.develop import develop as DevelopCommand
+from setuptools.command.install import install as InstallCommand
 from os import path
 import os
 import sys
+import shutil
+from distutils import log
+
+try:
+    import gtk
+except ImportError:
+    gtk = None
+try:
+    import glib
+except ImportError:
+    glib = None
+
+log.set_verbosity(log.DEBUG)
 
 
 class PyTest(TestCommand):
@@ -32,6 +47,72 @@ class PyTest(TestCommand):
         if not error_number:
             error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'common')])
         sys.exit(error_number)
+
+
+def install_fonts():
+    if not gtk:
+        log.warn("No GTK found. Will not install fonts.")
+        return
+
+    tv = gtk.TextView()
+    try:
+        context = tv.get_pango_context()
+    except Exception:
+        log.error("Could not get pango context. Will not install fonts.")
+        return
+    if not context:  # A Pango context is not always available
+        log.warn("Could not get pango context. Will not install fonts.")
+        return
+    existing_fonts = context.list_families()
+    existing_font_names = [font.get_name() for font in existing_fonts]
+
+    if glib:
+        user_data_folder = glib.get_user_data_dir()
+    else:
+        user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
+    user_otf_fonts_folder = os.path.join(user_data_folder, 'fonts', 'type1')
+
+    font_copied = False
+
+    try:
+        for font_name in ["DIN Next LT Pro", "FontAwesome"]:
+            if font_name in existing_font_names:
+                log.debug("Font '{0}' found".format(font_name))
+                continue
+
+            log.info("Installing font '{0}' to '{1}'...".format(font_name, user_otf_fonts_folder))
+            if not os.path.isdir(user_otf_fonts_folder):
+                os.makedirs(user_otf_fonts_folder)
+
+            # A font is a folder one or more font faces
+            fonts_folder = os.path.join(assets_folder, "fonts", font_name)
+            for font_face in os.listdir(fonts_folder):
+                target_font_file = os.path.join(user_otf_fonts_folder, font_face)
+                source_font_file = os.path.join(fonts_folder, font_face)
+                shutil.copy(source_font_file, target_font_file)
+            font_copied = True
+    except IOError:
+        log.error("Could not install fonts.")
+        return
+
+    if font_copied:
+        log.info("Restarting RAFCON to apply new fonts...")
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
+
+
+class PostDevelopCommand(DevelopCommand):
+    """Post-installation for development mode."""
+    def run(self):
+        install_fonts()
+        DevelopCommand.run(self)
+
+
+class PostInstallCommand(InstallCommand):
+    """Post-installation for installation mode."""
+    def run(self):
+        install_fonts()
+        InstallCommand.run(self)
 
 
 def get_data_files_tuple(*path, **kwargs):
@@ -88,8 +169,6 @@ setup(
 
     data_files=[
         get_data_files_tuple(assets_folder, 'icons'),
-        get_data_files_tuple(assets_folder, 'fonts', 'DIN Next LT Pro'),
-        get_data_files_tuple(assets_folder, 'fonts', 'FontAwesome'),
         get_data_files_tuple(assets_folder, 'splashscreens'),
         get_data_files_tuple(themes_folder, 'dark', 'gtk-2.0', 'gtkrc', path_to_file=True),
         get_data_files_tuple(themes_folder, 'dark', 'colors.json', path_to_file=True),
@@ -114,7 +193,11 @@ setup(
         ]
     },
 
-    cmdclass={'test': PyTest},
+    cmdclass={
+        'develop': PostDevelopCommand,
+        'install': PostInstallCommand,
+        'test': PyTest
+    },
 
     keywords=('state machine', 'robotic', 'FSM', 'development', 'GUI', 'visual programming'),
     classifiers=[
