@@ -6,8 +6,6 @@ from os import path
 import os
 import sys
 
-from version import version
-
 
 class PyTest(TestCommand):
     """Run py.test with RAFCON tests
@@ -60,6 +58,13 @@ global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion>
 tarball_url = "https://github.com/DLR-RM/gtkmvc3/releases/download/gtkmvc_dlr_1.99.1/"
 assets_folder = os.path.join('source', 'rafcon', 'gui', 'assets')
 themes_folder = os.path.join(assets_folder, 'themes')
+
+# read version from VERSION file
+# this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon
+version_file_path = os.path.join(os.path.dirname(__file__), "VERSION")
+with open(version_file_path, "r") as f:
+    content = f.read().splitlines()
+    version = content[0]
 
 setup(
     name='rafcon',
