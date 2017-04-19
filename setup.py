@@ -66,13 +66,7 @@ def install_fonts():
     existing_fonts = context.list_families()
     existing_font_names = [font.get_name() for font in existing_fonts]
 
-    if glib:
-        user_data_folder = glib.get_user_data_dir()
-    else:
-        user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
-    user_otf_fonts_folder = os.path.join(user_data_folder, 'fonts', 'type1')
-
-    font_copied = False
+    user_otf_fonts_folder = os.path.join(os.path.expanduser('~'), '.fonts')
 
     try:
         for font_name in ["DIN Next LT Pro", "FontAwesome"]:
@@ -90,15 +84,9 @@ def install_fonts():
                 target_font_file = os.path.join(user_otf_fonts_folder, font_face)
                 source_font_file = os.path.join(fonts_folder, font_face)
                 shutil.copy(source_font_file, target_font_file)
-            font_copied = True
-    except IOError:
-        log.error("Could not install fonts.")
+    except IOError as e:
+        log.error("Could not install fonts, IOError: {}".format(e))
         return
-
-    if font_copied:
-        log.info("Restarting RAFCON to apply new fonts...")
-        python = sys.executable
-        os.execl(python, python, *sys.argv)
 
 
 class PostDevelopCommand(DevelopCommand):
