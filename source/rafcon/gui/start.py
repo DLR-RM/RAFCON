@@ -31,7 +31,7 @@ import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.runtime_config import global_runtime_config
-from rafcon.gui.utils import constants
+import rafcon.gui.models.auto_backup
 from rafcon.gui.utils.splash_screen import SplashScreen
 
 # state machine
@@ -48,7 +48,6 @@ from rafcon.core.config import global_config
 import rafcon.utils.filesystem as filesystem
 from rafcon.utils import profiler
 from rafcon.utils import plugins
-from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils.i18n import _, setup_l10n, setup_l10n_gtk
 from rafcon.utils import log
 
@@ -243,13 +242,12 @@ def main():
     parser = setup_argument_parser()
     user_input = parser.parse_args()
 
-    # create lock file
-    if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
-        constants.RAFCON_INSTANCE_LOCK_FILE = open(os.path.join(RAFCON_TEMP_PATH_BASE, 'lock'), 'a+')
-        constants.RAFCON_INSTANCE_LOCK_FILE.close()
-
     splash_screen.set_text("Loading configurations...")
     setup_mvc_configuration(user_input.config_path, user_input.gui_config_path, user_input.gui_config_path)
+
+    # create lock file -> keep behavior for hole instance
+    if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
+        rafcon.gui.models.auto_backup.generate_rafcon_instance_lock_file()
 
     # setup the gui before loading the state machine as then the debug console shows the errors that emerged during
     # loading the state state machine
@@ -295,10 +293,7 @@ def main():
             profiler.stop("global", result_path, view)
 
         if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
-            if os.path.exists(constants.RAFCON_INSTANCE_LOCK_FILE.name):
-                os.remove(constants.RAFCON_INSTANCE_LOCK_FILE.name)
-            else:
-                logger.warning(_("External remove of lock file detected!"))
+            rafcon.gui.models.auto_backup.remove_rafcon_instance_lock_file()
 
     if core_singletons.state_machine_execution_engine.status.execution_mode == StateMachineExecutionStatus.STARTED:
         logger.info(_("Waiting for the state machine execution to finish"))
