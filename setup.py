@@ -9,15 +9,6 @@ import os
 import sys
 from imp import load_source
 
-try:
-    import gtk
-except ImportError:
-    gtk = None
-try:
-    import glib
-except ImportError:
-    glib = None
-
 
 class PyTest(TestCommand):
     """Run py.test with RAFCON tests
