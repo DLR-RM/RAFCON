@@ -1,0 +1,84 @@
+import logging
+import sys
+
+
+class NoHigherLevelFilter(logging.Filter):
+    """Filter high log levels
+    
+    A logging filter that filters out all logging records, whose level are smaller than the level specified in the
+    constructor.
+
+    :ivar level: the highest level the filter will pass
+    """
+    def __init__(self, level):
+        logging.Filter.__init__(self)
+        self.level = level
+
+    def filter(self, record):
+        """Filter high log levels
+        
+        Filters all records, whose logging level is smaller than the level specified in the constructor
+        :param record:
+        :return:
+        """
+        return record.levelno < self.level
+
+
+class LoggingViewHandler(logging.Handler):
+
+    _logging_views = {}
+
+    def __init__(self):
+        super(LoggingViewHandler, self).__init__()
+
+        try:
+            # noinspection PyStatementEffect
+            unicode
+            self._unicode = True
+        except NameError:
+            self._unicode = False
+
+    @classmethod
+    def set_logging_view(cls, name, text_view):
+        cls._logging_views[name] = text_view
+
+    @classmethod
+    def remove_logging_view(cls, name):
+        if name in cls._logging_views:
+            del cls._logging_views[name]
+
+    def emit(self, record):
+        """Logs a new record
+
+        If a logging view is given, it is used to log the new record to. The code is partially copied from the
+        StreamHandler class
+        :param record:
+        :return:
+        """
+        try:
+            # Shorten the source name of the record (remove rafcon.)
+            if sys.version_info >= (2, 7):
+                record.__setattr__("name", record.name.replace("rafcon.", ""))
+            msg = self.format(record)
+            fs = "%s"
+            if not self._unicode:  # if no unicode support...
+                entry = fs % msg
+            else:
+                try:
+                    if isinstance(msg, unicode):
+                        ufs = u'%s'
+                        try:
+                            entry = ufs % msg
+                        except UnicodeEncodeError:
+                            entry = fs % msg
+                    else:
+                            entry = fs % msg
+                except UnicodeError:
+                    entry = fs % msg
+
+            for logging_view in self._logging_views.itervalues():
+                logging_view.print_message(entry, record.levelno)
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
