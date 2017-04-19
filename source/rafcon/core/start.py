@@ -66,21 +66,14 @@ def post_setup_plugins(parser_result):
 
 
 def setup_environment():
-    """Ensures that the environmental variables RAFCON_PATH and RAFCON_LIB_PATH are existent
+    """Ensures that the environmental variable RAFCON_LIB_PATH is existent
     """
     try:
         import glib
-    except ImportError:
-        glib = None
-    rafcon_root_path = dirname(realpath(rafcon.__file__))
-    if not os.environ.get('RAFCON_PATH', None):
-        # set env variable RAFCON_PATH to the root directory of RAFCON
-        os.environ['RAFCON_PATH'] = rafcon_root_path
-
-    if glib:
         user_data_folder = glib.get_user_data_dir()
-    else:
+    except ImportError:
         user_data_folder = join(os.path.expanduser("~"), ".local", "share")
+    rafcon_root_path = dirname(realpath(rafcon.__file__))
     user_library_folder = join(user_data_folder, "rafcon", "libraries")
 
     # The RAFCON_LIB_PATH points to a path with common RAFCON libraries

@@ -15,8 +15,8 @@ DEPENDS.osl*        = python-gtkmvc==1.99, python-gaphas==0.7, python-jsonconver
 
 ARCHS               = sled11-x86-gcc4.x, sled11-x86_64-gcc4.x, osl42-x86_64
 PYTHON_PATHS        = ${PKGROOT}/source
-ADDITIONAL_ENV.osl* = RAFCON_PATH=${PKGROOT}/source/rafcon, RAFCON_LIB_PATH=${PKGROOT}/share/libraries, PATH=${PKGROOT}/bin:$${PATH}
-ADDITIONAL_ENV.sled11* = RAFCON_PATH=${PKGROOT}/source/rafcon, RAFCON_LIB_PATH=${PKGROOT}/share/libraries, PATH=${PKGROOT}/bin:/opt/python/python2.7/bin:$${PATH}
+ADDITIONAL_ENV.osl* = RAFCON_LIB_PATH=${PKGROOT}/share/libraries, PATH=${PKGROOT}/bin:$${PATH}
+ADDITIONAL_ENV.sled11* = RAFCON_LIB_PATH=${PKGROOT}/share/libraries, PATH=${PKGROOT}/bin:/opt/python/python2.7/bin:$${PATH}
 
 [pre-install]
 python -m compileall -fq ./source/rafcon

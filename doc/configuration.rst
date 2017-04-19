@@ -44,7 +44,7 @@ TYPE
 
 LIBRARY\_PATHS
     Type: Dictionary with type(key) = String and type(value) = String
-    Default: ``{"generic": "${RAFCON_PATH}/../libraries/generic"}``
+    Default: ``{"generic": "${RAFCON_LIB_PATH}/generic"}``
     A dictionary holding all libraries with name and path. The key of
     the dictionary is a unique library identifier. This unique
     identifier will be used as library name, shown as root of the
