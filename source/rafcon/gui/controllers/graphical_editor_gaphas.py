@@ -315,27 +315,14 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
-        if isinstance(model, AbstractStateModel) and 'arg' in info and \
-                info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state'
-                                       'group_states', 'ungroup_state', 'paste']:
+        # print self.__class__.__name__, "action_signal check", info
+        if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and\
+                info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste']:
+            # print self.__class__.__name__, "action_signal ####",
             self._complex_action = False
             self.relieve_model(model)
             self.adapt_complex_action(self.state_action_signal.__func__.target, info['arg'].action_parent_m)
             # print "GSME ACTION adapt to change"
-
-    @ExtendedController.observe("state_machine", before=True)
-    def state_machine_change_before(self, model, prop_name, info):
-        if 'method_name' in info and info['method_name'] == 'root_state_change':
-            method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
-
-            if method_name in ['change_state_type', 'change_root_state_type']:
-                self._complex_action = True
-                if method_name == 'change_root_state_type':
-                    state_model_to_be_changed = model.root_state
-                else:
-                    state_to_be_changed = arguments[1]
-                    state_model_to_be_changed = gui_helper_state_machine.get_state_model_for_state(state_to_be_changed)
-                self.observe_model(state_model_to_be_changed)
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
@@ -555,14 +542,18 @@ class GraphicalEditorController(ExtendedController):
                     logger.error('Error while trying to emit meta data signal {}'.format(e))
                     raise
 
-    @ExtendedController.observe("state_type_changed_signal", signal=True)
+    @ExtendedController.observe("action_signal", signal=True)
     def state_type_changed(self, old_state_m, prop_name, info):
-        self._complex_action = False
-        self.relieve_model(old_state_m)
-        signal_msg = info['arg']
-        new_state_m = signal_msg.new_state_m
-        # print "state_type_changed relieve observer"
-        self.adapt_complex_action(old_state_m, new_state_m)
+        msg = info['arg']
+        # print self.__class__.__name__, "state_type_changed check", info
+        if msg.action in ['change_state_type', 'change_root_state_type'] and msg.after:
+            # print self.__class__.__name__, "state_type_changed ####"
+            self._complex_action = False
+            self.relieve_model(old_state_m)
+            new_state_m = msg.affected_models[-1]
+            # print "state_type_changed relieve observer"
+            self.adapt_complex_action(old_state_m,
+                                      new_state_m)
 
     @lock_state_machine
     def adapt_complex_action(self, old_state_m, new_state_m):

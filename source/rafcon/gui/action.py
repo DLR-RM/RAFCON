@@ -49,7 +49,6 @@ from rafcon.core.storage import storage
 from rafcon.gui.models.container_state import ContainerState, ContainerStateModel
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.utils.notification_overview import NotificationOverview
-import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 import rafcon.gui.singleton as gui_singletons
 from rafcon.utils import log
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
@@ -706,32 +705,19 @@ class Action(ModelMT, AbstractAction):
 
     @ModelMT.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
-        if info['arg'].action == 'change_root_state_type':
-            if info['arg'].after:
-                new_state_m = info['arg'].affected_models[0]
-                logger.info("action state-type-change action-signal hook for root {}".format(new_state_m))
-                storage_version = self.storage_version_for_state_type_change_signal_hook
-                root_state_version_from_storage = get_state_from_state_tuple(storage_version)
-
-                self.update_state(new_state_m.state, root_state_version_from_storage)
-
-                insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
-
-    @ModelMT.observe("state_type_changed_signal", signal=True)
-    def hook_for_type_change_operation(self, model, prop_name, info):
-        g_sm_editor = self.stop_graphical_viewer()
         msg = info['arg']
-        new_state_m = msg.new_state_m
-        logger.info("action state-type-change state-type-change-signal hook for root {}".format(new_state_m))
-        storage_version = self.storage_version_for_state_type_change_signal_hook
-        root_state_version_from_storage = get_state_from_state_tuple(storage_version)
+        if msg.action == 'change_state_type' and msg.after:
+            new_state_m = msg.affected_models[-1]
+            logger.info("action state-type-change action-signal hook for root {}".format(new_state_m))
+            storage_version = self.storage_version_for_state_type_change_signal_hook
+            root_state_version_from_storage = get_state_from_state_tuple(storage_version)
 
-        self.update_state(new_state_m.state, root_state_version_from_storage)
+            self.update_state(new_state_m.state, root_state_version_from_storage)
 
-        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
+            insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
 
     def update_state(self, state, stored_state):
-        logger.info("PPP\n{0}\n{1}".format(state, stored_state))
+        # logger.info("PPP\n{0}\n{1}".format(state, stored_state))
         assert type(stored_state) is type(state)
 
         is_root = state.is_root_state
@@ -910,6 +896,7 @@ class Action(ModelMT, AbstractAction):
 
 
 class StateMachineAction(Action, ModelMT):
+
     def __init__(self, parent_path, state_machine_model, overview):
         ModelMT.__init__(self)
         assert isinstance(overview['model'][0].state_machine, StateMachine)
@@ -941,7 +928,6 @@ class StateMachineAction(Action, ModelMT):
         # observe root state model (type change signal)
         g_sm_editor = self.stop_graphical_viewer()
 
-        import rafcon.gui.helpers.state as gui_helper_state
         if self.action_type == 'change_root_state_type':
             self.storage_version_for_state_type_change_signal_hook = storage_version
             assert isinstance(self.state_machine_model.root_state.state, State)
@@ -949,12 +935,14 @@ class StateMachineAction(Action, ModelMT):
             self.observe_model(self.state_machine_model.root_state)
 
             # self.state_machine.change_root_state_type(new_state_class)
+            import rafcon.gui.helpers.state as gui_helper_state
             gui_helper_state.change_state_type(old_root_state_m, new_state_class)
             self.storage_version_for_state_type_change_signal_hook = None
             self.relieve_model(old_root_state_m)
         else:
             raise TypeError("Wrong action type")
         # else:
+        #     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         #     new_state = gui_helper_state_machine.create_new_state_from_state_with_type(state, new_state_class)
         #
         #     self.update_state(new_state, root_state_version_from_storage)
@@ -968,29 +956,16 @@ class StateMachineAction(Action, ModelMT):
     @ModelMT.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
         # print "#H# STATE_MACHINE_REDO_UNDO: ", NotificationOverview(info, False, self.__class__.__name__)
-        if info['arg'].action == 'change_root_state_type':
-            if info['arg'].after:
-                new_state_m = info['arg'].affected_models[0]
-                logger.info("action state-type-change action-signal hook for root {}".format(new_state_m))
-                storage_version = self.storage_version_for_state_type_change_signal_hook
-                root_state_version_from_storage = get_state_from_state_tuple(storage_version)
-
-                self.update_state(new_state_m.state, root_state_version_from_storage)
-
-                insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
-
-    @ModelMT.observe("state_type_changed_signal", signal=True)
-    def hook_for_type_change_operation(self, model, prop_name, info):
-        g_sm_editor = self.stop_graphical_viewer()
         msg = info['arg']
-        new_state_m = msg.new_state_m
-        logger.info("action state-type-change state-type-changed-signal hook for root {}".format(new_state_m))
-        storage_version = self.storage_version_for_state_type_change_signal_hook
-        root_state_version_from_storage = get_state_from_state_tuple(storage_version)
+        if msg.action == 'change_root_state_type' and msg.after:
+            new_state_m = msg.affected_models[-1]
+            logger.info("action state-type-change action-signal hook for root {}".format(new_state_m))
+            storage_version = self.storage_version_for_state_type_change_signal_hook
+            root_state_version_from_storage = get_state_from_state_tuple(storage_version)
 
-        self.update_state(new_state_m.state, root_state_version_from_storage)
+            self.update_state(new_state_m.state, root_state_version_from_storage)
 
-        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
+            insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
 
     def redo(self):
         # print "#H# STATE_MACHINE_REDO STARTED"

@@ -163,10 +163,14 @@ class StateMachineTreeController(TreeViewController):
             changed_model = self._selected_sm_model.get_state_model_by_path(overview['args'][-1][1].get_path())
             self.observe_model(changed_model)
 
-    @TreeViewController.observe("state_type_changed_signal", signal=True)
+    @TreeViewController.observe("action_signal", signal=True)
     def notification_state_type_changed(self, model, prop_name, info):
-        self.relieve_model(model)
-        self.update() if model.state.is_root_state else self.update(model.parent)
+        msg = info['arg']
+        # print self.__class__.__name__, "state_type_changed check", info
+        if msg.action in ['change_state_type', 'change_root_state_type'] and msg.after:
+            # print self.__class__.__name__, "state_type_changed"
+            self.relieve_model(model)
+            self.update() if model.state.is_root_state else self.update(model.parent)
 
     @TreeViewController.observe("root_state", assign=True)
     def state_machine_notification(self, model, property, info):

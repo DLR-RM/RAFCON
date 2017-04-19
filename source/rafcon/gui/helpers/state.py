@@ -261,7 +261,6 @@ def change_state_type(state_m, target_class):
             state_machine_m.root_state = new_state_m
             # logger.info("ASSIGNED after TO STATE TYPE CHANGE")
 
-            old_state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
             # print "\n\nEMIT-AFTER OLDSTATE\n\n"
             old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
                                                            action_parent_m=state_machine_m,
@@ -284,7 +283,6 @@ def change_state_type(state_m, target_class):
             affected_models = action_parent_m.change_state_type.__func__.affected_models
             affected_models.append(new_state_m)
 
-            old_state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
             old_state_m.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model',
                                                            action_parent_m=action_parent_m,
                                                            affected_models=affected_models,

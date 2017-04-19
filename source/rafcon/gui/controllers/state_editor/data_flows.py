@@ -155,11 +155,15 @@ class LinkageListController(ListViewController):
         if self.no_update or self.no_update_state_destruction or self.no_update_self_or_parent_state_destruction:
             return True
 
-    @ListViewController.observe("state_type_changed_signal", signal=True)
+    @ListViewController.observe("action_signal", signal=True)
     def notification_state_type_changed(self, model, prop_name, info):
-        if model not in self._model_observed:
-            self.relieve_model(model)
-        self.register_models_to_observe()
+        msg = info['arg']
+        # print self.__class__.__name__, "state_type_changed check", info
+        if msg.action in ['change_state_type', 'change_root_state_type'] and msg.after:
+            # print self.__class__.__name__, "state_type_changed"
+            if model not in self._model_observed:
+                self.relieve_model(model)
+            self.register_models_to_observe()
 
     @ListViewController.observe("state_machine", before=True)
     def before_notification_state_machine_observation_control(self, model, prop_name, info):
