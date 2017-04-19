@@ -13,7 +13,9 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+import os
 import gtk
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
 
 def get_glade_path(glade_file):
@@ -134,4 +136,4 @@ ICON_EHIST = "f1b3"
 ICON_NET = "f0ec"
 ICON_STICKY = "f08d"
 
-RAFCON_INSTANCE_LOCK_FILE = None
+RAFCON_INSTANCE_LOCK_FILE_PATH = os.path.join(RAFCON_TEMP_PATH_BASE, 'lock')
