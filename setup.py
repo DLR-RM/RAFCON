@@ -202,6 +202,8 @@ setup(
     package_dir={'': 'source'},  # tell distutils packages are under src
 
     package_data={
+        # Include config files
+        'rafcon': ['pylintrc'],
         # Include core and GUI config
         'rafcon.core': ['config.yaml'],
         'rafcon.gui': ['gui_config.yaml'],
