@@ -2,7 +2,7 @@ TYPE: GUI_CONFIG
 
 SOURCE_EDITOR_STYLE: rafcon-dark
 
-GAPHAS_EDITOR: False
+GAPHAS_EDITOR: True
 ENABLE_CACHING: True    # Affects only Gaphas editor
 
 WAYPOINT_SNAP_ANGLE: 45
