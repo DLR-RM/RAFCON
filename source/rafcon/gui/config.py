@@ -16,11 +16,10 @@ import os
 import re
 import gtk
 import yaml
-from pkg_resources import resource_filename, resource_listdir, resource_exists, resource_string
+from pkg_resources import resource_filename, resource_exists, resource_string
 from yaml_configuration.config import ConfigError
 
 from rafcon.core.config import ObservableConfig
-from rafcon.utils import filesystem
 from rafcon.utils import storage_utils
 from rafcon.utils import log
 
@@ -54,7 +53,6 @@ class GuiConfig(ObservableConfig):
                               "Please add \"TYPE: GUI_CONFIG\" to your gui_config.yaml file.")
         self.path_to_tool = os.path.dirname(os.path.realpath(__file__))
         self.configure_gtk()
-        self.configure_source_view_styles()
         self.configure_colors()
 
     def load(self, config_file=None, path=None):
@@ -89,21 +87,6 @@ class GuiConfig(ObservableConfig):
         while gtk.events_pending():
             gtk.main_iteration(False)
         gtk.rc_parse(gtkrc_file_path)
-
-    def configure_source_view_styles(self):
-        source_view_style_user_folder = os.path.join(os.path.expanduser('~'), '.local', 'share', 'gtksourceview-2.0',
-                                                     'styles')
-        filesystem.create_path(source_view_style_user_folder)
-
-        source_view_folder = self.get_assets_path("gtk-sourceview")
-
-        # Copy all .xml source view style files from theme to local user styles folder
-        for style_filename in resource_listdir(__name__, source_view_folder):
-            if not style_filename.endswith(".xml"):
-                continue
-            source_view_style_theme_path = resource_filename(__name__, "/".join((source_view_folder, style_filename)))
-            source_view_style_user_path = os.path.join(source_view_style_user_folder, style_filename)
-            filesystem.copy_file_if_update_required(source_view_style_theme_path, source_view_style_user_path)
 
     def configure_colors(self):
         # Get colors from GTKrc file

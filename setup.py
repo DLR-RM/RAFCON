@@ -57,8 +57,8 @@ def install_fonts():
     tv = gtk.TextView()
     try:
         context = tv.get_pango_context()
-    except Exception:
-        log.error("Could not get pango context. Will not install fonts.")
+    except Exception as e:
+        log.error("Could not get pango context. Will not install fonts: {}".format(e))
         return
     if not context:  # A Pango context is not always available
         log.warn("Could not get pango context. Will not install fonts.")
@@ -74,7 +74,7 @@ def install_fonts():
                 log.debug("Font '{0}' found".format(font_name))
                 continue
 
-            log.info("Installing font '{0}' to '{1}'...".format(font_name, user_otf_fonts_folder))
+            log.info("Installing font '{0}' to {1}".format(font_name, user_otf_fonts_folder))
             if not os.path.isdir(user_otf_fonts_folder):
                 os.makedirs(user_otf_fonts_folder)
 
@@ -89,10 +89,38 @@ def install_fonts():
         return
 
 
+def install_gtk_source_view_styles():
+    if glib:
+        user_data_folder = glib.get_user_data_dir()
+    else:
+        user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
+    user_source_view_style_path = os.path.join(user_data_folder, 'gtksourceview-2.0', 'styles')
+
+    try:
+        if not os.path.exists(user_source_view_style_path):
+            os.makedirs(user_source_view_style_path)
+
+        # Copy all .xml source view style files from all themes to local user styles folder
+        themes_path = os.path.join(assets_folder, "themes")
+        for theme in os.listdir(themes_path):
+            theme_source_view_path = os.path.join(themes_path, theme, "gtk-sourceview")
+            if not os.path.isdir(theme_source_view_path):
+                continue
+            for style_filename in os.listdir(theme_source_view_path):
+                if not style_filename.endswith(".xml"):
+                    continue
+                log.info("Installing GTKSourceView style '{}' to {}".format(style_filename, user_source_view_style_path))
+                theme_source_view_style_path = os.path.join(theme_source_view_path, style_filename)
+                shutil.copy(theme_source_view_style_path, user_source_view_style_path)
+    except IOError as e:
+        log.error("Could not install GTKSourceView style: {}".format(e))
+
+
 class PostDevelopCommand(DevelopCommand):
     """Post-installation for development mode."""
     def run(self):
         install_fonts()
+        install_gtk_source_view_styles()
         DevelopCommand.run(self)
 
 
@@ -100,6 +128,7 @@ class PostInstallCommand(InstallCommand):
     """Post-installation for installation mode."""
     def run(self):
         install_fonts()
+        install_gtk_source_view_styles()
         InstallCommand.run(self)
 
 
