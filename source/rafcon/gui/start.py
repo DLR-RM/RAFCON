@@ -19,6 +19,7 @@
 
 # default libraries
 import os
+import sys
 import logging
 import gtk
 import threading
@@ -26,6 +27,7 @@ import signal
 from yaml_configuration.config import config_path
 
 # gui
+import rafcon
 from rafcon.gui.config import global_gui_config
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.controllers.main_window import MainWindowController
@@ -33,6 +35,7 @@ from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.splash_screen import SplashScreen
+from rafcon.gui.helpers import installation
 
 # state machine
 from rafcon.core.start import parse_state_machine_path, setup_environment, reactor_required, \
@@ -55,8 +58,23 @@ from rafcon.utils import log
 logger = log.get_logger("rafcon.start.gui")
 
 
+def setup_installation():
+    """Install necessary GUI resources
+    
+    By default, RAFCON should be installed via `setup.py` (`pip install rafcon`). Thereby, all resources are being 
+    installed. However, if this is not the case, one can set the `RAFCON_CHECK_INSTALLATION` env variable to `True`. 
+    Then, the installation will be performed before starting the GUI. 
+    """
+    if os.environ.get("RAFCON_CHECK_INSTALLATION", False) == "True":
+        rafcon_root = os.path.dirname(rafcon.__file__)
+        installation.assets_folder = os.path.join(rafcon_root, 'gui', 'assets')
+        installation.share_folder = os.path.join(os.path.dirname(os.path.dirname(rafcon_root)), 'share')
+        installation.install_fonts(logger, restart=True)
+        installation.install_gtk_source_view_styles(logger)
+        installation.install_libraries(logger, overwrite=False)
+
+
 def setup_gtkmvc_logger():
-    import sys
     # Apply defaults to logger of gtkmvc
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
@@ -227,6 +245,7 @@ def main():
     while gtk.events_pending():
         gtk.main_iteration()
 
+    setup_installation()
     setup_l10n()
     setup_l10n_gtk()
 
@@ -244,7 +263,6 @@ def main():
     user_input = parser.parse_args()
 
     # create lock file
-    print "AUTO recovery",global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED')
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
         constants.RAFCON_INSTANCE_LOCK_FILE = open(os.path.join(RAFCON_TEMP_PATH_BASE, 'lock'), 'a+')
         constants.RAFCON_INSTANCE_LOCK_FILE.close()
@@ -295,7 +313,6 @@ def main():
             view = global_config.get_config_value("PROFILER_VIEWER")
             profiler.stop("global", result_path, view)
 
-        print "AUTO recovery", global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED')
         if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
             if os.path.exists(constants.RAFCON_INSTANCE_LOCK_FILE.name):
                 os.remove(constants.RAFCON_INSTANCE_LOCK_FILE.name)

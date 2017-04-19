@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 from distutils import log
 
@@ -12,9 +13,12 @@ except ImportError:
     glib = None
 
 assets_folder = os.path.join('source', 'rafcon', 'gui', 'assets')
+share_folder = "share"
 
 
-def install_fonts():
+def install_fonts(logger=None, restart=False):
+    if logger:
+        log = logger
     if not gtk:
         log.warn("No GTK found. Will not install fonts.")
         return
@@ -33,6 +37,7 @@ def install_fonts():
 
     user_otf_fonts_folder = os.path.join(os.path.expanduser('~'), '.fonts')
 
+    font_installed = False
     try:
         for font_name in ["DIN Next LT Pro", "FontAwesome"]:
             if font_name in existing_font_names:
@@ -49,12 +54,20 @@ def install_fonts():
                 target_font_file = os.path.join(user_otf_fonts_folder, font_face)
                 source_font_file = os.path.join(fonts_folder, font_face)
                 shutil.copy(source_font_file, target_font_file)
+            font_installed = True
     except IOError as e:
         log.error("Could not install fonts, IOError: {}".format(e))
         return
 
+    if font_installed and restart:
+        log.info("Restarting RAFCON to apply new fonts...")
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
 
-def install_gtk_source_view_styles():
+
+def install_gtk_source_view_styles(logger=None):
+    if logger:
+        log = logger
     if glib:
         user_data_folder = glib.get_user_data_dir()
     else:
@@ -81,15 +94,19 @@ def install_gtk_source_view_styles():
         log.error("Could not install GTKSourceView style: {}".format(e))
 
 
-def install_libraries():
+def install_libraries(logger=None, overwrite=True):
+    if logger:
+        log = logger
     if glib:
         user_data_folder = glib.get_user_data_dir()
     else:
         user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
     user_library_path = os.path.join(user_data_folder, 'rafcon', 'libraries')
-    library_path = os.path.join("share", "libraries")
+    library_path = os.path.join(share_folder, "libraries")
 
     if os.path.exists(user_library_path):
+        if not overwrite:
+            return
         try:
             log.info("Removing old RAFCON libraries in {}".format(user_library_path))
             shutil.rmtree(user_library_path)
