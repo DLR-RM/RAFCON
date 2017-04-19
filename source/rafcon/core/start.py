@@ -68,14 +68,29 @@ def post_setup_plugins(parser_result):
 def setup_environment():
     """Ensures that the environmental variables RAFCON_PATH and RAFCON_LIB_PATH are existent
     """
+    try:
+        import glib
+    except ImportError:
+        glib = None
     rafcon_root_path = dirname(realpath(rafcon.__file__))
     if not os.environ.get('RAFCON_PATH', None):
         # set env variable RAFCON_PATH to the root directory of RAFCON
         os.environ['RAFCON_PATH'] = rafcon_root_path
 
+    if glib:
+        user_data_folder = glib.get_user_data_dir()
+    else:
+        user_data_folder = join(os.path.expanduser("~"), ".local", "share")
+    user_library_folder = join(user_data_folder, "rafcon", "libraries")
+
+    # The RAFCON_LIB_PATH points to a path with common RAFCON libraries
+    # If the env variable is not set, we have to determine it. In the future, this should always be
+    # ~/.local/share/rafcon/libraries, but for backward compatibility, also a relative RAFCON path is supported
     if not os.environ.get('RAFCON_LIB_PATH', None):
-        # set env variable RAFCON_LIB_PATH to the library directory of RAFCON (when not using RMPM)
-        os.environ['RAFCON_LIB_PATH'] = join(dirname(dirname(rafcon_root_path)), 'share', 'libraries')
+        if exists(user_library_folder):
+            os.environ['RAFCON_LIB_PATH'] = user_library_folder
+        else:
+            os.environ['RAFCON_LIB_PATH'] = join(dirname(dirname(rafcon_root_path)), 'share', 'libraries')
 
 
 def parse_state_machine_path(path):

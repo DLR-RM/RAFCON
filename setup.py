@@ -116,11 +116,35 @@ def install_gtk_source_view_styles():
         log.error("Could not install GTKSourceView style: {}".format(e))
 
 
+def install_libraries():
+    if glib:
+        user_data_folder = glib.get_user_data_dir()
+    else:
+        user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
+    user_library_path = os.path.join(user_data_folder, 'rafcon', 'libraries')
+    library_path = os.path.join("share", "libraries")
+
+    if os.path.exists(user_library_path):
+        try:
+            log.info("Removing old RAFCON libraries in {}".format(user_library_path))
+            shutil.rmtree(user_library_path)
+        except (EnvironmentError, shutil.Error) as e:
+            log.error("Could not remove old RAFCON libraries in {}: {}".format(user_library_path, e))
+            return
+
+    try:
+        log.info("Installing RAFCON libraries to {}".format(user_library_path))
+        shutil.copytree(library_path, user_library_path)
+    except (IOError, shutil.Error):
+        log.error("Could not install RAFCON libraries: {}".format(e))
+
+
 class PostDevelopCommand(DevelopCommand):
     """Post-installation for development mode."""
     def run(self):
         install_fonts()
         install_gtk_source_view_styles()
+        install_libraries()
         DevelopCommand.run(self)
 
 
@@ -129,6 +153,7 @@ class PostInstallCommand(InstallCommand):
     def run(self):
         install_fonts()
         install_gtk_source_view_styles()
+        install_libraries()
         InstallCommand.run(self)
 
 
