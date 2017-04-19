@@ -7,8 +7,7 @@ from setuptools.command.install import install as InstallCommand
 from os import path
 import os
 import sys
-import shutil
-from distutils import log
+from imp import load_source
 
 try:
     import gtk
@@ -18,8 +17,6 @@ try:
     import glib
 except ImportError:
     glib = None
-
-log.set_verbosity(log.DEBUG)
 
 
 class PyTest(TestCommand):
@@ -49,112 +46,26 @@ class PyTest(TestCommand):
         sys.exit(error_number)
 
 
-def install_fonts():
-    if not gtk:
-        log.warn("No GTK found. Will not install fonts.")
-        return
-
-    tv = gtk.TextView()
-    try:
-        context = tv.get_pango_context()
-    except Exception as e:
-        log.error("Could not get pango context. Will not install fonts: {}".format(e))
-        return
-    if not context:  # A Pango context is not always available
-        log.warn("Could not get pango context. Will not install fonts.")
-        return
-    existing_fonts = context.list_families()
-    existing_font_names = [font.get_name() for font in existing_fonts]
-
-    user_otf_fonts_folder = os.path.join(os.path.expanduser('~'), '.fonts')
-
-    try:
-        for font_name in ["DIN Next LT Pro", "FontAwesome"]:
-            if font_name in existing_font_names:
-                log.debug("Font '{0}' found".format(font_name))
-                continue
-
-            log.info("Installing font '{0}' to {1}".format(font_name, user_otf_fonts_folder))
-            if not os.path.isdir(user_otf_fonts_folder):
-                os.makedirs(user_otf_fonts_folder)
-
-            # A font is a folder one or more font faces
-            fonts_folder = os.path.join(assets_folder, "fonts", font_name)
-            for font_face in os.listdir(fonts_folder):
-                target_font_file = os.path.join(user_otf_fonts_folder, font_face)
-                source_font_file = os.path.join(fonts_folder, font_face)
-                shutil.copy(source_font_file, target_font_file)
-    except IOError as e:
-        log.error("Could not install fonts, IOError: {}".format(e))
-        return
-
-
-def install_gtk_source_view_styles():
-    if glib:
-        user_data_folder = glib.get_user_data_dir()
-    else:
-        user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
-    user_source_view_style_path = os.path.join(user_data_folder, 'gtksourceview-2.0', 'styles')
-
-    try:
-        if not os.path.exists(user_source_view_style_path):
-            os.makedirs(user_source_view_style_path)
-
-        # Copy all .xml source view style files from all themes to local user styles folder
-        themes_path = os.path.join(assets_folder, "themes")
-        for theme in os.listdir(themes_path):
-            theme_source_view_path = os.path.join(themes_path, theme, "gtk-sourceview")
-            if not os.path.isdir(theme_source_view_path):
-                continue
-            for style_filename in os.listdir(theme_source_view_path):
-                if not style_filename.endswith(".xml"):
-                    continue
-                log.info("Installing GTKSourceView style '{}' to {}".format(style_filename, user_source_view_style_path))
-                theme_source_view_style_path = os.path.join(theme_source_view_path, style_filename)
-                shutil.copy(theme_source_view_style_path, user_source_view_style_path)
-    except IOError as e:
-        log.error("Could not install GTKSourceView style: {}".format(e))
-
-
-def install_libraries():
-    if glib:
-        user_data_folder = glib.get_user_data_dir()
-    else:
-        user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
-    user_library_path = os.path.join(user_data_folder, 'rafcon', 'libraries')
-    library_path = os.path.join("share", "libraries")
-
-    if os.path.exists(user_library_path):
-        try:
-            log.info("Removing old RAFCON libraries in {}".format(user_library_path))
-            shutil.rmtree(user_library_path)
-        except (EnvironmentError, shutil.Error) as e:
-            log.error("Could not remove old RAFCON libraries in {}: {}".format(user_library_path, e))
-            return
-
-    try:
-        log.info("Installing RAFCON libraries to {}".format(user_library_path))
-        shutil.copytree(library_path, user_library_path)
-    except (IOError, shutil.Error):
-        log.error("Could not install RAFCON libraries: {}".format(e))
-
-
 class PostDevelopCommand(DevelopCommand):
-    """Post-installation for development mode."""
+    """Post installation step for development mode
+    """
     def run(self):
-        install_fonts()
-        install_gtk_source_view_styles()
-        install_libraries()
         DevelopCommand.run(self)
+        installation = load_source("installation", install_helper)
+        installation.install_fonts()
+        installation.install_gtk_source_view_styles()
+        installation.install_libraries()
 
 
 class PostInstallCommand(InstallCommand):
-    """Post-installation for installation mode."""
+    """Post installation step for installation mode
+    """
     def run(self):
-        install_fonts()
-        install_gtk_source_view_styles()
-        install_libraries()
         InstallCommand.run(self)
+        installation = load_source("installation", install_helper)
+        installation.install_fonts()
+        installation.install_gtk_source_view_styles()
+        installation.install_libraries()
 
 
 def get_data_files_tuple(*path, **kwargs):
@@ -178,8 +89,10 @@ def get_data_files_tuple(*path, **kwargs):
 global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion~=0.2', 'yaml_configuration~=0.0',
                        'python-gtkmvc-dlr==1.99.2', 'gaphas>=0.7']
 
-assets_folder = os.path.join('source', 'rafcon', 'gui', 'assets')
-themes_folder = os.path.join(assets_folder, 'themes')
+script_path = path.realpath(__file__)
+install_helper = path.join(path.dirname(script_path), "source", "rafcon", "gui", "helpers", "installation.py")
+assets_folder = path.join('source', 'rafcon', 'gui', 'assets')
+themes_folder = path.join(assets_folder, 'themes')
 
 # read version from VERSION file
 # this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon

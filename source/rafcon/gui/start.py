@@ -244,6 +244,7 @@ def main():
     user_input = parser.parse_args()
 
     # create lock file
+    print "AUTO recovery",global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED')
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
         constants.RAFCON_INSTANCE_LOCK_FILE = open(os.path.join(RAFCON_TEMP_PATH_BASE, 'lock'), 'a+')
         constants.RAFCON_INSTANCE_LOCK_FILE.close()
@@ -294,6 +295,7 @@ def main():
             view = global_config.get_config_value("PROFILER_VIEWER")
             profiler.stop("global", result_path, view)
 
+        print "AUTO recovery", global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED')
         if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
             if os.path.exists(constants.RAFCON_INSTANCE_LOCK_FILE.name):
                 os.remove(constants.RAFCON_INSTANCE_LOCK_FILE.name)
