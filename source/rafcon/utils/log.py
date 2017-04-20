@@ -35,16 +35,15 @@ logging.config.dictConfig(logging_config)
 
 
 def get_logger(name):
-    """Generates and returns a logger object
+    """Returns a logger for the given name
 
-    Returns a logger for a specific name i.e. a class name. There are several logging modes available:
-    info, debug, warn, error
+    The function is basically a wrapper for logging.getLogger and only ensures that the namespace is within "rafcon."
+    and that the propagation is enabled.
 
     :param str name: The namespace of the new logger
     :return: Logger object with given namespace
     :rtype: logging.Logger
     """
-
     if name in existing_loggers:
         return existing_loggers[name]
 
