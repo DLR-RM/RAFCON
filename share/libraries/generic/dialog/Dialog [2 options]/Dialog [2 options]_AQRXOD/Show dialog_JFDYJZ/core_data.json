@@ -1,5 +1,5 @@
 {
-    "__jsonqualname__": "rafcon.statemachine.states.library_state.LibraryState", 
+    "__jsonqualname__": "rafcon.core.states.library_state.LibraryState", 
     "input_data_port_runtime_values": {
         "1": "Decide wisely", 
         "2": "You only have this one chance", 
@@ -15,9 +15,7 @@
             ], 
             [
                 "2", 
-                "kp_2"
-            ], 
-            [
+                "kp_2", 
                 "3", 
                 "kp_3"
             ]
@@ -28,17 +26,17 @@
     "name": "Show dialog", 
     "outcomes": {
         "-2": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "preempted", 
             "outcome_id": -2
         }, 
         "-1": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "aborted", 
             "outcome_id": -1
         }, 
         "0": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "done", 
             "outcome_id": 0
         }

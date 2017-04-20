@@ -1,6 +1,7 @@
 {
     "creation_time": "2015-06-08 07:13:51", 
-    "last_update": "2016-03-23 07:21:43", 
-    "root_state_id": "KGBCPK", 
-    "version": "None"
+    "last_update": "2017-04-20 12:13:30", 
+    "root_state_storage_id": "Show dialog_KGBCPK", 
+    "state_machine_version": "None", 
+    "used_rafcon_version": "0.9.1a1"
 }

@@ -1,12 +1,12 @@
 {
-    "__jsonqualname__": "rafcon.statemachine.states.execution_state.ExecutionState", 
+    "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
     "description": "Wait a given time\n\nThe library uses preemptive_wait to wait for the given time. If a preemption request occurs during the wait, the library preempts immediately.\n\nParameter:\ntime: Time to wait [sec]", 
     "input_data_ports": {
         "27": {
-            "__jsonqualname__": "rafcon.statemachine.data_port.InputDataPort", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
             "data_port_id": 27, 
             "data_type": {
-                "__type__": "float"
+                "__type__": "__builtin__.float"
             }, 
             "default_value": 0.0, 
             "name": "time"
@@ -15,17 +15,17 @@
     "name": "wait", 
     "outcomes": {
         "-2": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "preempted", 
             "outcome_id": -2
         }, 
         "-1": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "aborted", 
             "outcome_id": -1
         }, 
         "0": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "end", 
             "outcome_id": 0
         }
