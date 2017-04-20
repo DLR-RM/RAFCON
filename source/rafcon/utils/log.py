@@ -34,23 +34,6 @@ logging_config = json.loads(resource_string(rafcon_root, "logging.conf"))
 logging.config.dictConfig(logging_config)
 
 
-def setup_root_logger():
-    """Creates a RAFCON root logger
-
-    Creates logger with namespace "rafcon". All further RAFCON logger which have sub-namespaces of "rafcon" will
-    inherit the handlers, formatter and logging level.
-
-    :return: Root logger
-    :rtype: logging.Logger
-    """
-    if rafcon_root in existing_loggers:
-        return existing_loggers[rafcon_root]
-
-    root_logger = logging.getLogger(rafcon_root)
-    existing_loggers[rafcon_root] = root_logger
-    return root_logger
-
-
 def get_logger(name):
     """Generates and returns a logger object
 
@@ -106,5 +89,3 @@ class log_exceptions(object):
                     main_quit()
 
         return wrapper
-
-setup_root_logger()
