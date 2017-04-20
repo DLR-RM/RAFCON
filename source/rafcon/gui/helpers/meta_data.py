@@ -72,6 +72,8 @@ def get_boundaries_of_elements_in_dict(models_dict):
     else:
         left = models_dict['scoped_variables'].items()[0][1].get_meta_data_editor(gaphas_editor)['inner_rel_pos'][0]
     if models_dict['states']:
+        # print models_dict['states'].items()[0][1]
+        # print models_dict['states'].items()[0][1].meta
         # print models_dict['states'].items()[0][1].get_meta_data_editor(gaphas_editor)
         # print models_dict['states'].items()[0][1].get_meta_data_editor(gaphas_editor)['rel_pos'][1]
         top = y_axis_mirror * models_dict['states'].items()[0][1].get_meta_data_editor(gaphas_editor)['rel_pos'][1]
@@ -91,6 +93,8 @@ def get_boundaries_of_elements_in_dict(models_dict):
     parts = ['states', 'transitions', 'data_flows']
     if not gaphas_editor:
         parts.append('scoped_variables')
+        parts.append('input_data_ports')
+        parts.append('output_data_ports')
     for key in parts:
         elems_dict = models_dict[key]
         rel_positions = []
@@ -100,7 +104,7 @@ def get_boundaries_of_elements_in_dict(models_dict):
                 rel_positions = [model.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']]
                 _size = model.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
                 # print key, rel_positions, _size
-            elif key == 'scoped_variables':
+            elif key in ['scoped_variables', 'input_data_ports', 'output_data_ports']:
                 rel_positions = [model.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']]
             elif key in ['transitions', 'data_flows']:
                 if gaphas_editor and key is "data_flows":
@@ -199,6 +203,12 @@ def resize_of_all_models_in_dict(models_dict, factor, gaphas_editor):
     # Do the same for scoped variable
     if not gaphas_editor:
         for scoped_variable_m in models_dict['scoped_variables'].itervalues():
+            old_rel_pos = scoped_variable_m.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']
+            scoped_variable_m.set_meta_data_editor('inner_rel_pos', mult_two_vectors(factor, old_rel_pos), gaphas_editor)
+        for scoped_variable_m in models_dict['input_data_ports'].itervalues():
+            old_rel_pos = scoped_variable_m.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']
+            scoped_variable_m.set_meta_data_editor('inner_rel_pos', mult_two_vectors(factor, old_rel_pos), gaphas_editor)
+        for scoped_variable_m in models_dict['output_data_ports'].itervalues():
             old_rel_pos = scoped_variable_m.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']
             scoped_variable_m.set_meta_data_editor('inner_rel_pos', mult_two_vectors(factor, old_rel_pos), gaphas_editor)
 

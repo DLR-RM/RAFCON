@@ -315,8 +315,39 @@ def change_state_type_with_error_handling_and_logger_messages(state_m, target_cl
                     "".format(state_m.state.name, type(state_m.state).__name__, target_class.__name__))
 
 
-def substitute_state(target_state_m, state_m_to_insert):
+def dict_has_empty_elements(d):
+    empty = False
+    if not d:
+        # print d
+        return True
+    else:
+        for v in d.itervalues():
+            if isinstance(v, dict):
+                if not dict_has_empty_elements(v):
+                    empty = True
+            else:
+                if not v:
+                    # print v
+                    empty = True
 
+    return empty
+
+
+def model_has_empty_meta(m):
+    # print m, m.meta
+    if dict_has_empty_elements(m.meta):
+        # print "XXX", m, m.meta
+        return True
+    if isinstance(m, ContainerStateModel):
+        for state_m in m.states.itervalues():
+            if dict_has_empty_elements(state_m.meta):
+                # print "XXX", state_m, state_m.meta
+                return True
+    return False
+
+
+def substitute_state(target_state_m, state_m_to_insert):
+    # print "substitute_state"
     state_to_insert = state_m_to_insert.state
     action_parent_m = target_state_m.parent
     old_state_m = target_state_m
@@ -342,6 +373,7 @@ def substitute_state(target_state_m, state_m_to_insert):
 
     # CORE
     new_state = None
+    # print "state to insert", state_to_insert
     try:
         new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
         # assert new_state.state_id is state_id
@@ -351,6 +383,7 @@ def substitute_state(target_state_m, state_m_to_insert):
 
     if new_state:
         # AFTER MODEL
+        # print "AFTER MODEL", new_state
         new_state_m = action_parent_m.states[new_state.state_id]
         tmp_meta_data = action_parent_m.substitute_state.__func__.tmp_meta_data_storage
         old_state_m = action_parent_m.substitute_state.__func__.old_state_m
@@ -371,9 +404,9 @@ def substitute_state(target_state_m, state_m_to_insert):
                 logger.warning("Data flow model with id {0} to set meta data could not be found.".format(df_id))
 
         # TODO re-organize and use partly the expected_models pattern the next lines
-        if isinstance(state_m_to_insert, ContainerStateModel):
+        if isinstance(state_m_to_insert, ContainerStateModel) and not model_has_empty_meta(state_m_to_insert):
             models_dict = {'state': new_state_m}
-            for key in global_clipboard.Clipboard._container_state_unlimited:
+            for key in global_clipboard._container_state_unlimited:
                 elems_list = getattr(state_m_to_insert, key)
                 elems_list = elems_list.values() if hasattr(elems_list, 'keys') else elems_list
                 models_dict[key] = {elem.core_element.core_element_id: elem for elem in elems_list}
@@ -383,9 +416,12 @@ def substitute_state(target_state_m, state_m_to_insert):
                 elems_list = elems_list.values() if hasattr(elems_list, 'keys') else elems_list
                 for elem in elems_list:
                     elem.meta = models_dict[key][elem.core_element.core_element_id].meta
+        else:
+            if isinstance(state_m_to_insert, ContainerStateModel):
+                logger.info("Models have partly empty meta no resize provided")
 
-        notification = Notification(action_parent_m, "states", {'method_name': 'substitute_state'})
-        action_parent_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
+        # notification = Notification(action_parent_m, "states", {'method_name': 'substitute_state'})
+        # action_parent_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
         msg = ActionSignalMsg(action='substitute_state', origin='model', action_parent_m=action_parent_m,
                               affected_models=changed_models, after=True)
         # print "EMIT-AFTER OLDSTATE", msg
@@ -396,7 +432,7 @@ def substitute_state(target_state_m, state_m_to_insert):
 
 
 def substitute_selected_state(state, as_template=False):
-
+    # print "substitute_selected_state", state, as_template
     assert isinstance(state, State)
     from rafcon.core.states.barrier_concurrency_state import DeciderState
     if isinstance(state, DeciderState):
@@ -435,27 +471,35 @@ def substitute_selected_state(state, as_template=False):
     # If inserted as template, we have to extract the state_copy and load the meta data manually
     else:
         assert isinstance(state, LibraryState)
-        template = state.state_copy
+        # print "as template"
+        template_m = LibraryStateModel(state).state_copy
+        # print template_m
+        template = template_m.state
         orig_state_id = template.state_id
-        template.change_state_id()
-        template.name = current_state_name
         if isinstance(state.state_copy, ContainerState):
-            template_m = ContainerStateModel(state.state_copy)
+            # print "container state"
             # load meta data TODO fix the following code and related code/functions to the 'template' True flag
             import os.path
             lib_os_path, _, _ = library_manager.get_os_path_to_library(state.library_path, state.library_name)
-            root_state_path = os.path.join(lib_os_path, orig_state_id)
+            state_identifier = storage.get_storage_id_for_state(template)
+            root_state_path = os.path.join(lib_os_path, state_identifier)
 
             def load_models_recursive(state_m, path):
                 state_m.load_meta_data(path)
+                # print state_m, state_m.meta
                 if isinstance(state_m, ContainerStateModel):
                     for child_state_id, child_state_m in state_m.states.iteritems():
-                        load_models_recursive(child_state_m, os.path.join(path, child_state_id))
+                        load_models_recursive(child_state_m,
+                                              os.path.join(path, storage.get_storage_id_for_state(child_state_m.state)))
+            # print "META DATA BEFORE"
             load_models_recursive(template_m, root_state_path)
         else:
-            template_m = StateModel(state)
+            # print "execution state"
+            template_m = StateModel(template)
 
         substitute_state(parent_state_m.states[current_state.state_id], template_m)
+        # template.change_state_id()
+        # template.name = current_state_name
 
         return True
 

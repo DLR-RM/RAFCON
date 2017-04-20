@@ -147,13 +147,20 @@ class Clipboard(Observable):
 
         # TODO re-organize and use partly the expected_models pattern the next lines
         import rafcon.gui.helpers.meta_data as gui_helpers_meta_data
+        # import rafcon.gui.helpers.state as gui_helpers_state
         models_dict = {'state': target_state_m}
         for key, elems_list in insert_dict.iteritems():
             models_dict[key] = {elem[1].core_element.core_element_id: elem[1] for elem in elems_list}
+
+        # if all([all([gui_helpers_state.model_has_empty_meta(elem) for elem in elems_dict.itervalues()])
+        #         if isinstance(elems_dict, dict) else gui_helpers_state.model_has_empty_meta(elems_dict)
+        #         for elems_dict in models_dict.itervalues()]):
         gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
         for key, elems_list in insert_dict.iteritems():
             for elem in elems_list:
                 elem[0].meta = elem[1].meta
+        # else:
+        #     logger.info("Paste miss meta to scale.")
 
         affected_models = []
         for elemets_list in insert_dict.itervalues():
