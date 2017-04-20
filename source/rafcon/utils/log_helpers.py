@@ -39,7 +39,7 @@ class LoggingViewHandler(logging.Handler):
             self._unicode = False
 
     @classmethod
-    def set_logging_view(cls, name, text_view):
+    def add_logging_view(cls, name, text_view):
         cls._logging_views[name] = text_view
 
     @classmethod

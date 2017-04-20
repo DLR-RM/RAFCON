@@ -23,8 +23,6 @@ import logging.config
 import json
 from pkg_resources import resource_string
 
-from rafcon.utils.log_helpers import LoggingViewHandler
-
 
 # a dictionary to hold all loggers created so far
 existing_loggers = {}
@@ -34,14 +32,6 @@ rafcon_root = "rafcon"
 
 logging_config = json.loads(resource_string(rafcon_root, "logging.conf"))
 logging.config.dictConfig(logging_config)
-
-
-def register_logging_view(name, logging_view):
-    LoggingViewHandler.set_logging_view(name, logging_view)
-
-
-def unregister_logging_view(name):
-    LoggingViewHandler.remove_logging_view(name)
 
 
 def setup_root_logger():
