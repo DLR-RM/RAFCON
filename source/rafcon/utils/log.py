@@ -22,7 +22,7 @@ import os
 import logging
 import logging.config
 import json
-from pkg_resources import resource_string
+from pkg_resources import resource_filename
 
 
 # a dictionary to hold all loggers created so far
@@ -31,19 +31,15 @@ existing_loggers = {}
 # Root namespace
 rafcon_root = "rafcon"
 
-try:
-    logging_config = json.loads(resource_string(rafcon_root, "logging.conf"))
-    logging.config.dictConfig(logging_config)
-except ValueError as e:
-    print "Could not load logging.conf (ValueError: {})".format(e)  # we can't use a logger here (chicken-egg-problem)
-
-additional_logging_conf_path = os.environ.get("RAFCON_LOGGING_CONF", "")
-if os.path.isfile(additional_logging_conf_path):
-    with open(additional_logging_conf_path) as additional_logging_conf:
-        try:
-            logging.config.dictConfig(json.load(additional_logging_conf))
-        except ValueError as e:
-            print "Could not load {} (ValueError: {})".format(additional_logging_conf_path, e)
+# Load config from RAFCON_LOGGING_CONF if available, otherwise the default logging.conf
+logging_conf_path = os.environ.get("RAFCON_LOGGING_CONF", resource_filename(rafcon_root, "logging.conf"))
+with open(logging_conf_path) as logging_conf_file:
+    try:
+        logging_config = json.load(logging_conf_file)
+        logging.config.dictConfig(logging_config)
+    except ValueError as e:
+        # we can't use a logger here (chicken-egg-problem)
+        print "Could not load {} (ValueError: {})".format(logging_conf_path, e)
 
 
 def get_logger(name):
