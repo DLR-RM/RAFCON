@@ -1,8 +1,8 @@
 {
-    "__jsonqualname__": "rafcon.statemachine.states.hierarchy_state.HierarchyState", 
+    "__jsonqualname__": "rafcon.core.states.hierarchy_state.HierarchyState", 
     "data_flows": {
         "6": {
-            "__jsonqualname__": "rafcon.statemachine.data_flow.DataFlow", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
             "data_flow_id": 6, 
             "from_key": 3, 
             "from_state": "RYDGSS", 
@@ -10,7 +10,7 @@
             "to_state": "BMACRG"
         }, 
         "7": {
-            "__jsonqualname__": "rafcon.statemachine.data_flow.DataFlow", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
             "data_flow_id": 7, 
             "from_key": 1, 
             "from_state": "RYDGSS", 
@@ -18,7 +18,7 @@
             "to_state": "NMFUUQ"
         }, 
         "8": {
-            "__jsonqualname__": "rafcon.statemachine.data_flow.DataFlow", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
             "data_flow_id": 8, 
             "from_key": 2, 
             "from_state": "RYDGSS", 
@@ -26,7 +26,7 @@
             "to_state": "NMFUUQ"
         }, 
         "9": {
-            "__jsonqualname__": "rafcon.statemachine.data_flow.DataFlow", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
             "data_flow_id": 9, 
             "from_key": 5, 
             "from_state": "BMACRG", 
@@ -37,28 +37,28 @@
     "description": "Message dialog to inform user\n\nThis message dialog with headline and subtext can only be confirmed (there is a single button with the specified label). The library finishes, with the button is clicked.", 
     "input_data_ports": {
         "1": {
-            "__jsonqualname__": "rafcon.statemachine.data_port.InputDataPort", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
             "data_port_id": 1, 
             "data_type": {
-                "__type__": "str"
+                "__type__": "__builtin__.str"
             }, 
             "default_value": "Information", 
             "name": "text"
         }, 
         "2": {
-            "__jsonqualname__": "rafcon.statemachine.data_port.InputDataPort", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
             "data_port_id": 2, 
             "data_type": {
-                "__type__": "str"
+                "__type__": "__builtin__.str"
             }, 
             "default_value": "... to be filled in", 
             "name": "subtext"
         }, 
         "3": {
-            "__jsonqualname__": "rafcon.statemachine.data_port.InputDataPort", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
             "data_port_id": 3, 
             "data_type": {
-                "__type__": "str"
+                "__type__": "__builtin__.str"
             }, 
             "default_value": "OK", 
             "name": "button label"
@@ -67,17 +67,17 @@
     "name": "Dialog [Info]", 
     "outcomes": {
         "-2": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "preempted", 
             "outcome_id": -2
         }, 
         "-1": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "aborted", 
             "outcome_id": -1
         }, 
         "0": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "done", 
             "outcome_id": 0
         }
@@ -87,7 +87,7 @@
     "state_id": "RYDGSS", 
     "transitions": {
         "1": {
-            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
             "from_outcome": null, 
             "from_state": null, 
             "to_outcome": null, 
@@ -95,7 +95,7 @@
             "transition_id": 1
         }, 
         "2": {
-            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
             "from_outcome": 0, 
             "from_state": "BMACRG", 
             "to_outcome": null, 
@@ -103,7 +103,7 @@
             "transition_id": 2
         }, 
         "3": {
-            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
             "from_outcome": 0, 
             "from_state": "NMFUUQ", 
             "to_outcome": 0, 
@@ -111,7 +111,7 @@
             "transition_id": 3
         }, 
         "4": {
-            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
             "from_outcome": -1, 
             "from_state": "NMFUUQ", 
             "to_outcome": 0, 

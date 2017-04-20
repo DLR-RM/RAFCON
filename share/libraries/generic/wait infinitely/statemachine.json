@@ -1,6 +1,7 @@
 {
     "creation_time": "2015-05-11 09:14:18", 
-    "last_update": "2016-03-23 07:21:05", 
-    "root_state_id": "EQVJBF", 
-    "version": "None"
+    "last_update": "2017-04-20 12:13:31", 
+    "root_state_storage_id": "wait infitinetly_EQVJBF", 
+    "state_machine_version": "None", 
+    "used_rafcon_version": "0.9.1a1"
 }
