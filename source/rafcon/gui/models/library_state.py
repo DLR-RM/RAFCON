@@ -46,11 +46,13 @@ class LibraryStateModel(AbstractStateModel):
         assert isinstance(state, LibraryState)
         model_class = get_state_model_class_for_state(state.state_copy)
         if model_class is not None:
-            self.state_copy = model_class(state.state_copy, parent=self)
+            # print "load library inner state meta data\n", model_class, state.state_copy.get_file_system_path()
+            self.state_copy = model_class(state.state_copy, parent=self)  # TODO think about load_meta_data=False)
         else:
             logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
 
         if load_meta_data:
+            # print "load library hull state meta data\n", self.state.get_file_system_path()
             self.load_meta_data()
 
     def __eq__(self, other):

@@ -23,7 +23,7 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.state import State
 from rafcon.core.storage import storage
 
-from rafcon.utils import storage_utils
+from rafcon.utils import storage_utils, constants
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
@@ -325,11 +325,18 @@ class AbstractStateModel(MetaModel, Hashable):
 
         # TODO: Should be removed with next minor release
         if not os.path.exists(path_meta_data):
+            # print "use backup because {0} is not found".format(path_meta_data)
             path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA_OLD)
 
         try:
+            # print "try to load meta data from {0} for state {1}".format(path_meta_data, self.state)
             tmp_meta = storage.load_data_file(path_meta_data)
-        except ValueError:
+        except ValueError as e:
+            # if no element which is newly generated log a warning
+            # if os.path.exists(os.path.dirname(path)):
+            #     logger.debug("Because '{1}' meta data of {0} was not loaded properly.".format(self, e))
+            if not path.startswith(constants.RAFCON_TEMP_PATH_STORAGE) and not os.path.exists(os.path.dirname(path)):
+                logger.warning("Because '{1}' meta data of {0} was not loaded properly.".format(self, e))
             tmp_meta = {}
 
         # JSON returns a dict, which must be converted to a Vividict

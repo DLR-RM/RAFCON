@@ -556,7 +556,16 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :rtype: str
         :return: the path on the filesystem where the state is stored
         """
-        if not self.get_state_machine() or self.get_state_machine().file_system_path is None:
+        if self.is_root_state_of_library:
+            path = str(self.get_storage_path())
+            # print "State_get_file_system_path -11: ", path, os.path.exists(path)
+            if os.path.exists(path):
+                return path
+            else:
+                path = str(self.get_storage_path(old_delimiter=True))
+                # print "State_get_file_system_path -12: ", path
+                return path
+        elif not self.get_state_machine() or self.get_state_machine().file_system_path is None:
             if self._file_system_path:
                 # print "State_get_file_system_path 0: "
                 return self._file_system_path
@@ -577,9 +586,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
         else:
             if self.get_state_machine().supports_saving_state_names:
-                # print "State_get_file_system_path 21: ",
-                # os.path.join(self.get_state_machine().file_system_path, str(self.get_storage_path()))
                 path = os.path.join(self.get_state_machine().file_system_path, str(self.get_storage_path()))
+                # print "State_get_file_system_path 21: ", path
                 if os.path.exists(path):
                     return path
                 else:
