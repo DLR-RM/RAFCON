@@ -30,8 +30,11 @@ existing_loggers = {}
 # Root namespace
 rafcon_root = "rafcon"
 
-logging_config = json.loads(resource_string(rafcon_root, "logging.conf"))
-logging.config.dictConfig(logging_config)
+try:
+    logging_config = json.loads(resource_string(rafcon_root, "logging.conf"))
+    logging.config.dictConfig(logging_config)
+except ValueError:
+    print "Could not load logging.conf (ValueError)"  # we can't use a logger here (chicken-egg-problem)
 
 
 def get_logger(name):
