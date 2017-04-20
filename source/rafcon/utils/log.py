@@ -18,6 +18,7 @@
 
 """
 
+import os
 import logging
 import logging.config
 import json
@@ -33,8 +34,16 @@ rafcon_root = "rafcon"
 try:
     logging_config = json.loads(resource_string(rafcon_root, "logging.conf"))
     logging.config.dictConfig(logging_config)
-except ValueError:
-    print "Could not load logging.conf (ValueError)"  # we can't use a logger here (chicken-egg-problem)
+except ValueError as e:
+    print "Could not load logging.conf (ValueError: {})".format(e)  # we can't use a logger here (chicken-egg-problem)
+
+additional_logging_conf_path = os.environ.get("RAFCON_LOGGING_CONF", "")
+if os.path.isfile(additional_logging_conf_path):
+    with open(additional_logging_conf_path) as additional_logging_conf:
+        try:
+            logging.config.dictConfig(json.load(additional_logging_conf))
+        except ValueError as e:
+            print "Could not load {} (ValueError: {})".format(additional_logging_conf_path, e)
 
 
 def get_logger(name):
