@@ -28,6 +28,10 @@ log
 ---
 .. automodule:: rafcon.utils.log
 
+log_helpers
+-----------
+.. automodule:: rafcon.utils.log_helpers
+
 multi_event
 -----------
 .. automodule:: rafcon.utils.multi_event

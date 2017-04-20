@@ -18,6 +18,7 @@ class NoHigherLevelFilter(logging.Filter):
         """Filter high log levels
         
         Filters all records, whose logging level is smaller than the level specified in the constructor
+        
         :param record:
         :return:
         """
@@ -25,6 +26,11 @@ class NoHigherLevelFilter(logging.Filter):
 
 
 class LoggingViewHandler(logging.Handler):
+    """A LoggingHandler for `gtk.TextView`s 
+    
+    The `LoggingViewHandler` prints log messages in special `gtk.TextView`s that provide a `print_message` method. 
+    The views must register themselves to the handler. There can be multiple views registered for one handler.
+    """
 
     _logging_views = {}
 
@@ -51,7 +57,8 @@ class LoggingViewHandler(logging.Handler):
         """Logs a new record
 
         If a logging view is given, it is used to log the new record to. The code is partially copied from the
-        StreamHandler class
+        StreamHandler class.
+        
         :param record:
         :return:
         """
