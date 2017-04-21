@@ -1,0 +1,12 @@
+- name: "RAFCON Team"
+  description: "The Robotics and Mechatronics Center (RMC) is a cluster and DLR’s competence center for research and development in the areas of robotics, mechatronics, and optical systems. Mechatronics is the closest integration of mechanics, electronics and information technology for the realization of “intelligent mechanisms” which interact with their environment. The core competence of RMC is the interdisciplinary (virtual) design, computer-aided optimization and simulation, as well as implementation of complex mechatronic systems and human-machine interfaces. In the robotics community, the center is considered as one of the world leading institutions."
+  image: "images/team.jpg"
+  url:
+- name: "RMC - Robotics & Mechatronic Center"
+  description: "The Robotics and Mechatronics Center (RMC) is a cluster and DLR’s competence center for research and development in the areas of robotics, mechatronics, and optical systems. Mechatronics is the closest integration of mechanics, electronics and information technology for the realization of “intelligent mechanisms” which interact with their environment. The core competence of RMC is the interdisciplinary (virtual) design, computer-aided optimization and simulation, as well as implementation of complex mechatronic systems and human-machine interfaces. In the robotics community, the center is considered as one of the world leading institutions."
+  image: "images/rmc-building.jpg"
+  url: "http://www.dlr.de/rmc/rm/en/"
+- name: "DLR - German Aerospace Center"
+  description: "The Robotics and Mechatronics Center (RMC) is a cluster and DLR’s competence center for research and development in the areas of robotics, mechatronics, and optical systems. Mechatronics is the closest integration of mechanics, electronics and information technology for the realization of “intelligent mechanisms” which interact with their environment. The core competence of RMC is the interdisciplinary (virtual) design, computer-aided optimization and simulation, as well as implementation of complex mechatronic systems and human-machine interfaces. In the robotics community, the center is considered as one of the world leading institutions."
+  image: "images/DLR_Logo-black.svg"
+  url: "http://www.dlr.de/dlr/en/"
