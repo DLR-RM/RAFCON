@@ -318,16 +318,20 @@ def change_state_type_with_error_handling_and_logger_messages(state_m, target_cl
 def dict_has_empty_elements(d):
     empty = False
     if not d:
-        # print d
+        # print "dict check", d
         return True
     else:
-        for v in d.itervalues():
+        for k, v in d.iteritems():
+            # print "check", k, v
             if isinstance(v, dict):
-                if not dict_has_empty_elements(v):
-                    empty = True
+                if dict_has_empty_elements(v):
+                    if k not in ["show_content", "waypoints"]:
+                        empty = True
             else:
-                if not v:
-                    # print v
+                if isinstance(v, bool):
+                    pass
+                elif not len(v) > 0:
+                    # print k, v
                     empty = True
 
     return empty
@@ -341,7 +345,7 @@ def model_has_empty_meta(m):
     if isinstance(m, ContainerStateModel):
         for state_m in m.states.itervalues():
             if dict_has_empty_elements(state_m.meta):
-                # print "XXX", state_m, state_m.meta
+                # print "LXXX", state_m, state_m.meta
                 return True
     return False
 
