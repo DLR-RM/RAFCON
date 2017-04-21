@@ -34,6 +34,17 @@
                             <div class="col-md-12 placeholder-key-features"></div>
                         </div>
 
+                        {% if page.intro %}
+                        <div class="row">
+                            <div class="col-md-2"></div>
+                            <div class="col-md-8">
+                                <p class="docs-text" style="text-align:center;">
+                                    {{ page.intro }}
+                                </p>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         {{ content }}
 
                         <div class="row">
