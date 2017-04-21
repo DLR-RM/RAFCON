@@ -1,4 +1,5 @@
 ---
+title: Publications
 layout: page
 ---
 
