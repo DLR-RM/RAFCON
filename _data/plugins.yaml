@@ -1,0 +1,16 @@
+- name: "SME - assembly planner"
+  description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas a sapien lobortis, rhoncus mauris tristique, finibus sem. Fusce imperdiet nisl eu volutpat rhoncus. Curabitur euismod pharetra nisi, sit amet sodales augue aliquam vitae. Integer auctor imperdiet lorem, vel commodo magna mollis a. Morbi tincidunt gravida massa, nec gravida lacus dictum a."
+  image: "images/plugins.jpg"
+  url:
+- name: "Monitoring - DDS remote execution"
+  description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas a sapien lobortis, rhoncus mauris tristique, finibus sem. Fusce imperdiet nisl eu volutpat rhoncus. Curabitur euismod pharetra nisi, sit amet sodales augue aliquam vitae. Integer auctor imperdiet lorem, vel commodo magna mollis a. Morbi tincidunt gravida massa, nec gravida lacus dictum a."
+  image: "images/plugins.jpg"
+  url:
+- name: "Divine - model checking"
+  description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas a sapien lobortis, rhoncus mauris tristique, finibus sem. Fusce imperdiet nisl eu volutpat rhoncus. Curabitur euismod pharetra nisi, sit amet sodales augue aliquam vitae. Integer auctor imperdiet lorem, vel commodo magna mollis a. Morbi tincidunt gravida massa, nec gravida lacus dictum a."
+  image: "images/plugins.jpg"
+  url:
+- name: "ROS - info plugin"
+  description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas a sapien lobortis, rhoncus mauris tristique, finibus sem. Fusce imperdiet nisl eu volutpat rhoncus. Curabitur euismod pharetra nisi, sit amet sodales augue aliquam vitae. Integer auctor imperdiet lorem, vel commodo magna mollis a. Morbi tincidunt gravida massa, nec gravida lacus dictum a."
+  image: "images/plugins.jpg"
+  url:

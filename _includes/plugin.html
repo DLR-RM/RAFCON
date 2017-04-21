@@ -1,0 +1,24 @@
+<div class="row">
+    <div class="col-md-12 placeholder-key-features">
+        <div class="col-md-2"></div>
+        <div class="col-md-8" style="border-bottom:1px solid #008CFF; margin-top:50px;"></div>
+        <div class="col-md-2"></div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-4"><img alt="dlr-Logo" src="{{ include.content.image }}" style="margin-top:22px;"></div>
+    <div class="col-md-4 contact">
+        <h2 class="docs-head">{{ include.content.name }}</h2>
+        <p class="docs-text">
+            {{include.content.description}}
+        </p>
+        {% if include.content.url %}
+        <a href="{{ include.content.image }}">
+            <i class="fa fa-globe" style="color:#646464; float: left; font-size: 17px; color:#008CFF;" aria-hidden="true"></i><p class="mail">Webpage</p>
+        </a>
+        {% endif %}
+    </div>
+</div>
