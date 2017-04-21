@@ -1,25 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  {% include head.html %}
+{% include head.html %}
 
+<body class="overflow-x:hidden;">
+    {% include navigation.html %}
 
-
-  <body class="overflow-x:hidden;">
-
-
-
-  {% include navigation.html %}
-
-  {{ content }}
-
-
-
+    {{ content }}
 
     {% include contact-section.html %}
     {% include footer.html %}
     {% include packages.html %}
-  </body>
-
+</body>
 
 </html>
