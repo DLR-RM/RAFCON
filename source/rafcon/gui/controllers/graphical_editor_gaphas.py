@@ -297,7 +297,7 @@ class GraphicalEditorController(ExtendedController):
     @ExtendedController.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
         # print "GSME state_action_signal: ", info['arg'] if 'arg' in info else "XXX" + str(info)
-        if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state'
+        if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state',
                                                     'group_states', 'ungroup_state', 'paste']:
             if info['arg'].after is False:
                 self._complex_action = True
