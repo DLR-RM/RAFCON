@@ -31,6 +31,11 @@ Patch releases 0.9.\*
   - :issue:`322` 
   - :issue:`326`
 
+0.9.1
+"""""
+
+- Bug Fix
+  - fix bad storage format in combination with wrong jsonconversion version   
 
 0.9.0
 """""
