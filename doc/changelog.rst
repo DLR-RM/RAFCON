@@ -15,6 +15,23 @@ log <https://rmc-github.robotic.dlr.de/common/rafcon/commits/master>`__.
 Patch releases 0.9.\*
 ---------------------
 
+0.9.2
+"""""
+
+- Improvements
+
+  - Add rmpm env test
+  - First version of setup.py
+  - Version determination now in rafcon.__init__.py
+  - Add another plugin hook, which is called each time a state machine finishes its execution
+
+- Bug Fixes
+
+  - Fix complex issues including the decider state
+  - :issue:`322` 
+  - :issue:`326`
+
+
 0.9.0
 """""
 
