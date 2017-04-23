@@ -8,7 +8,6 @@ MAINTAINER          = Sebastian Brunner <sebastian.brunner@dlr.de>, Rico Belder 
 DESCRIPTION         = RMC awesome flow control -- This is a package to program and visualize complex robot tasks.
 DOCUMENTATION       = https://rmintra01.robotic.dlr.de/wiki/RAFCON
 MANTIS_PROJECT      = DLR Flow-Control
-VERSION             = 0.9.4
 SUPPORTED_LANGUAGES = python
 DEPENDS = 
 DEPENDS.sled11*     = gtk_etc==0, gtk_etc_python==0, python-jsonconversion==0.2, python_yaml_configuration==0
