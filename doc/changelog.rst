@@ -15,6 +15,13 @@ log <https://rmc-github.robotic.dlr.de/common/rafcon/commits/master>`__.
 Patch releases 0.9.\*
 ---------------------
 
+0.9.4
+"""""
+
+- Bug Fixes
+
+  - change VERSION file install rule to: ./VERSION => ./VERSION
+
 0.9.3
 """""
 
