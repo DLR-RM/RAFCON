@@ -13,12 +13,58 @@ intro: "For more information please visit the <a href=\"http://elib.dlr.de/\" ta
 </div>
 
 <div class="row">
-    <div class="col-md-12 placeholder-key-features"></div>
-</div>
-
-<div class="row">
     <div class="col-md-2"></div>
     <div class="col-md-7">
-        {% include publication-text.html %}
+        {% assign publications = (site.data.publications | sort: 'year') %}
+        {% assign last_year = 0 %}
+        {% for publication in publications %}
+            {% if last_year != publication.year %}
+                {% assign last_year = publication.year %}
+                <h2 class="docs-head">{{ publication.year }}</h2>
+            {% endif %}
+
+            {% assign authors = publication.author | split: " and " %}
+
+            <p class="docs-text">
+                {% for author in authors  %}
+                    {% assign author_name_parts = author | split: ", " %}
+                    {% assign author_lastname = author_name_parts[0] %}
+                    {% assign author_firstname_abbr = author_name_parts[1] | slice: 0 %}
+                    {% capture separator %}
+                    {% if forloop.last != true %}
+                    {% if forloop.rindex == 2 %}
+                    &nbsp;and
+                    {% else %}
+                    ,&nbsp;
+                    {% endif %}
+                    {% endif %}
+                    {% endcapture %}
+                    {{author_lastname}}, {{author_firstname_abbr}}.{{ separator | strip }}
+                {% endfor %},
+                &ldquo;{{ publication.title }},&rdquo;
+                in
+                <i>{% if publication.booktitle %}
+                    {{ publication.booktitle }}
+                {% else %}
+                    {{ publication.journal }}
+                {% endif %}
+                </i>,
+                {% if publication.volume %}
+                    vol. {{publication.volume}},
+                    {% if publication.number %}
+                        no. {{publication.number}},
+                    {% endif %}
+                {% endif %}
+                {% if publication.pages %}
+                    pp. {{publication.pages | replace: "--", "&mdash;" | replace: "-", "&mdash;"}},
+                {% endif %}
+                {% if publication.year %}
+                    {% if publication.month %}
+                        {{publication.month | capitalize | slice: 0, 3}}.
+                    {% endif %}
+                    {{ publication.year }}
+                {% endif %}
+            </p>
+        {% endfor %}
     </div>
 </div>

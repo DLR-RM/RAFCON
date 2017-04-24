@@ -1,0 +1,10 @@
+- type: InProceedings
+  bibkey: brunner2016rafcon
+  author: "Brunner, Sebastian and Steinmetz, Franz and Belder, Rico and Dömel, Andreas"
+  title: "RAFCON: A Graphical Tool for Engineering Complex, Robotic Tasks"
+  booktitle: "IEEE/RSJ Int. Conf. Intelligent Robots and Systems"
+  year: 2016
+  pages: "3283--3290"
+  month: oct
+  doi: "10.1109/IROS.2016.7759506"
+
