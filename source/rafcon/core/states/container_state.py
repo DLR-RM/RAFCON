@@ -887,11 +887,15 @@ class ContainerState(State):
     def substitute_state(self, state_id, state):
 
         if state_id not in self.states:
-            raise ValueError("The state_id {0} to be substitute has to be in the states list of "
+            raise ValueError("The state_id {0} to be substituted has to be in the states list of "
                              "respective parent state {1}.".format(state_id, self.get_path()))
         from rafcon.core.states.barrier_concurrency_state import DeciderState
         if isinstance(self.states[state_id], DeciderState):
             raise ValueError("State of type DeciderState can not be substituted.")
+
+        while state.state_id in self.states:
+            logger.info("Rename state_id of state to substitute.")
+            state.change_state_id()
 
         [related_transitions, related_data_flows] = self.related_linkage_state(state_id)
 
