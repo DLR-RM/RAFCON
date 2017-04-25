@@ -7,4 +7,11 @@
   pages: "3283--3290"
   month: oct
   doi: "10.1109/IROS.2016.7759506"
-
+- type: Article
+  bibkey: brunner2016rafcona
+  author: "Brunner, Sebastian and Steinmetz, Franz and Belder, Rico and Dömel, Andreas"
+  title: "RAFCON: A Graphical Tool for Task Programming and Mission Control"
+  journal: "CoRR"
+  volume: "abs/1605.09185"
+  year: 2016
+  url: http://arxiv.org/abs/1605.09185
