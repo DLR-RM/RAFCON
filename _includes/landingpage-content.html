@@ -48,16 +48,18 @@
 
 
     <div class="row mobile-hide">
-      <div class="col-md-2"></div>
-      <div class="col-md-8 slick-carousel overlap">
-        <div style="background-color:white;">
-          <div class="" style=" overflow-y: visible; padding-right: 0px; padding-left: 0px;">
-              <img src="images/banner/rafcon-screenshot.png" alt="RAFCON screenshot">
-          </div>
-          <p class="docs-text" style="text-align:center; color:#008CFF; opacity:1; margin-top:20px;">Simple statemachine in graphic editor</p>
+        <div class="col-md-2"></div>
+        <div class="col-md-8 slick-carousel overlap">
+        {% for banner in site.data.banner %}
+            <div style="background-color:white;">
+              <div style="overflow-y: visible; padding-right: 0px; padding-left: 0px;">
+                  <img src="{{ banner.image }}" alt="{{ banner.subtext }}">
+              </div>
+              <p class="docs-text" style="text-align:center; color:#008CFF; opacity:1; margin-top:20px;">{{ banner.subtext }}</p>
+            </div>
+        {% endfor %}
         </div>
-      </div>
-      <div class="col-md-2"></div>
+        <div class="col-md-2"></div>
     </div>
 
 
