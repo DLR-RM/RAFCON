@@ -1,63 +1,57 @@
 <div class="container-fluid content" style="overflow-x:hidden; z-index:2;">
 
     <div class="row mobile-hide">
-      <div class="col-md-12 placeholder placeholder-mobile-head"></div>
+        <div class="col-md-12 placeholder placeholder-mobile-head"></div>
     </div>
-
-
-
-    <div class="row mobile-hide">
-      <div class="col-md-2"></div>
-      <div class="col-md-4">
-        <!-- <h1 class="mobile-headline-rafcon">RAFCON</h1> -->
-        <img alt="dlr-Logo" class="mobile-headline-rafcon" src="images/logos/DLR_Logo.svg" style="width: 80px; padding-right: 20px; margin-bottom: 20px;">
-        <img class="mobile-headline-rafcon" src="images/logos/rafcon-logo-negativ.png" alt="" style="width:170px; margin-bottom:40px; margin-top:20px;">
-      </div>
-      <div class="col-md-4"></div>
-    </div>
-
-
-
-
-    <div class="row mobile-startup">
-      <div class="col-md-2"></div>
-      <div class="col-md-5">
-        <h2 class="mobile-headline" style="line-height:1.5;">Develop your robotic tasks using <br class="mobile-hide">an intuitive graphical user interface</h2>
-      </div>
-      <div class="col-md-3"></div>
-    </div>
-
-    <div class="row">
-      <div class="col-md-12 placeholder-mobile-start"></div>
-      <div class="col-md-2"></div>
-      <div class="col-md-2"><a href="https://github.com/" target="_blank" class="btn btn-default middle mobile-hide" style="max-width: 210px; min-width: 205px;">Download Rafcon</a></div>
-      <div class="col-md-5"></div>
-    </div>
-
-    <div class="row">
-      <div class="col-md-2"></div>
-      <div class="col-md-2"><h4 class="mobile-build">Latest Build v.3.7.6. 0.2.0</h4></div>
-      <div class="col-md-5"></div>
-    </div>
-
-    <div class="row mobile-hide">
-      <div class="col-md-12 placeholder-medium placeholder-mobile-head"></div>
-    </div>
-
 
 
 
     <div class="row mobile-hide">
         <div class="col-md-2"></div>
+        <div class="col-md-4">
+            <img alt="dlr-Logo" class="mobile-headline-rafcon" src="images/logos/DLR_Logo.svg" style="width: 80px; padding-right: 20px; margin-bottom: 20px;">
+            <img class="mobile-headline-rafcon" src="images/logos/rafcon-logo-negativ.png" alt="" style="width:170px; margin-bottom:40px; margin-top:20px;">
+        </div>
+        <div class="col-md-4"></div>
+    </div>
+
+
+    <div class="row mobile-startup">
+        <div class="col-md-2"></div>
+        <div class="col-md-5">
+            <h2 class="mobile-headline" style="line-height:1.5;">Develop your robotic tasks using <br class="mobile-hide">an intuitive graphical user interface</h2>
+        </div>
+        <div class="col-md-3"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 placeholder-mobile-start"></div>
+        <div class="col-md-2"></div>
+        <div class="col-md-2"><a href="https://github.com/" target="_blank" class="btn btn-default middle mobile-hide" style="max-width: 210px; min-width: 205px;">Download Rafcon</a></div>
+        <div class="col-md-5"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-2"><h4 class="mobile-build">Latest Build v.3.7.6. 0.2.0</h4></div>
+        <div class="col-md-5"></div>
+    </div>
+
+    <div class="row mobile-hide">
+        <div class="col-md-12 placeholder-medium placeholder-mobile-head"></div>
+    </div>
+
+    <div class="row mobile-hide">
+        <div class="col-md-2"></div>
         <div class="col-md-8 slick-carousel overlap">
-        {% for banner in site.data.banner %}
+            {% for banner in site.data.banner %}
             <div style="background-color:white;">
-              <div style="overflow-y: visible; padding-right: 0px; padding-left: 0px;">
-                  <img src="{{ banner.image }}" alt="{{ banner.subtext }}">
-              </div>
-              <p class="docs-text" style="text-align:center; color:#008CFF; opacity:1; margin-top:20px;">{{ banner.subtext }}</p>
+                <div style="overflow-y: visible; padding-right: 0px; padding-left: 0px;">
+                    <img src="{{ banner.image }}" alt="{{ banner.subtext }}">
+                </div>
+                <p class="docs-text" style="text-align:center; color:#008CFF; opacity:1; margin-top:20px;">{{ banner.subtext }}</p>
             </div>
-        {% endfor %}
+            {% endfor %}
         </div>
         <div class="col-md-2"></div>
     </div>
@@ -66,56 +60,43 @@
 </div>
 
 
-<!-- <div class="container-fluid grey"></div> -->
-
-
 
 <div class="container-fluid white mobile-large">
 
-  <div class="row">
-    <div class="col-md-12 placeholder-large mobile-space-small" ></div>
-  </div>
-
-  <div class="row mobile-only">
-    <div class="col-md-3"></div>
-    <div class="col-md-6">
-      <h2 class="dark">Editor</h2>
+    <div class="row">
+        <div class="col-md-12 placeholder-large mobile-space-small" ></div>
     </div>
-    <div class="col-md-3"></div>
-  </div>
 
-  <div class="row mobile-only mobile-space mobile-overflow">
-    <div class="col-md-2"></div>
-    <div class="col-md-8 slick-carousel">
-      <div style="background-color:white;">
-        <div class="" style=" overflow-y: visible; padding-right: 0px; padding-left: 0px;">
-            <img src="images/rafcon-screenshot.png" alt="rafcon preview picture">
+    <div class="row mobile-only">
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            <h2 class="dark">Editor</h2>
         </div>
-        <p class="docs-text" style="text-align:center; color:#008CFF; opacity:1; margin-top:20px;">Simple statemachine in graphic editor</p>
-      </div>
-      <div><img src="images/rafcon-screenshot.png" alt="rafcon preview picture" >
-          <p class="docs-text" style="text-align:center; color:#008CFF; opacity:1; margin-top:20px;">Simple statemachine in graphic editor</p>
-      </div>
-      <div><img src="images/rafcon-screenshot.png" alt="rafcon preview picture">
-          <p class="docs-text" style="text-align:center; color:#008CFF; opacity:1; margin-top:20px;">Simple statemachine in graphic editor</p>
-      </div>
-      <div><img src="images/rafcon-screenshot.png" alt="rafcon preview picture">
-          <p class="docs-text" style="text-align:center; color:#008CFF; opacity:1; margin-top:20px;">Simple statemachine in graphic editor</p>
-      </div>
-      <div><img src="images/rafcon-screenshot.png" alt="rafcon preview picture">
-          <p class="docs-text" style="text-align:center; color:#008CFF; opacity:1; margin-top:20px;">Simple statemachine in graphic editor</p>
-      </div>
+        <div class="col-md-3"></div>
     </div>
-    <div class="col-md-2"></div>
-  </div>
 
-  <div class="row">
-    <div class="col-md-3"></div>
-    <div class="col-md-6">
-      <h5 style="line-height: 1.5; font-size: 17px; color: #646464; opacity: 1;" class="mobile-left">RAFCON uses hierarchical state machines, featuring concurrent state execution, to represent robot programs. It ships with a graphical user interface supporting the creation of state machines and contains IDE like debugging mechanisms. Alternatively, state machines can programmatically be generated using RAFCON's API.</h5>
+    <div class="row mobile-only mobile-space mobile-overflow">
+        <div class="col-md-2"></div>
+        <div class="col-md-8 slick-carousel">
+            {% for banner in site.data.banner %}
+            <div style="background-color:white;">
+                <div style="overflow-y: visible; padding-right: 0px; padding-left: 0px;">
+                    <img src="{{ banner.image }}" alt="{{ banner.subtext }}">
+                </div>
+                <p class="docs-text" style="text-align:center; color:#008CFF; opacity:1; margin-top:20px;">{{ banner.subtext }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="col-md-2"></div>
     </div>
-    <div class="col-md-3"></div>
-  </div>
+
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            <h5 style="line-height: 1.5; font-size: 17px; color: #646464; opacity: 1;" class="mobile-left">RAFCON uses hierarchical state machines, featuring concurrent state execution, to represent robot programs. It ships with a graphical user interface supporting the creation of state machines and contains IDE like debugging mechanisms. Alternatively, state machines can programmatically be generated using RAFCON's API.</h5>
+        </div>
+        <div class="col-md-3"></div>
+    </div>
 
 
 
@@ -126,160 +107,142 @@
 
 
 
-  <div class="row">
-    <div class="col-md-12 placeholder-key-features"></div>
-  </div>
-
-
-
-
-  <div class="container">
-
-  <div class="row">
-    <div class="col-md-3"></div>
-    <div class="col-md-6">
-      <h2 class="dark">Key Features</h2>
-    </div>
-    <div class="col-md-3"></div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-12 placeholder-medium"></div>
-  </div>
-
-
-
-  <div class="row mobile-hide">
-<div class="col-md-1"></div>
-<div class="col-md-10">
-    <div class="col-md-4">
-      <a href="plugins.html">
-      <div class="card-large">
-        <div class="card-heading">
-            <span >Universal application</span>
-            <!-- <div class="card-description-plugins">
-                <span>assembly planner</span>
-            </div> -->
-            <span class="fa fa-puzzle-piece card-icon-plugins" style="font-size:60px;"></span>
-        </div>
-        <div class="card-description-features">
-            <span>RAFCON is written in Python, can be extended with plugins and is hard- and middleware independent.</span>
-        </div>
-      </div>
-      </a>
+    <div class="row">
+        <div class="col-md-12 placeholder-key-features"></div>
     </div>
 
 
-        <div class="col-md-4">
-          <a target="_blank" href="http://www.dlr.de/rmc/rm/desktopdefault.aspx/tabid-4845/20104_read-47199/">
-          <div class="card-large">
-            <div class="card-heading">
-              <span >Visual programming</span>
-              <!-- <div class="card-description-plugins">
-                  <span>DDS remote execution</span>
-              </div> -->
-              <span class="fa fa-wrench card-icon-plugins" style="font-size:60px;"></span>
+
+
+    <div class="container">
+
+        <div class="row">
+            <div class="col-md-3"></div>
+            <div class="col-md-6">
+                <h2 class="dark">Key Features</h2>
             </div>
-            <div class="card-description-features">
-                <span>The sophisticated graphical editor can be used for the creation, execution and debugging of state machines.</span>
+            <div class="col-md-3"></div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 placeholder-medium"></div>
+        </div>
+
+
+
+        <div class="row mobile-hide">
+            <div class="col-md-1"></div>
+            <div class="col-md-10">
+                <div class="col-md-4">
+                    <a href="plugins.html">
+                        <div class="card-large">
+                            <div class="card-heading">
+                                <span >Universal application</span>
+                                <span class="fa fa-puzzle-piece card-icon-plugins" style="font-size:60px;"></span>
+                            </div>
+                            <div class="card-description-features">
+                                <span>RAFCON is written in Python, can be extended with plugins and is hard- and middleware independent.</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+
+                <div class="col-md-4">
+                    <a target="_blank" href="http://www.dlr.de/rmc/rm/desktopdefault.aspx/tabid-4845/20104_read-47199/">
+                        <div class="card-large">
+                            <div class="card-heading">
+                                <span >Visual programming</span>
+                                <span class="fa fa-wrench card-icon-plugins" style="font-size:60px;"></span>
+                            </div>
+                            <div class="card-description-features">
+                                <span>The sophisticated graphical editor can be used for the creation, execution and debugging of state machines.</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-4">
+                    <a target="_blank" href="https://github.com">
+                        <div class="card-large">
+                            <div class="card-heading">
+                                <span>Collaborative working</span>
+                                <span class="fa fa-github-alt card-icon-plugins" style="font-size:60px;"></span>
+                            </div>
+                            <div class="card-description-features">
+                                <span>Share and reuse your state machines in form of libraries, stored as JSON strings in text files.</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
             </div>
-          </div>
-            </a>
         </div>
 
-        <div class="col-md-4">
-          <a target="_blank" href="https://github.com">
-          <div class="card-large">
-            <div class="card-heading">
-              <span>Collaborative working</span>
-              <!-- <div class="card-description-plugins">
-                  <span>DDS remote execution</span>
-              </div> -->
-              <span class="fa fa-github-alt card-icon-plugins" style="font-size:60px;"></span>
+        <div class="row mobile-only">
+
+
+            <div class="col-md-4">
+                <a href="plugins.html">
+                    <div class="card-large">
+                        <div class="card-heading">
+                            <span>Universal application</span>
+                            <span class="fa fa-puzzle-piece card-icon-plugins" style="font-size:60px;"></span>
+                        </div>
+                        <div class="card-description-features">
+                            <span>RAFCON is written in Python, can be extended with plugins and is hard- and middleware independent.</span>
+                        </div>
+                    </div>
+                </a>
             </div>
-            <div class="card-description-features">
-                <span>Share and reuse your state machines in form of libraries, stored as JSON strings in text files.</span>
+
+
+            <div class="col-md-4">
+                <a target="_blank" href="http://www.dlr.de/rmc/rm/desktopdefault.aspx/tabid-4845/20104_read-47199/">
+                    <div class="card-large">
+                        <div class="card-heading">
+                            <span >Visual programming</span>
+                            <span class="fa fa-wrench card-icon-plugins" style="font-size:60px;"></span>
+                        </div>
+                        <div class="card-description-features">
+                            <span>The sophisticated graphical editor can be used for the creation, execution and debugging of state machines.</span>
+                        </div>
+                    </div>
+                </a>
             </div>
-          </div>
-            </a>
+
+            <div class="col-md-4">
+                <a target="_blank" href="https://github.com">
+                    <div class="card-large">
+                        <div class="card-heading">
+                            <span>Collaborative working</span>
+                            <span class="fa fa-github-alt card-icon-plugins" style="font-size:60px;"></span>
+                        </div>
+                        <div class="card-description-features">
+                            <span>Share and reuse your state machines in form of libraries, stored as JSON strings in text files.</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
         </div>
-    </div>
-    </div>
-
-    <div class="row mobile-only">
-
-
-      <div class="col-md-4">
-        <a href="plugins.html">
-        <div class="card-large">
-          <div class="card-heading">
-              <span>Universal application</span>
-              <!-- <div class="card-description-plugins">
-                  <span>assembly planner</span>
-              </div> -->
-              <span class="fa fa-puzzle-piece card-icon-plugins" style="font-size:60px;"></span>
-          </div>
-          <div class="card-description-features">
-              <span>RAFCON is written in Python, can be extended with plugins and is hard- and middleware independent.</span>
-          </div>
-        </div>
-        </a>
-      </div>
-
-
-      <div class="col-md-4">
-        <a target="_blank" href="http://www.dlr.de/rmc/rm/desktopdefault.aspx/tabid-4845/20104_read-47199/">
-        <div class="card-large">
-          <div class="card-heading">
-            <span >Visual programming</span>
-            <!-- <div class="card-description-plugins">
-                <span>DDS remote execution</span>
-            </div> -->
-            <span class="fa fa-wrench card-icon-plugins" style="font-size:60px;"></span>
-          </div>
-          <div class="card-description-features">
-              <span>The sophisticated graphical editor can be used for the creation, execution and debugging of state machines.</span>
-          </div>
-        </div>
-          </a>
-      </div>
-
-      <div class="col-md-4">
-        <a target="_blank" href="https://github.com">
-        <div class="card-large">
-          <div class="card-heading">
-            <span>Collaborative working</span>
-            <!-- <div class="card-description-plugins">
-                <span>DDS remote execution</span>
-            </div> -->
-            <span class="fa fa-github-alt card-icon-plugins" style="font-size:60px;"></span>
-          </div>
-          <div class="card-description-features">
-              <span>Share and reuse your state machines in form of libraries, stored as JSON strings in text files.</span>
-          </div>
-        </div>
-          </a>
-      </div>
 
     </div>
 
-    </div>
-
-  </div>
+</div>
 
 
 <script type="text/javascript">
 
     $(document).ready(function(){
-      $('.slick-carousel').slick({
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        autoplay: true,
-        autoplaySpeed: 3000,
-        dots: true,
-        arrows: true,
+        $('.slick-carousel').slick({
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            autoplay: true,
+            autoplaySpeed: 4000,
+            dots: true,
+            arrows: true,
 
-      });
+        });
     });
 
 
