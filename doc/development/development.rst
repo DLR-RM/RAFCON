@@ -5,17 +5,17 @@ Everybody is encouraged to contribute to the RAFCON project. However, collaborat
 collect all this information in this document, so please stick to this.
 
 
-GIT repository
+Git repository
 --------------
 
-The GIT repository can be found at
-`https://rmc-github.robotic.dlr.de/common/rafcon <https://rmc-github.robotic.dlr.de/common/rafcon>`__.
+The Git repository can be found on `GitHub <https://github.com/DLR-RM/RAFCON>`__.
+
 
 Bugs & Feature request
 ----------------------
 
 Please use `GitHub
-Issues <https://rmc-github.robotic.dlr.de/common/rafcon/issues>`__ to
+Issues <https://github.com/DLR-RM/RAFCON/issues>`__ to
 report bugs. This page can also be used for feature requests.
 
 
