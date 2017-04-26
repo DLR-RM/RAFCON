@@ -84,6 +84,6 @@ title, and interest in and to Your Contributions.
 8. You agree to notify DLR of any facts or circumstances of which you become aware that would make these
    representations inaccurate in any respect.
 
+::
 
-
-Please sign: __________________________________ Date: ________________
+  Please sign: __________________________________ Date: ________________
