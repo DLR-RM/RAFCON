@@ -15,6 +15,14 @@ log <https://rmc-github.robotic.dlr.de/common/rafcon/commits/master>`__.
 Patch releases 0.9.\*
 ---------------------
 
+0.9.5
+"""""
+
+- Bug fixes
+
+  - runtime value flag of library states can be set again
+  - add missing files of last release
+
 0.9.4
 """""
 
