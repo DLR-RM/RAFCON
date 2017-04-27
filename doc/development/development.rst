@@ -40,8 +40,3 @@ HowTo on creating a splashscreen
 --------------------------------
 
 .. include:: includes/splashscreen.rst
-
-Discussion
-----------
-
-.. include:: includes/discussion.rst
