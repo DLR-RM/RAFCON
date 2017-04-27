@@ -25,7 +25,7 @@ Code style
 .. include:: includes/coding_conventions.rst
 
 
-GIT commit Guidelines
+Git commit guidelines
 ---------------------
 
 .. include:: includes/commit_guidelines.rst
