@@ -22,3 +22,13 @@
   title: The LRU Rover for Autonomous Planetary Exploration and its Success in the SpaceBotCamp Challenge
   booktitle: ICARSC - IEEE International Conference on Autonomous Robot Systems and Competitions
   year: 2016
+- type: video
+  bibkey: youtube1
+  author: DLRRMC Youtube Channel
+  title: <a href="https://www.youtube.com/watch?v=35dUykJandU">RAFCON A Graphical Tool for Engineering Complex, Robotic Tasks</a>
+  year: 2016
+- type: video
+  bibkey: youtube2
+  author: DLRRMC Youtube Channel
+  title: <a href="https://www.youtube.com/watch?v=wCTkSxcna8o">The LRU Rover for Autonomous Planetary Exploration and its Success in the SpaceBotCamp Challenge</a>
+  year: 2016

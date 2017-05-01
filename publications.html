@@ -20,23 +20,27 @@ intro: "For more information please visit the <a href=\"http://elib.dlr.de/\" ta
             {% assign authors = publication.author | split: " and " %}
 
             <p class="docs-text">
-                {% for author in authors  %}
-                    {% assign author_name_parts = author | split: ", " %}
-                    {% assign author_lastname = author_name_parts[0] %}
-                    {% assign author_firstname_abbr = author_name_parts[1] | slice: 0 %}
-                    {% capture separator %}
-                    {% if forloop.last != true %}
-                    {% if forloop.rindex == 2 %}
-                    &nbsp;and
-                    {% else %}
-                    ,&nbsp;
-                    {% endif %}
-                    {% endif %}
-                    {% endcapture %}
-                    {{author_lastname}}, {{author_firstname_abbr}}.{{ separator | strip }}
-                {% endfor %},
-                &ldquo;{{ publication.title }},&rdquo;
-                in
+                {% if publication.type == 'video' %}
+                    {{publication.author}}: {{ publication.title }}
+                {% else %}
+                    {% for author in authors  %}
+                        {% assign author_name_parts = author | split: ", " %}
+                        {% assign author_lastname = author_name_parts[0] %}
+                        {% assign author_firstname_abbr = author_name_parts[1] | slice: 0 %}
+                        {% capture separator %}
+                        {% if forloop.last != true %}
+                        {% if forloop.rindex == 2 %}
+                        &nbsp;and
+                        {% else %}
+                        ,&nbsp;
+                        {% endif %}
+                        {% endif %}
+                        {% endcapture %}
+                        {{author_lastname}}, {{author_firstname_abbr}}.{{ separator | strip }}
+                    {% endfor %},
+                    &ldquo;{{ publication.title }},&rdquo;
+                    in
+                {% endif %}
                 <i>{% if publication.booktitle %}
                     {{ publication.booktitle }}
                 {% else %}
