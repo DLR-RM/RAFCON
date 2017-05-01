@@ -22,6 +22,12 @@
   title: The LRU Rover for Autonomous Planetary Exploration and its Success in the SpaceBotCamp Challenge
   booktitle: ICARSC - IEEE International Conference on Autonomous Robot Systems and Competitions
   year: 2016
+- type: Presentation
+  bibkey: rosindustrial2016
+  author: Belder, Rico and Brunner, Sebastian Georg
+  title: RAFCON a Graphical Tool for Task Programming
+  booktitle: "ROS-Industrial Training and Conference, Stuttgart, Germany"
+  year: 2016
 - type: video
   bibkey: youtube1
   author: DLRRMC Youtube Channel

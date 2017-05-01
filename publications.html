@@ -1,7 +1,7 @@
 ---
 title: Publications
 layout: page
-intro: "For more information please visit the <a href=\"http://elib.dlr.de/\" target=\"blank\">electronic library</a>."
+intro: "This page gives an overview of all publications (conference papers, symposium papers and videos) related to RAFCON. For more information concerning the papers please visit the <a href=\"http://elib.dlr.de/\" target=\"blank\">electronic library</a>."
 ---
 
 {% include horizontal_line.html %}
@@ -38,7 +38,7 @@ intro: "For more information please visit the <a href=\"http://elib.dlr.de/\" ta
                         {% endcapture %}
                         {{author_lastname}}, {{author_firstname_abbr}}.{{ separator | strip }}
                     {% endfor %},
-                    &ldquo;{{ publication.title }},&rdquo;
+                    &ldquo;{{ publication.title }}&rdquo;,
                     in
                 {% endif %}
                 <i>{% if publication.booktitle %}
