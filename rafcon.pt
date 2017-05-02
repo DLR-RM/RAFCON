@@ -26,6 +26,7 @@ python -m compileall -fq ./source/libraries
 source/rafcon => source/rafcon
 share | !*.pyc | !.gitignore => share
 doc => doc
+./VERSION => ./VERSION
 bin/ | !rafcon_start | !rafcon_start_gui | !resave_state_machines  | !*.pyc => bin # Symlinks are recreated in post_install step
 
 [post-install]

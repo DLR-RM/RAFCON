@@ -25,8 +25,9 @@ from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.utils.dialog import RAFCONCheckBoxTableDialog
 import rafcon.gui.singleton as gui_singletons
 
-
+from rafcon.gui.utils.constants import RAFCON_INSTANCE_LOCK_FILE_PATH
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
+from rafcon.utils.i18n import _
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -40,8 +41,22 @@ try:
     import psutil
     process_id_list = [process.pid for process in psutil.process_iter()]
 except (OSError, ImportError):
-    logger.info("Could not retrieve list of current process ids")
+    logger.info(_("Could not retrieve list of current process ids"))
     process_id_list = []
+
+
+def generate_rafcon_instance_lock_file():
+    logger.debug(_("Generate lock file for RAFCON instance {0}".format(os.getpid())))
+    file_handler = open(RAFCON_INSTANCE_LOCK_FILE_PATH, 'a+')
+    file_handler.close()
+
+
+def remove_rafcon_instance_lock_file():
+    logger.debug(_("Remove lock file for RAFCON instance {0}".format(os.getpid())))
+    if os.path.exists(RAFCON_INSTANCE_LOCK_FILE_PATH):
+        os.remove(RAFCON_INSTANCE_LOCK_FILE_PATH)
+    else:
+        logger.warning(_("External remove of lock file detected!"))
 
 
 def check_for_crashed_rafcon_instances():
