@@ -68,7 +68,7 @@ def get_data_files_tuple(*path, **kwargs):
     :rtype: tuple(str, [str])
     """
     path = os.path.join(*path)
-    target_path = os.path.join(*path.split(os.sep)[1:])  # remove source/ (package_dir)
+    target_path = os.path.join("share", *path.split(os.sep)[1:])  # remove source/ (package_dir)
     if "path_to_file" in kwargs and kwargs["path_to_file"]:
         source_files = [path]
         target_path = os.path.dirname(target_path)
