@@ -27,7 +27,7 @@ from pylint import lint
 from pylint.reporters.json import JSONReporter
 from cStringIO import StringIO
 from astroid import MANAGER
-from pkg_resources import resource_filename
+from rafcon.utils.resources import resource_filename
 
 import rafcon
 from rafcon.core.states.library_state import LibraryState

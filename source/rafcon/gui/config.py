@@ -16,9 +16,10 @@ import os
 import re
 import gtk
 import yaml
-from pkg_resources import resource_filename, resource_exists, resource_string
+from rafcon.utils.resources import resource_filename, resource_exists, resource_string
 from yaml_configuration.config import ConfigError
 
+import rafcon.gui
 from rafcon.core.config import ObservableConfig
 from rafcon.utils import storage_utils
 from rafcon.utils import log
@@ -79,8 +80,8 @@ class GuiConfig(ObservableConfig):
         if not resource_exists(__name__, self.get_assets_path("gtk-2.0", "gtkrc")):
             raise ValueError("GTK theme does not exist")
         gtkrc_file_path = resource_filename(__name__, self.get_assets_path("gtk-2.0", "gtkrc"))
-        filename = resource_filename(__name__, self.get_assets_path("icons", "RAFCON_figurative_mark_negative.svg",
-                                                                    for_theme=False))
+        filename = resource_filename(__name__, self.get_assets_path(
+            "icons", "RAFCON_figurative_mark_negative.svg", for_theme=False))
         gtk.window_set_default_icon_from_file(filename)
 
         # wait for all gtk events being processed before parsing the gtkrc file

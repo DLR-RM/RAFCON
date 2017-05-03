@@ -20,9 +20,10 @@
 import yaml
 from os.path import split
 from gtkmvc import Observable
-from pkg_resources import resource_string, resource_filename
+from rafcon.utils.resources import resource_string, resource_filename
 from yaml_configuration.config import DefaultConfig, ConfigError
 
+import rafcon
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

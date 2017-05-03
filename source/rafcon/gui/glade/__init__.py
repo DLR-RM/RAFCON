@@ -9,7 +9,7 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 
 
-from pkg_resources import resource_filename
+from rafcon.utils.resources import resource_filename
 
 
 def get_glade_path(glade_file):
