@@ -106,10 +106,8 @@ setup(
     package_dir={'': 'source'},  # tell distutils packages are under src
 
     package_data={
-        # Include logging config
-        'rafcon': ['logging.conf'],
-        # Include pylint config
-        'rafcon': ['pylintrc'],
+        # Include pylint and logging config
+        'rafcon': ['pylintrc', 'logging.conf'],
         # Include core and GUI config
         'rafcon.core': ['config.yaml'],
         'rafcon.gui': ['gui_config.yaml'],
