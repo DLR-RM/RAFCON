@@ -22,8 +22,8 @@ import pkg_resources
 
 paths_to_search_for_resource = (
     os.path.join(expanduser("~"), ".local", "share"),
-    '/usr/local/',
-    '/usr/',
+    os.path.join('usr', 'local', 'share'),
+    os.path.join('usr', 'share'),
 )
 
 
