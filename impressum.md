@@ -1,7 +1,11 @@
 ---
 title: Impressum
 layout: page_inner
+intro: Legal notice for this website. The English version can be found at the <a href="#legal-notice" title="Legal notice">bottom of the page</a>.
 ---
+
+{% include horizontal_line.html %}
+
 
 Angaben gemäß §5 TMG:
 ---------------------
@@ -225,3 +229,78 @@ in Ihrer Browserzeile.
 Wenn die SSL Verschlüsselung aktiviert ist, können die Daten, die Sie an
 uns übermitteln, nicht von Dritten mitgelesen werden.
 
+
+{% include horizontal_line.html %}
+
+<a name="legal-notice" />
+
+Legal Notice
+============
+
+## Imprint according to § 5 TMG (German Act for Telemedia Services) and § 55 Rundfunkstaatsvertrag (German Interstate Treaty on Broadcasting)
+
+Deutsches Zentrum fuer Luft- und Raumfahrt e. V.  
+German Aerospace Center (DLR)  
+Linder Höhe  
+51147 Köln (Cologne)  
+Germany
+
+Phone: +49 2203 601-0  
+Fax: +49 2203 67310  
+E-mail: [contact-dlr@dlr.de](contact-dlr@dlr.de)
+
+DLR’s Executive Board is empowered to act as DLR’s representative. The
+Executive Board’s seat is located at DLR, Executive Board, Linder Höhe,
+D-51147 Köln. The Executive Board can also authorise DLR employees to act
+on behalf of DLR. The head of DLR’s legal department, Linder Höhe, 51147
+Köln, can provide information about the extent of this authorisation.
+Registered court and registration number of DLR: District court of Bonn,
+VR 2780.
+
+This website is maintained by
+-----------------------------
+
+German Aerospace Center (DLR)  
+Institute of Robotics and Mechatonics  
+Oberpfaffenhofen  
+D-82234 Wessling  
+Germany  
+
+Phone: +49 8153 28-2400  
+Fax: +49 8153 28-1134  
+E-mail: [rafcon@dlr.de](rafcon@dlr.de)  
+
+Responsible
+-----------
+Franz Steinmetz  
+German Aerospace Center (DLR)  
+Institute of Robotics and Mechatonics  
+Oberpfaffenhofen  
+82234 Weßling  
+Germany
+
+Liability
+---------
+DLR cannot be held liable either for mistakes in editorial or technical
+aspects, nor for omissions, nor for the correctness of the content. In
+particular, DLR does not guarantee completeness or correctness of information
+contained in external websites which can be accessed via links from DLR’s
+websites. Despite accurate research on the content of such linked external
+websites, DLR cannot be held liable for their content. Only the content
+providers of such external sites are liable for their content. Should you
+notice any mistake in technical or editorial aspects of the DLR site, please
+do not hesitate to inform us.
+
+Personal data privacy
+---------------------
+
+By accessing the DLR website, certain information about users, such as
+internet protocol (IP) addresses, record of navigation through the site,
+software used and time spent, as well as similar information, will be stored
+on GitHub servers. This information will not specifically identify users and the
+information will be used internally for website traffic analysis only. If users
+provide unique identifying information, such as name, address or other
+information on forms stored on this site, this information will be used for
+statistical purposes only and will not be published or made available for general
+access. DLR does not sell nor rent its website users’ names, addresses, email
+addresses or other personal information.
