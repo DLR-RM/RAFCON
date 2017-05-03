@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+{% include head.html %}
+
+<body class="overflow-x:hidden;">
+    {% include navigation.html %}
+
+    <div class="container-fluid bright-max container-mobile container-nav mobile-overflow">
+
+        <div class="row">
+            <div class="col-md-12 placeholder-mobile"></div>
+        </div>
+
+        <div class="container container-mobile">
+
+            <div class="row">
+                <div class="col-md-3"></div>
+                <div class="col-md-6">
+                    <h2 class="dark">{{ page.title }}</h2>
+                </div>
+                <div class="col-md-3"></div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 placeholder-medium"></div>
+            </div>
+
+            <div class="row ">
+                <div class="col-md-12">
+                    <div class="card-max">
+
+                        <div class="row">
+                            <div class="col-md-12 placeholder-key-features"></div>
+                        </div>
+
+                        {% if page.intro %}
+                        <div class="row">
+                            <div class="col-md-2"></div>
+                            <div class="col-md-8">
+                                <p class="docs-text" style="text-align:center;">
+                                    {{ page.intro }}
+                                </p>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-2"></div>
+                            <div class="col-md-8">
+                                {{ content }}
+                            </div>
+                            <div class="col-md-2"></div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 placeholder-key-features"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="container-fluid bright-max placeholder-mobile-large mobile-hide" ></div>
+
+    {% include contact-section.html %}
+    {% include footer.html %}
+    {% include packages.html %}
+</body>
+
+</html>
