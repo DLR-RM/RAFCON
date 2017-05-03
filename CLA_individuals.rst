@@ -14,7 +14,7 @@ before signing and keep a copy for your records. ::
 
   Full name: ______________________________________________________
 
-  Mailing Address: ________________________________________________
+  Mailing address: ________________________________________________
 
                    ________________________________________________
 
@@ -73,7 +73,7 @@ title, and interest in and to Your Contributions.
 6. You are not expected to provide support for Your Contributions, except to the extent You desire to provide support.
    You may provide support for free, for a fee, or not at all. Unless required by applicable law or agreed to in
    writing, You provide Your Contributions on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-   express or implied, including, without limitation, any warranties or conditions of TITLE, NON- INFRINGEMENT,
+   express or implied, including, without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT,
    MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE.
 
 7. Should You wish to submit work that is not Your original creation, You may submit it to DLR separately from any
@@ -83,6 +83,9 @@ title, and interest in and to Your Contributions.
 
 8. You agree to notify DLR of any facts or circumstances of which you become aware that would make these
    representations inaccurate in any respect.
+
+9. It is your responsibility to notify DLR when any change is required to the list of designated employees authorized
+   to submit Contributions on behalf of the Corporation, or to the Corporation's Point of Contact with DLR.
 
 ::
 
