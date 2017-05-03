@@ -7,20 +7,21 @@
   pages: "3283--3290"
   month: oct
   doi: "10.1109/IROS.2016.7759506"
-- type: InProceedings
+- type: InBook
   bibkey: brunner2016rafconmission
   author: "Brunner, Sebastian Georg and Steinmetz, Franz and Belder, Rico and Dömel, Andreas"
   title: "RAFCON: A Graphical Tool for Task Programming and Mission Control"
-  booktitle: "20th RoboCup International Symposium, Leipzig, Germany"
-  volume: "arXiv:1605.09185"
+  booktitle: "RoboCup 2016: Robot World Cup XX"
   year: 2016
-  month: July
+  month: jul
+  publisher: "Springer International Publishing"
+  address: Cham
   url: http://arxiv.org/abs/1605.09185
 - type: InProceedings
   bibkey: schuster2016thelru
   author: Schuster, Martin Johannes and Brand, Christoph and Brunner, Sebastian Georg and Lehner, Peter and Reill, Josef and Riedel, Sebastian and Bodenmüller, Tim and Bussmann, Kristin and Büttner, Stefan and Dömel, Andreas and Friedl, Werner and Grixa, Iris and Hellerer, Matthias and Hirschmüller, Heiko and Kassecker, Michael and Marton, Zoltan-Csaba and Nissler, Christian and Ruess, Felix and Suppa, Michael and Wedler, Armin
   title: The LRU Rover for Autonomous Planetary Exploration and its Success in the SpaceBotCamp Challenge
-  booktitle: ICARSC - IEEE International Conference on Autonomous Robot Systems and Competitions
+  booktitle: IEEE Int. Conf. Autonomous Robot Systems and Competitions
   year: 2016
 - type: Presentation
   bibkey: rosindustrial2016
