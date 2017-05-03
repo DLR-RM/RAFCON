@@ -46,8 +46,8 @@ from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.config_window import ConfigWindowView
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.views.utils.about_dialog import AboutDialogView
-from rafcon.utils import log
 from rafcon.utils import plugins
+from rafcon.utils import log, log_helpers
 
 logger = log.get_logger(__name__)
 
@@ -544,7 +544,7 @@ class MenuBarController(ExtendedController):
         # Recursively destroys the main window
         gui_singletons.main_window_controller.destroy()
         self.logging_console_view.quit_flag = True
-        glib.idle_add(log.unregister_logging_view, 'main')
+        glib.idle_add(log_helpers.LoggingViewHandler.remove_logging_view, 'main')
 
     ######################################################
     # menu bar functionality - Edit

@@ -95,8 +95,12 @@ class LoggingConsoleView(View):
         :return: List containing the content of text_to_split split up
         """
         assert isinstance(text_to_split, (str, unicode))
-        time, rest = text_to_split.split(': ', 1)
-        source, message = rest.split(':', 1)
+        try:
+            time, rest = text_to_split.split(': ', 1)
+            source, message = rest.split(':', 1)
+        except ValueError:
+            time = source = ""
+            message = text_to_split
         return time.strip(), source.strip(), message.strip()
 
     @staticmethod
