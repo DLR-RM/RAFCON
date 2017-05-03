@@ -3,10 +3,11 @@ title: Impressum
 layout: page_inner
 ---
 
-Angaben gemäß § 5 TMG:
-----------------------
+Angaben gemäß §5 TMG:
+---------------------
 
 Deutsches Zentrum für Luft- und Raumfahrt e. V.  
+German Aerospace Center (DLR)
 Linder Hoehe  
 51147 Köln
 
@@ -20,13 +21,13 @@ Kontakt:
 
 Telefon:   +49 8153 28-2400  
 Telefax:   +49 8153 28-1134  
-E-Mail:    rafcon@dlr.de
+E-Mail:    [rafcon@dlr.de](rafcon@dlr.de)
 
 Registereintrag:
 ----------------
 
 Eintragung im Vereinsregister.  
-Registergericht:Amtsgericht Bonn  
+Registergericht: Amtsgericht Bonn  
 Registernummer: VR 2780
 
 Umsatzsteuer-Identifikationsnummer gemäß §27 a Umsatzsteuergesetz:  
@@ -39,7 +40,7 @@ Daniel Seth, Info Manager
 German Aerospace Center (DLR)  
 Institute of Robotics and Mechatonics  
 Oberpfaffenhofen  
-D-82234 Wessling  
+82234 Weßling  
 Germany
 
 Online-Streitbeilegung
