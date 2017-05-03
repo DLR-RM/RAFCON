@@ -19,6 +19,12 @@ Issues <https://github.com/DLR-RM/RAFCON/issues>`__ to
 report bugs. This page can also be used for feature requests.
 
 
+Code of Conduct
+---------------
+
+.. include:: includes/code_of_conduct.rst
+
+
 Code style
 ----------
 
