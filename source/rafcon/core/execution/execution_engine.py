@@ -28,6 +28,7 @@ from gtkmvc import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.utils import log
+from rafcon.utils import plugins
 
 logger = log.get_logger(__name__)
 
@@ -186,6 +187,7 @@ class ExecutionEngine(Observable):
         self.state_machine_running = True
         self.__running_state_machine.join()
         self.__set_execution_mode_to_finished()
+        plugins.run_on_state_machine_execution_finished()
         # self.__set_execution_mode_to_stopped()
         self.state_machine_running = False
 

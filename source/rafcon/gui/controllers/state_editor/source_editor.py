@@ -27,7 +27,9 @@ from pylint import lint
 from pylint.reporters.json import JSONReporter
 from cStringIO import StringIO
 from astroid import MANAGER
+from rafcon.utils.resources import resource_filename
 
+import rafcon
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
 
@@ -240,7 +242,7 @@ class SourceEditorController(EditorController):
 
         # clear astroid module cache, see http://stackoverflow.com/questions/22241435/pylint-discard-cached-file-state
         MANAGER.astroid_cache.clear()
-        lint_config_file = os.path.join(os.environ['RAFCON_PATH'], "pylintrc")
+        lint_config_file = resource_filename(rafcon.__name__, "pylintrc")
         args = ["--rcfile={}".format(lint_config_file)]  # put your own here
         with contextlib.closing(StringIO()) as dummy_buffer:
             json_report = JSONReporter(dummy_buffer)

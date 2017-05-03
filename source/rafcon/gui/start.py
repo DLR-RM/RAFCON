@@ -19,6 +19,7 @@
 
 # default libraries
 import os
+import sys
 import logging
 import gtk
 import threading
@@ -26,13 +27,15 @@ import signal
 from yaml_configuration.config import config_path
 
 # gui
+import rafcon
 from rafcon.gui.config import global_gui_config
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.runtime_config import global_runtime_config
-from rafcon.gui.utils import constants
+import rafcon.gui.models.auto_backup
 from rafcon.gui.utils.splash_screen import SplashScreen
+from rafcon.gui.helpers import installation
 
 # state machine
 from rafcon.core.start import parse_state_machine_path, setup_environment, reactor_required, \
@@ -48,15 +51,29 @@ from rafcon.core.config import global_config
 import rafcon.utils.filesystem as filesystem
 from rafcon.utils import profiler
 from rafcon.utils import plugins
-from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils.i18n import _, setup_l10n, setup_l10n_gtk
 from rafcon.utils import log
 
 logger = log.get_logger("rafcon.start.gui")
 
 
+def setup_installation():
+    """Install necessary GUI resources
+    
+    By default, RAFCON should be installed via `setup.py` (`pip install rafcon`). Thereby, all resources are being 
+    installed. However, if this is not the case, one can set the `RAFCON_CHECK_INSTALLATION` env variable to `True`. 
+    Then, the installation will be performed before starting the GUI. 
+    """
+    if os.environ.get("RAFCON_CHECK_INSTALLATION", False) == "True":
+        rafcon_root = os.path.dirname(rafcon.__file__)
+        installation.assets_folder = os.path.join(rafcon_root, 'gui', 'assets')
+        installation.share_folder = os.path.join(os.path.dirname(os.path.dirname(rafcon_root)), 'share')
+        installation.install_fonts(logger, restart=True)
+        installation.install_gtk_source_view_styles(logger)
+        installation.install_libraries(logger, overwrite=False)
+
+
 def setup_gtkmvc_logger():
-    import sys
     # Apply defaults to logger of gtkmvc
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
@@ -227,6 +244,7 @@ def main():
     while gtk.events_pending():
         gtk.main_iteration()
 
+    setup_installation()
     setup_l10n()
     setup_l10n_gtk()
 
@@ -243,13 +261,12 @@ def main():
     parser = setup_argument_parser()
     user_input = parser.parse_args()
 
-    # create lock file
-    if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
-        constants.RAFCON_INSTANCE_LOCK_FILE = open(os.path.join(RAFCON_TEMP_PATH_BASE, 'lock'), 'a+')
-        constants.RAFCON_INSTANCE_LOCK_FILE.close()
-
     splash_screen.set_text("Loading configurations...")
     setup_mvc_configuration(user_input.config_path, user_input.gui_config_path, user_input.gui_config_path)
+
+    # create lock file -> keep behavior for hole instance
+    if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
+        rafcon.gui.models.auto_backup.generate_rafcon_instance_lock_file()
 
     # setup the gui before loading the state machine as then the debug console shows the errors that emerged during
     # loading the state state machine
@@ -295,10 +312,7 @@ def main():
             profiler.stop("global", result_path, view)
 
         if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
-            if os.path.exists(constants.RAFCON_INSTANCE_LOCK_FILE.name):
-                os.remove(constants.RAFCON_INSTANCE_LOCK_FILE.name)
-            else:
-                logger.warning(_("External remove of lock file detected!"))
+            rafcon.gui.models.auto_backup.remove_rafcon_instance_lock_file()
 
     if core_singletons.state_machine_execution_engine.status.execution_mode == StateMachineExecutionStatus.STARTED:
         logger.info(_("Waiting for the state machine execution to finish"))

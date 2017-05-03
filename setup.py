@@ -2,9 +2,12 @@
 
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
+from setuptools.command.develop import develop as DevelopCommand
+from setuptools.command.install import install as InstallCommand
 from os import path
 import os
 import sys
+from imp import load_source
 
 
 class PyTest(TestCommand):
@@ -34,6 +37,28 @@ class PyTest(TestCommand):
         sys.exit(error_number)
 
 
+class PostDevelopCommand(DevelopCommand):
+    """Post installation step for development mode
+    """
+    def run(self):
+        DevelopCommand.run(self)
+        installation = load_source("installation", install_helper)
+        installation.install_fonts()
+        installation.install_gtk_source_view_styles()
+        installation.install_libraries()
+
+
+class PostInstallCommand(InstallCommand):
+    """Post installation step for installation mode
+    """
+    def run(self):
+        InstallCommand.run(self)
+        installation = load_source("installation", install_helper)
+        installation.install_fonts()
+        installation.install_gtk_source_view_styles()
+        installation.install_libraries()
+
+
 def get_data_files_tuple(*path, **kwargs):
     """Return a tuple which can be used for setup.py's data_files
     
@@ -43,7 +68,7 @@ def get_data_files_tuple(*path, **kwargs):
     :rtype: tuple(str, [str])
     """
     path = os.path.join(*path)
-    target_path = os.path.join(*path.split(os.sep)[1:])  # remove source/ (package_dir)
+    target_path = os.path.join("share", *path.split(os.sep)[1:])  # remove source/ (package_dir)
     if "path_to_file" in kwargs and kwargs["path_to_file"]:
         source_files = [path]
         target_path = os.path.dirname(target_path)
@@ -55,8 +80,10 @@ def get_data_files_tuple(*path, **kwargs):
 global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion~=0.2', 'yaml_configuration~=0.0',
                        'python-gtkmvc-dlr==1.99.2', 'gaphas>=0.7']
 
-assets_folder = os.path.join('source', 'rafcon', 'gui', 'assets')
-themes_folder = os.path.join(assets_folder, 'themes')
+script_path = path.realpath(__file__)
+install_helper = path.join(path.dirname(script_path), "source", "rafcon", "gui", "helpers", "installation.py")
+assets_folder = path.join('source', 'rafcon', 'gui', 'assets')
+themes_folder = path.join(assets_folder, 'themes')
 
 # read version from VERSION file
 # this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon
@@ -79,7 +106,10 @@ setup(
     package_dir={'': 'source'},  # tell distutils packages are under src
 
     package_data={
+        # Include logging config
         'rafcon': ['logging.conf'],
+        # Include pylint config
+        'rafcon': ['pylintrc'],
         # Include core and GUI config
         'rafcon.core': ['config.yaml'],
         'rafcon.gui': ['gui_config.yaml'],
@@ -89,8 +119,6 @@ setup(
 
     data_files=[
         get_data_files_tuple(assets_folder, 'icons'),
-        get_data_files_tuple(assets_folder, 'fonts', 'DIN Next LT Pro'),
-        get_data_files_tuple(assets_folder, 'fonts', 'FontAwesome'),
         get_data_files_tuple(assets_folder, 'splashscreens'),
         get_data_files_tuple(themes_folder, 'dark', 'gtk-2.0', 'gtkrc', path_to_file=True),
         get_data_files_tuple(themes_folder, 'dark', 'colors.json', path_to_file=True),
@@ -115,7 +143,11 @@ setup(
         ]
     },
 
-    cmdclass={'test': PyTest},
+    cmdclass={
+        'develop': PostDevelopCommand,
+        'install': PostInstallCommand,
+        'test': PyTest
+    },
 
     keywords=('state machine', 'robotic', 'FSM', 'development', 'GUI', 'visual programming'),
     classifiers=[

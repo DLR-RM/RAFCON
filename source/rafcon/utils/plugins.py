@@ -76,6 +76,12 @@ def run_pre_inits():
     run_hook("pre_init")
 
 
+def run_on_state_machine_execution_finished():
+    """Runs the on_state_machine_execution_finished methods of all registered plugins
+    """
+    run_hook("on_state_machine_execution_finished")
+
+
 def run_post_inits(setup_config):
     """Runs the post_init methods of all registered plugins
 
