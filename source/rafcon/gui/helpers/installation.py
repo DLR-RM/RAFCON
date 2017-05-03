@@ -1,7 +1,7 @@
 import os
 import sys
 import shutil
-from distutils import log
+import distutils.log
 
 try:
     import gtk
@@ -16,16 +16,11 @@ assets_folder = os.path.join('source', 'rafcon', 'gui', 'assets')
 share_folder = "share"
 
 
-def get_logger(name):
-    import logging
-    return logging.getLogger(name)
-
-
 def install_fonts(logger=None, restart=False):
     if logger:
         log = logger
     else:
-        log = get_logger("install_fonts_logger")
+        log = distutils.log
     if not gtk:
         log.warn("No GTK found. Will not install fonts.")
         return
@@ -76,7 +71,7 @@ def install_gtk_source_view_styles(logger=None):
     if logger:
         log = logger
     else:
-        log = get_logger("install_gtk_source_view_styles_logger")
+        log = distutils.log
     if glib:
         user_data_folder = glib.get_user_data_dir()
     else:
@@ -107,7 +102,7 @@ def install_libraries(logger=None, overwrite=True):
     if logger:
         log = logger
     else:
-        log = get_logger("install_libraries_logger")
+        log = distutils.log
     if glib:
         user_data_folder = glib.get_user_data_dir()
     else:
