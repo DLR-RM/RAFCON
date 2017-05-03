@@ -1,1 +1,1 @@
-doc/development/includes/commit_guidelines.rst
+doc/development/development.rst
