@@ -54,9 +54,14 @@ core_interface.open_folder_func = open_folder
 
 def create_folder(query):
     import gtk
-    from os.path import expanduser, dirname
+    from os.path import expanduser, dirname, join, exists, isdir
+    from rafcon.core.storage.storage import STATEMACHINE_FILE
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
-    if last_path:
+    suggested_folder_name = global_runtime_config.get_config_value('CURRENT_SUGGESTED_FOLDER_NAME', '')
+
+    if isdir(last_path) and not exists(join(last_path, STATEMACHINE_FILE)):
+        pass
+    elif last_path:
         last_path = dirname(last_path)
     else:
         last_path = expanduser('~')
@@ -71,6 +76,7 @@ def create_folder(query):
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_current_folder(last_path)
+    dialog.set_current_name(suggested_folder_name)
     dialog.set_show_hidden(False)
 
     library_paths = library_manager.library_paths
