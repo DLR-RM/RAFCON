@@ -84,9 +84,6 @@ title, and interest in and to Your Contributions.
 8. You agree to notify DLR of any facts or circumstances of which you become aware that would make these
    representations inaccurate in any respect.
 
-9. It is your responsibility to notify DLR when any change is required to the list of designated employees authorized
-   to submit Contributions on behalf of the Corporation, or to the Corporation's Point of Contact with DLR.
-
 ::
 
   Please sign: __________________________________ Date: ________________
