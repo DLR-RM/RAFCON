@@ -296,17 +296,17 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
-        # print "GSME state_action_signal: ", info['arg'] if 'arg' in info else "XXX" + str(info)
+        print "GSME state_action_signal: ", info['arg'] if 'arg' in info else "XXX" + str(info)
         if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state',
                                                     'group_states', 'ungroup_state', 'paste']:
             if info['arg'].after is False:
                 self._complex_action = True
                 if info['arg'].action in ['group_states', 'paste']:
                     self.observe_model(info['arg'].action_parent_m)
-                    # print "GSME observe: ", info['arg'].action_parent_m
+                    print "GSME observe: ", info['arg'].action_parent_m
                 else:
                     self.observe_model(info['arg'].affected_models[0])
-                    # print "GSME observe: ", info['arg'].affected_models[0]
+                    print "GSME observe: ", info['arg'].affected_models[0]
 
                 # assert not hasattr(self.state_action_signal.__func__, "affected_models")
                 # assert not hasattr(self.state_action_signal.__func__, "target")
@@ -315,14 +315,31 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
-        # print self.__class__.__name__, "action_signal check", info
+        # print "GSME action_signal: ", self.__class__.__name__, "action_signal check", info
         if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and\
                 info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste']:
-            # print self.__class__.__name__, "action_signal ####",
-            self._complex_action = False
-            self.relieve_model(model)
-            self.adapt_complex_action(self.state_action_signal.__func__.target, info['arg'].action_parent_m)
-            # print "GSME ACTION adapt to change"
+
+            old_state_m = self.state_action_signal.__func__.target
+            new_state_m = info['arg'].action_parent_m
+
+        elif isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
+                info['arg'].action in ['change_state_type', 'change_root_state_type']:
+
+            old_state_m = model
+            new_state_m = info['arg'].affected_models[-1]
+
+        else:
+            return
+        # print self.__class__.__name__, "action_signal ####", "\n", model, "\n", old_state_m, "\n", new_state_m, "\n"
+
+        self._complex_action = False
+        self.relieve_model(model)
+
+        # print "state_type_changed relieve observer"
+        self.adapt_complex_action(old_state_m,
+                                  new_state_m)
+
+        # print "GSME ACTION adapt to change"
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
@@ -541,19 +558,6 @@ class GraphicalEditorController(ExtendedController):
                 except Exception as e:
                     logger.error('Error while trying to emit meta data signal {}'.format(e))
                     raise
-
-    @ExtendedController.observe("action_signal", signal=True)
-    def state_type_changed(self, old_state_m, prop_name, info):
-        msg = info['arg']
-        # print self.__class__.__name__, "state_type_changed check", info
-        if msg.action in ['change_state_type', 'change_root_state_type'] and msg.after:
-            # print self.__class__.__name__, "state_type_changed ####"
-            self._complex_action = False
-            self.relieve_model(old_state_m)
-            new_state_m = msg.affected_models[-1]
-            # print "state_type_changed relieve observer"
-            self.adapt_complex_action(old_state_m,
-                                      new_state_m)
 
     @lock_state_machine
     def adapt_complex_action(self, old_state_m, new_state_m):
