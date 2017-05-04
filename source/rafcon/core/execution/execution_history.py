@@ -314,6 +314,16 @@ class ScopedDataItem(HistoryItem):
             logger.error('TypeError: ' + str(e) + str(traceback.format_exc()))
             record['input_output_data'] = json.dumps({'TypeError': e.message}, cls=JSONObjectEncoder)
 
+        from rafcon.core.states.container_state import ContainerState
+        if isinstance(self.state_reference, ContainerState):
+            try:
+                record['scoped_variables'] = json.dumps(self.state_reference.scoped_variables, cls=JSONObjectEncoder)
+            except TypeError as e:
+                logger.error('TypeError: ' + str(e) + str(traceback.format_exc()))
+                record['scoped_variables'] = json.dumps({'TypeError': e.message}, cls=JSONObjectEncoder)
+        else:
+            record['scoped_variables'] = json.dumps({})
+
         record['call_type'] = self.call_type_str
         return record
 
