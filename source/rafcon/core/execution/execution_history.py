@@ -138,6 +138,8 @@ class ExecutionHistory(Observable, Iterable, Sized):
                                state.run_id)
         if last_history_item is None:
             return_item.prev = self.initial_prev
+        if last_history_item is not None:
+            last_history_item.next = return_item
         if self.execution_history_storage is not None:
             self.execution_history_storage.store_item(return_item.hist_item_id, return_item.to_dict())
         self._history_items.append(return_item)
@@ -160,6 +162,8 @@ class ExecutionHistory(Observable, Iterable, Sized):
         return_item = ReturnItem(state, self.get_last_history_item(), call_type, state_for_scoped_data, output_data, state.run_id)
         if last_history_item is None:
             return_item.prev = self.initial_prev
+        if last_history_item is not None:
+            last_history_item.next = return_item
         if self.execution_history_storage is not None:
             self.execution_history_storage.store_item(return_item.hist_item_id, return_item.to_dict())
         self._history_items.append(return_item)
@@ -180,6 +184,8 @@ class ExecutionHistory(Observable, Iterable, Sized):
         return_item = ConcurrencyItem(state, self.get_last_history_item(), number_concurrent_threads, state.run_id, self.execution_history_storage)
         if last_history_item is None:
             return_item.prev = self.initial_prev
+        if last_history_item is not None:
+            last_history_item.next = return_item
         if self.execution_history_storage is not None:
             self.execution_history_storage.store_item(return_item.hist_item_id, return_item.to_dict())
         self._history_items.append(return_item)

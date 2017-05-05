@@ -23,6 +23,7 @@ class BasicTreeViewExample:
         previous = {}
         next_ = {}
         concurrent = {}
+        grouped_by_run_id = {}
         start_item = None
 
         hist_items = shelve.open(filename, 'r')
@@ -45,7 +46,18 @@ class BasicTreeViewExample:
                 else:
                     next_[prev_item_id] = k
 
-        return start_item, hist_items, previous, next_, concurrent
+            rid = v['run_id']
+            if rid in grouped_by_run_id:
+                grouped_by_run_id[rid].append(v)
+            else:
+                grouped_by_run_id[rid] = [v]
+
+        return start_item, hist_items, previous, next_, concurrent, grouped_by_run_id
+
+    def collapse_log_file(self, filename):
+        start_item, hist_items, previous, next_, concurrent, grouped = self.parse_log_file(filename)
+        # build collapsed items
+
 
     def add_key(self, parent, key):
         piter = self.treestore.append(parent, [str(key)])
@@ -58,7 +70,7 @@ class BasicTreeViewExample:
                 self.add_key(tmppiter, next_key)
 
     def __init__(self, filename):
-        self.start, self.items, self.previous, self.next_, self.concurrent = self.parse_log_file(filename)
+        self.start, self.items, self.previous, self.next_, self.concurrent, _ = self.parse_log_file(filename)
 
         # Create a new window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
