@@ -1,7 +1,7 @@
 ---
 title: Get involved
 layout: page_inner
-intro: You think RAFCON is great but it lacks this one feature? You found a bug and cannot wait to fix it? You are welcome to contribute! 
+intro: You think RAFCON is great but it lacks this one feature?<br>You found a bug and cannot wait to fix it?<br>You are welcome to contribute! 
 ---
 
 {% include horizontal_line.html %}
