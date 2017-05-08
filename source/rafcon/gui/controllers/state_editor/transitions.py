@@ -24,7 +24,7 @@ import gtk
 
 from rafcon.core.state_elements.transition import Transition
 from rafcon.core.states.library_state import LibraryState
-from rafcon.gui.controllers.state_editor.data_flows import LinkageListController
+from rafcon.gui.controllers.state_editor.linkage_list import LinkageListController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers.label import format_cell
 from rafcon.gui.models.container_state import ContainerStateModel
