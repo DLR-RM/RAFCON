@@ -123,7 +123,7 @@ def trigger_gui_signals(*args):
     - Stop State Machine
     - Quit GUI
     """
-
+    import rafcon.gui.helpers.state as gui_helper_state
     sm_manager_model = args[0]
     main_window_controller = args[1]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
@@ -188,20 +188,37 @@ def trigger_gui_signals(*args):
     print "increase complexity by doing it twice -> increase the hierarchy-level"
     copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menubar_ctrl)
 
+    # TODO keep core interface, too
+    # ##########################################################
+    # # group states
+    # # TODO improve test to related data flows
+    # state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
+    # state_ids_old = [state_id for state_id in state_m_parent.state.states]
+    # call_gui_callback(state_m_parent.state.group_states, ['PAYECU', 'UEPNNW', 'KQDJYS'])
+    #
+    # ##########################################################
+    # # ungroup new state
+    # state_new = None
+    # for state_id in state_m_parent.state.states:
+    #     if state_id not in state_ids_old:
+    #         state_new = state_m_parent.state.states[state_id]
+    # call_gui_callback(state_m_parent.state.ungroup_state, state_new.state_id)
+
     ##########################################################
     # group states
     # TODO improve test to related data flows
     state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
     state_ids_old = [state_id for state_id in state_m_parent.state.states]
-    call_gui_callback(state_m_parent.state.group_states, ['PAYECU', 'UEPNNW', 'KQDJYS'])
+    state_m_list = [state_m_parent.states[child_state_id] for child_state_id in ['PAYECU', 'UEPNNW', 'KQDJYS']]
+    call_gui_callback(gui_helper_state.group_states_and_scoped_variables, state_m_list, [])
 
     ##########################################################
     # ungroup new state
-    state_new = None
+    new_state = None
     for state_id in state_m_parent.state.states:
         if state_id not in state_ids_old:
-            state_new = state_m_parent.state.states[state_id]
-    call_gui_callback(state_m_parent.state.ungroup_state, state_new.state_id)
+            new_state = state_m_parent.state.states[state_id]
+    call_gui_callback(gui_helper_state.ungroup_state, sm_m.get_state_model_by_path(new_state.get_path()))
 
     ##########################################################
     # substitute state with template
