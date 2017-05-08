@@ -69,6 +69,9 @@ class GraphicalEditorController(ExtendedController):
         self.observe_model(runtime_config_model)
         self.root_state_m = model.root_state
 
+        self.update_selection_gaphas_major = False
+        self.update_selection_external_major = False
+
         self.canvas = MyCanvas()
         self.zoom = 3.
 
@@ -225,6 +228,10 @@ class GraphicalEditorController(ExtendedController):
             return True
 
     def _update_selection_from_gaphas(self, view, selected_items):
+        if self.update_selection_external_major:
+            return
+        # else:
+        #     print "_update_selection_from_gaphas", self.view.editor.selected_items
         selected_items = self.view.editor.selected_items
         selected_models = []
         for item in selected_items:
@@ -237,10 +244,16 @@ class GraphicalEditorController(ExtendedController):
                 logger.debug("Cannot select item {}".format(item))
         new_selected_models = any([model not in self.model.selection for model in selected_models])
         if new_selected_models or len(self.model.selection) != len(selected_models):
+            self.update_selection_gaphas_major = True
             self.model.selection.set(selected_models)
+            self.update_selection_gaphas_major = False
 
     def _update_selection_from_external(self):
         selected_items = [self.canvas.get_view_for_model(model) for model in self.model.selection]
+        if self.update_selection_gaphas_major:
+            return
+        # else:
+        #     print "_update_selection_from_external", selected_items
         select_items = filter(lambda item: item not in self.view.editor.selected_items, selected_items)
         deselect_items = filter(lambda item: item not in selected_items, self.view.editor.selected_items)
         for item in deselect_items:
@@ -250,7 +263,9 @@ class GraphicalEditorController(ExtendedController):
             self.view.editor.selected_items.add(item)
             self.view.editor.queue_draw_item(item)
         if select_items or deselect_items:
+            self.update_selection_external_major = True
             self.view.editor.emit('selection-changed', self.view.editor.selected_items)
+            self.update_selection_external_major = False
         # TODO: Jump to the selected state in the view and adjust the zoom
 
     def _meta_data_changed(self, view, model, name, affects_children):
