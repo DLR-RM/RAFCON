@@ -315,36 +315,47 @@ def change_state_type_with_error_handling_and_logger_messages(state_m, target_cl
                     "".format(state_m.state.name, type(state_m.state).__name__, target_class.__name__))
 
 
-def dict_has_empty_elements(d):
+def dict_has_empty_elements(d, ignored_keys=None, ignored_partial_keys=None):
+    ignored_keys = ["show_content", "waypoints"] if ignored_keys is None else ignored_keys
+    ignored_partial_keys = ['input_data_port', 'output_data_port'] if ignored_partial_keys is None else ignored_partial_keys
     empty = False
     if not d:
-        # print "dict check", d
+        # print "dict check -> result empty", d
         return True
     else:
         for k, v in d.iteritems():
-            # print "check", k, v
+            # print "check", k, " -> ", v
             if isinstance(v, dict):
                 if dict_has_empty_elements(v):
-                    if k not in ["show_content", "waypoints"]:
+                    if k not in ignored_keys and not any([key in k for key in ignored_partial_keys]):
                         empty = True
+                        break
+                    else:
+                        # print "ignore empty dict: ", k
+                        pass
             else:
                 if isinstance(v, bool):
                     pass
                 elif not len(v) > 0:
                     # print k, v
-                    empty = True
+                    if k not in ignored_keys and not any([key in k for key in ignored_partial_keys]):
+                        empty = True
+                        break
+                    else:
+                        print "ignore empty list: ", k
+                        pass
 
     return empty
 
 
-def model_has_empty_meta(m):
+def model_has_empty_meta(m, ignored_keys=None, ignored_partial_keys=None):
     # print m, m.meta
-    if dict_has_empty_elements(m.meta):
+    if dict_has_empty_elements(m.meta, ignored_keys, ignored_partial_keys):
         # print "XXX", m, m.meta
         return True
     if isinstance(m, ContainerStateModel):
         for state_m in m.states.itervalues():
-            if dict_has_empty_elements(state_m.meta):
+            if dict_has_empty_elements(state_m.meta, ignored_keys, ignored_partial_keys):
                 # print "LXXX", state_m, state_m.meta
                 return True
     return False
@@ -540,7 +551,8 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
     assert isinstance(action_parent_m, ContainerStateModel)
 
     # BEFORE MODEL
-    tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
+    tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None,
+                       'input_data_ports': {}, 'output_data_ports': {}}
     related_transitions, related_data_flows = \
         action_parent_m.state.related_linkage_states_and_scoped_variables(state_ids, sv_ids)
     for state_id in state_ids:
@@ -572,10 +584,10 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
     new_state = None
     try:
         assert isinstance(action_parent_m.state, ContainerState)
-        new_state_id = action_parent_m.state.group_states(state_ids, sv_ids)
-        new_state = action_parent_m.state.states[new_state_id]
+        new_state = action_parent_m.state.group_states(state_ids, sv_ids)
+        # new_state = action_parent_m.state.states[new_state_id]
     except Exception:
-        logger.exception("State ungroup failed")
+        logger.exception("State group failed")
 
     # AFTER MODEL
     if new_state:
@@ -592,6 +604,12 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         affected_models = action_parent_m.group_states.__func__.affected_models
         affected_models.append(grouped_state_m)
         # print "EMIT-AFTER ON ACTION PARENT"
+        action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
+                                                           action_parent_m=action_parent_m,
+                                                           affected_models=affected_models, after=True))
+    else:
+        # after signal also if a exception occurs
+        # TODO the exception has to be handled better and the signal has to inform about it
         action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
                                                            action_parent_m=action_parent_m,
                                                            affected_models=affected_models, after=True))
@@ -613,8 +631,9 @@ def group_selected_states_and_scoped_variables():
         # for sv_m in selected_sv_m:
         #     parent_list.append(sv_m.scoped_variable.parent)
         # assert len(set(parent_list))
-        logger.debug("do group")
-
+        logger.debug("do group selected states: {0} scoped variables: {1}".format(selected_state_m_list, selected_sv_m))
+        # TODO remove un-select workaround (used to avoid wrong selections in gaphas and inconsistent selection)
+        sm_m.selection.set([])
         group_states_and_scoped_variables(selected_state_m_list, selected_sv_m)
 
 
@@ -625,7 +644,8 @@ def ungroup_state(state_m):
     old_state_m = state_m
 
     # BEFORE MODEL
-    tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None}
+    tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None,
+                       'input_data_ports': {}, 'output_data_ports': {}}
 
     related_transitions, related_data_flows = action_parent_m.state.related_linkage_state(state_id)
     tmp_models_dict['state'] = action_parent_m.states[state_id]
@@ -684,6 +704,12 @@ def ungroup_state(state_m):
         for elemets_dict in tmp_models_dict.itervalues():
             affected_models.extend(elemets_dict.itervalues())
         # print "EMIT-AFTER ON OLD_STATE ", state_id
+        old_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
+                                                       action_parent_m=action_parent_m,
+                                                       affected_models=affected_models, after=True))
+    else:
+        # after signal also if a exception occurs
+        # TODO the exception has to be handled better and the signal has to inform about it
         old_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
                                                        action_parent_m=action_parent_m,
                                                        affected_models=affected_models, after=True))
