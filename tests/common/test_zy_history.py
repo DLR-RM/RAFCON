@@ -1455,7 +1455,7 @@ def trigger_state_type_change_tests(*args):
     save_state_machine(sm_model, state_machine_path + '_after3', logger, with_gui, menubar_ctrl)
 
     assert len(sm_model.history.modifications.single_trail_history()) == 4
-    logger.info("PCS -> HS")
+    logger.info("PCS -> HS (undo)")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
     else:
@@ -1473,7 +1473,7 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_model.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
-    logger.info("HS -> PCS")
+    logger.info("HS -> PCS (redo)")
     if with_gui:
         call_gui_callback(sm_model.history.redo)
     else:
@@ -1517,7 +1517,7 @@ def trigger_state_type_change_tests(*args):
     save_state_machine(sm_model, state_machine_path + '_after4', logger, with_gui, menubar_ctrl)
 
     assert len(sm_model.history.modifications.single_trail_history()) == 5
-    logger.info("ES -> PCS")
+    logger.info("ES -> PCS (undo)")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
     else:
@@ -1536,7 +1536,7 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_model.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
 
-    logger.info("PCS -> ES")
+    logger.info("PCS -> ES (redo)")
     if with_gui:
         call_gui_callback(sm_model.history.redo)
     else:
@@ -1690,7 +1690,7 @@ def trigger_state_type_change_tests(*args):
         state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
 
     assert len(sm_model.history.modifications.single_trail_history()) == 8
-    logger.info("PCS -> HS")
+    logger.info("PCS -> HS (undo)")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
     else:
@@ -1703,7 +1703,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
-    logger.info("HS -> PCS")
+    logger.info("HS -> PCS (redo)")
     if with_gui:
         call_gui_callback(sm_model.history.redo)
     else:
@@ -1745,7 +1745,7 @@ def trigger_state_type_change_tests(*args):
     [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
 
     assert len(sm_model.history.modifications.single_trail_history()) == 9
-    logger.info("ES -> PCS")
+    logger.info("ES -> PCS (undo)")
     if with_gui:
         call_gui_callback(sm_model.history.undo)
     else:
@@ -1759,7 +1759,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
-    logger.info("PCS -> ES")
+    logger.info("PCS -> ES (redo)")
     if with_gui:
         call_gui_callback(sm_model.history.redo)
     else:
