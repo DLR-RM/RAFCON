@@ -36,6 +36,10 @@ from rafcon.utils.hashable import Hashable
 from rafcon.utils.storage_utils import get_current_time_string
 import time
 
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
+from rafcon.core.config import global_config
+import os
+
 logger = log.get_logger(__name__)
 
 
@@ -135,7 +139,8 @@ class StateMachine(Observable, JSONObject, Hashable):
     def join(self):
         """Wait for root state to finish execution"""
         self._root_state.join()
-        self._execution_histories[-1].execution_history_storage.close()
+        if self._execution_histories[-1].execution_history_storage is not None:
+            self._execution_histories[-1].execution_history_storage.close()
         from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
@@ -201,10 +206,18 @@ class StateMachine(Observable, JSONObject, Hashable):
     @Observable.observed
     def _add_new_execution_history(self):
         new_execution_history = ExecutionHistory()
-        execution_history_store = ExecutionHistoryStorage('/tmp/rafcon-execution-log_%s_%s.shelve' %
-                                                          (self.root_state.name.replace(' ', '-'),
-                                                           time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())))
-        new_execution_history.set_execution_history_storage(execution_history_store)
+
+        if global_config.get_config_value("ENABLE_EXEC_LOG", False):
+            base_dir = global_config.get_config_value("EXEC_LOG_PATH", "%RAFCON_TEMP_PATH_BASE/execution_logs")
+            if base_dir.startswith('%RAFCON_TEMP_PATH_BASE'):
+                base_dir = base_dir.replace('%RAFCON_TEMP_PATH_BASE', RAFCON_TEMP_PATH_BASE)
+            if not os.path.exists(base_dir):
+                os.makedirs(base_dir)
+            shelve_name = os.path.join(base_dir, 'rafcon_exec_log_%s_%s.shelve' %
+                                       (self.root_state.name.replace(' ', '-'),
+                                        time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())))
+            execution_history_store = ExecutionHistoryStorage(shelve_name)
+            new_execution_history.set_execution_history_storage(execution_history_store)
         self._execution_histories.append(new_execution_history)
         return new_execution_history
 
