@@ -422,23 +422,6 @@ class ModificationsHistoryModel(ModelMT):
 
         self.change_count += 1
 
-    def is_gaphas_editor(self):
-        import rafcon.gui.singleton as gui_singletons
-        import rafcon.gui.controllers.graphical_editor as graphical_editor_opengl
-        mw_ctrl = gui_singletons.main_window_controller
-        g_sm_editor = None
-        if mw_ctrl:
-            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
-                                                                    self.state_machine_model.state_machine.state_machine_id],
-                                                         with_print=False)
-
-        # # We are only interested in OpenGL editors, not Gaphas ones
-        # if g_sm_editor and not isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
-        #     return False
-        # else:
-        #     return True
-        return True
-
     def re_initiate_meta_data(self):
         self.active_action = []
         self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
@@ -454,12 +437,6 @@ class ModificationsHistoryModel(ModelMT):
         if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:  # TODO test why those occur
             # print "ALL"
             return
-        if overview['signal'][-1]['change'] == 'all':  # avoid strange change: 'all'
-            if self.is_gaphas_editor():
-                # print "ALL"
-                pass
-            else:
-                return
 
         if self.busy:
             return
@@ -575,7 +552,7 @@ class ModificationsHistoryModel(ModelMT):
                     if self.with_prints:
                         print "HISTORY COUNT WAS OF SUCCESS FOR STATE MACHINE"
             else:
-                logger.error("HISTORY after not count [state_machine] -> For every before there should be a after."
+                logger.error("HISTORY after not count to 0 [action signal] -> For every before there should be a after."
                              "{0}".format(NotificationOverview(info)))
 
     @ModelMT.observe("states", before=True)

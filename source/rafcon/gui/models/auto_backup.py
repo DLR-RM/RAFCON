@@ -240,7 +240,6 @@ class AutoBackupModel(ModelMT):
         else:
             self.check_for_auto_backup(force=True)
 
-
     def __destroy__(self):
         self.destroy()
 

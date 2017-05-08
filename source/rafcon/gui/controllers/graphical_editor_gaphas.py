@@ -301,27 +301,19 @@ class GraphicalEditorController(ExtendedController):
         self.canvas.request_update(view, matrix=True)
         self.canvas.perform_update()
 
-    def manual_notify_after(self, state_m):
-        state_v = self.canvas.get_view_for_model(state_m)
-        if state_v:
-            state_v.apply_meta_data(recursive=True)
-            self.canvas.request_update(state_v, matrix=True)
-        else:
-            logger.info("Meta data operation on state model without view: {}".format(state_m))
-
     @ExtendedController.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
-        print "GSME state_action_signal: ", info['arg'] if 'arg' in info else "XXX" + str(info)
+        # print "GSME state_action_signal: ", info['arg'] if 'arg' in info else "XXX" + str(info)
         if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state',
-                                                    'group_states', 'ungroup_state', 'paste']:
+                                                    'group_states', 'ungroup_state', 'paste', 'undo/redo']:
             if info['arg'].after is False:
                 self._complex_action = True
                 if info['arg'].action in ['group_states', 'paste']:
                     self.observe_model(info['arg'].action_parent_m)
-                    print "GSME observe: ", info['arg'].action_parent_m
+                    # print "GSME observe: ", info['arg'].action_parent_m
                 else:
                     self.observe_model(info['arg'].affected_models[0])
-                    print "GSME observe: ", info['arg'].affected_models[0]
+                    # print "GSME observe: ", info['arg'].affected_models[0]
 
                 # assert not hasattr(self.state_action_signal.__func__, "affected_models")
                 # assert not hasattr(self.state_action_signal.__func__, "target")
@@ -332,7 +324,7 @@ class GraphicalEditorController(ExtendedController):
     def action_signal(self, model, prop_name, info):
         # print "GSME action_signal: ", self.__class__.__name__, "action_signal check", info
         if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and\
-                info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste']:
+                info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'undo/redo']:
 
             old_state_m = self.state_action_signal.__func__.target
             new_state_m = info['arg'].action_parent_m
@@ -557,14 +549,20 @@ class GraphicalEditorController(ExtendedController):
                 else:
                     self.canvas.request_update(state_v, matrix=False)
                 self.canvas.perform_update()
-            elif method_name in ['change_state_type', 'change_root_state_type']:
-                pass
             elif method_name == 'parent':
                 pass
             elif method_name == 'description':
                 pass
+            elif method_name == 'script_text':
+                pass
+            # TODO handle the following method calls -> for now those are explicit (in the past implicit) ignored
+            # TODO -> correct the complex actions which are used in some test (by test calls or by adapting the model)
+            elif method_name in ['input_data_ports', 'output_data_ports', 'outcomes',
+                                 'change_root_state_type', 'change_state_type',
+                                 'group_states', 'ungroup_state', 'substitute_state']:
+                pass
             else:
-                logger.debug("Method '%s' not caught in GraphicalViewer" % method_name)
+                logger.warning("Method {0} not caught in GraphicalViewer, details: {1}".format(method_name, info))
 
             if method_name in ['add_state', 'add_transition', 'add_data_flow', 'add_outcome', 'add_input_data_port',
                                'add_output_data_port', 'add_scoped_variable', 'data_flow_change', 'transition_change']:

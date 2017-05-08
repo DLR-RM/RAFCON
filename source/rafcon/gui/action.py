@@ -47,9 +47,9 @@ from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrenc
 from rafcon.core.states.state import State
 from rafcon.core.storage import storage
 from rafcon.gui.models.container_state import ContainerState, ContainerStateModel
-from rafcon.gui.models.signals import MetaSignalMsg
+from rafcon.gui.models.signals import MetaSignalMsg, ActionSignalMsg
 from rafcon.gui.utils.notification_overview import NotificationOverview
-import rafcon.gui.singleton as gui_singletons
+
 from rafcon.utils import log
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 from rafcon.utils.storage_utils import substitute_modules
@@ -599,53 +599,6 @@ class Action(ModelMT, AbstractAction):
 
         return state
 
-    def stop_graphical_viewer(self):
-        """ The function avoid interference with and unnecessary drawing of the graphical edit while undo or redo
-        of an action by stopping the drawing process and returning the graphical viewer object.
-        It is a general functionality all Action*-Classes may need.
-        :return: g_sm_editor -> the actual graphical viewer for further use
-        """
-
-        # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s %s || %s || Action\n\n\n\n\n\n\n" % (path_of_state, state, storage_version_of_state))
-        mw_ctrl = gui_singletons.main_window_controller
-        g_sm_editor = None
-        if gui_singletons.main_window_controller:
-            g_sm_editor = mw_ctrl.get_controller_by_path(ctrl_path=['state_machines_editor_ctrl',
-                                                                    self.state_machine.state_machine_id],
-                                                         with_print=False)
-
-        # We are only interested in OpenGL editors, not Gaphas ones
-        try:
-            import rafcon.gui.controllers.graphical_editor as graphical_editor_opengl
-            if g_sm_editor and isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
-                g_sm_editor.suspend_drawing = True
-        except ImportError as e:
-            logger.debug("OpenGL-Graphical-Editor can not be imported: {0}".format(e))
-
-        return g_sm_editor
-
-    @staticmethod
-    def run_graphical_viewer(g_sm_editor, responsible_m):
-        """ Enables and re-initiate graphical viewer's drawing process.
-        :param g_sm_editor: graphical state machine editor
-        """
-
-        try:
-            import rafcon.gui.controllers.graphical_editor as graphical_editor_opengl
-            if g_sm_editor and isinstance(g_sm_editor, graphical_editor_opengl.GraphicalEditorController):
-                g_sm_editor.suspend_drawing = False
-                # TODO integrate meta-data affects_children status
-                responsible_m.meta_signal.emit(MetaSignalMsg("undo_redo_action", "all", True))
-        except ImportError as e:
-            logger.debug("OpenGL-Graphical-Editor can not be imported: {0}".format(e))
-
-        try:
-            import rafcon.gui.controllers.graphical_editor_gaphas as graphical_editor_gaphas
-            if g_sm_editor and isinstance(g_sm_editor, graphical_editor_gaphas.GraphicalEditorController):
-                g_sm_editor.manual_notify_after(responsible_m)
-        except ImportError as e:
-            logger.debug("Gaphas-Graphical-Editor can not be imported: {0}".format(e))
-
     def redo(self):
         """ General Redo, that takes all elements in the parent path state stored of the before action state machine
         status.
@@ -660,6 +613,17 @@ class Action(ModelMT, AbstractAction):
         """
         self.set_state_to_version(self.get_state_changed(), self.before_storage)
 
+    def emit_undo_redo_signal(self, action_parent_m, affected_models, after):
+        msg = ActionSignalMsg(action='undo/redo', origin='model', action_parent_m=action_parent_m,
+                              affected_models=affected_models, after=after, kwargs={})
+        # logger.info("{1} emit history signal: {0}".format(msg, self.__class__.__name__))
+        action_parent_m.action_signal.emit(msg)
+
+    def compare_models(self, previous_model, actual_model):
+        if previous_model is not actual_model:
+            logger.warning("The model of the state changes is performed on should not be another one, afterwards. "
+                           "\n{0}\n{1}".format(previous_model, actual_model))
+
     def set_state_to_version(self, state, storage_version):
         # print state.get_path(), '\n', storage_version[STATE_TUPLE_PATH_INDEX]
         assert state.get_path() == storage_version[STATE_TUPLE_PATH_INDEX]
@@ -669,7 +633,9 @@ class Action(ModelMT, AbstractAction):
 
         assert storage_version_of_state
 
-        g_sm_editor = self.stop_graphical_viewer()
+        previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        # TODO affected models should be more to allow recursive notification scheme and less updated elements
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         # if self.action_type == 'change_state_type':
         #     self.storage_version_for_state_type_change_signal_hook = storage_version
@@ -699,9 +665,10 @@ class Action(ModelMT, AbstractAction):
 
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=actual_state_model)
 
-        self.run_graphical_viewer(g_sm_editor, actual_state_model)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     @ModelMT.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
@@ -896,6 +863,8 @@ class Action(ModelMT, AbstractAction):
 
 
 class StateMachineAction(Action, ModelMT):
+    """ The state machine action is currently only used for root state type changes and their undo/redo functionality.
+    """
 
     def __init__(self, parent_path, state_machine_model, overview):
         ModelMT.__init__(self)
@@ -925,10 +894,13 @@ class StateMachineAction(Action, ModelMT):
             new_state_class = ExecutionState
         logger.debug("DO root version change " + self.action_type)
                  # logger.debug("DO root version change")
-        # observe root state model (type change signal)
-        g_sm_editor = self.stop_graphical_viewer()
+
+        previous_model = self.state_machine_model.root_state
+        # TODO affected models should be more to allow recursive notification scheme and less updated elements
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.action_type == 'change_root_state_type':
+            # observe root state model (type change signal)
             self.storage_version_for_state_type_change_signal_hook = storage_version
             assert isinstance(self.state_machine_model.root_state.state, State)
             old_root_state_m = self.state_machine_model.root_state
@@ -951,7 +923,8 @@ class StateMachineAction(Action, ModelMT):
         #     insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
         #                            state_model=self.state_machine_model.root_state)
 
-        self.run_graphical_viewer(g_sm_editor, self.state_machine_model.root_state)
+        # TODO check if this ok ... see type change performance in graphical editor
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     @ModelMT.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
@@ -1031,7 +1004,8 @@ class AddObjectAction(Action):
         path_of_state = state.get_path()
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
-        g_sm_editor = self.stop_graphical_viewer()
+        previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
@@ -1042,10 +1016,10 @@ class AddObjectAction(Action):
         self.add_core_object_to_state(state, core_obj)
 
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
                                state_model=actual_state_model, level=1)
-
-        self.run_graphical_viewer(g_sm_editor, actual_state_model)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     def undo(self):
 
@@ -1057,7 +1031,8 @@ class AddObjectAction(Action):
         path_of_state = state.get_path()
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
-        g_sm_editor = self.stop_graphical_viewer()
+        previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
@@ -1072,10 +1047,11 @@ class AddObjectAction(Action):
 
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
                                state_model=actual_state_model, level=1)
 
-        self.run_graphical_viewer(g_sm_editor, actual_state_model)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     def correct_reference_state(self, state, storage_version_of_state, storage_path):
 
@@ -1163,7 +1139,8 @@ class RemoveObjectAction(Action):
         path_of_state = state.get_path()
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
-        g_sm_editor = self.stop_graphical_viewer()
+        previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.removed_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
@@ -1179,35 +1156,41 @@ class RemoveObjectAction(Action):
 
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
                                state_model=actual_state_model, level=1)
 
-        self.run_graphical_viewer(g_sm_editor, actual_state_model)
-        actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
-                               state_model=actual_state_model, level=1)
-
-        self.run_graphical_viewer(g_sm_editor, actual_state_model)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     def redo(self):
 
-        g_sm_editor = self.stop_graphical_viewer()
-
+        # prepare what state and method is needed
         if self.action_type == 'remove_state':
-            state = self.state_machine.get_state_by_path(self.parent_path)
-            state.remove_state(self.removed_object_identifier._id)
+            path_of_state = self.parent_path
+            method_name = 'remove_state'
         else:
-            state = self.state_machine.get_state_by_path(self.removed_object_identifier._path)
-            remove_function = getattr(state, 'remove_' + self.removed_object_identifier._list_name[:-1])
-            remove_function(self.removed_object_identifier._id)
+            path_of_state = self.removed_object_identifier._path
+            method_name = 'remove_' + self.removed_object_identifier._list_name[:-1]
+        parent_with_all_changes = self.get_state_changed()
+        path_of_parent_with_all_changes = parent_with_all_changes.get_path()
 
-        state = self.get_state_changed()
-        path_of_state = state.get_path()
-        actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        # signal that undo/redo action will be performed -> stop graphical editor
+        previous_model = self.state_machine_model.get_state_model_by_path(path_of_parent_with_all_changes)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
+
+        # remove element from core
+        state = self.state_machine.get_state_by_path(path_of_state)
+        remove_function = getattr(state, method_name)
+        remove_function(self.removed_object_identifier._id)
+
+        assert self.get_state_changed() is parent_with_all_changes
+        actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_parent_with_all_changes)
+        self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=self.after_storage[STATE_TUPLE_META_DICT_INDEX],
                                state_model=actual_state_model, level=1)
 
-        self.run_graphical_viewer(g_sm_editor, actual_state_model)
+        # signal that undo/redo action was performed -> run graphical editor update
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     def correct_reference_state(self, state, storage_version_of_state, storage_path):
 
