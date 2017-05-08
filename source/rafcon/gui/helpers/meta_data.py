@@ -55,7 +55,7 @@ def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', c
         pass
 
 
-def get_boundaries_of_elements_in_dict(models_dict):
+def get_boundaries_of_elements_in_dict(models_dict, clearance=0.):
     """ Get boundaries of all handed models
     :param models_dict: dict of all handed models
     :return: tuple of left, right, top and bottom value
@@ -106,6 +106,7 @@ def get_boundaries_of_elements_in_dict(models_dict):
                 # print key, rel_positions, _size
             elif key in ['scoped_variables', 'input_data_ports', 'output_data_ports']:
                 rel_positions = [model.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']]
+                # print key, rel_positions, _size
             elif key in ['transitions', 'data_flows']:
                 if gaphas_editor and key is "data_flows":
                     # take into account the meta data positions of opengl if there is some (always in opengl format)
@@ -119,6 +120,7 @@ def get_boundaries_of_elements_in_dict(models_dict):
                 left, top = cal_min(left, top, rel_position, _size)
                 # print "new edges:", left, right, top, bottom, key
 
+    left, right, top, bottom = add_boundary_clearance(left, right, top, bottom, {'size': (0., 0.)}, clearance)
     return left, right, top, bottom
 
 
@@ -283,7 +285,10 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
         margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, parent_size,
                                                                    gaphas_editor, False)
         automatic_mode = True if rel_pos is None else False
+        clearance = 0.2 if rel_pos is None else 0.
         rel_pos = (margin, margin) if rel_pos is None else rel_pos
+        clearance_scale = 1 + clearance
+
         assert parent_size[0] > rel_pos[0]
         assert parent_size[1] > rel_pos[1]
         # print "edges:", left, right, top, bottom
@@ -296,7 +301,8 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
         # print "boundary width: {0}, boundary_height: {1}".format(boundary_width, boundary_height)
 
         # no site scale
-        if parent_width - rel_pos[0] > boundary_width and parent_height - rel_pos[1] > boundary_height:
+        if parent_width - rel_pos[0] > boundary_width * clearance_scale and \
+                parent_height - rel_pos[1] > boundary_height * clearance_scale:
             if automatic_mode:
                 resize_factor = 1.
                 boundary_width_in_parent = boundary_width*resize_factor
@@ -312,6 +318,20 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
             offset_rel_pos_of_all_models_in_dict(models_dict, mult_two_vectors((1., y_axis_mirror), offset), gaphas_editor)
         # smallest site scale
         else:
+            left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict, clearance=0.2)
+            parent_size = models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['size']
+            margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, parent_size,
+                                                                       gaphas_editor, False)
+            automatic_mode = True if rel_pos is None else False
+            rel_pos = (margin, margin) if rel_pos is None else rel_pos
+            assert parent_size[0] > rel_pos[0]
+            assert parent_size[1] > rel_pos[1]
+            # print "edges:", left, right, top, bottom
+            # print "margin:", margin, "rel_pos:", rel_pos, "old_rel_pos", old_rel_pos, "size:", size
+
+            parent_width, parent_height = parent_size
+
+            boundary_width, boundary_height = size
             if (parent_height - rel_pos[1] - margin)/boundary_height < \
                     (parent_width - rel_pos[0] - margin)/boundary_width:
                 # print "#"*20, 1, "#"*20, rel_pos
@@ -346,6 +366,22 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
     return True
 
 
+def add_boundary_clearance(left, right, top, bottom, frame, clearance=0.1):
+    # print "old boundary", left, right, top, bottom
+    width = right - left
+    width = frame['size'][0] if width < frame['size'][0] else width
+    left = left - 0.5 * clearance * width
+    left = 0 if left < 0 else left
+    right = right + 0.5 * clearance * width
+    height = bottom - top
+    height = frame['size'][1] if height < frame['size'][1] else height
+    top = top - 0.5 * clearance * height
+    left = 0 if left < 0 else left
+    bottom = bottom + 0.5 * clearance * height
+    # print "new boundary", left, right, top, bottom
+    return left, right, top, bottom
+
+
 def scale_meta_data_according_frame(models_dict, frame):
     # TODO Documentation needed....
     """
@@ -358,6 +394,8 @@ def scale_meta_data_according_frame(models_dict, frame):
     y_axis_mirror = 1. if gaphas_editor else -1.
 
     left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)
+    left, right, top, bottom = add_boundary_clearance(left, right, top, bottom, frame)
+
     margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, (0., 0.), gaphas_editor, False)
     old_frame = {'rel_pos': old_rel_pos, 'size': size}
 
