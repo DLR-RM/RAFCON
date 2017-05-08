@@ -150,7 +150,7 @@ class StateMachineModel(ModelMT, Hashable):
             self.auto_backup.prepare_destruction()
         try:
             self.unregister_observer(self)
-            self.root_state.register_observer(self)
+            self.root_state.unregister_observer(self)
         except KeyError:  # Might happen if the observer was already unregistered
             pass
         with self.state_machine.modification_lock():
