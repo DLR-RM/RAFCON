@@ -106,12 +106,11 @@ def save_selected_state_as():
     selected_states = state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
     state_machine_id = state_machine_manager_model.get_selected_state_machine_model().state_machine.state_machine_id
     if selected_states and len(selected_states) == 1:
-        gui_singletons.global_runtime_config.set_config_value('CURRENT_SUGGESTED_FOLDER_NAME',
-                                                              selected_states[0].state.name)
         state_m = copy.copy(selected_states[0])
         sm_m = StateMachineModel(StateMachine(root_state=state_m.state), state_machine_manager_model)
         sm_m.root_state = state_m
-        path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
+        path = interface.create_folder_func("Please choose a root folder and a name for the state-machine",
+                                            selected_states[0].state.name)
         if path:
             storage.save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
             sm_m.store_meta_data()

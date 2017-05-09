@@ -1,9 +1,31 @@
+# Copyright (C) 2015-2017 DLR
+#
+# All rights reserved. This program and the accompanying materials are made
+# available under the terms of the Eclipse Public License v1.0 which
+# accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+#
+# Contributors:
+# Franz Steinmetz <franz.steinmetz@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
+
+import os
 from rafcon.core import interface as core_interface
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.singleton import main_window_controller, library_manager
 
 
-def open_folder(query):
+def open_folder(query, default_path=None):
+    """Shows a user dialog for folder selection
+    
+    A dialog is opened with the prompt `query`. The current path is set to the last path that was opened/created. The 
+    roots of all libraries is added to the list of shortcut folders.
+    
+    :param str query: Prompt asking the user for a specific folder
+    :param str default_path: Path to use if user does not specify one 
+    :return: Path selected by the user or `default_path` if no path was specified or None if none of the paths is valid
+    :rtype: str
+    """
     import gtk
     from os.path import expanduser, pathsep
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
@@ -29,6 +51,7 @@ def open_folder(query):
 
     dialog.set_show_hidden(False)
 
+    # Add library roots to list of shortcut folders
     library_paths = library_manager.library_paths
     library_keys = sorted(library_paths)
     for library_key in library_keys:
@@ -38,13 +61,17 @@ def open_folder(query):
 
     if response != gtk.RESPONSE_OK:
         dialog.destroy()
+        if default_path and os.path.isdir(default_path):
+            return default_path
         return None
 
     path = dialog.get_filename()
     dialog.destroy()
 
-    global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
-    return path
+    if os.path.isdir(path):
+        global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
+        return path
+    return None
 
 
 # overwrite the open_folder_func of the interface: thus the user input is now retrieved from a dialog box and not
@@ -52,12 +79,23 @@ def open_folder(query):
 core_interface.open_folder_func = open_folder
 
 
-def create_folder(query):
+def create_folder(query, default_name=None, default_path=None):
+    """Shows a user dialog for folder creation
+    
+    A dialog is opened with the prompt `query`. The current path is set to the last path that was opened/created. The 
+    roots of all libraries is added to the list of shortcut folders.
+    
+    :param str query: Prompt asking the user for a specific folder
+    :param str default_name: Default name of the folder to be created 
+    :param str default_path: Path in which the folder is created if the user doesn't specify a path 
+    :return: Path created by the user or `default_path`\`default_name` if no path was specified or None if none of the
+      paths is valid
+    :rtype: str
+    """
     import gtk
     from os.path import expanduser, dirname, join, exists, isdir
     from rafcon.core.storage.storage import STATEMACHINE_FILE
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
-    suggested_folder_name = global_runtime_config.get_config_value('CURRENT_SUGGESTED_FOLDER_NAME', '')
 
     if isdir(last_path) and not exists(join(last_path, STATEMACHINE_FILE)):
         pass
@@ -76,9 +114,11 @@ def create_folder(query):
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_current_folder(last_path)
-    dialog.set_current_name(suggested_folder_name)
+    if default_name:
+        dialog.set_current_name(default_name)
     dialog.set_show_hidden(False)
 
+    # Add library roots to list of shortcut folders
     library_paths = library_manager.library_paths
     library_keys = sorted(library_paths)
     for library_key in library_keys:
@@ -88,13 +128,19 @@ def create_folder(query):
 
     if response != gtk.RESPONSE_OK:
         dialog.destroy()
+        if default_path and default_name:
+            default = os.path.join(default_path, default_name)
+            if os.path.isdir(default):
+                return default
         return None
 
     path = dialog.get_filename()
     dialog.destroy()
 
-    global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
-    return path
+    if os.path.isdir(path):
+        global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
+        return path
+    return None
 
 # overwrite the create_folder_func of the interface: thus the user input is now retrieved from a dialog box and not
 # from raw input any more
