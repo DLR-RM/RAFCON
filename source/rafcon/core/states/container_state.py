@@ -319,7 +319,6 @@ class ContainerState(State):
         :param scoped_variable_ids: data_port_id's of all scoped variables that are to be grouped, too.
         :return:
         """
-        # TODO remain all related linkage by adding outcomes and input output port to new hierarchy state
         # TODO remember changed state or state element ids and provide them for the model functionalities
         assert all([state_id in self.states.keys() for state_id in state_ids])
         if scoped_variable_ids is None:
@@ -533,9 +532,10 @@ class ContainerState(State):
         for goal, name in outcomes_outgoing_transitions.iteritems():
             try:
                 self.add_transition(s.state_id, new_outcome_ids[name], goal[0], goal[1])
-            except Exception:
-                logger.warning("\n".join(str(t) for t in self.transitions.values()))
-                logger.warning("seems to exist {0}".format((s.state_id, new_outcome_ids[name], goal[0], goal[1])))
+            except ValueError:
+                from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+                if not isinstance(self, BarrierConcurrencyState):
+                    logger.exception("Error while recreation of logical linkage.")
         # internal outgoing transitions
         for t_id, t in transitions_outgoing.iteritems():
             name = outcomes_outgoing_transitions[(t.to_state, t.to_outcome)]
@@ -671,7 +671,13 @@ class ContainerState(State):
         for ext_t in related_transitions['external']['outgoing']:
             for t in related_transitions['internal']['outgoing']:
                 if (t.to_state, t.to_outcome) == (ext_t.from_state, ext_t.from_outcome):
-                    self.add_transition(state_id_dict[t.from_state], t.from_outcome, ext_t.to_state, ext_t.to_outcome)
+                    try:
+                        self.add_transition(state_id_dict[t.from_state], t.from_outcome,
+                                            ext_t.to_state, ext_t.to_outcome)
+                    except ValueError:
+                        from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+                        if not isinstance(self, BarrierConcurrencyState):
+                            logger.exception("Error while recreation of logical linkage.")
 
         # re-create data flow linkage
         for df in related_data_flows['internal']['enclosed']:
