@@ -207,13 +207,13 @@ class StateMachine(Observable, JSONObject, Hashable):
     def _add_new_execution_history(self):
         new_execution_history = ExecutionHistory()
 
-        if global_config.get_config_value("ENABLE_EXEC_LOG", False):
-            base_dir = global_config.get_config_value("EXEC_LOG_PATH", "%RAFCON_TEMP_PATH_BASE/execution_logs")
+        if global_config.get_config_value("EXECUTION_LOG_ENABLE", False):
+            base_dir = global_config.get_config_value("EXECUTION_LOG_PATH", "%RAFCON_TEMP_PATH_BASE/execution_logs")
             if base_dir.startswith('%RAFCON_TEMP_PATH_BASE'):
                 base_dir = base_dir.replace('%RAFCON_TEMP_PATH_BASE', RAFCON_TEMP_PATH_BASE)
             if not os.path.exists(base_dir):
                 os.makedirs(base_dir)
-            shelve_name = os.path.join(base_dir, 'rafcon_exec_log_%s_%s.shelve' %
+            shelve_name = os.path.join(base_dir, 'rafcon_execution_log_%s_%s.shelve' %
                                        (self.root_state.name.replace(' ', '-'),
                                         time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())))
             execution_history_store = ExecutionHistoryStorage(shelve_name)

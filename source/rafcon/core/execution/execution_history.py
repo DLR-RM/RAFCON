@@ -38,6 +38,9 @@ class ExecutionHistoryStorage(object):
         self.filename = filename
         self.store_lock = Lock()
         try:
+            # 'c' for read/write/create
+            # protocol 2 cause of in some cases smaller file size
+            # writeback disabled, cause we don't need caching of entries in memory but continuous writes to the disk
             self.store = shelve.open(filename, flag='c', protocol=2, writeback=False)
             logger.debug('Openend log file for writing %s' % self.filename)
         except Exception as e:
@@ -271,6 +274,7 @@ class StateMachineStartItem(HistoryItem):
         record = HistoryItem.to_dict(self)
         record.update(self.sm_dict)
         record['item_type'] = self.item_type
+        record['call_type'] = 'EXECUTE'
         if self.prev is not None:
             record['prev_hist_item_id'] = self.prev.hist_item_id
         else:
@@ -303,31 +307,34 @@ class ScopedDataItem(HistoryItem):
         try:
             record['scoped_data'] = json.dumps(self.scoped_data, cls=JSONObjectEncoder)
         except TypeError as e:
-            logger.error('TypeError: ' + str(traceback.format_exc()))
-            record['scoped_data'] = json.dumps({'TypeError': e.message}, cls=JSONObjectEncoder)
+            logger.exception('TypeError: Could not serialize one of the scoped data port types.')
+            record['scoped_data'] = json.dumps({'error_type': 'TypeError',
+                                                'error_message': e.message}, cls=JSONObjectEncoder)
 
         try:
             if 'error' in self.child_state_input_output_data and \
                     isinstance(self.child_state_input_output_data['error'], BaseException):
                 # manually serialize Exceptions
                 export_dict_ = copy.deepcopy(self.child_state_input_output_data)
-                export_dict_['error'] = {'message': self.child_state_input_output_data['error'].message ,
-                                         'type': str(type(self.child_state_input_output_data['error']))}
+                export_dict_['error_message'] = self.child_state_input_output_data['error'].message
+                export_dict_['error_type'] = str(type(self.child_state_input_output_data['error']))
                 record['input_output_data'] = json.dumps(export_dict_, cls=JSONObjectEncoder)
             else:
                 record['input_output_data'] = json.dumps(self.child_state_input_output_data,
                                                          cls=JSONObjectEncoder)
         except TypeError as e:
-            logger.error('TypeError: ' + str(traceback.format_exc()))
-            record['input_output_data'] = json.dumps({'TypeError': e.message}, cls=JSONObjectEncoder)
+            logger.exception('TypeError: Could not serialize one of the input/output data port types.')
+            record['input_output_data'] = json.dumps({'error_type': 'TypeError',
+                                                      'error_message': e.message}, cls=JSONObjectEncoder)
 
         from rafcon.core.states.container_state import ContainerState
         if isinstance(self.state_reference, ContainerState):
             try:
                 record['scoped_variables'] = json.dumps(self.state_reference.scoped_variables, cls=JSONObjectEncoder)
             except TypeError as e:
-                logger.error('TypeError: ' + str(traceback.format_exc()))
-                record['scoped_variables'] = json.dumps({'TypeError': e.message}, cls=JSONObjectEncoder)
+                logger.exception('TypeError: Could not serialize one of the scoped variables types.')
+                record['scoped_variables'] = json.dumps({'error_type': 'TypeError',
+                                                         'error_message': e.message}, cls=JSONObjectEncoder)
         else:
             record['scoped_variables'] = json.dumps({})
 

@@ -172,9 +172,6 @@ class BasicTreeViewExample:
     def __init__(self, filename):
 #        self.start, self.items, self.previous, self.next_, self.concurrent, _ = self.parse_log_file(filename)
         self.start, self.next_, self.concurrent, self.hierarchy, self.items = self.collapse_log_file(filename)
-        print self.items.keys()
-        import pprint as pp
-        pp.pprint(self.hierarchy)
 
         # Create a new window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
