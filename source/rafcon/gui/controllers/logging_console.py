@@ -16,7 +16,7 @@ import gtk
 import threading
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.utils import log
+from rafcon.utils import log, log_helpers
 logger = log.get_logger(__name__)
 
 
@@ -33,7 +33,7 @@ class LoggingConsoleController(ExtendedController):
         self._lock = threading.Lock()
         self._log_entries = []
 
-        log.register_logging_view('main', self)
+        log_helpers.LoggingViewHandler.add_logging_view('main', self)
 
     def register_view(self, view):
         view.text_view.connect('populate_popup', self.add_clear_menu_item)

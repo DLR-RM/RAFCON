@@ -259,7 +259,7 @@ class ModificationHistoryTreeController(ExtendedController):
                 line = ""
                 for elem in action.script_diff.split('\n'):
                     line = elem
-                    if not line.replace(' ', '') == '' and ('+' in line or '-' in line):
+                    if not line.replace(' ', '') == '' and (line.startswith('+') or line.startswith('-')):
                         break
                 tool_tip = action.script_diff
                 parameters = [line]  # + "\n -> [hover for source script diff in tooltip.]"]
@@ -267,7 +267,7 @@ class ModificationHistoryTreeController(ExtendedController):
                 line = ""
                 for elem in action.description_diff.split('\n'):
                     line = elem
-                    if not line.replace(' ', '') == '' and ('+' in line or '-' in line):
+                    if not line.replace(' ', '') == '' and (line.startswith('+') or line.startswith('-')):
                         break
                 tool_tip = action.description_diff
                 parameters = [line]  # + "\n -> [hover for source script diff in tooltip.]"]

@@ -87,11 +87,13 @@ def add_outcome_to_selected_states():
 def save_selected_state_as():
     state_machine_manager_model = gui_singletons.state_machine_manager_model
     selected_states = state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+    state_machine_id = state_machine_manager_model.get_selected_state_machine_model().state_machine.state_machine_id
     if selected_states and len(selected_states) == 1:
         state_m = copy.copy(selected_states[0])
         sm_m = StateMachineModel(StateMachine(root_state=state_m.state), state_machine_manager_model)
         sm_m.root_state = state_m
-        path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
+        path = interface.create_folder_func("Please choose a root folder and a name for the state-machine",
+                                            selected_states[0].state.name)
         if path:
             storage.save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
             sm_m.store_meta_data()
@@ -130,6 +132,7 @@ def save_selected_state_as():
                 if response_id == 1:
                     logger.debug("Substitute saved state with Library.")
                     gui_helper_state_machine.refresh_libraries()
+                    state_machine_manager_model.selected_state_machine_id = state_machine_id
                     [library_path, library_name] = library_manager.get_library_path_and_name_for_os_path(path)
                     state = library_manager.get_library_instance(library_path, library_name)
                     substitute_selected_state(state, as_template=False)

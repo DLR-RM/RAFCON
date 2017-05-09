@@ -12,7 +12,7 @@
 
 import gtk
 import random
-from pkg_resources import resource_filename, resource_listdir
+from rafcon.utils.resources import resource_filename, resource_listdir
 
 import rafcon.gui
 from rafcon.utils import log

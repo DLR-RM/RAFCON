@@ -268,13 +268,19 @@ class StateMachineRightClickMenu(object):
     @staticmethod
     def on_save_state_as_state_machine_activate(widget, data=None, path=None):
         # TODO if the state is a root state the state machine will get chosen path a physical system path?!
-        if path is not None:
-            old_last_path_open = gui_singletons.global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
-            gui_singletons.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
-            gui_helper_state.save_selected_state_as()
+        # workaround to set the initial path in the 'choose folder' dialog to the handed one
+        old_last_path_open = gui_singletons.global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
+        try:
+            if path is not None:
+                gui_singletons.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
+                gui_helper_state.save_selected_state_as()
+            else:
+                gui_helper_state.save_selected_state_as()
+        except Exception:
+            raise
+        finally:
+            # secure that the last path open is reset
             gui_singletons.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', old_last_path_open)
-        else:
-            gui_helper_state.save_selected_state_as()
 
     @staticmethod
     def on_open_activate(widget, data=None):

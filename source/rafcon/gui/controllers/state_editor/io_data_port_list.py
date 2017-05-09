@@ -358,7 +358,7 @@ class InputPortListController(DataPortListController):
         self.model.state.remove_input_data_port(model.data_port.data_port_id)
 
     def toggle_runtime_value_usage(self, data_port_id):
-        current_flag = self.model.state.use_runtime_value_oinput_data_ports[data_port_id]
+        current_flag = self.model.state.use_runtime_value_input_data_ports[data_port_id]
         self.model.state.set_use_input_runtime_value(data_port_id, not current_flag)
 
     def set_data_port_runtime_value(self, data_port_id, value):

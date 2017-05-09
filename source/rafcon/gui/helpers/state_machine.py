@@ -31,6 +31,7 @@ from rafcon.gui.models import StateModel, AbstractStateModel, ContainerStateMode
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.outcome import OutcomeModel
 from rafcon.gui.models.state_machine import StateMachineModel
+from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.clipboard import global_clipboard
@@ -147,7 +148,11 @@ def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
         if interface.create_folder_func is None:
             logger.error("No function defined for creating a folder")
             return False
-        path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
+        state_machine_manager_model = gui_singletons.state_machine_manager_model
+        sm_m = state_machine_manager_model.state_machines[state_machine_manager_model.selected_state_machine_id]
+        folder_name = sm_m.state_machine.root_state.name if sm_m else ''
+        path = interface.create_folder_func("Please choose a root folder and a name for the state-machine",
+                                            folder_name)
         if path is None:
             return False
 

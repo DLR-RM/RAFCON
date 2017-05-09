@@ -13,17 +13,15 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import os
-import sys
 import re
 import gtk
 import yaml
-from pkg_resources import resource_filename, resource_listdir, resource_exists, resource_string
+from rafcon.utils.resources import resource_filename, resource_exists, resource_string
 from yaml_configuration.config import ConfigError
 
+import rafcon.gui
 from rafcon.core.config import ObservableConfig
-from rafcon.utils import filesystem
 from rafcon.utils import storage_utils
-from rafcon.gui.utils import constants
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -56,8 +54,6 @@ class GuiConfig(ObservableConfig):
                               "Please add \"TYPE: GUI_CONFIG\" to your gui_config.yaml file.")
         self.path_to_tool = os.path.dirname(os.path.realpath(__file__))
         self.configure_gtk()
-        self.configure_fonts()
-        self.configure_source_view_styles()
         self.configure_colors()
 
     def load(self, config_file=None, path=None):
@@ -84,66 +80,14 @@ class GuiConfig(ObservableConfig):
         if not resource_exists(__name__, self.get_assets_path("gtk-2.0", "gtkrc")):
             raise ValueError("GTK theme does not exist")
         gtkrc_file_path = resource_filename(__name__, self.get_assets_path("gtk-2.0", "gtkrc"))
-        filename = resource_filename(__name__, self.get_assets_path("icons", "RAFCON_figurative_mark_negative.svg",
-                                                                    for_theme=False))
+        filename = resource_filename(__name__, self.get_assets_path(
+            "icons", "RAFCON_figurative_mark_negative.svg", for_theme=False))
         gtk.window_set_default_icon_from_file(filename)
 
         # wait for all gtk events being processed before parsing the gtkrc file
         while gtk.events_pending():
             gtk.main_iteration(False)
         gtk.rc_parse(gtkrc_file_path)
-
-    def configure_fonts(self):
-        tv = gtk.TextView()
-        try:
-            context = tv.get_pango_context()
-        except Exception:
-            return
-        if not context:  # A Pango context is not always available
-            return
-        existing_fonts = context.list_families()
-        existing_font_names = [font.get_name() for font in existing_fonts]
-
-        font_user_folder = os.path.join(os.path.expanduser('~'), '.fonts')
-
-        font_copied = False
-
-        for font_name in constants.FONTS:
-            if font_name in existing_font_names:
-                logger.debug("Font '{0}' found".format(font_name))
-                continue
-
-            logger.debug("Installing font '{0}' to '{1}'".format(font_name, font_user_folder))
-            if not os.path.isdir(font_user_folder):
-                os.makedirs(font_user_folder)
-
-            # A font is a folder one or more font faces
-            fonts_folder = self.get_assets_path("fonts", font_name, for_theme=False)
-            for font_face in resource_listdir(__name__, fonts_folder):
-                target_font_file = os.path.join(font_user_folder, font_face)
-                source_font_file = resource_filename(__name__, "/".join((fonts_folder, font_face)))
-                filesystem.copy_file_if_update_required(source_font_file, target_font_file)
-            font_copied = True
-
-        if font_copied:
-            logger.info("Restarting RAFCON to apply new fonts...")
-            python = sys.executable
-            os.execl(python, python, *sys.argv)
-
-    def configure_source_view_styles(self):
-        source_view_style_user_folder = os.path.join(os.path.expanduser('~'), '.local', 'share', 'gtksourceview-2.0',
-                                                     'styles')
-        filesystem.create_path(source_view_style_user_folder)
-
-        source_view_folder = self.get_assets_path("gtk-sourceview")
-
-        # Copy all .xml source view style files from theme to local user styles folder
-        for style_filename in resource_listdir(__name__, source_view_folder):
-            if not style_filename.endswith(".xml"):
-                continue
-            source_view_style_theme_path = resource_filename(__name__, "/".join((source_view_folder, style_filename)))
-            source_view_style_user_path = os.path.join(source_view_style_user_folder, style_filename)
-            filesystem.copy_file_if_update_required(source_view_style_theme_path, source_view_style_user_path)
 
     def configure_colors(self):
         # Get colors from GTKrc file
