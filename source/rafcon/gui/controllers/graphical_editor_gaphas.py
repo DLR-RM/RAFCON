@@ -343,8 +343,7 @@ class GraphicalEditorController(ExtendedController):
         self.relieve_model(model)
 
         # print "state_type_changed relieve observer"
-        self.adapt_complex_action(old_state_m,
-                                  new_state_m)
+        self.adapt_complex_action(old_state_m, new_state_m)
 
         # print "GSME ACTION adapt to change"
 
@@ -589,6 +588,24 @@ class GraphicalEditorController(ExtendedController):
         else:
             state_v.model = new_state_m
             if isinstance(new_state_m, ContainerStateModel):
+                # Check for old StateViews (typically DeciderState), TransitionViews and DataFlowViews,
+                # no longer existing
+                for child_v in self.canvas.get_children(state_v)[:]:
+                    if isinstance(child_v, StateView):
+                        if child_v.model not in new_state_m.states.itervalues() and \
+                                child_v.model.state.state_id not in new_state_m.states:
+                            child_v.remove()
+                        else:
+                            # TODO maybe make it again not recursive because this could be handled by affected_models
+                            self.adapt_complex_action(child_v.model,
+                                                      new_state_m.states[child_v.model.state.state_id])
+                    elif isinstance(child_v, TransitionView):
+                        if child_v.model not in new_state_m.transitions:
+                            self.canvas.remove(child_v)
+                    elif isinstance(child_v, DataFlowView):
+                        if child_v.model not in new_state_m.data_flows:
+                            self.canvas.remove(child_v)
+
                 # Check for new states, which do not have a StateView (typically DeciderState)
                 for child_state_m in new_state_m.states.itervalues():
                     if not self.canvas.get_view_for_model(child_state_m):
@@ -597,18 +614,13 @@ class GraphicalEditorController(ExtendedController):
                 for transition_m in new_state_m.transitions:
                     if not self.canvas.get_view_for_model(transition_m):
                         self.add_transition_view_for_model(transition_m, new_state_m)
-                # Check for old StateViews (typically DeciderState) and TransitionViews, no longer existing
-                for child_v in self.canvas.get_children(state_v):
-                    if isinstance(child_v, StateView):
-                        if child_v.model.state.state_id not in new_state_m.states:
-                            child_v.remove()
-                    elif isinstance(child_v, TransitionView):
-                        if child_v.model not in new_state_m.transitions:
-                            self.canvas.remove(child_v)
+                # Check for new data flows, which do not have a DataFlowView (typically related to group and ungroup)
+                for data_flow_m in new_state_m.data_flows:
+                    if not self.canvas.get_view_for_model(data_flow_m):
+                        self.add_data_flow_view_for_model(data_flow_m, new_state_m)
             else:
                 # Remove all child states, as StateModels cannot have children
-                children = self.canvas.get_children(state_v)[:]
-                for child_v in children:
+                for child_v in self.canvas.get_children(state_v)[:]:
                     if isinstance(child_v, StateView):
                         child_v.remove()
                     elif not isinstance(child_v, NameView):  # Remove transitions and data flows but keep the NameView
