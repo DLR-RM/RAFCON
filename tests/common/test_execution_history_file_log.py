@@ -1,20 +1,12 @@
-# core elements
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.core.storage import storage
-from rafcon.core.state_machine import StateMachine
-from rafcon.core.script import Script
-
 # singleton elements
 import rafcon.core.singleton
+from rafcon.core.storage import storage as global_storage
+import rafcon.utils.execution_log as log_helper
 
 # test environment elements
 import pytest
 import testing_utils
-from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
-
 import os
-from rafcon.core.storage import storage as global_storage
 
 
 def test_execution_log(caplog):
@@ -36,11 +28,31 @@ def test_execution_log(caplog):
         import json
         ss = shelve.open(state_machine.get_last_execution_log_filename())
 
-        assert len(ss) == 53
+        assert len(ss) == 36
+
+        start, next, concurrent, hierarchy, collapsed_items = log_helper.log_to_collapsed_structure(ss)
+
+        prod1_id = [k for k, v in collapsed_items.items() if v['state_name'] == 'MakeProd1' ][0]
+        prod1 = collapsed_items[prod1_id]
+        assert prod1['scoped_data_ins']['product'] == 2
+        assert prod1['scoped_data_outs']['product'] == 2
+        assert prod1['outcome_name'] == 'success'
+
+        prod2_id = [k for k, v in collapsed_items.items() if v['state_name'] == 'MakeProd2' ][0]
+        prod2 = collapsed_items[prod2_id]
+        assert prod2['data_ins']['input_1'] == 0
+        assert prod2['data_outs']['output_1'] == 3
+        assert prod2['scoped_data_ins']['product'] == 1
+        assert prod2['scoped_data_outs']['product'] == 1
+
+        start_id = [k for k, v in collapsed_items.items() if v['state_name'] == 'Start' ][0]
+        start_item = collapsed_items[start_id]
+        assert 'Starts the factory' in start_item['description']
+
 
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     finally:
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=4)
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=2)
 
 if __name__ == '__main__':
     pytest.main([__file__])
