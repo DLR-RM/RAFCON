@@ -240,13 +240,13 @@ def change_state_type(state_m, target_class):
         action_parent_m.change_state_type.__func__.affected_models = affected_models
 
     # CORE
-    new_state = new_state_m = None
+    new_state = new_state_m = e = None
     try:
         if is_root_state:
             new_state = state_machine_m.state_machine.change_root_state_type(target_class)
         else:
             new_state = old_state_m.parent.state.change_state_type(old_state, target_class)
-    except Exception:
+    except Exception as e:
         logger.exception("Root state type change failed" if is_root_state else "Container state type change failed")
 
     # AFTER MODEL
@@ -264,11 +264,11 @@ def change_state_type(state_m, target_class):
             state_machine_m.root_state = new_state_m
             # logger.info("ASSIGNED after TO STATE TYPE CHANGE")
 
-            # print "\n\nEMIT-AFTER OLDSTATE\n\n"
-            old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
-                                                           action_parent_m=state_machine_m,
-                                                           affected_models=[new_state_m, ],
-                                                           after=True))
+        # print "\n\nEMIT-AFTER OLDSTATE\n\n"
+        old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
+                                                       action_parent_m=state_machine_m,
+                                                       affected_models=[new_state_m, ],
+                                                       after=True, result=e))
 
         del state_machine_m.change_root_state_type.__func__.child_models
 
@@ -286,10 +286,10 @@ def change_state_type(state_m, target_class):
             affected_models = action_parent_m.change_state_type.__func__.affected_models
             affected_models.append(new_state_m)
 
-            old_state_m.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model',
-                                                           action_parent_m=action_parent_m,
-                                                           affected_models=affected_models,
-                                                           after=True))
+        old_state_m.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model',
+                                                       action_parent_m=action_parent_m,
+                                                       affected_models=affected_models,
+                                                       after=True, result=e))
 
         del action_parent_m.change_state_type.__func__.child_models
         del action_parent_m.change_state_type.__func__.affected_models
@@ -390,13 +390,13 @@ def substitute_state(target_state_m, state_m_to_insert):
     action_parent_m.substitute_state.__func__.old_state_m = old_state_m
 
     # CORE
-    new_state = None
+    new_state = e = None
     # print "state to insert", state_to_insert
     try:
         new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
         # assert new_state.state_id is state_id
         assert new_state is state_to_insert
-    except Exception:
+    except Exception as e:
         logger.exception("State substitution failed")
 
     if new_state:
@@ -441,7 +441,7 @@ def substitute_state(target_state_m, state_m_to_insert):
         # notification = Notification(action_parent_m, "states", {'method_name': 'substitute_state'})
         # action_parent_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
         msg = ActionSignalMsg(action='substitute_state', origin='model', action_parent_m=action_parent_m,
-                              affected_models=changed_models, after=True)
+                              affected_models=changed_models, after=True, result=e)
         # print "EMIT-AFTER OLDSTATE", msg
         old_state_m.action_signal.emit(msg)
 
@@ -584,12 +584,12 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
     action_parent_m.group_states.__func__.affected_models = affected_models
 
     # CORE
-    new_state = None
+    new_state = e = None
     try:
         assert isinstance(action_parent_m.state, ContainerState)
         new_state = action_parent_m.state.group_states(state_ids, sv_ids)
         # new_state = action_parent_m.state.states[new_state_id]
-    except Exception:
+    except Exception as e:
         logger.exception("State group failed")
 
     # AFTER MODEL
@@ -607,15 +607,10 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         affected_models = action_parent_m.group_states.__func__.affected_models
         affected_models.append(grouped_state_m)
         # print "EMIT-AFTER ON ACTION PARENT"
-        action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
-                                                           action_parent_m=action_parent_m,
-                                                           affected_models=affected_models, after=True))
-    else:
-        # after signal also if a exception occurs
-        # TODO the exception has to be handled better and the signal has to inform about it
-        action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
-                                                           action_parent_m=action_parent_m,
-                                                           affected_models=affected_models, after=True))
+
+    action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
+                                                       action_parent_m=action_parent_m,
+                                                       affected_models=affected_models, after=True, result=e))
 
     del action_parent_m.group_states.__func__.tmp_models_storage
     del action_parent_m.group_states.__func__.affected_models
@@ -707,15 +702,10 @@ def ungroup_state(state_m):
         for elemets_dict in tmp_models_dict.itervalues():
             affected_models.extend(elemets_dict.itervalues())
         # print "EMIT-AFTER ON OLD_STATE ", state_id
-        old_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
-                                                       action_parent_m=action_parent_m,
-                                                       affected_models=affected_models, after=True))
-    else:
-        # after signal also if a exception occurs
-        # TODO the exception has to be handled better and the signal has to inform about it
-        old_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
-                                                       action_parent_m=action_parent_m,
-                                                       affected_models=affected_models, after=True))
+
+    old_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
+                                                   action_parent_m=action_parent_m,
+                                                   affected_models=affected_models, after=True, result=e))
 
     del action_parent_m.ungroup_state.__func__.tmp_models_storage
     del action_parent_m.group_states.__func__.affected_models

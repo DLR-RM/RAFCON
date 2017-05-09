@@ -16,8 +16,8 @@ MetaSignalMsg = namedtuple('MetaSignalMsg', ['origin', 'change', 'affects_childr
 MetaSignalMsg.__new__.__defaults__ = (False, None)  # Make last two parameters optional
 
 ActionSignalMsg = namedtuple('ActionSignalMsg', ['action', 'origin', 'action_parent_m', 'affected_models', 'after',
-                                                 'kwargs'])
-ActionSignalMsg.__new__.__defaults__ = ({}, )
+                                                 'kwargs', 'result'])
+ActionSignalMsg.__new__.__defaults__ = ({}, None)
 
 StateTypeChangeSignalMsg = namedtuple('StateTypeChangeSignalMsg', ['new_state_m'])
 

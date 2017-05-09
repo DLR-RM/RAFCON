@@ -117,26 +117,41 @@ def trigger_repetitive_group_ungroup(*args):
     call_gui_callback(gui_helper_state.change_state_type, sm_m.root_state.states.values()[0], BarrierConcurrencyState)
     # time.sleep(1)
     # return
-    print "select: ", sm_m.root_state.states.values()
-    call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values())
-    # time.sleep(1)
-    # call_gui_callback(gui_helper_state.group_selected_states_and_scoped_variables)
-    call_gui_callback(sm_m.root_state.states.values()[0].state.group_states, ['State1', 'State2'])
-    sm_m.root_state.states.values()[0].states.values()[0].state.name = "Stage 2"
 
+    # raw_input("enter")
+    selected_states = [sm_m.root_state.states.values()[0].states[state_id] for state_id in ['State1', 'State2']]
+    print "\n" * 50
+    print "select: ", [str(state_m) for state_m in selected_states]
+    call_gui_callback(sm_m.selection.set, selected_states)
+    # time.sleep(1)
+    call_gui_callback(gui_helper_state.group_selected_states_and_scoped_variables)
+
+    # core test
+    # call_gui_callback(sm_m.root_state.states.values()[0].state.group_states, ['State1', 'State2'])
+    # sm_m.root_state.states.values()[0].states.values()[0].state.name = "Stage 2"
+    print "\n" * 50
+    # raw_input("enter")
     print "wait1"
     # time.sleep(10)
     call_gui_callback(sm_m.history.undo)
     print "wait2 undo"
     # time.sleep(10)
+
+    # exception test
+    selected_states = [sm_m.root_state.states.values()[0].states[state_id] for state_id in
+                       ['State1', 'State2', UNIQUE_DECIDER_STATE_ID]]
+    print "select: ", [str(state_m) for state_m in selected_states]
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values())
+    call_gui_callback(gui_helper_state.group_selected_states_and_scoped_variables)
+
+    # exception core test
     # call_gui_callback(sm_m.root_state.states.values()[0].state.group_states, ['State1', 'State2', UNIQUE_DECIDER_STATE_ID])
     print "wait3 failure"
     # exit()
     # time.sleep(5)
     print "quitting"
-    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    call_gui_callback(menubar_ctrl.prepare_destruction)
+    # menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+    # call_gui_callback(menubar_ctrl.prepare_destruction)
 
 
 def test_repetitive_ungroup_state_and_group_states(caplog):
