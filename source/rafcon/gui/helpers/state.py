@@ -342,7 +342,7 @@ def dict_has_empty_elements(d, ignored_keys=None, ignored_partial_keys=None):
                         empty = True
                         break
                     else:
-                        print "ignore empty list: ", k
+                        # print "ignore empty list: ", k
                         pass
 
     return empty
