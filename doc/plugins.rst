@@ -87,8 +87,7 @@ DDS Monitoring Plugin
 """""""""""""""""""""
 
 This plugin facilitates monitoring and remote control of RAFCON state
-machines via RTI DDS. Installation and build instructions can be found
-in the `source repository <https://rmc-github.robotic.dlr.de/vilz-mi/rafcon_monitoring_dds>`__.
+machines via RTI DDS.
 
 Once the plugin has been set up, RAFCON can be started in either server
 or client mode. Currently, only one server per DDS domain is supported;
@@ -156,13 +155,6 @@ This RAFCON plugin enables to use execution hooks on changes in the
 execution engine. The RMPM package name is
 ``rafcon_execution_hooks_plugin``. At the moment, the plugin only
 enables this hooks for the state-machine root state.
-
-''' Additionally planned features '''
-
-The hooks also will be introduced for library states which are
-integrated state machines. For this case, it is planned that the plugin
-will be able to enable or disable the hooks for sub-states which are
-library states.(TO DISCUSS)
 
 Plugin Template
 """""""""""""""

@@ -43,7 +43,7 @@ Patch releases 0.9.\*
 - Bug Fixes
 
   - Fix complex issues including the decider state
-  - :issue:`322` 
+  - :issue:`322`
   - :issue:`326`
 
 0.9.1
@@ -281,26 +281,16 @@ Patch releases 0.7.\*
 
 - Issues fixed
 
-  - `Issue
-    #143 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/143>`_
-  - `Issue
-    #139 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/139>`_
-  - `Issue
-    #146 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/146>`_
-  - `Issue
-    #145 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/145>`_
-  - `Issue
-    #122 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/122>`_
-  - `Issue
-    #149 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/149>`_
-  - `Issue
-    #119 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/119>`_
-  - `Issue
-    #151 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/151>`_
-  - `Issue
-    #155 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/155>`_
-  - `Issue
-    #17 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/155>`_
+  - :issue:`143`
+  - :issue:`139`
+  - :issue:`146`
+  - :issue:`145`
+  - :issue:`122`
+  - :issue:`149`
+  - :issue:`119`
+  - :issue:`151`
+  - :issue:`155`
+  - :issue:`17`
 
 - Lots of further fixes and improvements
 
@@ -313,20 +303,15 @@ Patch releases 0.7.\*
   - Initial version of possibility to save arbitrary states as
     libraries and to substitute one state with another one
   - Right click menu for graphical editor
-  - add flags to ``mvc.start.py`` `\(see commit 87e8cd7\) <https://rmc-github.robotic.dlr.de/common/rafcon/commit/87e8cd7e64648aea8255db7b191112624a210c94>`_
+  - add flags to ``mvc.start.py``
 
 - Bug fixes
 
-  - `Issue
-    #132 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/132>`_
-  - `Issue
-    #40 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/40>`_
-  - `Issue
-    #65 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/65>`_
-  - `Issue
-    #131 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/40>`_
-  - `Issue
-    #105 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/105>`_
+  - :issue:`132`
+  - :issue:`40`
+  - :issue:`65`
+  - :issue:`131`
+  - :issue:`105`
   - Kill RAFCON with Ctrl+C
   - Resizing of states in Gaphas
   - Correctly distinguish string and unicode data port types when using library states (should fix issues with ROS)
@@ -377,7 +362,7 @@ Patch releases 0.7.\*
 - Show '+' for adding state machines
 - example on abortion handling
 - Add config option to hide data flow name
-- `Fix Issue #129 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/129>`_
+- Fix :issue:`129`
 - get rid of all plugin dependencies
 - no more need to change into the mvc-directory when working with the GUI
 - refactoring (especially in start.py)
@@ -405,8 +390,7 @@ Patch releases 0.7.\*
 
 - Improve performance of GUI while executing state machine with high
   frequent state changes
-- Fix `issue
-  121 <https://rmc-github.robotic.dlr.de/common/rafcon/issues/121>`_:
+- Fix :issue:`121`
   Properly copy nested ExecutionStates
 
 0.7.3
