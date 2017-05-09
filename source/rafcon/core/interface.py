@@ -37,17 +37,21 @@ def open_folder_cmd_line(query, default_path=None):
 open_folder_func = open_folder_cmd_line
 
 
-def create_folder_cmd_line(query, default_path=None):
+def create_folder_cmd_line(query, default_name=None, default_path=None):
     """Queries the user for a path to be created
     
     :param str query: Query that asks the user for a specific folder path  to be created
-    :param str default_path: Path to use if the user doesn't specify a path 
+    :param str default_name: Default name of the folder to be created 
+    :param str default_path: Path in which the folder is created if the user doesn't specify a path 
     :return: Input path from the user or `default_path` if nothing is specified or None if directory could ne be created
     :rtype: str
     """
-    user_input = raw_input(query + ': ')
+    default = None
+    if default_name and default_path:
+        default = os.path.join(default_path, default_name)
+    user_input = raw_input(query + ' [default {}]: '.format(default))
     if len(user_input) == 0:
-        user_input = default_path
+        user_input = default
 
     if not user_input:
         return None
