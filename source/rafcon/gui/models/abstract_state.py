@@ -395,7 +395,8 @@ class AbstractStateModel(MetaModel, Hashable):
 
         # TODO: Should be removed with next minor release
         if not os.path.exists(path_meta_data):
-            # print "use backup because {0} is not found".format(path_meta_data)
+            logger.debug("Because meta data was not found in {0} use backup option {1}"
+                         "".format(path_meta_data, os.path.join(path, storage.FILE_NAME_META_DATA_OLD)))
             path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA_OLD)
 
         try:
@@ -406,7 +407,7 @@ class AbstractStateModel(MetaModel, Hashable):
             # if os.path.exists(os.path.dirname(path)):
             #     logger.debug("Because '{1}' meta data of {0} was not loaded properly.".format(self, e))
             if not path.startswith(constants.RAFCON_TEMP_PATH_STORAGE) and not os.path.exists(os.path.dirname(path)):
-                logger.warning("Because '{1}' meta data of {0} was not loaded properly.".format(self, e))
+                logger.debug("Because '{1}' meta data of {0} was not loaded properly.".format(self, e))
             tmp_meta = {}
 
         # JSON returns a dict, which must be converted to a Vividict
