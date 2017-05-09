@@ -30,7 +30,7 @@ from rafcon.core.state_machine_manager import StateMachineManager
 from rafcon.core.execution.execution_history import ConcurrencyItem, CallItem, ScopedDataItem
 from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
-from rafcon.core.execution.execution_history import CallType
+from rafcon.core.execution.execution_history import CallType, StateMachineStartItem
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
@@ -227,7 +227,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 first_history_item = execution_history[0]
                 # the next lines filter out the StateMachineStartItem, which is not intended to
                 # be displayed, but merely as convenient entry point in the saved log file
-                if first_history_item.item_type == 'StateMachineStartItem':
+                if isinstance(first_history_item, StateMachineStartItem):
                     if len(execution_history) > 1:
                         first_history_item = execution_history[1]
                         tree_item = self.history_tree_store.insert_after(

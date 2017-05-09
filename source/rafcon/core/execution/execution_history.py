@@ -27,7 +27,7 @@ from enum import Enum
 from gtkmvc import Observable
 import traceback
 
-from rafcon.core.id_generator import hist_item_id_generator
+from rafcon.core.id_generator import history_item_id_generator
 #from rafcon.statemachine.states import hierarchy_state, barrier_concurrency_state, preemptive_concurrency_state
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -123,6 +123,16 @@ class ExecutionHistory(Observable, Iterable, Sized):
         except IndexError:  # this is the case for the very first executed state
             return None
 
+    def _push_item(self, last_history_item, current_item):
+        if last_history_item is None:
+            current_item.prev = self.initial_prev
+        if last_history_item is not None:
+            last_history_item.next = current_item
+        if self.execution_history_storage is not None:
+            self.execution_history_storage.store_item(current_item.history_item_id, current_item.to_dict())
+        self._history_items.append(current_item)
+        return current_item
+
     @Observable.observed
     def push_call_history_item(self, state, call_type, state_for_scoped_data, input_data=None):
         """Adds a new call-history-item to the history item list
@@ -139,14 +149,7 @@ class ExecutionHistory(Observable, Iterable, Sized):
         last_history_item = self.get_last_history_item()
         return_item = CallItem(state, last_history_item, call_type, state_for_scoped_data, input_data,
                                state.run_id)
-        if last_history_item is None:
-            return_item.prev = self.initial_prev
-        if last_history_item is not None:
-            last_history_item.next = return_item
-        if self.execution_history_storage is not None:
-            self.execution_history_storage.store_item(return_item.hist_item_id, return_item.to_dict())
-        self._history_items.append(return_item)
-        return return_item
+        return self._push_item(last_history_item, return_item)
 
     @Observable.observed
     def push_return_history_item(self, state, call_type, state_for_scoped_data, output_data=None):
@@ -162,15 +165,10 @@ class ExecutionHistory(Observable, Iterable, Sized):
             backward stepping)
         """
         last_history_item = self.get_last_history_item()
-        return_item = ReturnItem(state, self.get_last_history_item(), call_type, state_for_scoped_data, output_data, state.run_id)
-        if last_history_item is None:
-            return_item.prev = self.initial_prev
-        if last_history_item is not None:
-            last_history_item.next = return_item
-        if self.execution_history_storage is not None:
-            self.execution_history_storage.store_item(return_item.hist_item_id, return_item.to_dict())
-        self._history_items.append(return_item)
-        return return_item
+        return_item = ReturnItem(state, self.get_last_history_item(),
+                                 call_type, state_for_scoped_data, output_data,
+                                 state.run_id)
+        return self._push_item(last_history_item, return_item)
 
     @Observable.observed
     def push_concurrency_history_item(self, state, number_concurrent_threads):
@@ -184,21 +182,16 @@ class ExecutionHistory(Observable, Iterable, Sized):
         :param number_concurrent_threads: the number of states that are launched
         """
         last_history_item = self.get_last_history_item()
-        return_item = ConcurrencyItem(state, self.get_last_history_item(), number_concurrent_threads, state.run_id, self.execution_history_storage)
-        if last_history_item is None:
-            return_item.prev = self.initial_prev
-        if last_history_item is not None:
-            last_history_item.next = return_item
-        if self.execution_history_storage is not None:
-            self.execution_history_storage.store_item(return_item.hist_item_id, return_item.to_dict())
-        self._history_items.append(return_item)
-        return return_item
+        return_item = ConcurrencyItem(state, self.get_last_history_item(),
+                                      number_concurrent_threads, state.run_id,
+                                      self.execution_history_storage)
+        return self._push_item(last_history_item, return_item)
 
     @Observable.observed
     def push_statemachine_start_item(self, state_machine, run_id):
         return_item = StateMachineStartItem(state_machine, run_id)
         if self.execution_history_storage is not None:
-            self.execution_history_storage.store_item(return_item.hist_item_id, return_item.to_dict())
+            self.execution_history_storage.store_item(return_item.history_item_id, return_item.to_dict())
         self._history_items.append(return_item)
         return return_item
 
@@ -236,7 +229,7 @@ class HistoryItem(object):
         self.run_id = run_id
         self.prev = prev
         self.next = None
-        self.hist_item_id = hist_item_id_generator()
+        self.history_item_id = history_item_id_generator()
         self.state_type = str(type(state).__name__)
 
     def __str__(self):
@@ -250,12 +243,15 @@ class HistoryItem(object):
         record['path_by_name'] = self.state_reference.get_path(by_name=True)
         record['timestamp'] = self.timestamp
         record['run_id'] = self.run_id
-        record['hist_item_id'] = self.hist_item_id
+        record['history_item_id'] = self.history_item_id
         record['description'] = self.state_reference.description
         if self.prev is not None:
-            record['prev_hist_item_id'] = self.prev.hist_item_id
+            record['prev_history_item_id'] = self.prev.history_item_id
         else:
-            record['prev_hist_item_id'] = None
+            record['prev_history_item_id'] = None
+        # store the specialized class name as item_type,
+        # e.g. CallItem, ReturnItem, StatemachineStartItem when saved
+        record['item_type'] = self.__class__.__name__
         return record
 
 
@@ -264,7 +260,6 @@ class StateMachineStartItem(HistoryItem):
         HistoryItem.__init__(self, state_machine.root_state, None, run_id)
         from rafcon.core.state_machine import StateMachine
         self.sm_dict = StateMachine.state_machine_to_dict(state_machine)
-        self.item_type = 'StateMachineStartItem'
         self.prev = None
 
     def __str__(self):
@@ -273,12 +268,11 @@ class StateMachineStartItem(HistoryItem):
     def to_dict(self):
         record = HistoryItem.to_dict(self)
         record.update(self.sm_dict)
-        record['item_type'] = self.item_type
         record['call_type'] = 'EXECUTE'
         if self.prev is not None:
-            record['prev_hist_item_id'] = self.prev.hist_item_id
+            record['prev_history_item_id'] = self.prev.history_item_id
         else:
-            record['prev_hist_item_id'] = None
+            record['prev_history_item_id'] = None
         return record
 
 
@@ -292,10 +286,8 @@ class ScopedDataItem(HistoryItem):
 
     def __init__(self, state, prev, call_type, state_for_scoped_data, child_state_input_output_data, run_id):
         HistoryItem.__init__(self, state, prev, run_id)
-        if call_type is CallType.EXECUTE:
-            self.call_type_str = 'EXECUTE'
-        elif call_type is CallType.CONTAINER:
-            self.call_type_str = 'CONTAINER'
+        if call_type in CallType:
+            self.call_type_str = call_type.name
         else:
             raise Exception('unkown calltype, neither CONTAINER nor EXECUTE')
         self.call_type = call_type
@@ -351,14 +343,12 @@ class CallItem(ScopedDataItem):
     """
     def __init__(self, state, prev, call_type, state_for_scoped_data, input_data, run_id):
         ScopedDataItem.__init__(self, state, prev, call_type, state_for_scoped_data, input_data, run_id)
-        self.item_type = 'CallItem'
 
     def __str__(self):
         return "CallItem %s" % (ScopedDataItem.__str__(self))
 
     def to_dict(self):
         record = ScopedDataItem.to_dict(self)
-        record['item_type'] = self.item_type
         return record
 
 
@@ -367,17 +357,13 @@ class ReturnItem(ScopedDataItem):
     """
     def __init__(self, state, prev, call_type, state_for_scoped_data, output_data, run_id):
         ScopedDataItem.__init__(self, state, prev, call_type, state_for_scoped_data, output_data, run_id)
-        self.item_type = 'ReturnItem'
-
         self.outcome = state.final_outcome
-
 
     def __str__(self):
         return "ReturnItem %s" % (ScopedDataItem.__str__(self))
 
     def to_dict(self):
         record = ScopedDataItem.to_dict(self)
-        record['item_type'] = self.item_type
         if self.outcome is not None:
             record['outcome_name'] = self.outcome.to_dict()['name']
             record['outcome_id'] = self.outcome.to_dict()['outcome_id']
@@ -398,13 +384,11 @@ class ConcurrencyItem(HistoryItem):
             execution_history.set_execution_history_storage(execution_history_storage)
             self.execution_histories.append(execution_history)
 
-        self.item_type = 'ConcurrencyItem'
     def __str__(self):
         return "ConcurrencyItem %s" % (HistoryItem.__str__(self))
 
     def to_dict(self):
         record = HistoryItem.to_dict(self)
-        record['item_type'] = self.item_type
         record['call_type'] = 'CONTAINER'
         return record
 

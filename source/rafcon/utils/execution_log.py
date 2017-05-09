@@ -16,7 +16,7 @@ def log_to_raw_structure(execution_history_items):
         else:
 
             # connect the item to its predecessor
-            prev_item_id = v['prev_hist_item_id']
+            prev_item_id = v['prev_history_item_id']
             previous[k] = prev_item_id
 
             if execution_history_items[prev_item_id]['item_type'] == 'ConcurrencyItem' and \
@@ -56,7 +56,7 @@ def log_to_collapsed_structure(execution_history_items):
             execution_item['state_name'] = 'Start'
             execution_item['run_id'] = gitems[0]['run_id']
             start_item = execution_item
-            collapsed_next[rid] = execution_history_items[next_[gitems[0]['hist_item_id']]]['run_id']
+            collapsed_next[rid] = execution_history_items[next_[gitems[0]['history_item_id']]]['run_id']
             collapsed_items[rid] = execution_item
         elif gitems[0]['state_type'] == 'ExecutionState' or \
              gitems[0]['state_type'] == 'HierarchyState' or \
@@ -85,21 +85,21 @@ def log_to_collapsed_structure(execution_history_items):
                                       for i in range(len(gitems))].index(True)]
 
             # next item (on same hierarchy level) is always after return item
-            if return_item['hist_item_id'] in next_:
+            if return_item['history_item_id'] in next_:
                 # no next relationship at the end of containers
-                if execution_history_items[next_[return_item['hist_item_id']]]['state_type'] == 'HierarchyState' and execution_history_items[next_[return_item['hist_item_id']]]['item_type'] == 'ReturnItem':
+                if execution_history_items[next_[return_item['history_item_id']]]['state_type'] == 'HierarchyState' and execution_history_items[next_[return_item['history_item_id']]]['item_type'] == 'ReturnItem':
                     pass
                 else:
-                    collapsed_next[rid] = execution_history_items[next_[return_item['hist_item_id']]]['run_id']
+                    collapsed_next[rid] = execution_history_items[next_[return_item['history_item_id']]]['run_id']
 
             # treat hierarchy level 
-            if execution_history_items[previous[call_item['hist_item_id']]]['state_type'] == 'HierarchyState' and execution_history_items[previous[call_item['hist_item_id']]]['item_type'] == 'CallItem':
-                prev_rid = execution_history_items[previous[call_item['hist_item_id']]]['run_id']
+            if execution_history_items[previous[call_item['history_item_id']]]['state_type'] == 'HierarchyState' and execution_history_items[previous[call_item['history_item_id']]]['item_type'] == 'CallItem':
+                prev_rid = execution_history_items[previous[call_item['history_item_id']]]['run_id']
                 collapsed_hierarchy[prev_rid] = rid
 
             # treat concurrency level
-            if execution_history_items[previous[call_item['hist_item_id']]]['item_type'] == 'ConcurrencyItem':
-                prev_rid = execution_history_items[previous[call_item['hist_item_id']]]['run_id']
+            if execution_history_items[previous[call_item['history_item_id']]]['item_type'] == 'ConcurrencyItem':
+                prev_rid = execution_history_items[previous[call_item['history_item_id']]]['run_id']
                 if prev_rid in collapsed_concurrent:
                     collapsed_concurrent[prev_rid].append(rid)
                 else:
