@@ -316,6 +316,7 @@ class ScopedDataItem(HistoryItem):
                     isinstance(self.child_state_input_output_data['error'], BaseException):
                 # manually serialize Exceptions
                 export_dict_ = copy.deepcopy(self.child_state_input_output_data)
+                export_dict_.pop('error')
                 export_dict_['error_message'] = self.child_state_input_output_data['error'].message
                 export_dict_['error_type'] = str(type(self.child_state_input_output_data['error']))
                 record['input_output_data'] = json.dumps(export_dict_, cls=JSONObjectEncoder)
