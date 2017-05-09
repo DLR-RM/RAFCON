@@ -1,15 +1,8 @@
 Changelog
 =========
 
-:ref:`RAFCON` is getting closer to a "public" release version.
-Therefore, we now try to create beta release versions regularly. The
-versions can be found both on
-`GitHub <https://rmc-github.robotic.dlr.de/common/rafcon/releases>`__ and
-on `RMPM <https://rmintra01.robotic.dlr.de/wiki/Rmpm>`__ (software.common.rafcon).
-
-Information about changes in each release will be published here. More
-details can be found in the `GIT commit
-log <https://rmc-github.robotic.dlr.de/common/rafcon/commits/master>`__.
+Information about :ref:`RAFCON` changes in each release will be published here. More
+details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/develop>`__.
 
 
 Patch releases 0.9.\*
@@ -397,8 +390,7 @@ Patch releases 0.7.\*
   view and improved data and logical outcome description (on
   right-click)
 - Improve auto-backup and add lock files to offer formal procedure to
-  recover state machine from temporary storage `Auto
-  Recovery <https://rmintra01.robotic.dlr.de/wiki/RAFCON#Auto_Backup>`_
+  recover state machine from temporary storage (see :ref:`Auto Recovery`)
 - Improve Description editor by undo/redo feature similar to the
   SourceEditor
 - Improve versions of "monitoring" and "execution hooks" plugins
@@ -420,12 +412,10 @@ Patch releases 0.7.\*
 0.7.3
 """""
 
-- States are notified about pause and resume (See FAQ
-  `here <https://rmintra01.robotic.dlr.de/wiki/RAFCON/FAQ#How_does_preemption_work.3F_How_do_I_implement_preemptable_states_correctly.3F>`_
-  and
-  `here <https://rmintra01.robotic.dlr.de/wiki/RAFCON/FAQ#What_happens_if_the_state_machine_is_paused.3F_How_can_I_pause_running_services.2C_e._g._the_robot.3F>`_)
+- States are notified about pause and resume (See :ref:`FAQ` about :ref:`preemption <faq_preemption>` and
+  :ref:`pause <faq_pause>`)
 - Load libraries specified in
-  :envvar:`RAFCON_LIBRARY_PATH` \(See `this tutorial <https://rmintra01.robotic.dlr.de/wiki/RAFCON/Tutorials#How_to_create_and_re-use_a_library_state_machine>`_\)
+  :envvar:`RAFCON_LIBRARY_PATH` \(See :ref:`this tutorial <tutorial_libraries>`\)
 - improve stability
 - refactorings
 - bug fixes
@@ -451,7 +441,7 @@ Patch releases 0.7.\*
 
 This is a big minor release including many changes. State machines stored with version 0.6.\* are compatible with this version, but not state machines from older releases. Those have to be opened with 0.6.\* and then saved again. The following list is probably not complete:
 
-- Support for `openSUSE Leap <https://rmintra01.robotic.dlr.de/wiki/OpenSUSE_Leap>`_
+- Support for openSUSE Leap
 - Support for plugins
 - Major design overhaul: agrees with drafts from design and looks consistent on all platforms
 - Drag and Drop of states
@@ -470,7 +460,7 @@ This is a big minor release including many changes. State machines stored with v
 - Drop support of YAML state machine files
 - Rename state machine files
 - Extend documentation
-- `RMC-BuildBot <https://rmintra01.robotic.dlr.de/wiki/Buildbot>`_ support
+- RMC-BuildBot support
 - Many bug fixes
 - A lot of refactorings, code optimizations, etc.
 

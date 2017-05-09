@@ -12,6 +12,8 @@ Core
 
 Questions that concern the core functionality/execution.
 
+.. _faq_core_config:
+
 Where I can configure the RAFCON core?
 """"""""""""""""""""""""""""""""""""""
 
@@ -19,6 +21,8 @@ The core RAFCON configuration file is generally situated here
 ``~/.config/rafcon/config.yaml`` but also can be handed using a path as
 the config-folder parameter ``-c`` in the command line. For further
 explanation see :ref:`Configuration`.
+
+.. _faq_initialization_global_classes:
 
 Where can instances of global classes be initialized (e.g. a LN-client)?
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -28,6 +32,8 @@ state at the beginning of the state machine with name "Init LN-client",
 which does the initialization within some Python module. If this module
 is imported in another state, it can use the initialized client, as the
 Python shell didn't change.
+
+.. _faq_concurrency:
 
 How does concurrency work?
 """"""""""""""""""""""""""
@@ -43,7 +49,9 @@ concurrency state is not possible in RAFCON, except by using global
 variables (please use them with care, as heavily using them quickly
 leads to a bad state machine design).
 
-See also `How does preemption work? How do I implement preemptable states correctly?`_
+See also :ref:`How does preemption work? How do I implement preemptable states correctly? <faq_preemption>`
+
+.. _faq_execution_control:
 
 How does execution control – including stepping mode – work?
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -94,6 +102,8 @@ all. For example backward-stepping state machines, have a look at the
 "functionality\_examples" in the RAFCON Git repository:
 ``[path_to_git_repo]/share/examples/functionality_examples``.
 
+.. _faq_pause_stop:
+
 What does pause and stop do?
 """"""""""""""""""""""""""""
 
@@ -110,6 +120,8 @@ preempted-event of each state.
 
 For information on how to correctly listen to pause or preempted events
 inside a state, see `What happens if the state machine is paused? How can I pause running services, e. g. the robot?`_.
+
+.. _faq_preemption:
 
 How does preemption work? How do I implement preemptable states correctly?
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -161,6 +173,8 @@ be designed in this way. For further comprehension consider the state
 machine example in share/examples/tutorials/simple\_preemption\_example in the
 project folder.
 
+.. _faq_pause:
+
 What happens if the state machine is paused? How can I pause running services, e. g. the robot?
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -199,8 +213,9 @@ An example implementation can be seen in the following:
                 self.logger.debug("Heart reanimated")
         return 0
 
+
 An execution state with this code snippet would print "pulse" once per
-second (``self.wait_for_interruption(1)``. The wait command is
+second (``self.wait_for_interruption(1)``). The wait command is
 interrupted, if either the user clicks "pause" or the state is preempted
 (state machine is stopped or a state running in parallel finishes).
 Therefore, the two event types are checked. If the state is to be
@@ -216,6 +231,8 @@ If an external service is involved, e. g. for commanding a robot, that
 service might also be paused. For this, one can pass the one or more
 events to that service. This requires the external service to be written
 in Python.
+
+:: _faq_state_abortion:
 
 How to handle a state abortion correctly?
 """""""""""""""""""""""""""""""""""""""""
@@ -236,12 +253,16 @@ port must be manually forwarded to the first child state i.e. a
 input\_data port for the hierarchy and the child state has to created
 and connected.
 
+:: _faq_jsonconversion:
+
 How does python-jsonconversion handle string types?
 """""""""""""""""""""""""""""""""""""""""""""""""""
 
 Serialized strings are stored in a file in ASCII encoding, but they are
 read from a file as unicode. Thus explicit conversions to ASCII has to
 done if the type of the string matters.
+
+:: _faq_filesystem_names:
 
 Why do the folders on the file system of a state machine have cryptic names?
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -258,6 +279,8 @@ API
 
 Questions that concern the core programming interface.
 
+:: _faq_api_examples:
+
 Are there examples how to use the API?
 """"""""""""""""""""""""""""""""""""""
 
@@ -272,6 +295,8 @@ GUI
 
 Questions that concern the graphical user interface.
 
+:: _faq_gui_configuration:
+
 Where can I configure the RAFCON GUI?
 """""""""""""""""""""""""""""""""""""
 
@@ -279,6 +304,8 @@ You can either use File => Settings or manually edit
 ``~/.config/rafcon/gui_config.yaml``. This location can also be specified
 by the parameter ``-c`` in the command line. For further explanation see
 :ref:`Configuration`.
+
+:: _faq_change_hierarchy
 
 How can the hierarchy level of a state be changed in the graphical editor after it was created?
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -301,6 +328,7 @@ typically STRG-G or the menu bar Edit->Group.
 Known Issues
 """"""""""""
 
+:: _faq_maximization_issue:
 
 A window can not be un-maximized what I can do?
 +++++++++++++++++++++++++++++++++++++++++++++++
@@ -311,6 +339,7 @@ The fastest way to solve this problem is to delete your runtime_config.yaml file
 is commonly situated at ``~/.config/rafcon/runtime_config.yaml`` and which will be generated
 automatically and cleanly after removal.
 
+:: _faq_start_issue:
 
 Why start of RAFCON GUI sometimes never finish?
 +++++++++++++++++++++++++++++++++++++++++++++++
@@ -322,6 +351,4 @@ This can happens on some distributions because of a ``.gtkrc`` file in the home 
 New Questions
 -------------
 
-Ask your question here:
-
--  ...
+Please `create an issue <https://github.com/DLR-RM/RAFCON/issues/new>`__ for your question.

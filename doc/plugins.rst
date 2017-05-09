@@ -25,15 +25,13 @@ can be implemented.
 
 The function is called after all of RAFCON imports occurred and the
 RAFCON singletons have been created. In this function, RAFCON classes
-can be extended/monkey-patched or completely substituted. As it is
-`Python <https://www.python.org/>`__, you can do all the dirtyness python supports.
+can be extended/monkey-patched or completely substituted.
 Anyway, it is good to avoid monkey patches or big substitutions of
 classes at this point. Especially if you extend, monkey-patch or
 substitute a class that is used in a singleton make sure that your
 change reaches all parts of RAFCON (by explicitly substituting objects).
 An example is given with the Execution-Hooks plugin and the examples in
-`RMPM <https://rmintra01.robotic.dlr.de/wiki/Rmpm>`__ path ``share/examples/plugins/templates`` (this folder
-will be available starting from version 0.7.2).
+``share/examples/plugins/templates``.
 
 ``post_init``
 """""""""""""
@@ -169,11 +167,5 @@ library states.(TO DISCUSS)
 Plugin Template
 """""""""""""""
 
-The plugin template can be found in the RMPM package path of RAFCON
-``$RAFCON_RMPM_PKG_PATH/share/examples/plugins/templates`` or in the
-`Git <https://rmintra01.robotic.dlr.de/wiki/Git>`__ repository at
-``$RAFCON_GIT_REPO_PATH/share/examples/plugins/templates``.
-
-If you put this path into your :envvar:`RAFCON_PLUGIN_PATH`, the examples
-should be enabled. If there will be changes to the RAFCON plugin
-concept, you will find essential changes first here.
+The plugin template can be found in ``[RAFCON root path]/share/examples/plugins/templates``.If you put this path into
+your :envvar:`RAFCON_PLUGIN_PATH` env var, the plugin will automatically be loaded.
