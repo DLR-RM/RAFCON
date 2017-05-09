@@ -15,7 +15,7 @@ Plugin Interface
 ----------------
 
 The path of every RAFCON plugin has to be registered in the
-environmental variable ``RAFCON_PLUGIN_PATH``. In the registered path,
+environmental variable :envvar:`RAFCON_PLUGIN_PATH`. In the registered path,
 the ``__init__.py`` and ``hooks.py`` of respective plugin should be
 situated. In the optional ``hooks.py``, the following functions (hooks)
 can be implemented.
@@ -174,6 +174,6 @@ The plugin template can be found in the RMPM package path of RAFCON
 `Git <https://rmintra01.robotic.dlr.de/wiki/Git>`__ repository at
 ``$RAFCON_GIT_REPO_PATH/share/examples/plugins/templates``.
 
-If you put this path into your ``RAFCON_PLUGIN_PATH``, the examples
+If you put this path into your :envvar:`RAFCON_PLUGIN_PATH`, the examples
 should be enabled. If there will be changes to the RAFCON plugin
 concept, you will find essential changes first here.

@@ -425,7 +425,7 @@ Patch releases 0.7.\*
   and
   `here <https://rmintra01.robotic.dlr.de/wiki/RAFCON/FAQ#What_happens_if_the_state_machine_is_paused.3F_How_can_I_pause_running_services.2C_e._g._the_robot.3F>`_)
 - Load libraries specified in
-  ``RAFCON_LIBRARY_PATH`` \(See `this tutorial <https://rmintra01.robotic.dlr.de/wiki/RAFCON/Tutorials#How_to_create_and_re-use_a_library_state_machine>`_\)
+  :envvar:`RAFCON_LIBRARY_PATH` \(See `this tutorial <https://rmintra01.robotic.dlr.de/wiki/RAFCON/Tutorials#How_to_create_and_re-use_a_library_state_machine>`_\)
 - improve stability
 - refactorings
 - bug fixes

@@ -322,13 +322,13 @@ Option 2
 
 Instead of specifying the path of the library in he config file, there
 is an alternative solution. You can also set an environmental variable
-with name ``RAFCON_LIBRARY_PATH`` and colon-separated paths to state
+with name :envvar:`RAFCON_LIBRARY_PATH` and colon-separated paths to state
 machines, e. g. ``~/Desktop/rafcon_tutorial_library``. These libraries
 will also be loaded. The name of these libraries is equivalent to the
 name of the folder, thus in this case ``rafcon_tutorial_library``. This
 approach is especially useful if you release your libraries using
 `RMPM <https://rmintra01.robotic.dlr.de/wiki/Rmpm>`__. In the PT-file, you can append the path of the library
-to ``RAFCON_LIBRARY_PATH`` and do not have to modify the config file of
+to :envvar:`RAFCON_LIBRARY_PATH` and do not have to modify the config file of
 the user.
 
 How to use concurrency barrier states
