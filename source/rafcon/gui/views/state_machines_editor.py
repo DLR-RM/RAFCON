@@ -66,14 +66,32 @@ class PlusAddNotebook(gtk.Notebook):
         gtk.Notebook.__init__(self)
 
         self.connect("button_release_event", self.on_button_release)
+        self.connect('button_press_event', self.on_button_press)
+        self.connect('expose_event', self.on_expose_event)
         self.pixbuf = gtk.gdk.pixbuf_new_from_xpm_data(self.pixbuf_data)
 
-        self.set_tab_hborder(constants.BORDER_WIDTH * 2)
-        self.set_tab_vborder(constants.BORDER_WIDTH * 2)
+        self.enable_add_button = True
+        self._add_button_drawn = False
 
-        self.add_visible = True
+    def on_button_press(self, widget, event):
+        """ Emit an add_state_machine signal if a left double click is performed right of open state machine tabs
+        """
+        pb_x, pb_y = self.get_pixbuf_xy()
+        pb_height = self.pixbuf.get_height()
+
+        there_is_an_arrow = self.style_get_property("has-forward-stepper") and not self.is_there_space_for_a_button()
+        arrow_icon_width = constants.ICON_SIZE_IN_PIXEL if there_is_an_arrow else 0
+        right_row_end_x = self.get_allocation().x + self.get_allocation().width - arrow_icon_width
+        if pb_x - constants.ICON_MARGIN <= event.x <= right_row_end_x and \
+                pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN and \
+                event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
+            self.emit("add_state_machine")
+            return True
 
     def on_button_release(self, widget, event):
+        """ Emit an add_state_machine signal if a left click is performed on the drawn pix-buffer add button area and 
+        emit a close_state_machine signal if a middle click is performed on a state machine tab-label.
+        """
         x, y = event.x, event.y
         pb_x, pb_y = self.get_pixbuf_xy()
 
@@ -82,7 +100,7 @@ class PlusAddNotebook(gtk.Notebook):
 
         if pb_x - constants.ICON_MARGIN <= event.x <= pb_x + pb_width + constants.ICON_MARGIN and \
                 pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN \
-                and self.add_visible and event.state & gtk.gdk.BUTTON1_MASK:
+                and self._add_button_drawn and event.state & gtk.gdk.BUTTON1_MASK:
             self.emit("add_state_machine")
             return True
 
@@ -96,20 +114,20 @@ class PlusAddNotebook(gtk.Notebook):
                 self.emit("close_state_machine", i)
                 return True
 
-    def do_expose_event(self, event):
+    def on_expose_event(self, widget, event):
+        if self.get_n_pages() > 0 and self.enable_add_button:
+            self.update_add_button()
 
-        # check if number of pages is greater zero, else the drawing will raise errors
-        if self.get_n_pages() > 0:
-            gtk.Notebook.do_expose_event(self, event)
+    def is_there_space_for_a_button(self):
+        x, y = self.get_pixbuf_xy()
+        return x < self.get_allocation().x + self.get_allocation().width - self.pixbuf.get_width()
 
-            x, y = self.get_pixbuf_xy()
+    def update_add_button(self):
+        x, y = self.get_pixbuf_xy()
 
-            self.add_visible = x < self.get_allocation().x + self.get_allocation().width - self.pixbuf.get_width()
-
-            if self.add_visible:
-                self.window.draw_pixbuf(None, self.pixbuf, 0, 0, x, y, -1, -1, gtk.gdk.RGB_DITHER_NONE, 0, 0)
-
-        return True
+        self._add_button_drawn = self.is_there_space_for_a_button()
+        if self._add_button_drawn:
+            self.window.draw_pixbuf(None, self.pixbuf, 0, 0, x, y, -1, -1, gtk.gdk.RGB_DITHER_NONE, 0, 0)
 
     def get_pixbuf_xy(self):
         pb_width = self.pixbuf.get_width()
