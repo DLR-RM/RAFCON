@@ -173,7 +173,7 @@
                                 <child type="tab">
                                   <object class="GtkLabel" id="library_tree_tab">
                                     <property name="visible">True</property>
-                                    <property name="label">libraries</property>
+                                    <property name="label">Libraries</property>
                                     <property name="angle">90</property>
                                   </object>
                                   <packing>
@@ -209,7 +209,7 @@
                                 <child type="tab">
                                   <object class="GtkLabel" id="state_machine_tree_tab">
                                     <property name="visible">True</property>
-                                    <property name="label">states_tree</property>
+                                    <property name="label">States Tree</property>
                                     <property name="angle">90</property>
                                   </object>
                                   <packing>
@@ -246,7 +246,7 @@
                                 <child type="tab">
                                   <object class="GtkLabel" id="global_variables_tab">
                                     <property name="visible">True</property>
-                                    <property name="label">global_variables</property>
+                                    <property name="label">Global Variables</property>
                                     <property name="angle">90</property>
                                   </object>
                                   <packing>
@@ -334,7 +334,7 @@
                                 <child type="tab">
                                   <object class="GtkLabel" id="history_tab">
                                     <property name="visible">True</property>
-                                    <property name="label">history</property>
+                                    <property name="label">Modification History</property>
                                     <property name="angle">90</property>
                                   </object>
                                   <packing>
@@ -370,7 +370,7 @@
                                 <child type="tab">
                                   <object class="GtkLabel" id="execution_history_tab">
                                     <property name="visible">True</property>
-                                    <property name="label">execution_history</property>
+                                    <property name="label">Execution History</property>
                                     <property name="angle">90</property>
                                   </object>
                                   <packing>

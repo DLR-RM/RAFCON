@@ -238,9 +238,9 @@ class MainWindowView(View):
 
         :param notebook: GTK Notebook container, whose tab labels are to be rotated and made detachable
         """
-        icons = {'libraries': constants.SIGN_LIB, 'states_tree': constants.ICON_TREE,
-                 'global_variables': constants.ICON_GLOB, 'history': constants.ICON_HIST,
-                 'execution_history': constants.ICON_EHIST, 'network': constants.ICON_NET}
+        icons = {'Libraries': constants.SIGN_LIB, 'States Tree': constants.ICON_TREE,
+                 'Global Variables': constants.ICON_GLOB, 'Modification History': constants.ICON_HIST,
+                 'Execution History': constants.ICON_EHIST, 'network': constants.ICON_NET}
         for notebook in self.left_bar_notebooks:
             for i in range(notebook.get_n_pages()):
                 child = notebook.get_nth_page(i)
