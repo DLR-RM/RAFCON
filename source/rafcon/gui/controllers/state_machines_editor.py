@@ -37,6 +37,7 @@ from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.graphical_editor import GraphicalEditorView
+from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -120,6 +121,7 @@ class StateMachinesEditorController(ExtendedController):
         ExtendedController.__init__(self, sm_manager_model, view, spurious=True)
 
         assert isinstance(sm_manager_model, StateMachineManagerModel)
+        assert isinstance(view, StateMachinesEditorView)
 
         self.state_machine_manager_model = sm_manager_model
         self.tabs = {}

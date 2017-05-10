@@ -23,8 +23,8 @@ class StateMachinesEditorView(View):
     def __init__(self):
         View.__init__(self)
         self.notebook = PlusAddNotebook()
-        self.notebook.set_tab_hborder(constants.BORDER_WIDTH)
-        self.notebook.set_tab_vborder(constants.BORDER_WIDTH)
+        self.notebook.set_tab_hborder(constants.TAB_BORDER_WIDTH)
+        self.notebook.set_tab_vborder(constants.TAB_BORDER_WIDTH)
         self.notebook.set_scrollable(True)
         self.notebook.set_name("state_machines_notebook")
         self.notebook.show()

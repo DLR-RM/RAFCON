@@ -39,9 +39,9 @@ class ExecutionHistoryView(View, gtk.ScrolledWindow):
         history_tree = ExecutionHistoryTreeView()
 
         reload_button = gtk.Button("Reload history")
-        reload_button.set_border_width(constants.BORDER_WIDTH)
+        reload_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         clean_button = gtk.Button("Clean history")
-        clean_button.set_border_width(constants.BORDER_WIDTH)
+        clean_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
         button_box = gtk.HBox()
         button_box.pack_end(reload_button, False, True, 0)

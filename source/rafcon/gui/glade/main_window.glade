@@ -274,7 +274,7 @@
                                 <child>
                                   <object class="GtkHBox" id="hbox4">
                                     <property name="visible">True</property>
-                                    <property name="border_width">10</property>
+                                    <property name="border_width">5</property>
                                     <child>
                                       <object class="GtkLabel" id="lower_notebook_title">
                                         <property name="visible">True</property>
