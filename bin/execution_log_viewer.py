@@ -64,7 +64,7 @@ class BasicTreeViewExample:
 
         self.window.set_title("Execution Log Viewer")
 
-        self.window.set_size_request(1024, 786)
+        self.window.set_default_size(1024, 786)
 
         self.window.connect("delete_event", self.delete_event)
 
