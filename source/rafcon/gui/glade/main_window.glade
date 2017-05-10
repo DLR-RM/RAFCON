@@ -95,6 +95,7 @@
                                 <child>
                                   <object class="GtkHBox" id="state_editor_label_hbox1">
                                     <property name="visible">True</property>
+                                    <property name="border_width">5</property>
                                     <child>
                                       <object class="GtkLabel" id="upper_notebook_title">
                                         <property name="visible">True</property>
@@ -274,7 +275,7 @@
                                 <child>
                                   <object class="GtkHBox" id="hbox4">
                                     <property name="visible">True</property>
-                                    <property name="border_width">5</property>
+                                    <property name="border_width">10</property>
                                     <child>
                                       <object class="GtkLabel" id="lower_notebook_title">
                                         <property name="visible">True</property>
@@ -800,6 +801,7 @@
                                     <child>
                                       <object class="GtkHBox" id="debug_label_hbox">
                                         <property name="visible">True</property>
+                                        <property name="border_width">5</property>
                                         <child>
                                           <object class="GtkLabel" id="debug_console_label">
                                             <property name="visible">True</property>
