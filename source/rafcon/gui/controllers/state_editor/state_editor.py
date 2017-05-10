@@ -124,21 +124,21 @@ class StateEditorController(ExtendedController):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-        view['new_input_port_button'].connect('clicked', self.inputs_ctrl.on_add)
-        view['new_output_port_button'].connect('clicked', self.outputs_ctrl.on_add)
-        view['new_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_add)
+        view['add_input_port_button'].connect('clicked', self.inputs_ctrl.on_add)
+        view['add_output_port_button'].connect('clicked', self.outputs_ctrl.on_add)
+        view['add_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_add)
 
-        view['delete_input_port_button'].connect('clicked', self.inputs_ctrl.on_remove)
-        view['delete_output_port_button'].connect('clicked', self.outputs_ctrl.on_remove)
-        view['delete_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_remove)
+        view['remove_input_port_button'].connect('clicked', self.inputs_ctrl.on_remove)
+        view['remove_output_port_button'].connect('clicked', self.outputs_ctrl.on_remove)
+        view['remove_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_remove)
 
         if isinstance(self.model.state, LibraryState):
-            view['new_input_port_button'].set_sensitive(False)
-            view['delete_input_port_button'].set_sensitive(False)
-            view['new_output_port_button'].set_sensitive(False)
-            view['delete_output_port_button'].set_sensitive(False)
-            view['new_scoped_variable_button'].set_sensitive(False)
-            view['delete_scoped_variable_button'].set_sensitive(False)
+            view['add_input_port_button'].set_sensitive(False)
+            view['remove_input_port_button'].set_sensitive(False)
+            view['add_output_port_button'].set_sensitive(False)
+            view['remove_output_port_button'].set_sensitive(False)
+            view['add_scoped_variable_button'].set_sensitive(False)
+            view['remove_scoped_variable_button'].set_sensitive(False)
 
         state = self.model.state
         if isinstance(state, LibraryState):

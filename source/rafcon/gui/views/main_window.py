@@ -214,11 +214,13 @@ class MainWindowView(View):
 
         self.get_top_widget().set_decorated(False)
 
-        self['upper_notebook'].set_tab_hborder(constants.BORDER_WIDTH*2)
-        self['upper_notebook'].set_tab_vborder(constants.BORDER_WIDTH*3)
-
-        self['lower_notebook'].set_tab_hborder(constants.BORDER_WIDTH*2)
-        self['lower_notebook'].set_tab_vborder(constants.BORDER_WIDTH*3)
+        self['upper_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
+        self['upper_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
+        if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
+            self['lower_notebook'].set_tab_hborder(int(constants.TAB_BORDER_WIDTH * 2 / 1.4))
+        else:
+            self['lower_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
+        self['lower_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
 
         self['debug_eventbox'].set_border_width(0)
 
@@ -236,9 +238,9 @@ class MainWindowView(View):
 
         :param notebook: GTK Notebook container, whose tab labels are to be rotated and made detachable
         """
-        icons = {'libraries': constants.SIGN_LIB, 'states_tree': constants.ICON_TREE,
-                 'global_variables': constants.ICON_GLOB, 'history': constants.ICON_HIST,
-                 'execution_history': constants.ICON_EHIST, 'network': constants.ICON_NET}
+        icons = {'Libraries': constants.SIGN_LIB, 'States Tree': constants.ICON_TREE,
+                 'Global Variables': constants.ICON_GLOB, 'Modification History': constants.ICON_HIST,
+                 'Execution History': constants.ICON_EHIST, 'network': constants.ICON_NET}
         for notebook in self.left_bar_notebooks:
             for i in range(notebook.get_n_pages()):
                 child = notebook.get_nth_page(i)

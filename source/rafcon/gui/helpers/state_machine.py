@@ -153,6 +153,7 @@ def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
         path = interface.create_folder_func("Please choose a root folder and a name for the state-machine",
                                             folder_name)
         if path is None:
+            logger.warning("No valid path specified")
             return False
 
     menubar.model.get_selected_state_machine_model().state_machine.file_system_path = path

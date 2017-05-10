@@ -1,16 +1,14 @@
 Style guides
 """"""""""""
 
-We follow the rules of `PEP-8: Style Guide for Python Code <http://www.python.org/dev/peps/pep-0008/>`__ and the
-`DLR Coding Conventions <https://rmintra01.robotic.dlr.de/wiki/File:Code_conventions_python_flyer.pdf>`__ with
-some minor exceptions:
+We follow the rules :pep:`8` (Style Guide for Python Code) and the :download:`DLR Coding Conventions
+<../_static/code_conventions_python_flyer.pdf>` with some minor exceptions:
 
 - Line length is limited to 120 characters (instead of 79)
+- no ``__version__`` in header (except ``rafcon/__init__.py``)
 
 For docstrings (and generally for the documentation), we format using `reStructuredText <http://docutils.sourceforge
-.net/rst.html>`__ for `Sphinx <http://sphinx-doc
-.org/>`__. More information
-on this is available in another `PEP <https://www.python.org/dev/peps/pep-0287>`__.
+.net/rst.html>`__ for `Sphinx <http://sphinx-doc.org/>`__. More information on this is available in another :pep:`287`.
  
 
 PyCharm Coding Style/Conventions

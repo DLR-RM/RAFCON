@@ -283,6 +283,7 @@ class ModificationHistoryTreeController(ExtendedController):
             version_label = action.version_id
             if init_branch:
                 version_label = 'b.' + str(action.version_id)
+                tool_tip = "The element '{0}' starts a new branch of actions.".format(version_label)
 
             tree_row_iter = self.new_change(model, str(method_name).replace('_', ' '), instance, info, version_label, active,
                                             parent_tree_item, ', '.join(parameters), tool_tip)

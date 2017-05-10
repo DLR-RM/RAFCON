@@ -35,17 +35,23 @@ class SourceEditorView(EditorView):
         hbox = gtk.HBox()
         pylint_check_button = gtk.CheckButton("Validate")
         pylint_check_button.set_focus_on_click(False)
+        # pylint_check_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
+        # print "size", pylint_check_button.get_allocation(), constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT
+        # pylint_check_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
 
         open_external_button = gtk.ToggleButton("Open externally")
         open_external_button.set_focus_on_click(False)
-        open_external_button.set_size_request(120, constants.BUTTON_MIN_HEIGHT)
+        # open_external_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
+        # open_external_button.set_size_request(130, constants.BUTTON_MIN_HEIGHT)
 
         apply_button = gtk.Button("Apply")
         apply_button.set_focus_on_click(False)
+        # apply_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         apply_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
 
         cancel_button = gtk.Button("Reset")
         cancel_button.set_focus_on_click(False)
+        # cancel_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         cancel_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
 
         hbox.pack_start(pylint_check_button, False, False, constants.PADDING)

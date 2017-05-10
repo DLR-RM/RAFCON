@@ -98,6 +98,7 @@ def save_selected_state_as():
             storage.save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
             sm_m.store_meta_data()
         else:
+            logger.warning("No valid path specified")
             return False
         # check if state machine is in library path
         if library_manager.is_os_path_in_library_paths(path):
