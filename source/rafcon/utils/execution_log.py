@@ -1,8 +1,19 @@
+import shelve
 import json
+import pandas as pd
 
 def log_to_raw_structure(execution_history_items):
     """
-    param: execution_history_items is a dict, in the simplest directly the opened shelve log file
+    :param dict executiion_history_items: history items, in the simplest case
+           directly the opened shelve log file
+    :return: start_item, the StateMachineStartItem of the log file
+             previous, a dict mapping history_item_id --> history_item_id of previous history item
+             next_, a dict mapping history_item_id --> history_item_id of the next history item (except if
+                    next item is a concurrent execution branch)
+             concurrent, a dict mapping history_item_id --> []list of concurrent next history_item_ids
+                         (if present)
+             grouped, a dict mapping run_id --> []list of history items with this run_id
+    :rtype: tuple
     """
     previous = {}
     next_ = {}
@@ -40,6 +51,26 @@ def log_to_raw_structure(execution_history_items):
     return start_item, previous, next_, concurrent, grouped_by_run_id
 
 def log_to_collapsed_structure(execution_history_items):
+    """
+    Collapsed structure means that all history items belonging the same state execution are
+    merged together into one object (e.g. CallItem and ReturnItem of an ExecutionState). This
+    is based on the log structure in which all Items which belong together have the same run_id.
+    The collapsed items hold input as well as output data (direct and scoped), and the outcome
+    the state execution.
+    :param dict executiion_history_items: history items, in the simplest case
+           directly the opened shelve log file
+    :return: start_item, the StateMachineStartItem of the log file
+             next_, a dict mapping run_id --> run_id of the next executed state on the same
+                    hierarchy level
+             concurrent, a dict mapping run_id --> []list of run_ids of the concurrent next
+                         executed states (if present)
+             hierarchy, a dict mapping run_id --> run_id of the next executed state on the
+                        deeper hierarchy level (the start state within that HierarchyState)
+             items, a dict mapping run_id --> collapsed representation of the execution of
+                    the state with that run_id
+    :rtype: tuple
+    """
+
     start_item, previous, next_, concurrent, grouped = log_to_raw_structure(execution_history_items)
 
     start_item = None
@@ -50,11 +81,13 @@ def log_to_collapsed_structure(execution_history_items):
     # build collapsed items
     for rid, gitems in grouped.items():
         if gitems[0]['item_type'] == 'StateMachineStartItem':
+            item = gitems[0]
             execution_item = {}
-            execution_item['item_type'] = 'StateMachineStartItem'
-            execution_item['state_type'] = 'StateMachineStartState'
-            execution_item['state_name'] = 'Start'
-            execution_item['run_id'] = gitems[0]['run_id']
+            for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type', \
+                      'path', 'timestamp', 'root_state_storage_id', 'state_machine_version', \
+                      'used_rafcon_version', 'creation_time', 'last_update']:
+                execution_item[l] = item[l]
+
             start_item = execution_item
             collapsed_next[rid] = execution_history_items[next_[gitems[0]['history_item_id']]]['run_id']
             collapsed_items[rid] = execution_item
@@ -133,4 +166,66 @@ def log_to_collapsed_structure(execution_history_items):
             collapsed_items[rid] = execution_item
 
     return start_item, collapsed_next, collapsed_concurrent, collapsed_hierarchy, collapsed_items
+
+def log_to_DataFrame(execution_history_items):
+    """
+    Returns all collapsed items in a table-like structure (pandas.DataFrame). The data flow is
+    omitted from this table as the different states have different ports defined. The available
+    data per execution item (row in the table) can be printed using pandas.DataFrame.columns.
+    """
+    start, next_, concurrenty, hierarchy, gitems = log_to_collapsed_structure(execution_history_items)
+    gitems.pop(start['run_id'])
+    if len(gitems) == 0:
+        return pd.DataFrame()
+
+    # remove columns which are not generic over all states (basically the
+    # data flow stuff)
+    df_keys = gitems.values()[0].keys()
+    df_keys.remove('data_ins')
+    df_keys.remove('data_outs')
+    df_keys.remove('scoped_data_ins')
+    df_keys.remove('scoped_data_outs')
+    df_keys.sort()
+
+    df_items = []
+    for rid, item in gitems.items():
+        df_items.append([item[k] for k in df_keys])
+
+    df = pd.DataFrame(df_items, columns=df_keys)
+    # convert epoch to datetime
+    df.timestamp_call = pd.to_datetime(df.timestamp_call, unit='s')
+    df.timestamp_return = pd.to_datetime(df.timestamp_return, unit='s')
+
+    # use call timestamp as index
+    df_timed = df.set_index(df.timestamp_call)
+    df_timed.sort_index(inplace=True)
+
+    return df_timed
+
+def log_to_ganttplot(execution_history_items):
+    """
+    Example how to use the DataFrame representation
+    """
+    import matplotlib.pyplot as plt
+    import matplotlib.dates as dates
+    import numpy as np
+
+    d = log_to_DataFrame(execution_history_items)
+
+    # de-duplicate states and make mapping from state to idx
+    unique_states, idx = np.unique(d.path_by_name, return_index=True)
+    ordered_unique_states = np.array(d.path_by_name)[np.sort(idx)]
+    name2idx = {k: i for i, k in enumerate(ordered_unique_states)}
+
+    calldate = dates.date2num(d.timestamp_call.dt.to_pydatetime())
+    returndate = dates.date2num(d.timestamp_return.dt.to_pydatetime())
+
+    state2color = {'HierarchyState': 'k',
+                   'ExecutionState': 'g',
+                   'BarrierConcurrencyState': 'y',
+                   'PreemptiveConcurrencyState': 'y'}
+
+    fig, ax = plt.subplots(1,1)
+    ax.barh(bottom=[name2idx[k] for k in d.path_by_name], width=returndate-calldate, left=calldate, align='center', color=[state2color[s] for s in d.state_type], lw=0.0)
+    plt.yticks(range(len(ordered_unique_states)), ordered_unique_states)
 

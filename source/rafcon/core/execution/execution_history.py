@@ -269,6 +269,10 @@ class StateMachineStartItem(HistoryItem):
         record = HistoryItem.to_dict(self)
         record.update(self.sm_dict)
         record['call_type'] = 'EXECUTE'
+        record['state_name'] = 'Start'
+        record['state_type'] = 'Start'
+        record['path'] = ''
+        record['path_by_name'] = ''
         if self.prev is not None:
             record['prev_history_item_id'] = self.prev.history_item_id
         else:

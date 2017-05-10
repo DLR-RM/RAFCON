@@ -49,6 +49,10 @@ def test_execution_log(caplog):
         start_item = collapsed_items[start_id]
         assert 'Starts the factory' in start_item['description']
 
+        df = log_helper.log_to_DataFrame(ss)
+        all_starts = df.groupby('state_name').get_group('Start')
+        assert len(all_starts) == 3
+        assert list(all_starts['outcome_name']) == ['success', 'success', 'done']
 
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     finally:
