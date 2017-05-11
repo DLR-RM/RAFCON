@@ -94,7 +94,8 @@ class ModificationsHistoryModel(ModelMT):
         """
         try:
             self.relieve_model(self.state_machine_model)
-            self.relieve_model(self.state_machine_model.root_state)
+            assert self.__buffered_root_state_model is self.state_machine_model.root_state
+            self.relieve_model(self.__buffered_root_state_model)
         except KeyError:  # Might happen if the observer was already unregistered
             pass
 
@@ -531,18 +532,18 @@ class ModificationsHistoryModel(ModelMT):
                                                              'substitute_state', 'group_states', 'ungroup_state']:
             # print "\n\nIN AFTER\n\n", info['arg'].action, type(info['arg'].result), self.count_before
 
-            if isinstance(info['arg'].result, Exception):
-                if self.count_before == 1:
-                    return self._interrupt_active_action(info)
-                else:
-                    logger.warning("Count is wrong 1 != {0}".format(self.count_before))
-
             overview = NotificationOverview(info, self.with_prints, "History state_machine_AFTER")
             if info['arg'].action in ['change_state_type', 'paste',
                                       'substitute_state', 'group_states', 'ungroup_state']:
 
                 self.relieve_model(model)
                 # print "RELIEVE MODEL", model
+
+            if isinstance(info['arg'].result, Exception):
+                if self.count_before == 1:
+                    return self._interrupt_active_action(info)
+                else:
+                    logger.warning("Count is wrong 1 != {0}".format(self.count_before))
 
             # decrease counter and finish action if count_before = 0
             if self.locked:

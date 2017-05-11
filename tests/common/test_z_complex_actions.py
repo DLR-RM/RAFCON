@@ -150,8 +150,8 @@ def trigger_repetitive_group_ungroup(*args):
     # exit()
     # time.sleep(5)
     print "quitting"
-    # menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    # call_gui_callback(menubar_ctrl.prepare_destruction)
+    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+    call_gui_callback(menubar_ctrl.prepare_destruction)
 
 
 def test_repetitive_ungroup_state_and_group_states(caplog):
@@ -184,7 +184,7 @@ def test_repetitive_ungroup_state_and_group_states(caplog):
         thread.join()
         logger.debug("Joined test triggering thread!")
 
-    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=1, expected_errors=0)
+    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
     pass
 
 
@@ -195,5 +195,5 @@ def test_paste_method(caplog):
     pass
 
 if __name__ == '__main__':
-    test_repetitive_ungroup_state_and_group_states(None)
-    # pytest.main([__file__, '-xs'])
+    # test_repetitive_ungroup_state_and_group_states(None)
+    pytest.main([__file__, '-xs'])
