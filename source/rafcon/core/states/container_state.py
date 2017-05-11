@@ -747,6 +747,7 @@ class ContainerState(State):
                 destructed, including all its state elements
         :raises exceptions.AttributeError: if state.state_id does not
         """
+        from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
         if state_id not in self.states:
             raise AttributeError("State_id %s does not exist" % state_id)
 
@@ -785,9 +786,10 @@ class ContainerState(State):
                 for data_flow_id in self.states[state_id].data_flows.keys():
                     self.states[state_id].remove_data_flow(data_flow_id)
                 for child_state_id in self.states[state_id].states.keys():
+                    is_barrier_state = isinstance(self.states[state_id], BarrierConcurrencyState)
                     self.states[state_id].remove_state(child_state_id,
                                                        recursive_deletion=recursive_deletion,
-                                                       force=force,
+                                                       force=True if force or not force and is_barrier_state else False,
                                                        destruct=destruct)
 
         if destruct:
