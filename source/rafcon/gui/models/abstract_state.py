@@ -163,6 +163,11 @@ class AbstractStateModel(MetaModel, Hashable):
     def core_element(self):
         return self.state
 
+    @property
+    def hierarchy_level(self):
+        # TODO rewrite it to be more efficient -> try a recursive pattern on parent
+        return len(self.state.get_path().split('/'))
+
     def prepare_destruction(self):
         """Prepares the model for destruction
 
@@ -398,6 +403,8 @@ class AbstractStateModel(MetaModel, Hashable):
             logger.debug("Because meta data was not found in {0} use backup option {1}"
                          "".format(path_meta_data, os.path.join(path, storage.FILE_NAME_META_DATA_OLD)))
             path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA_OLD)
+            if not os.path.exists(path_meta_data):
+                logger.info("path not found {0}".format(path_meta_data))
 
         try:
             # print "try to load meta data from {0} for state {1}".format(path_meta_data, self.state)

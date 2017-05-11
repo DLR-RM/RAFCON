@@ -32,6 +32,7 @@ from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import react_to_event
+from rafcon.gui.helpers.meta_data import generate_default_state_meta_data
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.signals import MetaSignalMsg
@@ -772,24 +773,11 @@ class GraphicalEditorController(ExtendedController):
     @lock_state_machine
     def add_state_view_to_parent(self, state_m, parent_state_m):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
+        # print "add_state_view_to_parent", state_m, " of parent ", parent_state_m
 
-        new_state_side_size = min(parent_state_v.width * 0.2, parent_state_v.height * 0.2)
-        new_state_hierarchy_level = parent_state_v.hierarchy_level + 1
-        new_state_size = (new_state_side_size, new_state_side_size)
-
-        child_width = new_state_side_size
-        child_height = new_state_side_size
-        child_size = (child_width, child_height)
-        child_spacing = max(child_size) * 1.2
-
-        max_cols = parent_state_v.width // child_spacing
-        (row, col) = divmod(len(parent_state_m.states) - 1, max_cols)
-        child_rel_pos_x = col * child_spacing + child_spacing - child_width
-        child_rel_pos_y = child_spacing * (1.5 * row + 1)
-        child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
-
+        child_rel_pos, new_state_size = generate_default_state_meta_data(parent_state_m, self.canvas)
         return self.setup_state(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
-                                hierarchy_level=new_state_hierarchy_level)
+                                hierarchy_level=parent_state_m.hierarchy_level + 1)
 
     def _remove_state_view(self, view):
         return gui_helper_state_machine.delete_selected_elements(self.model)
@@ -812,7 +800,7 @@ class GraphicalEditorController(ExtendedController):
         done in the view, which is called from this method with the appropriate arguments.
 
         :param rafcon.gui.models.state.StateModel state_m: The state to be drawn
-        :param rafcon.gui.models.state.StateModel parent: The parent state of `state_m`
+        :param rafcon.gui.mygaphas.items.state.StateView parent: The parent state view of new state view `state_m`
         :param tuple rel_pos: The default relative position (x, y) if there is no relative position stored
         :param tuple size: The default size (width, height) if there is no size stored
         :param float hierarchy_level: The hierarchy level of the state
@@ -855,29 +843,16 @@ class GraphicalEditorController(ExtendedController):
 
         if isinstance(state_m, ContainerStateModel):
             num_child_state = 0
-            state_width = size[0]
-            state_height = size[1]
 
             for scoped_variable_m in state_m.scoped_variables:
                 state_v.add_scoped_variable(scoped_variable_m)
 
-            for child_state in state_m.states.itervalues():
-                # Calculate default positions for the child states
-                # Make the inset from the top left corner
+            for child_state_m in state_m.states.itervalues():
 
-                child_width = state_width / 5.
-                child_height = state_height / 5.
-                child_size = (child_width, child_height)
-                child_spacing = max(child_size) * 1.2
-
-                max_cols = state_width // child_spacing
-                (row, col) = divmod(num_child_state, max_cols)
-                child_rel_pos_x = col * child_spacing + child_spacing - child_width
-                child_rel_pos_y = child_spacing * (1.5 * row + 1)
-                child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
                 num_child_state += 1
+                child_rel_pos, child_size = generate_default_state_meta_data(state_m, self.canvas, num_child_state)
 
-                self.setup_state(child_state, state_v, child_rel_pos, child_size, hierarchy_level + 1)
+                self.setup_state(child_state_m, state_v, child_rel_pos, child_size, hierarchy_level + 1)
 
             self.add_transitions(state_m, hierarchy_level)
 

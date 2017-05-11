@@ -26,6 +26,50 @@ def divide_two_vectors(vec1, vec2):
     return tuple([vec1[i] / vec2[i] for i in range(len(vec2))])
 
 
+def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_state=None):
+    """Generate default meta data for a child state according its parent state
+
+    The function could work with the handed num_child_state if all child state are not drawn, till now.
+    The method checks if the parents meta data is consistent in canvas state view and model if a canvas instance is 
+    handed. 
+
+    :param rafcon.gui.models.container_state.ContainerStateModel parent_state_m: Model of the state were the child 
+                                                                                 should be drawn into
+    :param rafcon.gui.mygaphas.canvas.MyCanvas canvas: canvas instance the state will be drawn into
+    :param int num_child_state: Number of child states already drawn in canvas parent state view
+    :return child relative pos (tuple) in parent and it size (tuple)
+    """
+    parent_size = parent_state_m.get_meta_data_editor()['size']
+    if not isinstance(parent_size, tuple):
+        raise TypeError("'State size' have to be of tuple not {0} like {1}.".format(type(parent_size), parent_size))
+
+    # use handed number of child states and otherwise take number of child states from parent state model
+    num_child_state = len(parent_state_m.states) if num_child_state is None else num_child_state
+
+    # check if respective canvas is handed if meta data of parent canvas view is consistent with model
+    if canvas is not None:
+        parent_state_v = canvas.get_view_for_model(parent_state_m)
+        if not (parent_state_v.width, parent_state_v.height) == parent_size:
+            logger.warning("Size meta data of model {0} is different to gaphas {1}"
+                           "".format((parent_state_v.width, parent_state_v.height), parent_size))
+
+    # Calculate default positions for the child states
+    # Make the inset from the top left corner
+    parent_state_width, parent_state_height = parent_size
+    new_state_side_size = min(parent_state_width * 0.2, parent_state_height * 0.2)
+
+    child_width = new_state_side_size
+    child_height = new_state_side_size
+    child_size = (child_width, child_height)
+    child_spacing = max(child_size) * 1.2
+
+    max_cols = parent_state_width // child_spacing
+    (row, col) = divmod(num_child_state - 1, max_cols)
+    child_rel_pos_x = col * child_spacing + child_spacing - child_width
+    child_rel_pos_y = child_spacing * (1.5 * row + 1)
+    return (child_rel_pos_x, child_rel_pos_y), (new_state_side_size, new_state_side_size)
+
+
 def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', combined_action=False):
 
     try:
