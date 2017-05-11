@@ -88,14 +88,18 @@ class ListViewController(ExtendedController):
             if widget.handler_is_connected(handler_id):
                 widget.disconnect(handler_id)
 
+        def remove_all_handler(renderer):
+            editable = renderer.get_data("editable")
+            remove_handler(editable, "focus_out_handler_id")
+            remove_handler(editable, "cursor_move_handler_id")
+            remove_handler(renderer, "editing_cancelled_handler_id")
+
         def on_editing_canceled(renderer):
             """Disconnects the focus-out-event handler of cancelled editable
 
             :param gtk.CellRendererText renderer: The cell renderer who's editing was cancelled
             """
-            editable = renderer.get_data("editable")
-            remove_handler(editable, "focus_out_handler_id")
-            remove_handler(renderer, "editing_cancelled_handler_id")
+            remove_all_handler(renderer)
             self.active_entry_widget = None
 
         def on_focus_out(entry, event):
@@ -104,15 +108,16 @@ class ListViewController(ExtendedController):
             :param gtk.Entry entry: The entry that was focused out
             :param gtk.Event event: Event object with information about the event
             """
-            editable = renderer.get_data("editable")
-            remove_handler(editable, "focus_out_handler_id")
-            remove_handler(renderer, "editing_cancelled_handler_id")
+            remove_all_handler(renderer)
 
             if self.get_path() is None:
                 return
             # We have to use idle_add to prevent core dumps:
             # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
             glib.idle_add(apply_method, self.get_path(), entry.get_text())
+
+        def on_cursor_move_in_entry_widget(entry, step, count, extend_selection):
+            self.tree_view_keypress_callback(entry, None)
 
         def on_editing_started(renderer, editable, path):
             """Connects the a handler for the focus-out-event of the current editable
@@ -127,10 +132,12 @@ class ListViewController(ExtendedController):
 
             editing_cancelled_handler_id = renderer.connect('editing-canceled', on_editing_canceled)
             focus_out_handler_id = editable.connect('focus-out-event', on_focus_out)
+            cursor_move_handler_id = editable.connect('move-cursor', on_cursor_move_in_entry_widget)
             # Store reference to editable and signal handler ids for later access when removing the handlers
             renderer.set_data("editable", editable)
             renderer.set_data("editing_cancelled_handler_id", editing_cancelled_handler_id)
             editable.set_data("focus_out_handler_id", focus_out_handler_id)
+            editable.set_data("cursor_move_handler_id", cursor_move_handler_id)
             self.active_entry_widget = editable
 
         def on_edited(renderer, path, new_value_str):
@@ -140,9 +147,7 @@ class ListViewController(ExtendedController):
             :param str path: The path string of the renderer
             :param str new_value_str: The new value as string
             """
-            editable = renderer.get_data("editable")
-            remove_handler(editable, "focus_out_handler_id")
-            remove_handler(renderer, "editing_cancelled_handler_id")
+            remove_all_handler(renderer)
             apply_method(path, new_value_str)
             self.active_entry_widget = None
 
@@ -429,9 +434,9 @@ class ListViewController(ExtendedController):
         :param gtk.gdk.Event event: The key press event
         :return:
         """
-        # self._logger("key_value: " + str(event.keyval))
+        # self._logger.info("key_value: " + str(event.keyval))
 
-        if event.keyval == Key_Tab or event.keyval == ISO_Left_Tab:
+        if event and (event.keyval == Key_Tab or event.keyval == ISO_Left_Tab):
             [path, focus_column] = self.tree_view.get_cursor()
             if not path:
                 return False
@@ -465,6 +470,7 @@ class ListViewController(ExtendedController):
             focus_column_id = self.widget_columns.index(focus_column)
             if focus_column_id is not None:
                 # search all columns for next editable cell renderer
+                next_focus_column_id = 0
                 for index in range(len(self.tree_view.get_model())):
                     test_id = focus_column_id + direction * index + direction
                     next_focus_column_id = test_id % len(self.widget_columns)
@@ -479,9 +485,18 @@ class ListViewController(ExtendedController):
                 return False
 
             del self.tree_view_keypress_callback.__func__.core_element_id
+            # self._logger.info("self.tree_view.scroll_to_cell(next_row={0}, self.widget_columns[{1}] , use_align={2})"
+            #              "".format(next_row, next_focus_column_id, False))
             self.tree_view.scroll_to_cell(next_row, self.widget_columns[next_focus_column_id], use_align=False)
             self.tree_view.set_cursor_on_cell(next_row, self.widget_columns[next_focus_column_id], start_editing=True)
             return True
+        else:
+            current_row_path, current_focused_column = self.tree_view.get_cursor()
+            if len(current_row_path) == 1 and isinstance(current_row_path[0], int):
+                self.tree_view.scroll_to_cell(current_row_path[0], current_focused_column, use_align=False)
+            else:
+                self._logger.warning("A ListViewController aspects a current_row_path of dimension 1 with integer "
+                                     "but it is but it is {0}".format(current_row_path))
 
 
 class TreeViewController(ExtendedController):
