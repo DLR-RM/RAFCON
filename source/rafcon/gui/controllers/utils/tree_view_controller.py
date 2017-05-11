@@ -89,6 +89,10 @@ class ListViewController(ExtendedController):
                 widget.disconnect(handler_id)
 
         def remove_all_handler(renderer):
+            """Remove all handler for given renderer and its editable
+
+            :param renderer: Renderer of the respective column which is edit by a entry widget, at the moment
+            """
             editable = renderer.get_data("editable")
             remove_handler(editable, "focus_out_handler_id")
             remove_handler(editable, "cursor_move_handler_id")
@@ -117,6 +121,8 @@ class ListViewController(ExtendedController):
             glib.idle_add(apply_method, self.get_path(), entry.get_text())
 
         def on_cursor_move_in_entry_widget(entry, step, count, extend_selection):
+            """Trigger scroll bar adjustments according active entry widgets cursor change
+            """
             self.tree_view_keypress_callback(entry, None)
 
         def on_editing_started(renderer, editable, path):
