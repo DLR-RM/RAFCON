@@ -221,12 +221,19 @@ class StateModel(AbstractStateModel):
         for core_element in core_elements_dict.itervalues():
             if core_element_has_model(core_element):
                 continue
+
+            # get expected model and connect it to self or create a new model
             new_model = self._get_future_expected_model(core_element)
-            if model_key is None:
-                model_list_or_dict.append(new_model if new_model else model_class(core_element, self))
+            if new_model:
+                new_model.parent = self
             else:
-                model_list_or_dict[getattr(core_element, model_key)] = new_model if new_model else model_class(
-                    core_element, self)
+                new_model = model_class(core_element, self)
+
+            # insert new model into list or dict
+            if model_key is None:
+                model_list_or_dict.append(new_model)
+            else:
+                model_list_or_dict[getattr(core_element, model_key)] = new_model
             return True
         return False
 
@@ -261,8 +268,10 @@ class StateModel(AbstractStateModel):
                 return
 
     def _get_future_expected_model(self, core_element):
+        """Hand model for an core element from expected model list and remove the model from this list"""
         for model in self.expected_future_models:
             if model.core_element is core_element:
+                print "expected_future_models -> remove model:", model
                 self.expected_future_models.remove(model)
                 return model
         return None

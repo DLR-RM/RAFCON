@@ -345,7 +345,13 @@ def add_state(container_state_m, state_type):
     if new_state is None:
         logger.error("Cannot create state of type {0}".format(state_type))
         return False
-
+    import rafcon.gui.helpers.meta_data as gui_helpers_meta_data
+    from rafcon.gui.models.abstract_state import get_state_model_class_for_state
+    rel_pos, size = gui_helpers_meta_data.generate_default_state_meta_data(container_state_m)
+    model = get_state_model_class_for_state(new_state)(new_state)
+    model.set_meta_data_editor('size', size)
+    model.set_meta_data_editor('rel_pos', rel_pos)
+    container_state_m.expected_future_models.add(model)
     container_state_m.state.add_state(new_state)
     return True
 
