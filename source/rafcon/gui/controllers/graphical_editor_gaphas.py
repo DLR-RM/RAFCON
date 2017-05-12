@@ -849,8 +849,8 @@ class GraphicalEditorController(ExtendedController):
 
             for child_state_m in state_m.states.itervalues():
 
-                num_child_state += 1
                 child_rel_pos, child_size = generate_default_state_meta_data(state_m, self.canvas, num_child_state)
+                num_child_state += 1
 
                 self.setup_state(child_state_m, state_v, child_rel_pos, child_size, hierarchy_level + 1)
 

@@ -64,7 +64,7 @@ def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_stat
     child_spacing = max(child_size) * 1.2
 
     max_cols = parent_state_width // child_spacing
-    (row, col) = divmod(num_child_state - 1, max_cols)
+    (row, col) = divmod(num_child_state, max_cols)
     child_rel_pos_x = col * child_spacing + child_spacing - child_width
     child_rel_pos_y = child_spacing * (1.5 * row + 1)
     return (child_rel_pos_x, child_rel_pos_y), (new_state_side_size, new_state_side_size)
@@ -366,7 +366,7 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
             parent_size = models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['size']
             margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, parent_size,
                                                                        gaphas_editor, False)
-            automatic_mode = True if rel_pos is None else False
+
             rel_pos = (margin, margin) if rel_pos is None else rel_pos
             assert parent_size[0] > rel_pos[0]
             assert parent_size[1] > rel_pos[1]
