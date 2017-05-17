@@ -154,10 +154,14 @@ class ExecutionEngine(Observable):
         self.set_execution_mode(StateMachineExecutionStatus.FINISHED)
 
     @Observable.observed
-    def step_mode(self):
+    def step_mode(self, state_machine_id=None):
         """Set the execution mode to stepping mode. Transitions are only triggered if a new step is triggered
         """
         logger.debug("Activate step mode")
+
+        if state_machine_id is not None:
+            self.state_machine_manager.active_state_machine_id = state_machine_id
+
         self.run_to_states = []
         if self.finished_or_stopped():
             self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
