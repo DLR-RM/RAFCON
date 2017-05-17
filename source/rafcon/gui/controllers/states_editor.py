@@ -36,8 +36,11 @@ from rafcon.gui.utils import constants
 from rafcon.gui.utils.notification_overview import NotificationOverview, \
     is_execution_status_update_notification_from_state_machine_model
 from rafcon.gui.views.state_editor.state_editor import StateEditorView
-from rafcon.utils import log
 from rafcon.gui.helpers import text_formatting
+
+from rafcon.core.states.library_state import LibraryState
+
+from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
@@ -263,6 +266,9 @@ class StatesEditorController(ExtendedController):
             del self.closed_tabs[state_identifier]  # pages not in self.closed_tabs and self.tabs at the same time
         else:
             state_editor_view = StateEditorView()
+            if isinstance(state_m.state, LibraryState):
+                state_editor_view['main_notebook_1'].set_current_page(
+                    state_editor_view['main_notebook_1'].page_num(state_editor_view.page_dict["Data Linkage"]))
             state_editor_ctrl = StateEditorController(state_m, state_editor_view)
             self.add_controller(state_identifier, state_editor_ctrl)
             if state_editor_ctrl.get_controller('source_ctrl'):
