@@ -687,7 +687,7 @@ class MenuBarController(ExtendedController):
         self.state_machine_execution_engine.stop()
 
     def on_step_mode_activate(self, widget, data=None):
-        self.state_machine_execution_engine.step_mode()
+        self.state_machine_execution_engine.step_mode(self.model.selected_state_machine_id)
 
     def on_step_into_activate(self, widget, data=None):
         self.state_machine_execution_engine.step_into()
