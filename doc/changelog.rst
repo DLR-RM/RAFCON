@@ -8,6 +8,13 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Patch releases 0.9.\*
 ---------------------
 
+0.9.6
+"""""
+
+- Bug fixes
+
+  - fix step mode
+
 0.9.5
 """""
 
