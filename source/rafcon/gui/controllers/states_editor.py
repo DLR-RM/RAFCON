@@ -414,6 +414,16 @@ class StatesEditorController(ExtendedController):
         for state_identifier in states_to_be_closed:
             self.close_page(state_identifier, delete=False)
 
+    def close_pages_for_specific_sm_id(self, sm_id):
+        """Closes all tabs of the states editor for a specific sm_id"""
+        states_to_be_closed = []
+        for state_identifier in self.tabs:
+            state_m = self.tabs[state_identifier]["state_m"]
+            if state_m.state.get_state_machine().state_machine_id == sm_id:
+                states_to_be_closed.append(state_identifier)
+        for state_identifier in states_to_be_closed:
+            self.close_page(state_identifier, delete=False)
+
     def on_switch_page(self, notebook, page_pointer, page_num, user_param1=None):
         """Update state selection when the active tab was changed
         """

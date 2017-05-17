@@ -12,7 +12,7 @@
 
 import gtk
 
-from rafcon.core.singleton import state_machine_manager
+from rafcon.core.singleton import state_machine_manager, state_machine_execution_engine
 from rafcon.core import interface
 from rafcon.core.storage import storage
 from rafcon.core.singleton import library_manager
@@ -163,6 +163,50 @@ def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
 
 def refresh_libraries():
     library_manager.refresh_libraries()
+
+
+def refresh_selected_state_machine(menubar):
+    """Reloads the selected state machine.
+    """
+
+    selected_sm_id = gui_singletons.state_machine_manager_model.selected_state_machine_id
+    selected_sm = state_machine_manager.state_machines[selected_sm_id]
+
+    # check if the state machine is still running
+    if not menubar.state_machine_execution_engine.finished_or_stopped:
+        if selected_sm_id == state_machine_execution_engine.active_state_machine_id:
+            if menubar.stopped_state_machine_to_proceed():
+                pass  # state machine was stopped, proceeding reloading library
+            else:
+                return
+
+    # check if the a dirty flag is still set
+    all_tabs = menubar.states_editor_ctrl.tabs.values()
+    all_tabs.extend(menubar.states_editor_ctrl.closed_tabs.values())
+    dirty_source_editor = [tab_dict['controller'] for tab_dict in all_tabs if
+                           tab_dict['source_code_view_is_dirty'] is True]
+    if selected_sm.marked_dirty or dirty_source_editor:
+
+        def on_message_dialog_response_signal(widget, response_id):
+            if response_id == 1:
+                menubar.refresh_state_machine_by_id(selected_sm_id)
+            else:
+                logger.debug("Refresh of selected state machine canceled")
+            widget.destroy()
+
+        message_string = "Are you sure you want to reload the currently selected state machine?\n\n" \
+                         "The following elements have been modified and not saved. " \
+                         "These changes will get lost:"
+        message_string = "%s\n* State machine #%s and name '%s'" % (
+            message_string, str(selected_sm_id), selected_sm.root_state.name)
+        for ctrl in dirty_source_editor:
+            if ctrl.model.state.get_state_machine().state_machine_id == selected_sm_id:
+                message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
+                    message_string, ctrl.model.state.name, ctrl.model.state.get_path())
+        RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"], on_message_dialog_response_signal,
+                           message_type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
+    else:
+        menubar.refresh_state_machine_by_id(selected_sm_id)
 
 
 def refresh_all(menubar=None, force=False):

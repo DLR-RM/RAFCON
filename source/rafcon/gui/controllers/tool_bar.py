@@ -41,9 +41,10 @@ class ToolBarController(ExtendedController):
     def register_view(self, view):
         """Called when the View was registered"""
         self.view['button_new'].connect('clicked', self.on_button_new_clicked)
-        self.view['button_refresh'].connect('clicked', self.on_button_refresh_clicked)
         self.view['button_open'].connect('clicked', self.on_button_open_clicked)
         self.view['button_save'].connect('clicked', self.on_button_save_clicked)
+        self.view['button_refresh'].connect('clicked', self.on_button_refresh_clicked)
+        self.view['button_refresh_selected'].connect('clicked', self.on_button_refresh_selected_clicked)
         self.view['button_refresh_libs'].connect('clicked', self.on_button_refresh_libs_clicked)
 
     def register_adapters(self):
@@ -57,17 +58,20 @@ class ToolBarController(ExtendedController):
         """
         pass
 
-    def on_button_refresh_libs_clicked(self, widget, data=None):
-        self.menu_bar_ctrl.on_refresh_libraries_activate()
-
-    def on_button_save_clicked(self, widget, data=None):
-        self.menu_bar_ctrl.on_save_activate(widget, data)
+    def on_button_new_clicked(self, widget, data=None):
+        self.menu_bar_ctrl.on_new_activate(widget, data)
 
     def on_button_open_clicked(self, widget, data=None):
         self.menu_bar_ctrl.on_open_activate(widget, data)
 
+    def on_button_save_clicked(self, widget, data=None):
+        self.menu_bar_ctrl.on_save_activate(widget, data)
+
     def on_button_refresh_clicked(self, widget, data=None):
         self.menu_bar_ctrl.on_refresh_all_activate(widget, data)
 
-    def on_button_new_clicked(self, widget, data=None):
-        self.menu_bar_ctrl.on_new_activate(widget, data)
+    def on_button_refresh_selected_clicked(self, widget, data=None):
+        self.menu_bar_ctrl.on_refresh_selected_activate(widget, data)
+
+    def on_button_refresh_libs_clicked(self, widget, data=None):
+        self.menu_bar_ctrl.on_refresh_libraries_activate()

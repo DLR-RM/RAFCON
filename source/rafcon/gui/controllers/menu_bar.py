@@ -353,6 +353,9 @@ class MenuBarController(ExtendedController):
         gui_helper_state_machine.refresh_all(menubar=self,
                                              force=force)
 
+    def on_refresh_selected_activate(self, widget, data=None, force=False):
+        gui_helper_state_machine.refresh_selected_state_machine(menubar=self)
+
     @staticmethod
     def on_substitute_selected_state_activate(widget=None, data=None, path=None):
         return gui_helper_state.substitute_selected_state()
@@ -401,6 +404,49 @@ class MenuBarController(ExtendedController):
         """Deletes all libraries and state machines and reloads them freshly from the file system."""
         library_manager.refresh_libraries()
         self.refresh_state_machines()
+
+    def refresh_state_machine_by_id(self, state_machine_id):
+        """ Refreshes only a specific state machine id.
+
+        Can be easily adapted to take a list of state machines as parameters.
+        """
+        state_machine_manager.state_machines[state_machine_id].marked_dirty = False
+        currently_selected_sm_id = None
+        if self.model.get_selected_state_machine_model():
+            currently_selected_sm_id = self.model.get_selected_state_machine_model().state_machine.state_machine_id
+
+        # create a dictionary from state machine id to state machine path
+        state_machine_path_by_sm_id = {}
+        page_num_by_sm_id = {}
+        for sm_id, sm in state_machine_manager.state_machines.iteritems():
+            # If at some time a list is passed to this method "in" can be used here
+            if sm_id == state_machine_id:
+                # the sm.base_path is only None if the state machine has never been loaded or saved before
+                if sm.file_system_path is not None:
+                    # print sm.root_state.get_file_system_path()
+                    # cut the last directory from the path
+                    path_items = sm.root_state.get_file_system_path().split("/")
+                    new_path = path_items[0]
+                    for i in range(len(path_items) - 2):
+                        new_path = "%s/%s" % (new_path, path_items[i + 1])
+                    # print new_path
+                    state_machine_path_by_sm_id[sm_id] = new_path
+                    page_num_by_sm_id[sm_id] = self.state_machines_editor_ctrl.get_page_num(sm_id)
+
+        # close all tabs of the state machine editor belonging to the specified state machine
+        self.states_editor_ctrl.close_pages_for_specific_sm_id(state_machine_id)
+
+        self.state_machines_editor_ctrl.on_close_clicked(
+            None, self.model.state_machines[state_machine_id], None, force=True)
+
+        # reload state machines from file system
+        state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
+        self.state_machines_editor_ctrl.rearrange_state_machines(page_num_by_sm_id)
+        # case if no state machine is open
+        if currently_selected_sm_id:
+            # case if only unsaved state machines are open
+            if currently_selected_sm_id in state_machine_manager.state_machines.iterkeys():
+                self.state_machines_editor_ctrl.set_active_state_machine(currently_selected_sm_id)
 
     def refresh_state_machines(self):
         # delete dirty flags for state machines
