@@ -662,6 +662,21 @@ def substitute_state(state, as_template=False):
 
     current_state_m = selected_state_models[0]
     current_state = current_state_m.state
+
+    # Check if no recursion occurs
+    new_state_file_system_path = None
+    if not state.get_state_machine():
+        assert isinstance(state, LibraryState)
+        lib_os_path, new_library_path, new_library_name = \
+            library_manager.get_os_path_to_library(state.library_path, state.library_name)
+        new_state_file_system_path = lib_os_path
+    else:
+        new_state_file_system_path = state.get_state_machine().file_system_path
+
+    if new_state_file_system_path == current_state.get_state_machine().file_system_path:
+        logger.error("Recursions are not allowed!")
+        return False
+
     current_state_name = current_state.name
     parent_state_m = current_state_m.parent
     parent_state = current_state.parent
