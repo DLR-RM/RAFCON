@@ -15,6 +15,13 @@ log <https://rmc-github.robotic.dlr.de/common/rafcon/commits/master>`__.
 Patch releases 0.9.\*
 ---------------------
 
+0.9.6
+"""""
+
+- Bug fixes
+
+  - fix step mode
+
 0.9.5
 """""
 
