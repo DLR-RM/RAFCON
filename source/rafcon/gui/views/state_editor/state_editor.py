@@ -15,6 +15,7 @@
 
 from gtkmvc import View
 
+from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
 from rafcon.gui.views.state_editor.data_flows import StateDataFlowsEditorView
@@ -30,7 +31,7 @@ from rafcon.gui.views.state_editor.transitions import StateTransitionsEditorView
 
 
 class StateEditorView(View):
-    builder = constants.get_glade_path("state_editor_ld_widget_tab.glade")
+    builder = glade.get_glade_path("state_editor_ld_widget_tab.glade")
     top = 'main_frame_vbox'
 
     def __init__(self):
@@ -67,10 +68,12 @@ class StateEditorView(View):
         self['description_text_view'] = self['description_view'].textview
         self['description_scroller'] = self['description_view'].scrollable
 
-        self['main_notebook_1'].set_tab_hborder(constants.BORDER_WIDTH * 2)
-        self['main_notebook_1'].set_tab_vborder(constants.BORDER_WIDTH * 3)
-        self['main_notebook_2'].set_tab_hborder(constants.BORDER_WIDTH * 2)
-        self['main_notebook_2'].set_tab_vborder(constants.BORDER_WIDTH * 3)
+        self['main_notebook_1'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
+        self['main_notebook_1'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
+        self['main_notebook_2'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
+        self['main_notebook_2'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
+        self['ports_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
+        self['ports_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
         self.page_dict["Source"] = self['main_notebook_1'].get_nth_page(0)
         self.page_dict["Logical Linkage"] = self['main_notebook_1'].get_nth_page(1)
         self.page_dict["Data Linkage"] = self['main_notebook_1'].get_nth_page(2)
@@ -79,12 +82,12 @@ class StateEditorView(View):
         self['main_notebook_1'].set_current_page(self['main_notebook_1'].page_num(self.page_dict["Source"]))
         self['main_notebook_2'].set_current_page(self['main_notebook_2'].page_num(self.page_dict["Description"]))
 
-        self['new_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['delete_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['new_output_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['delete_output_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['new_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-        self['delete_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['add_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['remove_input_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['add_output_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['remove_output_port_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['add_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['remove_scoped_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
 
         self.set_default_paned_positions()
 

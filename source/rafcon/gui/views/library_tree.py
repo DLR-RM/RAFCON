@@ -15,7 +15,6 @@ from gtkmvc import View
 
 
 class LibraryTreeView(View, gtk.TreeView):
-    top = 'library_tree_view'
 
     def __init__(self):
         View.__init__(self)
@@ -29,5 +28,5 @@ class LibraryTreeView(View, gtk.TreeView):
         tvcolumn_name.pack_start(cell_renderer_name, True)
         tvcolumn_name.add_attribute(cell_renderer_name, 'text', 0)
 
-
         self['library_tree_view'] = self
+        self.top = 'library_tree_view'

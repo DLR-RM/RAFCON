@@ -12,7 +12,7 @@
 
 import gtk
 
-from rafcon.core.singleton import state_machine_manager
+from rafcon.core.singleton import state_machine_manager, state_machine_execution_engine
 from rafcon.core import interface
 from rafcon.core.storage import storage
 from rafcon.core.singleton import library_manager
@@ -32,6 +32,7 @@ from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.outcome import OutcomeModel
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.models.signals import MetaSignalMsg
+from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 import rafcon.gui.singleton
@@ -147,8 +148,13 @@ def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
         if interface.create_folder_func is None:
             logger.error("No function defined for creating a folder")
             return False
-        path = interface.create_folder_func("Please choose a root folder and a name for the state-machine")
+        state_machine_manager_model = gui_singletons.state_machine_manager_model
+        sm_m = state_machine_manager_model.state_machines[state_machine_manager_model.selected_state_machine_id]
+        folder_name = sm_m.state_machine.root_state.name if sm_m else ''
+        path = interface.create_folder_func("Please choose a root folder and a name for the state-machine",
+                                            folder_name)
         if path is None:
+            logger.warning("No valid path specified")
             return False
 
     menubar.model.get_selected_state_machine_model().state_machine.file_system_path = path
@@ -157,6 +163,50 @@ def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
 
 def refresh_libraries():
     library_manager.refresh_libraries()
+
+
+def refresh_selected_state_machine(menubar):
+    """Reloads the selected state machine.
+    """
+
+    selected_sm_id = gui_singletons.state_machine_manager_model.selected_state_machine_id
+    selected_sm = state_machine_manager.state_machines[selected_sm_id]
+
+    # check if the state machine is still running
+    if not menubar.state_machine_execution_engine.finished_or_stopped:
+        if selected_sm_id == state_machine_execution_engine.active_state_machine_id:
+            if menubar.stopped_state_machine_to_proceed():
+                pass  # state machine was stopped, proceeding reloading library
+            else:
+                return
+
+    # check if the a dirty flag is still set
+    all_tabs = menubar.states_editor_ctrl.tabs.values()
+    all_tabs.extend(menubar.states_editor_ctrl.closed_tabs.values())
+    dirty_source_editor = [tab_dict['controller'] for tab_dict in all_tabs if
+                           tab_dict['source_code_view_is_dirty'] is True]
+    if selected_sm.marked_dirty or dirty_source_editor:
+
+        def on_message_dialog_response_signal(widget, response_id):
+            if response_id == 1:
+                menubar.refresh_state_machine_by_id(selected_sm_id)
+            else:
+                logger.debug("Refresh of selected state machine canceled")
+            widget.destroy()
+
+        message_string = "Are you sure you want to reload the currently selected state machine?\n\n" \
+                         "The following elements have been modified and not saved. " \
+                         "These changes will get lost:"
+        message_string = "%s\n* State machine #%s and name '%s'" % (
+            message_string, str(selected_sm_id), selected_sm.root_state.name)
+        for ctrl in dirty_source_editor:
+            if ctrl.model.state.get_state_machine().state_machine_id == selected_sm_id:
+                message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
+                    message_string, ctrl.model.state.name, ctrl.model.state.get_path())
+        RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"], on_message_dialog_response_signal,
+                           message_type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
+    else:
+        menubar.refresh_state_machine_by_id(selected_sm_id)
 
 
 def refresh_all(menubar=None, force=False):
@@ -612,6 +662,21 @@ def substitute_state(state, as_template=False):
 
     current_state_m = selected_state_models[0]
     current_state = current_state_m.state
+
+    # Check if no recursion occurs
+    new_state_file_system_path = None
+    if not state.get_state_machine():
+        assert isinstance(state, LibraryState)
+        lib_os_path, new_library_path, new_library_name = \
+            library_manager.get_os_path_to_library(state.library_path, state.library_name)
+        new_state_file_system_path = lib_os_path
+    else:
+        new_state_file_system_path = state.get_state_machine().file_system_path
+
+    if new_state_file_system_path == current_state.get_state_machine().file_system_path:
+        logger.error("Recursions are not allowed!")
+        return False
+
     current_state_name = current_state.name
     parent_state_m = current_state_m.parent
     parent_state = current_state.parent

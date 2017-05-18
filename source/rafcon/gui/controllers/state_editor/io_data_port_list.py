@@ -31,6 +31,8 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController, react_to_event
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.clipboard import global_clipboard
+from rafcon.gui.views.state_editor.input_port_list import InputPortsListView
+from rafcon.gui.views.state_editor.output_port_list import OutputPortsListView
 
 from rafcon.gui.utils.comparison import compare_variables
 from rafcon.utils import log
@@ -66,7 +68,7 @@ class DataPortListController(ListViewController):
             view['data_type_text'].set_property("editable", True)
 
         # in the linkage overview the the default value is not shown
-        if view['default_value_col'] and view['default_value_text']:
+        if isinstance(view, InputPortsListView) or isinstance(view, OutputPortsListView):
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', self.DEFAULT_VALUE_STORAGE_ID)
             # if not isinstance(self.model.state, LibraryState):
             view['default_value_text'].set_property("editable", True)
@@ -356,7 +358,7 @@ class InputPortListController(DataPortListController):
         self.model.state.remove_input_data_port(model.data_port.data_port_id)
 
     def toggle_runtime_value_usage(self, data_port_id):
-        current_flag = self.model.state.use_runtime_value_oinput_data_ports[data_port_id]
+        current_flag = self.model.state.use_runtime_value_input_data_ports[data_port_id]
         self.model.state.set_use_input_runtime_value(data_port_id, not current_flag)
 
     def set_data_port_runtime_value(self, data_port_id, value):

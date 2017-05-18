@@ -28,6 +28,7 @@ from gtkmvc import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.utils import log
+from rafcon.utils import plugins
 
 logger = log.get_logger(__name__)
 
@@ -153,10 +154,14 @@ class ExecutionEngine(Observable):
         self.set_execution_mode(StateMachineExecutionStatus.FINISHED)
 
     @Observable.observed
-    def step_mode(self):
+    def step_mode(self, state_machine_id=None):
         """Set the execution mode to stepping mode. Transitions are only triggered if a new step is triggered
         """
         logger.debug("Activate step mode")
+
+        if state_machine_id is not None:
+            self.state_machine_manager.active_state_machine_id = state_machine_id
+
         self.run_to_states = []
         if self.finished_or_stopped():
             self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
@@ -186,6 +191,7 @@ class ExecutionEngine(Observable):
         self.state_machine_running = True
         self.__running_state_machine.join()
         self.__set_execution_mode_to_finished()
+        plugins.run_on_state_machine_execution_finished()
         # self.__set_execution_mode_to_stopped()
         self.state_machine_running = False
 

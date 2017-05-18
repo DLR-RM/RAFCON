@@ -21,7 +21,7 @@ Steps to perform, when releasing a new version of RAFCON:
 
 4. Create a test state machine for the new version
 
-  Open the state machine in ``[project directory]/source/test_scripts/backwards_compatibility/[latest version number]`` and save it to ``[project directory]/source/test_scripts/backwards_compatibility/[new version number]``. Commit your changes.
+  Open the state machine in ``[project directory]/tests/assets/unit_test_state_machines/[latest version number]`` and save it to ``[project directory]/source/test_scripts/backwards_compatibility/[new version number]``. Commit your changes.
 
 5. Check tests
 
@@ -33,7 +33,7 @@ Steps to perform, when releasing a new version of RAFCON:
 
 7. Apply the version number
 
-  Update the version number in: ``[project directory]/rafcon.pt`` (line ``VERSION = ...``).
+  Update the version number in ``[project directory]/VERSION``.
   Commit your changes.
 
 8. Merge to master
@@ -49,7 +49,7 @@ Steps to perform, when releasing a new version of RAFCON:
   Make sure, everything is pushed (``git push``). Then copy the release notes for the specific version into a temporary file, e.g. ``/tmp/release_notes.rst``. Finally do:
 
   - ``cd [projet directory]]``
-  - ``rmpm_do release --domain software.common -F /tmp/release_notes.rst``
+  - ``rmpm_do release --domain software.common --version [new version number] -F /tmp/release_notes.rst``
 
 10. Merge to develop
 

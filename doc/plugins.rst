@@ -15,7 +15,7 @@ Plugin Interface
 ----------------
 
 The path of every RAFCON plugin has to be registered in the
-environmental variable ``RAFCON_PLUGIN_PATH``. In the registered path,
+environmental variable :envvar:`RAFCON_PLUGIN_PATH`. In the registered path,
 the ``__init__.py`` and ``hooks.py`` of respective plugin should be
 situated. In the optional ``hooks.py``, the following functions (hooks)
 can be implemented.
@@ -25,15 +25,13 @@ can be implemented.
 
 The function is called after all of RAFCON imports occurred and the
 RAFCON singletons have been created. In this function, RAFCON classes
-can be extended/monkey-patched or completely substituted. As it is
-`Python <https://www.python.org/>`__, you can do all the dirtyness python supports.
+can be extended/monkey-patched or completely substituted.
 Anyway, it is good to avoid monkey patches or big substitutions of
 classes at this point. Especially if you extend, monkey-patch or
 substitute a class that is used in a singleton make sure that your
 change reaches all parts of RAFCON (by explicitly substituting objects).
 An example is given with the Execution-Hooks plugin and the examples in
-`RMPM <https://rmintra01.robotic.dlr.de/wiki/Rmpm>`__ path ``share/examples/plugins/templates`` (this folder
-will be available starting from version 0.7.2).
+``share/examples/plugins/templates``.
 
 ``post_init``
 """""""""""""
@@ -89,8 +87,7 @@ DDS Monitoring Plugin
 """""""""""""""""""""
 
 This plugin facilitates monitoring and remote control of RAFCON state
-machines via RTI DDS. Installation and build instructions can be found
-in the `source repository <https://rmc-github.robotic.dlr.de/vilz-mi/rafcon_monitoring_dds>`__.
+machines via RTI DDS.
 
 Once the plugin has been set up, RAFCON can be started in either server
 or client mode. Currently, only one server per DDS domain is supported;
@@ -159,21 +156,8 @@ execution engine. The RMPM package name is
 ``rafcon_execution_hooks_plugin``. At the moment, the plugin only
 enables this hooks for the state-machine root state.
 
-''' Additionally planned features '''
-
-The hooks also will be introduced for library states which are
-integrated state machines. For this case, it is planned that the plugin
-will be able to enable or disable the hooks for sub-states which are
-library states.(TO DISCUSS)
-
 Plugin Template
 """""""""""""""
 
-The plugin template can be found in the RMPM package path of RAFCON
-``$RAFCON_RMPM_PKG_PATH/share/examples/plugins/templates`` or in the
-`Git <https://rmintra01.robotic.dlr.de/wiki/Git>`__ repository at
-``$RAFCON_GIT_REPO_PATH/share/examples/plugins/templates``.
-
-If you put this path into your ``RAFCON_PLUGIN_PATH``, the examples
-should be enabled. If there will be changes to the RAFCON plugin
-concept, you will find essential changes first here.
+The plugin template can be found in ``[RAFCON root path]/share/examples/plugins/templates``.If you put this path into
+your :envvar:`RAFCON_PLUGIN_PATH` env var, the plugin will automatically be loaded.

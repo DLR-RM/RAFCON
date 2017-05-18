@@ -1,45 +1,36 @@
-Developer's Guide
-=================
+Contributing: Developer's Guide
+===============================
 
 Everybody is encouraged to contribute to the RAFCON project. However, collaboration needs some guidelines. We try to
 collect all this information in this document, so please stick to this.
 
-Developers
-----------
+When contributing to this repository, please first discuss the change you wish to make via issue, email, or any other method with the owners of this repository before making a change.
 
-**Current**
+Please note that `we have a code of conduct <#code-of-conduct>`__, please follow it in all your interactions with the
+project.
 
-- Sebastian Brunner
-- Franz Steinmetz
-- Rico Belder
-- Michael Vilzmann (since 2016)
-
-**Former**
-
-- Lukas Becker (2016-10 to 2017-02) Bachelor-student as Intern:
-    - splash screen, external editor, new shortcuts, refactoring of dialogs and helper
-- Benno Voggenreiter (2015-12 to 2016-03) as Bachelor-student:
-    - monitoring plugin GUI, ROS plugin
-- Matthias Büttner (2015-03 to 2015-08) as Master-student:
-    - graphical layout, first implementations of gaphas editor (feasibility study)
-- Mahmoud Akl (2015-12 to 2016-03) as  working student:
-    - (un-)dockable sidebar, refactoring
-- Annika Wollschläger (2015-12 to 2016-02) as working student:
-    - drag'n'drop of all kinds of states, including libraries
+Please check our `code style <#code-style>`__, before making any changes to the code. Please read the `commit
+guidelines <#git-commit-guidelines>`__, before submitting any commit.
 
 
-GIT repository
+Git repository
 --------------
 
-The GIT repository can be found at
-`https://rmc-github.robotic.dlr.de/common/rafcon <https://rmc-github.robotic.dlr.de/common/rafcon>`__.
+The Git repository can be found on `GitHub <https://github.com/DLR-RM/RAFCON>`__.
+
 
 Bugs & Feature request
 ----------------------
 
 Please use `GitHub
-Issues <https://rmc-github.robotic.dlr.de/common/rafcon/issues>`__ to
+Issues <https://github.com/DLR-RM/RAFCON/issues>`__ to
 report bugs. This page can also be used for feature requests.
+
+
+Code of Conduct
+---------------
+
+.. include:: includes/code_of_conduct.rst
 
 
 Code style
@@ -48,7 +39,7 @@ Code style
 .. include:: includes/coding_conventions.rst
 
 
-GIT commit Guidelines
+Git commit guidelines
 ---------------------
 
 .. include:: includes/commit_guidelines.rst
@@ -63,8 +54,3 @@ HowTo on creating a splashscreen
 --------------------------------
 
 .. include:: includes/splashscreen.rst
-
-Discussion
-----------
-
-.. include:: includes/discussion.rst

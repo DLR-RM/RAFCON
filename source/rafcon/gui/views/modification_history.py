@@ -16,7 +16,6 @@ from rafcon.gui.utils import constants
 
 
 class HistoryTreeView(View, gtk.TreeView):
-    top = 'history_treeview'
 
     def __init__(self):
         View.__init__(self)
@@ -38,10 +37,10 @@ class HistoryTreeView(View, gtk.TreeView):
         self.append_column(tvcolumn)
 
         self['history_treeview'] = self
+        self.top = 'history_treeview'
 
 
 class ModificationHistoryView(View, gtk.ScrolledWindow):
-    top = 'history_view'
 
     def __init__(self):
         View.__init__(self)
@@ -51,17 +50,17 @@ class ModificationHistoryView(View, gtk.ScrolledWindow):
         history_tree.set_name('history_tree')
 
         undo_button = gtk.Button("Undo")
-        undo_button.set_border_width(constants.BORDER_WIDTH)
+        undo_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         redo_button = gtk.Button("Redo")
-        redo_button.set_border_width(constants.BORDER_WIDTH)
+        redo_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         reset_button = gtk.Button("Reset")
-        reset_button.set_border_width(constants.BORDER_WIDTH)
+        reset_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         branch_checkbox = gtk.CheckButton("B")
         branch_checkbox.set_tooltip_text('Show branches')
-        branch_checkbox.set_border_width(constants.BORDER_WIDTH)
+        branch_checkbox.set_border_width(constants.BUTTON_BORDER_WIDTH)
         folded_checkbox = gtk.CheckButton("F")
         folded_checkbox.set_tooltip_text('Fold branches')
-        folded_checkbox.set_border_width(constants.BORDER_WIDTH)
+        folded_checkbox.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
         button_hbox = gtk.HBox()
         button_hbox.pack_end(folded_checkbox, False, True, 0)
@@ -86,3 +85,4 @@ class ModificationHistoryView(View, gtk.ScrolledWindow):
         self['reset_button'] = reset_button
         self['branch_checkbox'] = branch_checkbox
         self['folded_checkbox'] = folded_checkbox
+        self.top = 'history_view'

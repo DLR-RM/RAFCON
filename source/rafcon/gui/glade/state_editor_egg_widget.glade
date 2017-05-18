@@ -76,8 +76,8 @@
                             <property name="visible">True</property>
                             <property name="homogeneous">True</property>
                             <child>
-                              <object class="GtkButton" id="new_input_port_button">
-                                <property name="label" translatable="yes">New</property>
+                              <object class="GtkButton" id="add_input_port_button">
+                                <property name="label" translatable="yes">Add</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
@@ -149,8 +149,8 @@
                             <property name="visible">True</property>
                             <property name="homogeneous">True</property>
                             <child>
-                              <object class="GtkButton" id="new_output_port_button">
-                                <property name="label" translatable="yes">New</property>
+                              <object class="GtkButton" id="add_output_port_button">
+                                <property name="label" translatable="yes">Add</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
@@ -161,8 +161,8 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkButton" id="delete_output_port_button">
-                                <property name="label" translatable="yes">Delete</property>
+                              <object class="GtkButton" id="remove_output_port_button">
+                                <property name="label" translatable="yes">Remove</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
@@ -221,8 +221,8 @@
                             <property name="visible">True</property>
                             <property name="homogeneous">True</property>
                             <child>
-                              <object class="GtkButton" id="new_scoped_variable_button">
-                                <property name="label" translatable="yes">New</property>
+                              <object class="GtkButton" id="add_scoped_variable_button">
+                                <property name="label" translatable="yes">Add</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
@@ -233,8 +233,8 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkButton" id="delete_scoped_variable_button">
-                                <property name="label" translatable="yes">Delete</property>
+                              <object class="GtkButton" id="remove_scoped_variable_button">
+                                <property name="label" translatable="yes">Remove</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>

@@ -112,6 +112,12 @@ class ConfigModel(ModelMT):
                 state_machine_refresh_required = True
             elif config_key in self.config.keys_requiring_restart:
                 self.changed_keys_requiring_restart.add(config_key)
+            if config_key == 'AUTO_RECOVERY_LOCK_ENABLED':
+                import rafcon.gui.models.auto_backup
+                if config_value:
+                    rafcon.gui.models.auto_backup.generate_rafcon_instance_lock_file()
+                else:
+                    rafcon.gui.models.auto_backup.remove_rafcon_instance_lock_file()
         self.preliminary_config.clear()
 
         if save:

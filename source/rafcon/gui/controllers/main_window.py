@@ -43,6 +43,7 @@ from rafcon.gui.controllers.tool_bar import ToolBarController
 from rafcon.gui.controllers.top_tool_bar import TopToolBarMainWindowController
 from rafcon.gui.controllers.undocked_window import UndockedWindowController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.views.main_window import MainWindowView
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.runtime_config import global_runtime_config
@@ -64,6 +65,8 @@ class MainWindowController(ExtendedController):
     """
 
     def __init__(self, state_machine_manager_model, view):
+        assert isinstance(state_machine_manager_model, StateMachineManagerModel)
+        assert isinstance(view, MainWindowView)
         ExtendedController.__init__(self, state_machine_manager_model, view)
 
         gui_singletons.main_window_controller = self
@@ -74,7 +77,6 @@ class MainWindowController(ExtendedController):
         self.handler_ids = {}
 
         # state machine manager
-        assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         state_machine_manager = state_machine_manager_model.state_machine_manager
 
         self.state_machine_execution_model = gui_singletons.state_machine_execution_model
@@ -317,13 +319,13 @@ class MainWindowController(ExtendedController):
         if gui_config.get_config_value("RESTORE_UNDOCKED_SIDEBARS"):
             if global_runtime_config.get_config_value("LEFT_BAR_WINDOW_UNDOCKED"):
                 self.undock_sidebar("LEFT_BAR_WINDOW", "left_bar", "undock_left_bar_button", "left_bar_return_button",
-                                    self.on_left_bar_hide_clicked, "left_bar_replacement", view["LEFT_BAR_WINDOW"])
+                                    self.on_left_bar_hide_clicked, "left_bar_replacement", view.left_bar_window)
             if global_runtime_config.get_config_value("RIGHT_BAR_WINDOW_UNDOCKED"):
                 self.undock_sidebar("RIGHT_BAR_WINDOW", "right_bar", "undock_right_bar_button", "right_bar_return_button",
-                                    self.on_right_bar_hide_clicked, "right_bar_replacement", view["RIGHT_BAR_WINDOW"])
+                                    self.on_right_bar_hide_clicked, "right_bar_replacement", view.right_bar_window)
             if global_runtime_config.get_config_value("CONSOLE_BAR_WINDOW_UNDOCKED"):
                 self.undock_sidebar("CONSOLE_BAR_WINDOW", "console", "undock_console_button", "console_return_button",
-                                    self.on_console_hide_clicked, None, view["CONSOLE_BAR_WINDOW"])
+                                    self.on_console_hide_clicked, None, view.console_bar_window)
 
         # secure maximized state
         if global_runtime_config.get_config_value("MAIN_WINDOW_MAXIMIZED"):

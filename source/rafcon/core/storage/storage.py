@@ -161,7 +161,6 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
         state_machine.last_update = storage_utils.get_current_time_string()
         state_machine_dict = state_machine.to_dict()
         storage_utils.write_dict_to_json(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE))
-        storage_utils.write_dict_to_yaml(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE_OLD))
 
         # set the file_system_path of the state machine
         if not temporary_storage:

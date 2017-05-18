@@ -20,7 +20,6 @@ from rafcon.gui.config import global_gui_config
 
 
 class LoggingConsoleView(View):
-    top = 'main_frame'
 
     def __init__(self):
         View.__init__(self)
@@ -46,6 +45,7 @@ class LoggingConsoleView(View):
         self.read_enables()
 
         self['scrollable'] = scrollable
+        self.top = 'scrollable'
         self.quit_flag = False
 
     def clean_buffer(self):
@@ -95,8 +95,12 @@ class LoggingConsoleView(View):
         :return: List containing the content of text_to_split split up
         """
         assert isinstance(text_to_split, (str, unicode))
-        time, rest = text_to_split.split(': ', 1)
-        source, message = rest.split(':', 1)
+        try:
+            time, rest = text_to_split.split(': ', 1)
+            source, message = rest.split(':', 1)
+        except ValueError:
+            time = source = ""
+            message = text_to_split
         return time.strip(), source.strip(), message.strip()
 
     @staticmethod

@@ -13,7 +13,9 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+import os
 import gtk
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
 
 def get_glade_path(glade_file):
@@ -59,6 +61,7 @@ BORDER_WIDTH_ROOT_STATE = 5.
 BORDER_WIDTH_HIERARCHY_SCALE_FACTOR = 2.
 MAIN_WINDOW_BORDER_WIDTH = 3
 BORDER_WIDTH = 5
+TAB_BORDER_WIDTH = 5
 BORDER_WIDTH_TEXTVIEW = 10
 BUTTON_BORDER_WIDTH = 5
 BUTTON_MIN_WIDTH = 90
@@ -134,4 +137,4 @@ ICON_EHIST = "f1b3"
 ICON_NET = "f0ec"
 ICON_STICKY = "f08d"
 
-RAFCON_INSTANCE_LOCK_FILE = None
+RAFCON_INSTANCE_LOCK_FILE_PATH = os.path.join(RAFCON_TEMP_PATH_BASE, 'lock')

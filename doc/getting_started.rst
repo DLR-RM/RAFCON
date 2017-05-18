@@ -93,18 +93,18 @@ First, change to the directory in which you want to clone RAFCON:
     $ cd ~/any/existing/path
 
 Next, clone the `RAFCON
-repository <https://rmc-github.robotic.dlr.de/common/rafcon>`__. You can
+repository <https://github.com/DLR-RM/RAFCON>`__. You can
 either use the HTTPS URL:
 
 .. code:: bash
 
-    $ git clone https://rmc-github.robotic.dlr.de/common/rafcon
+    $ git clone https://github.com/DLR-RM/RAFCON.git
 
 or the SSH URL:
 
 .. code:: bash
 
-    $ git clone git@rmc-github.robotic.dlr.de:common/rafcon.git
+    $ git clone git@github.com:DLR-RM/RAFCON.git
 
 This must of course only be done once. If you want to get the latest
 commits after you have cloned the repository, use

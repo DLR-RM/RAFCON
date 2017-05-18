@@ -22,20 +22,20 @@ gobject.signal_new("tab_close_event", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, No
 
 
 class StatesEditorView(View):
-    top = 'notebook'
 
     def __init__(self):
         View.__init__(self)
         self.notebook = gtk.Notebook()
         self.notebook.set_scrollable(True)
         self.notebook.set_name('states_editor_notebook')
-        self.notebook.set_tab_hborder(constants.BORDER_WIDTH)
-        self.notebook.set_tab_vborder(constants.BORDER_WIDTH)
+        self.notebook.set_tab_hborder(constants.TAB_BORDER_WIDTH)
+        self.notebook.set_tab_vborder(constants.TAB_BORDER_WIDTH)
         self.notebook.show()
 
         self.notebook.connect("button_press_event", self.button_released)
 
         self['notebook'] = self.notebook
+        self.top = 'notebook'
 
     def button_released(self, widget, event=None):
         x, y = event.x, event.y

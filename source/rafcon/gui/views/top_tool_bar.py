@@ -16,12 +16,13 @@
 import gtk
 from gtkmvc import View
 
+from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
 
 
 class TopToolBarView(View):
-    builder = constants.get_glade_path("top_tool_bar.glade")
+    builder = glade.get_glade_path("top_tool_bar.glade")
     top = 'top_toolbar'
 
     def __init__(self):

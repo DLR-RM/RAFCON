@@ -1,6 +1,8 @@
 Tutorials
 =========
 
+.. _tutorial_bottles_of_beer:
+
 99 Bottles of Beer. Or: How to create a simple state machine containing a loop
 ------------------------------------------------------------------------------
 
@@ -172,6 +174,8 @@ of achieving things in RAFCON.
             return 1
         return 0
 
+.. _tutorial_ros_turtle:
+
 Starting the basic turtle demo statemachine using ROS
 -----------------------------------------------------
 
@@ -215,6 +219,8 @@ And the turtlesim node in yet another console:
 After that start the state machine. The state machine will then start
 some basic services of the turtlesim in a sequence. As this sequence
 will change in the future they are not listed yet.
+
+.. _tutorial_libraries:
 
 How to create and re-use a library state machine
 ------------------------------------------------
@@ -322,14 +328,16 @@ Option 2
 
 Instead of specifying the path of the library in he config file, there
 is an alternative solution. You can also set an environmental variable
-with name ``RAFCON_LIBRARY_PATH`` and colon-separated paths to state
+with name :envvar:`RAFCON_LIBRARY_PATH` and colon-separated paths to state
 machines, e. g. ``~/Desktop/rafcon_tutorial_library``. These libraries
 will also be loaded. The name of these libraries is equivalent to the
 name of the folder, thus in this case ``rafcon_tutorial_library``. This
 approach is especially useful if you release your libraries using
 `RMPM <https://rmintra01.robotic.dlr.de/wiki/Rmpm>`__. In the PT-file, you can append the path of the library
-to ``RAFCON_LIBRARY_PATH`` and do not have to modify the config file of
+to :envvar:`RAFCON_LIBRARY_PATH` and do not have to modify the config file of
 the user.
+
+.. _tutorial_barrier_state:
 
 How to use concurrency barrier states
 -------------------------------------
@@ -399,6 +407,8 @@ Decider:
         else:
             return 0
 
+.. _tutorial_monitoring_plugin:
+
 Using the monitoring plugin
 ---------------------------
 
@@ -451,6 +461,8 @@ After the connection we open the same statemachine on server and client.
 Now we are able to remote control the server by the client as like
 reverse. To connect two seperated systems, the ``<SERVER_IP:>`` has to
 be adjusted within the ``network_config.yaml`` files.
+
+.. _tutorial_dialogs:
 
 How to use dialog states from the generic library
 -------------------------------------------------

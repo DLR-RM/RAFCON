@@ -37,6 +37,7 @@ from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.graphical_editor import GraphicalEditorView
+from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -120,6 +121,7 @@ class StateMachinesEditorController(ExtendedController):
         ExtendedController.__init__(self, sm_manager_model, view, spurious=True)
 
         assert isinstance(sm_manager_model, StateMachineManagerModel)
+        assert isinstance(view, StateMachinesEditorView)
 
         self.state_machine_manager_model = sm_manager_model
         self.tabs = {}
@@ -201,6 +203,12 @@ class StateMachinesEditorController(ExtendedController):
             if tab_info['page'] is page:
                 return get_state_machine_id(tab_info['state_machine_m'])
 
+    def set_menu_label_text(self, state_machine_m, page):
+        # set menu label which is shown if the user right clicks the notebook to see the list of all pages
+        root_state_name = state_machine_m.root_state.state.name
+        root_state_name_trimmed = text_formatting.limit_string(root_state_name, ROOT_STATE_NAME_MAX_CHARS)
+        self.view.notebook.set_menu_label_text(page, root_state_name_trimmed)
+
     def add_graphical_state_machine_editor(self, state_machine_m):
         """Add to for new state machine
 
@@ -226,7 +234,9 @@ class StateMachinesEditorController(ExtendedController):
         set_tab_label_texts(tab_label, state_machine_m, state_machine_m.state_machine.marked_dirty)
 
         page = graphical_editor_view['main_frame']
+
         self.view.notebook.append_page(page, tab)
+        self.set_menu_label_text(state_machine_m, page)
         self.view.notebook.set_tab_reorderable(page, True)
         page.show_all()
 
@@ -289,6 +299,8 @@ class StateMachinesEditorController(ExtendedController):
         if sm_id in self.model.state_machine_manager.state_machines:
             label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_children()[0]
             set_tab_label_texts(label, self.tabs[sm_id]["state_machine_m"], True)
+            page = self.get_page_for_state_machine_id(sm_id)
+            self.set_menu_label_text(self.model.state_machines[sm_id], page)
 
     @ExtendedController.observe("state_machine_un_mark_dirty", assign=True)
     def sm_un_marked_dirty(self, model, prop_name, info):
