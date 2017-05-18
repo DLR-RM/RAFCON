@@ -45,7 +45,9 @@ def test_execution_log(caplog):
         assert prod2['scoped_data_ins']['product'] == 1
         assert prod2['scoped_data_outs']['product'] == 1
 
-        start_id = [k for k, v in collapsed_items.items() if v['state_name'] == 'Start' ][0]
+        start_states = [k for k, v in collapsed_items.items() if v['state_name'] == 'Start' and v['state_type'] == 'ExecutionState']
+        assert len(start_states) == 3 # Start state is executed three times until state machine is done
+        start_id = start_states[0]
         start_item = collapsed_items[start_id]
         assert 'Starts the factory' in start_item['description']
 

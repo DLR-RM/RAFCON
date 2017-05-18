@@ -311,6 +311,10 @@ class ScopedDataItem(HistoryItem):
             if 'error' in self.child_state_input_output_data and \
                     isinstance(self.child_state_input_output_data['error'], BaseException):
                 # manually serialize Exceptions
+                # If an error occurs within a state execution, the catched exception
+                # gets stored to the output data port 'error'. But the exception object
+                # is not json-serializable so for this special case I added a manual
+                # serializiation.
                 export_dict_ = copy.deepcopy(self.child_state_input_output_data)
                 export_dict_.pop('error')
                 export_dict_['error_message'] = self.child_state_input_output_data['error'].message

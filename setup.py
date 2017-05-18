@@ -46,7 +46,7 @@ class PyTest(TestCommand):
         sys.exit(error_number)
 
 
-global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion']
+global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion', 'pandas']
 
 setup(
     name='RAFCON',
