@@ -270,7 +270,7 @@ class StateMachineStartItem(HistoryItem):
         record.update(self.sm_dict)
         record['call_type'] = 'EXECUTE'
         record['state_name'] = 'StateMachineStartItem'
-        record['state_type'] = 'StateMachineStartItem'
+        record['state_type'] = 'StateMachine'
         record['path'] = ''
         record['path_by_name'] = ''
         if self.prev is not None:
