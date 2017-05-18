@@ -13,4 +13,5 @@ test:
   - echo "PATH:" $PATH
   - echo "PYTHONPATH:" $PYTHONPATH
   - pip freeze
+  - rm -rf build build_doc .eggs .cache source/rafcon.egg-info source/RAFCON.egg-info
   - python setup.py test
