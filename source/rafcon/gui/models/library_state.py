@@ -12,17 +12,12 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from copy import copy, deepcopy
-from os.path import join
+from copy import deepcopy
 
 from rafcon.core.states.state import State
 from rafcon.core.states.library_state import LibraryState
-from rafcon.core.singleton import library_manager
-from rafcon.core.storage.storage import get_storage_id_for_state
 
 from rafcon.gui.models.abstract_state import AbstractStateModel
-from rafcon.gui.models.data_port import DataPortModel
-from rafcon.gui.models.outcome import OutcomeModel
 from rafcon.gui.models.abstract_state import get_state_model_class_for_state
 
 from rafcon.utils import log
@@ -42,6 +37,10 @@ class LibraryStateModel(AbstractStateModel):
     def __init__(self, state, parent=None, meta=None, load_meta_data=True):
         """Constructor
         """
+        # TODO maybe find a different way to load the meta data of ports correctly
+        # at the moment the models of state_copy get initilized and the meta data taken from there
+        self.state_copy_initialized = False
+        self.meta_data_was_scaled = False
         super(LibraryStateModel, self).__init__(state, parent, meta)
         assert isinstance(state, LibraryState)
         model_class = get_state_model_class_for_state(state.state_copy)
@@ -50,10 +49,28 @@ class LibraryStateModel(AbstractStateModel):
             self.state_copy = model_class(state.state_copy, parent=self)  # TODO think about load_meta_data=False)
         else:
             logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
+        self.state_copy_initialized = True
+
+        self._load_input_data_port_models()
+        self._load_output_data_port_models()
+        self._load_outcome_models()
 
         if load_meta_data:
             # print "load library hull state meta data\n", self.state.get_file_system_path()
-            self.load_meta_data()
+            # for m in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
+            #     print "lib init 1: ", m, m.meta
+            # self.load_meta_data()
+
+            if not self.load_meta_data():
+                # TODO decide to scale here or still in the editor -> at the moment meta data is missing here
+                # print "try to scale accordingly to state copy proportion"
+                import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+                # gui_helper_meta_data.scale_library_ports_meta_data(self)
+            else:
+                self.meta_data_was_scaled = True
+
+        # for m in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
+        #     print "lib init 2: ", m, m.meta
 
     def __eq__(self, other):
         # logger.info("compare method")
@@ -72,18 +89,33 @@ class LibraryStateModel(AbstractStateModel):
 
     def _load_input_data_port_models(self):
         """Reloads the input data port models directly from the the state"""
+        if not self.state_copy_initialized:
+            return
         self.input_data_ports = []
-        for input_data_port in self.state.input_data_ports.itervalues():
-            self.input_data_ports.append(DataPortModel(input_data_port, self))
+        for input_data_port_m in self.state_copy.input_data_ports:
+            new_ip_m = deepcopy(input_data_port_m)
+            new_ip_m.parent = self
+            new_ip_m.data_port = input_data_port_m.data_port
+            self.input_data_ports.append(new_ip_m)
 
     def _load_output_data_port_models(self):
         """Reloads the output data port models directly from the the state"""
+        if not self.state_copy_initialized:
+            return
         self.output_data_ports = []
-        for output_data_port in self.state.output_data_ports.itervalues():
-            self.output_data_ports.append(DataPortModel(output_data_port, self))
+        for output_data_port_m in self.state_copy.output_data_ports:
+            new_op_m = deepcopy(output_data_port_m)
+            new_op_m.parent = self
+            new_op_m.data_port = output_data_port_m.data_port
+            self.output_data_ports.append(new_op_m)
 
     def _load_outcome_models(self):
-        """Reloads the input data port models directly from the the state"""
+        """Reloads the outcome models directly from the the state"""
+        if not self.state_copy_initialized:
+            return
         self.outcomes = []
-        for outcome in self.state.outcomes.itervalues():
-            self.outcomes.append(OutcomeModel(outcome, self))
+        for outcome_m in self.state_copy.outcomes:
+            new_oc_m = deepcopy(outcome_m)
+            new_oc_m.parent = self
+            new_oc_m.outcome = outcome_m.outcome
+            self.outcomes.append(new_oc_m)

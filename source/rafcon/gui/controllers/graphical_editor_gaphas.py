@@ -828,6 +828,10 @@ class GraphicalEditorController(ExtendedController):
 
         rel_pos = state_meta['rel_pos']
 
+        if isinstance(state_m, LibraryStateModel):
+            if not state_m.meta_data_was_scaled:
+                gui_helper_meta_data.scale_library_ports_meta_data(state_m)
+
         state_v = StateView(state_m, size, hierarchy_level)
 
         # Draw state above data flows and NameView but beneath transitions

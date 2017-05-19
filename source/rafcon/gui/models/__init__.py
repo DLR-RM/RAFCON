@@ -11,7 +11,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from state import StateModel
-from abstract_state import AbstractStateModel
+from abstract_state import AbstractStateModel, get_state_model_class_for_state
 from container_state import ContainerStateModel
 from library_state import LibraryStateModel
 from transition import TransitionModel
@@ -21,3 +21,4 @@ from outcome import OutcomeModel
 from scoped_variable import ScopedVariableModel
 from global_variable_manager import GlobalVariableManagerModel
 from library_manager import LibraryManagerModel
+from state_machine import StateMachineModel

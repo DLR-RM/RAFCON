@@ -221,6 +221,20 @@ def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor)
     # print "END", "#"*30, "offset models", pos_offset, "#"*30, "\n"
 
 
+def scale_library_ports_meta_data(state_m):
+    if state_m.meta_data_was_scaled:
+        return
+    state_m.set_meta_data_editor('income.rel_pos',
+                                 state_m.state_copy.get_meta_data_editor()['income']['rel_pos'])
+    # print "scale_library_ports_meta_data ", state_m.get_meta_data_editor()['size'], \
+    #     state_m.state_copy.get_meta_data_editor()['size']
+    factor = divide_two_vectors(state_m.get_meta_data_editor()['size'],
+                                state_m.state_copy.get_meta_data_editor()['size'])
+    # print "scale_library_ports_meta_data -> resize_state_port_meta", factor
+    resize_state_port_meta(state_m, factor, True)
+    state_m.meta_data_was_scaled = True
+
+
 def resize_state_port_meta(state_m, factor, gaphas_editor):
 
     # print "scale ports", factor, state_m, gaphas_editor
@@ -264,6 +278,11 @@ def resize_state_meta(state_m, factor, gaphas_editor):
         state_m.set_meta_data_editor('name.size', mult_two_vectors(factor, old_size), from_gaphas=gaphas_editor)
     if isinstance(state_m, LibraryStateModel):
         # print "LIBRARY", state_m
+        if gaphas_editor:
+            if state_m.meta_data_was_scaled:
+                resize_state_port_meta(state_m, factor, gaphas_editor)
+            else:
+                scale_library_ports_meta_data(state_m)
         resize_state_meta(state_m.state_copy, factor, gaphas_editor)
         # print "END LIBRARY RESIZE"
     else:
