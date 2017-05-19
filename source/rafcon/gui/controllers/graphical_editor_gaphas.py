@@ -46,6 +46,9 @@ from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.singleton import gui_config_model, runtime_config_model
 from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView
 import rafcon.gui.helpers.state as gui_helper_state
+import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+from rafcon.gui.models.library_state import LibraryStateModel
+
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -773,11 +776,16 @@ class GraphicalEditorController(ExtendedController):
     @lock_state_machine
     def add_state_view_to_parent(self, state_m, parent_state_m):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
-        # print "add_state_view_to_parent", state_m, " of parent ", parent_state_m
 
-        child_rel_pos, new_state_size = generate_default_state_meta_data(parent_state_m, self.canvas)
-        return self.setup_state(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
-                                hierarchy_level=parent_state_m.hierarchy_level + 1)
+        # generate default meta data for state only if necessary
+        state_meta = state_m.get_meta_data_editor()
+        if not isinstance(state_meta['size'], tuple) or not len(state_meta['size']) == 2 or \
+                not isinstance(state_meta['rel_pos'], tuple) or not len(state_meta['rel_pos']) == 2:
+            child_rel_pos, new_state_size = generate_default_state_meta_data(parent_state_m, self.canvas)
+            return self.setup_state(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
+                                    hierarchy_level=parent_state_m.hierarchy_level + 1)
+        else:
+            return self.setup_state(state_m, parent_state_v, hierarchy_level=parent_state_m.hierarchy_level + 1)
 
     def _remove_state_view(self, view):
         return gui_helper_state_machine.delete_selected_elements(self.model)
@@ -793,14 +801,14 @@ class GraphicalEditorController(ExtendedController):
                             " when the state machine is being saved.")
 
     @lock_state_machine
-    def setup_state(self, state_m, parent=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
+    def setup_state(self, state_m, parent_v=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
         """Draws a (container) state with all its content
 
         Mainly contains the logic for drawing (e. g. reading and calculating values). The actual drawing process is
         done in the view, which is called from this method with the appropriate arguments.
 
         :param rafcon.gui.models.state.StateModel state_m: The state to be drawn
-        :param rafcon.gui.mygaphas.items.state.StateView parent: The parent state view of new state view `state_m`
+        :param rafcon.gui.mygaphas.items.state.StateView parent_v: The parent state view of new state view `state_m`
         :param tuple rel_pos: The default relative position (x, y) if there is no relative position stored
         :param tuple size: The default size (width, height) if there is no size stored
         :param float hierarchy_level: The hierarchy level of the state
@@ -809,13 +817,13 @@ class GraphicalEditorController(ExtendedController):
         state_meta = state_m.get_meta_data_editor()
 
         # Use default values if no size information is stored
-        if not isinstance(state_meta['size'], tuple):
+        if not isinstance(state_meta['size'], tuple) or not len(state_meta['size']) == 2:
             state_meta = state_m.set_meta_data_editor('size', size)
 
         size = state_meta['size']
 
         # Use default values if no position information is stored
-        if not isinstance(state_meta['rel_pos'], tuple):
+        if not isinstance(state_meta['rel_pos'], tuple) or not len(state_meta['rel_pos']) == 2:
             state_meta = state_m.set_meta_data_editor('rel_pos', rel_pos)
 
         rel_pos = state_meta['rel_pos']
@@ -823,8 +831,8 @@ class GraphicalEditorController(ExtendedController):
         state_v = StateView(state_m, size, hierarchy_level)
 
         # Draw state above data flows and NameView but beneath transitions
-        index = 1 if not parent else len(state_m.state.parent.data_flows) + 1
-        self.canvas.add(state_v, parent, index=index)
+        index = 1 if not parent_v else len(state_m.state.parent.data_flows) + 1
+        self.canvas.add(state_v, parent_v, index=index)
         state_v.matrix.translate(*rel_pos)
 
         for outcome_m in state_m.outcomes:
@@ -837,7 +845,7 @@ class GraphicalEditorController(ExtendedController):
         for output_port_m in state_m.output_data_ports:
             state_v.add_output_port(output_port_m)
 
-        if parent is not None:
+        if parent_v is not None:
             # Keep state within parent
             pass
 
@@ -849,7 +857,8 @@ class GraphicalEditorController(ExtendedController):
 
             for child_state_m in state_m.states.itervalues():
 
-                child_rel_pos, child_size = generate_default_state_meta_data(state_m, self.canvas, num_child_state)
+                child_rel_pos, child_size = gui_helper_meta_data.generate_default_state_meta_data(state_m, self.canvas,
+                                                                                                  num_child_state)
                 num_child_state += 1
 
                 self.setup_state(child_state_m, state_v, child_rel_pos, child_size, hierarchy_level + 1)
