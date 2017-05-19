@@ -271,7 +271,7 @@ class StateModel(AbstractStateModel):
         """Hand model for an core element from expected model list and remove the model from this list"""
         for model in self.expected_future_models:
             if model.core_element is core_element:
-                print "expected_future_models -> remove model:", model
+                # print "expected_future_models -> remove model:", model
                 self.expected_future_models.remove(model)
                 return model
         return None

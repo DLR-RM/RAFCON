@@ -79,6 +79,7 @@ class MetaModel(ModelMT):
 
         # only keep meta data for one editor
         del self.meta['gui']['editor_opengl' if for_gaphas else 'editor_gaphas']
+        return self.meta['gui']['editor_gaphas'] if for_gaphas else self.meta['gui']['editor_opengl']
 
     def do_convert_meta_data_if_no_data(self, for_gaphas):
         if not self.meta['gui']['editor_gaphas'] and for_gaphas:
