@@ -56,5 +56,5 @@ def run_unit_tests_in_processes(path_with_test_modules):
         process.join()
 
 if __name__ == '__main__':
-    # run_unit_tests_in_processes("network_test")
+    # run_unit_tests_in_processes("network")
     run_unit_tests_in_processes("common")

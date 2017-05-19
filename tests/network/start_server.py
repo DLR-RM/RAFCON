@@ -26,7 +26,7 @@ def check_for_sm_finished(sm, monitoring_manager=None):
 
     sm.root_state.join()
 
-    # stop the network_test if the monitoring plugin is enabled
+    # stop the network if the monitoring plugin is enabled
     if monitoring_manager:
         from twisted.internet import reactor
         reactor.callFromThread(reactor.stop)
