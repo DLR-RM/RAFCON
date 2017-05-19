@@ -196,6 +196,9 @@ class StateMachineRightClickMenu(object):
 
         self.insert_copy_cut_paste_in_menu(menu, shortcuts_dict, accel_group, no_paste=True)
 
+        menu.append(create_image_menu_item("Group states", constants.BUTTON_GROUP, self.on_group_states_activate,
+                                           accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
+
         menu.append(create_image_menu_item("Open separately", constants.BUTTON_OPEN,
                                            self.on_open_activate,
                                            accel_code=None, accel_group=accel_group))
@@ -302,7 +305,8 @@ class StateMachineRightClickMenu(object):
 
     def mouse_click(self, widget, event=None):
         from rafcon.gui.models.library_state import LibraryStateModel
-        # Single right click
+        # logger.info("Single right click -> selection is \n{0}"
+        #             "".format(gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_all()))
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
             if len(selection.get_all()) == 1 and len(selection.get_states()) == 1 and \
