@@ -34,6 +34,10 @@ class ToolBarView(View):
         button_refresh = self['button_refresh']
         button_refresh.set_label_widget(create_label_widget_with_icon(constants.BUTTON_REFR, _("Refresh")))
 
+        button_refresh_selected = self['button_refresh_selected']
+        button_refresh_selected.set_label_widget(create_label_widget_with_icon(
+            constants.BUTTON_REFR, _("Refresh Selected")))
+
         button_open = self['button_open']
         button_open.set_label_widget(create_label_widget_with_icon(constants.BUTTON_OPEN, _("Open State Machine")))
 

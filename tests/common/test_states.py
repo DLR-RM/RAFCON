@@ -5,6 +5,7 @@ from pytest import raises
 from rafcon.core.custom_exceptions import RecoveryModeException
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.container_state import ContainerState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.state import InputDataPort
 from testing_utils import assert_logger_warnings_and_errors
 from rafcon.utils import log
@@ -185,6 +186,16 @@ def test_create_container_state(caplog):
     assert len(container.states) == 1
     assert len(container.transitions) == 1
     assert len(container.data_flows) == 1
+
+    # barrier state remove test and bug test elements for issue #346
+    barrier_state_id = container.add_state(BarrierConcurrencyState())
+    container.remove(container.states[barrier_state_id])
+
+    barrier_state_id = container.add_state(BarrierConcurrencyState())
+    with raises(AttributeError):
+        container.states[barrier_state_id].remove(container.states[barrier_state_id].states.values()[0])
+    container.remove_state(barrier_state_id)
+    ###########################################
 
     assert_logger_warnings_and_errors(caplog)
 

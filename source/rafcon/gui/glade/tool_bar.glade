@@ -1,14 +1,16 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkToolbar" id="toolbar">
     <property name="visible">True</property>
+    <property name="can_focus">False</property>
     <property name="toolbar_style">text</property>
     <property name="icon_size_set">True</property>
     <child>
       <object class="GtkToolButton" id="button_new">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="is_important">True</property>
         <property name="label" translatable="yes">New Statemachine</property>
         <property name="use_underline">True</property>
@@ -22,6 +24,7 @@
     <child>
       <object class="GtkSeparatorToolItem" id="separatortoolitem1">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="draw">False</property>
       </object>
       <packing>
@@ -31,6 +34,7 @@
     <child>
       <object class="GtkToolButton" id="button_open">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="is_important">True</property>
         <property name="label" translatable="yes">Open Statemachine</property>
         <property name="use_underline">True</property>
@@ -44,6 +48,7 @@
     <child>
       <object class="GtkSeparatorToolItem" id="separatortoolitem2">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="draw">False</property>
       </object>
       <packing>
@@ -53,6 +58,7 @@
     <child>
       <object class="GtkToolButton" id="button_save">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="is_important">True</property>
         <property name="label" translatable="yes">Save Statemachine</property>
         <property name="use_underline">True</property>
@@ -66,6 +72,7 @@
     <child>
       <object class="GtkSeparatorToolItem" id="separatortoolitem3">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="draw">False</property>
       </object>
       <packing>
@@ -75,6 +82,7 @@
     <child>
       <object class="GtkToolButton" id="button_refresh">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="is_important">True</property>
         <property name="label" translatable="yes">Refresh</property>
         <property name="use_underline">True</property>
@@ -88,6 +96,7 @@
     <child>
       <object class="GtkSeparatorToolItem" id="separatortoolitem4">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="draw">False</property>
       </object>
       <packing>
@@ -95,8 +104,32 @@
       </packing>
     </child>
     <child>
+      <object class="GtkToolButton" id="button_refresh_selected">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Refresh Selected</property>
+        <property name="use_underline">True</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparatorToolItem" id="separatortoolitem5">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="draw">False</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
       <object class="GtkToolButton" id="button_refresh_libs">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="is_important">True</property>
         <property name="label" translatable="yes">Refresh Libraries</property>
         <property name="use_underline">True</property>

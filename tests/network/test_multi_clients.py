@@ -176,8 +176,8 @@ def interacting_function_client2(main_window_controller, global_monitoring_manag
 
 
 def test_multi_clients():
-    from network_test.test_single_client import launch_client
-    from network_test.test_single_client import launch_server
+    from network.test_single_client import launch_client
+    from network.test_single_client import launch_server
     from test_single_client import check_if_ports_are_open
     if not check_if_ports_are_open():
         print "Address already in use by another server!"

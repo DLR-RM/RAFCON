@@ -4,9 +4,22 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/develop>`__.
 
+Next release
+------------
+
+- logging is configured with a JSON file
+- logging configuration can be specified by a user and the env variable :envvar:`RAFCON_LOGGING_CONF`
+
 
 Patch releases 0.9.\*
 ---------------------
+
+0.9.6
+"""""
+
+- Bug fixes
+
+  - fix step mode
 
 0.9.5
 """""
