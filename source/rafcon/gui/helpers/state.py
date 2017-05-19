@@ -25,10 +25,9 @@ from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibrary
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
 from rafcon.gui.clipboard import global_clipboard
-from rafcon.gui.models.state_machine import StateMachineModel
-from rafcon.gui.models.library_state import LibraryStateModel
-from rafcon.gui.models.container_state import ContainerStateModel, AbstractStateModel, StateModel, ScopedVariableModel
-from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg, Notification
+from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateModel, LibraryStateModel, \
+    ScopedVariableModel, StateMachineModel, get_state_model_class_for_state
+from rafcon.gui.models.signals import ActionSignalMsg
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
@@ -367,11 +366,13 @@ def model_has_empty_meta(m, ignored_keys=None, ignored_partial_keys=None):
 
 def substitute_state(target_state_m, state_m_to_insert):
     # print "substitute_state"
+    gaphas_editor = True if gui_singletons.global_gui_config.get_config_value('GAPHAS_EDITOR') else False
     state_to_insert = state_m_to_insert.state
     action_parent_m = target_state_m.parent
     old_state_m = target_state_m
     old_state = old_state_m.state
     state_id = old_state.state_id
+    # print "TARGET", old_state_m.get_meta_data_editor(gaphas_editor)
 
     # BEFORE MODEL
     tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'state': None}
@@ -383,6 +384,7 @@ def substitute_state(target_state_m, state_m_to_insert):
                                                    kwargs={'state_id': state_id, 'state': state_to_insert}))
     related_transitions, related_data_flows = action_parent_m.state.related_linkage_state(state_id)
     tmp_meta_data['state'] = old_state_m.meta
+    # print "old state meta", old_state_m.meta
     for t in related_transitions['external']['ingoing'] + related_transitions['external']['outgoing']:
         tmp_meta_data['transitions'][t.transition_id] = action_parent_m.get_transition_m(t.transition_id).meta
     for df in related_data_flows['external']['ingoing'] + related_data_flows['external']['outgoing']:
@@ -390,10 +392,30 @@ def substitute_state(target_state_m, state_m_to_insert):
     action_parent_m.substitute_state.__func__.tmp_meta_data_storage = tmp_meta_data
     action_parent_m.substitute_state.__func__.old_state_m = old_state_m
 
+    # # TODO re-organize and use partly the expected_models pattern the next lines
+    if isinstance(state_m_to_insert, ContainerStateModel) and not model_has_empty_meta(state_m_to_insert):
+        size = state_m_to_insert.set_meta_data_editor('size',
+                                                      old_state_m.get_meta_data_editor(gaphas_editor)['size'],
+                                                      gaphas_editor)
+        rel_pos = state_m_to_insert.set_meta_data_editor('rel_pos',
+                                                         old_state_m.get_meta_data_editor(gaphas_editor)['rel_pos'],
+                                                         gaphas_editor)
+        models_dict = {'state': state_m_to_insert}
+        # print "TARGET1", state_m_to_insert.get_meta_data_editor(gaphas_editor)['size'], \
+        #     old_state_m.get_meta_data_editor(gaphas_editor)['size'], size
+
+        for key in global_clipboard._container_state_unlimited:
+            elems_list = getattr(state_m_to_insert, key)
+            elems_list = elems_list.values() if hasattr(elems_list, 'keys') else elems_list
+            models_dict[key] = {elem.core_element.core_element_id: elem for elem in elems_list}
+        # print "TARGET2", models_dict['state'].get_meta_data_editor(gaphas_editor)['size']
+        gui_helper_meta_data.scale_meta_data_according_state(models_dict)
+
     # CORE
     new_state = e = None
     # print "state to insert", state_to_insert
     try:
+        action_parent_m.expected_future_models.add(state_m_to_insert)
         new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
         # assert new_state.state_id is state_id
         assert new_state is state_to_insert
@@ -422,25 +444,6 @@ def substitute_state(target_state_m, state_m_to_insert):
             elif df_id in action_parent_m.state.substitute_state.__func__.re_create_io_going_df_ids:
                 logger.warning("Data flow model with id {0} to set meta data could not be found.".format(df_id))
 
-        # TODO re-organize and use partly the expected_models pattern the next lines
-        if isinstance(state_m_to_insert, ContainerStateModel) and not model_has_empty_meta(state_m_to_insert):
-            models_dict = {'state': new_state_m}
-            for key in global_clipboard._container_state_unlimited:
-                elems_list = getattr(state_m_to_insert, key)
-                elems_list = elems_list.values() if hasattr(elems_list, 'keys') else elems_list
-                models_dict[key] = {elem.core_element.core_element_id: elem for elem in elems_list}
-            gui_helper_meta_data.scale_meta_data_according_state(models_dict)
-            for key in global_clipboard._container_state_unlimited:
-                elems_list = getattr(new_state_m, key)
-                elems_list = elems_list.values() if hasattr(elems_list, 'keys') else elems_list
-                for elem in elems_list:
-                    elem.meta = models_dict[key][elem.core_element.core_element_id].meta
-        else:
-            if isinstance(state_m_to_insert, ContainerStateModel):
-                logger.info("Models have partly empty meta no resize provided")
-
-        # notification = Notification(action_parent_m, "states", {'method_name': 'substitute_state'})
-        # action_parent_m.meta_signal.emit(MetaSignalMsg("substitute_state", "all", True, notification))
         msg = ActionSignalMsg(action='substitute_state', origin='model', action_parent_m=action_parent_m,
                               affected_models=changed_models, after=True, result=e)
         # print "EMIT-AFTER OLDSTATE", msg
@@ -480,43 +483,18 @@ def substitute_selected_state(state, as_template=False):
     parent_state = current_state.parent
 
     if not as_template:
-        if isinstance(state, ContainerState):
-            state_m = ContainerStateModel(state)
-        else:
-            state_m = StateModel(state)
+        state_m = get_state_model_class_for_state(state)(state)
         substitute_state(parent_state_m.states[current_state.state_id], state_m)
         state.name = current_state_name
         return True
     # If inserted as template, we have to extract the state_copy and load the meta data manually
     else:
         assert isinstance(state, LibraryState)
-        # print "as template"
+        # print "as template", parent_state_m.states[current_state.state_id].get_meta_data_editor()
         template_m = LibraryStateModel(state).state_copy
         # print template_m
-        template = template_m.state
-        orig_state_id = template.state_id
-        if isinstance(state.state_copy, ContainerState):
-            # print "container state"
-            # load meta data TODO fix the following code and related code/functions to the 'template' True flag
-            import os.path
-            lib_os_path, _, _ = library_manager.get_os_path_to_library(state.library_path, state.library_name)
-            state_identifier = storage.get_storage_id_for_state(template)
-            root_state_path = os.path.join(lib_os_path, state_identifier)
-
-            def load_models_recursive(state_m, path):
-                state_m.load_meta_data(path)
-                # print state_m, state_m.meta
-                if isinstance(state_m, ContainerStateModel):
-                    for child_state_id, child_state_m in state_m.states.iteritems():
-                        load_models_recursive(child_state_m,
-                                              os.path.join(path, storage.get_storage_id_for_state(child_state_m.state)))
-            # print "META DATA BEFORE"
-            load_models_recursive(template_m, root_state_path)
-        else:
-            # print "execution state"
-            template_m = StateModel(template)
-
         substitute_state(parent_state_m.states[current_state.state_id], template_m)
+        # template = template_m.state
         # template.change_state_id()
         # template.name = current_state_name
 
@@ -537,7 +515,9 @@ def substitute_selected_state_and_use_choice_dialog():
 def substitute_selected_library_state_with_template():
     selected_states = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
     if selected_states and len(selected_states) == 1 and isinstance(selected_states[0], LibraryStateModel):
+        # print "start substitute library state with template"
         lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_states[0].state))
+        # lib_state_m = copy.deepcopy(selected_states[0].state)
         substitute_selected_state(lib_state, as_template=True)
         return True
     else:
