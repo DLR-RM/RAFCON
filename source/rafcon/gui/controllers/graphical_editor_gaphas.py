@@ -285,6 +285,12 @@ class GraphicalEditorController(ExtendedController):
         :param str _: Always "state_meta_signal"
         :param dict info: Information about the change, contains the MetaSignalMessage in the 'arg' key value
         """
+        if 'signal' in info:
+            msg = info.arg
+            if msg.change == 'show_content':
+                print "message: ", info
+                self.adapt_complex_action(self.model.get_state_model_by_path(msg.notification.model.state.get_path()),
+                                          msg.notification.model)
         meta_signal_message = info['arg']
         if meta_signal_message.origin == "graphical_editor_gaphas":  # Ignore changes caused by ourself
             return
@@ -295,6 +301,7 @@ class GraphicalEditorController(ExtendedController):
             return              # Ignore the one with less information
         if self._complex_action:
             return
+
         model = notification.model
         view = self.canvas.get_view_for_model(model)
         if isinstance(view, StateView):
@@ -853,7 +860,14 @@ class GraphicalEditorController(ExtendedController):
             # Keep state within parent
             pass
 
-        if isinstance(state_m, ContainerStateModel):
+        if isinstance(state_m, ContainerStateModel) or \
+                isinstance(state_m, LibraryStateModel) and isinstance(state_m.state_copy, ContainerStateModel) and \
+                state_m.meta['gui']['show_content']:
+            if isinstance(state_m, LibraryStateModel):
+                logger.info("Library {0}".format(state_m))
+                state_m = state_m.state_copy
+                gui_helper_meta_data.scale_library_content_to_fit(state_m, gaphas_editor=True)
+
             num_child_state = 0
 
             for scoped_variable_m in state_m.scoped_variables:
