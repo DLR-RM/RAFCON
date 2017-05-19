@@ -168,6 +168,10 @@ class AbstractStateModel(MetaModel, Hashable):
         # TODO rewrite it to be more efficient -> try a recursive pattern on parent
         return len(self.state.get_path().split('/'))
 
+    @property
+    def hierarchy_level(self):
+        return len(self.state.get_path().split('/'))
+
     def prepare_destruction(self):
         """Prepares the model for destruction
 
@@ -391,10 +395,11 @@ class AbstractStateModel(MetaModel, Hashable):
         :param str path: Optional file system path to the meta data file. If not given, the path will be derived from
             the state's path on the filesystem
         """
-        # print "AbstractState_load_meta_data: ", path
+        # print "1AbstractState_load_meta_data: ", path
+        # print not path
         if not path:
             path = self.state.get_file_system_path()
-        # print "AbstractState_load_meta_data: ", path
+        # print "2AbstractState_load_meta_data: ", path
 
         path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA)
 
@@ -425,6 +430,10 @@ class AbstractStateModel(MetaModel, Hashable):
             # assign the meta data to the state
             self.meta = tmp_meta
             self.meta_signal.emit(MetaSignalMsg("load_meta_data", "all", True))
+            return True
+        else:
+            # print "nothing to parse", tmp_meta
+            return False
 
     def store_meta_data(self, temp_path=None):
         """Save meta data of state model to the file system
@@ -472,6 +481,7 @@ class AbstractStateModel(MetaModel, Hashable):
 
         :param meta_data: Dictionary of loaded meta data
         """
+        # print "_parse meta data", meta_data
         for data_port_m in self.input_data_ports:
             self._copy_element_meta_data_from_meta_file_data(meta_data, data_port_m, "input_data_port",
                                                              data_port_m.data_port.data_port_id)
@@ -496,6 +506,7 @@ class AbstractStateModel(MetaModel, Hashable):
         """
         meta_data_element_id = element_name + str(element_id)
         meta_data_element = meta_data[meta_data_element_id]
+        # print meta_data_element_id, element_m, meta_data_element
         element_m.meta = meta_data_element
         del meta_data[meta_data_element_id]
 
