@@ -556,22 +556,34 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :rtype: str
         :return: the path on the filesystem where the state is stored
         """
+        # print "\nget_file_system_path\n"
         if self.is_root_state_of_library:
             path = str(self.get_storage_path())
-            # print "State_get_file_system_path -11: ", path, os.path.exists(path)
+            # print "State_get_file_system_path 11: ", path, os.path.exists(path)
             if os.path.exists(path):
                 return path
             else:
                 path = str(self.get_storage_path(old_delimiter=True))
-                # print "State_get_file_system_path -12: ", path
+                # print "State_get_file_system_path 12: ", path
+                return path
+        elif self.get_library_root_state():
+            lib_state = self.get_library_root_state()
+            lib_root_state_path = lib_state.get_file_system_path()
+            path = os.path.join(lib_root_state_path, str(self.get_storage_path()))
+            # print "State_get_file_system_path 21: ", path
+            if os.path.exists(path):
+                return path
+            else:
+                # print "State_get_file_system_path 22: ", path
+                path = os.path.join(lib_root_state_path, str(self.get_storage_path(old_delimiter=True)))
                 return path
         elif not self.get_state_machine() or self.get_state_machine().file_system_path is None:
             if self._file_system_path:
-                # print "State_get_file_system_path 0: "
+                # print "State_get_file_system_path 3: "
                 return self._file_system_path
             elif self.get_state_machine():
                 if self.get_state_machine().supports_saving_state_names:
-                    # print "State_get_file_system_path 11: ",
+                    # print "State_get_file_system_path 41: ",
                     # os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
                     path = os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
                     if os.path.exists(path):
@@ -580,24 +592,25 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                         path = os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path(old_delimiter=True)))
                         return path
                 else:
-                    # print "State_get_file_system_path 12: "
+                    # print "State_get_file_system_path 42: "
                     return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
             else:
+                # print "State_get_file_system_path 43: "
                 return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
         else:
             if self.get_state_machine().supports_saving_state_names:
                 path = os.path.join(self.get_state_machine().file_system_path, str(self.get_storage_path()))
-                # print "State_get_file_system_path 21: ", path
+                # print "State_get_file_system_path 51: ", path
                 if os.path.exists(path):
                     return path
                 else:
                     path = os.path.join(self.get_state_machine().file_system_path, str(self.get_storage_path(
                         old_delimiter=True)))
-                    # print "State_get_file_system_path 22: ", path
+                    # print "State_get_file_system_path 52: ", path
                     return path
             else:
                 # the default case for ID-formatted state machines when using a GUI
-                # print "State_get_file_system_path 23: "
+                # print "State_get_file_system_path 53: "
                 return os.path.join(self.get_state_machine().file_system_path, self.get_path())
 
     @lock_state_machine
@@ -1275,6 +1288,15 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def is_root_state_of_library(self):
         from rafcon.core.states.library_state import LibraryState
         return isinstance(self.parent, LibraryState)
+
+    def get_library_root_state(self):
+        from rafcon.core.state_machine import StateMachine
+        state = self
+        while state.parent is not None and not isinstance(state.parent, StateMachine):
+            if state.parent.is_root_state_of_library:
+                return state.parent
+            state = state.parent
+        return None
 
     def finalize(self, outcome=None):
         """Finalize state
