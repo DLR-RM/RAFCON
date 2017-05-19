@@ -1674,7 +1674,6 @@ class GraphicalEditorController(ExtendedController):
                 redraw = True
 
         elif isinstance(state_m, LibraryStateModel):
-            lib_state_meta = state_m.state_copy.get_meta_data_editor(for_gaphas=False)
             show_content = state_m.meta['gui']['show_content'] is True
             is_first_draw_of_lib_state = not isinstance(state_m.state_copy.temp['gui']['editor']['pos'], tuple)
 
@@ -1689,9 +1688,17 @@ class GraphicalEditorController(ExtendedController):
                 # Resize inner states of library states if not done before
                 if is_first_draw_of_lib_state:
                     new_corner_pos = add_pos(state_temp['pos'], state_meta['size'])
-                    self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=False, resize_content=True,
-                                       redraw=False)
-                    state_m.set_meta_data_editor('size', lib_state_meta['size'], from_gaphas=False)
+                    if isinstance(state_m.state_copy, ContainerStateModel):
+                        import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+                        gui_helper_meta_data.scale_library_content_to_fit(state_m, gaphas_editor=False)
+                    else:
+                        self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
+                                           redraw=False)
+                        state_m.state_copy.set_meta_data_editor('size',
+                                                                state_m.get_meta_data_editor(for_gaphas=False)['size'],
+                                                                from_gaphas=False)
+                        state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=False)
+
                     redraw = True
 
         self._handle_new_transition(state_m, depth)

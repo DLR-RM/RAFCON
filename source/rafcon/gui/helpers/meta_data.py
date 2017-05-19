@@ -235,6 +235,29 @@ def scale_library_ports_meta_data(state_m):
     state_m.meta_data_was_scaled = True
 
 
+def scale_library_content_to_fit(state_m, gaphas_editor):
+    """Scale the meta data of the state_copy of a library state accordingly to fit into LibraryStateModel meta data"""
+    assert isinstance(state_m, LibraryStateModel)
+    models_dict = {'state': state_m}
+    gaphas_editor = False
+    size = state_m.state_copy.set_meta_data_editor('size',
+                                                   state_m.get_meta_data_editor(gaphas_editor)['size'],
+                                                   gaphas_editor)
+    rel_pos = state_m.state_copy.set_meta_data_editor('rel_pos',
+                                                      state_m.get_meta_data_editor(gaphas_editor)['rel_pos'],
+                                                      gaphas_editor)
+
+    # print "TARGET1", rel_pos, size, state_m.state_copy.get_meta_data_editor(gaphas_editor)['size'], \
+    #     state_m.get_meta_data_editor(gaphas_editor)['size']
+    for key in global_clipboard._container_state_unlimited:
+        elems_list = getattr(state_m.state_copy, key)
+        elems_list = elems_list.values() if hasattr(elems_list, 'keys') else elems_list
+        models_dict[key] = {elem.core_element.core_element_id: elem for elem in elems_list}
+    state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=False)
+    # print "TARGET2", models_dict['state'].get_meta_data_editor(gaphas_editor)['size']
+    scale_meta_data_according_state(models_dict)
+
+
 def resize_state_port_meta(state_m, factor, gaphas_editor):
 
     # print "scale ports", factor, state_m, gaphas_editor
