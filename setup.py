@@ -30,10 +30,6 @@ class PyTest(TestCommand):
         rafcon_path = path.join(path.dirname(path.abspath(__file__)), 'source')
         sys.path.insert(0, test_path)
         sys.path.insert(0, rafcon_path)
-        # Dirty hack trying to fix issue that gdk is not found
-        # See also http://stackoverflow.com/questions/22703496/problems-with-pygtks-gdk-module
-        import gtk
-        sys.modules['gdk'] = sys.modules['gtk.gdk']
         os.environ["PYTHONPATH"] = rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
         error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'network')])
         if not error_number:
