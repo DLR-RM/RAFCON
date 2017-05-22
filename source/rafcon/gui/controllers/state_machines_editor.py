@@ -79,6 +79,7 @@ def create_tab_header(title, close_callback, *additional_parameters):
     hbox.pack_start(label, expand=True, fill=True, padding=constants.GRID_SIZE)
     hbox.pack_start(close_button, expand=False, fill=False, padding=0)
     hbox.show_all()
+    hbox.tab_label = label
 
     return hbox, label
 
@@ -203,12 +204,6 @@ class StateMachinesEditorController(ExtendedController):
             if tab_info['page'] is page:
                 return get_state_machine_id(tab_info['state_machine_m'])
 
-    def set_menu_label_text(self, state_machine_m, page):
-        # set menu label which is shown if the user right clicks the notebook to see the list of all pages
-        root_state_name = state_machine_m.root_state.state.name
-        root_state_name_trimmed = text_formatting.limit_string(root_state_name, ROOT_STATE_NAME_MAX_CHARS)
-        self.view.notebook.set_menu_label_text(page, root_state_name_trimmed)
-
     def add_graphical_state_machine_editor(self, state_machine_m):
         """Add to for new state machine
 
@@ -236,7 +231,6 @@ class StateMachinesEditorController(ExtendedController):
         page = graphical_editor_view['main_frame']
 
         self.view.notebook.append_page(page, tab)
-        self.set_menu_label_text(state_machine_m, page)
         self.view.notebook.set_tab_reorderable(page, True)
         page.show_all()
 
@@ -299,8 +293,6 @@ class StateMachinesEditorController(ExtendedController):
         if sm_id in self.model.state_machine_manager.state_machines:
             label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_children()[0]
             set_tab_label_texts(label, self.tabs[sm_id]["state_machine_m"], True)
-            page = self.get_page_for_state_machine_id(sm_id)
-            self.set_menu_label_text(self.model.state_machines[sm_id], page)
 
     @ExtendedController.observe("state_machine_un_mark_dirty", assign=True)
     def sm_un_marked_dirty(self, model, prop_name, info):

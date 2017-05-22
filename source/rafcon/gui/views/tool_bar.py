@@ -31,12 +31,15 @@ class ToolBarView(View):
         button_new = self['button_new']
         button_new.set_label_widget(create_label_widget_with_icon(constants.BUTTON_NEW, _("New State Machine")))
 
+
         button_refresh = self['button_refresh']
-        button_refresh.set_label_widget(create_label_widget_with_icon(constants.BUTTON_REFR, _("Refresh")))
+        button_refresh.set_label_widget(create_label_widget_with_icon(constants.BUTTON_REFR, _("Refresh"),
+                                                                      "Refresh all Libraries and State Machines"))
 
         button_refresh_selected = self['button_refresh_selected']
-        button_refresh_selected.set_label_widget(create_label_widget_with_icon(
-            constants.BUTTON_REFR, _("Refresh Selected")))
+        button_refresh_selected.set_label_widget(create_label_widget_with_icon(constants.BUTTON_REFR,
+                                                                               _("Refresh Selected"),
+                                                                               "Refresh selected State Machine"))
 
         button_open = self['button_open']
         button_open.set_label_widget(create_label_widget_with_icon(constants.BUTTON_OPEN, _("Open State Machine")))
@@ -46,6 +49,6 @@ class ToolBarView(View):
 
         button_refresh_libs = self['button_refresh_libs']
         button_refresh_libs.set_label_widget(
-            create_label_widget_with_icon(constants.BUTTON_REFR, _("Refresh Libraries")))
+            create_label_widget_with_icon(constants.BUTTON_REFR, _("Refresh Libraries"), "Refresh all Libraries"))
 
         # self.get_top_widget().set_border_width(constants.BORDER_WIDTH)
