@@ -93,6 +93,7 @@ def log_to_collapsed_structure(execution_history_items):
             collapsed_items[rid] = execution_item
         elif gitems[0]['state_type'] == 'ExecutionState' or \
              gitems[0]['state_type'] == 'HierarchyState' or \
+             gitems[0]['state_type'] == 'LibraryState' or \
              'Concurrency' in gitems[0]['state_type']:
 
             # select call and return items for this state
