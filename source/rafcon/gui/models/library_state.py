@@ -38,7 +38,8 @@ class LibraryStateModel(AbstractStateModel):
         """Constructor
         """
         # TODO maybe find a different way to load the meta data of ports correctly
-        # at the moment the models of state_copy get initilized and the meta data taken from there
+        # at the moment the models of state_copy get initialized and the meta data taken from there if not found in
+        # state itself
         self.state_copy_initialized = False
         self.meta_data_was_scaled = False
         super(LibraryStateModel, self).__init__(state, parent, meta)
@@ -119,3 +120,7 @@ class LibraryStateModel(AbstractStateModel):
             new_oc_m.parent = self
             new_oc_m.outcome = outcome_m.outcome
             self.outcomes.append(new_oc_m)
+
+    def copy_meta_data_from_state_m(self, source_state_m):
+        super(LibraryStateModel, self).copy_meta_data_from_state_m(source_state_m)
+        self.meta_data_was_scaled = source_state_m.meta_data_was_scaled
