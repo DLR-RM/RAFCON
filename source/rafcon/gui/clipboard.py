@@ -21,7 +21,7 @@ from rafcon.core.id_generator import state_id_generator, generate_data_port_id
 from rafcon.core.states.container_state import ContainerState
 
 from rafcon.gui.models.selection import Selection
-from rafcon.gui.models.state import StateModel
+from rafcon.gui.models import StateModel
 from rafcon.gui.models.signals import ActionSignalMsg
 
 from rafcon.utils import log
@@ -145,9 +145,10 @@ class Clipboard(Observable):
             models_dict[key] = {elem[1].core_element.core_element_id: elem[1] for elem in elems_list}
 
         # if all([all([gui_helpers_state.model_has_empty_meta(elem) for elem in elems_dict.itervalues()])
-        #         if isinstance(elems_dict, dict) else gui_helpers_state.model_has_empty_meta(elems_dict)
+        #     if isinstance(elems_dict, dict) else gui_helpers_state.model_has_empty_meta(elems_dict)
         #         for elems_dict in models_dict.itervalues()]):
         gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
+        del models_dict['states']
         for key, elems_list in insert_dict.iteritems():
             for elem in elems_list:
                 elem[0].meta = elem[1].meta
@@ -180,6 +181,7 @@ class Clipboard(Observable):
     def insert_state(self, target_state_m, orig_state_copy_m):
         target_state = target_state_m.state
         orig_state_copy = orig_state_copy_m.state
+        target_state_m.expected_future_models.add(orig_state_copy_m)
 
         # secure that state_id is not target state state_id or of one state in its sub-hierarchy level
         old_state_id = orig_state_copy.state_id
@@ -192,16 +194,11 @@ class Clipboard(Observable):
             orig_state_copy.change_state_id(new_state_id)
 
         target_state.add_state(orig_state_copy)
-
-        # TODO define a way to hand model copy directly to target model to save resources (takes half of the copy time)
-        # TODO -> maybe by simply blind deposit model
-        # TODO -> maybe by signal send by target model and catch by clipboard that is registered as observer
-        # The models can be pre-generated in threads while editing is still possible -> scales better
-        new_state_copy_m = target_state_m.states[orig_state_copy.state_id]
+        assert target_state_m.states[orig_state_copy.state_id] is orig_state_copy_m
 
         # new_state_copy_m.copy_meta_data_from_state_m(orig_state_copy_m)
         self.state_id_mapping_dict[old_state_id] = new_state_id
-        return new_state_copy_m, orig_state_copy_m
+        return orig_state_copy_m, orig_state_copy_m
 
     def insert_transition(self, target_state_m, orig_transition_copy_m):
         t = orig_transition_copy_m.transition
