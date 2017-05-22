@@ -101,7 +101,7 @@ def log_to_collapsed_structure(execution_history_items):
                                     gitems[i]['call_type'] == 'EXECUTE' \
                                     for i in range(len(gitems))].index(True)]
             except ValueError:
-                # fall back to container call
+                # fall back to container call, should only happen for root state
                 call_item = gitems[[gitems[i]['item_type'] == 'CallItem' and \
                                     gitems[i]['call_type'] == 'CONTAINER' \
                                     for i in range(len(gitems))].index(True)]
@@ -112,7 +112,7 @@ def log_to_collapsed_structure(execution_history_items):
                                       gitems[i]['call_type'] == 'EXECUTE' \
                                       for i in range(len(gitems))].index(True)]
             except ValueError:
-                # fall back to container call
+                # fall back to container call, should only happen for root state
                 return_item = gitems[[gitems[i]['item_type'] == 'ReturnItem' and \
                                       gitems[i]['call_type'] == 'CONTAINER' \
                                       for i in range(len(gitems))].index(True)]
