@@ -16,6 +16,7 @@ import gobject
 from gtkmvc import View
 from rafcon.gui.utils import constants
 from rafcon.gui.config import global_gui_config as gui_config
+from rafcon.gui.helpers.label import create_image_menu_item
 
 
 class StateMachinesEditorView(View):
@@ -26,7 +27,6 @@ class StateMachinesEditorView(View):
         self.notebook.set_tab_hborder(constants.TAB_BORDER_WIDTH)
         self.notebook.set_tab_vborder(constants.TAB_BORDER_WIDTH)
         self.notebook.set_scrollable(True)
-        self.notebook.popup_enable()
         self.notebook.set_name("state_machines_notebook")
         self.notebook.show()
 
@@ -75,7 +75,8 @@ class PlusAddNotebook(gtk.Notebook):
         self._add_button_drawn = False
 
     def on_button_press(self, widget, event):
-        """ Emit an add_state_machine signal if a left double click is performed right of open state machine tabs
+        """ Emit an add_state_machine signal if a left double click is performed right of open state machine tabs and 
+        generate a popup menu to switch pages and create new or close state machines.
         """
         pb_x, pb_y = self.get_pixbuf_xy()
         pb_height = self.pixbuf.get_height()
@@ -88,6 +89,37 @@ class PlusAddNotebook(gtk.Notebook):
                 event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
             self.emit("add_state_machine")
             return True
+
+        elif pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN and \
+                event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
+
+            number_of_pages = self.get_n_pages()
+            menu = gtk.Menu()
+            for p in range(number_of_pages):
+                page = self.get_nth_page(p)
+                hbox_tab_label = self.get_tab_label(page)
+                text = hbox_tab_label.tab_label.get_text()
+                menu_item = create_image_menu_item(text, constants.BUTTON_EXCHANGE,
+                                                   callback=self.change_page, callback_args=[p])
+                menu.append(menu_item)
+
+            menu_item = create_image_menu_item("New State Machine", constants.BUTTON_ADD,
+                                               callback=self.do_emit, callback_args=["add_state_machine"])
+            menu.append(menu_item)
+
+            menu_item = create_image_menu_item("Close State Machine", constants.BUTTON_CLOSE,
+                                               callback=self.do_emit, callback_args=["close_state_machine"])
+            menu.append(menu_item)
+
+            menu.show_all()
+            menu.popup(None, None, None, event.button, event.time)
+            return True
+
+    def do_emit(self, widget, string):
+        self.emit(string)
+
+    def change_page(self, widget, new_page_number):
+        self.set_current_page(new_page_number)
 
     def on_button_release(self, widget, event):
         """ Emit an add_state_machine signal if a left click is performed on the drawn pix-buffer add button area and 
