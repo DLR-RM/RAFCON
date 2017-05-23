@@ -76,26 +76,13 @@ Patch releases 0.9.\*
   - Substitute State
   - Open externally
   - Save selected state as library
-
-- Bug Fixes
-
-  - :issue:`299`: State labels can be placed outside the state borders
-  - :issue:`298`: Child states can be placed outside hierarchy states
-  
-
-Patch releases 0.8.\*
----------------------
-
-0.8.4
-"""""
-
-- Improvements
-
   - Meta data convert methods with clear interface from Gaphas to OpenGL and OpenGL to Gaphas -> only one type of meta data hold
   - Undocked side bars can be restored automatically after restart if `RESTORE_UNDOCKED_SIDEBARS` is set to True.
 
 - Bug Fixes
 
+  - :issue:`299`: State labels can be placed outside the state borders
+  - :issue:`298`: Child states can be placed outside hierarchy states
   - :issue:`45`: Size of GUI cannot be changed
   - :issue:`284`: Core does not check the type of the default values
   - :issue:`282`: Input and output data port default_value check does not cover all cases
@@ -117,6 +104,17 @@ Patch releases 0.8.\*
   - :issue:`251`: Handles are added when hovering over a transition handle
   - :issue:`259`: Do not hard code version in about dialog
   - :issue:`260`: Meta data is loaded several times
+  
+
+Patch releases 0.8.\*
+---------------------
+
+0.8.4
+"""""
+
+- Improvements:
+  - allow loading of state machines created with RAFCON 0.9.*
+
 
 0.8.3
 """""
