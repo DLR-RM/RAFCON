@@ -80,10 +80,10 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     @classmethod
     def from_dict(cls, dictionary):
-        version = dictionary['version']
+        state_machine_version = dictionary['version'] if 'version' in dictionary else dictionary['state_machine_version']
         creation_time = dictionary['creation_time']
         last_update = dictionary['last_update']
-        return cls(None, version, creation_time, last_update)
+        return cls(None, state_machine_version, creation_time, last_update)
 
     def to_dict(self):
         return self.state_machine_to_dict(self)
