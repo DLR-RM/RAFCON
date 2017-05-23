@@ -196,14 +196,10 @@ class LibraryManager(Observable):
         :rtype: str, str, str
         :raises rafcon.core.custom_exceptions.LibraryNotFoundException: if the cannot be found
         """
-        # TODO this method needs refactoring it is to cryptic (e.g. end of while loop) and similar code is
-        # TODO get_library_path_and_name_for_os_path
-        path_list = library_path.split(os.sep)
-
-        original_path_and_name = library_path + library_name
+        original_path_and_name = library_path + os.sep + library_name
         library_path_root = library_path.split(os.sep)[0]
 
-        if path_list and (library_path.startswith(os.sep) or library_path.endswith(os.sep)):
+        if library_path.split(os.sep) and (library_path.startswith(os.sep) or library_path.endswith(os.sep)):
             raise LibraryNotFoundException("A library library_os_path is not considered to start or end with {2} like "
                                            "'{0}' with library name {1}".format(library_path, library_name, os.sep))
 
@@ -218,37 +214,34 @@ class LibraryManager(Observable):
 
         # replace already replaced states
         if original_path_and_name in self._replaced_libraries:
-            new_path = self._replaced_libraries[original_path_and_name][0]
-            new_library_sys_path = self._replaced_libraries[original_path_and_name][1]
+            new_library_os_path = self._replaced_libraries[original_path_and_name][0]
+            new_library_path = self._replaced_libraries[original_path_and_name][1]
 
             # only show debug message if a state is automatically replaced by the appropriate library state
             # chosen by the user before
             if not self._replaced_libraries[original_path_and_name][2]:
-                logger.debug("The library with library library_os_path \"{0}\" and name \"{1}\" "
+                logger.debug("The library with library library_path \"{0}\" and name \"{1}\" "
                              "is automatically replaced by the library "
-                             "with file system library_os_path \"{2}\" and library library_os_path \"{3}\"".format(library_path,
-                                                                                             library_name,
-                                                                                             new_path,
-                                                                                             new_library_sys_path))
-            return new_path, new_library_sys_path, library_name
+                             "with file system library_os_path \"{2}\" and library library_os_path \"{3}\""
+                             "".format(library_path, library_name, new_library_os_path, new_library_path))
+            return new_library_os_path, new_library_path, library_name
 
         # a boolean to indicate if a state was regularly found or by the help of the user
         regularly_found = True
 
-        target_lib_dict = self._get_target_lib_dict_leaf(path_list)
-        library_os_path = None if target_lib_dict is None else target_lib_dict[library_name]
+        library_os_path = self._get_library_os_path_from_library_dict_tree(library_path, library_name)
         while library_os_path is None:  # until the library is found or the user aborts
 
             regularly_found = False
             new_library_sys_path = None
             if allow_user_interaction:
                 notice = "Cannot find library '{0}' in subfolder '{1}'. Please check your library library_os_path " \
-                         "configuration. If your library library_os_path is correct and the library was moved, please select" \
-                         " the new root folder of the library. If not, please abort.".format(library_name,
-                                                                                             library_path)
+                         "configuration. If your library library_os_path is correct and the library was moved, please" \
+                         " select the new root folder of the library. If not, please abort.".format(library_name,
+                                                                                                    library_path)
                 interface.show_notice_func(notice)
-                new_library_sys_path = interface.open_folder_func("Select root folder for library '{0}'".format(
-                    library_name))
+                new_library_sys_path = interface.open_folder_func("Select root folder for library name '{0}'"
+                                                                  "".format(original_path_and_name))
             if new_library_sys_path is None:
                 # User clicked cancel => cancel library search
                 # If the library root is existent (e.g. "generic") and only the specific library state is not (
@@ -266,21 +259,15 @@ class LibraryManager(Observable):
                 logger.error('Specified library_os_path does not exist')
                 continue
 
-            library_root_key = self._get_library_root_key_for_abs_path(new_library_sys_path)
-            if library_root_key is None:
-                logger.error("Specified library_os_path not within library library_os_path list or your config file")
+            # check if valid library_path and library_name can be created
+            library_path, library_name = self.get_library_path_and_name_for_os_path(new_library_sys_path)
+            if library_path is None:
+                logger.error("Specified library_path not within loaded library library_root_path list or "
+                             "your config file")
                 continue  # Allow the user to change the directory
 
-            # construct library_name and library_path from library_root_key and new_library_sys_path
-            rel_path = os.path.relpath(new_library_sys_path, self._library_paths[library_root_key])
-            path_list = rel_path.split(os.sep)
-            library_name = path_list[-1]
-            path_list = [library_root_key] + path_list[:-1]
-            library_path = os.path.join(*path_list)
-
-            # verification
-            target_lib_dict = self._get_target_lib_dict_leaf(path_list)
-            library_os_path = None if target_lib_dict is None else target_lib_dict[library_name]
+            # verification if library is also in library tree
+            library_os_path = self._get_library_os_path_from_library_dict_tree(library_path, library_name)
             if library_os_path is not None:
                 assert library_os_path == new_library_sys_path
 
@@ -289,7 +276,10 @@ class LibraryManager(Observable):
         self._replaced_libraries[original_path_and_name] = (library_os_path, library_path, regularly_found)
         return library_os_path, library_path, library_name
 
-    def _get_target_lib_dict_leaf(self, path_list):
+    def _get_library_os_path_from_library_dict_tree(self, library_path, library_name):
+        if library_path is None or library_name is None:
+            return None
+        path_list = library_path.split(os.sep)
         target_lib_dict = self.libraries
         # go down the path to the correct library
         for path_element in path_list:
@@ -297,9 +287,9 @@ class LibraryManager(Observable):
                 target_lib_dict = None
                 break
             target_lib_dict = target_lib_dict[path_element]
-        return target_lib_dict
+        return None if target_lib_dict is None or library_name not in target_lib_dict else target_lib_dict[library_name]
 
-    def _get_library_root_key_for_abs_path(self, path):
+    def _get_library_root_key_for_os_path(self, path):
         path = os.path.realpath(path)
         library_root_key = None
         for library_root_key, library_root_path in self._library_paths.iteritems():
@@ -311,40 +301,25 @@ class LibraryManager(Observable):
                 break
         return library_root_key
 
-    def is_path_within_library_path_list(self, path):
-        return True if self._get_library_root_key_for_abs_path(path) is not None else False
+    def is_os_path_within_library_paths(self, path):
+        return True if self._get_library_root_key_for_os_path(path) is not None else False
 
     def is_library_in_libraries(self, library_path, library_name):
-        library_path_elements = library_path.split(os.sep)
-        sub_library = self.libraries
-        for path_element in library_path_elements:
-            if path_element in sub_library:
-                sub_library = sub_library[path_element]
-            else:
-                return False
-        if library_name in sub_library:
-            return True
-        else:
-            return False
-
-    def is_os_path_in_library_paths(self, os_path):
-        return any([root_path == os_path[:len(root_path)] for root_path in self._library_paths.values()])
+        library_os_path = self._get_library_os_path_from_library_dict_tree(library_path, library_name)
+        return True if library_os_path is not None else False
 
     def get_library_path_and_name_for_os_path(self, path):
         library_path = None
         library_name = None
-        if self.is_os_path_in_library_paths(path):
-            for key, root_path in self._library_paths.iteritems():
-                if len(root_path) <= len(path) and root_path == path[:len(root_path)]:
-                    library_root_path = root_path
-                    library_root_name = key
-                    path_elements_without_library_root = path[len(library_root_path)+1:].split(os.sep)
-                    library_name = path_elements_without_library_root[-1]
-                    sub_library_path = ''
-                    if len(path_elements_without_library_root[:-1]):
-                        sub_library_path = os.sep + os.sep.join(path_elements_without_library_root[:-1])
-                    library_path = library_root_name + sub_library_path
-                    break
+        library_root_key = self._get_library_root_key_for_os_path(path)
+        if library_root_key is not None:
+            library_root_path = self._library_paths[library_root_key]
+            path_elements_without_library_root = path[len(library_root_path)+1:].split(os.sep)
+            library_name = path_elements_without_library_root[-1]
+            sub_library_path = ''
+            if len(path_elements_without_library_root[:-1]):
+                sub_library_path = os.sep + os.sep.join(path_elements_without_library_root[:-1])
+            library_path = library_root_key + sub_library_path
         return library_path, library_name
 
     def get_library_instance(self, library_path, library_name):
