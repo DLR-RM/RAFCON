@@ -10,6 +10,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+import os
 import gtk
 import copy
 
@@ -23,7 +24,7 @@ from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibrary
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.models.state_machine import StateMachineModel, ContainerStateModel
 from rafcon.gui.models.library_state import LibraryStateModel
-from rafcon.gui.utils.dialog import RAFCONButtonDialog
+from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -117,60 +118,119 @@ def save_selected_state_as():
         else:
             logger.warning("No valid path specified")
             return False
+
         # check if state machine is in library path
-        if library_manager.is_os_path_in_library_paths(path):
+        if library_manager.is_os_path_within_library_paths(path):
             # TODO use a check box dialog with three check boxes and an confirmation and cancel button
 
-            # Library refresh dialog
-            def on_message_dialog_response_signal(widget, response_id):
 
-                if response_id == 1:
-                    logger.debug("Library refresh is triggered.")
-                    gui_helper_state_machine.refresh_libraries()
-                elif response_id == 2:
-                    logger.debug("Refresh all is triggered.")
-                    gui_helper_state_machine.refresh_all(None)
-                elif response_id in [3, -4]:
-                    pass
-                else:
-                    logger.warning("Response id: {} is not considered".format(response_id))
-                    return
-                widget.destroy()
+            # refreshed_library = False
+            # message_string = "You stored your state machine in a path that is included into the library paths.\n\n"\
+            #                  "Do you want to refresh the libraries or refresh libraries and state machines?"
+            # dialog = RAFCONButtonDialog(message_string, ["Refresh libraries", "Refresh everything", "Do nothing"],
+            #                             message_type=gtk.MESSAGE_QUESTION,
+            #                             parent=gui_singletons.main_window_controller.get_root_window())
+            # response_id = dialog.run()
+            # if response_id == 1:
+            #     logger.debug("Library refresh is triggered.")
+            #     gui_helper_state_machine.refresh_libraries()
+            # elif response_id == 2:
+            #     logger.debug("Refresh all is triggered.")
+            #     gui_helper_state_machine.refresh_all(None)
+            # elif response_id in [3, -4]:
+            #     pass
+            # else:
+            #     logger.warning("Response id: {} is not considered".format(response_id))
+            #     return
+            # if response_id in [1, 2]:
+            #     refreshed_library = True
+            # dialog.destroy()
+
+
+            # message_string = "You stored your state machine in a path that is included into the library paths.\n\n"\
+            #                  "Do you want to substitute the state you saved by this library?"
+            # dialog = RAFCONButtonDialog(message_string, ["Substitute", "Do nothing"],
+            #                             message_type=gtk.MESSAGE_QUESTION,
+            #                             parent=gui_singletons.main_window_controller.get_root_window())
+            # response_id = dialog.run()
+            # if response_id == 1:
+            #     logger.debug("Substitute saved state with Library.")
+            #     if not refreshed_library:
+            #         gui_helper_state_machine.refresh_libraries()
+            #     state_machine_manager_model.selected_state_machine_id = state_machine_id
+            #     [library_path, library_name] = library_manager.get_library_path_and_name_for_os_path(path)
+            #     state = library_manager.get_library_instance(library_path, library_name)
+            #     gui_helper_state_machine.substitute_state(state, as_template=False)
+            # elif response_id in [2, -4]:
+            #     pass
+            # else:
+            #     logger.warning("Response id: {} is not considered".format(response_id))
+            #     return
+            # dialog.destroy()
+            # Offer library refresh, state machines refresh, state substitution and open separately check box dialog
+
+            _library_path, _library_name = \
+                library_manager.get_library_path_and_name_for_os_path(sm_m.state_machine.file_system_path)
+            overwrote_old_lib = library_manager.is_library_in_libraries(_library_path, _library_name)
 
             message_string = "You stored your state machine in a path that is included into the library paths.\n\n"\
-                             "Do you want to refresh the libraries or refresh libraries and state machines?"
-            RAFCONButtonDialog(message_string, ["Refresh libraries", "Refresh everything", "Do nothing"],
-                               on_message_dialog_response_signal,
-                               message_type=gtk.MESSAGE_QUESTION,
-                               parent=gui_singletons.main_window_controller.get_root_window())
+                             "Do you want to:"
 
-            # Offer state substitution dialog
-            def on_message_dialog_response_signal(widget, response_id):
+            table_header = ["Option", "Description"]
+            table_data = [(True, "Substitute the state you saved by this library."),
+                          (True, "Open the newly created state machine.")]
+            if overwrote_old_lib:
+                table_data.append((False, "Refresh all open state machines because state machine was overwriting "
+                                          "existing library_os_path."))
 
-                if response_id == 1:
-                    logger.debug("Substitute saved state with Library.")
+            dialog = RAFCONCheckBoxTableDialog(message_string,
+                                               button_texts=("Apply", "Cancel"),
+                                               table_header=table_header, table_data=table_data,
+                                               message_type=gtk.MESSAGE_QUESTION,
+                                               parent=gui_singletons.main_window_controller.view.get_top_widget(),
+                                               width=800, standalone=False)
+            response_id = dialog.run()
+            if response_id == 1:
+
+                if overwrote_old_lib and dialog.list_store[2][0]:
+                    logger.debug("Refresh all is triggered.")
+                    menu_bar_ctrl = gui_singletons.main_window_controller.get_controller('menu_bar_controller')
+                    gui_helper_state_machine.refresh_all(menu_bar_ctrl)
+                else:  # if not all was refreshed at least the libraries are refreshed
+                    logger.debug("Library refresh is triggered.")
                     gui_helper_state_machine.refresh_libraries()
+
+                if dialog.list_store[0][0]:
+                    logger.debug("Substitute saved state with Library.")
+                    if dialog.list_store[0][0] or dialog.list_store[0][1]:
+                        gui_helper_state_machine.refresh_libraries()
                     state_machine_manager_model.selected_state_machine_id = state_machine_id
                     [library_path, library_name] = library_manager.get_library_path_and_name_for_os_path(path)
                     state = library_manager.get_library_instance(library_path, library_name)
-                    gui_helper_state_machine.substitute_state(state, as_template=False)
-                elif response_id in [2, -4]:
-                    pass
-                else:
-                    logger.warning("Response id: {} is not considered".format(response_id))
-                    return
-                widget.destroy()
-
-            message_string = "You stored your state machine in a path that is included into the library paths.\n\n"\
-                             "Do you want to substitute the state you saved by this library?"
-            RAFCONButtonDialog(message_string, ["Substitute", "Do nothing"],
-                               on_message_dialog_response_signal,
-                               message_type=gtk.MESSAGE_QUESTION,
-                               parent=gui_singletons.main_window_controller.get_root_window())
-
-        # Offer to open saved state machine dialog
-        def on_message_dialog_response_signal(widget, response_id):
-
+                    try:
+                        gui_helper_state_machine.substitute_state(state, as_template=False)
+                    except ValueError as e:
+                        logger.error('Error while trying to open state machine: {0}'.format(e))
+                if dialog.list_store[1][0]:
+                    logger.debug("Open state machine.")
+                    try:
+                        state_machine = storage.load_state_machine_from_path(path)
+                        state_machine_manager.add_state_machine(state_machine)
+                    except (ValueError, IOError) as e:
+                        logger.error('Error while trying to open state machine: {0}'.format(e))
+            elif response_id in [2, -4]:
+                pass
+            else:
+                logger.warning("Response id: {} is not considered".format(response_id))
+                return
+            dialog.destroy()
+        else:
+            # Offer to open saved state machine dialog
+            message_string = "Should the newly created state machine be opened?"
+            dialog = RAFCONButtonDialog(message_string, ["Open", "Do not open"],
+                                        message_type=gtk.MESSAGE_QUESTION,
+                                        parent=gui_singletons.main_window_controller.get_root_window())
+            response_id = dialog.run()
             if response_id == 1:
                 logger.debug("Open state machine.")
                 try:
@@ -183,12 +243,8 @@ def save_selected_state_as():
             else:
                 logger.warning("Response id: {} is not considered".format(response_id))
                 return
-            widget.destroy()
+            dialog.destroy()
 
-        message_string = "Should the newly created state machine be opened?"
-        RAFCONButtonDialog(message_string, ["Open", "Do not open"], on_message_dialog_response_signal,
-                           message_type=gtk.MESSAGE_QUESTION,
-                           parent=gui_singletons.main_window_controller.get_root_window())
         return True
     else:
         logger.warning("Multiple states can not be saved as state machine directly. Group them before.")
