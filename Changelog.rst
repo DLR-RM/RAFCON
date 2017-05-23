@@ -1,10 +1,16 @@
 Patch releases 0.8.\*
 =====================
 
+0.8.4
+-----
+
+- Improvements:
+  - allow loading of state machines created with RAFCON 0.9.*
+
 0.8.3
 -----
 
--Bug Fixes:
+- Bug Fixes:
   - fix copy paste of library states, consisting of containers
   - fix error output of not matching output data types
 
