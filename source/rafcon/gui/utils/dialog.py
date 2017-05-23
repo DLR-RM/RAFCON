@@ -251,7 +251,7 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
     :param standalone: specify if the dialog should run by itself and is only cancelable by a callback function
     """
 
-    def __init__(self, markup_text, button_texts, callback, callback_args=(), table_header=None, table_data=None,
+    def __init__(self, markup_text, button_texts, callback=None, callback_args=(), table_header=None, table_data=None,
                  toggled_callback=None, message_type=gtk.MESSAGE_INFO, parent=None, width=None, standalone=True):
 
         super(RAFCONCheckBoxTableDialog, self).__init__(markup_text, button_texts,
