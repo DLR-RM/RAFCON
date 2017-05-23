@@ -101,6 +101,7 @@ class LibraryManager(Observable):
 
     @staticmethod
     def _clean_path(path):
+        """Create a fully fissile absolute system path with no symbolic links and environment variables"""
         path = path.replace('"', '')
         path = path.replace("'", '')
         # Replace ~ with /home/user
@@ -186,11 +187,17 @@ class LibraryManager(Observable):
         :rtype: str, str, str
         :raises rafcon.core.custom_exceptions.LibraryNotFoundException: if the cannot be found
         """
+        # TODO this method needs refactoring it is to cryptic (e.g. end of while loop) and similar code is
+        # TODO get_library_path_and_name_for_os_path
         path_list = library_path.split(os.sep)
         target_lib_dict = self.libraries
 
         original_path_and_name = library_path + library_name
         library_path_root = library_path.split(os.sep)[0]
+
+        if path_list and (library_path.startswith(os.sep) or library_path.endswith(os.sep)):
+            raise LibraryNotFoundException("A library path is not considered to start or end with {2} like "
+                                           "'{0}' with library name {1}".format(library_path, library_name, os.sep))
 
         if not self._library_paths:
             raise LibraryNotFoundException("There are no libraries registered")
@@ -311,9 +318,12 @@ class LibraryManager(Observable):
                 if len(root_path) <= len(path) and root_path == path[:len(root_path)]:
                     library_root_path = root_path
                     library_root_name = key
-                    path_elements_without_library_root = path[len(library_root_path)+1:].split('/')
+                    path_elements_without_library_root = path[len(library_root_path)+1:].split(os.sep)
                     library_name = path_elements_without_library_root[-1]
-                    library_path = library_root_name + '/' + '/'.join(path_elements_without_library_root[:-1])
+                    sub_library_path = ''
+                    if len(path_elements_without_library_root[:-1]):
+                        sub_library_path = os.sep + os.sep.join(path_elements_without_library_root[:-1])
+                    library_path = library_root_name + sub_library_path
                     break
         return library_path, library_name
 
