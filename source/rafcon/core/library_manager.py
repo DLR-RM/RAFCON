@@ -54,7 +54,7 @@ class LibraryManager(Observable):
     def __init__(self):
         Observable.__init__(self)
         self._libraries = {}
-        self._library_paths = {}
+        self._library_root_paths = {}
         logger.debug("Initializing Storage object ...")
         # a list to hold all library state already manually replaced by the user
         self._replaced_libraries = {}
@@ -72,7 +72,7 @@ class LibraryManager(Observable):
         """
         logger.debug("Initializing LibraryManager: Loading libraries ... ")
         self._libraries = {}
-        self._library_paths = {}
+        self._library_root_paths = {}
         self._replaced_libraries = {}
         self._skipped_states = []
         self._skipped_library_roots = []
@@ -126,7 +126,7 @@ class LibraryManager(Observable):
         return path
 
     def _load_library_from_root_path(self, library_root_key, library_root_path):
-        self._library_paths[library_root_key] = library_root_path
+        self._library_root_paths[library_root_key] = library_root_path
         self._libraries[library_root_key] = {}
         self._load_nested_libraries(library_root_path, self._libraries[library_root_key])
         self._libraries[library_root_key] = OrderedDict(sorted(self._libraries[library_root_key].items()))
@@ -177,33 +177,36 @@ class LibraryManager(Observable):
         self._libraries = libraries
 
     @property
-    def library_paths(self):
+    def library_root_paths(self):
         """Getter for library paths
         """
-        return self._library_paths
+        return self._library_root_paths
 
     def get_os_path_to_library(self, library_path, library_name, allow_user_interaction=True):
         """Find library_os_path of library
 
-        This function retrieves the file system library_os_path of a library specified by a library_os_path and a name. In case the library
-        does not exist any more at its original location, the user has to specify an alternative location.
+        This function retrieves the file system library_os_path of a library specified by a library_path and a 
+        library_name. In case the library does not exist any more at its original location, the user has to specify 
+        an alternative location.
 
-        :param library_path: the library_path of the library, that must be relative and within a library_root_path 
+        :param str library_path: The library_path of the library, that must be relative and within a library_root_path 
                              given in the config.yaml by LIBRARY_PATHS
-        :param library_name: the name of the library
-        :param allow_user_interaction: Whether the user may be asked to specify library location
-        :return: library library_os_path within filesystem, library_os_path within library, library name
+        :param str library_name: The name of the library
+        :param bool allow_user_interaction: Whether the user may be asked to specify library location
+        :return: library_os_path within filesystem, library_path, library_name
         :rtype: str, str, str
         :raises rafcon.core.custom_exceptions.LibraryNotFoundException: if the cannot be found
         """
-        original_path_and_name = library_path + os.sep + library_name
+        original_path_and_name = os.path.join(library_path, library_name)
         library_path_root = library_path.split(os.sep)[0]
 
-        if library_path.split(os.sep) and (library_path.startswith(os.sep) or library_path.endswith(os.sep)):
-            raise LibraryNotFoundException("A library library_os_path is not considered to start or end with {2} like "
-                                           "'{0}' with library name {1}".format(library_path, library_name, os.sep))
+        if library_path.split(os.sep) and \
+                (library_path.startswith(os.sep) or library_path.endswith(os.sep) or os.sep + os.sep in library_path):
+            raise LibraryNotFoundException("A library_path is not considered to start or end with {2} or to have two "
+                                           "path separators {2}{2} in a row like '{0}' with library name {1}"
+                                           "".format(library_path, library_name, os.sep))
 
-        if not self._library_paths:
+        if not self._library_root_paths:
             raise LibraryNotFoundException("There are no libraries registered")
 
         # skip already skipped states
@@ -220,9 +223,9 @@ class LibraryManager(Observable):
             # only show debug message if a state is automatically replaced by the appropriate library state
             # chosen by the user before
             if not self._replaced_libraries[original_path_and_name][2]:
-                logger.debug("The library with library library_path \"{0}\" and name \"{1}\" "
+                logger.debug("The library with library_path \"{0}\" and name \"{1}\" "
                              "is automatically replaced by the library "
-                             "with file system library_os_path \"{2}\" and library library_os_path \"{3}\""
+                             "with file system library_os_path \"{2}\" and library_path \"{3}\""
                              "".format(library_path, library_name, new_library_os_path, new_library_path))
             return new_library_os_path, new_library_path, library_name
 
@@ -233,20 +236,22 @@ class LibraryManager(Observable):
         while library_os_path is None:  # until the library is found or the user aborts
 
             regularly_found = False
-            new_library_sys_path = None
+            new_library_os_path = None
             if allow_user_interaction:
-                notice = "Cannot find library '{0}' in subfolder '{1}'. Please check your library library_os_path " \
-                         "configuration. If your library library_os_path is correct and the library was moved, please" \
-                         " select the new root folder of the library. If not, please abort.".format(library_name,
-                                                                                                    library_path)
+                notice = "Cannot find library '{0}' in library_path '{1}' in any of the library root paths. " \
+                         "Please check your library root paths configuration in config.yaml " \
+                         "LIBRARY_PATHS and environment variable RAFCON_LIBRARY_PATH. " \
+                         "If your library_path is correct and the library was moved, please " \
+                         "select the new root/library_os_path folder of the library which should be situated within a "\
+                         "loaded library_root_path. If not, please abort.".format(library_name, library_path)
                 interface.show_notice_func(notice)
-                new_library_sys_path = interface.open_folder_func("Select root folder for library name '{0}'"
+                new_library_os_path = interface.open_folder_func("Select root folder for library name '{0}'"
                                                                   "".format(original_path_and_name))
-            if new_library_sys_path is None:
+            if new_library_os_path is None:
                 # User clicked cancel => cancel library search
-                # If the library root is existent (e.g. "generic") and only the specific library state is not (
+                # If the library root path is existent (e.g. "generic") and only the specific library state is not (
                 # e.g. "generic/wait", then the state is added to the skipped states.
-                # If the library root is not existing, we ignore the whole library, preventing the user from
+                # If the library root path is not existing, we ignore the whole library, preventing the user from
                 # endless dialogs for each missing library state.
                 if library_path_root not in self.libraries:
                     self._skipped_library_roots.append(library_path_root)
@@ -255,21 +260,21 @@ class LibraryManager(Observable):
                 raise LibraryNotFoundException("Library '{0}' not found in subfolder {1}".format(library_name,
                                                                                                  library_path))
 
-            if not os.path.exists(new_library_sys_path):
+            if not os.path.exists(new_library_os_path):
                 logger.error('Specified library_os_path does not exist')
                 continue
 
             # check if valid library_path and library_name can be created
-            library_path, library_name = self.get_library_path_and_name_for_os_path(new_library_sys_path)
+            library_path, library_name = self.get_library_path_and_name_for_os_path(new_library_os_path)
             if library_path is None:
-                logger.error("Specified library_path not within loaded library library_root_path list or "
-                             "your config file")
+                logger.error("Specified library_os_path not within loaded library_root_path list or your config.yaml "
+                             "file LIBRARY_PATHS or in the list of paths in environment variable RAFCON_LIBRARY_PATH")
                 continue  # Allow the user to change the directory
 
             # verification if library is also in library tree
             library_os_path = self._get_library_os_path_from_library_dict_tree(library_path, library_name)
             if library_os_path is not None:
-                assert library_os_path == new_library_sys_path
+                assert library_os_path == new_library_os_path
 
         # save the replacement in order that for a future occurrence the correct library_os_path can be used,
         # without asking the user for the correct library_os_path
@@ -277,6 +282,7 @@ class LibraryManager(Observable):
         return library_os_path, library_path, library_name
 
     def _get_library_os_path_from_library_dict_tree(self, library_path, library_name):
+        """Hand verified library os path from libraries dictionary tree."""
         if library_path is None or library_name is None:
             return None
         path_list = library_path.split(os.sep)
@@ -290,9 +296,10 @@ class LibraryManager(Observable):
         return None if target_lib_dict is None or library_name not in target_lib_dict else target_lib_dict[library_name]
 
     def _get_library_root_key_for_os_path(self, path):
+        """Return library root key if path is within library root paths"""
         path = os.path.realpath(path)
         library_root_key = None
-        for library_root_key, library_root_path in self._library_paths.iteritems():
+        for library_root_key, library_root_path in self._library_root_paths.iteritems():
             rel_path = os.path.relpath(path, library_root_path)
             if rel_path.startswith('..'):
                 library_root_key = None
@@ -301,7 +308,7 @@ class LibraryManager(Observable):
                 break
         return library_root_key
 
-    def is_os_path_within_library_paths(self, path):
+    def is_os_path_within_library_root_paths(self, path):
         return True if self._get_library_root_key_for_os_path(path) is not None else False
 
     def is_library_in_libraries(self, library_path, library_name):
@@ -309,11 +316,20 @@ class LibraryManager(Observable):
         return True if library_os_path is not None else False
 
     def get_library_path_and_name_for_os_path(self, path):
+        """Generate valid library_path and library_name
+
+        The method checks if the given os path is in the list of loaded library root paths and use respective 
+        library root key/mounting point to concanate the respective library_path and separate respective library_name.
+
+        :param str path: A library os path a library is situated in.
+        :return library path library name
+        :rtype str, str
+        """
         library_path = None
         library_name = None
         library_root_key = self._get_library_root_key_for_os_path(path)
         if library_root_key is not None:
-            library_root_path = self._library_paths[library_root_key]
+            library_root_path = self._library_root_paths[library_root_key]
             path_elements_without_library_root = path[len(library_root_path)+1:].split(os.sep)
             library_name = path_elements_without_library_root[-1]
             sub_library_path = ''
@@ -323,6 +339,7 @@ class LibraryManager(Observable):
         return library_path, library_name
 
     def get_library_instance(self, library_path, library_name):
+        """Generate a Library instance from within libraries dictionary tree."""
         if self.is_library_in_libraries(library_path, library_name):
             from rafcon.core.states.library_state import LibraryState
             return LibraryState(library_path, library_name, "0.1")
@@ -330,6 +347,7 @@ class LibraryManager(Observable):
             logger.warning("Library manager will not create a library instance which is not in the mounted libraries.")
 
     def remove_library_from_file_system(self, library_path, library_name):
+        """Remove library from hard disk."""
         library_file_system_path = self.get_os_path_to_library(library_path, library_name)[0]
         shutil.rmtree(library_file_system_path)
         self.refresh_libraries()

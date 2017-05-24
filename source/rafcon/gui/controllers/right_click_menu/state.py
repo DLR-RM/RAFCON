@@ -145,11 +145,11 @@ class StateMachineRightClickMenu(object):
         save_as_library_sub_menu_item, save_as_library_sub_menu = append_sub_menu_to_parent_menu("Library",
                                                                                                  save_as_sub_menu,
                                                                                                  constants.SIGN_LIB)
-        library_paths = core_singletons.library_manager.library_paths
-        for library_root_key in library_paths.iterkeys():
+        library_root_paths = core_singletons.library_manager.library_root_paths
+        for library_root_key in library_root_paths.iterkeys():
             save_as_library_sub_menu.append(create_image_menu_item(library_root_key, constants.SIGN_LIB,
                                                                    partial(self.on_save_state_as_state_machine_activate,
-                                                                           path=library_paths[library_root_key]),
+                                                                           path=library_root_paths[library_root_key]),
                                                                    accel_code=None, accel_group=accel_group))
 
         return menu
