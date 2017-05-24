@@ -78,7 +78,7 @@ def get_data_files_tuple(*path, **kwargs):
 
 
 global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion~=0.2', 'yaml_configuration~=0.0',
-                       'python-gtkmvc-dlr==1.99.2', 'gaphas>=0.7']
+                       'python-gtkmvc-dlr==1.99.2', 'gaphas>=0.7', 'pandas']
 
 script_path = path.realpath(__file__)
 install_helper = path.join(path.dirname(script_path), "source", "rafcon", "gui", "helpers", "installation.py")

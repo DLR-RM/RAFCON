@@ -29,11 +29,16 @@ from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
 
 import rafcon
-from rafcon.core.execution.execution_history import ExecutionHistory
-from rafcon.core.id_generator import generate_state_machine_id
+from rafcon.core.execution.execution_history import ExecutionHistory, ExecutionHistoryStorage
+from rafcon.core.id_generator import generate_state_machine_id, run_id_generator
 from rafcon.utils import log
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.storage_utils import get_current_time_string
+import time
+
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
+from rafcon.core.config import global_config
+import os
 
 logger = log.get_logger(__name__)
 
@@ -128,11 +133,14 @@ class StateMachine(Observable, JSONObject, Hashable):
         self._root_state.input_data = self._root_state.get_default_input_values_for_state(self._root_state)
         self._root_state.output_data = self._root_state.create_output_dictionary_for_state(self._root_state)
         new_execution_history = self._add_new_execution_history()
+        new_execution_history.push_statemachine_start_item(self, run_id_generator())
         self._root_state.start(new_execution_history)
 
     def join(self):
         """Wait for root state to finish execution"""
         self._root_state.join()
+        if self._execution_histories[-1].execution_history_storage is not None:
+            self._execution_histories[-1].execution_history_storage.close()
         from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
@@ -198,6 +206,18 @@ class StateMachine(Observable, JSONObject, Hashable):
     @Observable.observed
     def _add_new_execution_history(self):
         new_execution_history = ExecutionHistory()
+
+        if global_config.get_config_value("EXECUTION_LOG_ENABLE", False):
+            base_dir = global_config.get_config_value("EXECUTION_LOG_PATH", "%RAFCON_TEMP_PATH_BASE/execution_logs")
+            if base_dir.startswith('%RAFCON_TEMP_PATH_BASE'):
+                base_dir = base_dir.replace('%RAFCON_TEMP_PATH_BASE', RAFCON_TEMP_PATH_BASE)
+            if not os.path.exists(base_dir):
+                os.makedirs(base_dir)
+            shelve_name = os.path.join(base_dir, 'rafcon_execution_log_%s_%s.shelve' %
+                                       (self.root_state.name.replace(' ', '-'),
+                                        time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())))
+            execution_history_store = ExecutionHistoryStorage(shelve_name)
+            new_execution_history.set_execution_history_storage(execution_history_store)
         self._execution_histories.append(new_execution_history)
         return new_execution_history
 
@@ -257,6 +277,15 @@ class StateMachine(Observable, JSONObject, Hashable):
                     return None
             prev_state_id = state_id
         return state
+
+    def get_last_execution_log_filename(self):
+        if len(self._execution_histories) > 0:
+            for i in range(len(self._execution_histories) - 1, -1, -1):
+                if self._execution_histories[i].execution_history_storage is not None:
+                    return self._execution_histories[i].execution_history_storage.filename
+            return None
+        else:
+            return None
 
     @property
     def file_system_path(self):
