@@ -285,12 +285,6 @@ class GraphicalEditorController(ExtendedController):
         :param str _: Always "state_meta_signal"
         :param dict info: Information about the change, contains the MetaSignalMessage in the 'arg' key value
         """
-        if 'signal' in info:
-            msg = info.arg
-            if msg.change == 'show_content':
-                print "message: ", info
-                self.adapt_complex_action(self.model.get_state_model_by_path(msg.notification.model.state.get_path()),
-                                          msg.notification.model)
         meta_signal_message = info['arg']
         if meta_signal_message.origin == "graphical_editor_gaphas":  # Ignore changes caused by ourself
             return
@@ -304,10 +298,14 @@ class GraphicalEditorController(ExtendedController):
 
         model = notification.model
         view = self.canvas.get_view_for_model(model)
-        if isinstance(view, StateView):
-            view.apply_meta_data(recursive=meta_signal_message.affects_children)
+
+        if meta_signal_message.change == 'show_content':
+            logger.debug("Show content of {}: {}".format(model.state, model.meta['gui']['show_content']))
         else:
-            view.apply_meta_data()
+            if isinstance(view, StateView):
+                view.apply_meta_data(recursive=meta_signal_message.affects_children)
+            else:
+                view.apply_meta_data()
 
         self.canvas.request_update(view, matrix=True)
         self.canvas.perform_update()
