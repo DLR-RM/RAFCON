@@ -56,7 +56,7 @@ def add_scoped_variable_to_selected_states(data_type=None):
     data_type = 'int' if data_type is None else data_type
     selected_states = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
 
-    if all([not isinstance(state_m, ContainerState) for state_m in selected_states]):
+    if all([not isinstance(state_m.state, ContainerState) for state_m in selected_states]):
         logger.warn("The scoped variable couldn't be added to state of type {0}"
                     "".format(selected_states[0].state.__class__.__name__))
         return
