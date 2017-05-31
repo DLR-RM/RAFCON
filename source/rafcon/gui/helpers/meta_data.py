@@ -231,8 +231,11 @@ def scale_library_ports_meta_data(state_m):
     factor = divide_two_vectors(state_m.get_meta_data_editor()['size'],
                                 state_m.state_copy.get_meta_data_editor()['size'])
     # print "scale_library_ports_meta_data -> resize_state_port_meta", factor
-    resize_state_port_meta(state_m, factor, True)
-    state_m.meta_data_was_scaled = True
+    if isinstance(factor, tuple) and len(factor) == 2:
+        resize_state_port_meta(state_m, factor, True)
+        state_m.meta_data_was_scaled = True
+    else:
+        logger.info("Skip resize of library ports meta data {0}".format(state_m))
 
 
 def scale_library_content_to_fit(state_m, gaphas_editor):

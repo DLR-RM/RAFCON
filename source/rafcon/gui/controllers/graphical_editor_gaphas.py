@@ -591,6 +591,11 @@ class GraphicalEditorController(ExtendedController):
 
         # Otherwise we only look at the modified state and its children
         else:
+            # self.canvas.get_view_for_model(old_state_m.get_state_machine_m().root_state).remove()
+            # self.root_state_m = new_state_m.get_state_machine_m().root_state
+            # root_state_v = self.setup_state(self.root_state_m)
+            # self.canvas.request_update(root_state_v)
+
             state_v.model = new_state_m
             if isinstance(new_state_m, ContainerStateModel):
                 # Check for old StateViews (typically DeciderState), TransitionViews and DataFlowViews,
