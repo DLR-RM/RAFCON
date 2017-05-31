@@ -205,16 +205,20 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     # ---------------------------------------------------------------------------------------------
 
     # give the state the appearance of a thread that can be started several times
-    def start(self, execution_history, backward_execution=False):
+    def start(self, execution_history, backward_execution=False, generate_run_id=True):
         """ Starts the execution of the state in a new thread.
 
         :return:
         """
         self.execution_history = execution_history
-        self._run_id = run_id_generator()
+        if generate_run_id:
+            self._run_id = run_id_generator()
         self.backward_execution = copy.copy(backward_execution)
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
+
+    def generate_run_id(self):
+        self._run_id = run_id_generator()
 
     def join(self):
         """ Waits until the state finished execution.

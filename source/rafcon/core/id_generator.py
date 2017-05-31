@@ -29,6 +29,7 @@ transition_id_counter = 0
 data_flow_id_counter = 0
 script_id_counter = 0
 run_id_counter = 0
+history_item_id_counter = 0
 
 used_state_ids = []
 used_run_ids = []
@@ -86,8 +87,14 @@ def generate_script_id():
 def run_id_generator():
     global run_id_counter
     run_id_counter += 1
-    final_run_id = experiment_id + "." + str(run_id_counter)
+    final_run_id = experiment_id + ".run_id." + '%020d' % run_id_counter
     return final_run_id
+
+def history_item_id_generator():
+    global history_item_id_counter
+    history_item_id_counter += 1
+    final_id = experiment_id + ".history_item_id." + '%020d' % history_item_id_counter
+    return final_id
 
 
 def state_id_generator(size=STATE_ID_LENGTH, chars=string.ascii_uppercase):

@@ -91,7 +91,11 @@ class ConcurrencyState(ContainerState):
 
                 state.input_data = self.get_inputs_for_state(state)
                 state.output_data = self.create_output_dictionary_for_state(state)
+                state.concurrency_queue = concurrency_queue
+                state.concurrency_queue_id = index
 
+
+                state.generate_run_id()
                 if not self.backward_execution:
                     # care for the history items; this item is only for execution visualization
                     concurrency_history_item.execution_histories[index].push_call_history_item(
@@ -99,11 +103,8 @@ class ConcurrencyState(ContainerState):
                 else:  # backward execution
                     last_history_item = concurrency_history_item.execution_histories[index].pop_last_item()
                     assert isinstance(last_history_item, ReturnItem)
+                state.start(concurrency_history_item.execution_histories[index], self.backward_execution, False)
 
-                state.concurrency_queue = concurrency_queue
-                state.concurrency_queue_id = index
-
-                state.start(concurrency_history_item.execution_histories[index], self.backward_execution)
         return concurrency_queue
 
     def join_state(self, state, history_index, concurrency_history_item):
