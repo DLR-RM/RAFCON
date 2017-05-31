@@ -209,11 +209,34 @@ class GraphicalEditorController(ExtendedController):
     def suspend_drawing(self, value):
         self._suspend_drawing = value
 
-    @ExtendedController.observe("state_machine", before=True)
-    def state_machine_before_change(self, model, prop_name, info):
-        if 'method_name' in info and info['method_name'] == 'root_state_change':
-            if info['kwargs']['method_name'] in ['change_state_type', 'change_root_state_type']:
+    @ExtendedController.observe("state_action_signal", signal=True)
+    def state_action_signal_before(self, model, prop_name, info):
+        # from rafcon.gui.utils.notification_overview import NotificationOverview
+        # logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
+        if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'ungroup_state',
+                                  'undo/redo']:
+            if not info['arg'].after:
                 self.suspend_drawing = True
+                # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
+                self.observe_model(info['arg'].affected_models[0])
+        if info['arg'].action in ['group_states', 'paste']:
+            if not info['arg'].after:
+                self.suspend_drawing = True
+                # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
+                self.observe_model(info['arg'].action_parent_m)
+
+    @ExtendedController.observe("action_signal", signal=True)
+    def action_signal_after(self, model, prop_name, info):
+        # from rafcon.gui.utils.notification_overview import NotificationOverview
+        # logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
+        if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'group_states',
+                                  'ungroup_state', 'paste', 'undo/redo']:
+            if info['arg'].after:
+                self.suspend_drawing = False
+                self.relieve_model(model)
+                # logger.info("drawing suspended: {0} redraw".format(self.suspend_drawing))
+                if not info['arg'].action == 'paste':
+                    self._redraw()
 
     @ExtendedController.observe("state_machine", after=True)
     @ExtendedController.observe("meta_signal", signal=True)  # meta data of state machine changed
@@ -229,11 +252,6 @@ class GraphicalEditorController(ExtendedController):
         :param dict info: Information about the change
         """
         if 'method_name' in info:
-            if self.suspend_drawing:
-                if info['method_name'] == 'root_state_change':
-                    if info['kwargs']['method_name'] in ['change_state_type', 'change_root_state_type']:
-                        self.suspend_drawing = False
-                        self._redraw()
             if info['method_name'] == 'root_state_change':
                 self._redraw()
             elif info['method_name'] == 'marked_dirty' and info['args'][1]:
@@ -1670,12 +1688,16 @@ class GraphicalEditorController(ExtendedController):
                 # Resize inner states of library states if not done before
                 if is_first_draw_of_lib_state:
                     new_corner_pos = add_pos(state_temp['pos'], state_meta['size'])
-                    self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
-                                       redraw=False)
-                    state_m.state_copy.set_meta_data_editor('size',
-                                                            state_m.get_meta_data_editor(for_gaphas=False)['size'],
-                                                            from_gaphas=False)
-                    state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=False)
+                    if isinstance(state_m.state_copy, ContainerStateModel):
+                        import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+                        gui_helper_meta_data.scale_library_content_to_fit(state_m, gaphas_editor=False)
+                    else:
+                        self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
+                                           redraw=False)
+                        state_m.state_copy.set_meta_data_editor('size',
+                                                                state_m.get_meta_data_editor(for_gaphas=False)['size'],
+                                                                from_gaphas=False)
+                        state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=False)
 
                     redraw = True
 
@@ -2238,38 +2260,7 @@ class GraphicalEditorController(ExtendedController):
         """
         if react_to_event(self.view, self.view.editor, event):
             logger.debug("Paste")
-
-            selection = self.model.selection
-            selected_states = selection.get_states()
-            if len(selection) != 1 or len(selected_states) < 1:
-                logger.error("Please select a single container state for pasting the clipboard")
-                return
-
-            # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
-            target_state_m = selection.get_states()[0]
-            insert_dict = global_clipboard.paste(target_state_m)
-
-            if 'states' not in insert_dict:  # An error occurred while pasting
-                return
-
-            for new_state_m_copy, orig_state_m_copy in insert_dict['states']:
-
-                # Adjust size of new state
-                old_size = orig_state_m_copy.get_meta_data_editor(for_gaphas=False)['size']
-                target_size = target_state_m.get_meta_data_editor(for_gaphas=False)['size']
-
-                new_size = calculate_size(old_size, (target_size[0] / 5., target_size[1] / 5.))
-
-                rel_pos_x, rel_pos_y = new_state_m_copy.get_meta_data_editor(for_gaphas=False)['rel_pos']
-                rel_pos_x = target_size[0] * 4 / 5. if rel_pos_x > target_size[0] * 4 / 5. else rel_pos_x
-                rel_pos_y = -target_size[1] * 4 / 5. if rel_pos_y < -target_size[1] * 4 / 5. else rel_pos_y
-                pos = self._get_absolute_position(new_state_m_copy.parent, (rel_pos_x, rel_pos_y))
-                new_state_m_copy.set_meta_data_editor('rel_pos', (rel_pos_x, rel_pos_y), from_gaphas=False)
-                new_state_m_copy.temp['gui']['editor']['pos'] = pos
-                new_corner_pos = add_pos(new_state_m_copy.temp['gui']['editor']['pos'], new_size)
-                self._resize_state(new_state_m_copy, new_corner_pos, keep_ratio=True, resize_content=True, publish_changes=True)
-
-            self._redraw()
+            gui_helper_state_machine.paste_into_selected_state(self.model)
             return True
 
     def check_focus_and_sm_selection_according_event(self, event):

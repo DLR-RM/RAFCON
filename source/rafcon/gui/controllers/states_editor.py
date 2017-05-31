@@ -505,6 +505,13 @@ class StatesEditorController(ExtendedController):
         state_machine_m = model
         assert isinstance(state_machine_m.selection, Selection)
         if state_machine_m.selection.get_num_states() == 1 and len(state_machine_m.selection) == 1:
+            if state_machine_m.selection.get_states()[0].get_state_machine_m() is None or \
+                    state_machine_m.selection.get_states()[0].get_state_machine_m() is not state_machine_m:
+                # TODO maybe can be moved to state machine model
+                logger.warning("Selection of state machine {1} seems to be inconsistent. "
+                               "{0} is not known by state machine {1}."
+                               "".format(state_machine_m.selection.get_states()[0],
+                                         state_machine_m.state_machine.state_machine_id))
             self.activate_state_tab(state_machine_m.selection.get_states()[0])
 
     @ExtendedController.observe("state_machine", after=True)

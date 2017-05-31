@@ -32,6 +32,7 @@ from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import react_to_event
+from rafcon.gui.helpers.meta_data import generate_default_state_meta_data
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.signals import MetaSignalMsg
@@ -45,6 +46,9 @@ from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.singleton import gui_config_model, runtime_config_model
 from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView
 import rafcon.gui.helpers.state as gui_helper_state
+import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+from rafcon.gui.models.library_state import LibraryStateModel
+
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -58,7 +62,7 @@ class GraphicalEditorController(ExtendedController):
         element
     """
 
-    _change_state_type = False
+    _complex_action = False
 
     def __init__(self, model, view):
         """Constructor"""
@@ -68,6 +72,9 @@ class GraphicalEditorController(ExtendedController):
         self.observe_model(gui_config_model)
         self.observe_model(runtime_config_model)
         self.root_state_m = model.root_state
+
+        self.update_selection_gaphas_major = False
+        self.update_selection_external_major = False
 
         self.canvas = MyCanvas()
         self.zoom = 3.
@@ -221,51 +228,14 @@ class GraphicalEditorController(ExtendedController):
         """
         if react_to_event(self.view, self.view.editor, event):
             logger.debug("Paste")
-
-            selection = self.model.selection
-            selected_states = selection.get_states()
-            if len(selection) != 1 or len(selected_states) < 1:
-                logger.error("Please select a single container state for pasting the clipboard")
-                return
-
-            # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
-            target_state_m = selection.get_states()[0]
-            insert_dict = global_clipboard.paste(target_state_m)
-
-            if 'states' not in insert_dict:
-                return
-
-            for new_state_m_copy, orig_state_m_copy in insert_dict['states']:
-
-                # Adjust size of new state
-                old_size = orig_state_m_copy.get_meta_data_editor()['size']
-                target_size = target_state_m.get_meta_data_editor()['size']
-
-                # Use the old size, if it is smaller than the target state
-                if old_size[0]*2 < target_size[0] and old_size[1]*2 < target_size[1]:
-                    new_size = old_size
-                # Resize to 1/3 of the target state, but keep the size ratio
-                else:
-                    new_size = (target_size[0] / 4., target_size[1] / 4.)
-                    old_size_ratio = old_size[0] / old_size[1]
-                    if old_size_ratio < new_size[0] / new_size[1]:
-                        new_size = (new_size[1] * old_size_ratio, new_size[1])
-                    else:
-                        new_size = (new_size[0], new_size[0] / old_size_ratio)
-
-                new_state_v = self.canvas.get_view_for_model(new_state_m_copy)
-                new_state_v.width = new_size[0]
-                new_state_v.height = new_size[1]
-                new_state_m_copy.set_meta_data_editor('size', (new_state_v.width, new_state_v.height))
-
-                new_state_v.resize_all_children(old_size, True)
-                self._meta_data_changed(new_state_v, new_state_m_copy, 'all', True)
-
-            self.canvas.perform_update()
-
+            gui_helper_state_machine.paste_into_selected_state(self.model)
             return True
 
     def _update_selection_from_gaphas(self, view, selected_items):
+        if self.update_selection_external_major:
+            return
+        # else:
+        #     print "_update_selection_from_gaphas", self.view.editor.selected_items
         selected_items = self.view.editor.selected_items
         selected_models = []
         for item in selected_items:
@@ -278,10 +248,16 @@ class GraphicalEditorController(ExtendedController):
                 logger.debug("Cannot select item {}".format(item))
         new_selected_models = any([model not in self.model.selection for model in selected_models])
         if new_selected_models or len(self.model.selection) != len(selected_models):
+            self.update_selection_gaphas_major = True
             self.model.selection.set(selected_models)
+            self.update_selection_gaphas_major = False
 
     def _update_selection_from_external(self):
         selected_items = [self.canvas.get_view_for_model(model) for model in self.model.selection]
+        if self.update_selection_gaphas_major:
+            return
+        # else:
+        #     print "_update_selection_from_external", selected_items
         select_items = filter(lambda item: item not in self.view.editor.selected_items, selected_items)
         deselect_items = filter(lambda item: item not in selected_items, self.view.editor.selected_items)
         for item in deselect_items:
@@ -291,7 +267,9 @@ class GraphicalEditorController(ExtendedController):
             self.view.editor.selected_items.add(item)
             self.view.editor.queue_draw_item(item)
         if select_items or deselect_items:
+            self.update_selection_external_major = True
             self.view.editor.emit('selection-changed', self.view.editor.selected_items)
+            self.update_selection_external_major = False
         # TODO: Jump to the selected state in the view and adjust the zoom
 
     def _meta_data_changed(self, view, model, name, affects_children):
@@ -307,6 +285,12 @@ class GraphicalEditorController(ExtendedController):
         :param str _: Always "state_meta_signal"
         :param dict info: Information about the change, contains the MetaSignalMessage in the 'arg' key value
         """
+        if 'signal' in info:
+            msg = info.arg
+            if msg.change == 'show_content':
+                print "message: ", info
+                self.adapt_complex_action(self.model.get_state_model_by_path(msg.notification.model.state.get_path()),
+                                          msg.notification.model)
         meta_signal_message = info['arg']
         if meta_signal_message.origin == "graphical_editor_gaphas":  # Ignore changes caused by ourself
             return
@@ -315,6 +299,9 @@ class GraphicalEditorController(ExtendedController):
         notification = meta_signal_message.notification
         if not notification:    # For changes applied to the root state, there are always two notifications
             return              # Ignore the one with less information
+        if self._complex_action:
+            return
+
         model = notification.model
         view = self.canvas.get_view_for_model(model)
         if isinstance(view, StateView):
@@ -325,27 +312,51 @@ class GraphicalEditorController(ExtendedController):
         self.canvas.request_update(view, matrix=True)
         self.canvas.perform_update()
 
-    def manual_notify_after(self, state_m):
-        state_v = self.canvas.get_view_for_model(state_m)
-        if state_v:
-            state_v.apply_meta_data(recursive=True)
-            self.canvas.request_update(state_v, matrix=True)
-        else:
-            logger.info("Meta data operation on state model without view: {}".format(state_m))
-
-    @ExtendedController.observe("state_machine", before=True)
-    def state_machine_change_before(self, model, prop_name, info):
-        if 'method_name' in info and info['method_name'] == 'root_state_change':
-            method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
-
-            if method_name in ['change_state_type', 'change_root_state_type']:
-                self._change_state_type = True
-                if method_name == 'change_root_state_type':
-                    state_model_to_be_changed = model.root_state
+    @ExtendedController.observe("state_action_signal", signal=True)
+    def state_action_signal(self, model, prop_name, info):
+        # print "GSME state_action_signal: ", info['arg'] if 'arg' in info else "XXX" + str(info)
+        if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state',
+                                                    'group_states', 'ungroup_state', 'paste', 'undo/redo']:
+            if info['arg'].after is False:
+                self._complex_action = True
+                if info['arg'].action in ['group_states', 'paste']:
+                    self.observe_model(info['arg'].action_parent_m)
+                    # print "GSME observe: ", info['arg'].action_parent_m
                 else:
-                    state_to_be_changed = arguments[1]
-                    state_model_to_be_changed = gui_helper_state_machine.get_state_model_for_state(state_to_be_changed)
-                self.observe_model(state_model_to_be_changed)
+                    self.observe_model(info['arg'].affected_models[0])
+                    # print "GSME observe: ", info['arg'].affected_models[0]
+
+                # assert not hasattr(self.state_action_signal.__func__, "affected_models")
+                # assert not hasattr(self.state_action_signal.__func__, "target")
+                self.state_action_signal.__func__.affected_models = info['arg'].affected_models
+                self.state_action_signal.__func__.target = info['arg'].action_parent_m
+
+    @ExtendedController.observe("action_signal", signal=True)
+    def action_signal(self, model, prop_name, info):
+        # print "GSME action_signal: ", self.__class__.__name__, "action_signal check", info
+        if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and\
+                info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'undo/redo']:
+
+            old_state_m = self.state_action_signal.__func__.target
+            new_state_m = info['arg'].action_parent_m
+
+        elif isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
+                info['arg'].action in ['change_state_type', 'change_root_state_type']:
+
+            old_state_m = model
+            new_state_m = info['arg'].affected_models[-1]
+
+        else:
+            return
+        # print self.__class__.__name__, "action_signal ####", "\n", model, "\n", old_state_m, "\n", new_state_m, "\n"
+
+        self._complex_action = False
+        self.relieve_model(model)
+
+        # print "state_type_changed relieve observer"
+        self.adapt_complex_action(old_state_m, new_state_m)
+
+        # print "GSME ACTION adapt to change"
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
@@ -362,7 +373,7 @@ class GraphicalEditorController(ExtendedController):
         if 'method_name' in info and info['method_name'] == 'root_state_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
-            if self._change_state_type:
+            if self._complex_action:
                 return
 
             # The method causing the change raised an exception, thus nothing was changed
@@ -548,14 +559,20 @@ class GraphicalEditorController(ExtendedController):
                 else:
                     self.canvas.request_update(state_v, matrix=False)
                 self.canvas.perform_update()
-            elif method_name in ['change_state_type', 'change_root_state_type']:
-                pass
             elif method_name == 'parent':
                 pass
             elif method_name == 'description':
                 pass
+            elif method_name == 'script_text':
+                pass
+            # TODO handle the following method calls -> for now those are explicit (in the past implicit) ignored
+            # TODO -> correct the complex actions which are used in some test (by test calls or by adapting the model)
+            elif method_name in ['input_data_ports', 'output_data_ports', 'outcomes',
+                                 'change_root_state_type', 'change_state_type',
+                                 'group_states', 'ungroup_state', 'substitute_state']:
+                pass
             else:
-                logger.debug("Method '%s' not caught in GraphicalViewer" % method_name)
+                logger.warning("Method {0} not caught in GraphicalViewer, details: {1}".format(method_name, info))
 
             if method_name in ['add_state', 'add_transition', 'add_data_flow', 'add_outcome', 'add_input_data_port',
                                'add_output_data_port', 'add_scoped_variable', 'data_flow_change', 'transition_change']:
@@ -563,14 +580,10 @@ class GraphicalEditorController(ExtendedController):
                     self._meta_data_changed(None, model, 'append_to_last_change', True)
                 except Exception as e:
                     logger.error('Error while trying to emit meta data signal {}'.format(e))
+                    raise
 
-    @ExtendedController.observe("state_type_changed_signal", signal=True)
     @lock_state_machine
-    def state_type_changed(self, old_state_m, prop_name, info):
-        self._change_state_type = False
-        self.relieve_model(old_state_m)
-        signal_msg = info['arg']
-        new_state_m = signal_msg.new_state_m
+    def adapt_complex_action(self, old_state_m, new_state_m):
         state_v = self.canvas.get_view_for_model(old_state_m)
 
         # If the root state has been changed, we recreate the whole state machine view
@@ -586,6 +599,24 @@ class GraphicalEditorController(ExtendedController):
         else:
             state_v.model = new_state_m
             if isinstance(new_state_m, ContainerStateModel):
+                # Check for old StateViews (typically DeciderState), TransitionViews and DataFlowViews,
+                # no longer existing
+                for child_v in self.canvas.get_children(state_v)[:]:
+                    if isinstance(child_v, StateView):
+                        if child_v.model not in new_state_m.states.itervalues() and \
+                                child_v.model.state.state_id not in new_state_m.states:
+                            child_v.remove()
+                        else:
+                            # TODO maybe make it again not recursive because this could be handled by affected_models
+                            self.adapt_complex_action(child_v.model,
+                                                      new_state_m.states[child_v.model.state.state_id])
+                    elif isinstance(child_v, TransitionView):
+                        if child_v.model not in new_state_m.transitions:
+                            self.canvas.remove(child_v)
+                    elif isinstance(child_v, DataFlowView):
+                        if child_v.model not in new_state_m.data_flows:
+                            self.canvas.remove(child_v)
+
                 # Check for new states, which do not have a StateView (typically DeciderState)
                 for child_state_m in new_state_m.states.itervalues():
                     if not self.canvas.get_view_for_model(child_state_m):
@@ -594,18 +625,13 @@ class GraphicalEditorController(ExtendedController):
                 for transition_m in new_state_m.transitions:
                     if not self.canvas.get_view_for_model(transition_m):
                         self.add_transition_view_for_model(transition_m, new_state_m)
-                # Check for old StateViews (typically DeciderState) and TransitionViews, no longer existing
-                for child_v in self.canvas.get_children(state_v):
-                    if isinstance(child_v, StateView):
-                        if child_v.model.state.state_id not in new_state_m.states:
-                            child_v.remove()
-                    elif isinstance(child_v, TransitionView):
-                        if child_v.model not in new_state_m.transitions:
-                            self.canvas.remove(child_v)
+                # Check for new data flows, which do not have a DataFlowView (typically related to group and ungroup)
+                for data_flow_m in new_state_m.data_flows:
+                    if not self.canvas.get_view_for_model(data_flow_m):
+                        self.add_data_flow_view_for_model(data_flow_m, new_state_m)
             else:
                 # Remove all child states, as StateModels cannot have children
-                children = self.canvas.get_children(state_v)[:]
-                for child_v in children:
+                for child_v in self.canvas.get_children(state_v)[:]:
                     if isinstance(child_v, StateView):
                         child_v.remove()
                     elif not isinstance(child_v, NameView):  # Remove transitions and data flows but keep the NameView
@@ -758,23 +784,15 @@ class GraphicalEditorController(ExtendedController):
     def add_state_view_to_parent(self, state_m, parent_state_m):
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
 
-        new_state_side_size = min(parent_state_v.width * 0.2, parent_state_v.height * 0.2)
-        new_state_hierarchy_level = parent_state_v.hierarchy_level + 1
-        new_state_size = (new_state_side_size, new_state_side_size)
-
-        child_width = new_state_side_size
-        child_height = new_state_side_size
-        child_size = (child_width, child_height)
-        child_spacing = max(child_size) * 1.2
-
-        max_cols = parent_state_v.width // child_spacing
-        (row, col) = divmod(len(parent_state_m.states) - 1, max_cols)
-        child_rel_pos_x = col * child_spacing + child_spacing - child_width
-        child_rel_pos_y = child_spacing * (1.5 * row + 1)
-        child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
-
-        return self.setup_state(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
-                                hierarchy_level=new_state_hierarchy_level)
+        # generate default meta data for state only if necessary
+        state_meta = state_m.get_meta_data_editor()
+        if not isinstance(state_meta['size'], tuple) or not len(state_meta['size']) == 2 or \
+                not isinstance(state_meta['rel_pos'], tuple) or not len(state_meta['rel_pos']) == 2:
+            child_rel_pos, new_state_size = generate_default_state_meta_data(parent_state_m, self.canvas)
+            return self.setup_state(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
+                                    hierarchy_level=parent_state_m.hierarchy_level + 1)
+        else:
+            return self.setup_state(state_m, parent_state_v, hierarchy_level=parent_state_m.hierarchy_level + 1)
 
     def _remove_state_view(self, view):
         return gui_helper_state_machine.delete_selected_elements(self.model)
@@ -790,14 +808,14 @@ class GraphicalEditorController(ExtendedController):
                             " when the state machine is being saved.")
 
     @lock_state_machine
-    def setup_state(self, state_m, parent=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
+    def setup_state(self, state_m, parent_v=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
         """Draws a (container) state with all its content
 
         Mainly contains the logic for drawing (e. g. reading and calculating values). The actual drawing process is
         done in the view, which is called from this method with the appropriate arguments.
 
         :param rafcon.gui.models.state.StateModel state_m: The state to be drawn
-        :param rafcon.gui.models.state.StateModel parent: The parent state of `state_m`
+        :param rafcon.gui.mygaphas.items.state.StateView parent_v: The parent state view of new state view `state_m`
         :param tuple rel_pos: The default relative position (x, y) if there is no relative position stored
         :param tuple size: The default size (width, height) if there is no size stored
         :param float hierarchy_level: The hierarchy level of the state
@@ -806,22 +824,26 @@ class GraphicalEditorController(ExtendedController):
         state_meta = state_m.get_meta_data_editor()
 
         # Use default values if no size information is stored
-        if not isinstance(state_meta['size'], tuple):
+        if not isinstance(state_meta['size'], tuple) or not len(state_meta['size']) == 2:
             state_meta = state_m.set_meta_data_editor('size', size)
 
         size = state_meta['size']
 
         # Use default values if no position information is stored
-        if not isinstance(state_meta['rel_pos'], tuple):
+        if not isinstance(state_meta['rel_pos'], tuple) or not len(state_meta['rel_pos']) == 2:
             state_meta = state_m.set_meta_data_editor('rel_pos', rel_pos)
 
         rel_pos = state_meta['rel_pos']
 
+        if isinstance(state_m, LibraryStateModel):
+            if not state_m.meta_data_was_scaled:
+                gui_helper_meta_data.scale_library_ports_meta_data(state_m)
+
         state_v = StateView(state_m, size, hierarchy_level)
 
         # Draw state above data flows and NameView but beneath transitions
-        index = 1 if not parent else len(state_m.state.parent.data_flows) + 1
-        self.canvas.add(state_v, parent, index=index)
+        index = 1 if not parent_v else len(state_m.state.parent.data_flows) + 1
+        self.canvas.add(state_v, parent_v, index=index)
         state_v.matrix.translate(*rel_pos)
 
         for outcome_m in state_m.outcomes:
@@ -834,35 +856,30 @@ class GraphicalEditorController(ExtendedController):
         for output_port_m in state_m.output_data_ports:
             state_v.add_output_port(output_port_m)
 
-        if parent is not None:
+        if parent_v is not None:
             # Keep state within parent
             pass
 
-        if isinstance(state_m, ContainerStateModel):
+        if isinstance(state_m, ContainerStateModel) or \
+                isinstance(state_m, LibraryStateModel) and isinstance(state_m.state_copy, ContainerStateModel) and \
+                state_m.meta['gui']['show_content']:
+            if isinstance(state_m, LibraryStateModel):
+                logger.info("Library {0}".format(state_m))
+                state_m = state_m.state_copy
+                gui_helper_meta_data.scale_library_content_to_fit(state_m, gaphas_editor=True)
+
             num_child_state = 0
-            state_width = size[0]
-            state_height = size[1]
 
             for scoped_variable_m in state_m.scoped_variables:
                 state_v.add_scoped_variable(scoped_variable_m)
 
-            for child_state in state_m.states.itervalues():
-                # Calculate default positions for the child states
-                # Make the inset from the top left corner
+            for child_state_m in state_m.states.itervalues():
 
-                child_width = state_width / 5.
-                child_height = state_height / 5.
-                child_size = (child_width, child_height)
-                child_spacing = max(child_size) * 1.2
-
-                max_cols = state_width // child_spacing
-                (row, col) = divmod(num_child_state, max_cols)
-                child_rel_pos_x = col * child_spacing + child_spacing - child_width
-                child_rel_pos_y = child_spacing * (1.5 * row + 1)
-                child_rel_pos = (child_rel_pos_x, child_rel_pos_y)
+                child_rel_pos, child_size = gui_helper_meta_data.generate_default_state_meta_data(state_m, self.canvas,
+                                                                                                  num_child_state)
                 num_child_state += 1
 
-                self.setup_state(child_state, state_v, child_rel_pos, child_size, hierarchy_level + 1)
+                self.setup_state(child_state_m, state_v, child_rel_pos, child_size, hierarchy_level + 1)
 
             self.add_transitions(state_m, hierarchy_level)
 

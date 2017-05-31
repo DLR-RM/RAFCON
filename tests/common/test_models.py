@@ -1018,7 +1018,7 @@ def test_add_remove_models(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_state_property_modifications_history(caplog):
+def test_state_property_models_consistency(caplog):
     ##################
     # state properties
     # TODO the LibraryStateModel and StateModel has to be checked separately like mentioned in the notification-test
@@ -1178,7 +1178,7 @@ def test_state_property_modifications_history(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_outcome_property_modifications_history(caplog):
+def test_outcome_property__models_consistency(caplog):
     ##################
     # outcome properties
 
@@ -1222,7 +1222,7 @@ def test_outcome_property_modifications_history(caplog):
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
-def test_transition_property_modifications_history(caplog):
+def test_transition_property_models_consistency(caplog):
     ##################
     # transition properties
 

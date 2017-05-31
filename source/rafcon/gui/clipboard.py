@@ -22,7 +22,7 @@ from rafcon.core.states.container_state import ContainerState
 
 from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.state import StateModel
-from rafcon.gui.models.abstract_state import MetaSignalMsg
+from rafcon.gui.models.signals import ActionSignalMsg
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -101,13 +101,17 @@ class Clipboard(Observable):
 
         element_m_copy_lists = self.model_copies
         self.prepare_new_copy()  # threaded in future -> important that the copy is prepared here!!!
-
+        target_state_m.action_signal.emit(ActionSignalMsg(action='paste', origin='model',
+                                                          action_parent_m=target_state_m,
+                                                          affected_models=[], after=False))
         self.state_id_mapping_dict[self.copy_parent_state_id] = target_state_m.state.state_id
 
         # prepare list of lists to copy for limited or converted paste of objects
         if isinstance(target_state_m.state, ContainerState):
             tolerated_lists = self._container_state_unlimited
         else:
+            if element_m_copy_lists['states']:
+                logger.info("The clipboard stack holds states that are ignored if paste is applied on a ExecutionState.")
             tolerated_lists = self._execution_state_unlimited
         if limited and all([list_name in tolerated_lists for list_name in limited]):
             if len(limited) == 1 and limited[0] in ['input_data_ports', 'output_data_ports', 'scoped_variables'] and convert:
@@ -140,7 +144,30 @@ class Clipboard(Observable):
         for list_name in lists_to_insert:
             insert_dict[list_name] = insert_elements_from_model_copies_list(element_m_copy_lists[list_name],
                                                                             list_name[:-1])
-        target_state_m.meta_signal.emit(MetaSignalMsg("paste", "all", True))
+
+        # TODO re-organize and use partly the expected_models pattern the next lines
+        import rafcon.gui.helpers.meta_data as gui_helpers_meta_data
+        # import rafcon.gui.helpers.state as gui_helpers_state
+        models_dict = {'state': target_state_m}
+        for key, elems_list in insert_dict.iteritems():
+            models_dict[key] = {elem[1].core_element.core_element_id: elem[1] for elem in elems_list}
+
+        # if all([all([gui_helpers_state.model_has_empty_meta(elem) for elem in elems_dict.itervalues()])
+        #         if isinstance(elems_dict, dict) else gui_helpers_state.model_has_empty_meta(elems_dict)
+        #         for elems_dict in models_dict.itervalues()]):
+        gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
+        for key, elems_list in insert_dict.iteritems():
+            for elem in elems_list:
+                elem[0].meta = elem[1].meta
+        # else:
+        #     logger.info("Paste miss meta to scale.")
+
+        affected_models = []
+        for elemets_list in insert_dict.itervalues():
+            affected_models.extend(elemets_list)
+        target_state_m.action_signal.emit(ActionSignalMsg(action='paste', origin='clipboard',
+                                                          action_parent_m=target_state_m,
+                                                          affected_models=affected_models, after=True))
         return insert_dict
 
     def do_cut_removal(self):
@@ -180,7 +207,7 @@ class Clipboard(Observable):
         # The models can be pre-generated in threads while editing is still possible -> scales better
         new_state_copy_m = target_state_m.states[orig_state_copy.state_id]
 
-        new_state_copy_m.copy_meta_data_from_state_m(orig_state_copy_m)
+        # new_state_copy_m.copy_meta_data_from_state_m(orig_state_copy_m)
         self.state_id_mapping_dict[old_state_id] = new_state_id
         return new_state_copy_m, orig_state_copy_m
 
@@ -307,7 +334,6 @@ class Clipboard(Observable):
             from_port = data_flow.parent.get_data_port(data_flow.from_state, data_flow.from_key)
             to_port = data_flow.parent.get_data_port(data_flow.to_state, data_flow.to_key)
             return from_port, to_port
-
 
         def get_states_related_to_transition(transition):
             if transition.from_state == transition.parent.state_id or transition.from_state is None:

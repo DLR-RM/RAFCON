@@ -1,0 +1,25 @@
+{
+    "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
+    "description": "Wait infinitely\n\nThis library waits infinitely. If a preemption request occurs, the library preempts immediately.", 
+    "input_data_ports": {}, 
+    "name": "wait infitinetly", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "end", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {}, 
+    "state_id": "EQVJBF"
+}

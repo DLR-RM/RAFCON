@@ -115,8 +115,9 @@ class Selection(ModelMT):
     def set(self, selection):
         self.__selected.clear()
         # Do not add None values to selection
-        if not selection:
-            return
+        if selection is None:
+            selection = []
+
         if not isinstance(selection, list):
             selection = [selection]
         else:

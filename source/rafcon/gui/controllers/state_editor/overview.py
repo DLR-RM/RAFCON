@@ -195,7 +195,7 @@ class StateOverviewController(ExtendedController, Model):
 
         target_class = self.state_types_dict[type_text]['class']
         import rafcon.gui.helpers.state as gui_helper_state
-        gui_helper_state.change_state_type(self.model, target_class)
+        gui_helper_state.change_state_type_with_error_handling_and_logger_messages(self.model, target_class)
 
     def check_for_enter(self, entry, event):
         key_name = keyval_name(event.keyval)

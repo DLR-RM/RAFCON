@@ -358,10 +358,11 @@ class MenuBarController(ExtendedController):
 
     @staticmethod
     def on_substitute_selected_state_activate(widget=None, data=None, path=None):
-        return gui_helper_state.substitute_selected_state()
+        return gui_helper_state.substitute_selected_state_and_use_choice_dialog()
+
     @staticmethod
     def on_substitute_library_with_template_activate(widget=None, data=None):
-        return gui_helper_state.substitute_library_with_template()
+        return gui_helper_state.substitute_selected_library_state_with_template()
 
     @staticmethod
     def on_save_selected_state_as_activate(widget=None, data=None, path=None):
@@ -616,32 +617,10 @@ class MenuBarController(ExtendedController):
         self.shortcut_manager.trigger_action("add_execution_state", None, None)
 
     def on_group_states_activate(self, widget, data=None):
-        logger.debug("try to group")
-        state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
-        all_elements = self.model.get_selected_state_machine_model().selection.get_all()
-        selected_sv = [elem.scoped_variable for elem in all_elements if isinstance(elem, ScopedVariableModel)]
-        if state_m_list and isinstance(state_m_list[0].parent, StateModel) or selected_sv:
-            logger.debug("do group")
-            state_ids_of_selected_states = [state_m.state.state_id for state_m in state_m_list]
-            dp_ids_of_selected_sv = [sv.data_port_id for sv in selected_sv]
-            try:
-                if state_m_list:
-                    state_m_list[0].parent.state.group_states(state_ids_of_selected_states, dp_ids_of_selected_sv)
-                else:
-                    selected_sv[0].parent.group_states(state_ids_of_selected_states, dp_ids_of_selected_sv)
-            except:
-                pass
+        gui_helper_state.group_selected_states_and_scoped_variables()
 
     def on_ungroup_state_activate(self, widget, data=None):
-        logger.debug("try to ungroup")
-        state_m_list = self.model.get_selected_state_machine_model().selection.get_states()
-        if len(state_m_list) == 1 and isinstance(state_m_list[0], ContainerStateModel) and \
-                not state_m_list[0].state.is_root_state:
-            logger.debug("do ungroup")
-            try:
-                state_m_list[0].parent.state.ungroup_state(state_m_list[0].state.state_id)
-            except:
-                pass
+        gui_helper_state.ungroup_selected_state()
 
     def on_undo_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action("undo", None, None)

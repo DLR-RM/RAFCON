@@ -1,0 +1,190 @@
+{
+    "__jsonqualname__": "rafcon.core.states.hierarchy_state.HierarchyState", 
+    "data_flows": {
+        "7": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 7, 
+            "from_key": 3, 
+            "from_state": "AQRXOD", 
+            "to_key": 5, 
+            "to_state": "LFPQSW"
+        }, 
+        "8": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 8, 
+            "from_key": 4, 
+            "from_state": "AQRXOD", 
+            "to_key": 6, 
+            "to_state": "LFPQSW"
+        }, 
+        "10": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 10, 
+            "from_key": 9, 
+            "from_state": "LFPQSW", 
+            "to_key": 3, 
+            "to_state": "JFDYJZ"
+        }, 
+        "11": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 11, 
+            "from_key": 2, 
+            "from_state": "AQRXOD", 
+            "to_key": 2, 
+            "to_state": "JFDYJZ"
+        }, 
+        "12": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 12, 
+            "from_key": 1, 
+            "from_state": "AQRXOD", 
+            "to_key": 1, 
+            "to_state": "JFDYJZ"
+        }, 
+        "14": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 14, 
+            "from_key": 4, 
+            "from_state": "JFDYJZ", 
+            "to_key": 13, 
+            "to_state": "RFMJKJ"
+        }, 
+        "17": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 17, 
+            "from_key": 15, 
+            "from_state": "AQRXOD", 
+            "to_key": 16, 
+            "to_state": "LFPQSW"
+        }
+    }, 
+    "description": "Message dialog with 3 options\n\nA message dialog with headline \"text\" and subtext \"subtext\" is shown. \"Option 1\" defines the text for the first button, and so on. If the user clicks on the first button, outcome \"option 1\" is used, and so on.", 
+    "input_data_ports": {
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 1, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "Please decide wisely", 
+            "name": "text"
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 2, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "You only have this one chance", 
+            "name": "subtext"
+        }, 
+        "3": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 3, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "Blue pill", 
+            "name": "option 1"
+        }, 
+        "4": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 4, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "Red pill", 
+            "name": "option 2"
+        }, 
+        "15": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 15, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "Call Mum", 
+            "name": "option 3"
+        }
+    }, 
+    "name": "Dialog [3 options]", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "option 1", 
+            "outcome_id": 0
+        }, 
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "option 2", 
+            "outcome_id": 1
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "option 3", 
+            "outcome_id": 2
+        }
+    }, 
+    "output_data_ports": {}, 
+    "scoped_variables": {}, 
+    "state_id": "AQRXOD", 
+    "transitions": {
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": null, 
+            "from_state": null, 
+            "to_outcome": null, 
+            "to_state": "LFPQSW", 
+            "transition_id": 1
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "LFPQSW", 
+            "to_outcome": null, 
+            "to_state": "JFDYJZ", 
+            "transition_id": 2
+        }, 
+        "3": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "RFMJKJ", 
+            "to_outcome": 0, 
+            "to_state": "AQRXOD", 
+            "transition_id": 3
+        }, 
+        "4": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 1, 
+            "from_state": "RFMJKJ", 
+            "to_outcome": 1, 
+            "to_state": "AQRXOD", 
+            "transition_id": 4
+        }, 
+        "5": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "JFDYJZ", 
+            "to_outcome": null, 
+            "to_state": "RFMJKJ", 
+            "transition_id": 5
+        }, 
+        "6": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 2, 
+            "from_state": "RFMJKJ", 
+            "to_outcome": 2, 
+            "to_state": "AQRXOD", 
+            "transition_id": 6
+        }
+    }
+}

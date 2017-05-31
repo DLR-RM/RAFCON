@@ -55,7 +55,7 @@ class MetaModel(ModelMT):
     def get_meta_data_editor(self, for_gaphas=True):
         """Returns the editor for the specified editor
 
-        This method should be used instead of accessing the meta data of an editor directly. It return sthe meta data
+        This method should be used instead of accessing the meta data of an editor directly. It return the meta data
         of the editor available (with priority to the one specified by `for_gaphas`) and converts it if needed.
 
         :param bool for_gaphas: True (default) if the meta data is required for gaphas, False if for OpenGL
@@ -67,6 +67,7 @@ class MetaModel(ModelMT):
         assert isinstance(meta_gaphas, Vividict) and isinstance(meta_opengl, Vividict)
 
         # Use meta data of editor with more keys (typically one of the editors has zero keys)
+        # TODO check if the magic length condition in the next line can be improved (consistent behavior getter/setter?)
         parental_conversion_from_opengl = self._parent and self._parent().temp['conversion_from_opengl']
         from_gaphas = len(meta_gaphas) > len(meta_opengl) or (len(meta_gaphas) == len(meta_opengl) and for_gaphas and
                                                               not parental_conversion_from_opengl)
@@ -78,8 +79,13 @@ class MetaModel(ModelMT):
 
         # only keep meta data for one editor
         del self.meta['gui']['editor_opengl' if for_gaphas else 'editor_gaphas']
-
         return self.meta['gui']['editor_gaphas'] if for_gaphas else self.meta['gui']['editor_opengl']
+
+    def do_convert_meta_data_if_no_data(self, for_gaphas):
+        if not self.meta['gui']['editor_gaphas'] and for_gaphas:
+            self.meta['gui']['editor_gaphas'] = self._meta_data_editor_opengl2gaphas(self.meta['gui']['editor_opengl'])
+        elif not self.meta['gui']['editor_opengl'] and not for_gaphas:
+            self.meta['gui']['editor_opengl'] = self._meta_data_editor_gaphas2opengl(self.meta['gui']['editor_gaphas'])
 
     def set_meta_data_editor(self, key, meta_data, from_gaphas=True):
         """Sets the meta data for a specific key of the desired editor
@@ -88,6 +94,7 @@ class MetaModel(ModelMT):
         :param meta_data: The value to be set
         :param bool from_gaphas: If the data comes from a gaphas editor
         """
+        self.do_convert_meta_data_if_no_data(from_gaphas)
         meta_gui = self.meta['gui']
         meta_gui = meta_gui['editor_gaphas'] if from_gaphas else meta_gui['editor_opengl']
 

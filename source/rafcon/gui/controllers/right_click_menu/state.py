@@ -301,7 +301,8 @@ class StateMachineRightClickMenu(object):
     def on_type_change_activate(self, widget, data=None, target_class=None):
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.get_all()) == 1 and len(selection.get_states()) == 1:
-            gui_helper_state.change_state_type(selection.get_states()[0], target_class)
+            gui_helper_state.change_state_type_with_error_handling_and_logger_messages(selection.get_states()[0],
+                                                                                       target_class)
 
     def mouse_click(self, widget, event=None):
         from rafcon.gui.models.library_state import LibraryStateModel

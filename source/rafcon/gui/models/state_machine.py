@@ -27,7 +27,7 @@ from rafcon.core.storage import storage
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.models import ContainerStateModel, StateModel
 from rafcon.gui.models.selection import Selection
-from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg
+from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
 from rafcon.utils import log
 from rafcon.utils import storage_utils
 from rafcon.utils.hashable import Hashable
@@ -49,11 +49,14 @@ class StateMachineModel(ModelMT, Hashable):
     root_state = None
     meta_signal = Signal()
     state_meta_signal = Signal()
+    action_signal = Signal()
+    state_action_signal = Signal()
     sm_selection_changed_signal = Signal()
 
     suppress_new_root_state_model_one_time = False
 
-    __observables__ = ("state_machine", "root_state", "meta_signal", "state_meta_signal", "sm_selection_changed_signal")
+    __observables__ = ("state_machine", "root_state", "meta_signal", "state_meta_signal", "sm_selection_changed_signal",
+                       "action_signal", "state_action_signal")
 
     def __init__(self, state_machine, sm_manager_model, meta=None, load_meta_data=True):
         """Constructor
@@ -78,6 +81,8 @@ class StateMachineModel(ModelMT, Hashable):
             self.meta = Vividict()
         self.meta_signal = Signal()
         self.state_meta_signal = Signal()
+        self.action_signal = Signal()
+        self.state_action_signal = Signal()
         self.sm_selection_changed_signal = Signal()
 
         self.temp = Vividict()
@@ -145,7 +150,7 @@ class StateMachineModel(ModelMT, Hashable):
             self.auto_backup.prepare_destruction()
         try:
             self.unregister_observer(self)
-            self.root_state.register_observer(self)
+            self.root_state.unregister_observer(self)
         except KeyError:  # Might happen if the observer was already unregistered
             pass
         with self.state_machine.modification_lock():
@@ -183,7 +188,7 @@ class StateMachineModel(ModelMT, Hashable):
     @ModelMT.observe("scoped_variables", before=True)
     def root_state_model_before_change(self, model, prop_name, info):
         if not self._list_modified(prop_name, info):
-            self.__send_root_state_notification(model, prop_name, info)
+            self._send_root_state_notification(model, prop_name, info)
 
     @ModelMT.observe("state", after=True)
     @ModelMT.observe("outcomes", after=True)
@@ -196,19 +201,37 @@ class StateMachineModel(ModelMT, Hashable):
     @ModelMT.observe("scoped_variables", after=True)
     def root_state_model_after_change(self, model, prop_name, info):
         if not self._list_modified(prop_name, info):
-            self.__send_root_state_notification(model, prop_name, info)
+            self._send_root_state_notification(model, prop_name, info)
 
     @ModelMT.observe("meta_signal", signal=True)
     def meta_changed(self, model, prop_name, info):
-        # When the meta was changed, we have to set the dirty flag, as the changes are unsaved
+        """When the meta was changed, we have to set the dirty flag, as the changes are unsaved"""
         self.state_machine.marked_dirty = True
-        if model is not self:  # Signal was caused by the root state
+        msg = info.arg
+        if model is not self and msg.change.startswith('sm_notification_'):  # Signal was caused by the root state
             # Emit state_meta_signal to inform observing controllers about changes made to the meta data within the
             # state machine
-            msg = info.arg
-            change = msg.change
-            msg = msg._replace(change=change.replace('sm_notification_', '', 1))
+            # -> removes mark of "sm_notification_"-prepend to mark root-state msg forwarded to state machine label
+            msg = msg._replace(change=msg.change.replace('sm_notification_', '', 1))
             self.state_meta_signal.emit(msg)
+
+    @ModelMT.observe("action_signal", signal=True)
+    def action_signal_triggered(self, model, prop_name, info):
+        """When the action was performed, we have to set the dirty flag, as the changes are unsaved"""
+        # print "action_signal_triggered state machine: ", model, prop_name, info
+        self.state_machine.marked_dirty = True
+        msg = info.arg
+        if model is not self and msg.action.startswith('sm_notification_'):  # Signal was caused by the root state
+            # Emit state_action_signal to inform observing controllers about changes made to the state within the
+            # state machine
+            # print "DONE1 S", self.state_machine.state_machine_id, msg, model
+            # -> removes mark of "sm_notification_"-prepend to mark root-state msg forwarded to state machine label
+            msg = msg._replace(action=msg.action.replace('sm_notification_', '', 1))
+            self.state_action_signal.emit(msg)
+            # print "FINISH DONE1 S", self.state_machine.state_machine_id, msg
+        else:
+            # print "DONE2 S", self.state_machine.state_machine_id, msg
+            pass
 
     @staticmethod
     def _list_modified(prop_name, info):
@@ -264,51 +287,18 @@ class StateMachineModel(ModelMT, Hashable):
     def change_root_state_type(self, model, prop_name, info):
         if info.method_name != 'change_root_state_type':
             return
-        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
-        state_m = self.root_state
+        self.change_root_state_type.__func__.last_notification_model = model
+        self.change_root_state_type.__func__.last_notification_prop_name = prop_name
+        self.change_root_state_type.__func__.last_notification_info = info
 
-        # Before the root state type is actually changed, we extract the information from the old state model and remove
-        # the model from the selection
         if 'before' in info:
-            state_m.unregister_observer(state_m)
-            # robust check for new_state_class-argument
-            if len(info.args) > 1:
-                new_state_class = info.args[1]
-            else:
-                new_state_class = info.kwargs['new_state_class']
+            # logger.info("BEFORE {0}".format(info.method_name))
+            self._send_root_state_notification(model, prop_name, info)
+        # else:
+        #     logger.info("AFTER {0}".format(info.method_name))
 
-            state_m.unregister_observer(self)
-            self.selection.remove(state_m)
-
-            # Extract child models of state, as they have to be applied to the new state model
-            child_models = gui_helper_state_machine.extract_child_models_of_of_state(state_m, new_state_class)
-            self.change_root_state_type.__func__.child_models = child_models  # static variable of class method
-            self.suppress_new_root_state_model_one_time = True
-
-        # After the state has been changed in the core, we create a new model for it with all information extracted
-        # from the old state model
-        else:  # after
-            if isinstance(info.result, Exception):
-                logger.exception("Root state type change failed {0}".format(info.result))
-            else:
-                # The new state is returned by the core state class method 'change_state_type'
-                new_state = info.result
-
-                # Create a new state model based on the new state and apply the extracted child models
-                child_models = self.change_root_state_type.__func__.child_models
-                new_state_m = gui_helper_state_machine.create_state_model_for_state(new_state, child_models)
-
-                new_state_m.register_observer(self)
-                self.root_state = new_state_m
-
-                state_m.state_type_changed_signal.emit(StateTypeChangeSignalMsg(new_state_m))
-
-                self.selection.add(new_state_m)
-
-        self.__send_root_state_notification(model, prop_name, info)
-
-    def __send_root_state_notification(self, model, prop_name, info):
+    def _send_root_state_notification(self, model, prop_name, info):
         cause = 'root_state_change'
         try:
             if 'before' in info:

@@ -83,7 +83,7 @@ class StateView(Element):
         self._image_cache = ImageCache()
 
         name_meta = state_m.get_meta_data_editor()['name']
-        if not isinstance(name_meta['size'], tuple):
+        if not isinstance(name_meta['size'], tuple) and not name_meta['size'] == 2:
             name_width = self.width * 0.8
             name_height = self.height * 0.4
             name_meta = state_m.set_meta_data_editor('name.size', (name_width, name_height))['name']
@@ -91,7 +91,7 @@ class StateView(Element):
 
         self._name_view = NameView(state_m.state.name, name_size)
 
-        if not isinstance(name_meta['rel_pos'], tuple):
+        if not isinstance(name_meta['rel_pos'], tuple) and not name_meta['rel_pos'] == 2:
             name_meta['rel_pos'] = (0, 0)
         name_pos = name_meta['rel_pos']
         self.name_view.matrix.translate(*name_pos)
@@ -339,11 +339,11 @@ class StateView(Element):
         self.update_minimum_size_of_children()
 
         def update_port_position(port_v, meta_data):
-            if isinstance(meta_data['rel_pos'], tuple):
+            if isinstance(meta_data['rel_pos'], tuple) and len(meta_data['rel_pos']) == 2:
                 port_v.handle.pos = meta_data['rel_pos']
                 self.port_constraints[port_v].update_position(meta_data['rel_pos'])
 
-        if isinstance(state_meta['income']['rel_pos'], tuple):
+        if isinstance(state_meta['income']['rel_pos'], tuple) and len(state_meta['income']['rel_pos']) == 2:
             update_port_position(self.income, state_meta['income'])
         for outcome_v in self.outcomes:
             update_port_position(outcome_v, outcome_v.model.get_meta_data_editor())
@@ -597,12 +597,14 @@ class StateView(Element):
         self._map_handles_port_v[income_v.handle] = income_v
 
         port_meta = self.model.get_meta_data_editor()['income']
-        if not isinstance(port_meta['rel_pos'], tuple):
+        if not isinstance(port_meta['rel_pos'], tuple) or not len(port_meta['rel_pos']) == 2:
+            # print "generate rel_pos"
             # Position income on the top of the left state side
             income_v.side = SnappedSide.LEFT
             pos_x = 0
             pos_y = self._calculate_port_pos_on_line(1, self.height)
             port_meta = self.model.set_meta_data_editor('income.rel_pos', (pos_x, pos_y))['income']
+        # print "add income", self.model, self.model.parent, port_meta['rel_pos']
         income_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(income_v)
         return income_v
@@ -616,7 +618,8 @@ class StateView(Element):
         self._map_handles_port_v[outcome_v.handle] = outcome_v
 
         port_meta = outcome_m.get_meta_data_editor()
-        if not isinstance(port_meta['rel_pos'], tuple):
+        if not isinstance(port_meta['rel_pos'], tuple) or not len(port_meta['rel_pos']) == 2:
+            # print "generate rel_pos"
             if outcome_m.outcome.outcome_id < 0:
                 # Position aborted/preempted in upper right corner
                 outcome_v.side = SnappedSide.TOP
@@ -629,6 +632,7 @@ class StateView(Element):
                 num_outcomes = len([o for o in self.outcomes if o.model.outcome.outcome_id >= 0])
                 pos_y = self._calculate_port_pos_on_line(num_outcomes, self.height)
             port_meta = outcome_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
+        # print "add outcome", self.model, self.model.parent, port_meta['rel_pos']
         outcome_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(outcome_v)
 
@@ -650,13 +654,15 @@ class StateView(Element):
         self._map_handles_port_v[input_port_v.handle] = input_port_v
 
         port_meta = port_m.get_meta_data_editor()
-        if not isinstance(port_meta['rel_pos'], tuple):
+        if not isinstance(port_meta['rel_pos'], tuple) or not len(port_meta['rel_pos']) == 2:
+            # print "generate rel_pos"
             # Distribute input ports on the left side of the state, starting from bottom
             input_port_v.side = SnappedSide.LEFT
             num_inputs = len(self._inputs)
             pos_x = 0
             pos_y = self.height - self._calculate_port_pos_on_line(num_inputs, self.height)
             port_meta = port_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
+        # print "add input_port", self.model, self.model.parent, port_meta['rel_pos']
         input_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(input_port_v)
 
@@ -678,13 +684,15 @@ class StateView(Element):
         self._map_handles_port_v[output_port_v.handle] = output_port_v
 
         port_meta = port_m.get_meta_data_editor()
-        if not isinstance(port_meta['rel_pos'], tuple):
+        if not isinstance(port_meta['rel_pos'], tuple) or not len(port_meta['rel_pos']) == 2:
             # Distribute output ports on the right side of the state, starting from bottom
+            # print "generate rel_pos"
             output_port_v.side = SnappedSide.RIGHT
             num_outputs = len(self._outputs)
             pos_x = self.width
             pos_y = self.height - self._calculate_port_pos_on_line(num_outputs, self.height)
             port_meta = port_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
+        # print "add output_port", self.model, self.model.parent, port_meta['rel_pos']
         output_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(output_port_v)
 
@@ -708,14 +716,16 @@ class StateView(Element):
         scoped_variable_port_v.handle.pos = self.width * (0.1 * len(self._scoped_variables_ports)), 0
 
         port_meta = scoped_variable_m.get_meta_data_editor()
-        if not isinstance(port_meta['rel_pos'], tuple):
+        if not isinstance(port_meta['rel_pos'], tuple) or not len(port_meta['rel_pos']) == 2:
             # Distribute scoped variables on the top side of the state, starting from left
+            # print "generate rel_pos"
             scoped_variable_port_v.side = SnappedSide.BOTTOM
             num_scoped_vars = len(self._scoped_variables_ports)
             pos_x = self._calculate_port_pos_on_line(num_scoped_vars, self.width,
                                                      port_width=self.border_width * 4)
             pos_y = self.height
             port_meta = scoped_variable_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
+        # print "add scoped_variable", self.model, self.model.parent, port_meta['rel_pos']
         scoped_variable_port_v.handle.pos = port_meta['rel_pos']
 
         self.add_rect_constraint_for_port(scoped_variable_port_v)

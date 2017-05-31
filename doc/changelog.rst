@@ -7,12 +7,31 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 
-- logging is configured with a JSON file
-- logging configuration can be specified by a user and the env variable :envvar:`RAFCON_LOGGING_CONF`
-
+- Refactoring of "Save state as state machine/library"
+- Execution logs
 
 Patch releases 0.9.\*
 ---------------------
+
+0.9.7
+"""""
+
+- Improvements
+
+  - logging is configured with a JSON file
+  - logging configuration can be specified by a user and the env variable :envvar:`RAFCON_LOGGING_CONF`
+  - :issue:`336`: Use custom popup menu in state machin editor to quickly navigate in open state machines
+
+- Bug Fixes
+
+  - :issue:`349`
+  - :issue:`314`
+  - :issue:`341`
+  - :issue:`339`
+  - :issue:`338`
+  - :issue:`327`
+  - :issue:`343`
+  - :issue:`346`
 
 0.9.6
 """""

@@ -12,6 +12,7 @@
 import datetime
 import time
 from rafcon.utils import constants
+from rafcon.gui.models.signals import MetaSignalMsg, ActionSignalMsg
 
 
 EXECUTION_TRIGGERED_METHODS = constants.BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
@@ -121,7 +122,7 @@ class NotificationOverview(dict):
             # affects_children
             s += "\n{0}affects_children={1}".format(level + "\t", meta_signal_msg_tuple.affects_children)
             meta_signal_dict['affects_children'] = meta_signal_msg_tuple.affects_children
-            overview['meta_signal'].append(meta_signal_dict)
+            overview['signal'].append(meta_signal_dict)
 
             # notification (tuple)
             notification_dict = {}
@@ -145,6 +146,27 @@ class NotificationOverview(dict):
                                                                               overview))
             return s
 
+        def get_nice_action_signal_msg_tuple_string(meta_signal_msg_tuple, level, overview):
+            meta_signal_dict = {}
+            # after
+            s = "\n{0}after={1}".format(level + "\t", meta_signal_msg_tuple.after)
+            meta_signal_dict['after'] = meta_signal_msg_tuple.after
+            # action
+            s += "\n{0}action={1}".format(level + "\t", meta_signal_msg_tuple.action)
+            meta_signal_dict['action'] = meta_signal_msg_tuple.action
+            # origin
+            s += "\n{0}origin={1}".format(level + "\t", meta_signal_msg_tuple.origin)
+            meta_signal_dict['origin'] = meta_signal_msg_tuple.origin
+            # origin
+            s += "\n{0}action_parent_m={1}".format(level + "\t", meta_signal_msg_tuple.action_parent_m)
+            meta_signal_dict['action_parent_m'] = meta_signal_msg_tuple.origin
+            # change
+            s += "\n{0}affected_models={1}".format(level + "\t", meta_signal_msg_tuple.affected_models)
+            meta_signal_dict['affected_models'] = meta_signal_msg_tuple.affected_models
+
+            return s
+
+
         overview_was_none = False
         if overview is None:
             overview_was_none = True
@@ -158,7 +180,7 @@ class NotificationOverview(dict):
                 overview['result'] = []
             else:  # 'signal' in info:
                 overview['type'] = 'signal'
-                overview['meta_signal'] = []
+                overview['signal'] = []
 
         if ('after' in info or 'before' in info or 'signal' in info) and 'model' in info:
             if 'before' in info:
@@ -206,11 +228,29 @@ class NotificationOverview(dict):
                     overview['others'][len(overview['others'])-1][key] = info[key]
         else:
             overview['kwargs'].append({})
-            overview['meta_signal'].append(info['arg'])
-            s += "\n{0}'arg': MetaSignalMsg({1}".format(level,
-                                                        get_nice_meta_signal_msg_tuple_string(info['arg'],
-                                                                                              level,
-                                                                                              overview))
+            # print info
+            # print info['arg']
+            if isinstance(info['arg'], MetaSignalMsg):
+                overview['signal'].append(info['arg'])
+                s += "\n{0}'arg': MetaSignalMsg({1}".format(level,
+                                                            get_nice_meta_signal_msg_tuple_string(info['arg'],
+                                                                                                  level,
+                                                                                                  overview))
+            elif isinstance(info['arg'], ActionSignalMsg):
+                overview['instance'].append(info['arg'].action_parent_m.core_element)
+                overview['method_name'].append(info['arg'].action)
+                overview['signal'].append(info['arg'])
+                overview['kwargs'].append(info['arg'].kwargs)
+                # TODO check again this stuff
+                args = [info['arg'].action_parent_m.core_element, ]
+                args.extend(info['arg'].kwargs.values())
+                overview['args'].append(args)
+                s += "\n{0}'arg': ActionSignalMsg({1}".format(level,
+                                                              get_nice_action_signal_msg_tuple_string(info['arg'],
+                                                                                                      level,
+                                                                                                      overview))
+            else:
+                raise str(info)
 
         if overview_was_none:
             return s, overview

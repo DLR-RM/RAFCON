@@ -22,7 +22,7 @@ from copy import copy
 from gtkmvc import Observable
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.singleton import library_manager
-from rafcon.core.states.state import State
+from rafcon.core.states.state import State, PATH_SEPARATOR
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.storage import storage
 from rafcon.utils import log
@@ -82,6 +82,7 @@ class LibraryState(State):
 
         lib_os_path, new_library_path, new_library_name = \
             library_manager.get_os_path_to_library(library_path, library_name, allow_user_interaction)
+        self.lib_os_path = lib_os_path
 
         if library_path != new_library_path or library_name != new_library_name:
             self.library_name = new_library_name
@@ -90,7 +91,7 @@ class LibraryState(State):
             logger.info("Old library name '{0}' was located at {1}".format(library_name, library_path))
             logger.info("New library name '{0}' is located at {1}".format(new_library_name, new_library_path))
 
-        state_machine = storage.load_state_machine_from_path(lib_os_path)
+        state_machine = storage.load_state_machine_from_path(self.lib_os_path)
         lib_version = state_machine.version
         self.state_copy = state_machine.root_state
         self.state_copy.parent = self
@@ -166,6 +167,7 @@ class LibraryState(State):
         self.state_execution_status = StateExecutionStatus.ACTIVE
         logger.debug("Entering library state '{0}' with name '{1}'".format(self.library_name, self.name))
         # self.state_copy.parent = self.parent
+        self.state_copy._run_id = self._run_id
         self.state_copy.input_data = self.input_data
         self.state_copy.output_data = self.output_data
         self.state_copy.execution_history = self.execution_history
@@ -516,3 +518,9 @@ class LibraryState(State):
             return True
         else:
             return False
+
+    def get_storage_path(self, appendix=None, old_delimiter=False):
+        if appendix is None:
+            return super(LibraryState, self).get_storage_path(appendix, old_delimiter)
+        else:
+            return self.lib_os_path + PATH_SEPARATOR + appendix

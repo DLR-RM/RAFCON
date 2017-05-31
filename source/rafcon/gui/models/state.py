@@ -32,11 +32,16 @@ class StateModel(AbstractStateModel):
     :param rafcon.core.states.state.State state: The state to be managed
     :param AbstractStateModel parent: The state to be managed
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state
+    :param set expected_future_models: Existing models for new core elements
     """
+
+    expected_future_models = None
 
     def __init__(self, state, parent=None, meta=None, load_meta_data=True):
         """Constructor"""
         super(StateModel, self).__init__(state, parent, meta)
+
+        self.expected_future_models = set()
 
         if load_meta_data and type(self) == StateModel:
             self.load_meta_data()
@@ -178,7 +183,8 @@ class StateModel(AbstractStateModel):
         :param core_objects_dict: new dictionary of one type of core-elements (rafcon.core)
         :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
         :param model_class: model-class of the elements that should be insert
-        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element (e.g. 'state_id')
+        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element
+                          (e.g. 'state_id')
         :return:
         """
         for _ in range(len(model_list_or_dict)):
@@ -188,34 +194,48 @@ class StateModel(AbstractStateModel):
             for _ in core_objects_dict:
                 self.add_missing_model(model_list_or_dict, core_objects_dict, model_name, model_class, model_key)
 
-    def add_missing_model(self, model_list_or_dict, core_objects_dict, model_name, model_class, model_key):
+    def add_missing_model(self, model_list_or_dict, core_elements_dict, model_name, model_class, model_key):
         """Adds one missing model
 
         The method will search for the first core-object out of core_object_dict
-        not represented in the list or dict of models handed by model_list_or_dict, add it and return without continue
+        not represented in the list or dict of models handed by model_list_or_dict, adds it and returns without continue
         to search for more objects which maybe are missing in model_list_or_dict with respect to the
         core_object_dict.
 
         :param model_list_or_dict: could be a list or dictionary of one model type
-        :param core_objects_dict: dictionary of one type of core-elements (rafcon.core)
+        :param core_elements_dict: dictionary of one type of core-elements (rafcon.core)
         :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
         :param model_class: model-class of the elements that should be insert
-        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element (e.g. 'state_id')
-        :return:
+        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element
+                          (e.g. 'state_id')
+        :return: True, is a new model was added, False else
+        :rtype: bool
         """
-        for core_object in core_objects_dict.itervalues():
-            found = False
+        def core_element_has_model(core_object):
             for model_or_key in model_list_or_dict:
                 model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
                 if core_object is getattr(model, model_name):
-                    found = True
-                    break
-            if not found:
-                if model_key is None:
-                    model_list_or_dict.append(model_class(core_object, self))
-                else:
-                    model_list_or_dict[getattr(core_object, model_key)] = model_class(core_object, self)
-                return
+                    return True
+            return False
+
+        for core_element in core_elements_dict.itervalues():
+            if core_element_has_model(core_element):
+                continue
+
+            # get expected model and connect it to self or create a new model
+            new_model = self._get_future_expected_model(core_element)
+            if new_model:
+                new_model.parent = self
+            else:
+                new_model = model_class(core_element, self)
+
+            # insert new model into list or dict
+            if model_key is None:
+                model_list_or_dict.append(new_model)
+            else:
+                model_list_or_dict[getattr(core_element, model_key)] = new_model
+            return True
+        return False
 
     def remove_additional_model(self, model_list_or_dict, core_objects_dict, model_name, model_key):
         """Remove one unnecessary model
@@ -227,7 +247,8 @@ class StateModel(AbstractStateModel):
         :param model_list_or_dict: could be a list or dictionary of one model type
         :param core_objects_dict: dictionary of one type of core-elements (rafcon.core)
         :param model_name: prop_name for the core-element hold by the model, this core-element is covered by the model
-        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element (e.g. 'state_id')
+        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element
+                          (e.g. 'state_id')
         :return:
         """
         for model_or_key in model_list_or_dict:
@@ -245,3 +266,12 @@ class StateModel(AbstractStateModel):
                     model_list_or_dict[model_or_key].prepare_destruction()
                     del model_list_or_dict[model_or_key]
                 return
+
+    def _get_future_expected_model(self, core_element):
+        """Hand model for an core element from expected model list and remove the model from this list"""
+        for model in self.expected_future_models:
+            if model.core_element is core_element:
+                # print "expected_future_models -> remove model:", model
+                self.expected_future_models.remove(model)
+                return model
+        return None

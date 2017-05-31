@@ -32,13 +32,13 @@ logger = log.get_logger(__name__)
 
 def create_state_machine(*args, **kargs):
 
-    state1 = ExecutionState('State1')
+    state1 = ExecutionState('State1', state_id='STATE1')
     state2 = ExecutionState('State2')
     state4 = ExecutionState('Nested')
     output_state4 = state4.add_output_data_port("out", "int")
     state5 = ExecutionState('Nested2')
     input_state5 = state5.add_input_data_port("in", "int", 0)
-    state3 = HierarchyState(name='State3')
+    state3 = HierarchyState(name='State3', state_id='STATE3')
     state3.add_state(state4)
     state3.add_state(state5)
     state3.set_start_state(state4)
@@ -47,7 +47,7 @@ def create_state_machine(*args, **kargs):
     state3.add_transition(state5.state_id, 0, state3.state_id, 0)
     state3.add_data_flow(state4.state_id, output_state4, state5.state_id, input_state5)
 
-    ctr_state = HierarchyState(name="Container")
+    ctr_state = HierarchyState(name="Container", state_id='ROOTSTATE')
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
@@ -123,7 +123,7 @@ def trigger_gui_signals(*args):
     - Stop State Machine
     - Quit GUI
     """
-
+    import rafcon.gui.helpers.state as gui_helper_state
     sm_manager_model = args[0]
     main_window_controller = args[1]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
@@ -167,6 +167,7 @@ def trigger_gui_signals(*args):
 
     ##########################################################
     # create complex state with all elements
+    call_gui_callback(sm_m.selection.set, [sm_m.get_state_model_by_path('CDMJPK'), ])
     lib_state = LibraryState(join("generic", "dialog"), "Dialog [3 options]", "0.1", "Dialog [3 options]")
     call_gui_callback(gui_helper_state_machine.insert_state, lib_state, True)
     assert len(state_m.state.states) == old_child_state_count + 2
@@ -187,20 +188,37 @@ def trigger_gui_signals(*args):
     print "increase complexity by doing it twice -> increase the hierarchy-level"
     copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menubar_ctrl)
 
+    # TODO keep core interface, too
+    # ##########################################################
+    # # group states
+    # # TODO improve test to related data flows
+    # state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
+    # state_ids_old = [state_id for state_id in state_m_parent.state.states]
+    # call_gui_callback(state_m_parent.state.group_states, ['PAYECU', 'UEPNNW', 'KQDJYS'])
+    #
+    # ##########################################################
+    # # ungroup new state
+    # state_new = None
+    # for state_id in state_m_parent.state.states:
+    #     if state_id not in state_ids_old:
+    #         state_new = state_m_parent.state.states[state_id]
+    # call_gui_callback(state_m_parent.state.ungroup_state, state_new.state_id)
+
     ##########################################################
     # group states
     # TODO improve test to related data flows
     state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
     state_ids_old = [state_id for state_id in state_m_parent.state.states]
-    call_gui_callback(state_m_parent.state.group_states, ['PAYECU', 'UEPNNW', 'KQDJYS'])
+    state_m_list = [state_m_parent.states[child_state_id] for child_state_id in ['PAYECU', 'UEPNNW', 'KQDJYS']]
+    call_gui_callback(gui_helper_state.group_states_and_scoped_variables, state_m_list, [])
 
     ##########################################################
     # ungroup new state
-    state_new = None
+    new_state = None
     for state_id in state_m_parent.state.states:
         if state_id not in state_ids_old:
-            state_new = state_m_parent.state.states[state_id]
-    call_gui_callback(state_m_parent.state.ungroup_state, state_new.state_id)
+            new_state = state_m_parent.state.states[state_id]
+    call_gui_callback(gui_helper_state.ungroup_state, sm_m.get_state_model_by_path(new_state.get_path()))
 
     ##########################################################
     # substitute state with template

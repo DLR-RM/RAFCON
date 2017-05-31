@@ -241,10 +241,12 @@ class ContainerState(State):
         self.add_input_data_to_scoped_data(self.input_data)
 
     def handle_no_transition(self, state):
-        """ This function handles the case that there is no transition for a specific outcome of a substate. It waits on a
-        condition variable to a new transition that will be connected by the programmer or GUI-user.
+        """ This function handles the case that there is no transition for a specific outcome of a sub-state.
 
-        :param state: The substate to find a transition for
+        The method waits on a condition variable to a new transition that will be connected by the programmer or
+        GUI-user.
+
+        :param state: The sub-state to find a transition for
         :return: The transition for the target state.
         :raises exceptions.RuntimeError: if the execution engine is stopped
                                         (this will be caught at the end of the run method)
@@ -309,20 +311,19 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def group_states(self, state_ids, scoped_variables=None):
+    def group_states(self, state_ids, scoped_variable_ids=None):
         """ Group states and scoped variables into a new hierarchy state and remain internal connections.
             Interconnecting transitions and data flows to parent and other child states are removed, at the moment.
 
         :param state_ids: state_id's of all states that are to be grouped.
-        :param scoped_variables: data_port_id's of all scoped variables that are to be grouped, too.
+        :param scoped_variable_ids: data_port_id's of all scoped variables that are to be grouped, too.
         :return:
         """
-        # TODO remain all related linkage by adding outcomes and input output port to new hierarchy state
         # TODO remember changed state or state element ids and provide them for the model functionalities
         assert all([state_id in self.states.keys() for state_id in state_ids])
-        if scoped_variables is None:
-            scoped_variables = []
-        assert all([p_id in self.scoped_variables.keys() for p_id in scoped_variables])
+        if scoped_variable_ids is None:
+            scoped_variable_ids = []
+        assert all([p_id in self.scoped_variables.keys() for p_id in scoped_variable_ids])
         from rafcon.core.states.barrier_concurrency_state import DeciderState
         if any(isinstance(self.states[child_state_id], DeciderState) for child_state_id in state_ids):
             raise ValueError("State of type DeciderState can not be grouped.")
@@ -336,12 +337,12 @@ class ContainerState(State):
             return name_str + number_str
 
         [related_transitions, related_data_flows] = self.related_linkage_states_and_scoped_variables(state_ids,
-                                                                                                     scoped_variables)
+                                                                                                     scoped_variable_ids)
 
         # all states
         states_to_group = {state_id: self.states[state_id] for state_id in state_ids}
         # all internal scoped variables
-        scoped_variables_to_group = {dp_id: self.scoped_variables[dp_id] for dp_id in scoped_variables}
+        scoped_variables_to_group = {dp_id: self.scoped_variables[dp_id] for dp_id in scoped_variable_ids}
         # all internal transitions
         transitions_internal = {t.transition_id: t for t in related_transitions['enclosed']}
         # all internal data flows
@@ -462,7 +463,7 @@ class ContainerState(State):
 
         ############################# CREATE NEW STATE #############################
         [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
-        [self.remove_scoped_variable(sv_id) for sv_id in scoped_variables]
+        [self.remove_scoped_variable(sv_id) for sv_id in scoped_variable_ids]
         # TODO if the version is final create the ingoing and outgoing internal linkage before and hand it while state creation
         from rafcon.core.states.hierarchy_state import HierarchyState
         s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
@@ -531,9 +532,10 @@ class ContainerState(State):
         for goal, name in outcomes_outgoing_transitions.iteritems():
             try:
                 self.add_transition(s.state_id, new_outcome_ids[name], goal[0], goal[1])
-            except Exception:
-                logger.warning("\n".join(str(t) for t in self.transitions.values()))
-                logger.warning("seems to exist {0}".format((s.state_id, new_outcome_ids[name], goal[0], goal[1])))
+            except ValueError:
+                from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+                if not isinstance(self, BarrierConcurrencyState):
+                    logger.exception("Error while recreation of logical linkage.")
         # internal outgoing transitions
         for t_id, t in transitions_outgoing.iteritems():
             name = outcomes_outgoing_transitions[(t.to_state, t.to_outcome)]
@@ -585,7 +587,7 @@ class ContainerState(State):
                 self.add_data_flow(from_state_id=s.state_id, from_data_port_id=args['data_port_id'],
                                    to_state_id=df.to_state, to_data_port_id=df.to_key, data_flow_id=df.data_flow_id)
 
-        return state_id
+        return self.states[state_id]
 
     @lock_state_machine
     @Observable.observed
@@ -669,7 +671,13 @@ class ContainerState(State):
         for ext_t in related_transitions['external']['outgoing']:
             for t in related_transitions['internal']['outgoing']:
                 if (t.to_state, t.to_outcome) == (ext_t.from_state, ext_t.from_outcome):
-                    self.add_transition(state_id_dict[t.from_state], t.from_outcome, ext_t.to_state, ext_t.to_outcome)
+                    try:
+                        self.add_transition(state_id_dict[t.from_state], t.from_outcome,
+                                            ext_t.to_state, ext_t.to_outcome)
+                    except ValueError:
+                        from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+                        if not isinstance(self, BarrierConcurrencyState):
+                            logger.exception("Error while recreation of logical linkage.")
 
         # re-create data flow linkage
         for df in related_data_flows['internal']['enclosed']:
@@ -887,11 +895,15 @@ class ContainerState(State):
     def substitute_state(self, state_id, state):
 
         if state_id not in self.states:
-            raise ValueError("The state_id {0} to be substitute has to be in the states list of "
+            raise ValueError("The state_id {0} to be substituted has to be in the states list of "
                              "respective parent state {1}.".format(state_id, self.get_path()))
         from rafcon.core.states.barrier_concurrency_state import DeciderState
         if isinstance(self.states[state_id], DeciderState):
             raise ValueError("State of type DeciderState can not be substituted.")
+
+        while state.state_id in self.states:
+            logger.info("Rename state_id of state to substitute.")
+            state.change_state_id()
 
         [related_transitions, related_data_flows] = self.related_linkage_state(state_id)
 
@@ -985,7 +997,7 @@ class ContainerState(State):
         self.substitute_state.__func__.re_create_io_going_t_ids = re_create_io_going_t_ids
         self.substitute_state.__func__.re_create_io_going_df_ids = re_create_io_going_df_ids
         logger.info("substitute finished")
-        return state_id
+        return self.states[state_id]
 
     @lock_state_machine
     @Observable.observed
