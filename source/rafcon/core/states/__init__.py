@@ -8,4 +8,3 @@
 # Contributors:
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
-

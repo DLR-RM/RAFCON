@@ -215,7 +215,7 @@ def change_state_type(state_m, target_class):
 
         # Before the root state type is actually changed, we extract the information from the old state model
         # Extract child models of state, as they have to be applied to the new state model
-        child_models = gui_helper_state_machine.extract_child_models_of_of_state(old_state_m, target_class)
+        child_models = gui_helper_state_machine.extract_child_models_of_state(old_state_m, target_class)
         state_machine_m.change_root_state_type.__func__.child_models = child_models  # static variable of class method
         state_machine_m.suppress_new_root_state_model_one_time = True
     else:
@@ -234,7 +234,7 @@ def change_state_type(state_m, target_class):
 
         # Before the state type is actually changed, we extract the information from the old state model
         # Extract child models of state, as they have to be applied to the new state model
-        child_models = gui_helper_state_machine.extract_child_models_of_of_state(old_state_m, target_class)
+        child_models = gui_helper_state_machine.extract_child_models_of_state(old_state_m, target_class)
         affected_models = [old_state_m, ]
         for list_or_dict in child_models.itervalues():
             affected_models.extend(list_dict_to_list(list_or_dict))

@@ -17,7 +17,7 @@ from rafcon.core import interface
 from rafcon.core.storage import storage
 from rafcon.core.singleton import library_manager
 from rafcon.core.state_machine import StateMachine
-from rafcon.core.states.state import State
+from rafcon.core.states.state import State, StateType
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.execution_state import ExecutionState
@@ -25,7 +25,7 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
-from rafcon.core.states.state import StateType
+
 
 from rafcon.gui.models import StateModel, AbstractStateModel, ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.data_port import DataPortModel
@@ -37,6 +37,9 @@ from rafcon.gui.clipboard import global_clipboard
 import rafcon.gui.singleton
 from rafcon.utils import log
 
+state_type_to_state_class_dict = {StateType.EXECUTION: ExecutionState, StateType.HIERARCHY: HierarchyState,
+                                  StateType.BARRIER_CONCURRENCY: BarrierConcurrencyState,
+                                  StateType.PREEMPTION_CONCURRENCY: PreemptiveConcurrencyState}
 
 logger = log.get_logger(__name__)
 
@@ -376,19 +379,13 @@ def add_state(container_state_m, state_type):
         logger.error("Parent state must be a container, for example a Hierarchy State." + str(container_state_m))
         return False
 
-    new_state = None
-    if state_type == StateType.HIERARCHY:
-        new_state = HierarchyState()
-    elif state_type == StateType.EXECUTION:
-        new_state = ExecutionState()
-    elif state_type == StateType.BARRIER_CONCURRENCY:
-        new_state = BarrierConcurrencyState()
-    elif state_type == StateType.PREEMPTION_CONCURRENCY:
-        new_state = PreemptiveConcurrencyState()
+    state_class = state_type_to_state_class_dict.get(state_type, None)
 
-    if new_state is None:
+    if state_class is None:
         logger.error("Cannot create state of type {0}".format(state_type))
         return False
+
+    new_state = state_class()
     import rafcon.gui.helpers.meta_data as gui_helpers_meta_data
     from rafcon.gui.models.abstract_state import get_state_model_class_for_state
     rel_pos, size = gui_helpers_meta_data.generate_default_state_meta_data(container_state_m)
@@ -479,7 +476,7 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
     return new_state
 
 
-def extract_child_models_of_of_state(state_m, new_state_class):
+def extract_child_models_of_state(state_m, new_state_class):
     """Retrieve child models of state model
 
     The function stores model information like meta data of external (in the parent of the state) related
@@ -591,75 +588,6 @@ def reduce_to_parent_states(models):
         models.remove(model)
     return models
 
-
-def get_root_state_model(state_m, library_root=False):
-    """Get the root state for a given state model
-
-    The method walks up the state tree from the given state model to find the root state model (which doesn't
-    have a parent state). If the flag library_root is set to True, the root is defined as root of the library and
-    not of the whole state machine.
-
-    :param state_m: The state model to start from
-    :param library_root: Flag to specify if the root of teh library is searched
-    :return: The model of the root state (either of the state machine or the library)
-    """
-    while not state_m.state.is_root_state and (not library_root or not isinstance(state_m.state, LibraryState)):
-        state_m = state_m.parent
-    return state_m
-
-
-def get_state_model_for_state(state):
-    """Return the model for a given state
-
-    The function looks up the state machine id for the given state and walks the state tree up until it find the
-    model of the given state.
-
-    :param state: The state of which the state model is searched
-    :return: The model corresponding to state
-    """
-    assert isinstance(state, State)
-    state_machine_id = state.get_state_machine().state_machine_id
-    state_machine_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine_id]
-    state_m = state_machine_m.root_state
-    state_path = state.get_path()
-    path_item_list = state_path.split('/')
-    root_state_id = path_item_list.pop(0)
-    assert state_m.state.state_id == root_state_id
-    while len(path_item_list) > 0:
-        state_id = path_item_list.pop(0)
-        if isinstance(state_m.state, LibraryState):
-            return state_m  # There are no models for states within library states, yes
-        state_m = state_m.states[state_id]
-    assert state == state_m.state  # Final check
-    return state_m
-
-
-def get_state_machine_model_for_state(state):
-    """Return the state machine model containing the given state
-
-    :param state: The state of which the state machine model is searched
-    :return: The state machine model containing the state
-    """
-    assert isinstance(state, State)
-    state_machine_id = state.get_state_machine().state_machine_id
-    state_machine_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine_id]
-    return state_machine_m
-
-
-
-    # Check if no recursion occurs
-    new_state_file_system_path = None
-    if not state.get_state_machine():
-        assert isinstance(state, LibraryState)
-        lib_os_path, new_library_path, new_library_name = \
-            library_manager.get_os_path_to_library(state.library_path, state.library_name)
-        new_state_file_system_path = lib_os_path
-    else:
-        new_state_file_system_path = state.get_state_machine().file_system_path
-
-    if new_state_file_system_path == current_state.get_state_machine().file_system_path:
-        logger.error("Recursions are not allowed!")
-        return False
 
 def insert_state(state, as_template=False):
     """Adds a State to the selected state
