@@ -60,11 +60,9 @@ def add_state(container_state_m, state_type):
 
     new_state = state_class()
     from rafcon.gui.models.abstract_state import get_state_model_class_for_state
-    rel_pos, size = gui_helper_meta_data.generate_default_state_meta_data(container_state_m)
-    model = get_state_model_class_for_state(new_state)(new_state)
-    model.set_meta_data_editor('size', size)
-    model.set_meta_data_editor('rel_pos', rel_pos)
-    container_state_m.expected_future_models.add(model)
+    new_state_m = get_state_model_class_for_state(new_state)(new_state)
+    gui_helper_meta_data.put_default_meta_on_state_m(new_state_m, container_state_m)
+    container_state_m.expected_future_models.add(new_state_m)
     container_state_m.state.add_state(new_state)
     return True
 
@@ -347,6 +345,23 @@ def change_state_type(state_m, target_class):
     return new_state_m
 
 
+def prepare_state_m_for_insert_as_template(state_m_to_insert):
+    """Prepares and scales the meta data to fit into actual size of the state."""
+    if isinstance(state_m_to_insert, ContainerStateModel) and \
+            not gui_helper_meta_data.model_has_empty_meta(state_m_to_insert):
+
+        models_dict = {'state': state_m_to_insert}
+        # print "TARGET1", state_m_to_insert.get_meta_data_editor(gaphas_editor)['size'], \
+        #     old_state_m.get_meta_data_editor(gaphas_editor)['size'], size
+
+        for key in global_clipboard._container_state_unlimited:
+            elems_list = getattr(state_m_to_insert, key)
+            elems_list = elems_list.values() if hasattr(elems_list, 'keys') else elems_list
+            models_dict[key] = {elem.core_element.core_element_id: elem for elem in elems_list}
+        # print "TARGET2", models_dict['state'].get_meta_data_editor(gaphas_editor)['size']
+        gui_helper_meta_data.scale_meta_data_according_state(models_dict)
+
+
 def substitute_state(target_state_m, state_m_to_insert):
     # print "substitute_state"
     gaphas_editor = True if gui_singletons.global_gui_config.get_config_value('GAPHAS_EDITOR') else False
@@ -375,25 +390,15 @@ def substitute_state(target_state_m, state_m_to_insert):
     action_parent_m.substitute_state.__func__.tmp_meta_data_storage = tmp_meta_data
     action_parent_m.substitute_state.__func__.old_state_m = old_state_m
 
-    # # TODO re-organize and use partly the expected_models pattern the next lines
-    if isinstance(state_m_to_insert, ContainerStateModel) and \
-            not gui_helper_meta_data.model_has_empty_meta(state_m_to_insert):
-        size = state_m_to_insert.set_meta_data_editor('size',
+    # put old state size and rel_pos onto new state
+    size = state_m_to_insert.set_meta_data_editor('size',
                                                       old_state_m.get_meta_data_editor(gaphas_editor)['size'],
                                                       gaphas_editor)
-        rel_pos = state_m_to_insert.set_meta_data_editor('rel_pos',
-                                                         old_state_m.get_meta_data_editor(gaphas_editor)['rel_pos'],
-                                                         gaphas_editor)
-        models_dict = {'state': state_m_to_insert}
-        # print "TARGET1", state_m_to_insert.get_meta_data_editor(gaphas_editor)['size'], \
-        #     old_state_m.get_meta_data_editor(gaphas_editor)['size'], size
-
-        for key in global_clipboard._container_state_unlimited:
-            elems_list = getattr(state_m_to_insert, key)
-            elems_list = elems_list.values() if hasattr(elems_list, 'keys') else elems_list
-            models_dict[key] = {elem.core_element.core_element_id: elem for elem in elems_list}
-        # print "TARGET2", models_dict['state'].get_meta_data_editor(gaphas_editor)['size']
-        gui_helper_meta_data.scale_meta_data_according_state(models_dict)
+    rel_pos = state_m_to_insert.set_meta_data_editor('rel_pos',
+                                                     old_state_m.get_meta_data_editor(gaphas_editor)['rel_pos'],
+                                                     gaphas_editor)
+    # scale the meta data according new size
+    prepare_state_m_for_insert_as_template(state_m_to_insert)
 
     # CORE
     new_state = e = None

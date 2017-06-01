@@ -529,30 +529,25 @@ def insert_state(state, as_template=False):
         return False
 
     if not as_template:
-        current_state.add_state(state)
-        return True
+        new_state_m = get_state_model_class_for_state(state)(state)
+        gui_helper_state.gui_helper_meta_data.put_default_meta_on_state_m(new_state_m, current_state_m)
+        new_state = state
     # If inserted as template, we have to extract the state_copy and load the meta data manually
     else:
-        template = state.state_copy
-        orig_state_id = template.state_id
-        template.change_state_id()
-        current_state.add_state(template)
+        new_state_m = LibraryStateModel(state).state_copy
+        new_state = state.state_copy
 
-        # reset the parent of all ports (logical + data ports)
-        # as in the setter function the parent is reset it can be used here
-        template.input_data_ports = template.input_data_ports
-        template.output_data_ports = template.output_data_ports
-        template.outcomes = template.outcomes
+        gui_helper_state.gui_helper_meta_data.put_default_meta_on_state_m(new_state_m, current_state_m)
 
-        # load meta data
-        from os.path import join
-        lib_os_path, _, _ = library_manager.get_os_path_to_library(state.library_path, state.library_name)
-        root_state_path = join(lib_os_path, orig_state_id)
-        template_m = current_state_m.states[template.state_id]
-        template_m.load_meta_data(root_state_path)
-        # Causes the template to be resized
-        template_m.temp['gui']['editor']['template'] = True
-        return True
+        gui_helper_state.prepare_state_m_for_insert_as_template(new_state_m)
+
+    current_state_m.expected_future_models.add(new_state_m)
+    while new_state.state_id in current_state.states:
+        new_state.change_state_id()
+
+    current_state.add_state(new_state)
+
+    return True
 
 
 def add_state_by_drag_and_drop(state, data):
