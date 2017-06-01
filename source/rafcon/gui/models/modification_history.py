@@ -670,8 +670,8 @@ class ModificationsHistoryModel(ModelMT):
             if self.locked:
                 self.before_count()
             else:
-                # if self.with_prints:
-                print "NEW HISTORY ELEMENT"
+                if self.with_prints:
+                    print "NEW HISTORY ELEMENT"
 
                 if self.start_new_action(overview):
                     self.before_count()
