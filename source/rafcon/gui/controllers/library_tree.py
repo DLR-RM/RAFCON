@@ -194,8 +194,7 @@ class LibraryTreeController(ExtendedController):
         :param time:
         """
         library_state = self._get_selected_library_state()
-        if gui_helper_state_machine.insert_state(library_state, False):
-            data.set_text(library_state.state_id)
+        gui_helper_state_machine.add_state_by_drag_and_drop(library_state, data)
 
     def on_drag_begin(self, widget, context):
         """replace drag icon

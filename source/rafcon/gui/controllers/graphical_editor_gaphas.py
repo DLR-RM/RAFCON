@@ -78,6 +78,7 @@ class GraphicalEditorController(ExtendedController):
 
         self.canvas = MyCanvas()
         self.zoom = 3.
+        self.perform_drag_and_drop = False
 
         view.setup_canvas(self.canvas, self.zoom)
 
@@ -157,12 +158,17 @@ class GraphicalEditorController(ExtendedController):
         :param info:
         :param time:
         """
-        item = self.canvas.get_view_for_model(self.model.selection.get_selected_state().states[data.get_text()])
-        pos_start = item.model.get_meta_data_editor()['rel_pos']
-        motion = InMotion(item, self.view.editor)
-        motion.start_move(self.view.editor.get_matrix_i2v(item).transform_point(pos_start[0], pos_start[1]))
+        state_id_insert = data.get_text()
+        parent_m = self.model.selection.get_selected_state()
+        state_v = self.canvas.get_view_for_model(parent_m.states[state_id_insert])
+        pos_start = state_v.model.get_meta_data_editor()['rel_pos']
+        motion = InMotion(state_v, self.view.editor)
+        motion.start_move(self.view.editor.get_matrix_i2v(state_v).transform_point(pos_start[0], pos_start[1]))
         motion.move((x, y))
         motion.stop_move()
+        state_v.model.set_meta_data_editor('rel_pos', motion.item.position)
+        self.canvas.perform_update()
+        self._meta_data_changed(None, state_v.model, 'append_to_last_change', True)
 
     @lock_state_machine
     def on_drag_motion(self, widget, context, x, y, time):
@@ -383,7 +389,8 @@ class GraphicalEditorController(ExtendedController):
                 new_state = arguments[1]
                 new_state_m = model.states[new_state.state_id]
                 self.add_state_view_to_parent(new_state_m, model)
-                self.canvas.perform_update()
+                if not self.perform_drag_and_drop:
+                    self.canvas.perform_update()
             elif method_name == 'remove_state':
                 parent_state = arguments[0]
                 state_id = arguments[1]

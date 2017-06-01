@@ -32,6 +32,10 @@ logger = log.get_logger(__name__)
 
 
 class StateIconController(ExtendedController):
+
+    icon_label_to_state_class_dict = {"ES": ExecutionState, "HS": HierarchyState,
+                                      "PS": PreemptiveConcurrencyState, "BS": BarrierConcurrencyState}
+
     def __init__(self, model=None, view=None, shortcut_manager=None):
         ExtendedController.__init__(self, model, view)
 
@@ -57,9 +61,8 @@ class StateIconController(ExtendedController):
         :param info:
         :param time:
         """
-        state_id = self._insert_state()
-        if state_id is not None:
-            data.set_text(state_id)
+        state = self._get_state()
+        gui_helper_state_machine.add_state_by_drag_and_drop(state, data)
 
     def on_drag_begin(self, widget, context):
         """replace drag icon
@@ -85,7 +88,7 @@ class StateIconController(ExtendedController):
         """
         if self.view.get_path_at_pos(int(event.x), int(event.y)) is not None \
                 and len(self.view.get_selected_items()) > 0:
-            self._insert_state()
+            return gui_helper_state_machine.insert_state(self._get_state(), False)
 
     def on_mouse_motion(self, widget, event):
         """selection on mouse over
@@ -99,26 +102,16 @@ class StateIconController(ExtendedController):
         else:
             self.view.unselect_all()
 
-    def _insert_state(self):
-        """insert state
+    def _get_state(self):
+        """get state instance which was clicked on
 
-        :return: state ID
-        :rtype: String
+        :return: State that represents the icon which was clicked on
+        :rtype: rafcon.core.states.State
         """
 
         selected = self.view.get_selected_items()
         if not selected:
             return
-        selected_path = self.view.states[selected[0][0]]
-
-        if selected_path == "ES":
-            state = ExecutionState()
-        elif selected_path == "HS":
-            state = HierarchyState()
-        elif selected_path == "PS":
-            state = PreemptiveConcurrencyState()
-        elif selected_path == "BS":
-            state = BarrierConcurrencyState()
-
-        if gui_helper_state_machine.insert_state(state, False):
-            return state.state_id
+        icon_label = self.view.icon_label[selected[0][0]]
+        state_class = self.icon_label_to_state_class_dict[icon_label]
+        return state_class()

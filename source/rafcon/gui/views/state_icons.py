@@ -17,7 +17,7 @@ from rafcon.gui.utils import constants
 
 
 class StateIconView(View, gtk.IconView):
-    states = ["HS", "ES", "PS", "BS"]
+    icon_label = ["HS", "ES", "PS", "BS"]
     tooltips = {"HS": "Hierarchy State", "ES": "Execution State",
                 "PS": "Preemptive Concurrency State", "BS": "Barrier Concurrency State"}
 
@@ -25,7 +25,7 @@ class StateIconView(View, gtk.IconView):
         View.__init__(self)
         gtk.IconView.__init__(self)
 
-        self.set_columns(len(self.states))
+        self.set_columns(len(self.icon_label))
         self.set_margin(0)
         self.set_spacing(0)
         self.set_row_spacing(0)
@@ -36,7 +36,7 @@ class StateIconView(View, gtk.IconView):
         self.set_markup_column(0)
         self.set_tooltip_column(1)
 
-        for state in self.states:
+        for state in self.icon_label:
             liststore.append(['<span font_desc="%s %s">&#x%s; ' % (constants.ICON_FONT, constants.FONT_SIZE_NORMAL,
                                                                    constants.BUTTON_ADD) + state + '</span>',
                               "Add/Drag and Drop " + self.tooltips[state]])

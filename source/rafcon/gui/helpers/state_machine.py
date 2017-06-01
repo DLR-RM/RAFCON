@@ -168,7 +168,7 @@ def refresh_selected_state_machine(menubar):
     """Reloads the selected state machine.
     """
 
-    selected_sm_id = gui_singletons.state_machine_manager_model.selected_state_machine_id
+    selected_sm_id = rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id
     selected_sm = state_machine_manager.state_machines[selected_sm_id]
 
     # check if the state machine is still running
@@ -670,8 +670,8 @@ def insert_state(state, as_template=False):
     """
     smm_m = rafcon.gui.singleton.state_machine_manager_model
 
-    if state is None:
-        logger.error("Please select a library state")
+    if not isinstance(state, State):
+        logger.error("A state is needed to be insert not {0}".format(state))
         return False
 
     if not smm_m.selected_state_machine_id:
@@ -718,3 +718,13 @@ def insert_state(state, as_template=False):
         # Causes the template to be resized
         template_m.temp['gui']['editor']['template'] = True
         return True
+
+
+def add_state_by_drag_and_drop(state, data):
+    selected_sm_id = rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id
+    ctrl_path = ['state_machines_editor_ctrl', selected_sm_id]
+    state_machine_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller_by_path(ctrl_path)
+    state_machine_editor_ctrl.perform_drag_and_drop = True
+    if insert_state(state, False):
+        data.set_text(state.state_id)
+    state_machine_editor_ctrl.perform_drag_and_drop = False
