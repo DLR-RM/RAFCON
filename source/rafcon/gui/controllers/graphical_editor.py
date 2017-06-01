@@ -40,7 +40,6 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuControllerOpenGLEditor
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-import rafcon.gui.helpers.state as gui_helper_state
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models import ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.abstract_state import AbstractStateModel
@@ -50,6 +49,7 @@ from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.runtime_config import global_runtime_config
+import rafcon.gui.singleton
 from rafcon.gui.views.graphical_editor import Direction
 from rafcon.utils import log
 from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
@@ -2266,7 +2266,7 @@ class GraphicalEditorController(ExtendedController):
     def check_focus_and_sm_selection_according_event(self, event):
         if not react_to_event(self.view, self.view.editor, event):
             return False
-        if not gui_helper_state.gui_singletons.state_machine_manager_model.selected_state_machine_id == \
+        if not rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id == \
                 self.model.state_machine.state_machine_id:
             return False
         return True
@@ -2275,14 +2275,14 @@ class GraphicalEditorController(ExtendedController):
     def _add_data_port_to_selected_state(self, *event, **kwargs):
         if self.check_focus_and_sm_selection_according_event(event):
             data_port_type = None if 'data_port_type' not in kwargs else kwargs['data_port_type']
-            gui_helper_state.add_data_port_to_selected_states(data_port_type)
+            gui_helper_state_machine.add_data_port_to_selected_states(data_port_type)
 
     @lock_state_machine
     def _add_scoped_variable_to_selected_state(self, *event):
         if self.check_focus_and_sm_selection_according_event(event):
-            gui_helper_state.add_scoped_variable_to_selected_states()
+            gui_helper_state_machine.add_scoped_variable_to_selected_states()
 
     @lock_state_machine
     def _add_outcome_to_selected_state(self, *event):
         if self.check_focus_and_sm_selection_according_event(event):
-            gui_helper_state.add_outcome_to_selected_states()
+            gui_helper_state_machine.add_outcome_to_selected_states()

@@ -28,6 +28,52 @@ def divide_two_vectors(vec1, vec2):
     return tuple([vec1[i] / vec2[i] for i in range(len(vec2))])
 
 
+def dict_has_empty_elements(d, ignored_keys=None, ignored_partial_keys=None):
+    ignored_keys = ["show_content", "waypoints"] if ignored_keys is None else ignored_keys
+    ignored_partial_keys = ['input_data_port', 'output_data_port'] if ignored_partial_keys is None else ignored_partial_keys
+    empty = False
+    if not d:
+        # print "dict check -> result empty", d
+        return True
+    else:
+        for k, v in d.iteritems():
+            # print "check", k, " -> ", v
+            if isinstance(v, dict):
+                if dict_has_empty_elements(v):
+                    if k not in ignored_keys and not any([key in k for key in ignored_partial_keys]):
+                        empty = True
+                        break
+                    else:
+                        # print "ignore empty dict: ", k
+                        pass
+            else:
+                if isinstance(v, bool):
+                    pass
+                elif not len(v) > 0:
+                    # print k, v
+                    if k not in ignored_keys and not any([key in k for key in ignored_partial_keys]):
+                        empty = True
+                        break
+                    else:
+                        # print "ignore empty list: ", k
+                        pass
+
+    return empty
+
+
+def model_has_empty_meta(m, ignored_keys=None, ignored_partial_keys=None):
+    # print m, m.meta
+    if dict_has_empty_elements(m.meta, ignored_keys, ignored_partial_keys):
+        # print "XXX", m, m.meta
+        return True
+    if isinstance(m, ContainerStateModel):
+        for state_m in m.states.itervalues():
+            if dict_has_empty_elements(state_m.meta, ignored_keys, ignored_partial_keys):
+                # print "LXXX", state_m, state_m.meta
+                return True
+    return False
+
+
 def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_state=None):
     """Generate default meta data for a child state according its parent state
 

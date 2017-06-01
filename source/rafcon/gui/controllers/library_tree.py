@@ -25,7 +25,6 @@ import gtk
 import os
 from functools import partial
 
-import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -194,6 +193,7 @@ class LibraryTreeController(ExtendedController):
         :param time:
         """
         library_state = self._get_selected_library_state()
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         gui_helper_state_machine.add_state_by_drag_and_drop(library_state, data)
 
     def on_drag_begin(self, widget, context):
@@ -205,6 +205,7 @@ class LibraryTreeController(ExtendedController):
         self.view.drag_source_set_icon_stock(gtk.STOCK_NEW)
 
     def insert_button_clicked(self, widget, as_template=False):
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         gui_helper_state_machine.insert_state(self._get_selected_library_state(), as_template)
 
     def select_open_state_machine_of_selected_library_element(self):
@@ -282,12 +283,12 @@ class LibraryTreeController(ExtendedController):
         return False
 
     def substitute_as_library_clicked(self, widget):
-        import rafcon.gui.helpers.state as gui_helper_state
-        gui_helper_state.substitute_selected_state(self._get_selected_library_state(), as_template=False)
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+        gui_helper_state_machine.substitute_selected_state(self._get_selected_library_state(), as_template=False)
 
     def substitute_as_template_clicked(self, widget):
-        import rafcon.gui.helpers.state as gui_helper_state
-        gui_helper_state.substitute_selected_state(self._get_selected_library_state(), as_template=True)
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+        gui_helper_state_machine.substitute_selected_state(self._get_selected_library_state(), as_template=True)
 
     def _get_selected_library_state(self):
         """Returns the LibraryState which was selected in the LibraryTree

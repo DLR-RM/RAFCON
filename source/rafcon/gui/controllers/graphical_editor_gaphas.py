@@ -25,16 +25,16 @@ from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
 from gtk.gdk import ACTION_COPY
 
-import rafcon.core.id_generator as idgen
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.state import StateType
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.helpers.meta_data import generate_default_state_meta_data
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
+from rafcon.gui.models.library_state import LibraryStateModel
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.mygaphas.canvas import MyCanvas
@@ -43,11 +43,10 @@ from rafcon.gui.mygaphas import guide
 from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
 from rafcon.gui.mygaphas.items.ports import OutcomeView, DataPortView, ScopedVariablePortView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
-from rafcon.gui.singleton import gui_config_model, runtime_config_model
+import rafcon.gui.singleton
 from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView
-import rafcon.gui.helpers.state as gui_helper_state
 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
-from rafcon.gui.models.library_state import LibraryStateModel
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -69,8 +68,8 @@ class GraphicalEditorController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         assert type(view) == GraphicalEditorView
         assert isinstance(self.model, StateMachineModel)
-        self.observe_model(gui_config_model)
-        self.observe_model(runtime_config_model)
+        self.observe_model(rafcon.gui.singleton.gui_config_model)
+        self.observe_model(rafcon.gui.singleton.runtime_config_model)
         self.root_state_m = model.root_state
 
         self.update_selection_gaphas_major = False
@@ -1013,7 +1012,7 @@ class GraphicalEditorController(ExtendedController):
     def check_focus_and_sm_selection_according_event(self, event):
         if not react_to_event(self.view, self.view.editor, event):
             return False
-        if not gui_helper_state.gui_singletons.state_machine_manager_model.selected_state_machine_id == \
+        if not rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id == \
                 self.model.state_machine.state_machine_id:
             return False
         return True
@@ -1022,14 +1021,14 @@ class GraphicalEditorController(ExtendedController):
     def _add_data_port_to_selected_state(self, *event, **kwargs):
         if self.check_focus_and_sm_selection_according_event(event):
             data_port_type = None if 'data_port_type' not in kwargs else kwargs['data_port_type']
-            gui_helper_state.add_data_port_to_selected_states(data_port_type)
+            gui_helper_state_machine.add_data_port_to_selected_states(data_port_type)
 
     @lock_state_machine
     def _add_scoped_variable_to_selected_state(self, *event):
         if self.check_focus_and_sm_selection_according_event(event):
-            gui_helper_state.add_scoped_variable_to_selected_states()
+            gui_helper_state_machine.add_scoped_variable_to_selected_states()
 
     @lock_state_machine
     def _add_outcome_to_selected_state(self, *event):
         if self.check_focus_and_sm_selection_according_event(event):
-            gui_helper_state.add_outcome_to_selected_states()
+            gui_helper_state_machine.add_outcome_to_selected_states()

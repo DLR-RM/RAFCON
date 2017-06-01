@@ -358,15 +358,15 @@ class MenuBarController(ExtendedController):
 
     @staticmethod
     def on_substitute_selected_state_activate(widget=None, data=None, path=None):
-        return gui_helper_state.substitute_selected_state_and_use_choice_dialog()
+        return gui_helper_state_machine.substitute_selected_state_and_use_choice_dialog()
 
     @staticmethod
     def on_substitute_library_with_template_activate(widget=None, data=None):
-        return gui_helper_state.substitute_selected_library_state_with_template()
+        return gui_helper_state_machine.substitute_selected_library_state_with_template()
 
     @staticmethod
     def on_save_selected_state_as_activate(widget=None, data=None, path=None):
-        return gui_helper_state.save_selected_state_as()
+        return gui_helper_state_machine.save_selected_state_as()
 
     @staticmethod
     def on_menu_properties_activate(widget, data=None):
@@ -617,10 +617,10 @@ class MenuBarController(ExtendedController):
         self.shortcut_manager.trigger_action("add_execution_state", None, None)
 
     def on_group_states_activate(self, widget, data=None):
-        gui_helper_state.group_selected_states_and_scoped_variables()
+        gui_helper_state_machine.group_selected_states_and_scoped_variables()
 
     def on_ungroup_state_activate(self, widget, data=None):
-        gui_helper_state.ungroup_selected_state()
+        gui_helper_state_machine.ungroup_selected_state()
 
     def on_undo_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action("undo", None, None)

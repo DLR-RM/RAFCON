@@ -62,6 +62,7 @@ def test_ungroup_state(caplog):
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_repetitive_group_ungroup(*args):
     import rafcon.gui.helpers.state as gui_helper_state
+    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     import rafcon.gui.singleton as gui_singletons
     import time
     sm_manager_model = args[0]
@@ -78,19 +79,19 @@ def trigger_repetitive_group_ungroup(*args):
     print "select: ", sm_m.root_state.states.values()
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values())
     # time.sleep(1)
-    call_gui_callback(gui_helper_state.group_selected_states_and_scoped_variables)
+    call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
     sm_m.root_state.states.values()[0].state.name = "Stage 1"
 
     print "select: ", sm_m.root_state.states.values()
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values())
     # time.sleep(1)
-    call_gui_callback(gui_helper_state.group_selected_states_and_scoped_variables)
+    call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
     sm_m.root_state.states.values()[0].states.values()[0].state.name = "Stage 2"
 
     print "select: ", sm_m.root_state.states.values()
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values()[0].states.values())
     # time.sleep(1)
-    call_gui_callback(gui_helper_state.group_selected_states_and_scoped_variables)
+    call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
     sm_m.root_state.states.values()[0].states.values()[0].states.values()[0].state.name = "Stage 3"
 
     # time.sleep(5)
@@ -98,19 +99,19 @@ def trigger_repetitive_group_ungroup(*args):
     # raw_input("press enter")
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values()[0])
     # time.sleep(1)
-    call_gui_callback(gui_helper_state.ungroup_selected_state)
+    call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
     # return
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0])
     # time.sleep(1)
-    call_gui_callback(gui_helper_state.ungroup_selected_state)
+    call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
 
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0])
     # time.sleep(1)
-    call_gui_callback(gui_helper_state.ungroup_selected_state)
+    call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
 
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values())
     # time.sleep(1)
-    call_gui_callback(gui_helper_state.group_selected_states_and_scoped_variables)
+    call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
     sm_m.root_state.states.values()[0].state.name = "Stage 1"
 
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0])
@@ -124,7 +125,7 @@ def trigger_repetitive_group_ungroup(*args):
     print "select: ", [str(state_m) for state_m in selected_states]
     call_gui_callback(sm_m.selection.set, selected_states)
     # time.sleep(1)
-    call_gui_callback(gui_helper_state.group_selected_states_and_scoped_variables)
+    call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
 
     # core test
     # call_gui_callback(sm_m.root_state.states.values()[0].state.group_states, ['State1', 'State2'])
@@ -142,7 +143,7 @@ def trigger_repetitive_group_ungroup(*args):
                        ['State1', 'State2', UNIQUE_DECIDER_STATE_ID]]
     print "select: ", [str(state_m) for state_m in selected_states]
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values())
-    call_gui_callback(gui_helper_state.group_selected_states_and_scoped_variables)
+    call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
 
     # exception core test
     # call_gui_callback(sm_m.root_state.states.values()[0].state.group_states, ['State1', 'State2', UNIQUE_DECIDER_STATE_ID])

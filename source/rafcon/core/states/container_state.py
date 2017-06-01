@@ -1010,7 +1010,7 @@ class ContainerState(State):
         :rtype: :py:class:`rafcon.core.states.state.State`
         :raises exceptions.ValueError: if the state does not exist in the container state
         """
-        from rafcon.gui.helpers.state_machine import create_new_state_from_state_with_type
+        from rafcon.gui.helpers.state import create_new_state_from_state_with_type
 
         state_id = state.state_id
 

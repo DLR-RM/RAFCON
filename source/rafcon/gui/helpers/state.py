@@ -10,182 +10,217 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
-import copy
-
-from rafcon.core import interface, id_generator
-from rafcon.core.singleton import state_machine_manager, library_manager
-from rafcon.core.state_machine import StateMachine
-from rafcon.core.states.state import State
+from rafcon.core.states.state import State, StateType
 from rafcon.core.states.container_state import ContainerState
-from rafcon.core.states.library_state import LibraryState
-from rafcon.core.storage import storage
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.gui import singleton as gui_singletons
-from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
-import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+
 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
 from rafcon.gui.clipboard import global_clipboard
-from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateModel, LibraryStateModel, \
-    ScopedVariableModel, StateMachineModel, get_state_model_class_for_state
+from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateModel
 from rafcon.gui.models.signals import ActionSignalMsg
-from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
+
+state_type_to_state_class_dict = {StateType.EXECUTION: ExecutionState, StateType.HIERARCHY: HierarchyState,
+                                  StateType.BARRIER_CONCURRENCY: BarrierConcurrencyState,
+                                  StateType.PREEMPTION_CONCURRENCY: PreemptiveConcurrencyState}
 
 logger = log.get_logger(__name__)
 
 
-def add_data_port_to_selected_states(data_port_type, data_type=None):
-    data_type = 'int' if data_type is None else data_type
-    for state_m in gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states():
-        # save name with generated data port id
-        data_port_id = id_generator.generate_data_port_id(state_m.state.get_data_port_ids())
-        if data_port_type == 'INPUT':
-            name = 'input_' + str(data_port_id)
-            try:
-                state_m.state.add_input_data_port(name=name, data_type=data_type, data_port_id=data_port_id)
-            except ValueError as e:
-                logger.warn("The input data port couldn't be added: {0}".format(e))
-        elif data_port_type == 'OUTPUT':
-            name = 'output_' + str(data_port_id)
-            try:
-                state_m.state.add_output_data_port(name=name, data_type=data_type, data_port_id=data_port_id)
-            except ValueError as e:
-                logger.warn("The output data port couldn't be added: {0}".format(e))
-        else:
-            return
-    return
+def add_state(container_state_m, state_type):
+    """Add a state to a container state
 
+    Adds a state of type state_type to the given container_state
 
-def add_scoped_variable_to_selected_states(data_type=None):
-    data_type = 'int' if data_type is None else data_type
-    selected_states = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
-
-    if all([not isinstance(state_m.state, ContainerState) for state_m in selected_states]):
-        logger.warn("The scoped variable couldn't be added to state of type {0}"
-                    "".format(selected_states[0].state.__class__.__name__))
-        return
-
-    for state_m in selected_states:
-        if isinstance(state_m.state, ContainerState):
-            # save name with generated data port id
-            data_port_id = id_generator.generate_data_port_id(state_m.state.get_data_port_ids())
-            try:
-                state_m.state.add_scoped_variable("scoped_{0}".format(data_port_id), data_type, 0)
-            except ValueError as e:
-                logger.warn("The scoped variable couldn't be added: {0}".format(e))
-    return
-
-
-def add_outcome_to_selected_states():
-    for state_m in gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states():
-        # save name with generated outcome id
-        outcome_id = id_generator.generate_outcome_id(state_m.state.outcomes.keys())
-        name = "outcome_" + str(outcome_id)
-        try:
-            state_m.state.add_outcome(name=name, outcome_id=outcome_id)
-        except ValueError as e:
-            logger.warn("The outcome couldn't be added: {0}".format(e))
-    return
-
-
-def save_selected_state_as():
-    state_machine_manager_model = gui_singletons.state_machine_manager_model
-    selected_states = state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
-    state_machine_id = state_machine_manager_model.get_selected_state_machine_model().state_machine.state_machine_id
-    if selected_states and len(selected_states) == 1:
-        state_m = copy.copy(selected_states[0])
-        sm_m = StateMachineModel(StateMachine(root_state=state_m.state), state_machine_manager_model)
-        sm_m.root_state = state_m
-        path = interface.create_folder_func("Please choose a root folder and a name for the state-machine",
-                                            selected_states[0].state.name)
-        if path:
-            storage.save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
-            sm_m.store_meta_data()
-        else:
-            logger.warning("No valid path specified")
-            return False
-
-        def open_as_state_machine_saved_state_as_separate_state_machine():
-            logger.debug("Open state machine.")
-            try:
-                state_machine = storage.load_state_machine_from_path(path)
-                state_machine_manager.add_state_machine(state_machine)
-            except (ValueError, IOError) as e:
-                logger.error('Error while trying to open state machine: {0}'.format(e))
-
-        # check if state machine is in library path
-        if library_manager.is_os_path_within_library_root_paths(path):
-
-            _library_path, _library_name = \
-                library_manager.get_library_path_and_name_for_os_path(sm_m.state_machine.file_system_path)
-            overwrote_old_lib = library_manager.is_library_in_libraries(_library_path, _library_name)
-
-            message_string = "You stored your state machine in a path that is within the library root paths. " \
-                             "Thereby your state machine can be used as a library state.\n\n"\
-                             "Do you want to:"
-
-            table_header = ["Option", "Description"]
-            table_data = [(True, "Substitute the original state by this new library state."),
-                          (True, "Open the newly created library state machine.")]
-            if overwrote_old_lib:
-                table_data.append((False, "Refresh all open state machines, as an already existing library was "
-                                          "overwritten."))
-
-            dialog = RAFCONCheckBoxTableDialog(message_string,
-                                               button_texts=("Apply", "Cancel"),
-                                               table_header=table_header, table_data=table_data,
-                                               message_type=gtk.MESSAGE_QUESTION,
-                                               parent=gui_singletons.main_window_controller.view.get_top_widget(),
-                                               width=800, standalone=False)
-            response_id = dialog.run()
-            if response_id == 1:  # Apply pressed
-
-                if overwrote_old_lib and dialog.list_store[2][0]:  # refresh all open state machine selected
-                    logger.debug("Refresh all is triggered.")
-                    menu_bar_ctrl = gui_singletons.main_window_controller.get_controller('menu_bar_controller')
-                    gui_helper_state_machine.refresh_all(menu_bar_ctrl)
-                else:  # if not all was refreshed at least the libraries are refreshed
-                    logger.debug("Library refresh is triggered.")
-                    gui_helper_state_machine.refresh_libraries()
-
-                if dialog.list_store[0][0]:  # Substitute saved state with Library selected
-                    logger.debug("Substitute saved state with Library.")
-                    if dialog.list_store[0][0] or dialog.list_store[0][1]:
-                        gui_helper_state_machine.refresh_libraries()
-                    state_machine_manager_model.selected_state_machine_id = state_machine_id
-                    [library_path, library_name] = library_manager.get_library_path_and_name_for_os_path(path)
-                    state = library_manager.get_library_instance(library_path, library_name)
-                    try:
-                        gui_helper_state_machine.substitute_state(state, as_template=False)
-                    except ValueError as e:
-                        logger.error('Error while trying to open state machine: {0}'.format(e))
-                if dialog.list_store[1][0]:  # Open as state machine saved state as separate state machine selected
-                    open_as_state_machine_saved_state_as_separate_state_machine()
-            elif response_id in [2, -4]:  # Cancel or Close pressed
-                pass
-            else:
-                raise ValueError("Response id: {} is not considered".format(response_id))
-            dialog.destroy()
-        else:
-            # Offer to open saved state machine dialog
-            message_string = "Should the newly created state machine be opened?"
-            dialog = RAFCONButtonDialog(message_string, ["Open", "Do not open"],
-                                        message_type=gtk.MESSAGE_QUESTION,
-                                        parent=gui_singletons.main_window_controller.get_root_window())
-            response_id = dialog.run()
-            if response_id == 1:  # Apply pressed
-                open_as_state_machine_saved_state_as_separate_state_machine()
-            elif response_id in [2, -4]:  # Cancel or Close pressed
-                pass
-            else:
-                raise ValueError("Response id: {} is not considered".format(response_id))
-            dialog.destroy()
-
-        return True
-    else:
-        logger.warning("Multiple states can not be saved as state machine directly. Group them before.")
+    :param rafcon.gui.models.container_state.ContainerState container_state_m: A model of a container state to add
+      the new state to
+    :param rafcon.core.enums.StateType state_type: The type of state that should be added
+    :return: True if successful, False else
+    """
+    if container_state_m is None:
+        logger.error("Cannot add a state without a parent.")
         return False
+
+    if not isinstance(container_state_m, StateModel) or \
+            (isinstance(container_state_m, StateModel) and not isinstance(container_state_m, ContainerStateModel)):
+        logger.error("Parent state must be a container, for example a Hierarchy State." + str(container_state_m))
+        return False
+
+    state_class = state_type_to_state_class_dict.get(state_type, None)
+
+    if state_class is None:
+        logger.error("Cannot create state of type {0}".format(state_type))
+        return False
+
+    new_state = state_class()
+    from rafcon.gui.models.abstract_state import get_state_model_class_for_state
+    rel_pos, size = gui_helper_meta_data.generate_default_state_meta_data(container_state_m)
+    model = get_state_model_class_for_state(new_state)(new_state)
+    model.set_meta_data_editor('size', size)
+    model.set_meta_data_editor('rel_pos', rel_pos)
+    container_state_m.expected_future_models.add(model)
+    container_state_m.state.add_state(new_state)
+    return True
+
+
+def create_new_state_from_state_with_type(source_state, target_state_class):
+    """The function duplicates/transforms a state to a new state type. If the source state type and the new state
+    type both are ContainerStates the new state will have not transitions to force the user to explicitly re-order
+    the logical flow according the paradigm of the new state type.
+
+    :param source_state: previous/original state that is to transform into a new state type (target_state_class)
+    :param target_state_class: the final state class type
+    :return:
+    """
+
+    current_state_is_container = isinstance(source_state, ContainerState)
+    new_state_is_container = issubclass(target_state_class, ContainerState)
+
+    if current_state_is_container and new_state_is_container:  # TRANSFORM from CONTAINER- TO CONTAINER-STATE
+
+        # by default all transitions are left out if the new and original state are container states
+        # -> because switch from Barrier, Preemptive or Hierarchy has always different rules
+        state_transitions = {}
+        state_start_state_id = None
+        logger.info("Type change from %s to %s" % (type(source_state).__name__, target_state_class.__name__))
+
+        # decider state is removed because it is unique for BarrierConcurrencyState
+        if isinstance(source_state, BarrierConcurrencyState):
+            source_state.remove_state(UNIQUE_DECIDER_STATE_ID, force=True)
+            assert UNIQUE_DECIDER_STATE_ID not in source_state.states
+
+        new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
+                                       input_data_ports=source_state.input_data_ports,
+                                       output_data_ports=source_state.output_data_ports,
+                                       outcomes=source_state.outcomes, states=source_state.states,
+                                       transitions=state_transitions, data_flows=source_state.data_flows,
+                                       start_state_id=state_start_state_id,
+                                       scoped_variables=source_state.scoped_variables)
+
+    else:  # TRANSFORM from EXECUTION- TO CONTAINER-STATE or FROM CONTAINER- TO EXECUTION-STATE
+
+        # in case the new state is an execution state remove of child states (for observable notifications)
+        if current_state_is_container and issubclass(target_state_class, ExecutionState):
+            if isinstance(source_state, BarrierConcurrencyState):
+                source_state.remove_state(UNIQUE_DECIDER_STATE_ID, force=True)
+                assert UNIQUE_DECIDER_STATE_ID not in source_state.states
+            for state_id in source_state.states.keys():
+                source_state.remove_state(state_id)
+
+        new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
+                                       input_data_ports=source_state.input_data_ports,
+                                       output_data_ports=source_state.output_data_ports,
+                                       outcomes=source_state.outcomes)
+
+    if source_state.description is not None and len(source_state.description) > 0:
+        new_state.description = source_state.description
+
+    return new_state
+
+
+def extract_child_models_of_state(state_m, new_state_class):
+    """Retrieve child models of state model
+
+    The function stores model information like meta data of external (in the parent of the state) related
+    transitions
+    and data flows as well as StateModel-attributes of the original Models (of the original state) for operations
+    on the newly generated models after core-operations.
+
+    :param state_m: state model of which children are to be extracted from
+    :param new_state_class: The type of the new class
+    :return:
+    """
+    # check if root state and which type of state
+    assert isinstance(state_m, StateModel)
+    assert issubclass(new_state_class, State)
+    orig_state = state_m.state  # only here to get the input parameter of the Core-function
+
+    current_state_is_container = isinstance(orig_state, ContainerState)
+    new_state_is_container = issubclass(new_state_class, ContainerState)
+
+    # define which model references to hold for new state
+    model_properties = ['meta', 'input_data_ports', 'output_data_ports', 'outcomes']
+    if current_state_is_container and new_state_is_container:  # hold some additional references
+        # transition are removed when changing the state type, thus do not copy them
+        model_properties.extend(['states', 'data_flows', 'scoped_variables'])
+
+    child_models = {}
+    for prop_name in model_properties:
+        child_models[prop_name] = state_m.__getattribute__(prop_name)
+
+    return child_models
+
+
+def create_state_model_for_state(new_state, state_element_models):
+    """Create a new state model with the defined properties
+
+    A state model is created for a state of the type of new_state. All child models in state_element_models (
+    model list for port, connections and states) are added to the new model.
+
+    :param new_state: The new state object with the correct type
+    :param state_element_models: All state element and child state models of the original state model
+    :return: New state model for new_state with all childs of state_element_models
+    """
+    from rafcon.gui.models.abstract_state import get_state_model_class_for_state
+    state_m_class = get_state_model_class_for_state(new_state)
+    new_state_m = state_m_class(new_state)
+
+    # handle special case of BarrierConcurrencyState -> secure decider state model to not be overwritten
+    if isinstance(new_state, BarrierConcurrencyState):
+        decider_state_m = new_state_m.states[UNIQUE_DECIDER_STATE_ID]
+
+    # by default all transitions are left out if the new and original state are container states
+    # -> because Barrier, Preemptive or Hierarchy has always different rules
+    if isinstance(state_element_models, ContainerStateModel):
+        state_element_models['transitions'] = []
+
+    # insert and link original state model attributes (child-models) into/with new state model (the new parent)
+    for prop_name, value in state_element_models.iteritems():
+        if prop_name == "states":
+            # First, all automatically generated child states must be removed
+            child_state_ids = [state_id for state_id in new_state_m.states]
+            for child_state_id in child_state_ids:
+                if child_state_id != UNIQUE_DECIDER_STATE_ID:
+                    new_state_m.states[child_state_id].prepare_destruction()
+                    del new_state_m.states[child_state_id]
+
+            # Then, the old state models can be assigned
+            new_state_m.__setattr__(prop_name, value)
+            for state_m in new_state_m.states.itervalues():
+                state_m.parent = new_state_m
+
+            # Delete decider state model, if existing
+            if UNIQUE_DECIDER_STATE_ID in new_state_m.states:
+                del new_state_m.states[UNIQUE_DECIDER_STATE_ID]
+
+        elif prop_name in ['outcomes', 'input_data_ports', 'output_data_ports', 'data_flows', 'scoped_variables']:
+            # First, all automatically generated child elements must be removed
+            for model in new_state_m.__getattribute__(prop_name):
+                model.prepare_destruction()
+            del new_state_m.__getattribute__(prop_name)[:]
+
+            # Then, the old state element models can be assigned
+            new_state_m.__setattr__(prop_name, value)
+            for model in new_state_m.__getattribute__(prop_name):
+                model.parent = new_state_m
+        else:
+            # Only the old meta data is left to be assigned
+            new_state_m.__setattr__(prop_name, value)
+
+    # handle special case of BarrierConcurrencyState -> re-insert decider state model
+    if isinstance(new_state, BarrierConcurrencyState):
+        decider_state_m.parent = new_state_m
+        new_state_m.states[UNIQUE_DECIDER_STATE_ID] = decider_state_m
+    if isinstance(new_state, ContainerState):
+        new_state_m.check_is_start_state()
+
+    return new_state_m
 
 
 def change_state_type(state_m, target_class):
@@ -215,7 +250,7 @@ def change_state_type(state_m, target_class):
 
         # Before the root state type is actually changed, we extract the information from the old state model
         # Extract child models of state, as they have to be applied to the new state model
-        child_models = gui_helper_state_machine.extract_child_models_of_state(old_state_m, target_class)
+        child_models = extract_child_models_of_state(old_state_m, target_class)
         state_machine_m.change_root_state_type.__func__.child_models = child_models  # static variable of class method
         state_machine_m.suppress_new_root_state_model_one_time = True
     else:
@@ -234,7 +269,7 @@ def change_state_type(state_m, target_class):
 
         # Before the state type is actually changed, we extract the information from the old state model
         # Extract child models of state, as they have to be applied to the new state model
-        child_models = gui_helper_state_machine.extract_child_models_of_state(old_state_m, target_class)
+        child_models = extract_child_models_of_state(old_state_m, target_class)
         affected_models = [old_state_m, ]
         for list_or_dict in child_models.itervalues():
             affected_models.extend(list_dict_to_list(list_or_dict))
@@ -268,7 +303,7 @@ def change_state_type(state_m, target_class):
             # logger.info("start after TO STATE TYPE CHANGE")
             # Create a new state model based on the new state and apply the extracted child models
             child_models = state_machine_m.change_root_state_type.__func__.child_models
-            new_state_m = gui_helper_state_machine.create_state_model_for_state(new_state, child_models)
+            new_state_m = create_state_model_for_state(new_state, child_models)
 
             new_state_m.register_observer(state_machine_m)
             # state_machine_m.register_observer(state_machine_m)
@@ -287,7 +322,7 @@ def change_state_type(state_m, target_class):
         if new_state:
             # Create a new state model based on the new state and apply the extracted child models
             child_models = action_parent_m.change_state_type.__func__.child_models
-            new_state_m = gui_helper_state_machine.create_state_model_for_state(new_state, child_models)
+            new_state_m = create_state_model_for_state(new_state, child_models)
             # Set this state model (action_root_state_m) to be the parent of our new state model
             new_state_m.parent = action_parent_m
             # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
@@ -310,69 +345,6 @@ def change_state_type(state_m, target_class):
                                                       state_machine_m.change_root_state_type.__func__.last_notification_prop_name,
                                                       state_machine_m.change_root_state_type.__func__.last_notification_info)
     return new_state_m
-
-
-def change_state_type_with_error_handling_and_logger_messages(state_m, target_class):
-    if not isinstance(state_m.state, target_class):
-        logger.debug("Change type of State '{0}' from {1} to {2}".format(state_m.state.name,
-                                                                         type(state_m.state).__name__,
-                                                                         target_class.__name__))
-        try:
-            state_machine_m = gui_singletons.state_machine_manager_model.get_state_machine_model(state_m)
-            state_machine_m.selection.remove(state_m)
-            new_state_m = change_state_type(state_m, target_class)
-            state_machine_m.selection.set([new_state_m, ])
-        except Exception as e:
-            logger.exception("An error occurred while changing the state type")
-    else:
-        logger.info("State type of State '{0}' will not change because target_class: {1} == state_class: {2}"
-                    "".format(state_m.state.name, type(state_m.state).__name__, target_class.__name__))
-
-
-def dict_has_empty_elements(d, ignored_keys=None, ignored_partial_keys=None):
-    ignored_keys = ["show_content", "waypoints"] if ignored_keys is None else ignored_keys
-    ignored_partial_keys = ['input_data_port', 'output_data_port'] if ignored_partial_keys is None else ignored_partial_keys
-    empty = False
-    if not d:
-        # print "dict check -> result empty", d
-        return True
-    else:
-        for k, v in d.iteritems():
-            # print "check", k, " -> ", v
-            if isinstance(v, dict):
-                if dict_has_empty_elements(v):
-                    if k not in ignored_keys and not any([key in k for key in ignored_partial_keys]):
-                        empty = True
-                        break
-                    else:
-                        # print "ignore empty dict: ", k
-                        pass
-            else:
-                if isinstance(v, bool):
-                    pass
-                elif not len(v) > 0:
-                    # print k, v
-                    if k not in ignored_keys and not any([key in k for key in ignored_partial_keys]):
-                        empty = True
-                        break
-                    else:
-                        # print "ignore empty list: ", k
-                        pass
-
-    return empty
-
-
-def model_has_empty_meta(m, ignored_keys=None, ignored_partial_keys=None):
-    # print m, m.meta
-    if dict_has_empty_elements(m.meta, ignored_keys, ignored_partial_keys):
-        # print "XXX", m, m.meta
-        return True
-    if isinstance(m, ContainerStateModel):
-        for state_m in m.states.itervalues():
-            if dict_has_empty_elements(state_m.meta, ignored_keys, ignored_partial_keys):
-                # print "LXXX", state_m, state_m.meta
-                return True
-    return False
 
 
 def substitute_state(target_state_m, state_m_to_insert):
@@ -404,7 +376,8 @@ def substitute_state(target_state_m, state_m_to_insert):
     action_parent_m.substitute_state.__func__.old_state_m = old_state_m
 
     # # TODO re-organize and use partly the expected_models pattern the next lines
-    if isinstance(state_m_to_insert, ContainerStateModel) and not model_has_empty_meta(state_m_to_insert):
+    if isinstance(state_m_to_insert, ContainerStateModel) and \
+            not gui_helper_meta_data.model_has_empty_meta(state_m_to_insert):
         size = state_m_to_insert.set_meta_data_editor('size',
                                                       old_state_m.get_meta_data_editor(gaphas_editor)['size'],
                                                       gaphas_editor)
@@ -462,78 +435,6 @@ def substitute_state(target_state_m, state_m_to_insert):
 
     del action_parent_m.substitute_state.__func__.tmp_meta_data_storage
     del action_parent_m.substitute_state.__func__.old_state_m
-
-
-def substitute_selected_state(state, as_template=False):
-    # print "substitute_selected_state", state, as_template
-    assert isinstance(state, State)
-    from rafcon.core.states.barrier_concurrency_state import DeciderState
-    if isinstance(state, DeciderState):
-        raise ValueError("State of type DeciderState can not be substituted.")
-
-    smm_m = gui_singletons.state_machine_manager_model
-
-    if not smm_m.selected_state_machine_id:
-        logger.error("Please select a container state within a state machine first")
-        return False
-
-    current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
-    selected_state_models = current_selection.get_states()
-    if len(selected_state_models) > 1:
-        logger.error("Please select exactly one state for the substitution")
-        return False
-
-    if len(selected_state_models) == 0:
-        logger.error("Please select a state for the substitution")
-        return False
-
-    current_state_m = selected_state_models[0]
-    current_state = current_state_m.state
-    current_state_name = current_state.name
-    parent_state_m = current_state_m.parent
-    parent_state = current_state.parent
-
-    if not as_template:
-        state_m = get_state_model_class_for_state(state)(state)
-        substitute_state(parent_state_m.states[current_state.state_id], state_m)
-        state.name = current_state_name
-        return True
-    # If inserted as template, we have to extract the state_copy and load the meta data manually
-    else:
-        assert isinstance(state, LibraryState)
-        # print "as template", parent_state_m.states[current_state.state_id].get_meta_data_editor()
-        template_m = LibraryStateModel(state).state_copy
-        # print template_m
-        substitute_state(parent_state_m.states[current_state.state_id], template_m)
-        # template = template_m.state
-        # template.change_state_id()
-        # template.name = current_state_name
-
-        return True
-
-
-def substitute_selected_state_and_use_choice_dialog():
-    selected_states = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
-    if selected_states and len(selected_states) == 1:
-        StateSubstituteChooseLibraryDialog(gui_singletons.library_manager_model,
-                                           parent=gui_singletons.main_window_controller.get_root_window())
-        return True
-    else:
-        logger.warning("Substitute state needs exact one state to be selected.")
-        return False
-
-
-def substitute_selected_library_state_with_template():
-    selected_states = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
-    if selected_states and len(selected_states) == 1 and isinstance(selected_states[0], LibraryStateModel):
-        # print "start substitute library state with template"
-        lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_states[0].state))
-        # lib_state_m = copy.deepcopy(selected_states[0].state)
-        substitute_selected_state(lib_state, as_template=True)
-        return True
-    else:
-        logger.warning("Substitute library state with template needs exact one library state to be selected.")
-        return False
 
 
 def group_states_and_scoped_variables(state_m_list, sv_m_list):
@@ -606,25 +507,6 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
 
     del action_parent_m.group_states.__func__.tmp_models_storage
     del action_parent_m.group_states.__func__.affected_models
-
-
-def group_selected_states_and_scoped_variables():
-    logger.debug("try to group")
-    sm_m = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
-    selected_state_m_list = sm_m.selection.get_states()
-    selected_sv_m = [elem for elem in sm_m.selection.get_all() if isinstance(elem, ScopedVariableModel)]
-    if selected_state_m_list and isinstance(selected_state_m_list[0].parent, StateModel) or selected_sv_m:
-        # # check if all elements have the same parent or leave it to the parent
-        # parent_list = []
-        # for state_m in selected_state_m_list:
-        #     parent_list.append(state_m.state)
-        # for sv_m in selected_sv_m:
-        #     parent_list.append(sv_m.scoped_variable.parent)
-        # assert len(set(parent_list))
-        logger.debug("do group selected states: {0} scoped variables: {1}".format(selected_state_m_list, selected_sv_m))
-        # TODO remove un-select workaround (used to avoid wrong selections in gaphas and inconsistent selection)
-        sm_m.selection.set([])
-        group_states_and_scoped_variables(selected_state_m_list, selected_sv_m)
 
 
 def ungroup_state(state_m):
@@ -701,12 +583,3 @@ def ungroup_state(state_m):
 
     del action_parent_m.ungroup_state.__func__.tmp_models_storage
     del action_parent_m.group_states.__func__.affected_models
-
-
-def ungroup_selected_state():
-    logger.debug("try to ungroup")
-    state_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
-    if len(state_m_list) == 1 and isinstance(state_m_list[0], ContainerStateModel) and \
-            not state_m_list[0].state.is_root_state:
-        logger.debug("do ungroup")
-        ungroup_state(state_m_list[0])
