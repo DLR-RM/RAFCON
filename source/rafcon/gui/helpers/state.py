@@ -356,8 +356,8 @@ def prepare_state_m_for_insert_as_template(state_m_to_insert):
 
         for state_element_key in state_m_to_insert.state.state_element_keys:
             state_element_list = getattr(state_m_to_insert, state_element_key)
-            # Some models are hold in a dict, not a list
-            if isinstance(state_element_list, dict):
+            # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
+            if hasattr(state_element_list, 'keys'):
                 state_element_list = state_element_list.values()
             models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
         # print "TARGET2", models_dict['state'].get_meta_data_editor(gaphas_editor)['size']
