@@ -272,7 +272,7 @@ class StatesEditorController(ExtendedController):
             state_editor_ctrl = StateEditorController(state_m, state_editor_view)
             self.add_controller(state_identifier, state_editor_ctrl)
             if state_editor_ctrl.get_controller('source_ctrl'):
-                handler_id = state_editor_view['source_view'].get_buffer().connect('changed', self.script_text_changed,
+                handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
                                                                                    state_m)
             else:
                 handler_id = None
@@ -343,8 +343,8 @@ class StatesEditorController(ExtendedController):
         # logger.info("destroy page %s" % tab_dict['controller'].model.state.get_path())
         if tab_dict['source_code_changed_handler_id'] is not None:
             handler_id = tab_dict['source_code_changed_handler_id']
-            if tab_dict['controller'].view['source_view'].get_buffer().handler_is_connected(handler_id):
-                tab_dict['controller'].view['source_view'].get_buffer().disconnect(handler_id)
+            if tab_dict['controller'].view.source_view.get_buffer().handler_is_connected(handler_id):
+                tab_dict['controller'].view.source_view.get_buffer().disconnect(handler_id)
             else:
                 logger.warning("Source code changed handler of state {0} was already removed.".format(tab_dict['model']))
         self.remove_controller(tab_dict['controller'])

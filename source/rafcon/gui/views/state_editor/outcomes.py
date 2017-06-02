@@ -16,16 +16,17 @@ import gtk
 from gtkmvc import View
 
 from rafcon.gui import glade
+from rafcon.gui.views.utils.tree import TreeView
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
 
 
-class StateOutcomesTreeView(View):
+class StateOutcomesTreeView(TreeView):
     builder = glade.get_glade_path("outcome_list_widget.glade")
     top = 'tree_view'
 
     def __init__(self):
-        View.__init__(self)
+        super(StateOutcomesTreeView, self).__init__()
 
 
 class StateOutcomesEditorView(View):
@@ -56,6 +57,7 @@ class StateOutcomesEditorView(View):
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrollable.add(self.treeView['tree_view'])
+        self.treeView.scrollbar_widget = scrollable
 
         outcomes_label = gui_helper_label.create_label_with_text_and_spacing("OUTCOMES",
                                                                              letter_spacing=constants.LETTER_SPACING_1PT)

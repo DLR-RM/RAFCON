@@ -15,24 +15,25 @@
 from gtkmvc import View
 
 from rafcon.gui import glade
+from rafcon.gui.views.utils.tree import TreeView
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
 
 
-class LinkageOverviewDataView(View):
+class LinkageOverviewDataView(TreeView):
     builder = glade.get_glade_path("linkage_overview_data.glade")
     top = 'tree_view'
 
     def __init__(self):
-        View.__init__(self)
+        super(LinkageOverviewDataView, self).__init__()
 
 
-class LinkageOverviewLogicView(View):
+class LinkageOverviewLogicView(TreeView):
     builder = glade.get_glade_path("linkage_overview_logic.glade")
     top = 'tree_view'
 
     def __init__(self):
-        View.__init__(self)
+        super(LinkageOverviewLogicView, self).__init__()
 
         self.treeView = self
 
@@ -44,15 +45,19 @@ class LinkageOverviewView(View):
     def __init__(self):
         View.__init__(self)
 
-        self['inputs_view'] = LinkageOverviewDataView()
-        self['outputs_view'] = LinkageOverviewDataView()
-        self['scope_view'] = LinkageOverviewDataView()
-        self['outcomes_view'] = LinkageOverviewLogicView()
+        self.inputs_view = LinkageOverviewDataView()
+        self.outputs_view = LinkageOverviewDataView()
+        self.scope_view = LinkageOverviewDataView()
+        self.outcomes_view = LinkageOverviewLogicView()
 
-        self['inputs_scroller'].add(self['inputs_view'].get_top_widget())
-        self['outputs_scroller'].add(self['outputs_view'].get_top_widget())
-        self['scoped_scroller'].add(self['scope_view'].get_top_widget())
-        self['outcomes_scroller'].add(self['outcomes_view'].get_top_widget())
+        self['inputs_scroller'].add(self.inputs_view.get_top_widget())
+        self['outputs_scroller'].add(self.outputs_view.get_top_widget())
+        self['scoped_scroller'].add(self.scope_view.get_top_widget())
+        self['outcomes_scroller'].add(self.outcomes_view.get_top_widget())
+        self.inputs_view.scrollbar_widget = self['inputs_scroller']
+        self.outputs_view.scrollbar_widget = self['outputs_scroller']
+        self.scope_view.scrollbar_widget = self['scoped_scroller']
+        self.outcomes_view.scrollbar_widget = self['outcomes_scroller']
 
         gui_helper_label.set_label_markup(self['data_linkage_label'], 'DATA LINKAGE',
                                           letter_spacing=constants.LETTER_SPACING_1PT)

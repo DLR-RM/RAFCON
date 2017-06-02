@@ -15,16 +15,17 @@
 from gtkmvc import View
 
 from rafcon.gui import glade
+from rafcon.gui.views.utils.tree import TreeView
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
 
 
-class StateTransitionsListView(View):
+class StateTransitionsListView(TreeView):
     builder = glade.get_glade_path("transition_list_widget.glade")
     top = 'tree_view'
 
     def __init__(self):
-        View.__init__(self)
+        super(StateTransitionsListView, self).__init__()
         self.tree_view = self['tree_view']
 
     def get_top_widget(self):
@@ -43,6 +44,7 @@ class StateTransitionsEditorView(View):
 
         self.transitions_listView = StateTransitionsListView()
         self['transitions_scroller'].add(self.transitions_listView.get_top_widget())
+        self.transitions_listView.scrollbar_widget = self['transitions_scroller']
 
         self['internal_t_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['connected_to_t_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
