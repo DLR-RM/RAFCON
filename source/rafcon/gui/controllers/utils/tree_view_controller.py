@@ -498,11 +498,41 @@ class ListViewController(ExtendedController):
             return True
         else:
             current_row_path, current_focused_column = self.tree_view.get_cursor()
-            if len(current_row_path) == 1 and isinstance(current_row_path[0], int):
-                self.tree_view.scroll_to_cell(current_row_path[0], current_focused_column, use_align=False)
-            else:
-                self._logger.warning("A ListViewController aspects a current_row_path of dimension 1 with integer "
-                                     "but it is but it is {0}".format(current_row_path))
+            # print current_row_path, current_focused_column
+            if isinstance(widget, gtk.TreeView):
+                if current_row_path is not None and len(current_row_path) == 1 and isinstance(current_row_path[0], int):
+                    self.tree_view.scroll_to_cell(current_row_path[0], current_focused_column, use_align=False)
+                else:
+                    self._logger.warning("A ListViewController aspects a current_row_path of dimension 1 with integer "
+                                         "but it is but it is {0} and column is {1}".format(current_row_path,
+                                                                                            current_focused_column))
+            elif isinstance(widget, gtk.Entry) and self.view.scrollbar_widget is not None:
+                # calculate the position of the scrollbar to be always centered with the entry widget cursor
+                # TODO check how to get suffient the scroll-offset in the entry widget -> some times zero when not
+                # TODO the scrollbar is one step behind cursor -> so jump from pos1 to end works not perfect
+                results = widget.get_properties(*["scroll-offset", "cursor-position", "text-length", "inner-border",
+                                                  "max-length", "width-chars", "xalign", "width-request"])
+                e_scroll_offset, e_cursor_position, e_text_length = results[:3]
+                e_cell_rect = widget.get_allocation()
+                # print type(entry_widget_layout), "\n", dir(entry_widget_layout), entry_widget_layout.get_size(), \
+                #     entry_widget_layout.get_text(), dir(entry_widget_layout.get_attributes())
+                # print "layout pixel width widget.get_layout().get_pixel_size()
+
+                # cell_width_request, _ = widget.size_request()
+                # list_width_request, _ = self.view.get_top_widget().size_request()
+                # print "results:", results, cell_width_request, entry_widget_layout.get_pixel_size()[0]
+
+                horizontal_scroll_bar = self.view.scrollbar_widget.get_hscrollbar()
+                if horizontal_scroll_bar is not None:
+                    adjustment = horizontal_scroll_bar.get_adjustment()
+                    layout_pixel_width = widget.get_layout().get_pixel_size()[0]
+                    # print "rel_pos pices", e_cell_rect.x, int(layout_pixel_width*float(results[1])/float(results[2]))
+                    rel_pos = e_cell_rect.x - e_scroll_offset + \
+                        int(layout_pixel_width*float(e_cursor_position)/float(e_text_length))
+                    # print adjustment.lower, adjustment.upper, adjustment.value, adjustment.page_size, rel_pos
+                    value = int(float(adjustment.upper - adjustment.page_size)*rel_pos/float(adjustment.upper))
+                    adjustment.set_value(value)
+                    # print "new value", adjustment.value, 'of', float(adjustment.upper - adjustment.page_size)
 
 
 class TreeViewController(ExtendedController):
