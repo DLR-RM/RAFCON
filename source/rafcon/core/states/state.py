@@ -39,6 +39,7 @@ from rafcon.core.state_elements.data_port import DataPort, InputDataPort, Output
 from rafcon.core.state_elements.outcome import Outcome
 from rafcon.core.storage import storage
 from rafcon.core.storage.storage import get_storage_id_for_state
+from rafcon.utils import classproperty
 from rafcon.utils import log
 from rafcon.utils import multi_event
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
@@ -65,6 +66,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     """
 
     _parent = None
+    _state_element_keys = ['outcomes', 'input_data_ports', 'output_data_ports']
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  parent=None):
@@ -199,6 +201,16 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         dict_representation = loader.construct_mapping(node, deep=True)
         state = cls.from_dict(dict_representation)
         return state
+
+    @classproperty
+    @classmethod
+    def state_element_keys(cls):
+        """Return a list of keys of the state's state elements
+        
+        :return: Keys of the state's state elements
+        :rtype: list[str]
+        """
+        return cls._state_element_keys
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- execution functions -------------------------------------
