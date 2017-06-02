@@ -9,3 +9,12 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+
+class classproperty(property):
+    """Decorator for classes to allow class properties
+    
+    By default a @property method cannot at the same time by a @classmethod. This decorator serves as replacement for
+    @property.
+    """
+    def __get__(self, cls, owner):
+        return self.fget.__get__(None, owner)()
