@@ -42,11 +42,12 @@ def trigger_ungroup_bug_signals(*args):
     sm_m = sm_manager_model.get_selected_state_machine_model()
     assert sm_m
     import rafcon.gui.helpers.state as gui_helper_state
+    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     call_gui_callback(gui_helper_state.change_state_type, sm_m.get_state_model_by_path("ROOTSTATE/STATE3"),
-                                       gui_helper_state.gui_helper_state_machine.BarrierConcurrencyState)
+                      gui_helper_state.BarrierConcurrencyState)
 
     call_gui_callback(sm_m.selection.set, sm_m.get_state_model_by_path("ROOTSTATE/STATE3"))
-    call_gui_callback(gui_helper_state.ungroup_selected_state)
+    call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
 
     call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
     call_gui_callback(menubar_ctrl.on_stop_activate, None)

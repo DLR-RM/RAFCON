@@ -25,16 +25,16 @@ from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
 from gtk.gdk import ACTION_COPY
 
-import rafcon.core.id_generator as idgen
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.state import StateType
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.helpers.meta_data import generate_default_state_meta_data
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
+from rafcon.gui.models.library_state import LibraryStateModel
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.mygaphas.canvas import MyCanvas
@@ -43,11 +43,10 @@ from rafcon.gui.mygaphas import guide
 from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
 from rafcon.gui.mygaphas.items.ports import OutcomeView, DataPortView, ScopedVariablePortView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
-from rafcon.gui.singleton import gui_config_model, runtime_config_model
+import rafcon.gui.singleton
 from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView
-import rafcon.gui.helpers.state as gui_helper_state
 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
-from rafcon.gui.models.library_state import LibraryStateModel
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -69,8 +68,8 @@ class GraphicalEditorController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         assert type(view) == GraphicalEditorView
         assert isinstance(self.model, StateMachineModel)
-        self.observe_model(gui_config_model)
-        self.observe_model(runtime_config_model)
+        self.observe_model(rafcon.gui.singleton.gui_config_model)
+        self.observe_model(rafcon.gui.singleton.runtime_config_model)
         self.root_state_m = model.root_state
 
         self.update_selection_gaphas_major = False
@@ -78,6 +77,7 @@ class GraphicalEditorController(ExtendedController):
 
         self.canvas = MyCanvas()
         self.zoom = 3.
+        self.perform_drag_and_drop = False
 
         view.setup_canvas(self.canvas, self.zoom)
 
@@ -157,12 +157,17 @@ class GraphicalEditorController(ExtendedController):
         :param info:
         :param time:
         """
-        item = self.canvas.get_view_for_model(self.model.selection.get_selected_state().states[data.get_text()])
-        pos_start = item.model.get_meta_data_editor()['rel_pos']
-        motion = InMotion(item, self.view.editor)
-        motion.start_move(self.view.editor.get_matrix_i2v(item).transform_point(pos_start[0], pos_start[1]))
+        state_id_insert = data.get_text()
+        parent_m = self.model.selection.get_selected_state()
+        state_v = self.canvas.get_view_for_model(parent_m.states[state_id_insert])
+        pos_start = state_v.model.get_meta_data_editor()['rel_pos']
+        motion = InMotion(state_v, self.view.editor)
+        motion.start_move(self.view.editor.get_matrix_i2v(state_v).transform_point(pos_start[0], pos_start[1]))
         motion.move((x, y))
         motion.stop_move()
+        state_v.model.set_meta_data_editor('rel_pos', motion.item.position)
+        self.canvas.perform_update()
+        self._meta_data_changed(None, state_v.model, 'append_to_last_change', True)
 
     @lock_state_machine
     def on_drag_motion(self, widget, context, x, y, time):
@@ -387,7 +392,8 @@ class GraphicalEditorController(ExtendedController):
                 new_state = arguments[1]
                 new_state_m = model.states[new_state.state_id]
                 self.add_state_view_to_parent(new_state_m, model)
-                self.canvas.perform_update()
+                if not self.perform_drag_and_drop:
+                    self.canvas.perform_update()
             elif method_name == 'remove_state':
                 parent_state = arguments[0]
                 state_id = arguments[1]
@@ -595,6 +601,11 @@ class GraphicalEditorController(ExtendedController):
 
         # Otherwise we only look at the modified state and its children
         else:
+            # self.canvas.get_view_for_model(old_state_m.get_state_machine_m().root_state).remove()
+            # self.root_state_m = new_state_m.get_state_machine_m().root_state
+            # root_state_v = self.setup_state(self.root_state_m)
+            # self.canvas.request_update(root_state_v)
+
             state_v.model = new_state_m
             if isinstance(new_state_m, ContainerStateModel):
                 # Check for old StateViews (typically DeciderState), TransitionViews and DataFlowViews,
@@ -858,13 +869,7 @@ class GraphicalEditorController(ExtendedController):
             # Keep state within parent
             pass
 
-        if isinstance(state_m, ContainerStateModel) or \
-                isinstance(state_m, LibraryStateModel) and isinstance(state_m.state_copy, ContainerStateModel) and \
-                state_m.meta['gui']['show_content']:
-            if isinstance(state_m, LibraryStateModel):
-                logger.info("Library {0}".format(state_m))
-                state_m = state_m.state_copy
-                gui_helper_meta_data.scale_library_content_to_fit(state_m, gaphas_editor=True)
+        if isinstance(state_m, ContainerStateModel):
 
             num_child_state = 0
 
@@ -1011,7 +1016,7 @@ class GraphicalEditorController(ExtendedController):
     def check_focus_and_sm_selection_according_event(self, event):
         if not react_to_event(self.view, self.view.editor, event):
             return False
-        if not gui_helper_state.gui_singletons.state_machine_manager_model.selected_state_machine_id == \
+        if not rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id == \
                 self.model.state_machine.state_machine_id:
             return False
         return True
@@ -1020,14 +1025,14 @@ class GraphicalEditorController(ExtendedController):
     def _add_data_port_to_selected_state(self, *event, **kwargs):
         if self.check_focus_and_sm_selection_according_event(event):
             data_port_type = None if 'data_port_type' not in kwargs else kwargs['data_port_type']
-            gui_helper_state.add_data_port_to_selected_states(data_port_type)
+            gui_helper_state_machine.add_data_port_to_selected_states(data_port_type)
 
     @lock_state_machine
     def _add_scoped_variable_to_selected_state(self, *event):
         if self.check_focus_and_sm_selection_according_event(event):
-            gui_helper_state.add_scoped_variable_to_selected_states()
+            gui_helper_state_machine.add_scoped_variable_to_selected_states()
 
     @lock_state_machine
     def _add_outcome_to_selected_state(self, *event):
         if self.check_focus_and_sm_selection_according_event(event):
-            gui_helper_state.add_outcome_to_selected_states()
+            gui_helper_state_machine.add_outcome_to_selected_states()

@@ -30,7 +30,7 @@ from rafcon.core.state_machine_manager import StateMachineManager
 from rafcon.core.execution.execution_history import ConcurrencyItem, CallItem, ScopedDataItem
 from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
-from rafcon.core.execution.execution_history import CallType
+from rafcon.core.execution.execution_history import CallType, StateMachineStartItem
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
@@ -225,10 +225,26 @@ class ExecutionHistoryTreeController(ExtendedController):
         for execution_number, execution_history in enumerate(active_sm.execution_histories):
             if len(execution_history) > 0:
                 first_history_item = execution_history[0]
-                tree_item = self.history_tree_store.insert_after(
-                    None, None, (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
-                                 first_history_item))
-                self.insert_execution_history(tree_item, execution_history, is_root=True)
+                # the next lines filter out the StateMachineStartItem, which is not intended to
+                # be displayed, but merely as convenient entry point in the saved log file
+                if isinstance(first_history_item, StateMachineStartItem):
+                    if len(execution_history) > 1:
+                        first_history_item = execution_history[1]
+                        tree_item = self.history_tree_store.insert_after(
+                            None,
+                            None,
+                            (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
+                             first_history_item))
+                        self.insert_execution_history(tree_item, execution_history[1:], is_root=True)
+                    else:
+                        pass # there was only the Start item in the history
+                else:
+                    tree_item = self.history_tree_store.insert_after(
+                        None,
+                        None,
+                        (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
+                         first_history_item))
+                    self.insert_execution_history(tree_item, execution_history, is_root=True)
 
     def insert_history_item(self, parent, history_item, description, dummy=False):
         """Enters a single history item into the tree store

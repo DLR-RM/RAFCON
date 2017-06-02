@@ -107,25 +107,38 @@ class PlusAddNotebook(gtk.Notebook):
                                                callback=self.do_emit, callback_args=["add_state_machine"])
             menu.append(menu_item)
 
-            menu_item = create_image_menu_item("Close State Machine", constants.BUTTON_CLOSE,
-                                               callback=self.do_emit, callback_args=["close_state_machine"])
-            menu.append(menu_item)
+            page_number = self.get_current_page()
+            if page_number is not None:
+                menu_item = create_image_menu_item("Close State Machine", constants.BUTTON_CLOSE,
+                                                   callback=self.do_emit, callback_args=["close_state_machine",
+                                                                                         page_number])
+                menu.append(menu_item)
 
             menu.show_all()
             menu.popup(None, None, None, event.button, event.time)
             return True
 
-    def do_emit(self, widget, string):
-        self.emit(string)
+    def do_emit(self, *args):
+        self.emit(*args[1:])
 
     def change_page(self, widget, new_page_number):
         self.set_current_page(new_page_number)
+
+    def get_page_number_of_the_page_below_the_cursor(self, widget, event):
+        x, y = event.x, event.y
+        for i in range(0, self.get_n_pages()):
+            alloc = self.get_tab_label(self.get_nth_page(i)).get_allocation()
+            widget_position = widget.get_allocation()
+            mouse_x = widget_position.x + x
+            mouse_y = widget_position.y + y
+            if alloc.x < mouse_x < alloc.x + alloc.width and alloc.y < mouse_y < alloc.y + alloc.height:
+                return i
+        return None
 
     def on_button_release(self, widget, event):
         """ Emit an add_state_machine signal if a left click is performed on the drawn pix-buffer add button area and 
         emit a close_state_machine signal if a middle click is performed on a state machine tab-label.
         """
-        x, y = event.x, event.y
         pb_x, pb_y = self.get_pixbuf_xy()
 
         pb_width = self.pixbuf.get_width()
@@ -137,14 +150,10 @@ class PlusAddNotebook(gtk.Notebook):
             self.emit("add_state_machine")
             return True
 
-        for i in range(0, self.get_n_pages()):
-            alloc = self.get_tab_label(self.get_nth_page(i)).get_allocation()
-            widget_position = widget.get_allocation()
-            mouse_x = widget_position.x + x
-            mouse_y = widget_position.y + y
-            if alloc.x < mouse_x < alloc.x + alloc.width and alloc.y < mouse_y < alloc.y + alloc.height and \
-                            event.state & gtk.gdk.BUTTON2_MASK:
-                self.emit("close_state_machine", i)
+        if event.state & gtk.gdk.BUTTON2_MASK:
+            page_number = self.get_page_number_of_the_page_below_the_cursor(widget, event)
+            if page_number is not None:
+                self.emit("close_state_machine", page_number)
                 return True
 
     def on_expose_event(self, widget, event):

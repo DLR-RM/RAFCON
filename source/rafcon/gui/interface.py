@@ -52,7 +52,7 @@ def open_folder(query, default_path=None):
     dialog.set_show_hidden(False)
 
     # Add library roots to list of shortcut folders
-    library_paths = library_manager.library_paths
+    library_paths = library_manager.library_root_paths
     library_keys = sorted(library_paths)
     for library_key in library_keys:
         dialog.add_shortcut_folder(library_paths[library_key])
@@ -119,7 +119,7 @@ def create_folder(query, default_name=None, default_path=None):
     dialog.set_show_hidden(False)
 
     # Add library roots to list of shortcut folders
-    library_paths = library_manager.library_paths
+    library_paths = library_manager.library_root_paths
     library_keys = sorted(library_paths)
     for library_key in library_keys:
         dialog.add_shortcut_folder(library_paths[library_key])

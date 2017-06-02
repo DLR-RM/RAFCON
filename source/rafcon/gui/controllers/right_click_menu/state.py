@@ -26,7 +26,6 @@ import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-import rafcon.gui.helpers.state as gui_helper_state
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import create_image_menu_item, create_check_menu_item, append_sub_menu_to_parent_menu
 from rafcon.gui.models.abstract_state import AbstractStateModel
@@ -145,11 +144,11 @@ class StateMachineRightClickMenu(object):
         save_as_library_sub_menu_item, save_as_library_sub_menu = append_sub_menu_to_parent_menu("Library",
                                                                                                  save_as_sub_menu,
                                                                                                  constants.SIGN_LIB)
-        library_paths = core_singletons.library_manager.library_paths
-        for library_root_key in library_paths.iterkeys():
+        library_root_paths = core_singletons.library_manager.library_root_paths
+        for library_root_key in library_root_paths.iterkeys():
             save_as_library_sub_menu.append(create_image_menu_item(library_root_key, constants.SIGN_LIB,
                                                                    partial(self.on_save_state_as_state_machine_activate,
-                                                                           path=library_paths[library_root_key]),
+                                                                           path=library_root_paths[library_root_key]),
                                                                    accel_code=None, accel_group=accel_group))
 
         return menu
@@ -276,9 +275,9 @@ class StateMachineRightClickMenu(object):
         try:
             if path is not None:
                 gui_singletons.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
-                gui_helper_state.save_selected_state_as()
+                gui_helper_state_machine.save_selected_state_as()
             else:
-                gui_helper_state.save_selected_state_as()
+                gui_helper_state_machine.save_selected_state_as()
         except Exception:
             raise
         finally:
@@ -301,8 +300,8 @@ class StateMachineRightClickMenu(object):
     def on_type_change_activate(self, widget, data=None, target_class=None):
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.get_all()) == 1 and len(selection.get_states()) == 1:
-            gui_helper_state.change_state_type_with_error_handling_and_logger_messages(selection.get_states()[0],
-                                                                                       target_class)
+            gui_helper_state_machine.change_state_type_with_error_handling_and_logger_messages(selection.get_states()[0],
+                                                                                               target_class)
 
     def mouse_click(self, widget, event=None):
         from rafcon.gui.models.library_state import LibraryStateModel

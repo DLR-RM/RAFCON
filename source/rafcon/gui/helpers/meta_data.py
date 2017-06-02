@@ -28,7 +28,53 @@ def divide_two_vectors(vec1, vec2):
     return tuple([vec1[i] / vec2[i] for i in range(len(vec2))])
 
 
-def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_state=None):
+def dict_has_empty_elements(d, ignored_keys=None, ignored_partial_keys=None):
+    ignored_keys = ["show_content", "waypoints"] if ignored_keys is None else ignored_keys
+    ignored_partial_keys = ['input_data_port', 'output_data_port'] if ignored_partial_keys is None else ignored_partial_keys
+    empty = False
+    if not d:
+        # print "dict check -> result empty", d
+        return True
+    else:
+        for k, v in d.iteritems():
+            # print "check", k, " -> ", v
+            if isinstance(v, dict):
+                if dict_has_empty_elements(v):
+                    if k not in ignored_keys and not any([key in k for key in ignored_partial_keys]):
+                        empty = True
+                        break
+                    else:
+                        # print "ignore empty dict: ", k
+                        pass
+            else:
+                if isinstance(v, bool):
+                    pass
+                elif not len(v) > 0:
+                    # print k, v
+                    if k not in ignored_keys and not any([key in k for key in ignored_partial_keys]):
+                        empty = True
+                        break
+                    else:
+                        # print "ignore empty list: ", k
+                        pass
+
+    return empty
+
+
+def model_has_empty_meta(m, ignored_keys=None, ignored_partial_keys=None):
+    # print m, m.meta
+    if dict_has_empty_elements(m.meta, ignored_keys, ignored_partial_keys):
+        # print "XXX", m, m.meta
+        return True
+    if isinstance(m, ContainerStateModel):
+        for state_m in m.states.itervalues():
+            if dict_has_empty_elements(state_m.meta, ignored_keys, ignored_partial_keys):
+                # print "LXXX", state_m, state_m.meta
+                return True
+    return False
+
+
+def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_state=None, gaphas_editor=True):
     """Generate default meta data for a child state according its parent state
 
     The function could work with the handed num_child_state if all child state are not drawn, till now.
@@ -41,7 +87,7 @@ def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_stat
     :param int num_child_state: Number of child states already drawn in canvas parent state view
     :return child relative pos (tuple) in parent and it size (tuple)
     """
-    parent_size = parent_state_m.get_meta_data_editor()['size']
+    parent_size = parent_state_m.get_meta_data_editor(gaphas_editor)['size']
     if not isinstance(parent_size, tuple):
         raise TypeError("'State size' have to be of tuple not {0} like {1}.".format(type(parent_size), parent_size))
 
@@ -71,6 +117,13 @@ def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_stat
     child_rel_pos_y = child_spacing * (1.5 * row + 1)
     # print "default rel_pos and size", (child_rel_pos_x, child_rel_pos_y), (new_state_side_size, new_state_side_size)
     return (child_rel_pos_x, child_rel_pos_y), (new_state_side_size, new_state_side_size)
+
+
+def put_default_meta_on_state_m(state_m, parent_state_m):
+    gaphas_editor = global_gui_config.get_config_value('GAPHAS_EDITOR', True)
+    rel_pos, size = generate_default_state_meta_data(parent_state_m, gaphas_editor=gaphas_editor)
+    state_m.set_meta_data_editor('rel_pos', rel_pos, gaphas_editor)
+    state_m.set_meta_data_editor('size', size, gaphas_editor)
 
 
 def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', combined_action=False):
@@ -231,8 +284,11 @@ def scale_library_ports_meta_data(state_m):
     factor = divide_two_vectors(state_m.get_meta_data_editor()['size'],
                                 state_m.state_copy.get_meta_data_editor()['size'])
     # print "scale_library_ports_meta_data -> resize_state_port_meta", factor
-    resize_state_port_meta(state_m, factor, True)
-    state_m.meta_data_was_scaled = True
+    if isinstance(factor, tuple) and len(factor) == 2:
+        resize_state_port_meta(state_m, factor, True)
+        state_m.meta_data_was_scaled = True
+    else:
+        logger.info("Skip resize of library ports meta data {0}".format(state_m))
 
 
 def scale_library_content_to_fit(state_m, gaphas_editor):

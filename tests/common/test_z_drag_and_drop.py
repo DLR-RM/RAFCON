@@ -52,6 +52,7 @@ def create_models(*args, **kargs):
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_drag_and_drop_tests(*args):
+    # TODO test needs check on position -> is the state drawn where it was dropped?
     sm_manager_model = args[0]
     main_window_controller = args[1]
 
