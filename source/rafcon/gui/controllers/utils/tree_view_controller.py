@@ -44,6 +44,8 @@ class ListViewController(ExtendedController):
     _logger = None
     CORE_ELEMENT_CLASS = None
 
+    # TODO refactor to move functionality to gui.utils.tree.TreeView and possible reuse in TreeViewController
+
     def __init__(self, model, view, tree_view, list_store, logger=None):
         super(ListViewController, self).__init__(model, view)
         self._logger = logger if logger is not None else module_logger
@@ -508,27 +510,20 @@ class ListViewController(ExtendedController):
                                                                                             current_focused_column))
             elif isinstance(widget, gtk.Entry) and self.view.scrollbar_widget is not None:
                 # calculate the position of the scrollbar to be always centered with the entry widget cursor
-                # TODO check how to get suffient the scroll-offset in the entry widget -> some times zero when not
+                # TODO check how to get sufficient the scroll-offset in the entry widget -> some times zero when not
                 # TODO the scrollbar is one step behind cursor -> so jump from pos1 to end works not perfect
-                results = widget.get_properties(*["scroll-offset", "cursor-position", "text-length", "inner-border",
-                                                  "max-length", "width-chars", "xalign", "width-request"])
-                e_scroll_offset, e_cursor_position, e_text_length = results[:3]
-                e_cell_rect = widget.get_allocation()
-                # print type(entry_widget_layout), "\n", dir(entry_widget_layout), entry_widget_layout.get_size(), \
-                #     entry_widget_layout.get_text(), dir(entry_widget_layout.get_attributes())
-                # print "layout pixel width widget.get_layout().get_pixel_size()
-
-                # cell_width_request, _ = widget.size_request()
-                # list_width_request, _ = self.view.get_top_widget().size_request()
-                # print "results:", results, cell_width_request, entry_widget_layout.get_pixel_size()[0]
+                entry_widget_scroll_offset, entry_widget_cursor_position, entry_widget_text_length = \
+                    widget.get_properties(*["scroll-offset", "cursor-position", "text-length"])
+                cell_rect_of_entry_widget = widget.get_allocation()
 
                 horizontal_scroll_bar = self.view.scrollbar_widget.get_hscrollbar()
                 if horizontal_scroll_bar is not None:
                     adjustment = horizontal_scroll_bar.get_adjustment()
                     layout_pixel_width = widget.get_layout().get_pixel_size()[0]
-                    # print "rel_pos pices", e_cell_rect.x, int(layout_pixel_width*float(results[1])/float(results[2]))
-                    rel_pos = e_cell_rect.x - e_scroll_offset + \
-                        int(layout_pixel_width*float(e_cursor_position)/float(e_text_length))
+                    # print "rel_pos pices", cell_rect_of_entry_widget.x,
+                    #     int(layout_pixel_width*float(entry_widget_cursor_position)/float(entry_widget_text_length))
+                    rel_pos = cell_rect_of_entry_widget.x - entry_widget_scroll_offset + \
+                        int(layout_pixel_width*float(entry_widget_cursor_position)/float(entry_widget_text_length))
                     # print adjustment.lower, adjustment.upper, adjustment.value, adjustment.page_size, rel_pos
                     value = int(float(adjustment.upper - adjustment.page_size)*rel_pos/float(adjustment.upper))
                     adjustment.set_value(value)
