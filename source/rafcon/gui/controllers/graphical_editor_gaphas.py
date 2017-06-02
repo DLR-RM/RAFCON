@@ -849,7 +849,7 @@ class GraphicalEditorController(ExtendedController):
 
         if isinstance(state_m, LibraryStateModel):
             if not state_m.meta_data_was_scaled:
-                gui_helper_meta_data.scale_library_ports_meta_data(state_m)
+                gui_helper_meta_data.scale_library_ports_meta_data(state_m, gaphas_editor=True)
 
         state_v = StateView(state_m, size, hierarchy_level)
 

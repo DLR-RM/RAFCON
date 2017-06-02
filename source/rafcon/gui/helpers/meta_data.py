@@ -74,6 +74,12 @@ def model_has_empty_meta(m, ignored_keys=None, ignored_partial_keys=None):
     return False
 
 
+def get_y_axis_and_gaphas_editor_flag():
+    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    y_axis_mirror = 1. if gaphas_editor else -1.
+    return gaphas_editor, y_axis_mirror
+
+
 def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_state=None, gaphas_editor=True):
     """Generate default meta data for a child state according its parent state
 
@@ -120,9 +126,9 @@ def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_stat
 
 
 def put_default_meta_on_state_m(state_m, parent_state_m):
-    gaphas_editor = global_gui_config.get_config_value('GAPHAS_EDITOR', True)
+    gaphas_editor, y_axis_mirror = get_y_axis_and_gaphas_editor_flag()
     rel_pos, size = generate_default_state_meta_data(parent_state_m, gaphas_editor=gaphas_editor)
-    state_m.set_meta_data_editor('rel_pos', rel_pos, gaphas_editor)
+    state_m.set_meta_data_editor('rel_pos', mult_two_vectors((1., y_axis_mirror), rel_pos), gaphas_editor)
     state_m.set_meta_data_editor('size', size, gaphas_editor)
 
 
@@ -159,8 +165,17 @@ def add_boundary_clearance(left, right, top, bottom, frame, clearance=0.1):
     """Increase boundary size
 
     The function increase the space between top and bottom and between left and right parameters.
-    The increase done on the biggest size so max(size boundary, size frame)
+    The increase performed on the biggest size/frame so max(size boundary, size frame)
+
+    :param float left: lower x-axis value
+    :param float right: upper x-axis value
+    :param float top: lower y-axis value
+    :param float bottom: upper y-axis value
+    :param dict frame: Dictionary with size and rel_pos tuples
+    :param float clearance: Percentage 0.01 = 1% of clearance
+    :return:
     """
+
     # print "old boundary", left, right, top, bottom
     width = right - left
     width = frame['size'][0] if width < frame['size'][0] else width
@@ -188,8 +203,7 @@ def get_boundaries_of_elements_in_dict(models_dict, clearance=0.):
     :return: tuple of left, right, top and bottom value
     """
 
-    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
-    y_axis_mirror = 1 if gaphas_editor else -1
+    gaphas_editor, y_axis_mirror = get_y_axis_and_gaphas_editor_flag()
 
     # Determine initial outer coordinates
     right = 0.
@@ -244,6 +258,7 @@ def get_boundaries_of_elements_in_dict(models_dict, clearance=0.):
                 left, top = cal_min(left, top, rel_position, _size)
                 # print "new edges:", left, right, top, bottom, key
 
+    # increase of boundary results into bigger estimated size and finally stronger reduction of original element sizes
     left, right, top, bottom = add_boundary_clearance(left, right, top, bottom, {'size': (0., 0.)}, clearance)
     return left, right, top, bottom
 
@@ -300,7 +315,7 @@ def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor)
     # print "END", "#"*30, "offset models", pos_offset, "#"*30, "\n"
 
 
-def scale_library_ports_meta_data(state_m):
+def scale_library_ports_meta_data(state_m, gaphas_editor=True):
     """Scale the ports of library model accordingly relative to state_copy meta size.
     
     The function assumes that the meta data of ports of the state_copy of the library was copied to 
@@ -314,6 +329,7 @@ def scale_library_ports_meta_data(state_m):
     #     state_m.state_copy.get_meta_data_editor()['size']
     factor = divide_two_vectors(state_m.get_meta_data_editor()['size'],
                                 state_m.state_copy.get_meta_data_editor()['size'])
+    
     # print "scale_library_ports_meta_data -> resize_state_port_meta", factor
     if isinstance(factor, tuple) and len(factor) == 2:
         resize_state_port_meta(state_m, factor, True)
@@ -327,13 +343,8 @@ def scale_library_content_to_fit(state_m, gaphas_editor):
     """
     assert isinstance(state_m, LibraryStateModel)
     models_dict = {'state': state_m}
-    gaphas_editor = False
-    size = state_m.state_copy.set_meta_data_editor('size',
-                                                   state_m.get_meta_data_editor(gaphas_editor)['size'],
-                                                   gaphas_editor)
-    rel_pos = state_m.state_copy.set_meta_data_editor('rel_pos',
-                                                      state_m.get_meta_data_editor(gaphas_editor)['rel_pos'],
-                                                      gaphas_editor)
+    state_m.state_copy.set_meta_data_editor('size', state_m.get_meta_data_editor(gaphas_editor)['size'], gaphas_editor)
+    state_m.state_copy.set_meta_data_editor('rel_pos', state_m.get_meta_data_editor(gaphas_editor)['rel_pos'], gaphas_editor)
 
     # print "TARGET1", rel_pos, size, state_m.state_copy.get_meta_data_editor(gaphas_editor)['size'], \
     #     state_m.get_meta_data_editor(gaphas_editor)['size']
@@ -343,9 +354,10 @@ def scale_library_content_to_fit(state_m, gaphas_editor):
         if hasattr(state_element_list, 'keys'):
             state_element_list = state_element_list.values()
         models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
-    state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=False)
+    state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=gaphas_editor)
     # print "TARGET2", models_dict['state'].get_meta_data_editor(gaphas_editor)['size']
-    scale_meta_data_according_state(models_dict)
+    resize_factor = scale_meta_data_according_state(models_dict)
+    resize_income_of_state_m(state_m.state_copy, resize_factor, gaphas_editor)
 
 
 def _resize_port_models_list(port_models, rel_pos_key, factor, gaphas_editor):
@@ -367,6 +379,13 @@ def _resize_connection_models_list(connection_models, factor, gaphas_editor):
     #     print "new_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element
 
 
+def resize_income_of_state_m(state_m, factor, gaphas_editor):
+    if gaphas_editor:
+        old_rel_pos = state_m.get_meta_data_editor(for_gaphas=True)['income']['rel_pos']
+        state_m.set_meta_data_editor('income.rel_pos', mult_two_vectors(factor, old_rel_pos), from_gaphas=True)
+        # print "income", old_rel_pos, state_m.get_meta_data_editor(for_gaphas=True)['income']
+
+
 def resize_state_port_meta(state_m, factor, gaphas_editor):
     """ Resize data and logical ports relative positions """
     # print "scale ports", factor, state_m, gaphas_editor
@@ -377,10 +396,7 @@ def resize_state_port_meta(state_m, factor, gaphas_editor):
         port_models += state_m.scoped_variables[:] if isinstance(state_m, ContainerStateModel) else []
     _resize_port_models_list(port_models, 'rel_pos' if gaphas_editor else 'inner_rel_pos', factor, gaphas_editor)
 
-    if gaphas_editor:
-        old_rel_pos = state_m.get_meta_data_editor(for_gaphas=True)['income']['rel_pos']
-        state_m.set_meta_data_editor('income.rel_pos', mult_two_vectors(factor, old_rel_pos), from_gaphas=True)
-        # print "income", old_rel_pos, state_m.get_meta_data_editor(for_gaphas=True)['income']
+    resize_income_of_state_m(state_m, factor, gaphas_editor)
 
 
 def resize_state_meta(state_m, factor, gaphas_editor):
@@ -409,7 +425,7 @@ def resize_state_meta(state_m, factor, gaphas_editor):
             if state_m.meta_data_was_scaled:
                 resize_state_port_meta(state_m, factor, gaphas_editor)
             else:
-                scale_library_ports_meta_data(state_m)
+                scale_library_ports_meta_data(state_m, gaphas_editor)
         resize_state_meta(state_m.state_copy, factor, gaphas_editor)
         # print "END LIBRARY RESIZE"
     else:
@@ -484,13 +500,13 @@ def scale_meta_data_according_states(models_dict):
     return True
 
 
-def scale_meta_data_according_state(models_dict, rel_pos=None):
+def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False):
     # TODO Documentation needed....
-    """ Define a
-    """
+    """ Scale elements in dict to fit into dict state key element.
 
-    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
-    y_axis_mirror = 1. if gaphas_editor else -1.
+    If elements are already small enough no resize is performed.
+    """
+    gaphas_editor, y_axis_mirror = get_y_axis_and_gaphas_editor_flag()
 
     if 'states' in models_dict or 'scoped_variables' in models_dict:
         left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)
@@ -531,6 +547,8 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
             offset_rel_pos_of_all_models_in_dict(models_dict, mult_two_vectors((1., y_axis_mirror), offset), gaphas_editor)
         # smallest site scale
         else:
+            # increase of boundary or clearance results into bigger estimated size and finally stronger
+            # reduction of original element sizes
             left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict, clearance=0.2)
             parent_size = models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['size']
             margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, parent_size,
@@ -576,7 +594,7 @@ def scale_meta_data_according_state(models_dict, rel_pos=None):
 
             offset_rel_pos_of_all_models_in_dict(models_dict, mult_two_vectors((1., y_axis_mirror), frame['rel_pos']), gaphas_editor)
             # scale_meta_data_according_frame(models_dict, frame)
-    return True
+            return resize_factor, resize_factor
 
 
 def scale_meta_data_according_frame(models_dict, frame):
@@ -587,10 +605,10 @@ def scale_meta_data_according_frame(models_dict, frame):
     :return:
     """
     # TODO check if this is working and wherefore we wanted to use it -> scaling of states into empty space
-    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
-    y_axis_mirror = 1. if gaphas_editor else -1.
+    gaphas_editor, y_axis_mirror = get_y_axis_and_gaphas_editor_flag()
 
     left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)
+    # increase of boundary results into bigger estimated size and finally stronger reduction of original element sizes
     left, right, top, bottom = add_boundary_clearance(left, right, top, bottom, frame)
 
     margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, (0., 0.), gaphas_editor, False)
