@@ -305,10 +305,12 @@ def scale_library_content_to_fit(state_m, gaphas_editor):
 
     # print "TARGET1", rel_pos, size, state_m.state_copy.get_meta_data_editor(gaphas_editor)['size'], \
     #     state_m.get_meta_data_editor(gaphas_editor)['size']
-    for key in global_clipboard._container_state_unlimited:
-        elems_list = getattr(state_m.state_copy, key)
-        elems_list = elems_list.values() if hasattr(elems_list, 'keys') else elems_list
-        models_dict[key] = {elem.core_element.core_element_id: elem for elem in elems_list}
+    for state_element_key in state_m.state_copy.state.state_element_keys:
+        state_element_list = getattr(state_m.state_copy, state_element_key)
+        # Some models are hold in a dict, not a list
+        if isinstance(state_element_list, dict):
+            state_element_list = state_element_list.values()
+        models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
     state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=False)
     # print "TARGET2", models_dict['state'].get_meta_data_editor(gaphas_editor)['size']
     scale_meta_data_according_state(models_dict)

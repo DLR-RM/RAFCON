@@ -354,10 +354,12 @@ def prepare_state_m_for_insert_as_template(state_m_to_insert):
         # print "TARGET1", state_m_to_insert.get_meta_data_editor(gaphas_editor)['size'], \
         #     old_state_m.get_meta_data_editor(gaphas_editor)['size'], size
 
-        for key in global_clipboard._container_state_unlimited:
-            elems_list = getattr(state_m_to_insert, key)
-            elems_list = elems_list.values() if hasattr(elems_list, 'keys') else elems_list
-            models_dict[key] = {elem.core_element.core_element_id: elem for elem in elems_list}
+        for state_element_key in state_m_to_insert.state.state_element_keys:
+            state_element_list = getattr(state_m_to_insert, state_element_key)
+            # Some models are hold in a dict, not a list
+            if isinstance(state_element_list, dict):
+                state_element_list = state_element_list.values()
+            models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
         # print "TARGET2", models_dict['state'].get_meta_data_editor(gaphas_editor)['size']
         gui_helper_meta_data.scale_meta_data_according_state(models_dict)
 
