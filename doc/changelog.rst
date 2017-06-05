@@ -13,6 +13,13 @@ Next release
 Patch releases 0.9.\*
 ---------------------
 
+0.9.8
+"""""
+
+- Improvements:
+  
+  - execution history can be logged and is configurable via the config.yaml
+
 0.9.7
 """""
 
