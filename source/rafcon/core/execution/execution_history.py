@@ -303,9 +303,10 @@ class ScopedDataItem(HistoryItem):
         try:
             record['scoped_data'] = json.dumps(self.scoped_data, cls=JSONObjectEncoder)
         except TypeError as e:
-            logger.exception('TypeError: Could not serialize one of the scoped data port types.')
-            record['scoped_data'] = json.dumps({'error_type': 'TypeError',
-                                                'error_message': e.message}, cls=JSONObjectEncoder)
+            # logger.debug('TypeError: Could not serialize one of the scoped data port types.')
+            # record['scoped_data'] = json.dumps({'error_type': 'TypeError',
+            #                                     'error_message': e.message}, cls=JSONObjectEncoder)
+            record['scoped_data'] = json.dumps(str(self.scoped_data), cls=JSONObjectEncoder)
 
         try:
             if 'error' in self.child_state_input_output_data and \
@@ -324,18 +325,20 @@ class ScopedDataItem(HistoryItem):
                 record['input_output_data'] = json.dumps(self.child_state_input_output_data,
                                                          cls=JSONObjectEncoder)
         except TypeError as e:
-            logger.exception('TypeError: Could not serialize one of the input/output data port types.')
-            record['input_output_data'] = json.dumps({'error_type': 'TypeError',
-                                                      'error_message': e.message}, cls=JSONObjectEncoder)
+            # logger.exception('TypeError: Could not serialize one of the input/output data port types.')
+            # record['input_output_data'] = json.dumps({'error_type': 'TypeError',
+            #                                           'error_message': e.message}, cls=JSONObjectEncoder)
+            record['input_output_data'] = json.dumps(str(self.child_state_input_output_data), cls=JSONObjectEncoder)
 
         from rafcon.core.states.container_state import ContainerState
         if isinstance(self.state_reference, ContainerState):
             try:
                 record['scoped_variables'] = json.dumps(self.state_reference.scoped_variables, cls=JSONObjectEncoder)
             except TypeError as e:
-                logger.exception('TypeError: Could not serialize one of the scoped variables types.')
-                record['scoped_variables'] = json.dumps({'error_type': 'TypeError',
-                                                         'error_message': e.message}, cls=JSONObjectEncoder)
+                # logger.exception('TypeError: Could not serialize one of the scoped variables types.')
+                # record['scoped_variables'] = json.dumps({'error_type': 'TypeError',
+                #                                          'error_message': e.message}, cls=JSONObjectEncoder)
+                record['scoped_variables'] = json.dumps(str(self.state_reference.scoped_variables), cls=JSONObjectEncoder)
         else:
             record['scoped_variables'] = json.dumps({})
 
