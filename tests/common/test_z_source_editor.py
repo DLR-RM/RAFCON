@@ -170,4 +170,6 @@ def test_gui(caplog):
 
 
 if __name__ == '__main__':
-    test_gui(None)
+    # test_gui(None)
+    import pytest
+    pytest.main(['-s', __file__])
