@@ -139,8 +139,10 @@ class StateMachine(Observable, JSONObject, Hashable):
     def join(self):
         """Wait for root state to finish execution"""
         self._root_state.join()
-        if self._execution_histories[-1].execution_history_storage is not None:
-            self._execution_histories[-1].execution_history_storage.close()
+        # execution finished, close execution history log file (if present)
+        if len(self._execution_histories > 0):
+            if self._execution_histories[-1].execution_history_storage is not None:
+                self._execution_histories[-1].execution_history_storage.close()
         from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
