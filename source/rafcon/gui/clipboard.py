@@ -36,8 +36,8 @@ class Clipboard(Observable):
     def __init__(self):
         Observable.__init__(self)
 
-        self.selected_models = {state_element_key: [] for state_element_key in ContainerState.state_element_keys}
-        self.model_copies = {state_element_key: [] for state_element_key in ContainerState.state_element_keys}
+        self.selected_models = {state_element_attr: [] for state_element_attr in ContainerState.state_element_attrs}
+        self.model_copies = {state_element_attr: [] for state_element_attr in ContainerState.state_element_attrs}
 
         self.copy_parent_state_id = None
         self.outcome_id_mapping_dict = {}
@@ -105,22 +105,22 @@ class Clipboard(Observable):
         self.state_id_mapping_dict[self.copy_parent_state_id] = target_state_m.state.state_id
 
         # prepare list of lists to copy for limited or converted paste of objects
-        target_state_element_keys = target_state_m.state.state_element_keys
-        if limited and all([state_element_key in target_state_element_keys for state_element_key in limited]):
+        target_state_element_attrs = target_state_m.state.state_element_attrs
+        if limited and all([state_element_attr in target_state_element_attrs for state_element_attr in limited]):
             if len(limited) == 1 and limited[0] in ['input_data_ports', 'output_data_ports', 'scoped_variables'] and convert:
                 combined_list = element_m_copy_lists['input_data_ports'] + element_m_copy_lists['output_data_ports'] + \
                                 element_m_copy_lists['scoped_variables']
-                for state_element_key in ['input_data_ports', 'output_data_ports', 'scoped_variables']:
-                    element_m_copy_lists[state_element_key] = combined_list
-            state_element_keys_to_insert = limited
+                for state_element_attr in ['input_data_ports', 'output_data_ports', 'scoped_variables']:
+                    element_m_copy_lists[state_element_attr] = combined_list
+            state_element_attrs_to_insert = limited
         else:
-            state_element_keys_to_insert = target_state_element_keys
+            state_element_attrs_to_insert = target_state_element_attrs
 
         # check list order and put transitions and data flows to the end
-        for state_element_key in ['transitions', 'data_flows']:
-            if state_element_key in state_element_keys_to_insert:
-                state_element_keys_to_insert.remove(state_element_key)
-                state_element_keys_to_insert.append(state_element_key)
+        for state_element_attr in ['transitions', 'data_flows']:
+            if state_element_attr in state_element_attrs_to_insert:
+                state_element_attrs_to_insert.remove(state_element_attr)
+                state_element_attrs_to_insert.append(state_element_attr)
 
         def insert_elements_from_model_copies_list(model_list, element_str):
             new_and_copy_models = []
@@ -134,10 +134,9 @@ class Clipboard(Observable):
 
         # insert all lists and there elements into target state
         insert_dict = dict()
-        for state_element_key in state_element_keys_to_insert:
-            insert_dict[state_element_key] = insert_elements_from_model_copies_list(element_m_copy_lists[state_element_key],
-                                                                            state_element_key[:-1])
-
+        for state_element_attr in state_element_attrs_to_insert:
+            insert_dict[state_element_attr] = insert_elements_from_model_copies_list(element_m_copy_lists[state_element_attr],
+                                                                            state_element_attr[:-1])
         # TODO re-organize and use partly the expected_models pattern the next lines
         import rafcon.gui.helpers.meta_data as gui_helpers_meta_data
         # import rafcon.gui.helpers.state as gui_helpers_state
@@ -164,16 +163,16 @@ class Clipboard(Observable):
         return insert_dict
 
     def do_cut_removal(self):
-        for state_element_key in ContainerState.state_element_keys:
-            element_key_singular = state_element_key[:-1]
-            for model in self.selected_models[state_element_key]:
+        for state_element_attr in ContainerState.state_element_attrs:
+            element_key_singular = state_element_attr[:-1]
+            for model in self.selected_models[state_element_attr]:
                 # remove model from selection to avoid conflicts
                 # -> selection is not observing state machine changes and state machine model is not updating it
                 if model.parent is None and isinstance(model, StateModel) and model.state.is_root_state:
                     selection = model.get_state_machine_m().selection if model.get_state_machine_m() else None
                 else:
                     selection = model.parent.get_state_machine_m().selection if model.parent.get_state_machine_m() else None
-                if selection and model in getattr(selection, state_element_key):
+                if selection and model in getattr(selection, state_element_attr):
                     selection.remove(model)
                 # remove element
                 getattr(model.core_element.parent, 'remove_{0}'.format(element_key_singular))(model.core_element.core_element_id)
@@ -263,9 +262,9 @@ class Clipboard(Observable):
         :return:
         """
         # reset selections
-        for state_element_key in ContainerState.state_element_keys:
-            self.selected_models[state_element_key] = []
-            self.model_copies[state_element_key] = []
+        for state_element_attr in ContainerState.state_element_attrs:
+            self.selected_models[state_element_attr] = []
+            self.model_copies[state_element_attr] = []
 
         # reset parent state_id the copied elements are taken from
         self.copy_parent_state_id = None
@@ -409,7 +408,7 @@ class Clipboard(Observable):
             self.do_smart_selection_adaption(selection, parent_m)
 
         # store all lists of selection
-        for state_element_key in ContainerState.state_element_keys:
+        for state_element_key in ContainerState.state_element_attrs:
             self.selected_models[state_element_key] = getattr(selection, state_element_key)
 
         # copy all selected elements

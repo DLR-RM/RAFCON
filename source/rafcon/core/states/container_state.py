@@ -65,8 +65,8 @@ class ContainerState(State):
 
     """
 
-    _state_element_keys = ['outcomes', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'states', 
-                           'transitions', 'data_flows']
+    _state_element_attrs = ['outcomes', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'states',
+                            'transitions', 'data_flows']
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None,

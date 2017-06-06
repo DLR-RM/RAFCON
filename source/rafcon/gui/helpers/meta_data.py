@@ -348,7 +348,7 @@ def scale_library_content_to_fit(state_m, gaphas_editor):
 
     # print "TARGET1", rel_pos, size, state_m.state_copy.get_meta_data_editor(gaphas_editor)['size'], \
     #     state_m.get_meta_data_editor(gaphas_editor)['size']
-    for state_element_key in state_m.state_copy.state.state_element_keys:
+    for state_element_key in state_m.state_copy.state.state_element_attrs:
         state_element_list = getattr(state_m.state_copy, state_element_key)
         # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
         if hasattr(state_element_list, 'keys'):
