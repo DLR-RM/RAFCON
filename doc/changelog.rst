@@ -8,10 +8,20 @@ Next release
 ------------
 
 - Refactoring of "Save state as state machine/library"
-- Execution logs
 
 Patch releases 0.10.\*
 ---------------------
+
+0.10.1
+""""""
+
+- Bug Fixes:
+  
+  - make execution logs compatible with execution log viewer again
+
+
+0.10.0
+""""""
 
 - Improvements:
   
