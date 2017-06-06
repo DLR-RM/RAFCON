@@ -68,7 +68,6 @@ class StateEditorView(View):
         self.inputs_view.scrollbar_widget = self['input_ports_scroller']
         self.outputs_view.scrollbar_widget = self['output_ports_scroller']
         self.scopes_view.scrollbar_widget = self['scoped_variables_scroller']
-        self.outcomes_view.scrollbar_widget = self['outcomes_scroller']
 
         self['description_text_view'] = self.description_view.textview
         self['description_scroller'] = self.description_view.scrollable
