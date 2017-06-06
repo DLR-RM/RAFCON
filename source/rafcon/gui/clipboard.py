@@ -23,6 +23,7 @@ from rafcon.core.states.container_state import ContainerState
 from rafcon.gui.models.selection import Selection
 from rafcon.gui.models import StateModel
 from rafcon.gui.models.signals import ActionSignalMsg
+import rafcon.gui.helpers.meta_data as gui_helpers_meta_data
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -92,9 +93,6 @@ class Clipboard(Observable):
         :return:
         """
         assert isinstance(target_state_m, StateModel)
-
-        # update meta data of clipboard elements to adapt for new parent state, integration here?
-        # TODO -> it is maybe not the best solution to do so in the graphical editor after insertion of models
         # logger.info("PASTE -> meta data adaptation has to be implemented")
 
         element_m_copy_lists = self.model_copies
@@ -137,21 +135,20 @@ class Clipboard(Observable):
         for state_element_attr in state_element_attrs_to_insert:
             insert_dict[state_element_attr] = insert_elements_from_model_copies_list(element_m_copy_lists[state_element_attr],
                                                                             state_element_attr[:-1])
-        # TODO re-organize and use partly the expected_models pattern the next lines
-        import rafcon.gui.helpers.meta_data as gui_helpers_meta_data
-        # import rafcon.gui.helpers.state as gui_helpers_state
-        models_dict = {'state': target_state_m}
-        for key, elems_list in insert_dict.iteritems():
-            models_dict[key] = {elem[1].core_element.core_element_id: elem[1] for elem in elems_list}
 
+        # move meta data from original copied model to newly insert models and resize them to fit into target_state_m
+        models_dict = {'state': target_state_m}
+        for state_element_attr, elems_list in insert_dict.iteritems():
+            if not state_element_attr == 'states':  # skip states because handled by expected models scheme
+                for elem in elems_list:
+                    elem[0].meta = elem[1].meta
+            models_dict[state_element_attr] = {elem[0].core_element.core_element_id: elem[0] for elem in elems_list}
+
+        # commented parts are here for later use to detect empty meta data fields and debug those
         # if all([all([gui_helpers_state.model_has_empty_meta(elem) for elem in elems_dict.itervalues()])
         #     if isinstance(elems_dict, dict) else gui_helpers_state.model_has_empty_meta(elems_dict)
         #         for elems_dict in models_dict.itervalues()]):
         gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
-        del models_dict['states']
-        for key, elems_list in insert_dict.iteritems():
-            for elem in elems_list:
-                elem[0].meta = elem[1].meta
         # else:
         #     logger.info("Paste miss meta to scale.")
 
@@ -405,8 +402,8 @@ class Clipboard(Observable):
             self.do_smart_selection_adaption(selection, parent_m)
 
         # store all lists of selection
-        for state_element_key in ContainerState.state_element_attrs:
-            self.selected_models[state_element_key] = getattr(selection, state_element_key)
+        for state_element_attr in ContainerState.state_element_attrs:
+            self.selected_models[state_element_attr] = getattr(selection, state_element_attr)
 
         # copy all selected elements
         self.model_copies = deepcopy(self.selected_models)

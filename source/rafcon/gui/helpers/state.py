@@ -20,7 +20,6 @@ from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.gui import singleton as gui_singletons
 
 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
-from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateModel
 from rafcon.gui.models.signals import ActionSignalMsg
 from rafcon.utils.vividict import Vividict
@@ -366,6 +365,9 @@ def prepare_state_m_for_insert_as_template(state_m_to_insert):
         resize_factor = gui_helper_meta_data.scale_meta_data_according_state(models_dict, as_template=True)
         gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
         gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor, gaphas_editor)
+    else:
+        logger.info("For insert as template of {0} no resize of state meta data is performed because the meta data has "
+                    "empty fields.".format(state_m_to_insert))
 
 
 def substitute_state(target_state_m, state_m_to_insert):
