@@ -291,26 +291,25 @@ def scale_library_ports_meta_data(state_m):
         logger.info("Skip resize of library ports meta data {0}".format(state_m))
 
 
-def scale_library_content_to_fit(state_m, gaphas_editor):
-    """Scale the meta data of the state_copy of a library state accordingly to fit into LibraryStateModel meta data"""
-    assert isinstance(state_m, LibraryStateModel)
-    models_dict = {'state': state_m}
-    gaphas_editor = False
-    size = state_m.state_copy.set_meta_data_editor('size',
-                                                   state_m.get_meta_data_editor(gaphas_editor)['size'],
-                                                   gaphas_editor)
-    rel_pos = state_m.state_copy.set_meta_data_editor('rel_pos',
-                                                      state_m.get_meta_data_editor(gaphas_editor)['rel_pos'],
-                                                      gaphas_editor)
+def scale_library_content(library_state_m):
+    """Scales the meta data of the content of a LibraryState
+    
+    The contents of the `LibraryStateModel` `library_state_m` (i.e., the `state_copy` and all it children/state 
+    elements) to fit the current size of the `LibraryStateModel`.
+    
+    :param LibraryStateModel library_state_m: The library who's content is to be resized 
+    """
+    assert isinstance(library_state_m, LibraryStateModel)
+    # For library states with an ExecutionState as state_copy, scaling does not make sense
+    if not isinstance(library_state_m.state_copy, (ContainerStateModel, LibraryStateModel)):
+        return
 
-    # print "TARGET1", rel_pos, size, state_m.state_copy.get_meta_data_editor(gaphas_editor)['size'], \
-    #     state_m.get_meta_data_editor(gaphas_editor)['size']
+    models_dict = {'state': library_state_m}
     for key in global_clipboard._container_state_unlimited:
-        elems_list = getattr(state_m.state_copy, key)
+        elems_list = getattr(library_state_m.state_copy, key)
         elems_list = elems_list.values() if hasattr(elems_list, 'keys') else elems_list
         models_dict[key] = {elem.core_element.core_element_id: elem for elem in elems_list}
-    state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=False)
-    # print "TARGET2", models_dict['state'].get_meta_data_editor(gaphas_editor)['size']
+    library_state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=False)
     scale_meta_data_according_state(models_dict)
 
 
