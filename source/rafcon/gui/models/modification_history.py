@@ -459,12 +459,20 @@ class ModificationsHistoryModel(ModelMT):
                 changed_parent_model = overview['model'][-1]
             else:
                 changed_parent_model = overview['model'][-1].parent
+            changed_parent_state_path = changed_parent_model.state.get_path()
+
+            # TODO think about to remove this work around again
+            # ignore meta data changes inside of library states
+            changed_parent_state = self.state_machine_model.get_state_model_by_path(changed_parent_state_path).state
+            if changed_parent_state.get_library_root_state():
+                return
+
             if self.count_before == 0:
                 self.active_action = MetaAction(changed_parent_model.state.get_path(),
                                                 state_machine_model=self.state_machine_model,
                                                 overview=overview)
                 # b_tuple = self.actual_action.before_storage
-                meta_dict = self.get_state_element_meta_from_internal_tmp_storage(changed_parent_model.state.get_path())
+                meta_dict = self.get_state_element_meta_from_internal_tmp_storage(changed_parent_state_path)
                 self.active_action.before_storage = meta_dict
 
                 self.finish_new_action(overview)
