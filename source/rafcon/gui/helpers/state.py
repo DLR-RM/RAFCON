@@ -20,7 +20,7 @@ from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.gui import singleton as gui_singletons
 
 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
-from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateModel
+from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateModel, StateMachineModel
 from rafcon.gui.models.signals import ActionSignalMsg
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
@@ -231,9 +231,8 @@ def change_state_type(state_m, target_class):
     if is_root_state:
 
         state_machine_m = gui_singletons.state_machine_manager_model.get_state_machine_model(old_state_m)
+        assert isinstance(state_machine_m, StateMachineModel)
         assert state_machine_m.root_state is old_state_m
-
-
 
         # print "\n\nEMIT-BEFORE OLDSTATE\n\n"
         old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',

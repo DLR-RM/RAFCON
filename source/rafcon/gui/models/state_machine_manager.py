@@ -117,9 +117,20 @@ class StateMachineManagerModel(ModelMT, Observable):
                 sm_m.selection.clear()
 
     def get_state_machine_model(self, state_m):
+        """ Get respective state machine model for handed state model
+
+        :param state_m: State model for which the state machine model should be found
+        :return: state machine model
+        :rtype: rafcon.gui.models.state_machine.StateMachineModel
+        """
         return self.state_machines[state_m.state.get_state_machine().state_machine_id]
 
     def get_selected_state_machine_model(self):
+        """ Get selected state machine model
+
+        :return: state machine model
+        :rtype: rafcon.gui.models.state_machine.StateMachineModel
+        """
         if self.selected_state_machine_id is None:
             return None
 
@@ -127,7 +138,9 @@ class StateMachineManagerModel(ModelMT, Observable):
 
     @property
     def selected_state_machine_id(self):
-        """Property for the _selected_state_machine_id field"""
+        """Property for the _selected_state_machine_id field
+        :rtype: int
+        """
         return self._selected_state_machine_id
 
     @selected_state_machine_id.setter

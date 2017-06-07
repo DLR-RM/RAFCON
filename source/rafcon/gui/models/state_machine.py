@@ -27,7 +27,7 @@ from rafcon.core.storage import storage
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.models import ContainerStateModel, StateModel
 from rafcon.gui.models.selection import Selection
-from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
+from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.utils import log
 from rafcon.utils import storage_utils
 from rafcon.utils.hashable import Hashable
