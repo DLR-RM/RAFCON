@@ -25,7 +25,7 @@ from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.models import ContainerStateModel, StateModel
+from rafcon.gui.models import ContainerStateModel, StateModel, LibraryStateModel
 from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
 from rafcon.utils import log
@@ -251,17 +251,36 @@ class StateMachineModel(ModelMT, Hashable):
         return False
 
     def get_state_model_by_path(self, path):
-        path_elems = path.split('/')
-        path_elems.pop(0)
+        """Returns the `StateModel` for the given `path` 
+        
+        Searches a `StateModel` in the state machine, who's path is given by `path`.
+        
+        :param str path: Path of the searched state 
+        :return: The state with that path
+        :rtype: StateModel
+        :raises: ValueError, if path is invalid/not existing with this state machine  
+        """
+        path_elements = path.split('/')
+        path_elements.pop(0)
         current_state_model = self.root_state
-        for state_id in path_elems:
-            if state_id in current_state_model.states:
-                current_state_model = current_state_model.states[state_id]
+        for state_id in path_elements:
+            if isinstance(current_state_model, ContainerStateModel):
+                if state_id in current_state_model.states:
+                    current_state_model = current_state_model.states[state_id]
+                else:
+                    raise ValueError("Invalid path: State with id '{}' not found in state with id {}".format(
+                        state_id, current_state_model.state.state_id))
+            elif isinstance(current_state_model, LibraryStateModel):
+                if state_id == current_state_model.state_copy.state.state_id:
+                    current_state_model = current_state_model.state_copy
+                else:
+                    raise ValueError("Invalid path: state id '{}' does not coincide with state id '{}' of state_copy "
+                                     "of library state with id '{}'".format(
+                                        state_id, current_state_model.state_copy.state.state_id,
+                                        current_state_model.state.state_id))
             else:
-                logger.error("path element %s of '%s' could not be found root_state is %s %s" %
-                             (current_state_model.state.get_path(), path.split('/'),
-                              self.root_state.state.name, self.root_state.state.state_id))
-                assert False
+                raise ValueError("Invalid path: State with id '{}' has no children".format(
+                    current_state_model.state.state_id))
         return current_state_model
 
     @ModelMT.observe("state_machine", after=True)
