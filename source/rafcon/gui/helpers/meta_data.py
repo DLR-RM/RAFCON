@@ -4,7 +4,6 @@ from rafcon.gui.models.transition import mirror_waypoints
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models import LibraryStateModel, ContainerStateModel
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 
@@ -348,7 +347,7 @@ def scale_library_content_to_fit(state_m, gaphas_editor):
 
     # print "TARGET1", rel_pos, size, state_m.state_copy.get_meta_data_editor(gaphas_editor)['size'], \
     #     state_m.get_meta_data_editor(gaphas_editor)['size']
-    for state_element_key in state_m.state_copy.state.state_element_keys:
+    for state_element_key in state_m.state_copy.state.state_element_attrs:
         state_element_list = getattr(state_m.state_copy, state_element_key)
         # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
         if hasattr(state_element_list, 'keys'):
@@ -507,6 +506,8 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
     If elements are already small enough no resize is performed.
     """
     gaphas_editor, y_axis_mirror = get_y_axis_and_gaphas_editor_flag()
+    # TODO check about positions of input-data- and output-data- or scoped variable-ports is needed
+    # TODO adjustments of data ports positions are not sufficient -> origin state size is maybe needed for that
 
     if 'states' in models_dict or 'scoped_variables' in models_dict:
         left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)

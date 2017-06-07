@@ -279,4 +279,5 @@ if __name__ == '__main__':
     test_backward_stepping_barrier_state(None)
     test_backward_stepping_preemptive_state(None)
     test_backward_stepping_library_state(None)
-    # pytest.main([__file__])
+    # import pytest
+    # pytest.main(['-s', __file__])

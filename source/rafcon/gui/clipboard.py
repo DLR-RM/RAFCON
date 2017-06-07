@@ -21,8 +21,9 @@ from rafcon.core.id_generator import state_id_generator, generate_data_port_id
 from rafcon.core.states.container_state import ContainerState
 
 from rafcon.gui.models.selection import Selection
-from rafcon.gui.models.state import StateModel
+from rafcon.gui.models import StateModel
 from rafcon.gui.models.signals import ActionSignalMsg
+import rafcon.gui.helpers.meta_data as gui_helpers_meta_data
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -36,8 +37,8 @@ class Clipboard(Observable):
     def __init__(self):
         Observable.__init__(self)
 
-        self.selected_models = {state_element_key: [] for state_element_key in ContainerState.state_element_keys}
-        self.model_copies = {state_element_key: [] for state_element_key in ContainerState.state_element_keys}
+        self.selected_models = {state_element_attr: [] for state_element_attr in ContainerState.state_element_attrs}
+        self.model_copies = {state_element_attr: [] for state_element_attr in ContainerState.state_element_attrs}
 
         self.copy_parent_state_id = None
         self.outcome_id_mapping_dict = {}
@@ -92,9 +93,6 @@ class Clipboard(Observable):
         :return:
         """
         assert isinstance(target_state_m, StateModel)
-
-        # update meta data of clipboard elements to adapt for new parent state, integration here?
-        # TODO -> it is maybe not the best solution to do so in the graphical editor after insertion of models
         # logger.info("PASTE -> meta data adaptation has to be implemented")
 
         element_m_copy_lists = self.model_copies
@@ -105,82 +103,101 @@ class Clipboard(Observable):
         self.state_id_mapping_dict[self.copy_parent_state_id] = target_state_m.state.state_id
 
         # prepare list of lists to copy for limited or converted paste of objects
-        target_state_element_keys = target_state_m.state.state_element_keys
-        if limited and all([state_element_key in target_state_element_keys for state_element_key in limited]):
+        target_state_element_attrs = target_state_m.state.state_element_attrs
+        if limited and all([state_element_attr in target_state_element_attrs for state_element_attr in limited]):
             if len(limited) == 1 and limited[0] in ['input_data_ports', 'output_data_ports', 'scoped_variables'] and convert:
                 combined_list = element_m_copy_lists['input_data_ports'] + element_m_copy_lists['output_data_ports'] + \
                                 element_m_copy_lists['scoped_variables']
-                for state_element_key in ['input_data_ports', 'output_data_ports', 'scoped_variables']:
-                    element_m_copy_lists[state_element_key] = combined_list
-            state_element_keys_to_insert = limited
+                for state_element_attr in ['input_data_ports', 'output_data_ports', 'scoped_variables']:
+                    element_m_copy_lists[state_element_attr] = combined_list
+            state_element_attrs_to_insert = limited
         else:
-            state_element_keys_to_insert = target_state_element_keys
+            state_element_attrs_to_insert = target_state_element_attrs
 
         # check list order and put transitions and data flows to the end
-        for state_element_key in ['transitions', 'data_flows']:
-            if state_element_key in state_element_keys_to_insert:
-                state_element_keys_to_insert.remove(state_element_key)
-                state_element_keys_to_insert.append(state_element_key)
+        for state_element_attr in ['transitions', 'data_flows']:
+            if state_element_attr in state_element_attrs_to_insert:
+                state_element_attrs_to_insert.remove(state_element_attr)
+                state_element_attrs_to_insert.append(state_element_attr)
 
-        def insert_elements_from_model_copies_list(model_list, element_str):
-            new_and_copy_models = []
-            for orig_m_copy in model_list:
+        def insert_elements_from_model_copies_list(model_list, state_element_name):
+            """ Insert/add all core elements of model_list into the target_state_m
+
+            The function and returns list of pairs of models (new and original models) because the target_state_m for
+            some insert operations still generates a new model.
+            :param list model_list: list of models
+            :param str state_element_name: appendix string to "_insert_*" to get the attribute of respective methods in
+                                           clipboard-class.
+            :return: list of pairs of models (new and original models)
+            :rtype: list[tuple]
+            """
+            new_and_copied_models = []
+            for orig_element_m_copy in model_list:
                 try:
-                    new_and_copy_models.append(getattr(self, 'insert_{0}'.format(element_str))(target_state_m, orig_m_copy))
+                    # hold orig_element_m_copy related to newly generated model for debugging reasons
+                    # (its doubt that ids are fully correct, meta data is considered to be alright now)
+                    insert_function = getattr(self, '_insert_{0}'.format(state_element_name))  # e.g. self._insert_state
+                    new_element_m = insert_function(target_state_m, orig_element_m_copy)
+                    new_and_copied_models.append((new_element_m, orig_element_m_copy))
                 except (ValueError, AttributeError, TypeError) as e:
-                    logger.warning("While inserting a {0} a failure was detected, exception: {1}.".format(element_str, e))
+                    logger.warning("While inserting a {0} a failure was detected, exception: {1}."
+                                   "".format(state_element_name, e))
+            return new_and_copied_models
 
-            return new_and_copy_models
-
-        # insert all lists and there elements into target state
+        # insert all lists and their elements into target state
+        # insert_dict hold lists of pairs of models -> new (maybe generated by parent model) and original copy
         insert_dict = dict()
-        for state_element_key in state_element_keys_to_insert:
-            insert_dict[state_element_key] = insert_elements_from_model_copies_list(element_m_copy_lists[state_element_key],
-                                                                            state_element_key[:-1])
+        for state_element_attr in state_element_attrs_to_insert:
+            state_element_name = state_element_attr[:-1]  # e.g. "states" => "state", "outcomes" => "outcome"
+            insert_dict[state_element_attr] = \
+                insert_elements_from_model_copies_list(element_m_copy_lists[state_element_attr],
+                                                       state_element_name)
 
-        # TODO re-organize and use partly the expected_models pattern the next lines
-        import rafcon.gui.helpers.meta_data as gui_helpers_meta_data
-        # import rafcon.gui.helpers.state as gui_helpers_state
+        # move meta data from original copied model to newly insert models and resize them to fit into target_state_m
         models_dict = {'state': target_state_m}
-        for key, elems_list in insert_dict.iteritems():
-            models_dict[key] = {elem[1].core_element.core_element_id: elem[1] for elem in elems_list}
+        for state_element_attr, state_elements in insert_dict.iteritems():
+            models_dict[state_element_attr] = {}
+            for new_state_element_m, copied_state_element_m in state_elements:
+                new_core_element_id = new_state_element_m.core_element.core_element_id
+                models_dict[state_element_attr][new_core_element_id] = new_state_element_m
 
-        # if all([all([gui_helpers_state.model_has_empty_meta(elem) for elem in elems_dict.itervalues()])
-        #         if isinstance(elems_dict, dict) else gui_helpers_state.model_has_empty_meta(elems_dict)
+        # commented parts are here for later use to detect empty meta data fields and debug those
+        # if all([all([gui_helpers_state.model_has_empty_meta(state_element_m) for state_element_m in elems_dict.itervalues()])
+        #     if isinstance(elems_dict, dict) else gui_helpers_state.model_has_empty_meta(elems_dict)
         #         for elems_dict in models_dict.itervalues()]):
         gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
-        for key, elems_list in insert_dict.iteritems():
-            for elem in elems_list:
-                elem[0].meta = elem[1].meta
         # else:
         #     logger.info("Paste miss meta to scale.")
 
         affected_models = []
-        for elemets_list in insert_dict.itervalues():
-            affected_models.extend(elemets_list)
+        del models_dict['state']
+        for state_elements in insert_dict.itervalues():
+            for new_state_element_m, copied_state_element_m in state_elements:
+                affected_models.append(new_state_element_m)
         target_state_m.action_signal.emit(ActionSignalMsg(action='paste', origin='clipboard',
                                                           action_parent_m=target_state_m,
                                                           affected_models=affected_models, after=True))
         return insert_dict
 
     def do_cut_removal(self):
-        for state_element_key in ContainerState.state_element_keys:
-            element_key_singular = state_element_key[:-1]
-            for model in self.selected_models[state_element_key]:
+        for state_element_attr in ContainerState.state_element_attrs:
+            element_key_singular = state_element_attr[:-1]
+            for model in self.selected_models[state_element_attr]:
                 # remove model from selection to avoid conflicts
                 # -> selection is not observing state machine changes and state machine model is not updating it
                 if model.parent is None and isinstance(model, StateModel) and model.state.is_root_state:
                     selection = model.get_state_machine_m().selection if model.get_state_machine_m() else None
                 else:
                     selection = model.parent.get_state_machine_m().selection if model.parent.get_state_machine_m() else None
-                if selection and model in getattr(selection, state_element_key):
+                if selection and model in getattr(selection, state_element_attr):
                     selection.remove(model)
                 # remove element
                 getattr(model.core_element.parent, 'remove_{0}'.format(element_key_singular))(model.core_element.core_element_id)
 
-    def insert_state(self, target_state_m, orig_state_copy_m):
+    def _insert_state(self, target_state_m, orig_state_copy_m):
         target_state = target_state_m.state
         orig_state_copy = orig_state_copy_m.state
+        target_state_m.expected_future_models.add(orig_state_copy_m)
 
         # secure that state_id is not target state state_id or of one state in its sub-hierarchy level
         old_state_id = orig_state_copy.state_id
@@ -193,18 +210,13 @@ class Clipboard(Observable):
             orig_state_copy.change_state_id(new_state_id)
 
         target_state.add_state(orig_state_copy)
-
-        # TODO define a way to hand model copy directly to target model to save resources (takes half of the copy time)
-        # TODO -> maybe by simply blind deposit model
-        # TODO -> maybe by signal send by target model and catch by clipboard that is registered as observer
-        # The models can be pre-generated in threads while editing is still possible -> scales better
-        new_state_copy_m = target_state_m.states[orig_state_copy.state_id]
+        assert target_state_m.states[orig_state_copy.state_id] is orig_state_copy_m
 
         # new_state_copy_m.copy_meta_data_from_state_m(orig_state_copy_m)
         self.state_id_mapping_dict[old_state_id] = new_state_id
-        return new_state_copy_m, orig_state_copy_m
+        return target_state_m.states[orig_state_copy.state_id]
 
-    def insert_transition(self, target_state_m, orig_transition_copy_m):
+    def _insert_transition(self, target_state_m, orig_transition_copy_m):
         t = orig_transition_copy_m.transition
         from_state = self.state_id_mapping_dict[t.from_state]
         from_outcome = self.outcome_id_mapping_dict.get((t.from_state, t.from_outcome), t.from_outcome)
@@ -212,9 +224,9 @@ class Clipboard(Observable):
         to_outcome = self.outcome_id_mapping_dict.get((t.to_state, t.to_outcome), t.to_outcome)
         t_id = target_state_m.state.add_transition(from_state, from_outcome, to_state, to_outcome)
         target_state_m.get_transition_m(t_id).meta = orig_transition_copy_m.meta
-        return target_state_m.get_transition_m(t_id), orig_transition_copy_m
+        return target_state_m.get_transition_m(t_id)
 
-    def insert_data_flow(self, target_state_m, orig_data_flow_copy_m):
+    def _insert_data_flow(self, target_state_m, orig_data_flow_copy_m):
         df = orig_data_flow_copy_m.data_flow
         from_state = self.state_id_mapping_dict[df.from_state]
         from_key = self.port_id_mapping_dict.get((df.from_state, df.from_key), df.from_key)
@@ -222,9 +234,9 @@ class Clipboard(Observable):
         to_key = self.port_id_mapping_dict.get((df.to_state, df.to_key), df.to_key)
         df_id = target_state_m.state.add_data_flow(from_state, from_key, to_state, to_key)
         target_state_m.get_data_flow_m(df_id).meta = orig_data_flow_copy_m.meta
-        return target_state_m.get_data_flow_m(df_id), orig_data_flow_copy_m
+        return target_state_m.get_data_flow_m(df_id)
 
-    def insert_outcome(self, target_state_m, orig_outcome_copy_m):
+    def _insert_outcome(self, target_state_m, orig_outcome_copy_m):
         oc = orig_outcome_copy_m.outcome
         old_oc_tuple = (self.copy_parent_state_id, oc.outcome_id)
         oc_id = target_state_m.state.add_outcome(oc.name)
@@ -232,7 +244,7 @@ class Clipboard(Observable):
         target_state_m.get_outcome_m(oc_id).meta = orig_outcome_copy_m.meta
         return target_state_m.get_outcome_m(oc_id), orig_outcome_copy_m
 
-    def insert_data_port(self, target_state_m, add_data_port_method, orig_data_port_copy_m, instance_to_check_for):
+    def _insert_data_port(self, target_state_m, add_data_port_method, orig_data_port_copy_m, instance_to_check_for):
         data_port = orig_data_port_copy_m.core_element
         old_port_tuple = (self.copy_parent_state_id, data_port.data_port_id)
         if data_port.name in [target_state_m.state.get_data_port_by_id(dp_id).name for dp_id in target_state_m.state.get_data_port_ids()]:
@@ -243,19 +255,19 @@ class Clipboard(Observable):
         self.port_id_mapping_dict[old_port_tuple] = data_port_id
         if isinstance(orig_data_port_copy_m.core_element, instance_to_check_for):
             target_state_m.get_data_port_m(data_port_id).meta = orig_data_port_copy_m.meta
-        return target_state_m.get_data_port_m(data_port_id), orig_data_port_copy_m
+        return target_state_m.get_data_port_m(data_port_id)
 
-    def insert_input_data_port(self, target_state_m, orig_data_port_copy_m):
-        return self.insert_data_port(target_state_m, target_state_m.state.add_input_data_port,
-                                     orig_data_port_copy_m, InputDataPort)
+    def _insert_input_data_port(self, target_state_m, orig_data_port_copy_m):
+        return self._insert_data_port(target_state_m, target_state_m.state.add_input_data_port,
+                                      orig_data_port_copy_m, InputDataPort)
 
-    def insert_output_data_port(self, target_state_m, orig_data_port_copy_m):
-        return self.insert_data_port(target_state_m, target_state_m.state.add_output_data_port,
-                                     orig_data_port_copy_m, OutputDataPort)
+    def _insert_output_data_port(self, target_state_m, orig_data_port_copy_m):
+        return self._insert_data_port(target_state_m, target_state_m.state.add_output_data_port,
+                                      orig_data_port_copy_m, OutputDataPort)
 
-    def insert_scoped_variable(self, target_state_m, orig_data_port_copy_m):
-        return self.insert_data_port(target_state_m, target_state_m.state.add_scoped_variable,
-                                     orig_data_port_copy_m, ScopedVariable)
+    def _insert_scoped_variable(self, target_state_m, orig_data_port_copy_m):
+        return self._insert_data_port(target_state_m, target_state_m.state.add_scoped_variable,
+                                      orig_data_port_copy_m, ScopedVariable)
 
     def reset_clipboard(self):
         """ Resets the clipboard, so that old elements do not pollute the new selection that is copied into the
@@ -263,9 +275,9 @@ class Clipboard(Observable):
         :return:
         """
         # reset selections
-        for state_element_key in ContainerState.state_element_keys:
-            self.selected_models[state_element_key] = []
-            self.model_copies[state_element_key] = []
+        for state_element_attr in ContainerState.state_element_attrs:
+            self.selected_models[state_element_attr] = []
+            self.model_copies[state_element_attr] = []
 
         # reset parent state_id the copied elements are taken from
         self.copy_parent_state_id = None
@@ -409,8 +421,8 @@ class Clipboard(Observable):
             self.do_smart_selection_adaption(selection, parent_m)
 
         # store all lists of selection
-        for state_element_key in ContainerState.state_element_keys:
-            self.selected_models[state_element_key] = getattr(selection, state_element_key)
+        for state_element_attr in ContainerState.state_element_attrs:
+            self.selected_models[state_element_attr] = getattr(selection, state_element_attr)
 
         # copy all selected elements
         self.model_copies = deepcopy(self.selected_models)
