@@ -96,6 +96,11 @@ def log_to_collapsed_structure(execution_history_items):
              gitems[0]['state_type'] == 'LibraryState' or \
              'Concurrency' in gitems[0]['state_type']:
 
+            # for item in gitems:
+            #     if item["description"] is not None:
+            #         print item["item_type"], item["call_type"], item["state_type"], item["state_name"]
+            #     print item["description"]
+
             # select call and return items for this state
             try:
                 call_item = gitems[[gitems[i]['item_type'] == 'CallItem' and \
