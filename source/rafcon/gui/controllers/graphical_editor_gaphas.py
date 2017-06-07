@@ -310,9 +310,13 @@ class GraphicalEditorController(ExtendedController):
             if model.meta['gui']['show_content']:
                 logger.debug("Show content of {}".format(library_state_m.state))
                 gui_helper_meta_data.scale_library_content(library_state_m)
-                self.setup_state(library_state_m.state_copy, view, hierarchy_level=library_state_v.hierarchy_level + 1)
+                self.add_state_from_model(library_state_m.state_copy, view, hierarchy_level=library_state_v.hierarchy_level + 1)
             else:
                 logger.debug("Hide content of {}".format(library_state_m.state))
+                state_copy_v = self.canvas.get_view_for_model(library_state_m.state_copy)
+                state_copy_v.remove()
+                self.canvas.request_update(library_state_v)
+                self.canvas.perform_update()
         else:
             if isinstance(view, StateView):
                 view.apply_meta_data(recursive=meta_signal_message.affects_children)
