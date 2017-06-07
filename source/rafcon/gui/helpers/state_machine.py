@@ -537,9 +537,11 @@ def insert_state(state, as_template=False):
         new_state_m = LibraryStateModel(state).state_copy
         new_state = state.state_copy
 
+        gaphas_editor, _ = gui_helper_state.gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
+        previous_state_size = new_state_m.get_meta_data_editor(gaphas_editor)['size']
         gui_helper_state.gui_helper_meta_data.put_default_meta_on_state_m(new_state_m, current_state_m)
 
-        gui_helper_state.prepare_state_m_for_insert_as_template(new_state_m)
+        gui_helper_state.prepare_state_m_for_insert_as(new_state_m, previous_state_size)
 
     current_state_m.expected_future_models.add(new_state_m)
     while new_state.state_id in current_state.states:
@@ -679,9 +681,9 @@ def substitute_selected_state(state, as_template=False):
     # If inserted as template, we have to extract the state_copy and load the meta data manually
     else:
         assert isinstance(state, LibraryState)
-        # print "as template", parent_state_m.states[current_state.state_id].get_meta_data_editor()
+        # print "as template1", parent_state_m.states[current_state.state_id].get_meta_data_editor()
         template_m = LibraryStateModel(state).state_copy
-        # print template_m
+        # print "as template2", template_m
         gui_helper_state.substitute_state(parent_state_m.states[current_state.state_id], template_m)
         # template = template_m.state
         # template.change_state_id()

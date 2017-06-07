@@ -20,7 +20,7 @@ from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.gui import singleton as gui_singletons
 
 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
-from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateModel, StateMachineModel
+from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateModel, StateMachineModel, LibraryStateModel
 from rafcon.gui.models.signals import ActionSignalMsg
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
@@ -343,27 +343,44 @@ def change_state_type(state_m, target_class):
     return new_state_m
 
 
-def prepare_state_m_for_insert_as_template(state_m_to_insert):
+def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
     """Prepares and scales the meta data to fit into actual size of the state."""
     # TODO check how much code is duplicated or could be reused for library fit functionality meta data helper
-    if isinstance(state_m_to_insert, ContainerStateModel) and \
+    # TODO DO REFACTORING !!! and move maybe the hole method to meta data and rename it
+    if isinstance(state_m_to_insert, AbstractStateModel) and \
             not gui_helper_meta_data.model_has_empty_meta(state_m_to_insert):
 
-        models_dict = {'state': state_m_to_insert}
-        # print "TARGET1", state_m_to_insert.get_meta_data_editor(gaphas_editor)['size'], \
-        #     old_state_m.get_meta_data_editor(gaphas_editor)['size'], size
-
-        for state_element_key in state_m_to_insert.state.state_element_attrs:
-            state_element_list = getattr(state_m_to_insert, state_element_key)
-            # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
-            if hasattr(state_element_list, 'keys'):
-                state_element_list = state_element_list.values()
-            models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
-        # print "TARGET2", models_dict['state'].get_meta_data_editor(gaphas_editor)['size']
-
-        resize_factor = gui_helper_meta_data.scale_meta_data_according_state(models_dict, as_template=True)
         gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
-        gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor, gaphas_editor)
+        if isinstance(state_m_to_insert, ContainerStateModel):
+            # print "TARGET1", state_m_to_insert.state.state_element_attrs
+            models_dict = {'state': state_m_to_insert}
+
+            for state_element_key in state_m_to_insert.state.state_element_attrs:
+                state_element_list = getattr(state_m_to_insert, state_element_key)
+                # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
+                if hasattr(state_element_list, 'keys'):
+                    state_element_list = state_element_list.values()
+                models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
+
+            resize_factor = gui_helper_meta_data.scale_meta_data_according_state(models_dict, as_template=True)
+            gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor, gaphas_editor)
+
+        elif isinstance(state_m_to_insert, StateModel):
+            # print "TARGET2", state_m_to_insert.state.state_element_attrs
+
+            if previous_state_size:
+                current_size = state_m_to_insert.get_meta_data_editor(gaphas_editor)['size']
+                factor = gui_helper_meta_data.divide_two_vectors(current_size, previous_state_size)
+                factor = (min(*factor), min(*factor))
+                gui_helper_meta_data.resize_state_meta(state_m_to_insert, factor, gaphas_editor)
+
+            else:
+                logger.debug("For insert as template of {0} no resize of state meta data is performed because "
+                             "the meta data has empty fields.".format(state_m_to_insert))
+
+        elif not isinstance(state_m_to_insert, LibraryStateModel):
+            raise TypeError("For insert as template of {0} no resize of state meta data is performed because "
+                            "state model type is not ContainerStateModel or StateModel".format(state_m_to_insert))
     else:
         logger.info("For insert as template of {0} no resize of state meta data is performed because the meta data has "
                     "empty fields.".format(state_m_to_insert))
@@ -398,12 +415,13 @@ def substitute_state(target_state_m, state_m_to_insert):
     action_parent_m.substitute_state.__func__.old_state_m = old_state_m
 
     # put old state size and rel_pos onto new state
+    previous_state_size = state_m_to_insert.get_meta_data_editor(gaphas_editor)['size']
     state_m_to_insert.set_meta_data_editor('size', old_state_m.get_meta_data_editor(gaphas_editor)['size'],
                                            gaphas_editor)
     state_m_to_insert.set_meta_data_editor('rel_pos', old_state_m.get_meta_data_editor(gaphas_editor)['rel_pos'],
                                            gaphas_editor)
     # scale the meta data according new size
-    prepare_state_m_for_insert_as_template(state_m_to_insert)
+    prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size)
 
     # CORE
     new_state = e = None
