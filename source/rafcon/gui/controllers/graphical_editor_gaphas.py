@@ -305,7 +305,14 @@ class GraphicalEditorController(ExtendedController):
         view = self.canvas.get_view_for_model(model)
 
         if meta_signal_message.change == 'show_content':
-            logger.debug("Show content of {}: {}".format(model.state, model.meta['gui']['show_content']))
+            library_state_m = model
+            library_state_v = view
+            if model.meta['gui']['show_content']:
+                logger.debug("Show content of {}".format(library_state_m.state))
+                gui_helper_meta_data.scale_library_content(library_state_m)
+                self.setup_state(library_state_m.state_copy, view, hierarchy_level=library_state_v.hierarchy_level + 1)
+            else:
+                logger.debug("Hide content of {}".format(library_state_m.state))
         else:
             if isinstance(view, StateView):
                 view.apply_meta_data(recursive=meta_signal_message.affects_children)
@@ -851,7 +858,8 @@ class GraphicalEditorController(ExtendedController):
         state_v = StateView(state_m, size, hierarchy_level)
 
         # Draw state above data flows and NameView but beneath transitions
-        index = 1 if not parent_v else len(state_m.state.parent.data_flows) + 1
+        num_data_flows = len(state_m.state.parent.data_flows) if isinstance(state_m.parent, ContainerStateModel) else 0
+        index = 1 if not parent_v else num_data_flows + 1
         self.canvas.add(state_v, parent_v, index=index)
         state_v.matrix.translate(*rel_pos)
 
@@ -869,8 +877,11 @@ class GraphicalEditorController(ExtendedController):
             # Keep state within parent
             pass
 
-        if isinstance(state_m, ContainerStateModel):
+        if isinstance(state_m, LibraryStateModel) and state_m.meta['gui']['show_content']:
+            gui_helper_meta_data.scale_library_content(state_m)
+            self.setup_state(state_m.state_copy, state_v, hierarchy_level=hierarchy_level + 1)
 
+        elif isinstance(state_m, ContainerStateModel):
             num_child_state = 0
 
             for scoped_variable_m in state_m.scoped_variables:
