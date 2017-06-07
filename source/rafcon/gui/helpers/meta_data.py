@@ -4,7 +4,6 @@ from rafcon.gui.models.transition import mirror_waypoints
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models import LibraryStateModel, ContainerStateModel
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 
