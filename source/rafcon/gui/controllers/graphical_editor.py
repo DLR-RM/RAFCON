@@ -1690,7 +1690,7 @@ class GraphicalEditorController(ExtendedController):
                     new_corner_pos = add_pos(state_temp['pos'], state_meta['size'])
                     if isinstance(state_m.state_copy, ContainerStateModel):
                         import rafcon.gui.helpers.meta_data as gui_helper_meta_data
-                        gui_helper_meta_data.scale_library_content(state_m)
+                        gui_helper_meta_data.scale_library_content(state_m, gaphas_editor=False)
                     else:
                         self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
                                            redraw=False)

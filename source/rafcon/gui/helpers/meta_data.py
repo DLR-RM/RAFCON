@@ -338,13 +338,14 @@ def scale_library_ports_meta_data(state_m, gaphas_editor=True):
         logger.info("Skip resize of library ports meta data {0}".format(state_m))
 
 
-def scale_library_content(library_state_m, gaphas_editor):
+def scale_library_content(library_state_m, gaphas_editor=True):
     """Scales the meta data of the content of a LibraryState
     
     The contents of the `LibraryStateModel` `library_state_m` (i.e., the `state_copy` and all it children/state 
     elements) to fit the current size of the `LibraryStateModel`.
     
     :param LibraryStateModel library_state_m: The library who's content is to be resized 
+    :param bool gaphas_editor: Whether to use the meta data for the GraphicalEditor using gaphas (default: True) 
     """
     assert isinstance(library_state_m, LibraryStateModel)
     # For library states with an ExecutionState as state_copy, scaling does not make sense
@@ -352,8 +353,9 @@ def scale_library_content(library_state_m, gaphas_editor):
         return
 
     models_dict = {'state': library_state_m}
-    library_state_m.state_copy.set_meta_data_editor('size', library_state_m.get_meta_data_editor(gaphas_editor)['size'], gaphas_editor)
-    library_state_m.state_copy.set_meta_data_editor('rel_pos', library_state_m.get_meta_data_editor(gaphas_editor)['rel_pos'], gaphas_editor)
+    library_meta = library_state_m.get_meta_data_editor(gaphas_editor)
+    library_state_m.state_copy.set_meta_data_editor('size', library_meta['size'], gaphas_editor)
+    library_state_m.state_copy.set_meta_data_editor('rel_pos', library_meta['rel_pos'], gaphas_editor)
     for state_element_key in library_state_m.state_copy.state.state_element_attrs:
         state_element_list = getattr(library_state_m.state_copy, state_element_key)
         # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
