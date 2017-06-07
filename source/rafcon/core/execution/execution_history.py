@@ -28,7 +28,6 @@ from gtkmvc import Observable
 import traceback
 
 from rafcon.core.id_generator import history_item_id_generator
-#from rafcon.statemachine.states import hierarchy_state, barrier_concurrency_state, preemptive_concurrency_state
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -244,7 +243,14 @@ class HistoryItem(object):
         record['timestamp'] = self.timestamp
         record['run_id'] = self.run_id
         record['history_item_id'] = self.history_item_id
-        record['description'] = self.state_reference.description
+        # in case of a Library State, the description of the Library itself should be used and not the description of
+        # the wrapper state (i.e. the description of the Library developer and not that one of the user)
+        from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
+        if isinstance(self.state_reference, LibraryState):
+            record['description'] = self.state_reference.state_copy.description
+        else:
+            record['description'] = self.state_reference.description
+
         if self.prev is not None:
             record['prev_history_item_id'] = self.prev.history_item_id
         else:
