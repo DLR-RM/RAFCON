@@ -614,14 +614,14 @@ class GraphicalEditorController(ExtendedController):
 
             # Create and and new root state view from new root state model
             self.root_state_m = new_state_m
-            root_state_v = self.setup_state(self.root_state_m)
+            root_state_v = self.add_state_from_model(self.root_state_m)
             self.canvas.request_update(root_state_v)
 
         # Otherwise we only look at the modified state and its children
         else:
             # self.canvas.get_view_for_model(old_state_m.get_state_machine_m().root_state).remove()
             # self.root_state_m = new_state_m.get_state_machine_m().root_state
-            # root_state_v = self.setup_state(self.root_state_m)
+            # root_state_v = self.add_state_from_model(self.root_state_m)
             # self.canvas.request_update(root_state_v)
 
             state_v.model = new_state_m
@@ -816,10 +816,10 @@ class GraphicalEditorController(ExtendedController):
         if not isinstance(state_meta['size'], tuple) or not len(state_meta['size']) == 2 or \
                 not isinstance(state_meta['rel_pos'], tuple) or not len(state_meta['rel_pos']) == 2:
             child_rel_pos, new_state_size = generate_default_state_meta_data(parent_state_m, self.canvas)
-            return self.setup_state(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
-                                    hierarchy_level=parent_state_m.hierarchy_level + 1)
+            return self.add_state_from_model(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
+                                             hierarchy_level=parent_state_m.hierarchy_level + 1)
         else:
-            return self.setup_state(state_m, parent_state_v, hierarchy_level=parent_state_m.hierarchy_level + 1)
+            return self.add_state_from_model(state_m, parent_state_v, hierarchy_level=parent_state_m.hierarchy_level + 1)
 
     def _remove_state_view(self, view):
         return gui_helper_state_machine.delete_selected_elements(self.model)
@@ -827,7 +827,7 @@ class GraphicalEditorController(ExtendedController):
     def setup_canvas(self):
         with self.model.state_machine.modification_lock():
             hash_before = self.model.mutable_hash().digest()
-            self.setup_state(self.root_state_m, rel_pos=(10, 10))
+            self.add_state_from_model(self.root_state_m, rel_pos=(10, 10))
             hash_after = self.model.mutable_hash().digest()
             if hash_before != hash_after:
                 self._meta_data_changed(None, self.root_state_m, 'append_initial_change', True)
@@ -835,17 +835,19 @@ class GraphicalEditorController(ExtendedController):
                             " when the state machine is being saved.")
 
     @lock_state_machine
-    def setup_state(self, state_m, parent_v=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
-        """Draws a (container) state with all its content
+    def add_state_from_model(self, state_m, parent_v=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
+        """Creates a `StateView` (recursively) and adds it to the canvas
 
-        Mainly contains the logic for drawing (e. g. reading and calculating values). The actual drawing process is
-        done in the view, which is called from this method with the appropriate arguments.
+        The method uses the `StateModel` `state_m` to create the according `StateView`. For all content within 
+        `state_m`, such as connections, states and ports, the views are also created. All views are added to the canvas.
 
         :param rafcon.gui.models.state.StateModel state_m: The state to be drawn
         :param rafcon.gui.mygaphas.items.state.StateView parent_v: The parent state view of new state view `state_m`
         :param tuple rel_pos: The default relative position (x, y) if there is no relative position stored
         :param tuple size: The default size (width, height) if there is no size stored
         :param float hierarchy_level: The hierarchy level of the state
+        :return: The created `StateView`
+        :rtype: StateView
         """
         assert isinstance(state_m, AbstractStateModel)
         state_meta = state_m.get_meta_data_editor()
@@ -890,7 +892,7 @@ class GraphicalEditorController(ExtendedController):
 
         if isinstance(state_m, LibraryStateModel) and state_m.meta['gui']['show_content']:
             gui_helper_meta_data.scale_library_content(state_m)
-            self.setup_state(state_m.state_copy, state_v, hierarchy_level=hierarchy_level + 1)
+            self.add_state_from_model(state_m.state_copy, state_v, hierarchy_level=hierarchy_level + 1)
 
         elif isinstance(state_m, ContainerStateModel):
             num_child_state = 0
@@ -904,7 +906,7 @@ class GraphicalEditorController(ExtendedController):
                                                                                                   num_child_state)
                 num_child_state += 1
 
-                self.setup_state(child_state_m, state_v, child_rel_pos, child_size, hierarchy_level + 1)
+                self.add_state_from_model(child_state_m, state_v, child_rel_pos, child_size, hierarchy_level + 1)
 
             self.add_transitions(state_m, hierarchy_level)
 
