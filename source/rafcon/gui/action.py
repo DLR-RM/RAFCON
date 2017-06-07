@@ -41,12 +41,12 @@ from rafcon.core.state_elements.transition import Transition
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.hierarchy_state import HierarchyState, ContainerState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.states.state import State
 from rafcon.core.storage import storage
-from rafcon.gui.models.container_state import ContainerState, ContainerStateModel
+from rafcon.gui.models import ContainerStateModel, LibraryStateModel
 from rafcon.gui.models.signals import MetaSignalMsg, ActionSignalMsg
 from rafcon.gui.utils.notification_overview import NotificationOverview
 
@@ -291,6 +291,11 @@ def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=Fa
             if with_prints:
                 print "scoped_variable: ", elem.scoped_variable.data_port_id, \
                     elem.parent.state.scoped_variables.keys(), meta_dict['scoped_variables'].keys()
+
+    # store meta_data_was_scaled parameter to avoid repetitive port scaling
+    if isinstance(state_model, LibraryStateModel):
+        meta_dict['meta_data_was_scaled'] = state_model.meta_data_was_scaled
+
     return meta_dict
 
 
@@ -382,6 +387,10 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
             else:
                 missing_meta_data_warning(state_model, elem.scoped_variable, meta_dict, 'scoped_variables',
                                           [sv_m.scoped_variable.data_port_id for sv_m in state_model.scoped_variables])
+
+    # set meta_data_was_scaled parameter to avoid repetitive port scaling
+    if isinstance(state_model, LibraryStateModel):
+        state_model.meta_data_was_scaled = meta_dict['meta_data_was_scaled']
 
     # state_model.is_start = copy.deepcopy(meta_dict['is_start'])
     check_state_model_for_is_start_state(state_model)
