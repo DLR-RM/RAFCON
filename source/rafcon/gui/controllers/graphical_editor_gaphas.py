@@ -760,15 +760,24 @@ class GraphicalEditorController(ExtendedController):
 
     @lock_state_machine
     def add_transition_view_for_model(self, transition_m, parent_state_m):
+        """Creates a `TransitionView` and adds it to the canvas
+
+        The method creates a`TransitionView` from the given `TransitionModel `transition_m` and adds it to the canvas.
+
+        :param TransitionModel transition_m: The transition for which a view is to be created 
+        :param ContainerStateModel parent_state_m: The parental `StateModel` of the transition
+        """
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
 
-        new_transition_hierarchy_level = parent_state_v.hierarchy_level
-        new_transition_v = TransitionView(transition_m, new_transition_hierarchy_level)
+        hierarchy_level = parent_state_v.hierarchy_level
+        transition_v = TransitionView(transition_m, hierarchy_level)
 
         # Draw transition above all other state elements
-        self.canvas.add(new_transition_v, parent_state_v, index=None)
+        self.canvas.add(transition_v, parent_state_v, index=None)
 
-        self.add_transition(transition_m, new_transition_v, parent_state_m, parent_state_v)
+        self.add_transition(transition_m, transition_v, parent_state_m, parent_state_v)
+
+        return transition_v
 
     @lock_state_machine
     def add_data_flow_view_for_model(self, data_flow_m, parent_state_m):
@@ -908,30 +917,12 @@ class GraphicalEditorController(ExtendedController):
 
                 self.add_state_from_model(child_state_m, state_v, child_rel_pos, child_size, hierarchy_level + 1)
 
-            self.add_transitions(state_m, hierarchy_level)
+            for transition_m in state_m.transitions:
+                self.add_transition_view_for_model(transition_m, state_m)
 
             self.add_data_flows(state_m, hierarchy_level)
 
         return state_v
-
-    @lock_state_machine
-    def add_transitions(self, parent_state_m, hierarchy_level):
-        """Draws the transitions belonging to a state
-
-        The method takes all transitions from the given state and calculates their start and end point positions.
-        Those are passed together with the waypoints to the view of the graphical editor.
-
-        :param rafcon.gui.models.container_state.ContainerStateModel parent_state_m: The model of the container
-            state, of which the transitions shall be drawn
-        """
-        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
-        assert isinstance(parent_state_v, StateView)
-        for transition_m in parent_state_m.transitions:
-            transition_v = TransitionView(transition_m, hierarchy_level)
-            # Draw transition above all other state elements
-            self.canvas.add(transition_v, parent_state_v, index=None)
-
-            self.add_transition(transition_m, transition_v, parent_state_m, parent_state_v)
 
     @lock_state_machine
     def add_transition(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
