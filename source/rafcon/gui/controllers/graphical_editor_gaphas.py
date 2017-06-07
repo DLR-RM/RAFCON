@@ -781,14 +781,21 @@ class GraphicalEditorController(ExtendedController):
 
     @lock_state_machine
     def add_data_flow_view_for_model(self, data_flow_m, parent_state_m):
+        """Creates a `DataFlowView` and adds it to the canvas
+
+        The method creates a`DataFlowView` from the given `DataFlowModel `data_flow_m` and adds it to the canvas.
+
+        :param DataFlowModel data_flow_m: The data flow for which a view is to be created 
+        :param ContainerStateModel parent_state_m: The parental `StateModel` of the data flow
+        """
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
 
-        new_data_flow_hierarchy_level = parent_state_v.hierarchy_level
-        new_data_flow_v = DataFlowView(data_flow_m, new_data_flow_hierarchy_level)
+        hierarchy_level = parent_state_v.hierarchy_level
+        data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
 
         # Draw data flow above NameView but beneath all other state elements
-        self.canvas.add(new_data_flow_v, parent_state_v, index=1)
-        self.add_data_flow(data_flow_m, new_data_flow_v, parent_state_m)
+        self.canvas.add(data_flow_v, parent_state_v, index=1)
+        self.add_data_flow(data_flow_m, data_flow_v, parent_state_m)
 
     @lock_state_machine
     def _remove_connection_view(self, parent_state_m, transitions=True):
@@ -920,7 +927,8 @@ class GraphicalEditorController(ExtendedController):
             for transition_m in state_m.transitions:
                 self.add_transition_view_for_model(transition_m, state_m)
 
-            self.add_data_flows(state_m, hierarchy_level)
+            for data_flow_m in state_m.data_flows:
+                self.add_data_flow_view_for_model(data_flow_m, state_m)
 
         return state_v
 
@@ -966,25 +974,6 @@ class GraphicalEditorController(ExtendedController):
                 self.canvas.remove(transition_v)
             except KeyError:
                 pass
-
-    @lock_state_machine
-    def add_data_flows(self, parent_state_m, hierarchy_level):
-        """Draw all data flows contained in the given container state
-
-        The method takes all data flows from the given state and calculates their start and end point positions.
-        Those are passed together with the waypoints to the view of the graphical editor.
-
-        :param rafcon.gui.models.container_state.ContainerStateModel parent_state_m: The model of the container
-            state, of which the data flows shall be drawn
-        """
-        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
-        assert isinstance(parent_state_v, StateView)
-        for data_flow_m in parent_state_m.data_flows:
-            data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
-
-            # Draw data flow above NameView but beneath all other state elements
-            self.canvas.add(data_flow_v, parent_state_v, index=1)
-            self.add_data_flow(data_flow_m, data_flow_v, parent_state_m)
 
     @lock_state_machine
     def add_data_flow(self, data_flow_m, data_flow_v, parent_state_m):
