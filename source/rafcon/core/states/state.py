@@ -1304,11 +1304,27 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @property
     def is_root_state_of_library(self):
+        """ If self is the attribute LibraryState.state_copy of a LibraryState its the library root state and its parent
+        is a LibraryState
+        :return True or False
+        :rtype bool
+        """
         from rafcon.core.states.library_state import LibraryState
         return isinstance(self.parent, LibraryState)
 
     def get_library_root_state(self):
+        """ Get library root state
+
+        The method recursively checks state parent states till finding a StateMachine as parent or a library root state.
+        :return: library root state (Execution or ContainerState) or None if self is not a library root state or
+                 inside of such
+        :rtype: rafcon.core.states.library_state.State
+        """
         from rafcon.core.state_machine import StateMachine
+
+        if self.is_root_state_of_library:
+            return self
+
         state = self
         while state.parent is not None and not isinstance(state.parent, StateMachine):
             if state.parent.is_root_state_of_library:
