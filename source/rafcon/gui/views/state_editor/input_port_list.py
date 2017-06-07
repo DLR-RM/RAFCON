@@ -10,14 +10,14 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import View
+from rafcon.gui.views.utils.tree import TreeView
 
 from rafcon.gui import glade
 
 
-class InputPortsListView(View):
+class InputPortsListView(TreeView):
     builder = glade.get_glade_path("input_ports_list_widget.glade")
     top = 'input_ports_tree_view'
 
     def __init__(self):
-        View.__init__(self)
+        super(InputPortsListView, self).__init__()

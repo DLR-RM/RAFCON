@@ -583,7 +583,14 @@ class GraphicalEditorController(ExtendedController):
                                  'group_states', 'ungroup_state', 'substitute_state']:
                 pass
             else:
-                logger.warning("Method {0} not caught in GraphicalViewer, details: {1}".format(method_name, info))
+                known_ignore_list = ['set_input_runtime_value', 'set_use_input_runtime_value',  # from library State
+                                     'set_output_runtime_value', 'set_use_output_runtime_value',
+                                     'input_data_port_runtime_values', 'use_runtime_value_input_data_ports',
+                                     'output_data_port_runtime_values', 'use_runtime_value_output_data_ports']
+                if method_name in known_ignore_list:
+                    logger.debug("Method {0} not caught in GraphicalViewer, details: {1}".format(method_name, info))
+                else:
+                    logger.warning("Method {0} not caught in GraphicalViewer, details: {1}".format(method_name, info))
 
             if method_name in ['add_state', 'add_transition', 'add_data_flow', 'add_outcome', 'add_input_data_port',
                                'add_output_data_port', 'add_scoped_variable', 'data_flow_change', 'transition_change']:
@@ -853,7 +860,7 @@ class GraphicalEditorController(ExtendedController):
 
         if isinstance(state_m, LibraryStateModel):
             if not state_m.meta_data_was_scaled:
-                gui_helper_meta_data.scale_library_ports_meta_data(state_m)
+                gui_helper_meta_data.scale_library_ports_meta_data(state_m, gaphas_editor=True)
 
         state_v = StateView(state_m, size, hierarchy_level)
 

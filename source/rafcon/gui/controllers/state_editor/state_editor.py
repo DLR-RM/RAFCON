@@ -35,6 +35,7 @@ from rafcon.gui.controllers.state_editor.transitions import StateTransitionsEdit
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.models import ContainerStateModel
+from rafcon.gui.views.state_editor.state_editor import StateEditorView
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 
@@ -59,42 +60,43 @@ class StateEditorController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor"""
+        assert isinstance(view, StateEditorView)
         ExtendedController.__init__(self, model, view)
 
-        self.add_controller('properties_ctrl', StateOverviewController(model, view['properties_view']))
+        self.add_controller('properties_ctrl', StateOverviewController(model, view.properties_view))
 
-        self.inputs_ctrl = InputPortListController(model, view['inputs_view'])
+        self.inputs_ctrl = InputPortListController(model, view.inputs_view)
         self.add_controller('input_data_ports', self.inputs_ctrl)
-        self.outputs_ctrl = OutputPortListController(model, view['outputs_view'])
+        self.outputs_ctrl = OutputPortListController(model, view.outputs_view)
         self.add_controller('output_data_ports', self.outputs_ctrl)
-        self.scopes_ctrl = ScopedVariableListController(model, view['scopes_view'])
+        self.scopes_ctrl = ScopedVariableListController(model, view.scopes_view)
         self.add_controller('scoped_variables', self.scopes_ctrl)
-        self.add_controller('outcomes', StateOutcomesEditorController(model, view['outcomes_view']))
+        self.add_controller('outcomes', StateOutcomesEditorController(model, view.outcomes_view))
 
-        self.add_controller('transitions_ctrl', StateTransitionsEditorController(model, view['transitions_view']))
-        self.add_controller('data_flows_ctrl', StateDataFlowsEditorController(model, view['data_flows_view']))
+        self.add_controller('transitions_ctrl', StateTransitionsEditorController(model, view.transitions_view))
+        self.add_controller('data_flows_ctrl', StateDataFlowsEditorController(model, view.data_flows_view))
 
-        self.add_controller('linkage_overview_ctrl', LinkageOverviewController(model, view['linkage_overview']))
+        self.add_controller('linkage_overview_ctrl', LinkageOverviewController(model, view.linkage_overview))
 
-        self.add_controller('description_ctrl', DescriptionEditorController(model, view['description_view']))
+        self.add_controller('description_ctrl', DescriptionEditorController(model, view.description_view))
 
-        view['inputs_view'].show()
-        view['outputs_view'].show()
-        view['scopes_view'].show()
-        view['outcomes_view'].show()
-        view['transitions_view'].show()
-        view['data_flows_view'].show()
+        view.inputs_view.show()
+        view.outputs_view.show()
+        view.scopes_view.show()
+        view.outcomes_view.show()
+        view.transitions_view.show()
+        view.data_flows_view.show()
 
         # Container states do not have a source editor and library states does not show there source code
         # Thus, for those states we do not have to add the source controller and can hide the source code tab
         # logger.info("init state: {0}".format(model))
         if not isinstance(model, ContainerStateModel) and not isinstance(model.state, LibraryState):
-            self.add_controller('source_ctrl', SourceEditorController(model, view['source_view']))
-            view['source_view'].show()
+            self.add_controller('source_ctrl', SourceEditorController(model, view.source_view))
+            view.source_view.show()
             scoped_var_page = view['ports_notebook'].page_num(view['scoped_variable_vbox'])
             view['ports_notebook'].remove_page(scoped_var_page)
         else:
-            view['scopes_view'].show()
+            view.scopes_view.show()
             source_page = view['main_notebook_1'].page_num(view['source_viewport'])
             view['main_notebook_1'].remove_page(source_page)
 

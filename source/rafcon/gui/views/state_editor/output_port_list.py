@@ -10,15 +10,14 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import View
+from rafcon.gui.views.utils.tree import TreeView
 
 from rafcon.gui import glade
-from rafcon.gui.utils import constants
 
 
-class OutputPortsListView(View):
+class OutputPortsListView(TreeView):
     builder = glade.get_glade_path("output_ports_list_widget.glade")
     top = 'output_ports_tree_view'
 
     def __init__(self):
-        View.__init__(self)
+        super(OutputPortsListView, self).__init__()

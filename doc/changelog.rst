@@ -8,10 +8,40 @@ Next release
 ------------
 
 - Refactoring of "Save state as state machine/library"
-- Execution logs
+
+Patch releases 0.10.\*
+---------------------
+
+0.10.1
+""""""
+
+- Bug Fixes:
+  
+  - make execution logs compatible with execution log viewer again
+
+
+0.10.0
+""""""
+
+- Improvements:
+  
+  - complex actions(copy & paste, resize) are properly handled in gaphas and in the modification history
+  - drag and drop now drops the state at the mouse position
+
+- Bug Fixes:
+  
+  - show library content for OpenGL works again  
+  - add as template works again
 
 Patch releases 0.9.\*
 ---------------------
+
+0.9.8
+"""""
+
+- Improvements:
+  
+  - execution history can be logged and is configurable via the config.yaml
 
 0.9.7
 """""

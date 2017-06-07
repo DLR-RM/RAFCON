@@ -44,6 +44,8 @@ class ListViewController(ExtendedController):
     _logger = None
     CORE_ELEMENT_CLASS = None
 
+    # TODO refactor to move functionality to gui.utils.tree.TreeView and possible reuse in TreeViewController
+
     def __init__(self, model, view, tree_view, list_store, logger=None):
         super(ListViewController, self).__init__(model, view)
         self._logger = logger if logger is not None else module_logger
@@ -498,11 +500,34 @@ class ListViewController(ExtendedController):
             return True
         else:
             current_row_path, current_focused_column = self.tree_view.get_cursor()
-            if len(current_row_path) == 1 and isinstance(current_row_path[0], int):
-                self.tree_view.scroll_to_cell(current_row_path[0], current_focused_column, use_align=False)
-            else:
-                self._logger.warning("A ListViewController aspects a current_row_path of dimension 1 with integer "
-                                     "but it is but it is {0}".format(current_row_path))
+            # print current_row_path, current_focused_column
+            if isinstance(widget, gtk.TreeView):
+                if current_row_path is not None and len(current_row_path) == 1 and isinstance(current_row_path[0], int):
+                    self.tree_view.scroll_to_cell(current_row_path[0], current_focused_column, use_align=False)
+                else:
+                    self._logger.warning("A ListViewController aspects a current_row_path of dimension 1 with integer "
+                                         "but it is but it is {0} and column is {1}".format(current_row_path,
+                                                                                            current_focused_column))
+            elif isinstance(widget, gtk.Entry) and self.view.scrollbar_widget is not None:
+                # calculate the position of the scrollbar to be always centered with the entry widget cursor
+                # TODO check how to get sufficient the scroll-offset in the entry widget -> some times zero when not
+                # TODO the scrollbar is one step behind cursor -> so jump from pos1 to end works not perfect
+                entry_widget_scroll_offset, entry_widget_cursor_position, entry_widget_text_length = \
+                    widget.get_properties(*["scroll-offset", "cursor-position", "text-length"])
+                cell_rect_of_entry_widget = widget.get_allocation()
+
+                horizontal_scroll_bar = self.view.scrollbar_widget.get_hscrollbar()
+                if horizontal_scroll_bar is not None:
+                    adjustment = horizontal_scroll_bar.get_adjustment()
+                    layout_pixel_width = widget.get_layout().get_pixel_size()[0]
+                    # print "rel_pos pices", cell_rect_of_entry_widget.x,
+                    #     int(layout_pixel_width*float(entry_widget_cursor_position)/float(entry_widget_text_length))
+                    rel_pos = cell_rect_of_entry_widget.x - entry_widget_scroll_offset + \
+                        int(layout_pixel_width*float(entry_widget_cursor_position)/float(entry_widget_text_length))
+                    # print adjustment.lower, adjustment.upper, adjustment.value, adjustment.page_size, rel_pos
+                    value = int(float(adjustment.upper - adjustment.page_size)*rel_pos/float(adjustment.upper))
+                    adjustment.set_value(value)
+                    # print "new value", adjustment.value, 'of', float(adjustment.upper - adjustment.page_size)
 
 
 class TreeViewController(ExtendedController):

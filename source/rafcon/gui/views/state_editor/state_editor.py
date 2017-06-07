@@ -43,30 +43,34 @@ class StateEditorView(View):
         gui_helper_label.set_label_markup(self['data_ports_label'], 'DATA PORTS',
                                           letter_spacing=constants.LETTER_SPACING_1PT)
 
-        self['properties_view'] = StateOverviewView()
-        self['inputs_view'] = InputPortsListView()
-        self['outputs_view'] = OutputPortsListView()
-        self['scopes_view'] = ScopedVariablesListView()
-        self['outcomes_view'] = StateOutcomesEditorView()
-        self['source_view'] = SourceEditorView()
-        self['transitions_view'] = StateTransitionsEditorView()
-        self['data_flows_view'] = StateDataFlowsEditorView()
-        self['linkage_overview'] = LinkageOverviewView()
-        self['description_view'] = DescriptionEditorView()
+        self.properties_view = StateOverviewView()
+        self.inputs_view = InputPortsListView()
+        self.outputs_view = OutputPortsListView()
+        self.scopes_view = ScopedVariablesListView()
+        self.outcomes_view = StateOutcomesEditorView()
+        self.source_view = SourceEditorView()
+        self.transitions_view = StateTransitionsEditorView()
+        self.data_flows_view = StateDataFlowsEditorView()
+        self.linkage_overview = LinkageOverviewView()
+        self.description_view = DescriptionEditorView()
 
-        self['properties_viewport'].add(self['properties_view'].get_top_widget())
-        self['input_ports_scroller'].add(self['inputs_view'].get_top_widget())
-        self['output_ports_scroller'].add(self['outputs_view'].get_top_widget())
-        self['scoped_variables_scroller'].add(self['scopes_view'].get_top_widget())
-        self['outcomes_viewport'].add(self['outcomes_view'].get_top_widget())
-        self['source_viewport'].add(self['source_view'].get_top_widget())
-        self['transitions_viewport'].add(self['transitions_view'].get_top_widget())
-        self['data_flows_viewport'].add(self['data_flows_view'].get_top_widget())
-        self['linkage_overview_viewport'].add(self['linkage_overview'].get_top_widget())
-        self['description_viewport'].add(self['description_view'].get_top_widget())
+        self['properties_viewport'].add(self.properties_view.get_top_widget())
+        self['input_ports_scroller'].add(self.inputs_view.get_top_widget())
+        self['output_ports_scroller'].add(self.outputs_view.get_top_widget())
+        self['scoped_variables_scroller'].add(self.scopes_view.get_top_widget())
+        self['outcomes_viewport'].add(self.outcomes_view.get_top_widget())
+        self['source_viewport'].add(self.source_view.get_top_widget())
+        self['transitions_viewport'].add(self.transitions_view.get_top_widget())
+        self['data_flows_viewport'].add(self.data_flows_view.get_top_widget())
+        self['linkage_overview_viewport'].add(self.linkage_overview.get_top_widget())
+        self['description_viewport'].add(self.description_view.get_top_widget())
 
-        self['description_text_view'] = self['description_view'].textview
-        self['description_scroller'] = self['description_view'].scrollable
+        self.inputs_view.scrollbar_widget = self['input_ports_scroller']
+        self.outputs_view.scrollbar_widget = self['output_ports_scroller']
+        self.scopes_view.scrollbar_widget = self['scoped_variables_scroller']
+
+        self['description_text_view'] = self.description_view.textview
+        self['description_scroller'] = self.description_view.scrollable
 
         self['main_notebook_1'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
         self['main_notebook_1'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)

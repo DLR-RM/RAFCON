@@ -39,6 +39,7 @@ from rafcon.core.state_elements.data_port import DataPort, InputDataPort, Output
 from rafcon.core.state_elements.outcome import Outcome
 from rafcon.core.storage import storage
 from rafcon.core.storage.storage import get_storage_id_for_state
+from rafcon.utils import classproperty
 from rafcon.utils import log
 from rafcon.utils import multi_event
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
@@ -61,10 +62,13 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     :ivar dict State.output_data_ports: holds the output data ports of the state
     :ivar dict State.outcomes: holds the state outcomes, which are the connection points for transitions
     :ivar rafcon.core.states.container_state.ContainerState State.parent: a reference to the parent state or None
+    :ivar list State.state_element_attrs: List of strings/attribute names that point on state element type
+                                          specific dictionaries which the state hold's as attributes.
 
     """
 
     _parent = None
+    _state_element_attrs = ['outcomes', 'input_data_ports', 'output_data_ports']
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  parent=None):
@@ -199,6 +203,16 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         dict_representation = loader.construct_mapping(node, deep=True)
         state = cls.from_dict(dict_representation)
         return state
+
+    @classproperty
+    @classmethod
+    def state_element_attrs(cls):
+        """Return a list of attribute names of the state's state elements
+        
+        :return: Attribute names of the state's state elements
+        :rtype: list[str]
+        """
+        return cls._state_element_attrs
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- execution functions -------------------------------------

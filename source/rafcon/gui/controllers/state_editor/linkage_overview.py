@@ -33,15 +33,15 @@ class LinkageOverviewController(ExtendedController, Model):
     def __init__(self, model, view):
         ExtendedController.__init__(self, model, view)
 
-        self.add_controller('input_data_ports', InputPortListController(model, view['inputs_view']))
-        self.add_controller('output_data_ports', OutputPortListController(model, view['outputs_view']))
-        self.add_controller('scoped_variables', ScopedVariableListController(model, view['scope_view']))
-        self.add_controller('outcomes', StateOutcomesEditorController(model, view['outcomes_view']))
+        self.add_controller('input_data_ports', InputPortListController(model, view.inputs_view))
+        self.add_controller('output_data_ports', OutputPortListController(model, view.outputs_view))
+        self.add_controller('scoped_variables', ScopedVariableListController(model, view.scope_view))
+        self.add_controller('outcomes', StateOutcomesEditorController(model, view.outcomes_view))
 
         if isinstance(self.model.state, LibraryState) or isinstance(self.model.state, ExecutionState):
             view['scoped_box'].destroy()
 
-        view['inputs_view'].show()
-        view['outputs_view'].show()
-        view['scope_view'].show()
-        view['outcomes_view'].show()
+        view.inputs_view.show()
+        view.outputs_view.show()
+        view.scope_view.show()
+        view.outcomes_view.show()
