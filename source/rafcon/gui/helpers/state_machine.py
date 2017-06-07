@@ -152,7 +152,8 @@ def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
         state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
         sm_m = state_machine_manager_model.state_machines[state_machine_manager_model.selected_state_machine_id]
         folder_name = sm_m.state_machine.root_state.name if sm_m else ''
-        path = interface.create_folder_func("Please choose a root folder and a name for the state-machine",
+        path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
+                                            "The default folder name is the name of the root state.",
                                             folder_name)
         if path is None:
             logger.warning("No valid path specified")
@@ -170,7 +171,8 @@ def save_selected_state_as():
         state_m = copy.copy(selected_states[0])
         sm_m = StateMachineModel(StateMachine(root_state=state_m.state), state_machine_manager_model)
         sm_m.root_state = state_m
-        path = interface.create_folder_func("Please choose a root folder and a name for the state-machine",
+        path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine your "
+                                            "state is saved in. The default folder name is the name of state.",
                                             selected_states[0].state.name)
         if path:
             storage.save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
