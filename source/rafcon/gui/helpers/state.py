@@ -517,17 +517,18 @@ def substitute_state(target_state_m, state_m_to_insert):
     del action_parent_m.substitute_state.__func__.old_state_m
 
 
-def substitute_state_as(target_state_m, state, as_template):
+def substitute_state_as(target_state_m, state, as_template, keep_name=False):
     """ Substitute a target state with a handed state
 
     The method generates a state model for the state to be insert and use function substitute_state to finally
     substitute the state.
     In case the state to be insert is a LibraryState it can be chosen to be insert as template.
-    In case a state is not insert as template the inserted state keeps the name of the target state.
+    It can be chosen that the inserted state keeps the name of the target state.
 
     :param rafcon.gui.models.state.AbstractStateModel target_state_m: State model of the target state
     :param rafcon.core.states.State state: State to be insert as template or not
     :param bool as_template: The flag determines if a handed state of type LibraryState is insert as template
+    :param bool keep_name: The flag to keep the name of the target state
     :return:
     """
 
@@ -536,8 +537,9 @@ def substitute_state_as(target_state_m, state, as_template):
     if as_template:
         assert isinstance(state_m, LibraryStateModel)
         state_m = state_m.state_copy
-    else:
-        state.name = target_state_m.state.name
+
+    if keep_name:
+        state_m.state.name = target_state_m.state.name
 
     assert target_state_m.parent.states[target_state_m.state.state_id] is target_state_m
     substitute_state(target_state_m, state_m)

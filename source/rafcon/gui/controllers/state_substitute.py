@@ -21,6 +21,7 @@ import gtk
 from rafcon.gui.views.library_tree import LibraryTreeView
 from rafcon.gui.controllers.library_tree import LibraryTreeController
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
+from rafcon.gui.singleton import global_gui_config
 
 from rafcon.utils import log
 
@@ -32,6 +33,7 @@ class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
     def __init__(self, model=None, view=None, state_machine_manager_model=None, dialog_widget=None):
         super(StateSubstituteChooseLibraryDialogTreeController, self).__init__(model, view, state_machine_manager_model)
         self.dialog_widget = dialog_widget
+        self.keep_name = global_gui_config.get_config_value('SUBSTITUTE_STATE_KEEPS_STATE_NAME')
 
     def generate_right_click_menu(self, *args, **kwargs):
         pass
@@ -48,7 +50,7 @@ class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
                     else:
                         self.view.expand_to_path(state_row_path)
                 return False
-            self.substitute_as_library_clicked(None)
+            self.substitute_as_library_clicked(None, self.keep_name)
             if self.dialog_widget:
                 self.dialog_widget.destroy()
             return True
@@ -56,7 +58,7 @@ class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][1], dict):  # double click on folder, not library
                 return False
-            self.substitute_as_template_clicked(None)
+            self.substitute_as_template_clicked(None, self.keep_name)
             if self.dialog_widget:
                 self.dialog_widget.destroy()
             return True
@@ -81,12 +83,19 @@ class StateSubstituteChooseLibraryDialog(RAFCONButtonDialog):
         self.widget_view = LibraryTreeView()
         self.widget_ctrl = StateSubstituteChooseLibraryDialogTreeController(self.model, self.widget_view,
                                                                             dialog_widget=self)
-
+        self.keep_name_check_box = gtk.CheckButton()
+        self.keep_name_check_box.set_active(self.widget_ctrl.keep_name)
+        self.keep_name_check_box.set_label("Keep state name")
+        self.vbox.pack_end(self.keep_name_check_box, True, True, 0)
         self.vbox.pack_start(self.widget_view, True, True, 0)
+        self.keep_name_check_box.connect('toggled', self.on_toggle_keep_name)
 
         self.vbox.show_all()
         self.grab_focus()
         self.run()
+
+    def on_toggle_keep_name(self, button):
+        self.widget_ctrl.keep_name = button.get_active()
 
     def destroy(self):
         self.widget_view.destroy()
@@ -94,12 +103,13 @@ class StateSubstituteChooseLibraryDialog(RAFCONButtonDialog):
         super(StateSubstituteChooseLibraryDialog, self).destroy()
 
     def check_for_library_path(self, widget, response_id):
+        logger.info("check box is active: {}".format(self.widget_ctrl.keep_name))
         if response_id == 1:
             logger.debug("Library substitute state as library triggered.")
-            self.widget_ctrl.substitute_as_library_clicked(None)
+            self.widget_ctrl.substitute_as_library_clicked(None, self.widget_ctrl.keep_name)
         elif response_id == 2:
             logger.debug("Library substitute state as template triggered.")
-            self.widget_ctrl.substitute_as_template_clicked(None)
+            self.widget_ctrl.substitute_as_template_clicked(None, self.widget_ctrl.keep_name)
         elif response_id in [3, -4]:
             pass
         else:

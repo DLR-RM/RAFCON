@@ -28,7 +28,7 @@ from functools import partial
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers.label import create_image_menu_item
+from rafcon.gui.helpers.label import create_image_menu_item, append_sub_menu_to_parent_menu
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.utils import log
@@ -78,10 +78,22 @@ class LibraryTreeController(ExtendedController):
         menu.append(create_image_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
         menu.append(gtk.SeparatorMenuItem())
         menu.append(create_image_menu_item("Remove library", constants.BUTTON_DEL, self.delete_button_clicked))
-        menu.append(create_image_menu_item("Substitute as library", constants.BUTTON_REFR,
-                                           self.substitute_as_library_clicked))
-        menu.append(create_image_menu_item("Substitute as template", constants.BUTTON_REFR,
-                                           self.substitute_as_template_clicked))
+
+        sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute as library", menu,
+                                                                 constants.BUTTON_REFR)
+
+        sub_menu.append(create_image_menu_item("Keep state name", constants.BUTTON_LEFTA,
+                        partial(self.substitute_as_library_clicked, keep_name=True)))
+        sub_menu.append(create_image_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
+                        partial(self.substitute_as_library_clicked, keep_name=False)))
+
+        sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute as template", menu,
+                                                                 constants.BUTTON_REFR)
+
+        sub_menu.append(create_image_menu_item("Keep state name", constants.BUTTON_LEFTA,
+                        partial(self.substitute_as_template_clicked, keep_name=True)))
+        sub_menu.append(create_image_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
+                        partial(self.substitute_as_template_clicked, keep_name=False)))
 
         return menu
 
@@ -282,13 +294,15 @@ class LibraryTreeController(ExtendedController):
             return True
         return False
 
-    def substitute_as_library_clicked(self, widget):
+    def substitute_as_library_clicked(self, widget, keep_name=True):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-        gui_helper_state_machine.substitute_selected_state(self._get_selected_library_state(), as_template=False)
+        gui_helper_state_machine.substitute_selected_state(self._get_selected_library_state(), as_template=False,
+                                                           keep_name=keep_name)
 
-    def substitute_as_template_clicked(self, widget):
+    def substitute_as_template_clicked(self, widget, keep_name=True):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-        gui_helper_state_machine.substitute_selected_state(self._get_selected_library_state(), as_template=True)
+        gui_helper_state_machine.substitute_selected_state(self._get_selected_library_state(), as_template=True,
+                                                           keep_name=keep_name)
 
     def _get_selected_library_state(self):
         """Returns the LibraryState which was selected in the LibraryTree

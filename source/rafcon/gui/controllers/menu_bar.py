@@ -362,7 +362,8 @@ class MenuBarController(ExtendedController):
 
     @staticmethod
     def on_substitute_library_with_template_activate(widget=None, data=None):
-        return gui_helper_state_machine.substitute_selected_library_state_with_template()
+        keep_name = global_gui_config.get_config_value('SUBSTITUTE_STATE_KEEPS_STATE_NAME')
+        return gui_helper_state_machine.substitute_selected_library_state_with_template(keep_name)
 
     @staticmethod
     def on_save_selected_state_as_activate(widget=None, data=None, path=None):

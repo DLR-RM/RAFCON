@@ -621,7 +621,7 @@ def substitute_selected_state_and_use_choice_dialog():
         return False
 
 
-def substitute_selected_state(state, as_template=False):
+def substitute_selected_state(state, as_template=False, keep_name=False):
     """ Substitute the selected state with the handed state
 
     :param rafcon.core.states.state.State state: A state of any functional type that derives from State
@@ -644,18 +644,18 @@ def substitute_selected_state(state, as_template=False):
         logger.error("Please select exactly one state for the substitution")
         return False
 
-    gui_helper_state.substitute_state_as(selected_state_models[0], state, as_template)
+    gui_helper_state.substitute_state_as(selected_state_models[0], state, as_template, keep_name)
 
     return True
 
 
-def substitute_selected_library_state_with_template():
+def substitute_selected_library_state_with_template(keep_name=True):
     selected_states = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
     if selected_states and len(selected_states) == 1 and isinstance(selected_states[0], LibraryStateModel):
         # print "start substitute library state with template"
         lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_states[0].state))
         # lib_state_m = copy.deepcopy(selected_states[0].state)
-        substitute_selected_state(lib_state, as_template=True)
+        substitute_selected_state(lib_state, as_template=True, keep_name=keep_name)
         return True
     else:
         logger.warning("Substitute library state with template needs exact one library state to be selected.")

@@ -445,7 +445,7 @@ def resize_of_all_models_in_dict(models_dict, factor, gaphas_editor):
         resize_state_meta(child_state_m, factor, gaphas_editor)
 
     # Do the same for data and logic ports
-    port_models = models_dict['scoped_variables'].values() + models_dict['input_data_ports'].values() + \
+    port_models = models_dict.get('scoped_variables', {}).values() + models_dict['input_data_ports'].values() + \
                   models_dict['output_data_ports'].values()
     port_models += models_dict['outcomes'].values() if gaphas_editor else []
     _resize_port_models_list(port_models, 'rel_pos' if gaphas_editor else 'inner_rel_pos', factor, gaphas_editor)

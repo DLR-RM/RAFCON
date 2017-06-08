@@ -205,8 +205,14 @@ class StateMachineRightClickMenu(object):
         menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
                                            self.on_substitute_state_activate,
                                            accel_code=shortcuts_dict['substitute_state'][0], accel_group=accel_group))
-        menu.append(create_image_menu_item("Substitute library with template", constants.BUTTON_REFR,
-                                           self.on_substitute_library_with_template_activate))
+
+        sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute library with template", menu,
+                                                                 constants.BUTTON_REFR)
+        sub_menu.append(create_image_menu_item("Keep state name", constants.BUTTON_LEFTA,
+                        partial(self.on_substitute_library_with_template_activate, keep_name=True)))
+
+        sub_menu.append(create_image_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
+                        partial(self.on_substitute_library_with_template_activate, keep_name=False)))
 
         return menu
 
@@ -294,8 +300,8 @@ class StateMachineRightClickMenu(object):
     def on_substitute_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('substitute_state', None, None)
 
-    def on_substitute_library_with_template_activate(self, widget, data=None):
-        self.shortcut_manager.trigger_action('substitute_library_with_template', None, None)
+    def on_substitute_library_with_template_activate(self, widget, data=None, keep_name=False):
+        gui_helper_state_machine.substitute_selected_library_state_with_template(keep_name)
 
     def on_type_change_activate(self, widget, data=None, target_class=None):
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
