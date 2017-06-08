@@ -622,7 +622,7 @@ def substitute_selected_state_and_use_choice_dialog():
 
 
 def substitute_selected_state(state, as_template=False):
-    """ Substitutes the selected state with the handed state
+    """ Substitute the selected state with the handed state
 
     :param rafcon.core.states.state.State state: A state of any functional type that derives from State
     :param bool as_template: The flag determines if a handed the state of type LibraryState is insert as template
@@ -635,35 +635,16 @@ def substitute_selected_state(state, as_template=False):
         raise ValueError("State of type DeciderState can not be substituted.")
 
     smm_m = rafcon.gui.singleton.state_machine_manager_model
-
     if not smm_m.selected_state_machine_id:
-        logger.error("Please select a container state within a state machine first")
+        logger.error("Selected state machine can not be found, please select a state within a state machine first.")
         return False
 
-    current_selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
-    selected_state_models = current_selection.get_states()
-    if len(selected_state_models) > 1:
+    selected_state_models = smm_m.state_machines[smm_m.selected_state_machine_id].selection.get_states()
+    if len(selected_state_models) > 1 or len(selected_state_models) == 0:
         logger.error("Please select exactly one state for the substitution")
         return False
 
-    if len(selected_state_models) == 0:
-        logger.error("Please select a state for the substitution")
-        return False
-
-    current_state_m = selected_state_models[0]
-
-    if not as_template:
-        state.name = current_state_m.state.name
-
-    if not as_template:
-        state_m = get_state_model_class_for_state(state)(state)
-    # If inserted as template, we have to extract the state_copy and model
-    else:
-        assert isinstance(state, LibraryState)
-        state_m = LibraryStateModel(state).state_copy
-
-    assert current_state_m.parent.states[current_state_m.state.state_id] is current_state_m
-    gui_helper_state.substitute_state(current_state_m, state_m)
+    gui_helper_state.substitute_state_as(selected_state_models[0], state, as_template)
 
     return True
 

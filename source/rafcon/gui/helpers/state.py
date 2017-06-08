@@ -14,6 +14,7 @@ from rafcon.core.states.state import State, StateType
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
@@ -379,6 +380,7 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
                 logger.debug("For insert as template of {0} no resize of state meta data is performed because "
                              "the meta data has empty fields.".format(state_m_to_insert))
 
+        # library state is not resize because its ports became resized indirectly -> see was resized flag
         elif not isinstance(state_m_to_insert, LibraryStateModel):
             raise TypeError("For insert as template of {0} no resize of state meta data is performed because "
                             "state model type is not ContainerStateModel or StateModel".format(state_m_to_insert))
@@ -390,9 +392,11 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
 def insert_state_as(target_state_m, state, as_template):
     """ Add a state into a target state
 
-    :param rafcon.gui.models.container_state.ContainerState target_state_m: State model of the target state
-    :param rafcon.core.states.State state: State to insert as template or not
-    :param bool as_template: The flag determines if a handed the state of type LibraryState is insert as template
+    In case the state to be insert is a LibraryState it can be chosen to be insert as template.
+
+    :param rafcon.gui.models.container_state.ContainerStateModel target_state_m: State model of the target state
+    :param rafcon.core.states.State state: State to be insert as template or not
+    :param bool as_template: The flag determines if a handed state of type LibraryState is insert as template
     :return:
     """
 
@@ -402,30 +406,41 @@ def insert_state_as(target_state_m, state, as_template):
         return False
 
     previous_state_size = None
+    state_m = get_state_model_class_for_state(state)(state)
     if not as_template:
-        new_state_m = get_state_model_class_for_state(state)(state)
-        gui_helper_meta_data.put_default_meta_on_state_m(new_state_m, target_state_m)
-        new_state = state
+        gui_helper_meta_data.put_default_meta_on_state_m(state_m, target_state_m)
     # If inserted as template, we have to extract the state_copy and respective model
     else:
-        new_state_m = LibraryStateModel(state).state_copy
-        new_state = state.state_copy
+        assert isinstance(state, LibraryState)
+        state_m = state_m.state_copy
 
         gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
-        previous_state_size = new_state_m.get_meta_data_editor(gaphas_editor)['size']
-        gui_helper_meta_data.put_default_meta_on_state_m(new_state_m, target_state_m)
+        previous_state_size = state_m.get_meta_data_editor(gaphas_editor)['size']
+        gui_helper_meta_data.put_default_meta_on_state_m(state_m, target_state_m)
 
-    prepare_state_m_for_insert_as(new_state_m, previous_state_size)
+    prepare_state_m_for_insert_as(state_m, previous_state_size)
 
-    target_state_m.expected_future_models.add(new_state_m)
-    while new_state.state_id in target_state_m.state.states:
-        new_state.change_state_id()
+    # explicit secure that there is no state_id conflict within target state child states
+    while state_m.state.state_id in target_state_m.state.states:
+        state_m.state.change_state_id()
 
-    target_state_m.state.add_state(new_state)
+    target_state_m.expected_future_models.add(state_m)
+
+    target_state_m.state.add_state(state_m.state)
 
 
 def substitute_state(target_state_m, state_m_to_insert):
+    """ Substitute the target state with a the handed state
+
+    Both states are handed by there state models. The insert state adapts the size and position of the target state.
+    State elements of the state handed to be insert became resize by keeping there proportion.
+
+    :param rafcon.gui.models.container_state.AbstractStateModel target_state_m: State Model of state to be substituted
+    :param rafcon.gui.models.container_state.StateModel state_m_to_insert: State Model of state to be insert instate
+    :return:
+    """
     # print "substitute_state"
+
     gaphas_editor = True if gui_singletons.global_gui_config.get_config_value('GAPHAS_EDITOR') else False
     state_to_insert = state_m_to_insert.state
     action_parent_m = target_state_m.parent
@@ -501,6 +516,32 @@ def substitute_state(target_state_m, state_m_to_insert):
 
     del action_parent_m.substitute_state.__func__.tmp_meta_data_storage
     del action_parent_m.substitute_state.__func__.old_state_m
+
+
+def substitute_state_as(target_state_m, state, as_template):
+    """ Substitute a target state with a handed state
+
+    The method generates a state model for the state to be insert and use function substitute_state to finally
+    substitute the state.
+    In case the state to be insert is a LibraryState it can be chosen to be insert as template.
+    In case a state is not insert as template the inserted state keeps the name of the target state.
+
+    :param rafcon.gui.models.state.AbstractStateModel target_state_m: State model of the target state
+    :param rafcon.core.states.State state: State to be insert as template or not
+    :param bool as_template: The flag determines if a handed state of type LibraryState is insert as template
+    :return:
+    """
+
+    state_m = get_state_model_class_for_state(state)(state)
+    # If inserted as template, we have to extract the state_copy and model otherwise keep original name
+    if as_template:
+        assert isinstance(state_m, LibraryStateModel)
+        state_m = state_m.state_copy
+    else:
+        state.name = target_state_m.state.name
+
+    assert target_state_m.parent.states[target_state_m.state.state_id] is target_state_m
+    substitute_state(target_state_m, state_m)
 
 
 def group_states_and_scoped_variables(state_m_list, sv_m_list):
