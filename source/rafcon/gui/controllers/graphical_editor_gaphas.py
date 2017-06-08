@@ -179,17 +179,17 @@ class GraphicalEditorController(ExtendedController):
         :param y: Integer: y-position of mouse
         :param time:
         """
-        hovered = ItemFinder(self.view.editor).get_item_at_point((x, y))
-        if isinstance(hovered, NameView):
-            hovered = hovered.parent
-        if hovered is None:
+        hovered_item = ItemFinder(self.view.editor).get_item_at_point((x, y))
+        if isinstance(hovered_item, NameView):
+            hovered_item = hovered_item.parent
+        if hovered_item is None:
             self.view.editor.unselect_all()
-        elif isinstance(hovered.model, ContainerStateModel):
-            if len(self.view.editor.selected_items) == 1 and hovered in self.view.editor.selected_items:
+        elif isinstance(hovered_item.model, ContainerStateModel):
+            if len(self.view.editor.selected_items) == 1 and hovered_item in self.view.editor.selected_items:
                 return
             if len(self.view.editor.selected_items) > 0:
                 self.view.editor.unselect_all()
-            self.view.editor.focused_item = hovered
+            self.view.editor.focused_item = hovered_item
 
     def update_view(self, *args):
         self.canvas.update_root_items()

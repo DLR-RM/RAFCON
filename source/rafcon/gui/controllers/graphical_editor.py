@@ -50,7 +50,7 @@ from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.runtime_config import global_runtime_config
 import rafcon.gui.singleton
-from rafcon.gui.views.graphical_editor import Direction
+from rafcon.gui.views.graphical_editor import Direction, GraphicalEditorView
 from rafcon.utils import log
 from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
 
@@ -111,6 +111,7 @@ class GraphicalEditorController(ExtendedController):
     def __init__(self, model, view):
         """Constructor"""
         assert isinstance(model, StateMachineModel)
+        assert isinstance(view, GraphicalEditorView)
         ExtendedController.__init__(self, model, view)
         self.state_right_click_ctrl = StateRightClickMenuControllerOpenGLEditor(model, view)
 
