@@ -195,11 +195,7 @@ class HoverItemTool(HoverTool):
                 # If the hovered item is e.g. a connection, we need to get the parental state
                 hovered_state_v = view.canvas.get_parent(view.hovered_item)
                 state = hovered_state_v.model.state
-            # get_library_root_state return None if the state is not a _child_ within a library
             library_root_state = state.get_library_root_state()
-            # Therefore, we also need to check the case that the state is the state_copy of a library
-            if state.is_root_state_of_library:
-                library_root_state = state
             # If the hovered element is a child of a library, make the library the hovered_item
             if library_root_state:
                 library_parent = library_root_state.parent
