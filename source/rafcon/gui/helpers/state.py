@@ -405,7 +405,6 @@ def insert_state_as(target_state_m, state, as_template):
         logger.error("States can only be inserted in container states")
         return False
 
-    previous_state_size = None
     state_m = get_state_model_class_for_state(state)(state)
     if not as_template:
         gui_helper_meta_data.put_default_meta_on_state_m(state_m, target_state_m)
@@ -417,8 +416,8 @@ def insert_state_as(target_state_m, state, as_template):
         gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
         previous_state_size = state_m.get_meta_data_editor(gaphas_editor)['size']
         gui_helper_meta_data.put_default_meta_on_state_m(state_m, target_state_m)
-
-    prepare_state_m_for_insert_as(state_m, previous_state_size)
+        # TODO check if the not as template case maybe has to be run with the prepare call
+        prepare_state_m_for_insert_as(state_m, previous_state_size)
 
     # explicit secure that there is no state_id conflict within target state child states
     while state_m.state.state_id in target_state_m.state.states:
