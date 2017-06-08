@@ -802,6 +802,15 @@ class StateView(Element):
             new_name_rel_pos = calc_new_rel_pos(old_name_rel_pos, old_state_size, new_state_size)
             set_item_properties(name_v, new_name_size, new_name_rel_pos)
 
+            def resize_child_state_v(child_state_v):
+                if use_meta_data:
+                    old_child_size = child_state_v.model.get_meta_data_editor()['size']
+                else:
+                    old_child_size = (child_state_v.width, child_state_v.height)
+
+                new_child_size = (old_child_size[0] * width_factor, old_child_size[1] * height_factor)
+                resize_state_v(child_state_v, old_child_size, new_child_size, use_meta_data)
+
             # Set new port view properties
             for port_v in state_v.get_all_ports():
                 new_port_rel_pos = calc_new_rel_pos(port_v.handle.pos, old_state_size, new_state_size)
@@ -817,13 +826,11 @@ class StateView(Element):
                             *new_rel_pos)
 
                 for child_state_v in state_v.child_state_views():
-                    if use_meta_data:
-                        old_child_size = child_state_v.model.get_meta_data_editor()['size']
-                    else:
-                        old_child_size = (child_state_v.width, child_state_v.height)
-
-                    new_child_size = (old_child_size[0] * width_factor, old_child_size[1] * height_factor)
-                    resize_state_v(child_state_v, old_child_size, new_child_size, use_meta_data)
+                    resize_child_state_v(child_state_v)
+            elif isinstance(state_v.model, LibraryStateModel):
+                if state_v.model.meta['gui']["show_content"]:
+                    state_copy_v = self.canvas.get_view_for_model(state_v.model.state_copy)
+                    resize_child_state_v(state_copy_v)
 
         new_size = (self.width, self.height)
         resize_state_v(self, old_size, new_size, paste)
