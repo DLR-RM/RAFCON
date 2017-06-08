@@ -622,6 +622,12 @@ def substitute_selected_state_and_use_choice_dialog():
 
 
 def substitute_selected_state(state, as_template=False):
+    """ Substitutes the selected state with the handed state
+
+    :param rafcon.core.states.state.State state: A state of any functional type that derives from State
+    :param bool as_template: The flag determines if a handed the state of type LibraryState is insert as template
+    :return:
+    """
     # print "substitute_selected_state", state, as_template
     assert isinstance(state, State)
     from rafcon.core.states.barrier_concurrency_state import DeciderState
@@ -645,28 +651,21 @@ def substitute_selected_state(state, as_template=False):
         return False
 
     current_state_m = selected_state_models[0]
-    current_state = current_state_m.state
-    current_state_name = current_state.name
-    parent_state_m = current_state_m.parent
-    parent_state = current_state.parent
+
+    if not as_template:
+        state.name = current_state_m.state.name
 
     if not as_template:
         state_m = get_state_model_class_for_state(state)(state)
-        gui_helper_state.substitute_state(parent_state_m.states[current_state.state_id], state_m)
-        state.name = current_state_name
-        return True
-    # If inserted as template, we have to extract the state_copy and load the meta data manually
+    # If inserted as template, we have to extract the state_copy and model
     else:
         assert isinstance(state, LibraryState)
-        # print "as template1", parent_state_m.states[current_state.state_id].get_meta_data_editor()
-        template_m = LibraryStateModel(state).state_copy
-        # print "as template2", template_m
-        gui_helper_state.substitute_state(parent_state_m.states[current_state.state_id], template_m)
-        # template = template_m.state
-        # template.change_state_id()
-        # template.name = current_state_name
+        state_m = LibraryStateModel(state).state_copy
 
-        return True
+    assert current_state_m.parent.states[current_state_m.state.state_id] is current_state_m
+    gui_helper_state.substitute_state(current_state_m, state_m)
+
+    return True
 
 
 def substitute_selected_library_state_with_template():
