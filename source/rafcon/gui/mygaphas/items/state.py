@@ -365,7 +365,10 @@ class StateView(Element):
                         state_v.apply_meta_data(recursive=True)
 
     def draw(self, context):
-        if self.moving and self.parent and self.parent.moving:
+        # Do not draw if
+        # * state (or its parent) is currently moved
+        # * is root state of a library (drawing would hide the LibraryState itself)
+        if self.moving and self.parent and self.parent.moving or self.model.state.is_root_state_of_library:
             return
 
         width = self.width
@@ -899,7 +902,10 @@ class NameView(Element):
         self.height = name_meta['size'][1]
 
     def draw(self, context):
-        if self.moving:
+        # Do not draw if
+        # * state (or its parent) is currently moved
+        # * is root state of a library (drawing would hide the LibraryState itself)
+        if self.moving or self.parent.model.state.is_root_state_of_library:
             return
 
         width = self.width
