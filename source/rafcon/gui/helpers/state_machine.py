@@ -498,11 +498,11 @@ def reduce_to_parent_states(models):
     return models
 
 
-def insert_state(state, as_template=False):
+def insert_state_into_selected_state(state, as_template=False):
     """Adds a State to the selected state
 
     :param state: the state which is inserted
-    :param as_template:
+    :param as_template: If a state is a library state can be insert as template
     :return: boolean: success of the insertion
     """
     smm_m = rafcon.gui.singleton.state_machine_manager_model
@@ -524,32 +524,7 @@ def insert_state(state, as_template=False):
         logger.error("Please select a state for the insertion")
         return False
 
-    current_state_m = selected_state_models[0]
-    current_state = current_state_m.state
-    if not isinstance(current_state, ContainerState):
-        logger.error("States can only be inserted in container states")
-        return False
-
-    if not as_template:
-        new_state_m = get_state_model_class_for_state(state)(state)
-        gui_helper_state.gui_helper_meta_data.put_default_meta_on_state_m(new_state_m, current_state_m)
-        new_state = state
-    # If inserted as template, we have to extract the state_copy and load the meta data manually
-    else:
-        new_state_m = LibraryStateModel(state).state_copy
-        new_state = state.state_copy
-
-        gaphas_editor, _ = gui_helper_state.gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
-        previous_state_size = new_state_m.get_meta_data_editor(gaphas_editor)['size']
-        gui_helper_state.gui_helper_meta_data.put_default_meta_on_state_m(new_state_m, current_state_m)
-
-        gui_helper_state.prepare_state_m_for_insert_as(new_state_m, previous_state_size)
-
-    current_state_m.expected_future_models.add(new_state_m)
-    while new_state.state_id in current_state.states:
-        new_state.change_state_id()
-
-    current_state.add_state(new_state)
+    gui_helper_state.insert_state_as(selected_state_models[0], state, as_template)
 
     return True
 
@@ -559,7 +534,7 @@ def add_state_by_drag_and_drop(state, data):
     ctrl_path = ['state_machines_editor_ctrl', selected_sm_id]
     state_machine_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller_by_path(ctrl_path)
     state_machine_editor_ctrl.perform_drag_and_drop = True
-    if insert_state(state, False):
+    if insert_state_into_selected_state(state, False):
         data.set_text(state.state_id)
     state_machine_editor_ctrl.perform_drag_and_drop = False
 

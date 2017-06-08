@@ -88,7 +88,7 @@ class StateIconController(ExtendedController):
         """
         if self.view.get_path_at_pos(int(event.x), int(event.y)) is not None \
                 and len(self.view.get_selected_items()) > 0:
-            return gui_helper_state_machine.insert_state(self._get_state(), False)
+            return gui_helper_state_machine.insert_state_into_selected_state(self._get_state(), False)
 
     def on_mouse_motion(self, widget, event):
         """selection on mouse over

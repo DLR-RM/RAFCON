@@ -169,7 +169,7 @@ def trigger_gui_signals(*args):
     # create complex state with all elements
     call_gui_callback(sm_m.selection.set, [sm_m.get_state_model_by_path('CDMJPK'), ])
     lib_state = LibraryState(join("generic", "dialog"), "Dialog [3 options]", "0.1", "Dialog [3 options]")
-    call_gui_callback(gui_helper_state_machine.insert_state, lib_state, True)
+    call_gui_callback(gui_helper_state_machine.insert_state_into_selected_state, lib_state, True)
     assert len(state_m.state.states) == old_child_state_count + 2
 
     state = None

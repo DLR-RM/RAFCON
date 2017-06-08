@@ -206,7 +206,7 @@ class LibraryTreeController(ExtendedController):
 
     def insert_button_clicked(self, widget, as_template=False):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-        gui_helper_state_machine.insert_state(self._get_selected_library_state(), as_template)
+        gui_helper_state_machine.insert_state_into_selected_state(self._get_selected_library_state(), as_template)
 
     def select_open_state_machine_of_selected_library_element(self):
         """Select respective state machine of selected library in state machine manager if already open """

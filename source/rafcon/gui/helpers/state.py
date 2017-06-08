@@ -20,7 +20,8 @@ from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.gui import singleton as gui_singletons
 
 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
-from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateModel, StateMachineModel, LibraryStateModel
+from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateModel, StateMachineModel, \
+    LibraryStateModel, get_state_model_class_for_state
 from rafcon.gui.models.signals import ActionSignalMsg
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
@@ -384,6 +385,43 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
     else:
         logger.info("For insert as template of {0} no resize of state meta data is performed because the meta data has "
                     "empty fields.".format(state_m_to_insert))
+
+
+def insert_state_as(target_state_m, state, as_template):
+    """ Add a state into a target state
+
+    :param rafcon.gui.models.container_state.ContainerState target_state_m: State model of the target state
+    :param rafcon.core.states.State state: State to insert as template or not
+    :param bool as_template: The flag determines if a handed the state of type LibraryState is insert as template
+    :return:
+    """
+
+    if not isinstance(target_state_m, ContainerStateModel) or \
+            not isinstance(target_state_m.state, ContainerState):
+        logger.error("States can only be inserted in container states")
+        return False
+
+    previous_state_size = None
+    if not as_template:
+        new_state_m = get_state_model_class_for_state(state)(state)
+        gui_helper_meta_data.put_default_meta_on_state_m(new_state_m, target_state_m)
+        new_state = state
+    # If inserted as template, we have to extract the state_copy and respective model
+    else:
+        new_state_m = LibraryStateModel(state).state_copy
+        new_state = state.state_copy
+
+        gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
+        previous_state_size = new_state_m.get_meta_data_editor(gaphas_editor)['size']
+        gui_helper_meta_data.put_default_meta_on_state_m(new_state_m, target_state_m)
+
+    prepare_state_m_for_insert_as(new_state_m, previous_state_size)
+
+    target_state_m.expected_future_models.add(new_state_m)
+    while new_state.state_id in target_state_m.state.states:
+        new_state.change_state_id()
+
+    target_state_m.state.add_state(new_state)
 
 
 def substitute_state(target_state_m, state_m_to_insert):
