@@ -889,6 +889,10 @@ class GraphicalEditorController(ExtendedController):
     def _connect_transition_to_ports(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
 
         transition_meta = transition_m.get_meta_data_editor()
+        grandparent_state_v = self.canvas.get_parent(parent_state_v)
+        connect_to_grandparent = False
+        if parent_state_m.state.is_root_state_of_library:
+            connect_to_grandparent = True
 
         try:
             if use_waypoints:
@@ -900,7 +904,10 @@ class GraphicalEditorController(ExtendedController):
             # Get id and references to the from and to state
             from_state_id = transition_m.transition.from_state
             if from_state_id is None:
-                parent_state_v.connect_to_income(transition_v, transition_v.from_handle())
+                if connect_to_grandparent:
+                    grandparent_state_v.connect_to_income(transition_v, transition_v.from_handle())
+                else:
+                    parent_state_v.connect_to_income(transition_v, transition_v.from_handle())
             else:
                 from_state_m = parent_state_m.states[from_state_id]
                 from_state_v = self.canvas.get_view_for_model(from_state_m)
@@ -912,7 +919,10 @@ class GraphicalEditorController(ExtendedController):
             if to_state_id == parent_state_m.state.state_id:  # Transition goes back to parent
                 # Set the to coordinates to the outcome coordinates received earlier
                 to_outcome_id = transition_m.transition.to_outcome
-                parent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
+                if connect_to_grandparent:
+                    grandparent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
+                else:
+                    parent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
             else:
                 # Set the to coordinates to the center of the next state
                 to_state_m = parent_state_m.states[to_state_id]
