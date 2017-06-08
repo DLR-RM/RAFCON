@@ -553,6 +553,7 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
                 rel_pos = add_pos(rel_pos, (0., height_pos_offset_to_middle))
             offset = subtract_pos((0., 0.), subtract_pos(old_rel_pos, rel_pos))
             offset_rel_pos_of_all_models_in_dict(models_dict, mult_two_vectors((1., y_axis_mirror), offset), gaphas_editor)
+            return 1, 1
         # smallest site scale
         else:
             # increase of boundary or clearance results into bigger estimated size and finally stronger
