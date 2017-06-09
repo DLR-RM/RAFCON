@@ -79,8 +79,10 @@ def test_create_container_state(caplog):
     container = ContainerState("Container")
     assert len(container.states) == 0
 
-    input_container_state = container.add_input_data_port("input", "float")
-    output_container_state = container.add_output_data_port("output", "float")
+    input_port_container_state = container.add_input_data_port("input", "float")
+    output_port_container_state = container.add_output_data_port("output", "float")
+    scoped_var_1_container_state = container.add_scoped_variable("scope_1", "float")
+    scoped_var_2_container_state = container.add_scoped_variable("scope_2", "float")
 
     state1 = ExecutionState("MyFirstState")
     container.add_state(state1)
@@ -125,8 +127,15 @@ def test_create_container_state(caplog):
     with raises(ValueError):
         # Data flow to non-existing state
         container.add_data_flow(state1.state_id, output_state1, -1, input_state2)
+    with raises(ValueError):
+        # Connect port to itself
+        container.add_data_flow(state1.state_id, output_state1, state1.state_id, output_state1)
+    with raises(ValueError):
+        # Connect two scoped variable
+        container.add_data_flow(container.state_id, scoped_var_1_container_state,
+                                container.state_id, scoped_var_2_container_state)
 
-    container.add_data_flow(container.state_id, input_container_state, state1.state_id, input_state1)
+    container.add_data_flow(container.state_id, input_port_container_state, state1.state_id, input_state1)
 
     # with raises(ValueError):  # cannot connect data flow to same child state
     container.add_data_flow(state2.state_id, output_state2, state2.state_id, input2_state2)
