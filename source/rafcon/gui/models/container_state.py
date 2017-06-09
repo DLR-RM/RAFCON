@@ -196,10 +196,8 @@ class ContainerStateModel(StateModel):
         super(ContainerStateModel, self).model_changed(model, prop_name, info)
 
     def check_is_start_state(self):
-        start_state_id = self.state.start_state_id
         for state_id, state_m in self.states.iteritems():
-            if state_m.is_start != (state_id == start_state_id):
-                state_m.is_start = (state_id == start_state_id)
+            state_m.update_is_start()
 
     def _get_model_info(self, model, info=None):
         model_list = None

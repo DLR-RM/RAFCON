@@ -102,12 +102,9 @@ class AbstractStateModel(MetaModel, Hashable):
 
         MetaModel.__init__(self, meta)
         assert isinstance(state, State)
+        self.is_start = False
 
         self.state = state
-
-        # True if root_state or state is parent start_state_id else False
-        self.is_start = state.is_root_state or parent is None or isinstance(parent.state, LibraryState) or \
-                        state.state_id == state.parent.start_state_id
 
         self.parent = parent
 
@@ -160,6 +157,13 @@ class AbstractStateModel(MetaModel, Hashable):
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
 
+    def update_is_start(self):
+        """True if root_state or state is parent start_state_id or has no parent  or is the state copy of a library
+        state else False."""
+        if (self.state.is_root_state or self.parent is None or isinstance(self.parent.state, LibraryState) or
+                self.state.state_id == self.state.parent.start_state_id) != self.is_start:
+            self.is_start = False if self.is_start else True
+
     @property
     def core_element(self):
         return self.state
@@ -205,6 +209,7 @@ class AbstractStateModel(MetaModel, Hashable):
             self._parent = ref(parent_m)
         else:
             self._parent = None
+        self.update_is_start()
 
     def get_state_machine_m(self, two_factor_check=True):
         """ Get respective state machine model
@@ -294,6 +299,9 @@ class AbstractStateModel(MetaModel, Hashable):
         # Notify the parent state about the change (this causes a recursive call up to the root state)
         if self.parent is not None:
             self.parent.model_changed(model, prop_name, info)
+
+        if prop_name == 'parent':
+            self.update_is_start()
 
     @ModelMT.observe("action_signal", signal=True)
     def action_signal_triggered(self, model, prop_name, info):
