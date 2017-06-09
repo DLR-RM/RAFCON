@@ -8,15 +8,7 @@
             "from_state": "OALJKK", 
             "to_key": 0, 
             "to_state": "QHUUFU"
-        }, 
-        "2": {
-            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
-            "data_flow_id": 2, 
-            "from_key": 0, 
-            "from_state": "OALJKK", 
-            "to_key": 0, 
-            "to_state": "OALJKK"
-        }, 
+        },
         "14": {
             "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
             "data_flow_id": 14, 
