@@ -29,6 +29,7 @@ from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.state import StateType
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.config import global_gui_config
 
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.helpers.meta_data import generate_default_state_meta_data
@@ -777,7 +778,31 @@ class GraphicalEditorController(ExtendedController):
             # Keep state within parent
             pass
 
-        if isinstance(state_m, LibraryStateModel) and state_m.meta['gui']['show_content']:
+        def show_content_of_library(library_state_m):
+            """Check if content of library is to be shown
+            
+            Content is shown, if the state's meta flag "show_content" is True or if the same flag for a library up in
+            the hierarchy (up to a certain configurable level) is True.
+            
+            :param LibraryStateModel library_state_m: The library of which the content might be drawn 
+            :return: Whether the content is to be drawn
+            :rtype: bool
+            """
+            current_hierarchy_depth = 1
+            max_hierarchy_depth = global_gui_config.get_config_value("MAX_VISIBLE_LIBRARY_HIERARCHY", 2)
+            state_m = library_state_m
+            while True:
+                if isinstance(state_m, LibraryStateModel) and state_m.meta['gui']['show_content']:
+                    return True
+                if current_hierarchy_depth >= max_hierarchy_depth:
+                    return False
+                if state_m.state.is_root_state_of_library:
+                    current_hierarchy_depth += 1
+                if not state_m.parent:
+                    return False
+                state_m = state_m.parent
+
+        if isinstance(state_m, LibraryStateModel) and show_content_of_library(state_m):
             gui_helper_meta_data.scale_library_content(state_m)
             self.add_state_view_for_model(state_m.state_copy, state_v, hierarchy_level=hierarchy_level + 1)
 
