@@ -232,7 +232,7 @@ class PortView(object):
 
         parent_state_m = self._parent.model
         is_library_state_with_content_shown = isinstance(parent_state_m, LibraryStateModel) and \
-                                                parent_state_m.meta['gui']['show_content']
+                                              parent_state_m.show_content()
 
         parameters = {
             'direction': self.direction,
