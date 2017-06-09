@@ -314,6 +314,10 @@ def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor)
     # print "END", "#"*30, "offset models", pos_offset, "#"*30, "\n"
 
 
+def generate_default_data_for_state_recursively(state_m):
+    return False
+
+
 def scale_library_ports_meta_data(state_m, gaphas_editor=True):
     """Scale the ports of library model accordingly relative to state_copy meta size.
     
@@ -348,11 +352,17 @@ def scale_library_content(library_state_m, gaphas_editor=True):
     """
     assert isinstance(library_state_m, LibraryStateModel)
     # For library states with an ExecutionState as state_copy, scaling does not make sense
-    if not isinstance(library_state_m.state_copy, (ContainerStateModel, LibraryStateModel)):
+    if not isinstance(library_state_m.state_copy, ContainerStateModel):
         return
 
+    if model_has_empty_meta(library_state_m.state_copy) and \
+            not generate_default_data_for_state_recursively(library_state_m.state_copy):
+        return
+
+    # prepare resize by collecting all state elements in the model_dict
     models_dict = {'state': library_state_m}
     library_meta = library_state_m.get_meta_data_editor(gaphas_editor)
+
     library_state_m.state_copy.set_meta_data_editor('size', library_meta['size'], gaphas_editor)
     library_state_m.state_copy.set_meta_data_editor('rel_pos', library_meta['rel_pos'], gaphas_editor)
     for state_element_key in library_state_m.state_copy.state.state_element_attrs:
@@ -362,6 +372,8 @@ def scale_library_content(library_state_m, gaphas_editor=True):
             state_element_list = state_element_list.values()
         models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
     library_state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=gaphas_editor)
+
+    # perform final resize
     resize_factor = scale_meta_data_according_state(models_dict)
     resize_income_of_state_m(library_state_m.state_copy, resize_factor, gaphas_editor)
 
