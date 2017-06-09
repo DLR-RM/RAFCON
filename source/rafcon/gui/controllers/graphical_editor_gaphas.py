@@ -914,6 +914,8 @@ class GraphicalEditorController(ExtendedController):
     def _connect_transition_to_ports(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
 
         transition_meta = transition_m.get_meta_data_editor()
+        # The state_copy (root_state_of_library) is not shown, therefore transitions to the state_copy are connected
+        # to the LibraryState belonging to the state copy
         grandparent_state_v = self.canvas.get_parent(parent_state_v)
         connect_to_grandparent = False
         if parent_state_m.state.is_root_state_of_library:
@@ -967,11 +969,17 @@ class GraphicalEditorController(ExtendedController):
         from_state_id = data_flow_m.data_flow.from_state
         from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
             from_state_id]
+        # The state_copy (root_state_of_library) is not shown, therefore data flows to the state_copy are connected
+        # to the LibraryState belonging to the state copy
+        if from_state_m.state.is_root_state_of_library:
+            from_state_m = from_state_m.parent
         from_state_v = self.canvas.get_view_for_model(from_state_m)
 
         to_state_id = data_flow_m.data_flow.to_state
         to_state_m = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
             to_state_id]
+        if to_state_m.state.is_root_state_of_library:  # see comment above
+            to_state_m = to_state_m.parent
         to_state_v = self.canvas.get_view_for_model(to_state_m)
 
         from_key = data_flow_m.data_flow.from_key
@@ -981,11 +989,16 @@ class GraphicalEditorController(ExtendedController):
         to_port_m = to_state_m.get_data_port_m(to_key)
 
         if from_port_m is None:
-            logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
-                                                                                    data_flow_m.data_flow))
+            # One case, for which there is no from_port_m is when the the from-port is a ScopedVariable of a
+            # LibraryState
+            if not isinstance(from_state_m, LibraryStateModel):
+                logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
+                                                                                        data_flow_m.data_flow))
             return
         if to_port_m is None:
-            logger.warn('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
+            # One case, for which there is no to_port_m is when the the to-port is a ScopedVariable of a LibraryState
+            if not isinstance(to_state_m, LibraryStateModel):
+                logger.warn('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
             return
 
         # For scoped variables, there is no inner and outer connector
