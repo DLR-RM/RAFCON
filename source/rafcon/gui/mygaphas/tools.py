@@ -187,6 +187,32 @@ class HoverItemTool(HoverTool):
         # Reset cursor
         self.view.window.set_cursor(gtk.gdk.Cursor(DEFAULT_CURSOR))
 
+        # Check if hovered_item is within a LibraryState, if so, set hovered_item to the LibraryState
+        if view.hovered_item:
+            if isinstance(view.hovered_item, StateView):
+                state = view.hovered_item.model.state
+            else:
+                # If the hovered item is e.g. a connection, we need to get the parental state
+                hovered_state_v = view.canvas.get_parent(view.hovered_item)
+                state = hovered_state_v.model.state
+
+            # Find state_copy of uppermost LibraryState
+            library_root_state = state.get_library_root_state()
+            while True:
+                if library_root_state:
+                    parent_library_root_state = library_root_state.parent.get_library_root_state()
+                else:
+                    break
+                if parent_library_root_state:
+                    library_root_state = parent_library_root_state
+                else:
+                    break
+            # If the hovered element is a child of a library, make the library the hovered_item
+            if library_root_state:
+                library_parent = library_root_state.parent
+                library_parent_v = self.view.canvas.get_view_for_core_element(library_parent)
+                view.hovered_item = library_parent_v
+
         if isinstance(view.hovered_item, StateView):
             distance = view.hovered_item.border_width / 2.
             state_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos, distance)

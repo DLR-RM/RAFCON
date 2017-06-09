@@ -12,8 +12,6 @@
 
 from pkg_resources import get_distribution, DistributionNotFound
 
-__all__ = ["gui", "core", "utils"]
-
 try:
     __version__ = get_distribution("rafcon").version
 except DistributionNotFound:

@@ -38,8 +38,14 @@ class MyCanvas(Canvas):
         from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
 
         def delete_model_from_maps(model):
-            del self._core_view_map[model.core_element]
-            del self._model_view_map[model]
+            try:
+                del self._core_view_map[model.core_element]
+                del self._model_view_map[model]
+            except KeyError:
+                from rafcon.gui.models.library_state import LibraryStateModel
+                if not isinstance(model.parent, LibraryStateModel):
+                    # TODO: Check if this exception can really be ignored
+                    raise
         if isinstance(item, StateView):
             delete_model_from_maps(item.model)
             map(delete_model_from_maps, [outcome.model for outcome in item.outcomes])

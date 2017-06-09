@@ -37,6 +37,7 @@ from rafcon.gui.mygaphas.utils.cache.image_cache import ImageCache
 from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
 
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
+from rafcon.gui.helpers.meta_data import contains_geometric_info
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
@@ -83,7 +84,7 @@ class StateView(Element):
         self._image_cache = ImageCache()
 
         name_meta = state_m.get_meta_data_editor()['name']
-        if not isinstance(name_meta['size'], tuple) and not len(name_meta['size']) == 2:
+        if not contains_geometric_info(name_meta['size']):
             name_width = self.width * 0.8
             name_height = self.height * 0.4
             name_meta = state_m.set_meta_data_editor('name.size', (name_width, name_height))['name']
@@ -91,7 +92,7 @@ class StateView(Element):
 
         self._name_view = NameView(state_m.state.name, name_size)
 
-        if not isinstance(name_meta['rel_pos'], tuple) and not len(name_meta['rel_pos']) == 2:
+        if not contains_geometric_info(name_meta['rel_pos']):
             name_meta['rel_pos'] = (0, 0)
         name_pos = name_meta['rel_pos']
         self.name_view.matrix.translate(*name_pos)
@@ -365,7 +366,10 @@ class StateView(Element):
                         state_v.apply_meta_data(recursive=True)
 
     def draw(self, context):
-        if self.moving and self.parent and self.parent.moving:
+        # Do not draw if
+        # * state (or its parent) is currently moved
+        # * is root state of a library (drawing would hide the LibraryState itself)
+        if self.moving and self.parent and self.parent.moving or self.model.state.is_root_state_of_library:
             return
 
         width = self.width
@@ -802,6 +806,15 @@ class StateView(Element):
             new_name_rel_pos = calc_new_rel_pos(old_name_rel_pos, old_state_size, new_state_size)
             set_item_properties(name_v, new_name_size, new_name_rel_pos)
 
+            def resize_child_state_v(child_state_v):
+                if use_meta_data:
+                    old_child_size = child_state_v.model.get_meta_data_editor()['size']
+                else:
+                    old_child_size = (child_state_v.width, child_state_v.height)
+
+                new_child_size = (old_child_size[0] * width_factor, old_child_size[1] * height_factor)
+                resize_state_v(child_state_v, old_child_size, new_child_size, use_meta_data)
+
             # Set new port view properties
             for port_v in state_v.get_all_ports():
                 new_port_rel_pos = calc_new_rel_pos(port_v.handle.pos, old_state_size, new_state_size)
@@ -817,13 +830,11 @@ class StateView(Element):
                             *new_rel_pos)
 
                 for child_state_v in state_v.child_state_views():
-                    if use_meta_data:
-                        old_child_size = child_state_v.model.get_meta_data_editor()['size']
-                    else:
-                        old_child_size = (child_state_v.width, child_state_v.height)
-
-                    new_child_size = (old_child_size[0] * width_factor, old_child_size[1] * height_factor)
-                    resize_state_v(child_state_v, old_child_size, new_child_size, use_meta_data)
+                    resize_child_state_v(child_state_v)
+            elif isinstance(state_v.model, LibraryStateModel):
+                if state_v.model.meta['gui']["show_content"]:
+                    state_copy_v = self.canvas.get_view_for_model(state_v.model.state_copy)
+                    resize_child_state_v(state_copy_v)
 
         new_size = (self.width, self.height)
         resize_state_v(self, old_size, new_size, paste)
@@ -892,7 +903,10 @@ class NameView(Element):
         self.height = name_meta['size'][1]
 
     def draw(self, context):
-        if self.moving:
+        # Do not draw if
+        # * state (or its parent) is currently moved
+        # * is root state of a library (drawing would hide the LibraryState itself)
+        if self.moving or self.parent.model.state.is_root_state_of_library:
             return
 
         width = self.width

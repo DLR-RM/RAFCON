@@ -33,8 +33,9 @@ logger = log.get_logger(__name__)
 
 
 def mirror_y_axis_in_vividict_element(vividict, key):
+    from rafcon.gui.helpers.meta_data import contains_geometric_info
     rel_pos = vividict[key]
-    if isinstance(rel_pos, tuple):
+    if contains_geometric_info(rel_pos):
         vividict[key] = (rel_pos[0], -rel_pos[1])
     else:
         del vividict[key]
@@ -554,8 +555,9 @@ class AbstractStateModel(MetaModel, Hashable):
         return vividict
 
     def _meta_data_editor_opengl2gaphas(self, vividict):
+        from rafcon.gui.helpers.meta_data import contains_geometric_info
         vividict = mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
-        if isinstance(vividict['size'], tuple):
+        if contains_geometric_info(vividict['size']):
             self.temp['conversion_from_opengl'] = True
             # Determine income position
             size = vividict['size']

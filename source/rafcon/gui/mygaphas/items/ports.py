@@ -22,13 +22,13 @@ import cairo
 from rafcon.gui.utils import constants
 from rafcon.utils.geometry import deg2rad
 
-from rafcon.core.states.container_state import ContainerState
-
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.models.outcome import OutcomeModel
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
+from rafcon.gui.models.container_state import ContainerStateModel
+from rafcon.gui.models.library_state import LibraryStateModel
 
 from rafcon.gui.mygaphas.connector import RectanglePointPort
 from rafcon.gui.mygaphas.utils import gap_draw_helper
@@ -230,6 +230,10 @@ class PortView(object):
         if view_length < constants.MINIMUM_SIZE_FOR_DISPLAY:
             return
 
+        parent_state_m = self._parent.model
+        is_library_state_with_content_shown = isinstance(parent_state_m, LibraryStateModel) and \
+                                              parent_state_m.show_content()
+
         parameters = {
             'direction': self.direction,
             'side_length': side_length,
@@ -237,6 +241,7 @@ class PortView(object):
             'transparency': transparent,
             'incoming': self.connected_incoming,
             'outgoing': self.connected_outgoing,
+            'is_library_state_with_content_shown': is_library_state_with_content_shown
         }
 
         upper_left_corner = (position.x.value - side_length / 2., position.y.value - side_length / 2.)
@@ -255,7 +260,8 @@ class PortView(object):
             c = self._port_image_cache.get_context_for_image(current_zoom)
 
             c.move_to(0, 0)
-            if isinstance(self._parent.model.state, ContainerState):
+
+            if isinstance(parent_state_m, ContainerStateModel) or is_library_state_with_content_shown:
                 self._draw_container_state_port(c, self.direction, fill_color, transparent)
             else:
                 self._draw_simple_state_port(c, self.direction, fill_color, transparent)
@@ -368,7 +374,8 @@ class PortView(object):
         c.restore()
 
         # Colorize the generated connector path
-        if self.connected_incoming or self.connected_outgoing:
+        if isinstance(self, IncomeView) and self.connected_incoming or \
+                isinstance(self, OutcomeView) and self.connected_outgoing:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
             c.set_source_color(gui_config.gtk_colors['BLACK'])

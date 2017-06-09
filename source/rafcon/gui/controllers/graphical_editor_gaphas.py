@@ -303,10 +303,25 @@ class GraphicalEditorController(ExtendedController):
 
         model = notification.model
         view = self.canvas.get_view_for_model(model)
-        if isinstance(view, StateView):
-            view.apply_meta_data(recursive=meta_signal_message.affects_children)
+
+        if meta_signal_message.change == 'show_content':
+            library_state_m = model
+            library_state_v = view
+            if model.meta['gui']['show_content']:
+                logger.debug("Show content of {}".format(library_state_m.state))
+                gui_helper_meta_data.scale_library_content(library_state_m)
+                self.add_state_view_for_model(library_state_m.state_copy, view, hierarchy_level=library_state_v.hierarchy_level + 1)
+            else:
+                logger.debug("Hide content of {}".format(library_state_m.state))
+                state_copy_v = self.canvas.get_view_for_model(library_state_m.state_copy)
+                state_copy_v.remove()
+                self.canvas.request_update(library_state_v)
+                self.canvas.perform_update()
         else:
-            view.apply_meta_data()
+            if isinstance(view, StateView):
+                view.apply_meta_data(recursive=meta_signal_message.affects_children)
+            else:
+                view.apply_meta_data()
 
         self.canvas.request_update(view, matrix=True)
         self.canvas.perform_update()
@@ -387,7 +402,7 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'add_state':
                 new_state = arguments[1]
                 new_state_m = model.states[new_state.state_id]
-                self.add_state_view_to_parent(new_state_m, model)
+                self.add_state_view_with_meta_data_for_model(new_state_m, model)
                 if not self.perform_drag_and_drop:
                     self.canvas.perform_update()
             elif method_name == 'remove_state':
@@ -414,12 +429,12 @@ class GraphicalEditorController(ExtendedController):
                         self.canvas.perform_update()
                         break
             elif method_name == 'remove_transition':
-                self.remove_transition_view_from_parent_view(model)
+                self.remove_obsolete_transition_views_from_state(model)
                 self.canvas.perform_update()
             elif method_name == 'transition_change':
                 transition_m = model
                 transition_v = self.canvas.get_view_for_model(transition_m)
-                self.connect_transition_handle_to_state(transition_v, transition_m, transition_m.parent)
+                self._reconnect_transition(transition_v, transition_m, transition_m.parent)
                 self.canvas.perform_update()
 
             # ----------------------------------
@@ -434,12 +449,12 @@ class GraphicalEditorController(ExtendedController):
                         self.canvas.perform_update()
                         break
             elif method_name == 'remove_data_flow':
-                self.remove_data_flow_view_from_parent_view(model)
+                self.remove_obsolete_data_flow_views_from_state(model)
                 self.canvas.perform_update()
             elif method_name == 'data_flow_change':
                 data_flow_m = model
                 data_flow_v = self.canvas.get_view_for_model(data_flow_m)
-                self.connect_data_flow_handle_to_state(data_flow_v, data_flow_m, data_flow_m.parent)
+                self._reconnect_data_flow(data_flow_v, data_flow_m, data_flow_m.parent)
                 self.canvas.perform_update()
 
             # ----------------------------------
@@ -599,14 +614,14 @@ class GraphicalEditorController(ExtendedController):
 
             # Create and and new root state view from new root state model
             self.root_state_m = new_state_m
-            root_state_v = self.setup_state(self.root_state_m)
+            root_state_v = self.add_state_view_for_model(self.root_state_m)
             self.canvas.request_update(root_state_v)
 
         # Otherwise we only look at the modified state and its children
         else:
             # self.canvas.get_view_for_model(old_state_m.get_state_machine_m().root_state).remove()
             # self.root_state_m = new_state_m.get_state_machine_m().root_state
-            # root_state_v = self.setup_state(self.root_state_m)
+            # root_state_v = self.add_state_view_for_model(self.root_state_m)
             # self.canvas.request_update(root_state_v)
 
             state_v.model = new_state_m
@@ -632,7 +647,7 @@ class GraphicalEditorController(ExtendedController):
                 # Check for new states, which do not have a StateView (typically DeciderState)
                 for child_state_m in new_state_m.states.itervalues():
                     if not self.canvas.get_view_for_model(child_state_m):
-                        self.add_state_view_to_parent(child_state_m, new_state_m)
+                        self.add_state_view_with_meta_data_for_model(child_state_m, new_state_m)
                 # Check for new transitions, which do not have a TransitionView (typically related to DeciderState)
                 for transition_m in new_state_m.transitions:
                     if not self.canvas.get_view_for_model(transition_m):
@@ -670,33 +685,6 @@ class GraphicalEditorController(ExtendedController):
         """
         self._update_selection_from_external()
 
-    def set_non_active_states_transparent(self, transparent, state_v):
-        if transparent:
-            for root_item in self.canvas.get_root_items():
-                if isinstance(root_item, StateView):
-                    if root_item is not state_v:
-                        root_item.background()
-                for child in self.canvas.get_all_children(root_item):
-                    if isinstance(child, StateView):
-                        if child is not state_v:
-                            child.background()
-        else:
-            for root_item in self.canvas.get_root_items():
-                if isinstance(root_item, StateView):
-                    root_item.foreground()
-                for child in self.canvas.get_all_children(root_item):
-                    if isinstance(child, StateView):
-                        child.foreground()
-
-    def get_connected_data_flows(self, state_v):
-        parent_v = self.canvas.get_parent(state_v)
-        connected_data_flows = []
-        for child in self.canvas.get_children(parent_v):
-            if isinstance(child, DataFlowView):
-                if child.from_port in state_v.get_data_ports() or child.to_port in state_v.get_data_ports():
-                    connected_data_flows.append(child)
-        return connected_data_flows
-
     @staticmethod
     def _extract_info_data(info):
         if info['method_name'] in ['state_change', 'input_data_port_change', 'output_data_port_change',
@@ -723,96 +711,10 @@ class GraphicalEditorController(ExtendedController):
                 method_name = 'data_flow_change'
         return method_name, model, result, args, instance
 
-    def connect_transition_handle_to_state(self, transition_v, transition_m, parent_state_m):
-        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
-
-        self.canvas.disconnect_item(transition_v)
-        transition_v.remove_connection_from_ports()
-        self.add_transition(transition_m, transition_v, parent_state_m, parent_state_v, False)
-        self.canvas.update()
-
-    def connect_data_flow_handle_to_state(self, data_flow_v, data_flow_m, parent_state_m):
-        self.canvas.disconnect_item(data_flow_v)
-        data_flow_v.remove_connection_from_ports()
-        self.add_data_flow(data_flow_m, data_flow_v, parent_state_m)
-        self.canvas.update()
-
-    @staticmethod
-    def get_state_model(container_m, state_id):
-        if state_id is None:
-            return container_m
-        return container_m.states[state_id]
-
-    @lock_state_machine
-    def add_transition_view_for_model(self, transition_m, parent_state_m):
-        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
-
-        new_transition_hierarchy_level = parent_state_v.hierarchy_level
-        new_transition_v = TransitionView(transition_m, new_transition_hierarchy_level)
-
-        # Draw transition above all other state elements
-        self.canvas.add(new_transition_v, parent_state_v, index=None)
-
-        self.add_transition(transition_m, new_transition_v, parent_state_m, parent_state_v)
-
-    @lock_state_machine
-    def add_data_flow_view_for_model(self, data_flow_m, parent_state_m):
-        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
-
-        new_data_flow_hierarchy_level = parent_state_v.hierarchy_level
-        new_data_flow_v = DataFlowView(data_flow_m, new_data_flow_hierarchy_level)
-
-        # Draw data flow above NameView but beneath all other state elements
-        self.canvas.add(new_data_flow_v, parent_state_v, index=1)
-        self.add_data_flow(data_flow_m, new_data_flow_v, parent_state_m)
-
-    @lock_state_machine
-    def _remove_connection_view(self, parent_state_m, transitions=True):
-        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
-
-        if transitions:
-            available_connections = parent_state_m.transitions
-        else:
-            available_connections = parent_state_m.data_flows
-
-        children = self.canvas.get_children(parent_state_v)
-        for child in list(children):
-            if transitions and isinstance(child, TransitionView) and child.model not in available_connections:
-                child.prepare_destruction()
-                self.canvas.remove(child)
-            elif not transitions and isinstance(child, DataFlowView) and child.model not in available_connections:
-                child.prepare_destruction()
-                self.canvas.remove(child)
-
-    @lock_state_machine
-    def remove_data_flow_view_from_parent_view(self, parent_state_m):
-        self._remove_connection_view(parent_state_m, False)
-
-    @lock_state_machine
-    def remove_transition_view_from_parent_view(self, parent_state_m):
-        self._remove_connection_view(parent_state_m)
-
-    @lock_state_machine
-    def add_state_view_to_parent(self, state_m, parent_state_m):
-        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
-
-        # generate default meta data for state only if necessary
-        state_meta = state_m.get_meta_data_editor()
-        if not isinstance(state_meta['size'], tuple) or not len(state_meta['size']) == 2 or \
-                not isinstance(state_meta['rel_pos'], tuple) or not len(state_meta['rel_pos']) == 2:
-            child_rel_pos, new_state_size = generate_default_state_meta_data(parent_state_m, self.canvas)
-            return self.setup_state(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
-                                    hierarchy_level=parent_state_m.hierarchy_level + 1)
-        else:
-            return self.setup_state(state_m, parent_state_v, hierarchy_level=parent_state_m.hierarchy_level + 1)
-
-    def _remove_state_view(self, view):
-        return gui_helper_state_machine.delete_selected_elements(self.model)
-
     def setup_canvas(self):
         with self.model.state_machine.modification_lock():
             hash_before = self.model.mutable_hash().digest()
-            self.setup_state(self.root_state_m, rel_pos=(10, 10))
+            self.add_state_view_for_model(self.root_state_m, rel_pos=(10, 10))
             hash_after = self.model.mutable_hash().digest()
             if hash_before != hash_after:
                 self._meta_data_changed(None, self.root_state_m, 'append_initial_change', True)
@@ -820,29 +722,31 @@ class GraphicalEditorController(ExtendedController):
                             " when the state machine is being saved.")
 
     @lock_state_machine
-    def setup_state(self, state_m, parent_v=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
-        """Draws a (container) state with all its content
+    def add_state_view_for_model(self, state_m, parent_v=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
+        """Creates a `StateView` (recursively) and adds it to the canvas
 
-        Mainly contains the logic for drawing (e. g. reading and calculating values). The actual drawing process is
-        done in the view, which is called from this method with the appropriate arguments.
+        The method uses the `StateModel` `state_m` to create the according `StateView`. For all content within 
+        `state_m`, such as connections, states and ports, the views are also created. All views are added to the canvas.
 
         :param rafcon.gui.models.state.StateModel state_m: The state to be drawn
         :param rafcon.gui.mygaphas.items.state.StateView parent_v: The parent state view of new state view `state_m`
         :param tuple rel_pos: The default relative position (x, y) if there is no relative position stored
         :param tuple size: The default size (width, height) if there is no size stored
         :param float hierarchy_level: The hierarchy level of the state
+        :return: The created `StateView`
+        :rtype: StateView
         """
         assert isinstance(state_m, AbstractStateModel)
         state_meta = state_m.get_meta_data_editor()
 
         # Use default values if no size information is stored
-        if not isinstance(state_meta['size'], tuple) or not len(state_meta['size']) == 2:
+        if not gui_helper_meta_data.contains_geometric_info(state_meta['size']):
             state_meta = state_m.set_meta_data_editor('size', size)
 
         size = state_meta['size']
 
         # Use default values if no position information is stored
-        if not isinstance(state_meta['rel_pos'], tuple) or not len(state_meta['rel_pos']) == 2:
+        if not gui_helper_meta_data.contains_geometric_info(state_meta['rel_pos']):
             state_meta = state_m.set_meta_data_editor('rel_pos', rel_pos)
 
         rel_pos = state_meta['rel_pos']
@@ -854,7 +758,8 @@ class GraphicalEditorController(ExtendedController):
         state_v = StateView(state_m, size, hierarchy_level)
 
         # Draw state above data flows and NameView but beneath transitions
-        index = 1 if not parent_v else len(state_m.state.parent.data_flows) + 1
+        num_data_flows = len(state_m.state.parent.data_flows) if isinstance(state_m.parent, ContainerStateModel) else 0
+        index = 1 if not parent_v else num_data_flows + 1
         self.canvas.add(state_v, parent_v, index=index)
         state_v.matrix.translate(*rel_pos)
 
@@ -872,50 +777,124 @@ class GraphicalEditorController(ExtendedController):
             # Keep state within parent
             pass
 
-        if isinstance(state_m, ContainerStateModel):
+        if isinstance(state_m, LibraryStateModel) and state_m.show_content():
+            gui_helper_meta_data.scale_library_content(state_m)
+            self.add_state_view_for_model(state_m.state_copy, state_v, hierarchy_level=hierarchy_level + 1)
 
+        elif isinstance(state_m, ContainerStateModel):
             num_child_state = 0
 
             for scoped_variable_m in state_m.scoped_variables:
                 state_v.add_scoped_variable(scoped_variable_m)
 
             for child_state_m in state_m.states.itervalues():
-
+                # generate optional meta data for child state - not used if valid meta data already in child state model
                 child_rel_pos, child_size = gui_helper_meta_data.generate_default_state_meta_data(state_m, self.canvas,
                                                                                                   num_child_state)
                 num_child_state += 1
 
-                self.setup_state(child_state_m, state_v, child_rel_pos, child_size, hierarchy_level + 1)
+                self.add_state_view_for_model(child_state_m, state_v, child_rel_pos, child_size, hierarchy_level + 1)
 
-            self.add_transitions(state_m, hierarchy_level)
+            for transition_m in state_m.transitions:
+                self.add_transition_view_for_model(transition_m, state_m)
 
-            self.add_data_flows(state_m, hierarchy_level)
+            for data_flow_m in state_m.data_flows:
+                self.add_data_flow_view_for_model(data_flow_m, state_m)
 
         return state_v
 
     @lock_state_machine
-    def add_transitions(self, parent_state_m, hierarchy_level):
-        """Draws the transitions belonging to a state
+    def add_transition_view_for_model(self, transition_m, parent_state_m):
+        """Creates a `TransitionView` and adds it to the canvas
 
-        The method takes all transitions from the given state and calculates their start and end point positions.
-        Those are passed together with the waypoints to the view of the graphical editor.
+        The method creates a`TransitionView` from the given `TransitionModel `transition_m` and adds it to the canvas.
 
-        :param rafcon.gui.models.container_state.ContainerStateModel parent_state_m: The model of the container
-            state, of which the transitions shall be drawn
+        :param TransitionModel transition_m: The transition for which a view is to be created 
+        :param ContainerStateModel parent_state_m: The parental `StateModel` of the transition
         """
         parent_state_v = self.canvas.get_view_for_model(parent_state_m)
-        assert isinstance(parent_state_v, StateView)
-        for transition_m in parent_state_m.transitions:
-            transition_v = TransitionView(transition_m, hierarchy_level)
-            # Draw transition above all other state elements
-            self.canvas.add(transition_v, parent_state_v, index=None)
 
-            self.add_transition(transition_m, transition_v, parent_state_m, parent_state_v)
+        hierarchy_level = parent_state_v.hierarchy_level
+        transition_v = TransitionView(transition_m, hierarchy_level)
+
+        # Draw transition above all other state elements
+        self.canvas.add(transition_v, parent_state_v, index=None)
+
+        self._connect_transition_to_ports(transition_m, transition_v, parent_state_m, parent_state_v)
+
+        return transition_v
 
     @lock_state_machine
-    def add_transition(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
+    def add_data_flow_view_for_model(self, data_flow_m, parent_state_m):
+        """Creates a `DataFlowView` and adds it to the canvas
+
+        The method creates a`DataFlowView` from the given `DataFlowModel `data_flow_m` and adds it to the canvas.
+
+        :param DataFlowModel data_flow_m: The data flow for which a view is to be created 
+        :param ContainerStateModel parent_state_m: The parental `StateModel` of the data flow
+        """
+        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
+
+        hierarchy_level = parent_state_v.hierarchy_level
+        data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
+
+        # Draw data flow above NameView but beneath all other state elements
+        self.canvas.add(data_flow_v, parent_state_v, index=1)
+        self._connect_data_flow_to_ports(data_flow_m, data_flow_v, parent_state_m)
+
+    @lock_state_machine
+    def _remove_obsolete_connections_views_of_state(self, parent_state_m, transitions=True):
+        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
+
+        if transitions:
+            available_connections = parent_state_m.transitions
+        else:
+            available_connections = parent_state_m.data_flows
+
+        children = self.canvas.get_children(parent_state_v)
+        for child in list(children):
+            if transitions and isinstance(child, TransitionView) and child.model not in available_connections:
+                child.prepare_destruction()
+                self.canvas.remove(child)
+            elif not transitions and isinstance(child, DataFlowView) and child.model not in available_connections:
+                child.prepare_destruction()
+                self.canvas.remove(child)
+
+    @lock_state_machine
+    def remove_obsolete_data_flow_views_from_state(self, parent_state_m):
+        self._remove_obsolete_connections_views_of_state(parent_state_m, False)
+
+    @lock_state_machine
+    def remove_obsolete_transition_views_from_state(self, parent_state_m):
+        self._remove_obsolete_connections_views_of_state(parent_state_m)
+
+    @lock_state_machine
+    def add_state_view_with_meta_data_for_model(self, state_m, parent_state_m):
+        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
+
+        # generate default meta data for state only if necessary
+        state_meta = state_m.get_meta_data_editor()
+        if not gui_helper_meta_data.contains_geometric_info(state_meta['size']) or \
+                not gui_helper_meta_data.contains_geometric_info(state_meta['rel_pos']):
+            child_rel_pos, new_state_size = generate_default_state_meta_data(parent_state_m, self.canvas)
+            return self.add_state_view_for_model(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
+                                                 hierarchy_level=parent_state_m.hierarchy_level + 1)
+        else:
+            return self.add_state_view_for_model(state_m, parent_state_v, hierarchy_level=parent_state_m.hierarchy_level + 1)
+
+    def _remove_state_view(self, view):
+        return gui_helper_state_machine.delete_selected_elements(self.model)
+
+    @lock_state_machine
+    def _connect_transition_to_ports(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
 
         transition_meta = transition_m.get_meta_data_editor()
+        # The state_copy (root_state_of_library) is not shown, therefore transitions to the state_copy are connected
+        # to the LibraryState belonging to the state copy
+        grandparent_state_v = self.canvas.get_parent(parent_state_v)
+        connect_to_grandparent = False
+        if parent_state_m.state.is_root_state_of_library:
+            connect_to_grandparent = True
 
         try:
             if use_waypoints:
@@ -927,21 +906,25 @@ class GraphicalEditorController(ExtendedController):
             # Get id and references to the from and to state
             from_state_id = transition_m.transition.from_state
             if from_state_id is None:
-                parent_state_v.connect_to_income(transition_v, transition_v.from_handle())
+                if connect_to_grandparent:
+                    grandparent_state_v.connect_to_income(transition_v, transition_v.from_handle())
+                else:
+                    parent_state_v.connect_to_income(transition_v, transition_v.from_handle())
             else:
                 from_state_m = parent_state_m.states[from_state_id]
                 from_state_v = self.canvas.get_view_for_model(from_state_m)
                 from_outcome_id = transition_m.transition.from_outcome
                 from_state_v.connect_to_outcome(from_outcome_id, transition_v, transition_v.from_handle())
-                # from_state_v.connect_to_double_port_outcome(from_outcome_id, transition_v,
-                # transition_v.from_handle(), False)
 
             to_state_id = transition_m.transition.to_state
 
             if to_state_id == parent_state_m.state.state_id:  # Transition goes back to parent
                 # Set the to coordinates to the outcome coordinates received earlier
                 to_outcome_id = transition_m.transition.to_outcome
-                parent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
+                if connect_to_grandparent:
+                    grandparent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
+                else:
+                    parent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
             else:
                 # Set the to coordinates to the center of the next state
                 to_state_m = parent_state_m.states[to_state_id]
@@ -956,35 +939,22 @@ class GraphicalEditorController(ExtendedController):
                 pass
 
     @lock_state_machine
-    def add_data_flows(self, parent_state_m, hierarchy_level):
-        """Draw all data flows contained in the given container state
-
-        The method takes all data flows from the given state and calculates their start and end point positions.
-        Those are passed together with the waypoints to the view of the graphical editor.
-
-        :param rafcon.gui.models.container_state.ContainerStateModel parent_state_m: The model of the container
-            state, of which the data flows shall be drawn
-        """
-        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
-        assert isinstance(parent_state_v, StateView)
-        for data_flow_m in parent_state_m.data_flows:
-            data_flow_v = DataFlowView(data_flow_m, hierarchy_level)
-
-            # Draw data flow above NameView but beneath all other state elements
-            self.canvas.add(data_flow_v, parent_state_v, index=1)
-            self.add_data_flow(data_flow_m, data_flow_v, parent_state_m)
-
-    @lock_state_machine
-    def add_data_flow(self, data_flow_m, data_flow_v, parent_state_m):
+    def _connect_data_flow_to_ports(self, data_flow_m, data_flow_v, parent_state_m):
         # Get id and references to the from and to state
         from_state_id = data_flow_m.data_flow.from_state
         from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
             from_state_id]
+        # The state_copy (root_state_of_library) is not shown, therefore data flows to the state_copy are connected
+        # to the LibraryState belonging to the state copy
+        if from_state_m.state.is_root_state_of_library:
+            from_state_m = from_state_m.parent
         from_state_v = self.canvas.get_view_for_model(from_state_m)
 
         to_state_id = data_flow_m.data_flow.to_state
         to_state_m = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
             to_state_id]
+        if to_state_m.state.is_root_state_of_library:  # see comment above
+            to_state_m = to_state_m.parent
         to_state_v = self.canvas.get_view_for_model(to_state_m)
 
         from_key = data_flow_m.data_flow.from_key
@@ -994,11 +964,16 @@ class GraphicalEditorController(ExtendedController):
         to_port_m = to_state_m.get_data_port_m(to_key)
 
         if from_port_m is None:
-            logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
-                                                                                    data_flow_m.data_flow))
+            # One case, for which there is no from_port_m is when the the from-port is a ScopedVariable of a
+            # LibraryState
+            if not isinstance(from_state_m, LibraryStateModel):
+                logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
+                                                                                        data_flow_m.data_flow))
             return
         if to_port_m is None:
-            logger.warn('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
+            # One case, for which there is no to_port_m is when the the to-port is a ScopedVariable of a LibraryState
+            if not isinstance(to_state_m, LibraryStateModel):
+                logger.warn('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
             return
 
         # For scoped variables, there is no inner and outer connector
@@ -1016,7 +991,30 @@ class GraphicalEditorController(ExtendedController):
         elif to_port_m in to_state_m.input_data_ports:
             to_state_v.connect_to_input_port(to_key, data_flow_v, data_flow_v.to_handle())
 
-    def check_focus_and_sm_selection_according_event(self, event):
+    def _reconnect_transition(self, transition_v, transition_m, parent_state_m):
+        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
+
+        self.canvas.disconnect_item(transition_v)
+        transition_v.remove_connection_from_ports()
+        self._connect_transition_to_ports(transition_m, transition_v, parent_state_m, parent_state_v, False)
+        self.canvas.update()
+
+    def _reconnect_data_flow(self, data_flow_v, data_flow_m, parent_state_m):
+        self.canvas.disconnect_item(data_flow_v)
+        data_flow_v.remove_connection_from_ports()
+        self._connect_data_flow_to_ports(data_flow_m, data_flow_v, parent_state_m)
+        self.canvas.update()
+
+    def react_to_event(self, event):
+        """Check whether the given event should be handled
+        
+        Checks, whether the editor widget has the focus and whether the selected state machine corresponds to the 
+        state machine of this editor.
+        
+        :param event: GTK event object 
+        :return: True if the event should be handled, else False
+        :rtype: bool
+        """
         if not react_to_event(self.view, self.view.editor, event):
             return False
         if not rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id == \
@@ -1026,16 +1024,16 @@ class GraphicalEditorController(ExtendedController):
 
     @lock_state_machine
     def _add_data_port_to_selected_state(self, *event, **kwargs):
-        if self.check_focus_and_sm_selection_according_event(event):
+        if self.react_to_event(event):
             data_port_type = None if 'data_port_type' not in kwargs else kwargs['data_port_type']
             gui_helper_state_machine.add_data_port_to_selected_states(data_port_type)
 
     @lock_state_machine
     def _add_scoped_variable_to_selected_state(self, *event):
-        if self.check_focus_and_sm_selection_according_event(event):
+        if self.react_to_event(event):
             gui_helper_state_machine.add_scoped_variable_to_selected_states()
 
     @lock_state_machine
     def _add_outcome_to_selected_state(self, *event):
-        if self.check_focus_and_sm_selection_according_event(event):
+        if self.react_to_event(event):
             gui_helper_state_machine.add_outcome_to_selected_states()

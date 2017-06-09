@@ -41,6 +41,7 @@ from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuCon
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import react_to_event
+from rafcon.gui.helpers.meta_data import contains_geometric_info, add_pos, subtract_pos
 from rafcon.gui.models import ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.data_port import DataPortModel
@@ -51,29 +52,15 @@ from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.runtime_config import global_runtime_config
 import rafcon.gui.singleton
 from rafcon.gui.views.graphical_editor import Direction, GraphicalEditorView
-from rafcon.utils import log
 from rafcon.utils.geometry import point_in_triangle, dist, point_on_line, deg2rad
+from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
 
 def check_pos(pos):
-    if not isinstance(pos, tuple):
-        raise ValueError("Position must be of type tuple")
-    if len(pos) != 2:
-        raise ValueError("Position must have exactly two entries (x and y)")
-
-
-def add_pos(pos1, pos2):
-    check_pos(pos1)
-    check_pos(pos2)
-    return pos1[0] + pos2[0], pos1[1] + pos2[1]
-
-
-def subtract_pos(pos1, pos2):
-    check_pos(pos1)
-    check_pos(pos2)
-    return pos1[0] - pos2[0], pos1[1] - pos2[1]
+    if not contains_geometric_info(pos):
+        raise ValueError("Position is not valid: {}".format(pos))
 
 
 def pos_equal(pos1, pos2):
@@ -1529,17 +1516,18 @@ class GraphicalEditorController(ExtendedController):
         assert isinstance(state_m, AbstractStateModel)
         state_meta = state_m.get_meta_data_editor(for_gaphas=False)
         state_temp = state_m.temp['gui']['editor']
-        is_first_draw_of_state = not isinstance(state_temp['pos'], tuple)
+        is_first_draw_of_state = not contains_geometric_info(state_temp['pos'])
         redraw = False
 
         # Use default values if no size information is stored
-        if not isinstance(state_meta['size'], tuple):
+        if not contains_geometric_info(state_meta['size']):
+
             if not isinstance(state_m, LibraryStateModel):
                 state_meta = state_m.set_meta_data_editor('size', size, from_gaphas=False)
             else:
                 # Try to get size from library (will later be resized to fit in state
                 lib_size = state_m.state_copy.get_meta_data_editor(for_gaphas=False)['size']
-                if isinstance(lib_size, tuple):
+                if contains_geometric_info(lib_size):
                     parent_size = state_m.parent.get_meta_data_editor(for_gaphas=False)['size']
                     if lib_size[0] >= parent_size[0] or lib_size[1] >= parent_size[1]:
                         target_size = parent_size[0] / 5., parent_size[1] / 5.
@@ -1556,7 +1544,7 @@ class GraphicalEditorController(ExtendedController):
             pos = (0, 0)
         else:
             # Use default values if no size information is stored
-            if not isinstance(state_meta['rel_pos'], tuple):
+            if not contains_geometric_info(state_meta['rel_pos']):
                 state_meta = state_m.set_meta_data_editor('rel_pos', rel_pos, from_gaphas=False)
 
                 state_abs_pos = self._get_absolute_position(state_m.parent, rel_pos)
@@ -1676,7 +1664,7 @@ class GraphicalEditorController(ExtendedController):
 
         elif isinstance(state_m, LibraryStateModel):
             show_content = state_m.meta['gui']['show_content'] is True
-            is_first_draw_of_lib_state = not isinstance(state_m.state_copy.temp['gui']['editor']['pos'], tuple)
+            is_first_draw_of_lib_state = not contains_geometric_info(state_m.state_copy.temp['gui']['editor']['pos'])
 
             if show_content or is_child_of_library:
                 # Start calculation hierarchy level within a library
@@ -1691,7 +1679,7 @@ class GraphicalEditorController(ExtendedController):
                     new_corner_pos = add_pos(state_temp['pos'], state_meta['size'])
                     if isinstance(state_m.state_copy, ContainerStateModel):
                         import rafcon.gui.helpers.meta_data as gui_helper_meta_data
-                        gui_helper_meta_data.scale_library_content_to_fit(state_m, gaphas_editor=False)
+                        gui_helper_meta_data.scale_library_content(state_m, gaphas_editor=False)
                     else:
                         self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
                                            redraw=False)
@@ -1732,7 +1720,7 @@ class GraphicalEditorController(ExtendedController):
             port_meta = port_m.get_meta_data_editor(for_gaphas=False)
             port_temp = port_m.temp['gui']['editor']
             port = port_m.data_port
-            if not isinstance(port_meta['inner_rel_pos'], tuple):
+            if not contains_geometric_info(port_meta['inner_rel_pos']):
                 # Put input ports by default in the lower left corner
                 rel_pos = (0, -parent_meta['size'][1] + num_input_ports * port_height)
                 port_meta = port_m.set_meta_data_editor('inner_rel_pos', rel_pos, from_gaphas=False)
@@ -1751,7 +1739,7 @@ class GraphicalEditorController(ExtendedController):
             port_meta = port_m.get_meta_data_editor(for_gaphas=False)
             port_temp = port_m.temp['gui']['editor']
             port = port_m.data_port
-            if not isinstance(port_meta['inner_rel_pos'], tuple):
+            if not contains_geometric_info(port_meta['inner_rel_pos']):
                 # Put output ports by default in the lower right corner
                 rel_pos = (parent_meta['size'][0], -parent_meta['size'][1] + num_output_ports * port_height)
                 port_meta = port_m.set_meta_data_editor('inner_rel_pos', rel_pos, from_gaphas=False)
@@ -1770,7 +1758,7 @@ class GraphicalEditorController(ExtendedController):
             port_meta = port_m.get_meta_data_editor(for_gaphas=False)
             port_temp = port_m.temp['gui']['editor']
             port = port_m.scoped_variable
-            if not isinstance(port_meta['inner_rel_pos'], tuple):
+            if not contains_geometric_info(port_meta['inner_rel_pos']):
                 # Put scoped variables by default row-wise in at the top
                 max_cols = parent_meta['size'][0] // max_port_width
                 (row, col) = divmod(num_scoped_variables, max_cols)
