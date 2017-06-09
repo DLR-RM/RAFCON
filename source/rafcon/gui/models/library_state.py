@@ -20,6 +20,7 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.abstract_state import get_state_model_class_for_state
 
+from rafcon.gui.config import global_gui_config
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -120,6 +121,29 @@ class LibraryStateModel(AbstractStateModel):
             new_oc_m.parent = self
             new_oc_m.outcome = outcome_m.outcome
             self.outcomes.append(new_oc_m)
+
+    def show_content(self):
+        """Check if content of library is to be shown
+        
+        Content is shown, if the state's meta flag "show_content" is True or if the same flag for a library up in
+        the hierarchy (up to a certain configurable level) is True.
+        
+        :return: Whether the content is to be drawn
+        :rtype: bool
+        """
+        current_hierarchy_depth = 1
+        max_hierarchy_depth = global_gui_config.get_config_value("MAX_VISIBLE_LIBRARY_HIERARCHY", 2)
+        state_m = self
+        while True:
+            if isinstance(state_m, LibraryStateModel) and state_m.meta['gui']['show_content']:
+                return True
+            if current_hierarchy_depth >= max_hierarchy_depth:
+                return False
+            if state_m.state.is_root_state_of_library:
+                current_hierarchy_depth += 1
+            if not state_m.parent:
+                return False
+            state_m = state_m.parent
 
     def copy_meta_data_from_state_m(self, source_state_m):
         super(LibraryStateModel, self).copy_meta_data_from_state_m(source_state_m)
