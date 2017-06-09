@@ -72,9 +72,10 @@ class OutcomeModel(StateElementModel):
         return vividict
 
     def _meta_data_editor_opengl2gaphas(self, vividict):
+        from rafcon.gui.helpers.meta_data import contains_geometric_info
         if self.parent:
             state_size = self.parent.get_meta_data_editor()['size']
-            if isinstance(state_size, tuple):
+            if contains_geometric_info(state_size):
                 step = min(state_size) / 10.
                 if self.outcome.outcome_id == -1:  # aborted
                     vividict["rel_pos"] = (state_size[0] - step, 0)

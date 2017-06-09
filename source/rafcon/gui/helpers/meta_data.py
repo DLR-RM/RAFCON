@@ -30,6 +30,10 @@ def divide_two_vectors(vec1, vec2):
 def cal_margin(parent_size):
     return min(parent_size[0], parent_size[1]) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
 
+def contains_geometric_info(var):
+    """ Check whether the passed variable is a tuple with two floats """
+    return isinstance(var, tuple) and len(var) == 2 and all(isinstance(val, (int, float)) for val in var)
+
 
 def dict_has_empty_elements(d, ignored_keys=None, ignored_partial_keys=None):
     ignored_keys = ["show_content", "waypoints"] if ignored_keys is None else ignored_keys
@@ -97,8 +101,8 @@ def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_stat
     :return child relative pos (tuple) in parent and it size (tuple)
     """
     parent_size = parent_state_m.get_meta_data_editor(gaphas_editor)['size']
-    if not isinstance(parent_size, tuple):
-        raise TypeError("'State size' have to be of tuple not {0} like {1}.".format(type(parent_size), parent_size))
+    if not contains_geometric_info(parent_size):
+        raise ValueError("Invalid state size: {}".format(parent_size))
 
     # use handed number of child states and otherwise take number of child states from parent state model
     num_child_state = len(parent_state_m.states) if num_child_state is None else num_child_state
@@ -351,7 +355,7 @@ def scale_library_ports_meta_data(state_m, gaphas_editor=True):
                                 state_m.state_copy.get_meta_data_editor()['size'])
 
     # print "scale_library_ports_meta_data -> resize_state_port_meta", factor
-    if isinstance(factor, tuple) and len(factor) == 2:
+    if contains_geometric_info(factor):
         resize_state_port_meta(state_m, factor, True)
         state_m.meta_data_was_scaled = True
     else:

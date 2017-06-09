@@ -740,13 +740,13 @@ class GraphicalEditorController(ExtendedController):
         state_meta = state_m.get_meta_data_editor()
 
         # Use default values if no size information is stored
-        if not isinstance(state_meta['size'], tuple) or not len(state_meta['size']) == 2:
+        if not gui_helper_meta_data.contains_geometric_info(state_meta['size']):
             state_meta = state_m.set_meta_data_editor('size', size)
 
         size = state_meta['size']
 
         # Use default values if no position information is stored
-        if not isinstance(state_meta['rel_pos'], tuple) or not len(state_meta['rel_pos']) == 2:
+        if not gui_helper_meta_data.contains_geometric_info(state_meta['rel_pos']):
             state_meta = state_m.set_meta_data_editor('rel_pos', rel_pos)
 
         rel_pos = state_meta['rel_pos']
@@ -874,8 +874,8 @@ class GraphicalEditorController(ExtendedController):
 
         # generate default meta data for state only if necessary
         state_meta = state_m.get_meta_data_editor()
-        if not isinstance(state_meta['size'], tuple) or not len(state_meta['size']) == 2 or \
-                not isinstance(state_meta['rel_pos'], tuple) or not len(state_meta['rel_pos']) == 2:
+        if not gui_helper_meta_data.contains_geometric_info(state_meta['size']) or \
+                not gui_helper_meta_data.contains_geometric_info(state_meta['rel_pos']):
             child_rel_pos, new_state_size = generate_default_state_meta_data(parent_state_m, self.canvas)
             return self.add_state_view_for_model(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
                                                  hierarchy_level=parent_state_m.hierarchy_level + 1)
