@@ -37,6 +37,7 @@ from rafcon.core.id_generator import *
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
 from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.scope import ScopedData
 from rafcon.core.storage import storage
 from rafcon.core.storage.storage import get_storage_id_for_state
 from rafcon.utils import classproperty
@@ -729,7 +730,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             return self._check_outcome_validity(child)
         if isinstance(child, DataPort):
             return self._check_data_port_validity(child)
-        return False, "no valid child type"
+        if isinstance(child, ScopedData):
+            return self._check_scoped_data_validity(child)
+        return False, "Invalid state element for state of type {}".format(self.__class__.__name__)
 
     def _check_outcome_validity(self, check_outcome):
         """Checks the validity of an outcome
@@ -848,6 +851,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                                  "as current value {3}".format(self, data_port.data_type,
                                                                type(self.output_data[data_port.name]),
                                                                self.output_data[data_port.name]))
+
+    def _check_scoped_data_validity(self, check_scoped_data):
+        return True, "valid"  # no validity checks, yet
 
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- misc functions ---------------------------------------
