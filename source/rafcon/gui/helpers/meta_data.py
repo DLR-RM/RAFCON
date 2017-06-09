@@ -27,6 +27,10 @@ def divide_two_vectors(vec1, vec2):
     return tuple([vec1[i] / vec2[i] for i in range(len(vec2))])
 
 
+def cal_margin(parent_size):
+    return min(parent_size[0], parent_size[1]) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
+
+
 def dict_has_empty_elements(d, ignored_keys=None, ignored_partial_keys=None):
     ignored_keys = ["show_content", "waypoints"] if ignored_keys is None else ignored_keys
     ignored_partial_keys = ['input_data_port', 'output_data_port'] if ignored_partial_keys is None else ignored_partial_keys
@@ -282,7 +286,7 @@ def cal_frame_according_boundaries(left, right, top, bottom, parent_size, gaphas
     """ Generate margin and relative position and size handed boundary parameter and parent size """
     y_axis_mirror = 1 if gaphas_editor else -1
     # print "parent_size ->", parent_size
-    margin = min(parent_size[0], parent_size[1]) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
+    margin = cal_margin(parent_size)
     # Add margin and ensure that the upper left corner is within the state
     if group:
         # frame of grouped state
@@ -367,12 +371,16 @@ def scale_library_content(library_state_m, gaphas_editor=True):
     if not isinstance(library_state_m.state_copy, ContainerStateModel):
         return
 
-    # prepare resize by collecting all state elements in the model_dict
-    models_dict = {'state': library_state_m}
+    # use same size for state copy and put rel_pos to zero
     library_meta = library_state_m.get_meta_data_editor(gaphas_editor)
+    state_copy_meta = library_state_m.state_copy.set_meta_data_editor('size', library_meta['size'], gaphas_editor)
+    library_state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=gaphas_editor)
 
-    library_state_m.state_copy.set_meta_data_editor('size', library_meta['size'], gaphas_editor)
-    library_state_m.state_copy.set_meta_data_editor('rel_pos', library_meta['rel_pos'], gaphas_editor)
+    # work around that gaphas draws in state_copy coordinates (which is not shown) -> reduce state copy size
+    if gaphas_editor:
+        library_state_margin = cal_margin(state_copy_meta['size'])
+        state_copy_size = subtract_pos(state_copy_meta['size'], (2*library_state_margin, 2*library_state_margin))
+        library_state_m.state_copy.set_meta_data_editor('size', state_copy_size, gaphas_editor)
 
     # if meta data has empty fields put default data on state meta data
     if model_has_empty_meta(library_state_m.state_copy) and \
@@ -380,13 +388,16 @@ def scale_library_content(library_state_m, gaphas_editor=True):
                                                              only_child_states=True):
         return
 
+    # prepare resize by collecting all state elements in the models_dict
+    # do resize in respect to state copy
+    # (opengl same size as library state and in case of gaphas reduced by library state margin)
+    models_dict = {'state': library_state_m.state_copy}
     for state_element_key in library_state_m.state_copy.state.state_element_attrs:
         state_element_list = getattr(library_state_m.state_copy, state_element_key)
         # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
         if hasattr(state_element_list, 'keys'):
             state_element_list = state_element_list.values()
         models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
-    library_state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=gaphas_editor)
 
     # perform final resize
     resize_factor = scale_meta_data_according_state(models_dict, fill_up=True)
