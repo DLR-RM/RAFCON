@@ -119,9 +119,9 @@ class ScopedData(StateElement):
     _data_port_type = None
     _primary_key = None
 
-    def __init__(self, name, value, value_type, from_state, data_port_type):
+    def __init__(self, name, value, value_type, from_state, data_port_type, parent=None):
 
-        Observable.__init__(self)
+        super(ScopedData, self).__init__()
 
         self.from_state = from_state
         self.name = name
@@ -134,6 +134,8 @@ class ScopedData(StateElement):
 
         self._timestamp = generate_time_stamp()
         # for storage purpose inside the container states (generated from key_name and from_state)
+
+        self.parent = parent
 
     @property
     def state_element_id(self):

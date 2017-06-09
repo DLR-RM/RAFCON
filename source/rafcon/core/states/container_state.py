@@ -1497,7 +1497,7 @@ class ContainerState(State):
             for input_data_port_key, data_port in self.input_data_ports.iteritems():
                 if dict_key == data_port.name:
                     self.scoped_data[str(input_data_port_key) + self.state_id] = \
-                        ScopedData(data_port.name, value, type(value), self.state_id, ScopedVariable)
+                        ScopedData(data_port.name, value, type(value), self.state_id, ScopedVariable, parent=self)
                     # forward the data to scoped variables
                     for data_flow_key, data_flow in self.data_flows.iteritems():
                         if data_flow.from_key == input_data_port_key and data_flow.from_state == self.state_id:
@@ -1505,7 +1505,7 @@ class ContainerState(State):
                                 current_scoped_variable = self.scoped_variables[data_flow.to_key]
                                 self.scoped_data[str(data_flow.to_key) + self.state_id] = \
                                     ScopedData(current_scoped_variable.name, value, type(value), self.state_id,
-                                               ScopedVariable)
+                                               ScopedVariable, parent=self)
 
     @lock_state_machine
     def add_state_execution_output_to_scoped_data(self, dictionary, state):
@@ -1524,7 +1524,7 @@ class ContainerState(State):
                             logger.error("The data type of output port {0} should be of type {1}, but is of type {2}".
                                          format(output_name, data_port.data_type, type(value)))
                     self.scoped_data[str(output_data_port_key) + state.state_id] = \
-                        ScopedData(data_port.name, value, type(value), state.state_id, OutputDataPort)
+                        ScopedData(data_port.name, value, type(value), state.state_id, OutputDataPort, parent=self)
 
     @lock_state_machine
     def add_default_values_of_scoped_variables_to_scoped_data(self):
@@ -1534,7 +1534,7 @@ class ContainerState(State):
         for key, scoped_var in self.scoped_variables.iteritems():
             self.scoped_data[str(scoped_var.data_port_id) + self.state_id] = \
                 ScopedData(scoped_var.name, scoped_var.default_value, scoped_var.data_type, self.state_id,
-                           ScopedVariable)
+                           ScopedVariable, parent=self)
 
     @lock_state_machine
     def update_scoped_variables_with_output_dictionary(self, dictionary, state):
@@ -1561,7 +1561,7 @@ class ContainerState(State):
                             current_scoped_variable = self.scoped_variables[data_flow.to_key]
                             self.scoped_data[str(data_flow.to_key) + self.state_id] = \
                                 ScopedData(current_scoped_variable.name, value, type(value), state.state_id,
-                                           ScopedVariable)
+                                           ScopedVariable, parent=self)
 
     # ---------------------------------------------------------------------------------------------
     # ------------------------ functions to modify the scoped data end ----------------------------
@@ -1652,7 +1652,7 @@ class ContainerState(State):
         """
         # First let the state do validity checks for outcomes and data ports
         valid, message = super(ContainerState, self).check_child_validity(child)
-        if not valid and message != "no valid child type":
+        if not valid and not message.startswith("Invalid state element"):
             return False, message
         # Continue with checks if previous ones did not fail
         # Check type of child and call appropriate validity test
@@ -1781,9 +1781,13 @@ class ContainerState(State):
 
         # Data_ports without parents are not allowed to be connected twice
         if not to_data_port.parent:
-            return False, "to_data_port does not have a parent -> {0}".format(data_flow)
+            return False, "Source data port does not have a parent -> {0}".format(data_flow)
         if not from_data_port.parent:
-            return False, "from_data_port does not have a parent -> {0}".format(data_flow)
+            return False, "Target data port does not have a parent -> {0}".format(data_flow)
+
+        # Check if data ports are identical
+        if from_data_port is to_data_port:
+            return False, "Source and target data ports of data flow must not be identical -> {}".format(data_flow)
 
         # Check, whether the origin of the data flow is valid
         if from_state_id == self.state_id:  # data_flow originates in container state
@@ -1804,6 +1808,10 @@ class ContainerState(State):
             if to_data_port_id not in to_data_port.parent.input_data_ports:
                 return False, "Data flow target port must be an input port, when the data flow goes to a child state" \
                               " -> {0}".format(data_flow)
+
+        # Check if data flow connects two scoped variables
+        if isinstance(from_data_port, ScopedVariable) and isinstance(to_data_port, ScopedVariable):
+            return False, "Data flows must not connect two scoped variables -> {}".format(data_flow)
 
         # Check, whether the target port is already connected
         for existing_data_flow in self.data_flows.itervalues():
