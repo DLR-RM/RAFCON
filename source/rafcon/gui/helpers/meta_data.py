@@ -108,6 +108,7 @@ def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_stat
 
     # Calculate default positions for the child states
     # Make the inset from the top left corner
+    # print "parent size", parent_size
     parent_state_width, parent_state_height = parent_size
     new_state_side_size = min(parent_state_width * 0.2, parent_state_height * 0.2)
 
@@ -124,11 +125,26 @@ def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_stat
     return (child_rel_pos_x, child_rel_pos_y), (new_state_side_size, new_state_side_size)
 
 
-def put_default_meta_on_state_m(state_m, parent_state_m):
+def put_default_meta_on_state_m(state_m, parent_state_m, num_child_state=None):
+    # print state_m, parent_state_m, num_child_state
     gaphas_editor, y_axis_mirror = get_y_axis_and_gaphas_editor_flag()
-    rel_pos, size = generate_default_state_meta_data(parent_state_m, gaphas_editor=gaphas_editor)
+    rel_pos, size = generate_default_state_meta_data(parent_state_m,
+                                                     num_child_state=num_child_state,
+                                                     gaphas_editor=gaphas_editor,)
     state_m.set_meta_data_editor('rel_pos', mult_two_vectors((1., y_axis_mirror), rel_pos), gaphas_editor)
     state_m.set_meta_data_editor('size', size, gaphas_editor)
+
+
+def put_default_meta_data_on_state_m_recursively(state_m, parent_state_m, num_child_state=None, only_child_states=False):
+
+    if not only_child_states:
+        put_default_meta_on_state_m(state_m, parent_state_m, num_child_state)
+
+    if isinstance(state_m, ContainerStateModel):
+        for child_state_number, child_state_m in enumerate(state_m.states.itervalues()):
+            put_default_meta_data_on_state_m_recursively(child_state_m, parent_state_m if only_child_states else state_m,
+                                                         num_child_state=child_state_number)
+    return True
 
 
 def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', combined_action=False):
@@ -314,10 +330,6 @@ def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor)
     # print "END", "#"*30, "offset models", pos_offset, "#"*30, "\n"
 
 
-def generate_default_data_for_state_recursively(state_m):
-    return False
-
-
 def scale_library_ports_meta_data(state_m, gaphas_editor=True):
     """Scale the ports of library model accordingly relative to state_copy meta size.
     
@@ -355,16 +367,19 @@ def scale_library_content(library_state_m, gaphas_editor=True):
     if not isinstance(library_state_m.state_copy, ContainerStateModel):
         return
 
-    if model_has_empty_meta(library_state_m.state_copy) and \
-            not generate_default_data_for_state_recursively(library_state_m.state_copy):
-        return
-
     # prepare resize by collecting all state elements in the model_dict
     models_dict = {'state': library_state_m}
     library_meta = library_state_m.get_meta_data_editor(gaphas_editor)
 
     library_state_m.state_copy.set_meta_data_editor('size', library_meta['size'], gaphas_editor)
     library_state_m.state_copy.set_meta_data_editor('rel_pos', library_meta['rel_pos'], gaphas_editor)
+
+    # if meta data has empty fields put default data on state meta data
+    if model_has_empty_meta(library_state_m.state_copy) and \
+            not put_default_meta_data_on_state_m_recursively(library_state_m.state_copy, library_state_m,
+                                                             only_child_states=True):
+        return
+
     for state_element_key in library_state_m.state_copy.state.state_element_attrs:
         state_element_list = getattr(library_state_m.state_copy, state_element_key)
         # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
@@ -374,7 +389,7 @@ def scale_library_content(library_state_m, gaphas_editor=True):
     library_state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=gaphas_editor)
 
     # perform final resize
-    resize_factor = scale_meta_data_according_state(models_dict)
+    resize_factor = scale_meta_data_according_state(models_dict, fill_up=True)
     resize_income_of_state_m(library_state_m.state_copy, resize_factor, gaphas_editor)
 
 
@@ -518,7 +533,7 @@ def scale_meta_data_according_states(models_dict):
     return True
 
 
-def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False):
+def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False, fill_up=False):
     # TODO Documentation needed....
     """ Scale elements in dict to fit into dict state key element.
 
@@ -527,15 +542,17 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
     gaphas_editor, y_axis_mirror = get_y_axis_and_gaphas_editor_flag()
     # TODO check about positions of input-data- and output-data- or scoped variable-ports is needed
     # TODO adjustments of data ports positions are not sufficient -> origin state size is maybe needed for that
+    # TODO consistency check on boundary and scale parameter for every if else case
 
     if 'states' in models_dict or 'scoped_variables' in models_dict:
         left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)
         parent_size = models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['size']
         margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, parent_size,
-                                                                   gaphas_editor, False)
+                                                                   gaphas_editor, group=False)
         automatic_mode = True if rel_pos is None else False
         clearance = 0.2 if rel_pos is None else 0.
         rel_pos = (margin, margin) if rel_pos is None else rel_pos
+        # rel_pos = (0., 0.) if fill_up else rel_pos
         clearance_scale = 1 + clearance
 
         assert parent_size[0] > rel_pos[0]
@@ -551,7 +568,7 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
 
         # no site scale
         if parent_width - rel_pos[0] > boundary_width * clearance_scale and \
-                parent_height - rel_pos[1] > boundary_height * clearance_scale:
+                parent_height - rel_pos[1] > boundary_height * clearance_scale and not fill_up:
             if automatic_mode:
                 resize_factor = 1.
                 boundary_width_in_parent = boundary_width*resize_factor
@@ -565,12 +582,12 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
                 rel_pos = add_pos(rel_pos, (0., height_pos_offset_to_middle))
             offset = subtract_pos((0., 0.), subtract_pos(old_rel_pos, rel_pos))
             offset_rel_pos_of_all_models_in_dict(models_dict, mult_two_vectors((1., y_axis_mirror), offset), gaphas_editor)
-            return 1, 1
+            return 1, 1  # (1, 1), offset, rel_pos
         # smallest site scale
         else:
             # increase of boundary or clearance results into bigger estimated size and finally stronger
             # reduction of original element sizes
-            left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict, clearance=0.2)
+            left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict, clearance=clearance)
             parent_size = models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['size']
             margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, parent_size,
                                                                        gaphas_editor, False)
@@ -615,7 +632,9 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
 
             offset_rel_pos_of_all_models_in_dict(models_dict, mult_two_vectors((1., y_axis_mirror), frame['rel_pos']), gaphas_editor)
             # scale_meta_data_according_frame(models_dict, frame)
-            return resize_factor, resize_factor
+            return resize_factor, resize_factor  # (resize_factor, resize_factor) , offset, frame['rel_pos']
+    else:
+        return 1, 1  # (1, 1) , (0., 0.), (0., 0.)
 
 
 def scale_meta_data_according_frame(models_dict, frame):

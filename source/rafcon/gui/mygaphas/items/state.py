@@ -83,7 +83,8 @@ class StateView(Element):
         self._image_cache = ImageCache()
 
         name_meta = state_m.get_meta_data_editor()['name']
-        if not isinstance(name_meta['size'], tuple) and not len(name_meta['size']) == 2:
+        if not isinstance(name_meta['size'], tuple) or not len(name_meta['size']) == 2:
+            # print "generate new name size: ", name_meta['size'], state_m
             name_width = self.width * 0.8
             name_height = self.height * 0.4
             name_meta = state_m.set_meta_data_editor('name.size', (name_width, name_height))['name']
@@ -91,7 +92,8 @@ class StateView(Element):
 
         self._name_view = NameView(state_m.state.name, name_size)
 
-        if not isinstance(name_meta['rel_pos'], tuple) and not len(name_meta['rel_pos']) == 2:
+        if not isinstance(name_meta['rel_pos'], tuple) or not len(name_meta['rel_pos']) == 2:
+            # print "generate new name rel_pos: ", name_meta['rel_pos'], , state_m
             name_meta['rel_pos'] = (0, 0)
         name_pos = name_meta['rel_pos']
         self.name_view.matrix.translate(*name_pos)

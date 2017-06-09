@@ -788,7 +788,7 @@ class GraphicalEditorController(ExtendedController):
                 state_v.add_scoped_variable(scoped_variable_m)
 
             for child_state_m in state_m.states.itervalues():
-
+                # generate optional meta data for child state - not used if valid meta data already in child state model
                 child_rel_pos, child_size = gui_helper_meta_data.generate_default_state_meta_data(state_m, self.canvas,
                                                                                                   num_child_state)
                 num_child_state += 1
