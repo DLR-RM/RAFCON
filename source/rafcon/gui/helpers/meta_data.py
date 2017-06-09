@@ -112,7 +112,6 @@ def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_stat
 
     # Calculate default positions for the child states
     # Make the inset from the top left corner
-    # print "parent size", parent_size
     parent_state_width, parent_state_height = parent_size
     new_state_side_size = min(parent_state_width * 0.2, parent_state_height * 0.2)
 
@@ -121,9 +120,11 @@ def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_stat
     child_size = (child_width, child_height)
     child_spacing = max(child_size) * 1.2
 
-    max_cols = parent_state_width // child_spacing
+    parent_margin = cal_margin(parent_size)
+    # print "parent size", parent_size, parent_margin
+    max_cols = (parent_state_width - 2*parent_margin) // child_spacing
     (row, col) = divmod(num_child_state, max_cols)
-    child_rel_pos_x = col * child_spacing + child_spacing - child_width
+    child_rel_pos_x = parent_margin + col * child_spacing + child_spacing - child_width
     child_rel_pos_y = child_spacing * (1.5 * row + 1)
     # print "default rel_pos and size", (child_rel_pos_x, child_rel_pos_y), (new_state_side_size, new_state_side_size)
     return (child_rel_pos_x, child_rel_pos_y), (new_state_side_size, new_state_side_size)
