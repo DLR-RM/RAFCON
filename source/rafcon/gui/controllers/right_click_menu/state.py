@@ -28,9 +28,8 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import create_image_menu_item, create_check_menu_item, append_sub_menu_to_parent_menu
-from rafcon.gui.models.abstract_state import AbstractStateModel
-from rafcon.gui.models.container_state import ContainerStateModel
-from rafcon.gui.models.scoped_variable import ScopedVariableModel
+from rafcon.gui.models import AbstractStateModel, ContainerStateModel, LibraryStateModel, ScopedVariableModel
+from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 
@@ -153,6 +152,13 @@ class StateMachineRightClickMenu(object):
 
         return menu
 
+    def insert_show_library_content_in_menu(self, menu, shortcuts_dict, accel_group):
+
+        state_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+        if len(state_m_list) == 1 and isinstance(state_m_list[0], LibraryStateModel):
+            menu.append(create_check_menu_item("Show library content", state_m_list[0].meta['gui']['show_content'],
+                                               partial(self.on_toggle_show_library_content, state_m=state_m_list[0])))
+
     def insert_is_start_state_in_menu(self, menu, shortcuts_dict, accel_group):
 
         state_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
@@ -189,6 +195,8 @@ class StateMachineRightClickMenu(object):
         accel_group = self.accel_group
         shortcuts_dict = global_gui_config.get_config_value('SHORTCUTS')
 
+        self.insert_show_library_content_in_menu(menu, shortcuts_dict, accel_group)
+
         self.insert_is_start_state_in_menu(menu, shortcuts_dict, accel_group)
 
         self.insert_execution_sub_menu_in_menu(menu, shortcuts_dict, accel_group)
@@ -202,7 +210,7 @@ class StateMachineRightClickMenu(object):
                                            self.on_open_activate,
                                            accel_code=None, accel_group=accel_group))
 
-        menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
+        menu.append(create_image_menu_item("Substitute state with library", constants.BUTTON_REFR,
                                            self.on_substitute_state_activate,
                                            accel_code=shortcuts_dict['substitute_state'][0], accel_group=accel_group))
 
@@ -211,10 +219,17 @@ class StateMachineRightClickMenu(object):
         sub_menu.append(create_image_menu_item("Keep state name", constants.BUTTON_LEFTA,
                         partial(self.on_substitute_library_with_template_activate, keep_name=True)))
 
-        sub_menu.append(create_image_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
+        sub_menu.append(create_image_menu_item("Take name from library", constants.BUTTON_EXCHANGE,
                         partial(self.on_substitute_library_with_template_activate, keep_name=False)))
 
         return menu
+
+    @staticmethod
+    def on_toggle_show_library_content(widget, date=None, state_m=None):
+        if state_m is not None:
+            state_m.meta['gui']['show_content'] = False if state_m.meta['gui']['show_content'] else True
+            msg = MetaSignalMsg(origin='state_overview', change='show_content', affects_children=False)
+            state_m.meta_signal.emit(msg)
 
     def on_toggle_is_start_state(self, widget, data=None):
         self.shortcut_manager.trigger_action("is_start_state", None, None)
@@ -300,10 +315,12 @@ class StateMachineRightClickMenu(object):
     def on_substitute_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('substitute_state', None, None)
 
-    def on_substitute_library_with_template_activate(self, widget, data=None, keep_name=False):
+    @staticmethod
+    def on_substitute_library_with_template_activate(widget, data=None, keep_name=False):
         gui_helper_state_machine.substitute_selected_library_state_with_template(keep_name)
 
-    def on_type_change_activate(self, widget, data=None, target_class=None):
+    @staticmethod
+    def on_type_change_activate(widget, data=None, target_class=None):
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.get_all()) == 1 and len(selection.get_states()) == 1:
             gui_helper_state_machine.change_state_type_with_error_handling_and_logger_messages(selection.get_states()[0],

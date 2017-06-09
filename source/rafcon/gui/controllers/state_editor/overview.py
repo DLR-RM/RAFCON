@@ -104,7 +104,7 @@ class StateOverviewController(ExtendedController, Model):
         view['type_viewport'].add(combo)
         view['type_viewport'].show()
 
-        # Prepare LAbel for state_name -> Library states cannot be changed
+        # Prepare label for state_name -> Library states cannot be changed
         if isinstance(self.model.state, LibraryState):
             l_store.prepend(['LIBRARY'])
             combo.set_sensitive(False)
@@ -112,6 +112,7 @@ class StateOverviewController(ExtendedController, Model):
             self.view['library_path'].set_text(self.model.state.library_path + "/" + self.model.state.library_name)
             view['show_content_checkbutton'].set_active(self.model.meta['gui']['show_content'] is True)
             view['show_content_checkbutton'].connect('toggled', self.on_toggle_show_content)
+            # self.view['properties_widget'].remove(self.view['show_content_checkbutton'])
         else:
             self.view['properties_widget'].remove(self.view['label_library_path'])
             self.view['properties_widget'].remove(self.view['library_path'])
