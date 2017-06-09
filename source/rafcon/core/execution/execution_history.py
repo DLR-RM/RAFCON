@@ -30,6 +30,7 @@ import traceback
 from rafcon.core.id_generator import history_item_id_generator
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+import os
 
 
 class ExecutionHistoryStorage(object):
@@ -267,6 +268,7 @@ class StateMachineStartItem(HistoryItem):
         from rafcon.core.state_machine import StateMachine
         self.sm_dict = StateMachine.state_machine_to_dict(state_machine)
         self.prev = None
+        self.os_environment = dict(os.environ)
 
     def __str__(self):
         return "StateMachineStartItem with name %s (time: %s)" % (self.sm_dict['root_state_storage_id'], self.timestamp)
@@ -279,6 +281,7 @@ class StateMachineStartItem(HistoryItem):
         record['state_type'] = 'StateMachine'
         record['path'] = ''
         record['path_by_name'] = ''
+        record['os_environment'] = self.os_environment
         if self.prev is not None:
             record['prev_history_item_id'] = self.prev.history_item_id
         else:
