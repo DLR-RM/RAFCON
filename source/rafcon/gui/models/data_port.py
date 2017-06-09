@@ -77,10 +77,11 @@ class DataPortModel(StateElementModel):
         return vividict
 
     def _meta_data_editor_opengl2gaphas(self, vividict):
+        from rafcon.gui.helpers.meta_data import contains_geometric_info
         if self.parent:
             rel_pos = vividict['inner_rel_pos']
             state_size = self.parent.get_meta_data_editor()['size']
-            if isinstance(rel_pos, tuple) and isinstance(state_size, tuple):
+            if contains_geometric_info(rel_pos) and contains_geometric_info(state_size):
                 if isinstance(self.data_port, InputDataPort):
                     vividict['rel_pos'] = (0, -rel_pos[1])
                 else:  # OutputDataPort

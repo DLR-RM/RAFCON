@@ -75,8 +75,9 @@ class ScopedVariableModel(StateElementModel):
         return vividict
 
     def _meta_data_editor_opengl2gaphas(self, vividict):
+        from rafcon.gui.helpers.meta_data import contains_geometric_info
         rel_pos = vividict['inner_rel_pos']
-        if isinstance(rel_pos, tuple):
+        if contains_geometric_info(rel_pos):
             vividict['rel_pos'] = (rel_pos[0], 0)
         else:
             del vividict['inner_rel_pos']
