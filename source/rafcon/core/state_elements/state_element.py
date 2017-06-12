@@ -54,10 +54,12 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
         self.parent = parent
 
     def __eq__(self, other):
-        # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}".format(self, other))
         if not isinstance(other, self.__class__):
             return False
         return str(self) == str(other)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __del__(self):
         self._parent = None
