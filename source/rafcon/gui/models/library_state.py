@@ -89,6 +89,9 @@ class LibraryStateModel(AbstractStateModel):
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
 
+    def update_hash(self, obj_hash):
+        self.update_hash_from_dict(obj_hash, self.state_copy)
+
     def _load_input_data_port_models(self):
         """Reloads the input data port models directly from the the state"""
         if not self.state_copy_initialized:

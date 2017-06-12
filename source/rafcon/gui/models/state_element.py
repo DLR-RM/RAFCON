@@ -57,7 +57,8 @@ class StateElementModel(MetaModel, Hashable):
         return not self.__eq__(other)
 
     def update_hash(self, obj_hash):
-        Hashable.update_hash_from_dict(obj_hash, self.meta)
+        self.update_hash_from_dict(obj_hash, self.core_element)
+        self.update_hash_from_dict(obj_hash, self.meta)
 
     @property
     def parent(self):

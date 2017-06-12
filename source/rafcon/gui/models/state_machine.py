@@ -158,8 +158,8 @@ class StateMachineModel(ModelMT, Hashable):
             self.root_state.prepare_destruction()
 
     def update_hash(self, obj_hash):
-        self.root_state.update_hash(obj_hash)
-        Hashable.update_hash_from_dict(obj_hash, self.meta)
+        self.update_hash_from_dict(obj_hash, self.root_state)
+        self.update_hash_from_dict(obj_hash, self.meta)
 
     @ModelMT.observe("state_machine", after=True)
     def marked_dirty_flag_changed(self, model, prop_name, info):
