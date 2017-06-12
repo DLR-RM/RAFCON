@@ -43,13 +43,6 @@ class ScopedVariableModel(StateElementModel):
     def __str__(self):
         return "Model of ScopedVariable: {0}".format(self.scoped_variable)
 
-    def __eq__(self, other):
-        # logger.info("compare method")
-        if isinstance(other, ScopedVariableModel):
-            return self.scoped_variable == other.scoped_variable and self.meta == other.meta
-        else:
-            return False
-
     def __copy__(self):
         scoped_variable = copy(self.scoped_variable)
         scoped_variable_m = self.__class__(scoped_variable, parent=None, meta=None)

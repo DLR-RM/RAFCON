@@ -42,13 +42,6 @@ class DataFlowModel(StateElementModel):
     def __str__(self):
         return "Model of DataFlow: {0}".format(self.data_flow)
 
-    def __eq__(self, other):
-        # logger.info("compare method")
-        if isinstance(other, DataFlowModel):
-            return self.data_flow == other.data_flow and self.meta == other.meta
-        else:
-            return False
-
     def __copy__(self):
         data_flow = copy(self.data_flow)
         data_flow_m = self.__class__(data_flow, parent=None, meta=None)

@@ -44,6 +44,18 @@ class StateElementModel(MetaModel, Hashable):
         # this class is an observer of its own properties:
         self.register_observer(self)
 
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        if self.core_element != other.core_element:
+            return False
+        if self.meta != other.meta:
+            return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def update_hash(self, obj_hash):
         Hashable.update_hash_from_dict(obj_hash, self.meta)
 

@@ -45,13 +45,6 @@ class DataPortModel(StateElementModel):
     def __str__(self):
         return "Model of DataPort: {0}".format(self.data_port)
 
-    def __eq__(self, other):
-        # logger.info("compare method")
-        if isinstance(other, DataPortModel):
-            return self.data_port == other.data_port and self.meta == other.meta
-        else:
-            return False
-
     def __copy__(self):
         data_port = copy(self.data_port)
         data_port_m = self.__class__(data_port, parent=None, meta=None)
