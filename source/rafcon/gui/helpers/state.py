@@ -217,7 +217,7 @@ def create_state_model_for_state(new_state, state_element_models):
         decider_state_m.parent = new_state_m
         new_state_m.states[UNIQUE_DECIDER_STATE_ID] = decider_state_m
     if isinstance(new_state, ContainerState):
-        new_state_m.check_is_start_state()
+        new_state_m.update_child_is_start()
 
     return new_state_m
 
@@ -325,7 +325,7 @@ def change_state_type(state_m, target_class):
             new_state_m.parent = action_parent_m
             # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
             action_parent_m.states[state_id] = new_state_m
-            action_parent_m.check_is_start_state()
+            action_parent_m.update_child_is_start()
 
             affected_models = action_parent_m.change_state_type.__func__.affected_models
             affected_models.append(new_state_m)

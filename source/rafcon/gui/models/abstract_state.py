@@ -158,11 +158,15 @@ class AbstractStateModel(MetaModel, Hashable):
         return self.__copy__()
 
     def update_is_start(self):
-        """True if root_state or state is parent start_state_id or has no parent  or is the state copy of a library
-        state else False."""
-        if (self.state.is_root_state or self.parent is None or isinstance(self.parent.state, LibraryState) or
-                self.state.state_id == self.state.parent.start_state_id) != self.is_start:
-            self.is_start = False if self.is_start else True
+        """Updates the `is_start` property of the state
+        
+        A state is a start state, if it is the root state, it has no parent, the parent is a LibraryState or it is 
+        the first state within a ContainerState.
+        """
+        self.is_start = self.state.is_root_state or \
+                        self.parent is None or \
+                        isinstance(self.parent.state, LibraryState) or \
+                        self.state.state_id == self.state.parent.start_state_id
 
     @property
     def core_element(self):

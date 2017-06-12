@@ -74,7 +74,7 @@ class ContainerStateModel(StateModel):
         for scoped_variable in self.state.scoped_variables.itervalues():
             self.scoped_variables.append(ScopedVariableModel(scoped_variable, self))
 
-        self.check_is_start_state()
+        self.update_child_is_start()
 
         if load_meta_data:
             self.load_meta_data()
@@ -195,7 +195,8 @@ class ContainerStateModel(StateModel):
         # Finally call the method of the base class, to forward changes in ports and outcomes
         super(ContainerStateModel, self).model_changed(model, prop_name, info)
 
-    def check_is_start_state(self):
+    def update_child_is_start(self):
+        """ Updates the `is_child` property of its child states """
         for state_id, state_m in self.states.iteritems():
             state_m.update_is_start()
 
@@ -246,7 +247,7 @@ class ContainerStateModel(StateModel):
 
         # Update is_start flag in child states if the start state has changed (eventually)
         if info.method_name in ['start_state_id', 'add_transition', 'remove_transition']:
-            self.check_is_start_state()
+            self.update_child_is_start()
 
         model_list = None
         if info.method_name in ["add_transition", "remove_transition", "transitions"]:
