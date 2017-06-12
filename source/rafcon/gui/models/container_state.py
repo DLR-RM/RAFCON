@@ -17,7 +17,7 @@ from copy import deepcopy
 from gtkmvc import ModelMT
 
 from rafcon.core.states.container_state import ContainerState
-from rafcon.gui.models.abstract_state import AbstractStateModel, diff_for_state_element_lists, MetaSignalMsg
+from rafcon.gui.models.abstract_state import AbstractStateModel, MetaSignalMsg
 from rafcon.gui.models.abstract_state import get_state_model_class_for_state
 from rafcon.gui.models.data_flow import DataFlowModel, StateElementModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
@@ -81,23 +81,6 @@ class ContainerStateModel(StateModel):
 
         # this class is an observer of its own properties:
         self.register_observer(self)
-
-    def __eq__(self, other):
-        # logger.info("compare method {0} {1}".format(type(self), type(other)))
-        if isinstance(other, ContainerStateModel):
-            if not AbstractStateModel.__eq__(self, other) or \
-                    not all(diff_for_state_element_lists(self.scoped_variables, other.scoped_variables, 'scoped_variable')) or \
-                    not all(diff_for_state_element_lists(self.data_flows, other.data_flows, 'data_flow')) or \
-                    not all(diff_for_state_element_lists(self.transitions, other.transitions, 'transition')):
-                return False
-            try:
-                diff_states = [self.states[state_id] == state for state_id, state in other.states.iteritems()]
-                diff_states.append(len(self.states) == len(other.states))
-            except KeyError:
-                return False
-            return all(diff_states) and self.state == other.state and self.meta == other.meta
-        else:
-            return False
 
     def __contains__(self, item):
         """Checks whether `item` is an element of the container state model

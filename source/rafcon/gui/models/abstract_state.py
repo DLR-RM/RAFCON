@@ -42,18 +42,6 @@ def mirror_y_axis_in_vividict_element(vividict, key):
     return vividict
 
 
-def diff_for_state_element_lists(self_list_of_elements, other_list_of_elements, name):
-    id_name = name + '_id' if 'scope' not in name else 'data_port_id'
-    self_dict = {getattr(getattr(elem, name), id_name): elem for elem in self_list_of_elements}
-    try:
-        # print "diff ", name
-        diff_list = [self_dict[getattr(getattr(elem, name), id_name)] == elem for elem in other_list_of_elements]
-        diff_list.append(len(self_list_of_elements) == len(other_list_of_elements))
-    except KeyError:
-        return [False]
-    return diff_list
-
-
 def get_state_model_class_for_state(state):
     """Determines the model required for the given state class
 
@@ -124,15 +112,25 @@ class AbstractStateModel(MetaModel, Hashable):
         return "Model of state: {0}".format(self.state)
 
     def __eq__(self, other):
-        # logger.info("compare method")
-        if isinstance(other, AbstractStateModel):
-            if not all(diff_for_state_element_lists(self.input_data_ports, other.input_data_ports, 'data_port')) or \
-                    not all(diff_for_state_element_lists(self.output_data_ports, other.output_data_ports, 'data_port')) or \
-                    not all(diff_for_state_element_lists(self.outcomes, other.outcomes, 'outcome')):
-                return False
-            return self.state == other.state and self.meta == other.meta
-        else:
+        if type(self) != type(other):
             return False
+        if self.state != other.state:
+            return False
+        if self.meta != other.meta:
+            return False
+        for attr in self.state.state_element_attrs:
+            # E.g. compare lists of outcomes and data ports. The lists are converted to sets, as those are unordered
+            if hasattr(getattr(self, attr), "__radd__"):  # elements are stored in a list (ObsListWrapper)
+                elements = getattr(self, attr)
+                other_elements = getattr(other, attr)
+            else:  # elements are stored in a dict (ObsMapWrapper)
+                elements = getattr(self, attr).items()
+                other_elements = getattr(other, attr).items()
+            if len(elements) != len(other_elements):
+                return False
+            if not all([element in other_elements for element in other_elements]):
+                return False
+        return True
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -202,7 +200,7 @@ class AbstractStateModel(MetaModel, Hashable):
     def update_hash(self, obj_hash):
         for state_element in self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]:
             state_element.update_hash(obj_hash)
-        Hashable.update_hash_from_dict(obj_hash, self.meta)
+        # Hashable.update_hash_from_dict(obj_hash, self.meta)
 
     @property
     def parent(self):
