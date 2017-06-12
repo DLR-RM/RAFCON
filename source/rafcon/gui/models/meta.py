@@ -18,6 +18,7 @@ from rafcon.utils.vividict import Vividict
 class MetaModel(ModelMT):
 
     _parent = None
+    meta = None
 
     def __init__(self, meta=None):
         ModelMT.__init__(self)

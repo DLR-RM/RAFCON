@@ -47,6 +47,7 @@ class StateMachineModel(ModelMT, Hashable):
     state_machine = None
     selection = None
     root_state = None
+    meta = None
     meta_signal = Signal()
     state_meta_signal = Signal()
     action_signal = Signal()
