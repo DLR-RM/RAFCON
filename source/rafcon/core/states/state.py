@@ -148,6 +148,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             return False
         return str(self) == str(other)
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __contains__(self, item):
         """Checks whether `item` is an element of the state
 
