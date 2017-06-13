@@ -314,53 +314,52 @@ class StateMachinesEditorController(ExtendedController):
         force = True if event is not None and event.state & SHIFT_MASK and event.state & CONTROL_MASK else force
 
         def push_sm_running_dialog():
-            def on_message_dialog_sm_running(widget, response_id):
-                if response_id == 1:
-                    logger.debug("State machine execution is being stopped")
-                    state_machine_execution_engine.stop()
-                    self.remove_state_machine(state_machine_m)
-                elif response_id == 2:
-                    logger.debug("State machine execution will keep running")
-                widget.destroy()
 
             message_string = "The state machine is still running. Are you sure you want to close?"
-            RAFCONButtonDialog(message_string, ["Stop and close", "Cancel"], on_message_dialog_sm_running,
-                               message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+            dialog = RAFCONButtonDialog(message_string, ["Stop and close", "Cancel"],
+                                        message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+            response_id = dialog.run()
+            if response_id == 1:
+                logger.debug("State machine execution is being stopped")
+                state_machine_execution_engine.stop()
+                self.remove_state_machine(state_machine_m)
+                return True
+            elif response_id == 2:
+                logger.debug("State machine execution will keep running")
+            dialog.destroy()
+            return False
 
         def push_sm_dirty_dialog():
-
-            def on_message_dialog_response_signal(widget, response_id, state_machine_m):
-
-                if response_id == 1:
-                    if not state_machine_execution_engine.finished_or_stopped() \
-                            and state_machine_manager.active_state_machine_id == \
-                                    state_machine_m.state_machine.state_machine_id:
-                        push_sm_running_dialog()
-                    else:
-                        self.remove_state_machine(state_machine_m)
-                else:
-                    logger.debug("Closing of state machine model canceled")
-                widget.destroy()
 
             sm_id = get_state_machine_id(state_machine_m)
             root_state_name = state_machine_m.root_state.state.name
             message_string = "There are unsaved changed in the state machine '{0}' with id {1}. Do you want to close " \
                              "the state machine anyway?".format(root_state_name, sm_id)
-            RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"], on_message_dialog_response_signal,
-                               [state_machine_m], message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+            dialog = RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"],
+                                        message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+            response_id = dialog.run()
+            if response_id == 1:  # Close without saving pressed
+                self.remove_state_machine(state_machine_m)
+                return True
+            else:
+                logger.debug("Closing of state machine model canceled")
+            dialog.destroy()
+            return False
 
         # sm running
         if not state_machine_execution_engine.finished_or_stopped() and \
-                        state_machine_manager.active_state_machine_id == state_machine_m.state_machine.state_machine_id:
-            push_sm_running_dialog()
+                state_machine_manager.active_state_machine_id == state_machine_m.state_machine.state_machine_id:
+            return push_sm_running_dialog()
         # close is forced -> sm not saved
         elif force:
             self.remove_state_machine(state_machine_m)
+            return True
         # sm dirty -> save sm request dialog
         elif state_machine_m.state_machine.marked_dirty:
-            push_sm_dirty_dialog()
+            return push_sm_dirty_dialog()
         else:
             self.remove_state_machine(state_machine_m)
+            return True
 
     def remove_state_machine(self, state_machine_m):
         """

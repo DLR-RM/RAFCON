@@ -327,23 +327,18 @@ class MenuBarController(ExtendedController):
     ######################################################
 
     def on_new_activate(self, widget=None, data=None):
-        gui_helper_state_machine.new_state_machine(menubar=self, )
+        gui_helper_state_machine.new_state_machine(menubar=self)
 
     @staticmethod
     def on_open_activate(widget=None, data=None, path=None):
         gui_helper_state_machine.open_state_machine(path=path)
 
     def on_save_activate(self, widget, data=None, save_as=False, delete_old_state_machine=False):
-        return gui_helper_state_machine.save_state_machine(menubar=self,
-                                                    widget=widget,
-                                                    save_as=save_as,
-                                                    delete_old_state_machine=delete_old_state_machine)
+        return gui_helper_state_machine.save_state_machine(menubar=self, widget=widget, save_as=save_as,
+                                                           delete_old_state_machine=delete_old_state_machine)
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
-        gui_helper_state_machine.save_state_machine_as(menubar=self,
-                                                widget=widget,
-                                                data=data,
-                                                path=path)
+        return gui_helper_state_machine.save_state_machine_as(menubar=self, widget=widget, data=data, path=path)
 
     @staticmethod
     def on_refresh_libraries_activate():
@@ -380,27 +375,22 @@ class MenuBarController(ExtendedController):
 
     def stopped_state_machine_to_proceed(self):
 
-            def on_message_dialog_response_signal(widget, response_id):
-                if response_id == 1:
-                    self.state_machine_execution_engine.stop()
-                    widget.state_machine_stopped = True
-                elif response_id == 2:
-                    logger.debug("State machine will stay running and no refresh will be performed!")
-                    widget.state_machine_stopped = False
-                widget.destroy()
+        message_string = "A state machine is still running. The state machines can only be refreshed" \
+                         "if no state machine is running any more."
+        dialog = RAFCONButtonDialog(message_string, ["Stop execution and refresh libraries",
+                                                     "Keep running and do not refresh libraries"],
+                                    message_type=gtk.MESSAGE_QUESTION,
+                                    parent=self.get_root_window())
+        response_id = dialog.run()
+        state_machine_stopped = False
+        if response_id == 1:
+            self.state_machine_execution_engine.stop()
+            state_machine_stopped = True
+        elif response_id == 2:
+            logger.debug("State machine will stay running and no refresh will be performed!")
+        dialog.destroy()
 
-            message_string = "A state machine is still running. The state machines can only be refreshed" \
-                             "if no state machine is running any more."
-            dialog = RAFCONButtonDialog(message_string, ["Stop execution and refresh libraries",
-                                                         "Keep running and do not refresh libraries"],
-                                        on_message_dialog_response_signal,
-                                        message_type=gtk.MESSAGE_QUESTION,
-                                        parent=self.get_root_window())
-
-            state_machine_stopped = False
-            if hasattr(dialog, "state_machine_stopped"):
-                state_machine_stopped = dialog.state_machine_stopped
-            return state_machine_stopped
+        return state_machine_stopped
 
     def refresh_libs_and_state_machines(self):
         """Deletes all libraries and state machines and reloads them freshly from the file system."""
@@ -412,6 +402,7 @@ class MenuBarController(ExtendedController):
 
         Can be easily adapted to take a list of state machines as parameters.
         """
+        # TODO move to state machines editor the method implements functionality of it
         state_machine_manager.state_machines[state_machine_id].marked_dirty = False
         currently_selected_sm_id = None
         if self.model.get_selected_state_machine_model():
@@ -420,30 +411,25 @@ class MenuBarController(ExtendedController):
         # create a dictionary from state machine id to state machine path
         state_machine_path_by_sm_id = {}
         page_num_by_sm_id = {}
-        for sm_id, sm in state_machine_manager.state_machines.iteritems():
-            # If at some time a list is passed to this method "in" can be used here
-            if sm_id == state_machine_id:
-                # the sm.base_path is only None if the state machine has never been loaded or saved before
-                if sm.file_system_path is not None:
-                    # print sm.root_state.get_file_system_path()
-                    # cut the last directory from the path
-                    path_items = sm.root_state.get_file_system_path().split("/")
-                    new_path = path_items[0]
-                    for i in range(len(path_items) - 2):
-                        new_path = "%s/%s" % (new_path, path_items[i + 1])
-                    # print new_path
-                    state_machine_path_by_sm_id[sm_id] = new_path
-                    page_num_by_sm_id[sm_id] = self.state_machines_editor_ctrl.get_page_num(sm_id)
 
-        # close all tabs of the state machine editor belonging to the specified state machine
+        # the sm.base_path is only None if the state machine has never been loaded or saved before
+        sm = state_machine_manager.state_machines[state_machine_id]
+        if sm.file_system_path is not None:
+            state_machine_path_by_sm_id[state_machine_id] = sm.file_system_path
+            page_num_by_sm_id[state_machine_id] = self.state_machines_editor_ctrl.get_page_num(state_machine_id)
+
+        # close tab of the state machine editor belonging to the specified state machine
         self.states_editor_ctrl.close_pages_for_specific_sm_id(state_machine_id)
 
-        self.state_machines_editor_ctrl.on_close_clicked(
-            None, self.model.state_machines[state_machine_id], None, force=True)
+        was_closed = self.state_machines_editor_ctrl.on_close_clicked(None, self.model.state_machines[state_machine_id],
+                                                                      None, force=True)
 
         # reload the state machine from file system
         try:
-            state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
+            if was_closed:
+                state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
+            else:
+                logger.info("State machine with id {0} it is still open, so no re-opening.".format(state_machine_id))
         except AttributeError as e:
             logger.warning("State machine was not re-open because {0}".format(e))
         self.state_machines_editor_ctrl.rearrange_state_machines(page_num_by_sm_id)
@@ -454,8 +440,7 @@ class MenuBarController(ExtendedController):
                 self.state_machines_editor_ctrl.set_active_state_machine(currently_selected_sm_id)
 
     def refresh_state_machines(self):
-        # delete dirty flags for state machines
-        state_machine_manager.reset_dirty_flags()
+        # TODO move to state machines editor the method implements functionality of it
         currently_selected_sm_id = None
         if self.model.get_selected_state_machine_model():
             currently_selected_sm_id = self.model.get_selected_state_machine_model().state_machine.state_machine_id
@@ -466,24 +451,18 @@ class MenuBarController(ExtendedController):
         for sm_id, sm in state_machine_manager.state_machines.iteritems():
             # the sm.base_path is only None if the state machine has never been loaded or saved before
             if sm.file_system_path is not None:
-                # print sm.root_state.get_file_system_path()
-                # cut the last directory from the path
-                path_items = sm.root_state.get_file_system_path().split("/")
-                new_path = path_items[0]
-                for i in range(len(path_items) - 2):
-                    new_path = "%s/%s" % (new_path, path_items[i + 1])
-                # print new_path
-                state_machine_path_by_sm_id[sm_id] = new_path
+                state_machine_path_by_sm_id[sm_id] = sm.file_system_path
                 page_num_by_sm_id[sm_id] = self.state_machines_editor_ctrl.get_page_num(sm_id)
 
         self.states_editor_ctrl.close_all_pages()
         self.state_machines_editor_ctrl.close_all_pages()
 
-        # reload state machines from file system
-        for sm_id, path in state_machine_path_by_sm_id.iteritems():
-            if state_machine_manager.is_state_machine_open(path):
+        # reload state machines from file system if not opened already closed
+        for sm_id in state_machine_path_by_sm_id.keys():
+            if state_machine_manager.is_state_machine_open(state_machine_path_by_sm_id[sm_id]):
                 logger.info("State machine with id {0} will not be re-open because already opened.".format(sm_id))
                 del state_machine_path_by_sm_id[sm_id]
+                del page_num_by_sm_id[sm_id]
         try:
             state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
         except AttributeError as e:

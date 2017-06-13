@@ -160,7 +160,7 @@ def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
             return False
 
     menubar.model.get_selected_state_machine_model().state_machine.file_system_path = path
-    save_state_machine(menubar=menubar, widget=widget, save_as=True, delete_old_state_machine=True)
+    return save_state_machine(menubar=menubar, widget=widget, save_as=True, delete_old_state_machine=True)
 
 
 def save_selected_state_as():
@@ -278,7 +278,7 @@ def refresh_selected_state_machine(menubar):
     if not menubar.state_machine_execution_engine.finished_or_stopped:
         if selected_sm_id == state_machine_execution_engine.active_state_machine_id:
             if menubar.stopped_state_machine_to_proceed():
-                pass  # state machine was stopped, proceeding reloading library
+                pass  # state machine was stopped, refresh state machine
             else:
                 return
 
@@ -289,13 +289,6 @@ def refresh_selected_state_machine(menubar):
                            tab_dict['source_code_view_is_dirty'] is True]
     if selected_sm.marked_dirty or dirty_source_editor:
 
-        def on_message_dialog_response_signal(widget, response_id):
-            if response_id == 1:
-                menubar.refresh_state_machine_by_id(selected_sm_id)
-            else:
-                logger.debug("Refresh of selected state machine canceled")
-            widget.destroy()
-
         message_string = "Are you sure you want to reload the currently selected state machine?\n\n" \
                          "The following elements have been modified and not saved. " \
                          "These changes will get lost:"
@@ -305,24 +298,29 @@ def refresh_selected_state_machine(menubar):
             if ctrl.model.state.get_state_machine().state_machine_id == selected_sm_id:
                 message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
                     message_string, ctrl.model.state.name, ctrl.model.state.get_path())
-        RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"], on_message_dialog_response_signal,
-                           message_type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
-    else:
-        menubar.refresh_state_machine_by_id(selected_sm_id)
+        dialog = RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"],
+                                    message_type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
+        response_id = dialog.run()
+        dialog.destroy()
+        if response_id == 1:  # Reload anyway
+            pass
+        else:
+            logger.debug("Refresh of selected state machine canceled")
+            return
+
+    menubar.refresh_state_machine_by_id(selected_sm_id)
 
 
 def refresh_all(menubar=None, force=False):
     """Reloads all libraries and thus all state machines as well.
-        :param menubar: the menubar where this method gets called from
-        :param widget: the main widget
-        :param data: optional data
+    :param menubar: the menubar where this method gets called from
     """
     if not menubar:
         error_no_menubar("refresh_all")
         return
 
     if force:
-            menubar.refresh_libs_and_state_machines()
+        pass  # no checks direct refresh
     else:
 
         # check if a state machine is still running
@@ -339,13 +337,6 @@ def refresh_all(menubar=None, force=False):
                                tab_dict['source_code_view_is_dirty'] is True]
         if state_machine_manager.has_dirty_state_machine() or dirty_source_editor:
 
-            def on_message_dialog_response_signal(widget, response_id):
-                if response_id == 1:
-                    menubar.refresh_libs_and_state_machines()
-                else:
-                    logger.debug("Refresh canceled")
-                widget.destroy()
-
             message_string = "Are you sure you want to reload the libraries and all state machines?\n\n" \
                              "The following elements have been modified and not saved. " \
                              "These changes will get lost:"
@@ -356,10 +347,17 @@ def refresh_all(menubar=None, force=False):
             for ctrl in dirty_source_editor:
                 message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
                     message_string, ctrl.model.state.name, ctrl.model.state.get_path())
-            RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"], on_message_dialog_response_signal,
-                               message_type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
-        else:
-            menubar.refresh_libs_and_state_machines()
+            dialog = RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"],
+                                        message_type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
+            response_id = dialog.run()
+            dialog.destroy()
+            if response_id == 1:  # Reload anyway
+                pass
+            else:
+                logger.debug("Refresh canceled")
+                return
+
+    menubar.refresh_libs_and_state_machines()
 
 
 def error_no_menubar(method_name="unspecified"):
