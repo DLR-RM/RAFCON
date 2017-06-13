@@ -643,8 +643,14 @@ def change_state_type_with_error_handling_and_logger_messages(state_m, target_cl
 def substitute_selected_state_and_use_choice_dialog():
     selected_states = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
     if selected_states and len(selected_states) == 1:
-        StateSubstituteChooseLibraryDialog(rafcon.gui.singleton.library_manager_model,
-                                           parent=rafcon.gui.singleton.main_window_controller.get_root_window())
+        # calculate position for dialog window
+        root_window = rafcon.gui.singleton.main_window_controller.get_root_window()
+        x, y = root_window.get_position()
+        _width, _height = root_window.get_size()
+        # print "x, y, width, height, bit_depth", x, y, width, height
+        pos = (x + _width/4, y + _height/6)
+        StateSubstituteChooseLibraryDialog(rafcon.gui.singleton.library_manager_model, width=450, height=550, pos=pos,
+                                           parent=root_window)
         return True
     else:
         logger.warning("Substitute state needs exact one state to be selected.")
