@@ -400,9 +400,7 @@ class StateMachinesEditorController(ExtendedController):
 
     def close_all_pages(self):
         """Closes all tabs of the state machines editor."""
-        state_machine_m_list = []
-        for tab in self.tabs.itervalues():
-            state_machine_m_list.append(tab['state_machine_m'])
+        state_machine_m_list = [tab['state_machine_m'] for tab in self.tabs.itervalues()]
         for state_machine_m in state_machine_m_list:
             self.on_close_clicked(None, state_machine_m, None, force=True)
 
@@ -433,49 +431,11 @@ class StateMachinesEditorController(ExtendedController):
                                     "modify_fg",
                                     gtk.gdk.color_parse(global_gui_config.colors['STATE_MACHINE_NOT_ACTIVE']))
 
-    def refresh_state_machine_by_id(self, state_machine_id):
-        """ Refreshes only a specific state machine id.
+    def refresh_state_machines(self, state_machine_ids):
+        """ Refresh list af state machine tabs
 
-        Can be easily adapted to take a list of state machines as parameters.
-        """
-        # TODO take the redundant code from this method and refresh all to have a generic method
-        currently_selected_sm_id = None
-        if self.model.get_selected_state_machine_model():
-            currently_selected_sm_id = self.model.get_selected_state_machine_model().state_machine.state_machine_id
-
-        # create a dictionary from state machine id to state machine path
-        state_machine_path_by_sm_id = {}
-        page_num_by_sm_id = {}
-
-        # the sm.base_path is only None if the state machine has never been loaded or saved before
-        sm = self.model.state_machine_manager.state_machines[state_machine_id]
-        if sm.file_system_path is not None:
-            state_machine_path_by_sm_id[state_machine_id] = sm.file_system_path
-            page_num_by_sm_id[state_machine_id] = self.get_page_num(state_machine_id)
-
-        # close tab of the state machine editor belonging to the specified state machine
-        was_closed = self.on_close_clicked(None, self.model.state_machines[state_machine_id], None, force=True)
-
-        # reload the state machine from file system
-        try:
-            if was_closed:
-                self.model.state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
-            else:
-                logger.info("State machine with id {0} it is still open, so no re-opening.".format(state_machine_id))
-        except AttributeError as e:
-            logger.warning("State machine was not re-open because {0}".format(e))
-
-        # recover tab arrangement
-        self.rearrange_state_machines(page_num_by_sm_id)
-
-        # recover selection and case handling if no state machine is open
-        if currently_selected_sm_id:
-            # case if only unsaved state machines are open
-            if currently_selected_sm_id in self.model.state_machine_manager.state_machines.iterkeys():
-                self.set_active_state_machine(currently_selected_sm_id)
-
-    def refresh_state_machines(self):
-        """ Refreshes all state machine tabs
+        :param list state_machine_ids: List of state machine ids to be refreshed
+        :return:
         """
 
         currently_selected_sm_id = None
@@ -487,15 +447,17 @@ class StateMachinesEditorController(ExtendedController):
         page_num_by_sm_id = {}
         for sm_id, sm in self.model.state_machine_manager.state_machines.iteritems():
             # the sm.base_path is only None if the state machine has never been loaded or saved before
-            if sm.file_system_path is not None:
+            if sm_id in state_machine_ids and sm.file_system_path is not None:
                 state_machine_path_by_sm_id[sm_id] = sm.file_system_path
                 page_num_by_sm_id[sm_id] = self.get_page_num(sm_id)
 
-        self.close_all_pages()
+        was_closed = {}
+        for sm_id in state_machine_ids:
+            was_closed[sm_id] = self.on_close_clicked(None, self.model.state_machines[sm_id], None, force=True)
 
         # reload state machines from file system if not opened already closed
         for sm_id in state_machine_path_by_sm_id.keys():
-            if self.model.state_machine_manager.is_state_machine_open(state_machine_path_by_sm_id[sm_id]):
+            if not was_closed[sm_id]:
                 logger.info("State machine with id {0} will not be re-open because already opened.".format(sm_id))
                 del state_machine_path_by_sm_id[sm_id]
                 del page_num_by_sm_id[sm_id]
@@ -512,3 +474,15 @@ class StateMachinesEditorController(ExtendedController):
             # case if only unsaved state machines are open
             if currently_selected_sm_id in self.model.state_machine_manager.state_machines.iterkeys():
                 self.set_active_state_machine(currently_selected_sm_id)
+
+    def refresh_state_machine_by_id(self, state_machine_id):
+        """ Refreshes only a specific state machine id
+
+        :param int state_machine_id: State machine id of state machine that should be refreshed
+        """
+        self.refresh_state_machines([state_machine_id])
+
+    def refresh_all_state_machines(self):
+        """ Refreshes all state machine tabs
+        """
+        self.refresh_state_machines(self.model.state_machine_manager.state_machines.keys())

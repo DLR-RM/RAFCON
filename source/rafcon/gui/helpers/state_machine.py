@@ -393,7 +393,7 @@ def refresh_all(force=False):
 
     refresh_libraries()
     states_editor_ctrl.close_all_pages()
-    state_machines_editor_ctrl.refresh_state_machines()
+    state_machines_editor_ctrl.refresh_all_state_machines()
 
 
 def delete_model(model, raise_exceptions=False):
