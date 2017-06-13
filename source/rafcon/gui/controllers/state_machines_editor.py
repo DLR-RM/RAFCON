@@ -38,6 +38,7 @@ from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.graphical_editor import GraphicalEditorView
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
+from gtk.gdk import SHIFT_MASK, CONTROL_MASK
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -149,14 +150,14 @@ class StateMachinesEditorController(ExtendedController):
         # Call register_action of parent in order to register actions for child controllers
         super(StateMachinesEditorController, self).register_actions(shortcut_manager)
 
-    def close_state_machine(self, widget, page_number):
+    def close_state_machine(self, widget, page_number, event=None):
         """Triggered when the close button in the tab is clicked
         """
         page = widget.get_nth_page(page_number)
         for tab_info in self.tabs.itervalues():
             if tab_info['page'] is page:
                 state_machine_m = tab_info['state_machine_m']
-                self.on_close_clicked(None, state_machine_m, None, force=False)
+                self.on_close_clicked(event, state_machine_m, None, force=False)
                 return
 
     def on_close_shortcut(self, *args):
@@ -310,6 +311,7 @@ class StateMachinesEditorController(ExtendedController):
         :param state_machine_m: The selected state machine model.
         """
         from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
+        force = True if event is not None and event.state & SHIFT_MASK and event.state & CONTROL_MASK else force
 
         def push_sm_running_dialog():
             def on_message_dialog_sm_running(widget, response_id):

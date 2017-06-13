@@ -40,7 +40,7 @@ class StateMachinesEditorView(View):
 
 
 gobject.signal_new("add_state_machine", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, ())
-gobject.signal_new("close_state_machine", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, (int,))
+gobject.signal_new("close_state_machine", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, (int, gobject.TYPE_PYOBJECT))
 
 
 class PlusAddNotebook(gtk.Notebook):
@@ -111,7 +111,7 @@ class PlusAddNotebook(gtk.Notebook):
             if page_number is not None:
                 menu_item = create_image_menu_item("Close State Machine", constants.BUTTON_CLOSE,
                                                    callback=self.do_emit, callback_args=["close_state_machine",
-                                                                                         page_number])
+                                                                                         page_number, event])
                 menu.append(menu_item)
 
             menu.show_all()
@@ -153,7 +153,7 @@ class PlusAddNotebook(gtk.Notebook):
         if event.state & gtk.gdk.BUTTON2_MASK:
             page_number = self.get_page_number_of_the_page_below_the_cursor(widget, event)
             if page_number is not None:
-                self.emit("close_state_machine", page_number)
+                self.emit("close_state_machine", page_number, event)
                 return True
 
     def on_expose_event(self, widget, event):
