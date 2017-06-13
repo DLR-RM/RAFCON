@@ -65,9 +65,6 @@ class MenuBarController(ExtendedController):
     def __init__(self, state_machine_manager_model, view, shortcut_manager, sm_execution_engine):
         assert isinstance(view, MainWindowView)
         ExtendedController.__init__(self, state_machine_manager_model, view.menu_bar)
-        self.state_machines_editor_ctrl = gui_singletons.main_window_controller.\
-            get_controller('state_machines_editor_ctrl')
-        self.states_editor_ctrl = gui_singletons.main_window_controller.get_controller('states_editor_ctrl')
         self.shortcut_manager = shortcut_manager
         self.logging_console_view = view.logging_console_view
         self.main_window_view = view
@@ -327,29 +324,28 @@ class MenuBarController(ExtendedController):
     ######################################################
 
     def on_new_activate(self, widget=None, data=None):
-        gui_helper_state_machine.new_state_machine(menubar=self)
+        gui_helper_state_machine.new_state_machine()
 
     @staticmethod
     def on_open_activate(widget=None, data=None, path=None):
         gui_helper_state_machine.open_state_machine(path=path)
 
     def on_save_activate(self, widget, data=None, save_as=False, delete_old_state_machine=False):
-        return gui_helper_state_machine.save_state_machine(menubar=self, widget=widget, save_as=save_as,
+        return gui_helper_state_machine.save_state_machine(save_as=save_as,
                                                            delete_old_state_machine=delete_old_state_machine)
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
-        return gui_helper_state_machine.save_state_machine_as(menubar=self, widget=widget, data=data, path=path)
+        return gui_helper_state_machine.save_state_machine_as(path=path)
 
     @staticmethod
     def on_refresh_libraries_activate():
         gui_helper_state_machine.refresh_libraries()
 
     def on_refresh_all_activate(self, widget, data=None, force=False):
-        gui_helper_state_machine.refresh_all(menubar=self,
-                                             force=force)
+        gui_helper_state_machine.refresh_all(force=force)
 
     def on_refresh_selected_activate(self, widget, data=None, force=False):
-        gui_helper_state_machine.refresh_selected_state_machine(menubar=self)
+        gui_helper_state_machine.refresh_selected_state_machine()
 
     @staticmethod
     def on_substitute_selected_state_activate(widget=None, data=None, path=None):
@@ -373,109 +369,8 @@ class MenuBarController(ExtendedController):
         config_window_view.show()
         config_window_view.get_top_widget().present()
 
-    def stopped_state_machine_to_proceed(self):
-
-        message_string = "A state machine is still running. The state machines can only be refreshed" \
-                         "if no state machine is running any more."
-        dialog = RAFCONButtonDialog(message_string, ["Stop execution and refresh libraries",
-                                                     "Keep running and do not refresh libraries"],
-                                    message_type=gtk.MESSAGE_QUESTION,
-                                    parent=self.get_root_window())
-        response_id = dialog.run()
-        state_machine_stopped = False
-        if response_id == 1:
-            self.state_machine_execution_engine.stop()
-            state_machine_stopped = True
-        elif response_id == 2:
-            logger.debug("State machine will stay running and no refresh will be performed!")
-        dialog.destroy()
-
-        return state_machine_stopped
-
-    def refresh_libs_and_state_machines(self):
-        """Deletes all libraries and state machines and reloads them freshly from the file system."""
-        library_manager.refresh_libraries()
-        self.refresh_state_machines()
-
-    def refresh_state_machine_by_id(self, state_machine_id):
-        """ Refreshes only a specific state machine id.
-
-        Can be easily adapted to take a list of state machines as parameters.
-        """
-        # TODO move to state machines editor the method implements functionality of it
-        state_machine_manager.state_machines[state_machine_id].marked_dirty = False
-        currently_selected_sm_id = None
-        if self.model.get_selected_state_machine_model():
-            currently_selected_sm_id = self.model.get_selected_state_machine_model().state_machine.state_machine_id
-
-        # create a dictionary from state machine id to state machine path
-        state_machine_path_by_sm_id = {}
-        page_num_by_sm_id = {}
-
-        # the sm.base_path is only None if the state machine has never been loaded or saved before
-        sm = state_machine_manager.state_machines[state_machine_id]
-        if sm.file_system_path is not None:
-            state_machine_path_by_sm_id[state_machine_id] = sm.file_system_path
-            page_num_by_sm_id[state_machine_id] = self.state_machines_editor_ctrl.get_page_num(state_machine_id)
-
-        # close tab of the state machine editor belonging to the specified state machine
-        self.states_editor_ctrl.close_pages_for_specific_sm_id(state_machine_id)
-
-        was_closed = self.state_machines_editor_ctrl.on_close_clicked(None, self.model.state_machines[state_machine_id],
-                                                                      None, force=True)
-
-        # reload the state machine from file system
-        try:
-            if was_closed:
-                state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
-            else:
-                logger.info("State machine with id {0} it is still open, so no re-opening.".format(state_machine_id))
-        except AttributeError as e:
-            logger.warning("State machine was not re-open because {0}".format(e))
-        self.state_machines_editor_ctrl.rearrange_state_machines(page_num_by_sm_id)
-        # case if no state machine is open
-        if currently_selected_sm_id:
-            # case if only unsaved state machines are open
-            if currently_selected_sm_id in state_machine_manager.state_machines.iterkeys():
-                self.state_machines_editor_ctrl.set_active_state_machine(currently_selected_sm_id)
-
-    def refresh_state_machines(self):
-        # TODO move to state machines editor the method implements functionality of it
-        currently_selected_sm_id = None
-        if self.model.get_selected_state_machine_model():
-            currently_selected_sm_id = self.model.get_selected_state_machine_model().state_machine.state_machine_id
-
-        # create a dictionary from state machine id to state machine path
-        state_machine_path_by_sm_id = {}
-        page_num_by_sm_id = {}
-        for sm_id, sm in state_machine_manager.state_machines.iteritems():
-            # the sm.base_path is only None if the state machine has never been loaded or saved before
-            if sm.file_system_path is not None:
-                state_machine_path_by_sm_id[sm_id] = sm.file_system_path
-                page_num_by_sm_id[sm_id] = self.state_machines_editor_ctrl.get_page_num(sm_id)
-
-        self.states_editor_ctrl.close_all_pages()
-        self.state_machines_editor_ctrl.close_all_pages()
-
-        # reload state machines from file system if not opened already closed
-        for sm_id in state_machine_path_by_sm_id.keys():
-            if state_machine_manager.is_state_machine_open(state_machine_path_by_sm_id[sm_id]):
-                logger.info("State machine with id {0} will not be re-open because already opened.".format(sm_id))
-                del state_machine_path_by_sm_id[sm_id]
-                del page_num_by_sm_id[sm_id]
-        try:
-            state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
-        except AttributeError as e:
-            logger.warning("Not all state machines were re-open because {0}".format(e))
-        self.state_machines_editor_ctrl.rearrange_state_machines(page_num_by_sm_id)
-        # case if now state machine is open
-        if currently_selected_sm_id:
-            # case if only unsaved state machines are open
-            if currently_selected_sm_id in state_machine_manager.state_machines.iterkeys():
-                self.state_machines_editor_ctrl.set_active_state_machine(currently_selected_sm_id)
-
     def on_quit_activate(self, widget, data=None, force=False):
-        avoid_shutdown = self.on_delete_event(self, widget, None, force=force)
+        avoid_shutdown = self.on_delete_event(widget, None, force=force)
         if not avoid_shutdown:
             self.on_destroy(None)
 
@@ -483,10 +378,10 @@ class MenuBarController(ExtendedController):
         logger.debug("Delete event received")
 
         # State machine was modified, callback method handles closing operation
-        if not force and self.check_sm_modified():
+        if not force and self.on_delete_check_sm_modified():
             return True  # prevents closing operation
         # State machine is running, callback method handles closing operation
-        if not force and self.check_sm_running():
+        if not force and self.on_delete_check_sm_running():
             return True  # prevents closing operation
 
         self.prepare_destruction()
@@ -499,19 +394,8 @@ class MenuBarController(ExtendedController):
             if shortcuts and item_name in self.view.buttons:
                 self.view.set_menu_item_accelerator(item_name, shortcuts[0])
 
-    def check_sm_modified(self):
+    def on_delete_check_sm_modified(self):
         if state_machine_manager.has_dirty_state_machine():
-
-            def on_message_dialog_response_signal(widget, response_id):
-                if response_id == 1:
-                    if not self.state_machine_execution_engine.finished_or_stopped():
-                        self.check_sm_running()
-                    else:
-                        self.prepare_destruction()
-                        self.on_destroy(None)
-                elif response_id == 2:
-                    logger.debug("Close main window canceled")
-                widget.destroy()
 
             message_string = "Are you sure you want to exit RAFCON?\n\n" \
                              "The following state machines have been modified and not saved. " \
@@ -519,26 +403,35 @@ class MenuBarController(ExtendedController):
             for sm_id, sm in state_machine_manager.state_machines.iteritems():
                 if sm.marked_dirty:
                     message_string = "%s\n#%s: %s " % (message_string, str(sm_id), sm.root_state.name)
-            RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"], on_message_dialog_response_signal,
-                               message_type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+            dialog = RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"],
+                                        message_type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+            response_id = dialog.run()
+            if response_id == 1:  # Close without saving - button pressed
+                if not self.state_machine_execution_engine.finished_or_stopped():
+                    self.on_delete_check_sm_running()
+                else:
+                    self.prepare_destruction()
+                    self.on_destroy(None)
+            elif response_id == 2:  # Cancel - button pressed
+                logger.debug("Close main window canceled")
+            dialog.destroy()
             return True
         return False
 
-    def check_sm_running(self):
+    def on_delete_check_sm_running(self):
         if not self.state_machine_execution_engine.finished_or_stopped():
 
-            def on_message_dialog_response_signal(widget, response_id):
-                if response_id == 1:
-                    self.state_machine_execution_engine.stop()
-                elif response_id == 2:
-                    logger.debug("State machine will stay running!")
-                widget.destroy()
-                self.prepare_destruction()
-                self.on_destroy(None)
-
             message_string = "The state machine is still running. Do you want to stop the execution before closing?"
-            RAFCONButtonDialog(message_string, ["Stop execution", "Keep running"], on_message_dialog_response_signal,
-                               message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+            dialog = RAFCONButtonDialog(message_string, ["Stop execution", "Keep running"],
+                                        message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+            response_id = dialog.run()
+            if response_id == 1:  # Stop execution
+                self.state_machine_execution_engine.stop()
+            elif response_id == 2:  # Keep running
+                logger.debug("State machine will stay running!")
+            dialog.destroy()
+            self.prepare_destruction()
+            self.on_destroy(None)
             return True
         return False
 

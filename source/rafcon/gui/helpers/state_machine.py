@@ -18,6 +18,7 @@
 import copy
 
 import gtk
+import glib
 
 import rafcon.gui.helpers.state as gui_helper_state
 import rafcon.gui.singleton
@@ -43,22 +44,28 @@ logger = log.get_logger(__name__)
 # TODO think about to generate a state machine manager helper to separate this functions from this module
 
 
-def new_state_machine(menubar=None):
-    if not menubar:
-        error_no_menubar("new_state_machine")
-        return
-    import glib
+def is_element_none_with_error_message(method_name, element_dict):
+    missing_elements = [element_name for element_name, element in element_dict.iteritems() if element is None]
+    if missing_elements:
+        logger.error("The following elements are missing to perform {0}: {1}".format(missing_elements))
+
+
+def new_state_machine():
+
+    state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    state_machines_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('state_machines_editor_ctrl')
+
     logger.debug("Creating new state-machine...")
     root_state = HierarchyState("new root state")
     state_machine = StateMachine(root_state)
     state_machine_manager.add_state_machine(state_machine)
     state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
-    state_machine_m = menubar.model.get_selected_state_machine_model()
+    state_machine_m = state_machine_manager_model.get_selected_state_machine_model()
     # If idle_add isn't used, gaphas crashes, as the view is not ready
     glib.idle_add(state_machine_m.selection.set, state_machine_m.root_state)
 
     def grab_focus():
-        editor_controller = menubar.state_machines_editor_ctrl.get_controller(state_machine.state_machine_id)
+        editor_controller = state_machines_editor_ctrl.get_controller(state_machine.state_machine_id)
         editor_controller.view.editor.grab_focus()
 
     # The editor parameter of view is created belated, thus we have to use idle_add again
@@ -83,27 +90,18 @@ def open_state_machine(path=None):
         logger.error('Error while trying to open state machine: {0}'.format(e))
 
 
-def save_state_machine(menubar, widget, save_as=False, delete_old_state_machine=False):
-    def on_message_dialog_response_signal(widget, response_id, source_editor_ctrl):
-        state = source_editor_ctrl.model.state
-        if response_id == 1:
-            logger.debug("Applying source code changes of state '{}'".format(state.name))
-            source_editor_ctrl.apply_clicked(None)
+def save_state_machine(save_as=False, delete_old_state_machine=False):
 
-        elif response_id == 2:
-            logger.debug("Ignoring source code changes of state '{}'".format(state.name))
-        else:
-            logger.warning("Response id: {} is not considered".format(response_id))
-            return
-        widget.destroy()
+    state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    states_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('states_editor_ctrl')
 
-    state_machine_m = menubar.model.get_selected_state_machine_model()
+    state_machine_m = state_machine_manager_model.get_selected_state_machine_model()
     if state_machine_m is None:
         logger.warning("Can not 'save state machine' because no state machine is selected.")
         return
 
-    all_tabs = menubar.states_editor_ctrl.tabs.values()
-    all_tabs.extend(menubar.states_editor_ctrl.closed_tabs.values())
+    all_tabs = states_editor_ctrl.tabs.values()
+    all_tabs.extend(states_editor_ctrl.closed_tabs.values())
     dirty_source_editor_ctrls = [tab_dict['controller'].get_controller('source_ctrl') for tab_dict in all_tabs if
                                  tab_dict['source_code_view_is_dirty'] is True and
                                  tab_dict['state_m'].state.get_state_machine().state_machine_id ==
@@ -117,31 +115,41 @@ def save_state_machine(menubar, widget, save_as=False, delete_old_state_machine=
         if global_gui_config.get_config_value("AUTO_APPLY_SOURCE_CODE_CHANGES", False):
             dirty_source_editor_ctrl.apply_clicked(None)
         else:
-            RAFCONButtonDialog(message_string, ["Apply", "Ignore changes"],
-                               callback=on_message_dialog_response_signal, callback_args=[dirty_source_editor_ctrl],
-                               message_type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
+            dialog = RAFCONButtonDialog(message_string, ["Apply", "Ignore changes"],
+                                        message_type=gtk.MESSAGE_WARNING, parent=states_editor_ctrl.get_root_window())
+            response_id = dialog.run()
+            state = dirty_source_editor_ctrl.model.state
+            if response_id == 1:  # Apply changes
+                logger.debug("Applying source code changes of state '{}'".format(state.name))
+                dirty_source_editor_ctrl.apply_clicked(None)
+
+            elif response_id == 2:  # Ignore changes
+                logger.debug("Ignoring source code changes of state '{}'".format(state.name))
+            else:
+                logger.warning("Response id: {} is not considered".format(response_id))
+                return
+            dialog.destroy()
 
     save_path = state_machine_m.state_machine.file_system_path
     if save_path is None:
-        if not menubar.on_save_as_activate(widget, data=None):
+        if not save_state_machine_as():
             return
 
     logger.debug("Saving state machine to {0}".format(save_path))
 
-    state_machine = menubar.model.get_selected_state_machine_model().state_machine
-    storage.save_state_machine_to_path(state_machine, state_machine.file_system_path,
+    state_machine_m = state_machine_manager_model.get_selected_state_machine_model()
+    storage.save_state_machine_to_path(state_machine_m.state_machine, state_machine_m.state_machine.file_system_path,
                                        delete_old_state_machine=delete_old_state_machine, save_as=save_as)
 
-    menubar.model.get_selected_state_machine_model().store_meta_data()
-    logger.debug("Successfully saved state machine and its meta data.")
+    state_machine_m.store_meta_data()
+    logger.debug("Saved state machine and its meta data.")
     return True
 
 
-def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
-    if not menubar:
-        error_no_menubar("save_state_machine_as")
-        return
-    if menubar.model.get_selected_state_machine_model() is None:
+def save_state_machine_as(path=None):
+
+    state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    if state_machine_manager_model.get_selected_state_machine_model() is None:
         logger.warning("Can not 'save state machine as' because no state machine is selected.")
         return
 
@@ -149,7 +157,6 @@ def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
         if interface.create_folder_func is None:
             logger.error("No function defined for creating a folder")
             return False
-        state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
         sm_m = state_machine_manager_model.state_machines[state_machine_manager_model.selected_state_machine_id]
         folder_name = sm_m.state_machine.root_state.name if sm_m else ''
         path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
@@ -159,8 +166,8 @@ def save_state_machine_as(menubar=None, widget=None, data=None, path=None):
             logger.warning("No valid path specified")
             return False
 
-    menubar.model.get_selected_state_machine_model().state_machine.file_system_path = path
-    return save_state_machine(menubar=menubar, widget=widget, save_as=True, delete_old_state_machine=True)
+    state_machine_manager_model.get_selected_state_machine_model().state_machine.file_system_path = path
+    return save_state_machine(save_as=True, delete_old_state_machine=True)
 
 
 def save_selected_state_as():
@@ -219,7 +226,7 @@ def save_selected_state_as():
 
                 if overwrote_old_lib and dialog.list_store[2][0]:  # refresh all open state machine selected
                     logger.debug("Refresh all is triggered.")
-                    refresh_all(rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller'))
+                    refresh_all()
                 else:  # if not all was refreshed at least the libraries are refreshed
                     logger.debug("Library refresh is triggered.")
                     refresh_libraries()
@@ -263,28 +270,57 @@ def save_selected_state_as():
         return False
 
 
+def is_state_machine_stopped_to_proceed(selected_sm_id=None, root_window=None):
+    """ Check if state machine is stopped and in case request user by dialog how to proceed
+
+     The function checks if a specific state machine or by default all state machines have stopped or finished
+     execution. If a state machine is still running the user is ask by dialog window if those should be stopped or not.
+    :param selected_sm_id: Specific state mine to check for
+    :param root_window: Root window for dialog window
+    :return:
+    """
+    # check if the/a state machine is still running
+    if not state_machine_execution_engine.finished_or_stopped():
+        if selected_sm_id is None or selected_sm_id == state_machine_manager.active_state_machine_id:
+
+            message_string = "A state machine is still running. This state machine can only be refreshed" \
+                             "if not running any more."
+            dialog = RAFCONButtonDialog(message_string, ["Stop execution and refresh",
+                                                         "Keep running and do not refresh"],
+                                        message_type=gtk.MESSAGE_QUESTION,
+                                        parent=root_window)
+            response_id = dialog.run()
+            state_machine_stopped = False
+            if response_id == 1:
+                state_machine_execution_engine.stop()
+                state_machine_stopped = True
+            elif response_id == 2:
+                logger.debug("State machine will stay running and no refresh will be performed!")
+            dialog.destroy()
+
+            return state_machine_stopped
+    return True
+
+
 def refresh_libraries():
     library_manager.refresh_libraries()
 
 
-def refresh_selected_state_machine(menubar):
+def refresh_selected_state_machine():
     """Reloads the selected state machine.
     """
 
     selected_sm_id = rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id
     selected_sm = state_machine_manager.state_machines[selected_sm_id]
+    state_machines_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('state_machines_editor_ctrl')
+    states_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('states_editor_ctrl')
 
-    # check if the state machine is still running
-    if not menubar.state_machine_execution_engine.finished_or_stopped:
-        if selected_sm_id == state_machine_execution_engine.active_state_machine_id:
-            if menubar.stopped_state_machine_to_proceed():
-                pass  # state machine was stopped, refresh state machine
-            else:
-                return
+    if not is_state_machine_stopped_to_proceed(selected_sm_id, state_machines_editor_ctrl.get_root_window()):
+        return
 
     # check if the a dirty flag is still set
-    all_tabs = menubar.states_editor_ctrl.tabs.values()
-    all_tabs.extend(menubar.states_editor_ctrl.closed_tabs.values())
+    all_tabs = states_editor_ctrl.tabs.values()
+    all_tabs.extend(states_editor_ctrl.closed_tabs.values())
     dirty_source_editor = [tab_dict['controller'] for tab_dict in all_tabs if
                            tab_dict['source_code_view_is_dirty'] is True]
     if selected_sm.marked_dirty or dirty_source_editor:
@@ -299,7 +335,7 @@ def refresh_selected_state_machine(menubar):
                 message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
                     message_string, ctrl.model.state.name, ctrl.model.state.get_path())
         dialog = RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"],
-                                    message_type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
+                                    message_type=gtk.MESSAGE_WARNING, parent=states_editor_ctrl.get_root_window())
         response_id = dialog.run()
         dialog.destroy()
         if response_id == 1:  # Reload anyway
@@ -308,31 +344,29 @@ def refresh_selected_state_machine(menubar):
             logger.debug("Refresh of selected state machine canceled")
             return
 
-    menubar.refresh_state_machine_by_id(selected_sm_id)
+    states_editor_ctrl.close_pages_for_specific_sm_id(selected_sm_id)
+    state_machines_editor_ctrl.refresh_state_machine_by_id(selected_sm_id)
 
 
-def refresh_all(menubar=None, force=False):
-    """Reloads all libraries and thus all state machines as well.
-    :param menubar: the menubar where this method gets called from
+def refresh_all(force=False):
+    """Remove/close all libraries and state machines and reloads them freshly from the file system
+
+    :param bool force: Force flag to avoid any checks
     """
-    if not menubar:
-        error_no_menubar("refresh_all")
-        return
+    state_machines_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('state_machines_editor_ctrl')
+    states_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('states_editor_ctrl')
 
     if force:
         pass  # no checks direct refresh
     else:
 
         # check if a state machine is still running
-        if not menubar.state_machine_execution_engine.finished_or_stopped:
-            if menubar.stopped_state_machine_to_proceed():
-                pass  # state machine was stopped, proceeding reloading library
-            else:
-                return
+        if not is_state_machine_stopped_to_proceed(root_window=states_editor_ctrl.get_root_window()):
+            return
 
         # check if the a dirty flag is still set
-        all_tabs = menubar.states_editor_ctrl.tabs.values()
-        all_tabs.extend(menubar.states_editor_ctrl.closed_tabs.values())
+        all_tabs = states_editor_ctrl.tabs.values()
+        all_tabs.extend(states_editor_ctrl.closed_tabs.values())
         dirty_source_editor = [tab_dict['controller'] for tab_dict in all_tabs if
                                tab_dict['source_code_view_is_dirty'] is True]
         if state_machine_manager.has_dirty_state_machine() or dirty_source_editor:
@@ -348,7 +382,7 @@ def refresh_all(menubar=None, force=False):
                 message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
                     message_string, ctrl.model.state.name, ctrl.model.state.get_path())
             dialog = RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"],
-                                        message_type=gtk.MESSAGE_WARNING, parent=menubar.get_root_window())
+                                        message_type=gtk.MESSAGE_WARNING, parent=states_editor_ctrl.get_root_window())
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:  # Reload anyway
@@ -357,11 +391,9 @@ def refresh_all(menubar=None, force=False):
                 logger.debug("Refresh canceled")
                 return
 
-    menubar.refresh_libs_and_state_machines()
-
-
-def error_no_menubar(method_name="unspecified"):
-    logger.error("Method '{0}' not called from a menubar, behaviour not specified".format(method_name))
+    refresh_libraries()
+    states_editor_ctrl.close_all_pages()
+    state_machines_editor_ctrl.refresh_state_machines()
 
 
 def delete_model(model, raise_exceptions=False):
