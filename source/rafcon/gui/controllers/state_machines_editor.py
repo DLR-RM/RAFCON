@@ -437,12 +437,12 @@ class StateMachinesEditorController(ExtendedController):
         :param list state_machine_ids: List of state machine ids to be refreshed
         :return:
         """
-
+        # remember current selected state machine id
         currently_selected_sm_id = None
         if self.model.get_selected_state_machine_model():
             currently_selected_sm_id = self.model.get_selected_state_machine_model().state_machine.state_machine_id
 
-        # create a dictionary from state machine id to state machine path
+        # create a dictionary from state machine id to state machine path and one for tab page number for recovery
         state_machine_path_by_sm_id = {}
         page_num_by_sm_id = {}
         for sm_id, sm in self.model.state_machine_manager.state_machines.iteritems():
@@ -451,16 +451,15 @@ class StateMachinesEditorController(ExtendedController):
                 state_machine_path_by_sm_id[sm_id] = sm.file_system_path
                 page_num_by_sm_id[sm_id] = self.get_page_num(sm_id)
 
-        was_closed = {}
+        # close all state machine in list and remember if one was not closed
         for sm_id in state_machine_ids:
-            was_closed[sm_id] = self.on_close_clicked(None, self.model.state_machines[sm_id], None, force=True)
-
-        # reload state machines from file system if not opened already closed
-        for sm_id in state_machine_path_by_sm_id.keys():
-            if not was_closed[sm_id]:
-                logger.info("State machine with id {0} will not be re-open because already opened.".format(sm_id))
+            was_closed = self.on_close_clicked(None, self.model.state_machines[sm_id], None, force=True)
+            if not was_closed and sm_id in page_num_by_sm_id:
+                logger.info("State machine with id {0} will not be re-open because was not closed.".format(sm_id))
                 del state_machine_path_by_sm_id[sm_id]
                 del page_num_by_sm_id[sm_id]
+
+        # reload state machines from file system
         try:
             self.model.state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
         except AttributeError as e:
@@ -469,7 +468,7 @@ class StateMachinesEditorController(ExtendedController):
         # recover tab arrangement
         self.rearrange_state_machines(page_num_by_sm_id)
 
-        # recover selection and case handling if now state machine is open
+        # recover initial selected state machine and case handling if now state machine is open anymore
         if currently_selected_sm_id:
             # case if only unsaved state machines are open
             if currently_selected_sm_id in self.model.state_machine_manager.state_machines.iterkeys():
