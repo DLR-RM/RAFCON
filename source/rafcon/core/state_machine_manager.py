@@ -84,6 +84,12 @@ class StateMachineManager(Observable):
         for sm_id, sm in self.state_machines.iteritems():
             sm.marked_dirty = False
 
+    def is_state_machine_open(self, file_system_path):
+        for loaded_sm in self._state_machines.itervalues():
+            if loaded_sm.file_system_path == file_system_path:
+                return True
+        return False
+
     @Observable.observed
     def add_state_machine(self, state_machine):
         """Add a state machine to the list of managed state machines. If there is no active state machine set yet,
@@ -93,11 +99,10 @@ class StateMachineManager(Observable):
         :raises exceptions.AttributeError: if the passed state machine was already added of is of a wrong type
         """
         if not isinstance(state_machine, StateMachine):
-            raise AttributeError("state_machine must be of type StateMachine")
+            raise AttributeError("State machine must be of type StateMachine")
         if state_machine.file_system_path is not None:
-            for loaded_sm in self._state_machines.itervalues():
-                if loaded_sm.file_system_path == state_machine.file_system_path:
-                    raise AttributeError("The state-machine is already open")
+            if self.is_state_machine_open(state_machine.file_system_path):
+                raise AttributeError("The state machine is already open {0}".format(state_machine.file_system_path))
         logger.debug("Add new state machine with id {0}".format(state_machine.state_machine_id))
         self._state_machines[state_machine.state_machine_id] = state_machine
         if self.active_state_machine_id is None:

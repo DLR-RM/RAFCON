@@ -441,8 +441,11 @@ class MenuBarController(ExtendedController):
         self.state_machines_editor_ctrl.on_close_clicked(
             None, self.model.state_machines[state_machine_id], None, force=True)
 
-        # reload state machines from file system
-        state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
+        # reload the state machine from file system
+        try:
+            state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
+        except AttributeError as e:
+            logger.warning("State machine was not re-open because {0}".format(e))
         self.state_machines_editor_ctrl.rearrange_state_machines(page_num_by_sm_id)
         # case if no state machine is open
         if currently_selected_sm_id:
@@ -477,7 +480,14 @@ class MenuBarController(ExtendedController):
         self.state_machines_editor_ctrl.close_all_pages()
 
         # reload state machines from file system
-        state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
+        for sm_id, path in state_machine_path_by_sm_id.iteritems():
+            if state_machine_manager.is_state_machine_open(path):
+                logger.info("State machine with id {0} will not be re-open because already opened.".format(sm_id))
+                del state_machine_path_by_sm_id[sm_id]
+        try:
+            state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
+        except AttributeError as e:
+            logger.warning("Not all state machines were re-open because {0}".format(e))
         self.state_machines_editor_ctrl.rearrange_state_machines(page_num_by_sm_id)
         # case if now state machine is open
         if currently_selected_sm_id:
