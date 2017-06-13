@@ -309,7 +309,6 @@ class StateMachinesEditorController(ExtendedController):
 
         :param state_machine_m: The selected state machine model.
         """
-        from rafcon.core.execution.execution_status import StateMachineExecutionStatus
         from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
 
         def push_sm_running_dialog():
@@ -326,11 +325,8 @@ class StateMachinesEditorController(ExtendedController):
             RAFCONButtonDialog(message_string, ["Stop and close", "Cancel"], on_message_dialog_sm_running,
                                message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
 
-        if force:
-            self.remove_state_machine(state_machine_m)
-        # sm not saved
+        def push_sm_dirty_dialog():
 
-        elif state_machine_m.state_machine.marked_dirty:
             def on_message_dialog_response_signal(widget, response_id, state_machine_m):
 
                 if response_id == 1:
@@ -352,9 +348,15 @@ class StateMachinesEditorController(ExtendedController):
                                [state_machine_m], message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
 
         # sm running
-        elif not state_machine_execution_engine.finished_or_stopped() and \
+        if not state_machine_execution_engine.finished_or_stopped() and \
                         state_machine_manager.active_state_machine_id == state_machine_m.state_machine.state_machine_id:
             push_sm_running_dialog()
+        # close is forced -> sm not saved
+        elif force:
+            self.remove_state_machine(state_machine_m)
+        # sm dirty -> save sm request dialog
+        elif state_machine_m.state_machine.marked_dirty:
+            push_sm_dirty_dialog()
         else:
             self.remove_state_machine(state_machine_m)
 
