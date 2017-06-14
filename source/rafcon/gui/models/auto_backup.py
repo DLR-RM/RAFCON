@@ -197,6 +197,7 @@ class AutoBackupModel(ModelMT):
     If the lock file is not cleaned up the state machine and the RAFCON instance was not closed cleanly.
 
     """
+    _tmp_storage_path = None
 
     def __init__(self, state_machine_model):
         ModelMT.__init__(self)
@@ -272,13 +273,14 @@ class AutoBackupModel(ModelMT):
         sm = self.state_machine_model.state_machine
         if sm.marked_dirty and self.lock_file is None and self.AUTO_RECOVERY_LOCK_ENABLED:
             self.lock_file_lock.acquire()
-            # logger.info('create lock {0} -> path {1}'.format(sm.state_machine_id, self.tmp_storage_folder()))
+            # logger.info('create lock {0} -> path {1}'.format(sm.state_machine_id, self.update_tmp_storage_path()))
             self.lock_file = open(RAFCON_RUNTIME_BACKUP_PATH + '/dirty_lock_' + str(sm.state_machine_id), 'a+')
             mark_4_removal = []
             if self.state_machine_model.state_machine.state_machine_id in storage._paths_to_remove_before_sm_save:
                 for path in storage._paths_to_remove_before_sm_save[self.state_machine_model.state_machine.state_machine_id]:
                     mark_4_removal.append("\n" + path)
-            self.lock_file.writelines([self.tmp_storage_folder() + "\n# marked for removal: "] + mark_4_removal)
+            self.update_tmp_storage_path()
+            self.lock_file.writelines([self._tmp_storage_path + "\n# marked for removal: "] + mark_4_removal)
             self.lock_file.close()
             self.last_lock_file_name = self.lock_file.name
             self.lock_file_lock.release()
@@ -298,12 +300,12 @@ class AutoBackupModel(ModelMT):
             self.lock_file = None
             self.lock_file_lock.release()
 
-    def tmp_storage_folder(self):
+    def update_tmp_storage_path(self):
         sm = self.state_machine_model.state_machine
         if sm.file_system_path is None:
-            return os.path.join(RAFCON_RUNTIME_BACKUP_PATH, 'not_stored_' + str(sm.state_machine_id))
+            self._tmp_storage_path = os.path.join(RAFCON_RUNTIME_BACKUP_PATH, 'not_stored_' + str(sm.state_machine_id))
         else:
-            return os.path.join(RAFCON_RUNTIME_BACKUP_PATH + sm.file_system_path)  # leave the PLUS !!!
+            self._tmp_storage_path = os.path.join(RAFCON_RUNTIME_BACKUP_PATH + sm.file_system_path) # leave the PLUS !!!
 
     @ModelMT.observe("state_machine", after=True)
     def change_in_state_machine_notification(self, model, prop_name, info):
@@ -366,10 +368,10 @@ class AutoBackupModel(ModelMT):
         self.timer_request_lock.release()
         sm = self.state_machine_model.state_machine
         logger.debug('Performing auto backup of state machine {} to temp folder'.format(sm.state_machine_id))
-        tmp_sm_system_path = self.tmp_storage_folder()
-        storage.save_state_machine_to_path(sm, tmp_sm_system_path, delete_old_state_machine=True,
+        self.update_tmp_storage_path()
+        storage.save_state_machine_to_path(sm, self._tmp_storage_path, delete_old_state_machine=True,
                                            save_as=True, temporary_storage=True)
-        self.state_machine_model.store_meta_data(temp_path=tmp_sm_system_path)
+        self.state_machine_model.store_meta_data(temp_path=self._tmp_storage_path)
         self.last_backup_time = time.time()  # used as 'last-backup' time
         self.timer_request_lock.acquire()
         self._timer_request_time = None
