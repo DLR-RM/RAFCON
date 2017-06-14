@@ -29,6 +29,7 @@ from rafcon.gui.utils.constants import RAFCON_INSTANCE_LOCK_FILE_PATH
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils.i18n import _
 from rafcon.utils import log
+from rafcon.utils.storage_utils import get_time_string_for_float
 logger = log.get_logger(__name__)
 
 
@@ -307,6 +308,11 @@ class AutoBackupModel(ModelMT):
         else:
             self._tmp_storage_path = os.path.join(RAFCON_RUNTIME_BACKUP_PATH + sm.file_system_path) # leave the PLUS !!!
 
+    def write_meta_data(self):
+        """Write the backup meta data to the state machine meta data"""
+        self.state_machine_model.meta['last_backup']['time'] = get_time_string_for_float(self.last_backup_time)
+        self.state_machine_model.meta['last_backup']['file_system_path'] = self._tmp_storage_path
+
     @ModelMT.observe("state_machine", after=True)
     def change_in_state_machine_notification(self, model, prop_name, info):
         if info['method_name'] == 'marked_dirty':
@@ -372,6 +378,7 @@ class AutoBackupModel(ModelMT):
         storage.save_state_machine_to_path(sm, self._tmp_storage_path, delete_old_state_machine=True,
                                            save_as=True, temporary_storage=True)
         self.state_machine_model.store_meta_data(temp_path=self._tmp_storage_path)
+        self.write_meta_data()
         self.last_backup_time = time.time()  # used as 'last-backup' time
         self.timer_request_lock.acquire()
         self._timer_request_time = None

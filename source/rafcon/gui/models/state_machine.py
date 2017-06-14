@@ -358,6 +358,9 @@ class StateMachineModel(ModelMT, Hashable):
 
         # JSON returns a dict, which must be converted to a Vividict
         tmp_meta = Vividict(tmp_meta)
+        tmp_meta['last_used'] = storage_utils.get_current_time_string()
+        tmp_meta['last_saved']['time'] = self.state_machine.last_update
+        tmp_meta['last_saved']['file_system_path'] = self.state_machine.file_system_path
 
         if recursively:
             root_state_path = None if not path else os.path.join(path, self.root_state.state.state_id)
@@ -379,6 +382,8 @@ class StateMachineModel(ModelMT, Hashable):
             meta_file_json = os.path.join(temp_path, storage.FILE_NAME_META_DATA)
         else:
             meta_file_json = os.path.join(self.state_machine.file_system_path, storage.FILE_NAME_META_DATA)
+            self.meta['last_saved']['time'] = storage_utils.get_current_time_string()
+            self.meta['last_saved']['file_system_path'] = self.state_machine.file_system_path
 
         storage_utils.write_dict_to_json(self.meta, meta_file_json)
 

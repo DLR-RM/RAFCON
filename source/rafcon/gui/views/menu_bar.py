@@ -33,6 +33,7 @@ class MenuBarView(View):
         # -----------------------------------------------
         'new':                  constants.BUTTON_NEW,
         'open':                 constants.BUTTON_OPEN,
+        'open_recent':          constants.BUTTON_OPEN,
         'save':                 constants.BUTTON_SAVE,
         'save_as':              constants.BUTTON_SAVE,
         'save_state_as':        constants.BUTTON_SAVE,

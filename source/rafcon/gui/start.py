@@ -284,6 +284,9 @@ def main():
     if user_input.new:
         create_new_state_machine()
 
+    # TODO find out why this works and rearrange it -> most proper because of the pending gtk events
+    main_window_controller.model.load_session_from_storage()
+
     log_ready_output()
 
     if global_config.get_config_value("PROFILER_RUN", False):

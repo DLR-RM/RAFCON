@@ -86,6 +86,26 @@ class MenuBarController(ExtendedController):
         self.main_window_view.right_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.left_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.console_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
+        # update open recent
+        self.sub_menu = gtk.Menu()
+        view.menu_bar['open_recent'].set_submenu(self.sub_menu)
+
+    def update_open_recent(self):
+        """Update the sub menu Open Recent in File menu"""
+        for item in self.sub_menu.get_children():
+            self.sub_menu.remove(item)
+        self.sub_menu.show_all()
+        for sm_meta_dict in self.model.recently_used_state_machines:
+            # print "insert recent", sm_meta_dict['last_saved']['file_system_path']
+            sm_open_function = partial(self.on_open_activate, path=sm_meta_dict['last_saved']['file_system_path'])
+            self.sub_menu.append(gui_helper_label.create_image_menu_item(sm_meta_dict['last_saved']['file_system_path'],
+                                                                         constants.BUTTON_LEFTA,
+                                                                         sm_open_function))
+        self.sub_menu.show_all()
+
+    @ExtendedController.observe("state_machines", after=True)
+    def notification_state_machine_manager_model(self, model, prop_name, info):
+        self.update_open_recent()
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -150,6 +170,7 @@ class MenuBarController(ExtendedController):
         self.full_screen_window.connect('key_press_event', self.on_key_press_event)
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
         self.registered_view = True
+        self.update_open_recent()
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
@@ -370,6 +391,7 @@ class MenuBarController(ExtendedController):
         config_window_view.get_top_widget().present()
 
     def on_quit_activate(self, widget, data=None, force=False):
+        self.model.store_session()
         avoid_shutdown = self.on_delete_event(widget, None, force=force)
         if not avoid_shutdown:
             self.on_destroy(None)

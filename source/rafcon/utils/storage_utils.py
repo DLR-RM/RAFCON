@@ -17,7 +17,7 @@
 
 import json
 import yaml
-from time import gmtime, strftime
+from time import gmtime, strftime, strptime, mktime
 
 from jsonconversion.decoder import JSONObjectDecoder
 from jsonconversion.encoder import JSONObjectEncoder
@@ -58,8 +58,19 @@ substitute_modules = {
 }
 
 
+TIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
 def get_current_time_string():
-    return strftime("%Y-%m-%d %H:%M:%S", gmtime())
+    return strftime(TIME_STRING_FORMAT, gmtime())
+
+
+def get_float_time_for_string(string):
+    return mktime(strptime(string, TIME_STRING_FORMAT))
+
+
+def get_time_string_for_float(seconds):
+    return strftime(TIME_STRING_FORMAT, gmtime(seconds))
 
 
 def write_dict_to_yaml(dictionary, path, **kwargs):
