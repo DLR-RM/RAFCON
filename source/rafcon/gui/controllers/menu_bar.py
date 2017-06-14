@@ -406,6 +406,7 @@ class MenuBarController(ExtendedController):
             dialog = RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"],
                                         message_type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
             response_id = dialog.run()
+            dialog.destroy()
             if response_id == 1:  # Close without saving - button pressed
                 if not self.state_machine_execution_engine.finished_or_stopped():
                     self.on_delete_check_sm_running()
@@ -414,7 +415,6 @@ class MenuBarController(ExtendedController):
                     self.on_destroy(None)
             elif response_id == 2:  # Cancel - button pressed
                 logger.debug("Close main window canceled")
-            dialog.destroy()
             return True
         return False
 
@@ -425,11 +425,11 @@ class MenuBarController(ExtendedController):
             dialog = RAFCONButtonDialog(message_string, ["Stop execution", "Keep running"],
                                         message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
             response_id = dialog.run()
+            dialog.destroy()
             if response_id == 1:  # Stop execution
                 self.state_machine_execution_engine.stop()
             elif response_id == 2:  # Keep running
                 logger.debug("State machine will stay running!")
-            dialog.destroy()
             self.prepare_destruction()
             self.on_destroy(None)
             return True

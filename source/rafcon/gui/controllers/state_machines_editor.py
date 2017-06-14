@@ -317,6 +317,7 @@ class StateMachinesEditorController(ExtendedController):
             dialog = RAFCONButtonDialog(message_string, ["Stop and close", "Cancel"],
                                         message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
             response_id = dialog.run()
+            dialog.destroy()
             if response_id == 1:
                 logger.debug("State machine execution is being stopped")
                 state_machine_execution_engine.stop()
@@ -324,7 +325,6 @@ class StateMachinesEditorController(ExtendedController):
                 return True
             elif response_id == 2:
                 logger.debug("State machine execution will keep running")
-            dialog.destroy()
             return False
 
         def push_sm_dirty_dialog():
@@ -336,12 +336,12 @@ class StateMachinesEditorController(ExtendedController):
             dialog = RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"],
                                         message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
             response_id = dialog.run()
+            dialog.destroy()
             if response_id == 1:  # Close without saving pressed
                 self.remove_state_machine(state_machine_m)
                 return True
             else:
                 logger.debug("Closing of state machine model canceled")
-            dialog.destroy()
             return False
 
         # sm running
