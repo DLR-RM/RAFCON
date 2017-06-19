@@ -285,7 +285,9 @@ def main():
         create_new_state_machine()
 
     # TODO find out why this works and rearrange it -> most proper because of the pending gtk events
-    main_window_controller.model.load_session_from_storage()
+    if rafcon.gui.singleton.global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
+        main_window_controller.model.load_session_from_storage()
+    main_window_controller.model.read_recent_opened_state_machines()
 
     log_ready_output()
 

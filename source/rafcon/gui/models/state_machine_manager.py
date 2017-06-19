@@ -112,6 +112,7 @@ class StateMachineManagerModel(ModelMT, Observable):
                 if sm_id not in self.state_machine_manager.state_machines:
                     sm_id_to_delete = sm_id
                     if self.selected_state_machine_id == sm_id:
+                        self.update_recently_used_state_machines(self.state_machines[sm_id])
                         self.selected_state_machine_id = None
                     break
 
@@ -177,45 +178,49 @@ class StateMachineManagerModel(ModelMT, Observable):
             # TODO menu bar is always one step behind the next line would fix it but it is at the wrong place here
             # rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller').update_open_recent()
 
+    def store_recent_opened_state_machines(self):
+        num = rafcon.gui.singleton.global_gui_config.get_config_value('NUMBER_OF_RECENT_OPENED_STATE_MACHINES_STORED')
+        rafcon.gui.singleton.global_runtime_config.set_config_value('recently_used',
+                                                                    self.recently_used_state_machines[:num])
+
+    def read_recent_opened_state_machines(self):
+        self.recently_used_state_machines = rafcon.gui.singleton.global_runtime_config.get_config_value('recently_used',
+                                                                                                        [])
+        self.sort_recently_used_state_machines()
+        rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller').update_open_recent()
+
     def store_session(self):
         session_store_file_json = os.path.join(rafcon.gui.singleton.global_gui_config.path, SESSION_STORE_FILE)
-        num = rafcon.gui.singleton.global_gui_config.get_config_value('NUMBER_OF_RECENT_OPENED_STATE_MACHINES_STORED')
-        session_storage_dict = {'recently_used': self.recently_used_state_machines[:num],
-                                'open_tabs': [sm_m.meta for sm_m in self.state_machines.itervalues()]}
+        session_storage_dict = {'open_tabs': [sm_m.meta for sm_m in self.state_machines.itervalues()]}
         storage_utils.write_dict_to_json(session_storage_dict, session_store_file_json)
 
     def load_session_from_storage(self):
         # TODO this method needs better documentation and to be moved
+
         session_store_file_json = os.path.join(rafcon.gui.singleton.global_gui_config.path, SESSION_STORE_FILE)
         if not os.path.exists(session_store_file_json):
             logger.info("No session recovery from: " + session_store_file_json)
             return
         session_storage_dict = storage_utils.load_objects_from_json(session_store_file_json, as_dict=True)
-
-        if rafcon.gui.singleton.global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
-            for sm_meta_dict in session_storage_dict['open_tabs']:
-                open_last_backup = False
-                if 'last_backup' in sm_meta_dict:
-                    open_last_backup = True
-                    path = sm_meta_dict['last_backup']['file_system_path']
-                    # print "### open last backup?", path
-                    last_backup_time = storage_utils.get_float_time_for_string(sm_meta_dict['last_backup']['time'])
-                    if 'last_saved' in sm_meta_dict:
-                        if last_backup_time < storage_utils.get_float_time_for_string(sm_meta_dict['last_saved']['time']):
-                            path = sm_meta_dict['last_saved']['file_system_path']
-                            open_last_backup = False
-                            # print "### open last saved", path
-                elif 'last_saved' in sm_meta_dict:
-                    path = sm_meta_dict['last_saved']['file_system_path']
-                    # print "### open last saved", path
-                else:
-                    continue
-                state_machine = storage.load_state_machine_from_path(path)
-                self.state_machine_manager.add_state_machine(state_machine)
-                if open_last_backup:
-                    state_machine._file_system_path = sm_meta_dict['last_saved']['file_system_path']
-                    state_machine.marked_dirty = True
-
-        self.recently_used_state_machines = session_storage_dict['recently_used']
-        self.sort_recently_used_state_machines()
-        rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller').update_open_recent()
+        for sm_meta_dict in session_storage_dict['open_tabs']:
+            open_last_backup = False
+            if 'last_backup' in sm_meta_dict:
+                open_last_backup = True
+                path = sm_meta_dict['last_backup']['file_system_path']
+                # print "### open last backup?", path
+                last_backup_time = storage_utils.get_float_time_for_string(sm_meta_dict['last_backup']['time'])
+                if 'last_saved' in sm_meta_dict:
+                    if last_backup_time < storage_utils.get_float_time_for_string(sm_meta_dict['last_saved']['time']):
+                        path = sm_meta_dict['last_saved']['file_system_path']
+                        open_last_backup = False
+                        # print "### open last saved", path
+            elif 'last_saved' in sm_meta_dict:
+                path = sm_meta_dict['last_saved']['file_system_path']
+                # print "### open last saved", path
+            else:
+                continue
+            state_machine = storage.load_state_machine_from_path(path)
+            self.state_machine_manager.add_state_machine(state_machine)
+            if open_last_backup:
+                state_machine._file_system_path = sm_meta_dict['last_saved']['file_system_path']
+                state_machine.marked_dirty = True

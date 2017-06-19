@@ -391,6 +391,7 @@ class MenuBarController(ExtendedController):
         config_window_view.get_top_widget().present()
 
     def on_quit_activate(self, widget, data=None, force=False):
+        self.model.store_recent_opened_state_machines()
         self.model.store_session()
         avoid_shutdown = self.on_delete_event(widget, None, force=force)
         if not avoid_shutdown:
