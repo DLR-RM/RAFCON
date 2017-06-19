@@ -359,7 +359,6 @@ class StateMachineModel(ModelMT, Hashable):
         # JSON returns a dict, which must be converted to a Vividict
         tmp_meta = Vividict(tmp_meta)
         # data used for restore tabs -> (having the information to load state machines without loading them)
-        tmp_meta['last_used'] = storage_utils.get_current_time_string()
         tmp_meta['last_saved']['time'] = self.state_machine.last_update
         tmp_meta['last_saved']['file_system_path'] = self.state_machine.file_system_path
 

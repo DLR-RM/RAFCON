@@ -28,6 +28,8 @@ from functools import partial
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.models.library_manager import LibraryManagerModel
+from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.helpers.label import create_image_menu_item, append_sub_menu_to_parent_menu
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
@@ -43,7 +45,9 @@ class LibraryTreeController(ExtendedController):
     LIB_PATH_STORAGE_ID = 2
 
     def __init__(self, model=None, view=None, state_machine_manager_model=None):
+        assert isinstance(model, LibraryManagerModel)
         assert isinstance(view, gtk.TreeView)
+        assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         ExtendedController.__init__(self, model, view)
         self.tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
         view.set_model(self.tree_store)
@@ -256,6 +260,7 @@ class LibraryTreeController(ExtendedController):
         state_machine = storage.load_state_machine_from_path(physical_library_path)
 
         smm_m.state_machine_manager.add_state_machine(state_machine)
+        smm_m.update_recently_opened_state_machines(smm_m.state_machines[state_machine.state_machine_id])
         return state_machine
 
     def delete_button_clicked(self, widget):

@@ -50,7 +50,7 @@ class StateMachineManagerModel(ModelMT, Observable):
     state_machines = {}
     state_machine_mark_dirty = 0
     state_machine_un_mark_dirty = 0
-    recently_used_state_machines = []
+    recently_opened_state_machines = []
 
     __observables__ = ("state_machine_manager", "selected_state_machine_id", "state_machines",
                        "state_machine_mark_dirty", "state_machine_un_mark_dirty")
@@ -104,7 +104,6 @@ class StateMachineManagerModel(ModelMT, Observable):
                     logger.debug("Create new state machine model for state machine with id %s", sm.state_machine_id)
                     with sm.modification_lock():
                         self.state_machines[sm_id] = StateMachineModel(sm, self)
-                        self.update_recently_used_state_machines(self.state_machines[sm_id])
                         self.selected_state_machine_id = sm_id
         elif info["method_name"] == "remove_state_machine":
             sm_id_to_delete = None
@@ -112,7 +111,6 @@ class StateMachineManagerModel(ModelMT, Observable):
                 if sm_id not in self.state_machine_manager.state_machines:
                     sm_id_to_delete = sm_id
                     if self.selected_state_machine_id == sm_id:
-                        self.update_recently_used_state_machines(self.state_machines[sm_id])
                         self.selected_state_machine_id = None
                     break
 
@@ -159,34 +157,44 @@ class StateMachineManagerModel(ModelMT, Observable):
                 raise TypeError("selected_state_machine_id must be of type int")
         self._selected_state_machine_id = selected_state_machine_id
 
-    def sort_recently_used_state_machines(self):
-        self.recently_used_state_machines = sorted(self.recently_used_state_machines,
-                                                   key=lambda meta_dict:
-                                                   storage_utils.get_float_time_for_string(meta_dict['last_used']),
-                                                   reverse=True)
+    def clean_recently_opened_state_machines(self):
+        """ Check if state machine paths still valid
 
-    def update_recently_used_state_machines(self, state_machine_m):
+        If the state machine is no more valid the state machine is removed from the path.
+        :return:
+        """
+        # clean state machines that can not be reached anymore
+        sm_to_delete = []
+        for sm_path in self.recently_opened_state_machines:
+            if not os.path.exists(sm_path):
+                sm_to_delete.append(sm_path)
+        for sm_path in sm_to_delete:
+            self.recently_opened_state_machines.remove(sm_path)
+
+    def update_recently_opened_state_machines(self, state_machine_m):
         sm = state_machine_m.state_machine
         if sm.file_system_path:
+            # check if path is in recent path already
             # print "update recent state machine: ", sm.file_system_path
-            path_list = [meta['last_saved']['file_system_path'] for meta in self.recently_used_state_machines]
-            if sm.file_system_path in path_list:
-                self.recently_used_state_machines[path_list.index(sm.file_system_path)] = state_machine_m.meta
-            else:
-                self.recently_used_state_machines.append(state_machine_m.meta)
-            self.sort_recently_used_state_machines()
+            if sm.file_system_path in self.recently_opened_state_machines:
+                del self.recently_opened_state_machines[self.recently_opened_state_machines.index(sm.file_system_path)]
+            self.recently_opened_state_machines.insert(0, sm.file_system_path)
+            self.clean_recently_opened_state_machines()
             # TODO menu bar is always one step behind the next line would fix it but it is at the wrong place here
-            # rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller').update_open_recent()
+            rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller').update_open_recent()
+        else:
+            logger.warning("State machine {0} can not be added to recent open because it has no valid path."
+                           "".format(state_machine_m))
 
     def store_recent_opened_state_machines(self):
         num = rafcon.gui.singleton.global_gui_config.get_config_value('NUMBER_OF_RECENT_OPENED_STATE_MACHINES_STORED')
         rafcon.gui.singleton.global_runtime_config.set_config_value('recently_used',
-                                                                    self.recently_used_state_machines[:num])
+                                                                    self.recently_opened_state_machines[:num])
 
     def read_recent_opened_state_machines(self):
-        self.recently_used_state_machines = rafcon.gui.singleton.global_runtime_config.get_config_value('recently_used',
-                                                                                                        [])
-        self.sort_recently_used_state_machines()
+        recently_opened_state_machines = rafcon.gui.singleton.global_runtime_config.get_config_value('recently_used', [])
+        self.recently_opened_state_machines = recently_opened_state_machines
+        self.clean_recently_opened_state_machines()
         rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller').update_open_recent()
 
     def store_session(self):

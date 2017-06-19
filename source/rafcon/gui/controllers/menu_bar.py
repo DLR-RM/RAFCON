@@ -95,16 +95,17 @@ class MenuBarController(ExtendedController):
         for item in self.sub_menu.get_children():
             self.sub_menu.remove(item)
         self.sub_menu.show_all()
-        for sm_meta_dict in self.model.recently_used_state_machines:
+        for sm_path in self.model.recently_opened_state_machines:
             # print "insert recent", sm_meta_dict['last_saved']['file_system_path']
-            sm_open_function = partial(self.on_open_activate, path=sm_meta_dict['last_saved']['file_system_path'])
-            self.sub_menu.append(gui_helper_label.create_image_menu_item(sm_meta_dict['last_saved']['file_system_path'],
+            sm_open_function = partial(self.on_open_activate, path=sm_path)
+            self.sub_menu.append(gui_helper_label.create_image_menu_item(sm_path,
                                                                          constants.BUTTON_LEFTA,
                                                                          sm_open_function))
         self.sub_menu.show_all()
 
     @ExtendedController.observe("state_machines", after=True)
     def notification_state_machine_manager_model(self, model, prop_name, info):
+        print "notification_state_machine_manager_model", model, prop_name, info
         self.update_open_recent()
 
     def register_view(self, view):
@@ -349,14 +350,15 @@ class MenuBarController(ExtendedController):
 
     @staticmethod
     def on_open_activate(widget=None, data=None, path=None):
-        gui_helper_state_machine.open_state_machine(path=path)
+        gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
 
     def on_save_activate(self, widget, data=None, save_as=False, delete_old_state_machine=False):
         return gui_helper_state_machine.save_state_machine(save_as=save_as,
-                                                           delete_old_state_machine=delete_old_state_machine)
+                                                           delete_old_state_machine=delete_old_state_machine,
+                                                           recent_opened_notification=True)
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
-        return gui_helper_state_machine.save_state_machine_as(path=path)
+        return gui_helper_state_machine.save_state_machine_as(path=path, recent_opened_notification=True)
 
     @staticmethod
     def on_refresh_libraries_activate():
