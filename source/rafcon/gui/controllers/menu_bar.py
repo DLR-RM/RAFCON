@@ -82,9 +82,6 @@ class MenuBarController(ExtendedController):
         self.main_window_view.right_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.left_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.console_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
-        # update open recent
-        self.sub_menu = gtk.Menu()
-        view.menu_bar['open_recent'].set_submenu(self.sub_menu)
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -148,8 +145,8 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('about', 'activate', self.on_about_activate)
         self.full_screen_window.connect('key_press_event', self.on_key_press_event)
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
-        self.registered_view = True
         self.update_recently_opened_state_machines(None, None, None)
+        self.registered_view = True
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
@@ -170,16 +167,16 @@ class MenuBarController(ExtendedController):
     @ExtendedController.observe("recently_opened_state_machines", after=True)
     def update_recently_opened_state_machines(self, model, prop_name, info):
         """Update the sub menu Open Recent in File menu"""
-        for item in self.sub_menu.get_children():
-            self.sub_menu.remove(item)
-        self.sub_menu.show_all()
+        for item in self.view.sub_menu_open_recently.get_children():
+            self.view.sub_menu_open_recently.remove(item)
+        self.view.sub_menu_open_recently.show_all()
         for sm_path in self.model.recently_opened_state_machines:
             # print "insert recent", sm_meta_dict['last_saved']['file_system_path']
             sm_open_function = partial(self.on_open_activate, path=sm_path)
-            self.sub_menu.append(gui_helper_label.create_image_menu_item(sm_path,
-                                                                         constants.BUTTON_LEFTA,
-                                                                         sm_open_function))
-        self.sub_menu.show_all()
+            self.view.sub_menu_open_recently.append(gui_helper_label.create_image_menu_item(sm_path,
+                                                                                            constants.BUTTON_LEFTA,
+                                                                                            sm_open_function))
+        self.view.sub_menu_open_recently.show_all()
 
     def on_toggle_full_screen_mode(self, *args):
         if self.view["full_screen"].get_active():
