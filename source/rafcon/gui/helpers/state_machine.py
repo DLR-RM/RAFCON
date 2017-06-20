@@ -116,7 +116,7 @@ def save_state_machine(save_as=False, delete_old_state_machine=False, recent_ope
         state = dirty_source_editor_ctrl.model.state
         message_string = "The source code of the state '{}' (path: {}) has net been applied yet and would " \
                          "therefore not be stored.\n\nDo you want to apply the changes now?".format(state.name,
-                                                                                                 state.get_path())
+                                                                                                    state.get_path())
         if global_gui_config.get_config_value("AUTO_APPLY_SOURCE_CODE_CHANGES", False):
             dirty_source_editor_ctrl.apply_clicked(None)
         else:

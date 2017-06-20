@@ -60,6 +60,96 @@ def remove_rafcon_instance_lock_file():
         logger.warning(_("External remove of lock file detected!"))
 
 
+def check_path_for_correct_dirty_lock_file(sm_path, path):
+    for elem in os.listdir(path):
+        full_path = os.path.join(path, elem)
+        if not os.path.isdir(full_path) and 'dirty_lock_' in elem:
+            with open(full_path) as f:
+                if sm_path in f.readline().replace('\n', ''):
+                    return full_path
+
+
+def find_dirty_lock_file_for_state_machine_path(sm_path):
+    full_path_dirty_lock = None
+    # -> can be in the root tmp folder of the instance
+    if MY_RAFCON_TEMP_PATH in sm_path:
+        runtime_backup_path_len = len(MY_RAFCON_TEMP_PATH.split(os.sep)) + 2
+        runtime_backup_path_of_rafcon_instance = os.sep.join(sm_path.split(os.sep)[:runtime_backup_path_len])
+        assert 'runtime_backup' in runtime_backup_path_of_rafcon_instance
+        full_path_dirty_lock = check_path_for_correct_dirty_lock_file(sm_path, runtime_backup_path_of_rafcon_instance)
+
+    # -> or in the state machine folder
+    if full_path_dirty_lock is None:
+        full_path_dirty_lock = check_path_for_correct_dirty_lock_file(sm_path, sm_path)
+
+    return full_path_dirty_lock
+
+
+def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=None):
+
+    # work around to avoid reopening if backup enabled -> take into account possible stored session TODO  do better
+    if full_path_dirty_lock is not None and not os.path.exists(full_path_dirty_lock):
+        return
+
+    if full_path_dirty_lock is None:
+        full_path_dirty_lock = find_dirty_lock_file_for_state_machine_path(sm_path)
+
+    state_machine = storage.load_state_machine_from_path(sm_path)
+
+    # re-construct dirty log -> marked for removal
+    if full_path_dirty_lock is not None:
+        # logger.info("Read dirty lock " + full_path_dirty_lock)
+        with open(full_path_dirty_lock) as f:
+            lines = f.readlines()
+            lines.pop(0)  # ignore backup path -> first line
+            lines.pop(0)  # remove comment line "marked for removal:"
+            if len(lines) > 0:
+                storage._paths_to_remove_before_sm_save[state_machine.state_machine_id] = []
+                for sm_path in lines:
+                    sm_path = sm_path.replace('\n', '')
+                    if os.path.isdir(sm_path):
+                        storage.mark_path_for_removal_for_sm_id(state_machine.state_machine_id, sm_path)
+    else:
+        logger.info("Recover backup of state machine without dirty lock {0}.".format(sm_path))
+
+    # move dirty lock file
+    if full_path_dirty_lock is not None and full_path_dirty_lock == os.path.join(sm_path, full_path_dirty_lock.split(os.sep)[-1]):
+        # logger.info("Move dirty lock from root tmp folder {0} to state machine folder {1}"
+        #             "".format(full_path_dirty_lock, os.path.join(sm_path, full_path_dirty_lock.split(os.sep)[-1])))
+        os.rename(full_path_dirty_lock, os.path.join(sm_path, full_path_dirty_lock.split(os.sep)[-1]))
+
+    gui_singletons.state_machine_manager.add_state_machine(state_machine)
+    sm_m = gui_singletons.state_machine_manager_model.state_machines[state_machine.state_machine_id]
+    assert sm_m.state_machine is state_machine
+
+    # correct backup instance and sm-storage-path -> TODO make the add state machine better to reduce complexity, here
+    # correct path after add state machine because meta data should be loaded from the backup path
+    sm_path = sm_m.state_machine.file_system_path
+    sm_m.storage_lock.acquire()
+    try:
+        sm_meta = storage.load_data_file(os.path.join(sm_path, storage.FILE_NAME_META_DATA))
+    except ValueError:
+        sm_meta = {}
+    if 'last_saved' in sm_meta and 'file_system_path' in sm_meta['last_saved']:
+        sm_m.state_machine._file_system_path = sm_meta['last_saved']['file_system_path']
+    else:  # state machines with old backup format -> backward compatibility check
+        reduced_path = sm_path.replace(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'runtime_backup'), '')
+        if os.path.isdir(reduced_path) and not reduced_path.split(os.path.sep)[1] == 'tmp':
+            sm_m.state_machine._file_system_path = reduced_path
+        else:
+            sm_m.state_machine._file_system_path = None
+    sm_m.meta['last_saved']['file_system_path'] = sm_m.state_machine.file_system_path
+    sm_m.storage_lock.release()
+
+    # set dirty flag -> TODO think about to make it more reliable still not fully sure that the flag is right
+    if 'last_backup' in sm_meta and 'marked_dirty' in sm_meta['last_backup']:  # backward compatibility check
+        state_machine.marked_dirty = sm_meta['last_backup']['marked_dirty']
+    else:
+        state_machine.marked_dirty = True  # backward compatibility
+
+    return sm_m
+
+
 def check_for_crashed_rafcon_instances():
 
     def on_message_dialog_response_signal(widget, response_id, found_backups, *args):
@@ -69,34 +159,13 @@ def check_for_crashed_rafcon_instances():
                 path, pid, lock_file, m_time, full_path_dirty_lock = tuple_of_backup
                 if path is not None and widget.list_store[index][0]:  # Open it
 
-                    state_machine = storage.load_state_machine_from_path(path)
-                    gui_singletons.state_machine_manager.add_state_machine(state_machine)
-                    sm_m = gui_singletons.state_machine_manager_model.state_machines[state_machine.state_machine_id]
-                    assert sm_m.state_machine is state_machine
+                    # recover state machine, marked dirty flag, marked for removal,
+                    sm_m = recover_state_machine_from_backup(path, pid, full_path_dirty_lock)
 
-                    # correct backup instance and sm-storage-path
-                    reduced_path = path.replace(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'runtime_backup'), '')
-                    sm_m.storage_lock.acquire()
-                    if os.path.isdir(reduced_path) and not reduced_path.split(os.path.sep)[1] == 'tmp':
-                        state_machine._file_system_path = reduced_path
-                    else:
-                        state_machine._file_system_path = None
-                    sm_m.storage_lock.release()
-
-                    # re-construct dirty log
-                    with open(full_path_dirty_lock) as f:
-                        lines = f.readlines()
-                        lines.pop(0) # ignore backup path -> first line
-                        lines.pop(0) # remove comment line "marked for removal:"
-                        if len(lines) > 0:
-                            storage._paths_to_remove_before_sm_save[state_machine.state_machine_id] = []
-                            for path in lines:
-                                path = path.replace('\n', '')
-                                if os.path.isdir(path):
-                                    storage.mark_path_for_removal_for_sm_id(state_machine.state_machine_id, path)
-                    # force backup re-initialization
-                    state_machine.marked_dirty = True
-                    sm_m.auto_backup.check_for_auto_backup(force=True)
+                    # force backup re-initialization -> set auto-backup dirty flag to enforce backup even if not dirty
+                    if sm_m is not None:
+                        sm_m.auto_backup.marked_dirty = True
+                        sm_m.auto_backup.check_for_auto_backup(force=True)
 
         if response_id in [1, 3]:
             for index, tuple_of_backup in enumerate(found_backups):
@@ -109,9 +178,14 @@ def check_for_crashed_rafcon_instances():
                     else:
                         logger.debug("Clean up lock for state machine with path: {0} pid: {1} lock_file: {2}"
                                      "".format(path, pid, lock_file))
-                    if path is not None:
-                        os.remove(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'runtime_backup', lock_file))
+
+                    if path is not None and response_id == 3:
+                        logger.info("Move dirty lock from root tmp folder {0} to state machine folder {1}"
+                                    "".format(os.path.join(MY_RAFCON_TEMP_PATH, pid), path))
+                        assert os.path.join(MY_RAFCON_TEMP_PATH, pid) in full_path_dirty_lock
+                        os.rename(full_path_dirty_lock, os.path.join(path, lock_file))
                     if os.path.exists(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'lock')):
+                        logger.info("Remove instance lock {0}".format(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'lock')))
                         os.remove(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'lock'))
 
         if response_id in [1, 2, 3]:
@@ -274,8 +348,11 @@ class AutoBackupModel(ModelMT):
         sm = self.state_machine_model.state_machine
         if sm.marked_dirty and self.lock_file is None and self.AUTO_RECOVERY_LOCK_ENABLED:
             self.lock_file_lock.acquire()
-            # logger.info('create lock {0} -> path {1}'.format(sm.state_machine_id, self.update_tmp_storage_path()))
+            # logger.info('create lock {0} -> path {1}'.format(sm.state_machine_id,
+            #                                                  RAFCON_RUNTIME_BACKUP_PATH +
+            #                                                  '/dirty_lock_' + str(sm.state_machine_id)))
             self.lock_file = open(RAFCON_RUNTIME_BACKUP_PATH + '/dirty_lock_' + str(sm.state_machine_id), 'a+')
+            # TODO move this and the inverse functionality to one location (capsule)
             mark_4_removal = []
             if self.state_machine_model.state_machine.state_machine_id in storage._paths_to_remove_before_sm_save:
                 for path in storage._paths_to_remove_before_sm_save[self.state_machine_model.state_machine.state_machine_id]:
@@ -312,6 +389,7 @@ class AutoBackupModel(ModelMT):
         """Write the backup meta data to the state machine meta data"""
         self.state_machine_model.meta['last_backup']['time'] = get_time_string_for_float(self.last_backup_time)
         self.state_machine_model.meta['last_backup']['file_system_path'] = self._tmp_storage_path
+        self.state_machine_model.meta['last_backup']['marked_dirty'] = self.state_machine_model.state_machine.marked_dirty
 
     @ModelMT.observe("state_machine", after=True)
     def change_in_state_machine_notification(self, model, prop_name, info):
@@ -377,8 +455,8 @@ class AutoBackupModel(ModelMT):
         self.update_tmp_storage_path()
         storage.save_state_machine_to_path(sm, self._tmp_storage_path, delete_old_state_machine=True,
                                            save_as=True, temporary_storage=True)
-        self.state_machine_model.store_meta_data(temp_path=self._tmp_storage_path)
         self.write_meta_data()
+        self.state_machine_model.store_meta_data(temp_path=self._tmp_storage_path)
         self.last_backup_time = time.time()  # used as 'last-backup' time
         self.timer_request_lock.acquire()
         self._timer_request_time = None

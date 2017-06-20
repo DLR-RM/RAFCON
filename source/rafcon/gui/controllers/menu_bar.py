@@ -105,7 +105,7 @@ class MenuBarController(ExtendedController):
 
     @ExtendedController.observe("state_machines", after=True)
     def notification_state_machine_manager_model(self, model, prop_name, info):
-        print "notification_state_machine_manager_model", model, prop_name, info
+        # print "notification_state_machine_manager_model", model, prop_name, info
         self.update_open_recent()
 
     def register_view(self, view):
@@ -394,7 +394,9 @@ class MenuBarController(ExtendedController):
 
     def on_quit_activate(self, widget, data=None, force=False):
         self.model.store_recent_opened_state_machines()
-        self.model.store_session()
+        if global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
+            self.model.store_session()
+            force = True
         avoid_shutdown = self.on_delete_event(widget, None, force=force)
         if not avoid_shutdown:
             self.on_destroy(None)

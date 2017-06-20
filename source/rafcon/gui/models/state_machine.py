@@ -343,7 +343,6 @@ class StateMachineModel(ModelMT, Hashable):
         :param str path: Optional path to the meta data file. If not given, the path will be derived from the state
             machine's path on the filesystem
         """
-
         meta_data_path = path if path is not None else self.state_machine.file_system_path
 
         if meta_data_path:
@@ -358,9 +357,10 @@ class StateMachineModel(ModelMT, Hashable):
 
         # JSON returns a dict, which must be converted to a Vividict
         tmp_meta = Vividict(tmp_meta)
-        # data used for restore tabs -> (having the information to load state machines without loading them)
-        tmp_meta['last_saved']['time'] = self.state_machine.last_update
-        tmp_meta['last_saved']['file_system_path'] = self.state_machine.file_system_path
+        if path is None:
+            # data used for restore tabs -> (having the information to load state machines without loading them)
+            tmp_meta['last_saved']['time'] = self.state_machine.last_update
+            tmp_meta['last_saved']['file_system_path'] = self.state_machine.file_system_path
 
         if recursively:
             root_state_path = None if not path else os.path.join(path, self.root_state.state.state_id)

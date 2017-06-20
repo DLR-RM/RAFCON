@@ -181,6 +181,7 @@ class StateMachineManagerModel(ModelMT, Observable):
             self.recently_opened_state_machines.insert(0, sm.file_system_path)
             self.clean_recently_opened_state_machines()
             # TODO menu bar is always one step behind the next line would fix it but it is at the wrong place here
+            # TODO make the list recently_opened_state_machines observable
             rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller').update_open_recent()
         else:
             logger.warning("State machine {0} can not be added to recent open because it has no valid path."
@@ -198,37 +199,74 @@ class StateMachineManagerModel(ModelMT, Observable):
         rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller').update_open_recent()
 
     def store_session(self):
+        from rafcon.gui.models.auto_backup import AutoBackupModel
+        # check there are dirty state machines
+        # -> use backup file structure maybe it is already stored
+        # TODO think about if this is a too strong cross dependency -> best to recover mark dirty and mark for removal
+        for sm_m in self.state_machines.itervalues():
+            if hasattr(sm_m, 'auto_backup'):
+                if sm_m.state_machine.marked_dirty:
+                    sm_m.auto_backup.perform_temp_storage()
+            else:
+                # generate a backup
+                AutoBackupModel(sm_m)
+        # store final state machine meta data to restore session in the next run
         session_store_file_json = os.path.join(rafcon.gui.singleton.global_gui_config.path, SESSION_STORE_FILE)
         session_storage_dict = {'open_tabs': [sm_m.meta for sm_m in self.state_machines.itervalues()]}
         storage_utils.write_dict_to_json(session_storage_dict, session_store_file_json)
 
     def load_session_from_storage(self):
-        # TODO this method needs better documentation and to be moved
-
+        from rafcon.gui.models.auto_backup import recover_state_machine_from_backup
+        # TODO this method needs better documentation and to be moved to a controller because it load's state machines
         session_store_file_json = os.path.join(rafcon.gui.singleton.global_gui_config.path, SESSION_STORE_FILE)
+        # check if session storage file exists
         if not os.path.exists(session_store_file_json):
             logger.info("No session recovery from: " + session_store_file_json)
             return
+
+        # load and recover state machines like they were opened before
         session_storage_dict = storage_utils.load_objects_from_json(session_store_file_json, as_dict=True)
-        for sm_meta_dict in session_storage_dict['open_tabs']:
-            open_last_backup = False
+        for idx, sm_meta_dict in enumerate(session_storage_dict['open_tabs']):
+            from_backup_path = None
+            # TODO do this decision before storing or maybe store the last stored time in the auto backup?!
+            # pick folder name dependent on time, and meta data existence
+            # problem is that the backup time is maybe not the best choice
             if 'last_backup' in sm_meta_dict:
-                open_last_backup = True
-                path = sm_meta_dict['last_backup']['file_system_path']
-                # print "### open last backup?", path
                 last_backup_time = storage_utils.get_float_time_for_string(sm_meta_dict['last_backup']['time'])
                 if 'last_saved' in sm_meta_dict:
-                    if last_backup_time < storage_utils.get_float_time_for_string(sm_meta_dict['last_saved']['time']):
-                        path = sm_meta_dict['last_saved']['file_system_path']
-                        open_last_backup = False
-                        # print "### open last saved", path
+                    last_save_time = storage_utils.get_float_time_for_string(sm_meta_dict['last_saved']['time'])
+                    backup_marked_dirty = sm_meta_dict['last_backup']['marked_dirty']
+                    if last_backup_time > last_save_time and backup_marked_dirty:
+                        from_backup_path = sm_meta_dict['last_backup']['file_system_path']
+                else:
+                    from_backup_path = sm_meta_dict['last_backup']['file_system_path']
             elif 'last_saved' in sm_meta_dict:
-                path = sm_meta_dict['last_saved']['file_system_path']
-                # print "### open last saved", path
+                # print "### open last saved", sm_meta_dict['last_saved']['file_system_path']
+                pass
             else:
+                logger.error("A tab was stored into session storage dictionary {0} without any recovery path"
+                             "".format(sm_meta_dict))
                 continue
-            state_machine = storage.load_state_machine_from_path(path)
-            self.state_machine_manager.add_state_machine(state_machine)
-            if open_last_backup:
-                state_machine._file_system_path = sm_meta_dict['last_saved']['file_system_path']
-                state_machine.marked_dirty = True
+
+            # check in case that the backup folder is valid or use last saved path
+            if from_backup_path is not None and not os.path.isdir(from_backup_path):
+                logger.warning("The restore of tab {0} from backup path {1} was not possible. "
+                               "The last saved path will be used what maybe include lose of changes."
+                               "".format(idx, from_backup_path))
+                from_backup_path = None
+
+            # open state machine
+            if from_backup_path is not None:
+                # open state machine, recover mark dirty flags, cleans dirty lock files
+                logger.info("Recover from backup {0}".format(from_backup_path))
+                recover_state_machine_from_backup(from_backup_path)
+            else:
+                if 'last_saved' not in sm_meta_dict or sm_meta_dict['last_saved']['file_system_path'] is None:
+                    continue
+                path = sm_meta_dict['last_saved']['file_system_path']
+                if not os.path.isdir(path):
+                    logger.warning("The tab can not be open. The restore of tab {0} from common path {1} was not "
+                                   "possible.".format(idx, path))
+                    continue
+                state_machine = storage.load_state_machine_from_path(path)
+                self.state_machine_manager.add_state_machine(state_machine)
