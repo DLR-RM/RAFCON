@@ -34,12 +34,8 @@ import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.config_window import ConfigWindowController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers import state as gui_helper_state
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.models.abstract_state import AbstractStateModel
-from rafcon.gui.models.container_state import ContainerStateModel
-from rafcon.gui.models.scoped_variable import ScopedVariableModel
-from rafcon.gui.models.state import StateModel
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
@@ -89,24 +85,6 @@ class MenuBarController(ExtendedController):
         # update open recent
         self.sub_menu = gtk.Menu()
         view.menu_bar['open_recent'].set_submenu(self.sub_menu)
-
-    def update_open_recent(self):
-        """Update the sub menu Open Recent in File menu"""
-        for item in self.sub_menu.get_children():
-            self.sub_menu.remove(item)
-        self.sub_menu.show_all()
-        for sm_path in self.model.recently_opened_state_machines:
-            # print "insert recent", sm_meta_dict['last_saved']['file_system_path']
-            sm_open_function = partial(self.on_open_activate, path=sm_path)
-            self.sub_menu.append(gui_helper_label.create_image_menu_item(sm_path,
-                                                                         constants.BUTTON_LEFTA,
-                                                                         sm_open_function))
-        self.sub_menu.show_all()
-
-    @ExtendedController.observe("state_machines", after=True)
-    def notification_state_machine_manager_model(self, model, prop_name, info):
-        # print "notification_state_machine_manager_model", model, prop_name, info
-        self.update_open_recent()
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -171,7 +149,7 @@ class MenuBarController(ExtendedController):
         self.full_screen_window.connect('key_press_event', self.on_key_press_event)
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
         self.registered_view = True
-        self.update_open_recent()
+        self.update_recently_opened_state_machines(None, None, None)
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
@@ -188,6 +166,20 @@ class MenuBarController(ExtendedController):
             library_manager.refresh_libraries()
         elif config_key == "SHORTCUTS":
             self.refresh_shortcuts()
+
+    @ExtendedController.observe("recently_opened_state_machines", after=True)
+    def update_recently_opened_state_machines(self, model, prop_name, info):
+        """Update the sub menu Open Recent in File menu"""
+        for item in self.sub_menu.get_children():
+            self.sub_menu.remove(item)
+        self.sub_menu.show_all()
+        for sm_path in self.model.recently_opened_state_machines:
+            # print "insert recent", sm_meta_dict['last_saved']['file_system_path']
+            sm_open_function = partial(self.on_open_activate, path=sm_path)
+            self.sub_menu.append(gui_helper_label.create_image_menu_item(sm_path,
+                                                                         constants.BUTTON_LEFTA,
+                                                                         sm_open_function))
+        self.sub_menu.show_all()
 
     def on_toggle_full_screen_mode(self, *args):
         if self.view["full_screen"].get_active():

@@ -53,7 +53,7 @@ class StateMachineManagerModel(ModelMT, Observable):
     recently_opened_state_machines = []
 
     __observables__ = ("state_machine_manager", "selected_state_machine_id", "state_machines",
-                       "state_machine_mark_dirty", "state_machine_un_mark_dirty")
+                       "state_machine_mark_dirty", "state_machine_un_mark_dirty", "recently_opened_state_machines")
 
     def __init__(self, state_machine_manager, meta=None):
         """Constructor"""
@@ -180,9 +180,6 @@ class StateMachineManagerModel(ModelMT, Observable):
                 del self.recently_opened_state_machines[self.recently_opened_state_machines.index(sm.file_system_path)]
             self.recently_opened_state_machines.insert(0, sm.file_system_path)
             self.clean_recently_opened_state_machines()
-            # TODO menu bar is always one step behind the next line would fix it but it is at the wrong place here
-            # TODO make the list recently_opened_state_machines observable
-            rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller').update_open_recent()
         else:
             logger.warning("State machine {0} can not be added to recent open because it has no valid path."
                            "".format(state_machine_m))
@@ -194,9 +191,9 @@ class StateMachineManagerModel(ModelMT, Observable):
 
     def read_recent_opened_state_machines(self):
         recently_opened_state_machines = rafcon.gui.singleton.global_runtime_config.get_config_value('recently_used', [])
-        self.recently_opened_state_machines = recently_opened_state_machines
+        del self.recently_opened_state_machines[:]
+        self.recently_opened_state_machines.extend(recently_opened_state_machines)
         self.clean_recently_opened_state_machines()
-        rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller').update_open_recent()
 
     def store_session(self):
         from rafcon.gui.models.auto_backup import AutoBackupModel
