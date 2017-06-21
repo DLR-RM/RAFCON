@@ -731,3 +731,22 @@ def ungroup_selected_state():
             not selected_states[0].state.is_root_state:
         logger.debug("do ungroup")
         gui_helper_state.ungroup_state(selected_states[0])
+
+
+def get_root_state_name_of_sm_file_system_path(file_system_path):
+    import os
+    if os.path.isdir(file_system_path) and os.path.exists(os.path.join(file_system_path, storage.STATEMACHINE_FILE)):
+        try:
+            sm_dict = storage.load_data_file(os.path.join(file_system_path, storage.STATEMACHINE_FILE))
+        except ValueError:
+            return
+        if 'root_state_id' not in sm_dict and 'root_state_storage_id' not in sm_dict:
+            return
+        root_state_folder = sm_dict['root_state_id'] if 'root_state_id' in sm_dict else sm_dict['root_state_storage_id']
+        root_state_file = os.path.join(file_system_path, root_state_folder, storage.FILE_NAME_CORE_DATA)
+        root_state = storage.load_data_file(root_state_file)
+        if isinstance(root_state, tuple):
+            root_state = root_state[0]
+        if isinstance(root_state, State):
+            return root_state.name
+        return

@@ -177,10 +177,22 @@ class MenuBarController(ExtendedController):
         self.view.sub_menu_open_recently.show_all()
         for sm_path in self.model.recently_opened_state_machines:
             # print "insert recent", sm_meta_dict['last_saved']['file_system_path']
+
+            # define label string
+            root_state_name = gui_helper_state_machine.get_root_state_name_of_sm_file_system_path(sm_path)
+            label_string = "'{0}' -> {1}".format(root_state_name, sm_path) if root_state_name is not None else sm_path
+
+            # define icon of menu item
+            is_in_libs = library_manager.is_os_path_within_library_root_paths(sm_path)
+            button_image = constants.SIGN_LIB if is_in_libs else constants.BUTTON_LEFTA
+
+            # prepare state machine open call_back function
             sm_open_function = partial(self.on_open_activate, path=sm_path)
-            self.view.sub_menu_open_recently.append(gui_helper_label.create_image_menu_item(sm_path,
-                                                                                            constants.BUTTON_LEFTA,
-                                                                                            sm_open_function))
+
+            # create and insert new menu item
+            menu_item = gui_helper_label.create_image_menu_item(label_string, button_image, sm_open_function)
+            self.view.sub_menu_open_recently.append(menu_item)
+
         self.view.sub_menu_open_recently.show_all()
 
     def on_toggle_full_screen_mode(self, *args):
