@@ -70,7 +70,6 @@ class MainWindowController(ExtendedController):
         ExtendedController.__init__(self, state_machine_manager_model, view)
 
         gui_singletons.main_window_controller = self
-        self.state_machine_manager_model = state_machine_manager_model
         self.observe_model(gui_singletons.gui_config_model)
 
         self.shortcut_manager = None
@@ -224,6 +223,9 @@ class MainWindowController(ExtendedController):
         view.left_bar_window.initialize_title(gui_helper_label.create_left_bar_window_title(upper_title, lower_title))
         view.right_bar_window.initialize_title('STATE EDITOR')
         view.console_bar_window.initialize_title('CONSOLE')
+
+        # TODO check import problems if called while init of manager model
+        self.model.read_recent_opened_state_machines()
 
     @staticmethod
     def configure_event(widget, event, name):

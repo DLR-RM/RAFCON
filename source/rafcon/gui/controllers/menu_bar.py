@@ -66,6 +66,7 @@ class MenuBarController(ExtendedController):
         self.main_window_view = view
         self.observe_model(gui_singletons.core_config_model)
         self.observe_model(gui_singletons.gui_config_model)
+        self.observe_model(gui_singletons.runtime_config_model)
 
         self._destroyed = False
         self.handler_ids = {}
@@ -145,8 +146,8 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('about', 'activate', self.on_about_activate)
         self.full_screen_window.connect('key_press_event', self.on_key_press_event)
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
-        self.update_recently_opened_state_machines(None, None, None)
         self.registered_view = True
+        self.update_recently_opened_state_machines()
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
@@ -163,10 +164,14 @@ class MenuBarController(ExtendedController):
             library_manager.refresh_libraries()
         elif config_key == "SHORTCUTS":
             self.refresh_shortcuts()
+        elif config_key == "recently_used":
+            self.update_recently_opened_state_machines()
 
     @ExtendedController.observe("recently_opened_state_machines", after=True)
-    def update_recently_opened_state_machines(self, model, prop_name, info):
+    def update_recently_opened_state_machines(self, *args):
         """Update the sub menu Open Recent in File menu"""
+        if not self.registered_view:
+            return
         for item in self.view.sub_menu_open_recently.get_children():
             self.view.sub_menu_open_recently.remove(item)
         self.view.sub_menu_open_recently.show_all()

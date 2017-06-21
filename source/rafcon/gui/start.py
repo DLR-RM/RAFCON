@@ -280,17 +280,16 @@ def main():
 
     if user_input.state_machine_paths:
         state_machine = open_state_machines(user_input.state_machine_paths)
+        main_window_controller.model.extend_recently_opened_by_current_open_state_machines()
 
     if user_input.new:
         create_new_state_machine()
 
     # TODO find out why this works and rearrange it -> most proper because of the pending gtk events
-    # initiate stored session and read/adapt recent opened state machines # TODO think about a controller for this
+    # initiate stored session # TODO think about a controller for this
     if not user_input.new and not user_input.state_machine_paths \
             and rafcon.gui.singleton.global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
         main_window_controller.model.load_session_from_storage()
-    # the recent open state machine are loaded after
-    main_window_controller.model.read_recent_opened_state_machines()
 
     log_ready_output()
 

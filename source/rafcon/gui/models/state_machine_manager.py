@@ -173,6 +173,8 @@ class StateMachineManagerModel(ModelMT, Observable):
 
     def update_recently_opened_state_machines(self, state_machine_m):
         sm = state_machine_m.state_machine
+        # TODO finally check if this runs only with observing (menu-bar) and using the runtime config as currently
+        # TODO -> means StateMachineManagerModel will not need a list for this anymore
         if sm.file_system_path:
             # check if path is in recent path already
             # print "update recent state machine: ", sm.file_system_path
@@ -184,13 +186,18 @@ class StateMachineManagerModel(ModelMT, Observable):
             logger.warning("State machine {0} can not be added to recent open because it has no valid path."
                            "".format(state_machine_m))
 
+    def extend_recently_opened_by_current_open_state_machines(self):
+        for sm_m in self.state_machines.itervalues():
+            self.update_recently_opened_state_machines(sm_m)
+
     def store_recent_opened_state_machines(self):
         num = rafcon.gui.singleton.global_gui_config.get_config_value('NUMBER_OF_RECENT_OPENED_STATE_MACHINES_STORED')
-        rafcon.gui.singleton.global_runtime_config.set_config_value('recently_used',
+        rafcon.gui.singleton.global_runtime_config.set_config_value('recently_opened_state_machines',
                                                                     self.recently_opened_state_machines[:num])
 
     def read_recent_opened_state_machines(self):
-        recently_opened_state_machines = rafcon.gui.singleton.global_runtime_config.get_config_value('recently_used', [])
+        global_runtime_config = rafcon.gui.singleton.global_runtime_config
+        recently_opened_state_machines = global_runtime_config.get_config_value('recently_opened_state_machines', [])
         del self.recently_opened_state_machines[:]
         self.recently_opened_state_machines.extend(recently_opened_state_machines)
         self.clean_recently_opened_state_machines()
@@ -276,3 +283,5 @@ class StateMachineManagerModel(ModelMT, Observable):
                 # logger.info("restore from last saved", path, sm_meta_dict)
                 state_machine = storage.load_state_machine_from_path(path)
                 self.state_machine_manager.add_state_machine(state_machine)
+
+        self.extend_recently_opened_by_current_open_state_machines()
