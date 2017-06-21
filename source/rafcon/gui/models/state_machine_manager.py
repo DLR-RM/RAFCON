@@ -195,6 +195,14 @@ class StateMachineManagerModel(ModelMT, Observable):
         self.recently_opened_state_machines.extend(recently_opened_state_machines)
         self.clean_recently_opened_state_machines()
 
+    @property
+    def current_session_storage_file(self):
+        return os.path.join(rafcon.gui.singleton.global_gui_config.path, SESSION_STORE_FILE)
+
+    def reset_session_storage(self):
+        if os.path.exists(self.current_session_storage_file):
+            os.remove(self.current_session_storage_file)
+
     def store_session(self):
         from rafcon.gui.models.auto_backup import AutoBackupModel
         # check there are dirty state machines
@@ -208,9 +216,8 @@ class StateMachineManagerModel(ModelMT, Observable):
                 # generate a backup
                 AutoBackupModel(sm_m)
         # store final state machine meta data to restore session in the next run
-        session_store_file_json = os.path.join(rafcon.gui.singleton.global_gui_config.path, SESSION_STORE_FILE)
         session_storage_dict = {'open_tabs': [sm_m.meta for sm_m in self.state_machines.itervalues()]}
-        storage_utils.write_dict_to_json(session_storage_dict, session_store_file_json)
+        storage_utils.write_dict_to_json(session_storage_dict, self.current_session_storage_file)
 
     def load_session_from_storage(self):
         from rafcon.gui.models.auto_backup import recover_state_machine_from_backup
@@ -221,6 +228,7 @@ class StateMachineManagerModel(ModelMT, Observable):
             logger.info("No session recovery from: " + session_store_file_json)
             return
 
+        # TODO think about a dialog to give the use control -> maybe combine this and auto-backup in one structure
         # load and recover state machines like they were opened before
         session_storage_dict = storage_utils.load_objects_from_json(session_store_file_json, as_dict=True)
         for idx, sm_meta_dict in enumerate(session_storage_dict['open_tabs']):
@@ -265,5 +273,6 @@ class StateMachineManagerModel(ModelMT, Observable):
                     logger.warning("The tab can not be open. The restore of tab {0} from common path {1} was not "
                                    "possible.".format(idx, path))
                     continue
+                # logger.info("restore from last saved", path, sm_meta_dict)
                 state_machine = storage.load_state_machine_from_path(path)
                 self.state_machine_manager.add_state_machine(state_machine)

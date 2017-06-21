@@ -61,9 +61,11 @@ def remove_rafcon_instance_lock_file():
 
 
 def check_path_for_correct_dirty_lock_file(sm_path, path):
+    # print "run check for lock file", sm_path, path, os.listdir(path)
     for elem in os.listdir(path):
         full_path = os.path.join(path, elem)
         if not os.path.isdir(full_path) and 'dirty_lock_' in elem:
+            # print "check lock file", full_path
             with open(full_path) as f:
                 if sm_path in f.readline().replace('\n', ''):
                     return full_path
@@ -72,11 +74,14 @@ def check_path_for_correct_dirty_lock_file(sm_path, path):
 def find_dirty_lock_file_for_state_machine_path(sm_path):
     full_path_dirty_lock = None
     # -> can be in the root tmp folder of the instance
+    # print MY_RAFCON_TEMP_PATH, "in", sm_path
     if MY_RAFCON_TEMP_PATH in sm_path:
         runtime_backup_path_len = len(MY_RAFCON_TEMP_PATH.split(os.sep)) + 2
         runtime_backup_path_of_rafcon_instance = os.sep.join(sm_path.split(os.sep)[:runtime_backup_path_len])
+        # print "check tmp root folder", runtime_backup_path_len, runtime_backup_path_of_rafcon_instance
         assert 'runtime_backup' in runtime_backup_path_of_rafcon_instance
         full_path_dirty_lock = check_path_for_correct_dirty_lock_file(sm_path, runtime_backup_path_of_rafcon_instance)
+        # print "check tmp root folder tmp lock", full_path_dirty_lock
 
     # -> or in the state machine folder
     if full_path_dirty_lock is None:
@@ -85,14 +90,45 @@ def find_dirty_lock_file_for_state_machine_path(sm_path):
     return full_path_dirty_lock
 
 
-def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=None):
+def move_dirty_lock_file(dirty_lock_file, sm_path):
+    """ Move the dirt_lock file to the sm_path and thereby is not found by auto recovery of backup anymore """
+    # print "clean dirty lock", dirty_lock_file_path, sm_path, dirty_lock_file_path is not None
+    if dirty_lock_file is not None \
+            and not dirty_lock_file == os.path.join(sm_path, dirty_lock_file.split(os.sep)[-1]):
+        logger.debug("Move dirty lock from root tmp folder {0} to state machine folder {1}"
+                     "".format(dirty_lock_file, os.path.join(sm_path, dirty_lock_file.split(os.sep)[-1])))
+        os.rename(dirty_lock_file, os.path.join(sm_path, dirty_lock_file.split(os.sep)[-1]))
 
-    # work around to avoid reopening if backup enabled -> take into account possible stored session TODO  do better
-    if full_path_dirty_lock is not None and not os.path.exists(full_path_dirty_lock):
-        return
+
+def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=None):
 
     if full_path_dirty_lock is None:
         full_path_dirty_lock = find_dirty_lock_file_for_state_machine_path(sm_path)
+    # logger.info("found lock file to recover " + str(full_path_dirty_lock))
+
+    # find last_save_file_system_path
+    try:
+        sm_meta = storage.load_data_file(os.path.join(sm_path, storage.FILE_NAME_META_DATA))
+    except ValueError:
+        sm_meta = {}
+    if 'last_saved' in sm_meta and 'file_system_path' in sm_meta['last_saved']:
+        last_save_file_system_path = sm_meta['last_saved']['file_system_path']
+    else:  # state machines with old backup format -> backward compatibility check
+        reduced_path = sm_path.replace(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'runtime_backup'), '')
+        if os.path.isdir(reduced_path) and not reduced_path.split(os.path.sep)[1] == 'tmp':
+            last_save_file_system_path = reduced_path
+        else:
+            last_save_file_system_path = None
+
+    # check if already open -> # TODO in future backups has to be integrated better to avoid this
+    if last_save_file_system_path is not None \
+            and core_singletons.state_machine_manager.is_state_machine_open(last_save_file_system_path):
+        # sm = core_singletons.state_machine_manager.get_open_state_machine_of_file_system_path(last_save_file_system_path)
+        # import rafcon.gui.singleton
+        # assert rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id].meta == sm_meta
+        logger.info("Backup state machine is already open by other feature {0}".format(sm_meta))
+        move_dirty_lock_file(full_path_dirty_lock, sm_path)
+        return
 
     state_machine = storage.load_state_machine_from_path(sm_path)
 
@@ -113,10 +149,7 @@ def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=No
         logger.info("Recover backup of state machine without dirty lock {0}.".format(sm_path))
 
     # move dirty lock file
-    if full_path_dirty_lock is not None and full_path_dirty_lock == os.path.join(sm_path, full_path_dirty_lock.split(os.sep)[-1]):
-        # logger.info("Move dirty lock from root tmp folder {0} to state machine folder {1}"
-        #             "".format(full_path_dirty_lock, os.path.join(sm_path, full_path_dirty_lock.split(os.sep)[-1])))
-        os.rename(full_path_dirty_lock, os.path.join(sm_path, full_path_dirty_lock.split(os.sep)[-1]))
+    move_dirty_lock_file(full_path_dirty_lock, sm_path)
 
     gui_singletons.state_machine_manager.add_state_machine(state_machine)
     sm_m = gui_singletons.state_machine_manager_model.state_machines[state_machine.state_machine_id]
@@ -124,20 +157,8 @@ def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=No
 
     # correct backup instance and sm-storage-path -> TODO make the add state machine better to reduce complexity, here
     # correct path after add state machine because meta data should be loaded from the backup path
-    sm_path = sm_m.state_machine.file_system_path
     sm_m.storage_lock.acquire()
-    try:
-        sm_meta = storage.load_data_file(os.path.join(sm_path, storage.FILE_NAME_META_DATA))
-    except ValueError:
-        sm_meta = {}
-    if 'last_saved' in sm_meta and 'file_system_path' in sm_meta['last_saved']:
-        sm_m.state_machine._file_system_path = sm_meta['last_saved']['file_system_path']
-    else:  # state machines with old backup format -> backward compatibility check
-        reduced_path = sm_path.replace(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'runtime_backup'), '')
-        if os.path.isdir(reduced_path) and not reduced_path.split(os.path.sep)[1] == 'tmp':
-            sm_m.state_machine._file_system_path = reduced_path
-        else:
-            sm_m.state_machine._file_system_path = None
+    sm_m.state_machine._file_system_path = last_save_file_system_path
     sm_m.meta['last_saved']['file_system_path'] = sm_m.state_machine.file_system_path
     sm_m.storage_lock.release()
 
@@ -171,21 +192,13 @@ def check_for_crashed_rafcon_instances():
             for index, tuple_of_backup in enumerate(found_backups):
                 path, pid, lock_file, m_time, full_path_dirty_lock = tuple_of_backup
                 list_store_row = widget.list_store[index]
+                # if open or delete is checked and the Apply or Ignore and remove button is pressed
                 if (list_store_row[0] or list_store_row[2]) and response_id == 1 or response_id == 3:
 
-                    if path is None:
-                        logger.debug("Clean up lock of RAFCON instance with pid {}".format(pid))
-                    else:
-                        logger.debug("Clean up lock for state machine with path: {0} pid: {1} lock_file: {2}"
-                                     "".format(path, pid, lock_file))
-
-                    if path is not None and response_id == 3:
-                        logger.info("Move dirty lock from root tmp folder {0} to state machine folder {1}"
-                                    "".format(os.path.join(MY_RAFCON_TEMP_PATH, pid), path))
-                        assert os.path.join(MY_RAFCON_TEMP_PATH, pid) in full_path_dirty_lock
-                        os.rename(full_path_dirty_lock, os.path.join(path, lock_file))
+                    if path is not None and response_id == 3:  # with path and Ignore and remove button is pressed
+                        move_dirty_lock_file(full_path_dirty_lock, path)
                     if os.path.exists(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'lock')):
-                        logger.info("Remove instance lock {0}".format(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'lock')))
+                        logger.debug("Remove instance lock {0}".format(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'lock')))
                         os.remove(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'lock'))
 
         if response_id in [1, 2, 3]:

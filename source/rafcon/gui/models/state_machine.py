@@ -93,7 +93,7 @@ class StateMachineModel(ModelMT, Hashable):
 
         self.selection = Selection(self.sm_selection_changed_signal)
 
-        self.storage_lock = threading.Lock()
+        self.storage_lock = threading.Lock()  # TODO check if this lock can be substituted by the state machine lock
 
         if global_gui_config.get_config_value('HISTORY_ENABLED'):
             from rafcon.gui.models.modification_history import ModificationsHistoryModel
@@ -358,6 +358,7 @@ class StateMachineModel(ModelMT, Hashable):
         # JSON returns a dict, which must be converted to a Vividict
         tmp_meta = Vividict(tmp_meta)
         if path is None:
+            # logger.info("store meta data of {0} to {1}".format(self, meta_data_path))
             # data used for restore tabs -> (having the information to load state machines without loading them)
             tmp_meta['last_saved']['time'] = self.state_machine.last_update
             tmp_meta['last_saved']['file_system_path'] = self.state_machine.file_system_path
