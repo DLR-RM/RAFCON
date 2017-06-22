@@ -1341,6 +1341,26 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             state = state.parent
         return None
 
+    def get_uppermost_library_root_state(self):
+        """Find state_copy of uppermost LibraryState
+
+        Method checks if there is a parent library root state and assigns it to be the current library root state till
+        there is no further parent library root state.
+        """
+
+        library_root_state = self.get_library_root_state()
+        parent_library_root_state = library_root_state
+        # initial a library root state has to be found and if there is no further parent root state
+        # parent_library_root_state and library_root_state are no more identical
+        while library_root_state and library_root_state is parent_library_root_state:
+            if library_root_state:
+                parent_library_root_state = library_root_state.parent.get_library_root_state()
+
+            if parent_library_root_state:
+                library_root_state = parent_library_root_state
+
+        return library_root_state
+
     def finalize(self, outcome=None):
         """Finalize state
 
