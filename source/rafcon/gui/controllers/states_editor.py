@@ -457,8 +457,9 @@ class StatesEditorController(ExtendedController):
             # The desired state is not open, yet
             if state_identifier not in self.tabs:
                 # add tab for desired state
-                page_id = self.add_state_editor(state_m)
-                self.view.notebook.set_current_page(page_id)
+                if state_m.state.get_library_root_state() is None:
+                    page_id = self.add_state_editor(state_m)
+                    self.view.notebook.set_current_page(page_id)
 
             # bring tab for desired state into foreground
             else:
