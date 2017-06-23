@@ -161,7 +161,6 @@ class StateMachineTreeController(TreeViewController):
                 self._selected_sm_model.selection.add(state_m)
             self.update_selection_sm_prior()
 
-
     @TreeViewController.observe("state_machine", before=True)
     def states_update_before(self, model, prop_name, info):
 
@@ -262,7 +261,7 @@ class StateMachineTreeController(TreeViewController):
                 parent_row_iter = self.state_row_iter_dict_by_state_path[changed_state_model.parent.state.get_path()]
 
         # do recursive update
-        self.insert_and_update_rec(parent_row_iter, changed_state_model, with_expand)
+        self.insert_and_update_recursively(parent_row_iter, changed_state_model, with_expand)
 
     def update_tree_store_row(self, state_model):
         state_row_iter = self.state_row_iter_dict_by_state_path[state_model.state.get_path()]
@@ -277,7 +276,7 @@ class StateMachineTreeController(TreeViewController):
             self.tree_store[state_row_path][self.MODEL_STORAGE_ID] = state_model
             self.tree_store.row_changed(state_row_path, state_row_iter)
 
-    def insert_and_update_rec(self, parent_iter, state_model, with_expand=False):
+    def insert_and_update_recursively(self, parent_iter, state_model, with_expand=False):
         """ Insert and/or update the handed state model in parent tree store element iterator
 
         :param parent_iter: Parent tree store iterator the insert should be performed in
@@ -349,7 +348,7 @@ class StateMachineTreeController(TreeViewController):
         # - check if ALL children are in
         if isinstance(state_model, ContainerStateModel):
             for child_state_id, child_state_model in state_model.states.items():
-                self.insert_and_update_rec(state_row_iter, child_state_model, with_expand=False)
+                self.insert_and_update_recursively(state_row_iter, child_state_model, with_expand=False)
 
         # - check if TOO MUCH children are in
         # if state_model.state.get_library_root_state() is not None or isinstance(state_model, LibraryStateModel):
