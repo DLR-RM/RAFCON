@@ -30,7 +30,7 @@ class LibraryStateModel(AbstractStateModel):
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state).
 
-    :param State state: The state to be managed
+    :param rafcon.core.states.library_state.LibraryState state: The state to be managed
      """
 
     state_copy = None
@@ -128,25 +128,22 @@ class LibraryStateModel(AbstractStateModel):
     def show_content(self):
         """Check if content of library is to be shown
         
-        Content is shown, if the state's meta flag "show_content" is True or if the same flag for a library up in
-        the hierarchy (up to a certain configurable level) is True.
+        Content is shown, if the uppermost state's meta flag "show_content" is True and the library hierarchy depth
+        (up to MAX_VISIBLE_LIBRARY_HIERARCHY level) is not to high.
         
-        :return: Whether the content is to be drawn
+        :return: Whether the content is to be shown
         :rtype: bool
         """
-        current_hierarchy_depth = 1
+        current_hierarchy_depth = self.state.library_hierarchy_depth
         max_hierarchy_depth = global_gui_config.get_config_value("MAX_VISIBLE_LIBRARY_HIERARCHY", 2)
-        state_m = self
-        while True:
-            if isinstance(state_m, LibraryStateModel) and state_m.meta['gui']['show_content']:
-                return True
-            if current_hierarchy_depth >= max_hierarchy_depth:
-                return False
-            if state_m.state.is_root_state_of_library:
-                current_hierarchy_depth += 1
-            if not state_m.parent:
-                return False
-            state_m = state_m.parent
+        if current_hierarchy_depth >= max_hierarchy_depth:
+            return False
+        if current_hierarchy_depth > 1:
+            uppermost_lib_state = self.state.get_uppermost_library_root_state().parent
+            uppermost_lib_state_m = self.get_state_machine_m().get_state_model_by_path(uppermost_lib_state.get_path())
+        else:
+            uppermost_lib_state_m = self
+        return uppermost_lib_state_m.meta['gui']['show_content']
 
     def copy_meta_data_from_state_m(self, source_state_m):
         super(LibraryStateModel, self).copy_meta_data_from_state_m(source_state_m)
