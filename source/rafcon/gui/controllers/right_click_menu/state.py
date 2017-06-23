@@ -29,7 +29,6 @@ from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import create_image_menu_item, create_check_menu_item, append_sub_menu_to_parent_menu
 from rafcon.gui.models import AbstractStateModel, ContainerStateModel, LibraryStateModel, ScopedVariableModel
-from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 
@@ -227,9 +226,7 @@ class StateMachineRightClickMenu(object):
     @staticmethod
     def on_toggle_show_library_content(widget, date=None, state_m=None):
         if state_m is not None:
-            state_m.meta['gui']['show_content'] = False if state_m.meta['gui']['show_content'] else True
-            msg = MetaSignalMsg(origin='state_overview', change='show_content', affects_children=False)
-            state_m.meta_signal.emit(msg)
+            gui_helper_state_machine.gui_helper_state.toggle_show_content_flag_of_library_state_model(state_m)
 
     def on_toggle_is_start_state(self, widget, data=None):
         self.shortcut_manager.trigger_action("is_start_state", None, None)
