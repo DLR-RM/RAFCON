@@ -37,15 +37,15 @@ In the following, all possible parameters are described, together with
 their default value:
 
 TYPE
-    Type: String-constant
-    Default: ``SM_CONFIG``
-    Specifying the type of configuration. Must be SM\_CONFIG for the
+  | Type: String-constant
+  | Default: ``SM_CONFIG``
+  | Specifying the type of configuration. Must be SM\_CONFIG for the
     core config file.
 
 LIBRARY\_PATHS
-    Type: Dictionary with type(key) = String and type(value) = String
-    Default: ``{"generic": "${RAFCON_LIB_PATH}/generic"}``
-    A dictionary holding all libraries with name and path. The key of
+  | Type: Dictionary with type(key) = String and type(value) = String
+  | Default: ``{"generic": "${RAFCON_LIB_PATH}/generic"}``
+  | A dictionary holding all libraries with name and path. The key of
     the dictionary is a unique library identifier. This unique
     identifier will be used as library name, shown as root of the
     library hierarchy in the library tree. The value of the dictionary
@@ -54,22 +54,22 @@ LIBRARY\_PATHS
     config file. Environment variables are also allowed.
 
 PROFILER\_RUN
-    Type: boolean
-    Default: ``False``
-    If this flag is activated, a profiler will be run with the execution
+  | Type: boolean
+  | Default: ``False``
+  | If this flag is activated, a profiler will be run with the execution
     of RACON
 
 PROFILER\_VIEWER
-    Type: boolean
-    Default: ``True``
-    If this flag is True and the profiler was activated, an interactive
+  | Type: boolean
+  | Default: ``True``
+  | If this flag is True and the profiler was activated, an interactive
     shell interface is opened showing the results of the profiler, when
     RAFCON is exited.
 
 PROFILER\_RESULT\_PATH
-    Type: String
-    Default: ``"/tmp/"``
-    Path pointing to where the profiler will dump its results. The files
+  | Type: String
+  | Default: ``"/tmp/"``
+  | Path pointing to where the profiler will dump its results. The files
     in the path can be used for later evaluation.
 
 GUI configuration
@@ -101,6 +101,7 @@ A typical config file looks like this:
     LOGGING_SHOW_ERROR: True
 
     LIBRARY_TREE_PATH_HUMAN_READABLE: False
+    SUBSTITUTE_STATE_KEEPS_STATE_NAME: True
 
     MINIMUM_SIZE_FOR_CONTENT: 30
     MAX_VISIBLE_LIBRARY_HIERARCHY: 2
@@ -199,15 +200,15 @@ Documentation
 """""""""""""
 
 TYPE
-    Type: String-constant
-    Default: ``GUI_CONFIG``
-    Specifying the type of configuration. Must be GUI\_CONFIG for the
+  | Type: String-constant
+  | Default: ``GUI_CONFIG``
+  | Specifying the type of configuration. Must be GUI\_CONFIG for the
     GUI config file.
 
 SOURCE\_EDITOR\_STYLE
-    Type: string
-    Default: ``awesome-style``
-    The gtk source view style used in the script editor. Note: You can
+  | Type: string
+  | Default: ``awesome-style``
+  | The gtk source view style used in the script editor. Note: You can
     download different styles at
     `https://wiki.gnome.org/Projects/GtkSourceView/StyleSchemes GTK
     Source View
@@ -217,44 +218,44 @@ SOURCE\_EDITOR\_STYLE
     created to fit to the design of RAFCON.
 
 GAPHAS\_EDITOR
-    Type: boolean
-    Default: ``False``
-    RAFCON started with a graphical editor using OpenGL. Its development
+  | Type: boolean
+  | Default: ``False``
+  | RAFCON started with a graphical editor using OpenGL. Its development
     has been stopped (except bugfixes) in favor of a new editor using
     GTK cairo and the library Gaphas. The flag decides whether to use
     the old OpenGL editor (False) or the new Gaphas one (True).
 
 ENABLE\_CACHING:
-    Default: True
-    Affects only Gaphas editor and enables a accelerating caching feature.
+  | Default: True
+  | Affects only Gaphas editor and enables a accelerating caching feature.
 
 WAYPOINT\_SNAP\_ANGLE
-    Default: ``45``
-    Unit: Degree
-    Base angle, to which waypoints are snapped to when moving them with
+  | Default: ``45``
+  | Unit: Degree
+  | Base angle, to which waypoints are snapped to when moving them with
     the Shift key pressed. For a value of 45, waypoints are snapped to
     e. g. 0°, 45°, 90°, 135°, ... Only used in the old editor (OpenGL).
 
 WAYPOINT\_SNAP\_MAX\_DIFF\_ANGLE
-    Default: ``10``
-    Unit: Degree
-    Max deviation to a snap angle, at which the waypoint is still
+  | Default: ``10``
+  | Unit: Degree
+  | Max deviation to a snap angle, at which the waypoint is still
     snapped. For a value of 10 with a snap angle of 45, the waypoint is
     snapped if the angle of the actual transition/data flow is 99, but
     not if the angle is 102. Only used in the old editor (OpenGL).
 
 WAYPOINT\_SNAP\_MAX\_DIFF\_PIXEL
-    Default: ``50``
-    Unit: px
-    Max snap point distance to the mouse cursor that is still allowed.
+  | Default: ``50``
+  | Unit: px
+  | Max snap point distance to the mouse cursor that is still allowed.
     If the waypoint would be snapped according to snap angle and its
     deviation, but the resulting waypoint is too far away from the mouse
     cursor, snapping is aborted. Only used in the old editor (OpenGL).
 
 PORT\_SNAP\_DISTANCE
-    Default: ``5``
-    Unit: Pixel
-    Maximum distane to a port, at which the moved end of a connection is
+  | Default: ``5``
+  | Unit: Pixel
+  | Maximum distane to a port, at which the moved end of a connection is
     snapped to a port (outcome, input, output, scoped variable). Only
     used in Gaphas editor.
 
@@ -265,74 +266,83 @@ LOGGING\_SHOW\_INFO
 LOGGING\_SHOW\_WARNING
 
 LOGGING\_SHOW\_ERROR
-    Type: boolean
-    Default: ``False`` for DEBUG, ``True`` for the rest
-    The flags decide which message log levels to show in the logging
+  | Type: boolean
+  | Default: ``False`` for DEBUG, ``True`` for the rest
+  | The flags decide which message log levels to show in the logging
     console view.
 
 LIBRARY\_TREE\_PATH\_HUMAN\_READABLE
-    Type: boolean
-    Default: ``False``
-    The flag is substituting underscores with spaces in the library
+  | Type: boolean
+  | Default: ``False``
+  | The flag is substituting underscores with spaces in the library
     tree. Thereby it is thought for people who do not like spaces in
     file system paths but don't wanna have underscores in the library
     tree.
 
+SUBSTITUTE\_STATE\_KEEPS\_STATE\_NAME
+  | Type: boolean
+  | Default: ``True``
+  | The flag describes the default behavior of the substitute state action
+    concerning the previous state name and the state name after the substitution.
+    In the dialogs this can be set adapted for the single operation via a check box.
+    If the flag is True the name is taken from the original state.
+    If the flag is False the name is taken from the state machine that substitute the original state.
+
 MINIMUM\_SIZE\_FOR\_CONTENT
-    Default: ``30``
-    Unit: Pixel
-    Minimum side length (width and height) for container states to have
+  | Default: ``30``
+  | Unit: Pixel
+  | Minimum side length (width and height) for container states to have
     their content (child states, transitions, etc.) shown. Currently
     only used in the old editor (OpenGL).
 
 MAX\_VISIBLE\_LIBRARY\_HIERARCHY
-    Default: ``2``
-    Number of hierarchy levels to be shown within a library state. High
+  | Default: ``2``
+  | Number of hierarchy levels to be shown within a library state. High
     values cause the GUI to lag. Currently only used in the old editor
     (OpenGL).
 
 USE\_ICONS\_AS\_TAB\_LABELS
-    Type: boolean
-    Default: ``True``
-    If True, only icons will be shown in the tabs on the left and right
+  | Type: boolean
+  | Default: ``True``
+  | If True, only icons will be shown in the tabs on the left and right
     side. Otherwise also a title text is shown.
 
 SHOW\_NAMES\_ON\_DATA\_FLOWS
-    Type: boolean
-    Default: ``True``
-    If False, data flow labels will not be shown (helpful if there are
+  | Type: boolean
+  | Default: ``True``
+  | If False, data flow labels will not be shown (helpful if there are
     many data flows)
 
 ROTATE\_NAMES\_ON\_CONNECTIONS
-    Type: boolean
-    Default: ``False``
-    If True, connection labels will be parallel to the connection.
+  | Type: boolean
+  | Default: ``False``
+  | If True, connection labels will be parallel to the connection.
     Otherwise, they are horizontally aligned.
 
 HISTORY\_ENABLED
-    Type: boolean
-    Default: ``True``
-    If True, an edit history will be created, allowing for undo and redo
+  | Type: boolean
+  | Default: ``True``
+  | If True, an edit history will be created, allowing for undo and redo
     operation. Might still be buggy, therefore its optional.
 
 KEEP\_ONLY\_STICKY\_STATES\_OPEN
-    Type: boolean
-    Default: ``True``
-    If True, only the currently selected state and sticky states are
+  | Type: boolean
+  | Default: ``True``
+  | If True, only the currently selected state and sticky states are
     open in the states editor on the right side. Thus, a new selected
     state closes the old one. If False, all states remain open, if they
     are not actively closed.
 
 AUTO\_BACKUP\_ENABLED
-    Type: boolean
-    Default: ``True``
-    If True, the auto backup is enabled. I False, the auto-backup is
+  | Type: boolean
+  | Default: ``True``
+  | If True, the auto backup is enabled. I False, the auto-backup is
     disabled.
 
 AUTO\_BACKUP\_ONLY\_FIX\_FORCED\_INTERVAL
-    Type: boolean
-    Default: ``False``
-    If True, the auto backup is performed according a fixed time
+  | Type: boolean
+  | Default: ``False``
+  | If True, the auto backup is performed according a fixed time
     interval which is defined by
     ``AUTO_BACKUP_FORCED_STORAGE_INTERVAL``. If False, the auto-backup
     is performed dynamically according
@@ -344,22 +354,22 @@ AUTO\_BACKUP\_ONLY\_FIX\_FORCED\_INTERVAL
     not modified the state-machine to trigger the auto-backup while
     still using ``*_FORCED_STORAGE_INTERVAL`` as a hard limit.
 AUTO\_BACKUP\_FORCED\_STORAGE\_INTERVAL
-    Default: 120
-    Unit: Seconds
-    Time horizon for forced auto-backup if
+  | Default: 120
+  | Unit: Seconds
+  | Time horizon for forced auto-backup if
     ``AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL`` is False and otherwise the
     it is the fix auto-backup time interval.
 
 AUTO\_BACKUP\_DYNAMIC\_STORAGE\_INTERVAL
-    Default: 20
-    Unit: Seconds
-    Time horizon after which the "dynamic" auto-backup
+  | Default: 20
+  | Unit: Seconds
+  | Time horizon after which the "dynamic" auto-backup
     (``AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL`` is False) is triggered if
     there was no modification to the state-machine while this interval.
 
 AUTO\_RECOVERY\_CHECK
-    Default: ``False``
-    If True, the auto back module will check for backups of crashed instances or
+  | Default: ``False``
+  | If True, the auto back module will check for backups of crashed instances or
     badly closed state machines that left a lock file. This comfortable feature
     only can be used if the crashed instances or state machines already were
     created with ``AUTO_RECOVERY_LOCK_ENABLED`` and ``AUTO_BACKUP_ENABLED`` True
@@ -367,35 +377,35 @@ AUTO\_RECOVERY\_CHECK
 
 
 AUTO\_RECOVERY\_LOCK\_ENABLED:
-    Default: ``False``
-    If True, the auto backup will put lock-files into the respective backup folder
+  | Default: ``False``
+  | If True, the auto backup will put lock-files into the respective backup folder
     to label not correctly/cleanly closed state machines and instances.
     The auto recovery check is searching for these locks.
 
 RESTORE\_UNDOCKED\_SIDEBARS
-    Default: ``False``
-    If True, RAFCON will restore undocked windows from the last
+  | Default: ``False``
+  | If True, RAFCON will restore undocked windows from the last
     RAFCON-instance run.
 
 DEFAULT\_EXTERNAL\_EDITOR
-    Default: Empty
-    Holds the command which is executed before the script.py file by clicking the 
+  | Default: Empty
+  | Holds the command which is executed before the script.py file by clicking the
     'Open externally' button in the source editor window. The command can be anything 
     you wish and results in a shell command with the following pattern:
     '<DEFAULT\_EXTERNAL\_EDITOR> script.py>'.
 
 PREFER_EXTERNAL_EDITOR
-    Default: ``False``
-    If True, RAFCON will assume that the user always wants to work with a different editor
+  | Default: ``False``
+  | If True, RAFCON will assume that the user always wants to work with a different editor
     than the internal one. If the 'Open externally' button is clicked, the source text is 
     locked the whole time and a 'Reload' buttons reloads the saved file into RAFCON.
     If False, it is recommended to close the externally opend script.py everytime you are
     done editing.
 
 SHORTCUTS
-    Type: dict
-    Default: see example ``gui_config.yaml`` above
-    Defines the shortcuts of the GUI. The key describes the action
+  | Type: dict
+  | Default: see example ``gui_config.yaml`` above
+  | Defines the shortcuts of the GUI. The key describes the action
     triggered by the shortcut, the value defines the shortcut(s). There
     can be more than one shortcut registered for one action. See `GTK
     Documentation <https://people.gnome.org/~gcampagna/docs/Gtk-3.0/Gtk.accelerator_parse.html>`__
@@ -483,66 +493,66 @@ Documentation
 """""""""""""
 
 BURST\_NUMBER
-    Type: int
-    Default: ``1``
-    Amount of messages with the same content which shall be send to
+  | Type: int
+  | Default: ``1``
+  | Amount of messages with the same content which shall be send to
     ensure the communication.
 
 CLIENT\_UDP\_PORT
-    Type: int
-    Default: ``7777``
-    Contains the UDP port of the client
+  | Type: int
+  | Default: ``7777``
+  | Contains the UDP port of the client
 
 ENABLED
-    Type: boolean
-    Default: ``True``
+  | Type: boolean
+  | Default: ``True``
 
 HASH\_LENGHT
-    Type: int
-    Default: ``8``
+  | Type: int
+  | Default: ``8``
 
 HISTORY\_LENGHT
-    Type: int
-    Default: ``1000``
+  | Type: int
+  | Default: ``1000``
 
 MAX\_TIME\_WAITING\_BETWEEN\_CONNECTION\_TRY OUTS
-    Type: float
-    Default: ``3.0``
+  | Type: float
+  | Default: ``3.0``
 
 MAX\_TIME\_WAITING\_FOR\_ACKNOWLEDGEMENTS
-    Type: float
-    Default: ``1.0``
-    Maximum time waiting for an acknowledge after sending a message
+  | Type: float
+  | Default: ``1.0``
+  | Maximum time waiting for an acknowledge after sending a message
     which expects one.
 
 SALT\_LENGHT
-    Type: int
-    Default: ``6``
+  | Type: int
+  | Default: ``6``
 
 SERVER
-    Type: boolean
-    Default: ``True``
-    Defines if process should start as server or client. If ``False``
+  | Type: boolean
+  | Default: ``True``
+  | Defines if process should start as server or client. If ``False``
     process will start as client.
 
 SERVER\_IP
-    Type: string
-    Default: ``127.0.0.1``
-    If process is client, SERVER\_IP contains the IP to connect to.
+  | Type: string
+  | Default: ``127.0.0.1``
+  | If process is client, SERVER\_IP contains the IP to connect to.
 
 SERVER\_UDP\_PORT
-    Type: int
-    Default: ``9999``
-    Contains the UDP port of the server which shall be connected to.
+  | Type: int
+  | Default: ``9999``
+  | Contains the UDP port of the server which shall be connected to.
 
 TIME\_BETWEEN\_BURSTS
-    Type: float
-    Default: ``0.01``
-    Time between burst messages (refer to BURST\_NUMBER).
+  | Type: float
+  | Default: ``0.01``
+  | Time between burst messages (refer to BURST\_NUMBER).
 
 TYPE
-    Type: string
-    Default: ``NETWORK_CONFIG``
-    Specifying the type of configuration. Must be NETWORK\_CONFIG for
+  | Type: string
+  | Default: ``NETWORK_CONFIG``
+  | Specifying the type of configuration. Must be NETWORK\_CONFIG for
     the network config file.
 
