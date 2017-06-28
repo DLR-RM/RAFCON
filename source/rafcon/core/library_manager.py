@@ -319,11 +319,11 @@ class LibraryManager(Observable):
         """Generate valid library_path and library_name
 
         The method checks if the given os path is in the list of loaded library root paths and use respective 
-        library root key/mounting point to concanate the respective library_path and separate respective library_name.
+        library root key/mounting point to concatenate the respective library_path and separate respective library_name.
 
         :param str path: A library os path a library is situated in.
-        :return library path library name
-        :rtype str, str
+        :return: library path library name
+        :rtype: str, str
         """
         library_path = None
         library_name = None

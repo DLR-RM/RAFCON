@@ -275,6 +275,7 @@ def is_state_machine_stopped_to_proceed(selected_sm_id=None, root_window=None):
 
      The function checks if a specific state machine or by default all state machines have stopped or finished
      execution. If a state machine is still running the user is ask by dialog window if those should be stopped or not.
+
     :param selected_sm_id: Specific state mine to check for
     :param root_window: Root window for dialog window
     :return:

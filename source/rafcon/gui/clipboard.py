@@ -83,13 +83,13 @@ class Clipboard(Observable):
         elements and notifies the user if the parts can not be insert to the target state.
         - for ExecutionStates outcomes, input- and output-data ports can be insert
         - for ContainerState additional states, scoped variables and data flows and/or transitions (if related) can be
-          insert
+        insert
 
         Related data flows and transitions are determined by origin and target keys and respective objects which has to
         be in the state machine selection, too. So transitions or data flows without the related objects are not copied.
         :param target_state_m: state in which the copied/cut elements should be insert
         :param cursor_position: cursor position used to adapt meta data positioning of elements e.g states and
-                                via points
+        via points
         :return:
         """
         assert isinstance(target_state_m, StateModel)
@@ -272,6 +272,7 @@ class Clipboard(Observable):
     def reset_clipboard(self):
         """ Resets the clipboard, so that old elements do not pollute the new selection that is copied into the
             clipboard.
+
         :return:
         """
         # reset selections

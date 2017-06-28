@@ -1325,9 +1325,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """ Get library root state
 
         The method recursively checks state parent states till finding a StateMachine as parent or a library root state.
-        :return: library root state (Execution or ContainerState) or None if self is not a library root state or
-                 inside of such
-        :rtype: rafcon.core.states.library_state.State
+
+        :return library root state (Execution or ContainerState) or None if self is not a library root state or
+        inside of such
+        :rtype rafcon.core.states.library_state.State:
         """
         from rafcon.core.state_machine import StateMachine
 
