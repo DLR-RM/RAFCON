@@ -605,19 +605,19 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 return self._file_system_path
             elif self.get_state_machine():
                 if self.get_state_machine().supports_saving_state_names:
-                    # print "State_get_file_system_path 41: ",
-                    # os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
                     path = os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
+                    # print "State_get_file_system_path 41: ", path
                     if os.path.exists(path):
                         return path
                     else:
                         path = os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path(old_delimiter=True)))
+                        # print "State_get_file_system_path 42: ", path
                         return path
                 else:
-                    # print "State_get_file_system_path 42: "
+                    # print "State_get_file_system_path 43: ", os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
                     return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
             else:
-                # print "State_get_file_system_path 43: "
+                # print "State_get_file_system_path 44: ", os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
                 return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
         else:
             if self.get_state_machine().supports_saving_state_names:
@@ -626,13 +626,14 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 if os.path.exists(path):
                     return path
                 else:
-                    path = os.path.join(self.get_state_machine().file_system_path, str(self.get_storage_path(
-                        old_delimiter=True)))
+                    path = os.path.join(self.get_state_machine().file_system_path,
+                                        str(self.get_storage_path(old_delimiter=True)))
                     # print "State_get_file_system_path 52: ", path
                     return path
             else:
                 # the default case for ID-formatted state machines when using a GUI
-                # print "State_get_file_system_path 53: "
+                # print "State_get_file_system_path 53: ", os.path.join(self.get_state_machine().file_system_path,
+                #                                                       self.get_path())
                 return os.path.join(self.get_state_machine().file_system_path, self.get_path())
 
     @lock_state_machine

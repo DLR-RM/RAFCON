@@ -102,14 +102,14 @@ def remove_state_machine_paths(state_machine_id):
             _paths_to_remove_before_sm_save[state_machine_id].remove(path)
         if len(_paths_to_remove_before_sm_save[state_machine_id]) > 0:
             logger.debug("There are still elements in _paths_to_remove_before_sm_save for state machine {1}: {0}"
-                        "-> After remove state machine paths is called it should be empty."
-                        "".format(_paths_to_remove_before_sm_save[state_machine_id], state_machine_id))
+                         "-> After remove state machine paths is called it should be empty."
+                         "".format(_paths_to_remove_before_sm_save[state_machine_id], state_machine_id))
 
 
 def clean_state_machine_paths(state_machine_id):
     """Empties the list of paths marked for removal for the given state machine
 
-    :param int state_machine_id: ID of the state machine whos paths are to be emptied
+    :param int state_machine_id: ID of the state machine who's paths are to be emptied
     """
     if state_machine_id in _paths_to_remove_before_sm_save:
         del _paths_to_remove_before_sm_save[state_machine_id]
@@ -182,11 +182,12 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
 
 def save_script_file_for_state_and_source_path(state, state_path_full, temporary_storage=False):
     """Saves the script file for a state to the directory of the state.
+
     The script name will be set to the SCRIPT_FILE constant.
 
     :param state: The state of which the script file should be saved
-    :param str base_path: The path to the state machone
-    :param str state_path: The path of the state meta file
+    :param str state_path_full: The path to the file system storage location of the state
+    :param bool temporary_storage: Temporary storage flag to signal that the given path is not the new file_system_path
     """
     from rafcon.core.states.execution_state import ExecutionState
     if isinstance(state, ExecutionState):
@@ -213,6 +214,7 @@ def save_state_recursively(state, base_path, parent_path, temporary_storage=Fals
     :param state: State to be stored
     :param base_path: Path to the state machine
     :param parent_path: Path to the parent state
+    :param bool temporary_storage: Temporary storage flag to signal that the given path is not the new file_system_path
     :return:
     """
     from rafcon.core.states.execution_state import ExecutionState
@@ -399,20 +401,23 @@ def load_state_recursively(parent, state_path=None):
     return state
 
 
-def load_data_file(filename):
-    """ Loads the content of a file.
+def load_data_file(path_of_file):
+    """ Loads the content of a file by using json.load.
 
-    :param filename: the path of the file to load
+    :param path_of_file: the path of the file to load
     :return: the file content as a string
     :raises exceptions.ValueError: if the file was not found
     """
-    if os.path.exists(filename):
-        return storage_utils.load_objects_from_json(filename)
-    raise ValueError("Data file not found: {0}".format(filename))
+    if os.path.exists(path_of_file):
+        return storage_utils.load_objects_from_json(path_of_file)
+    raise ValueError("Data file not found: {0}".format(path_of_file))
 
 
 def get_storage_id_for_state(state, old_delimiter=False):
     """ Calculates the storage id of a state. This ID can be used for generating the file path for a state.
+
+    :param rafcon.core.states.state.State state: state the storage_id should is composed for
+    :param bool old_delimiter: flag to indicate if the old delimiter should be used or not
     """
     if old_delimiter:
         return state.name + OLD_ID_NAME_DELIMITER + state.state_id
