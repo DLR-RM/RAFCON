@@ -60,10 +60,20 @@ class Script(Observable, yaml.YAMLObject):
         self._parent = None
         self._check_path = check_path
 
-        self.script = DEFAULT_SCRIPT
+        self._script = DEFAULT_SCRIPT
         self.filename = filename
         self.path = path
         self.parent = parent
+
+    @property
+    def script(self):
+        return self._script
+
+    @script.setter
+    def script(self, value):
+        if not isinstance(value, str):
+            raise ValueError("The script text of  Script class needs to be string it was handed {0}".format(value))
+        self._script = value
 
     def execute(self, state, inputs=None, outputs=None, backward_execution=False):
         """Execute the user 'execute' function specified in the script
@@ -99,8 +109,8 @@ class Script(Observable, yaml.YAMLObject):
         script_text = filesystem.read_file(self.path, self.filename)
 
         if not script_text:
-            raise IOError("Script file could not be opened or was empty: {0}".format(os.path.join(self.path,
-                                                                                                  self.filename)))
+            raise IOError("Script file could not be opened or was empty: {0}"
+                          "".format(os.path.join(self.path, self.filename)))
         self.script = script_text
 
     def build_module(self):
