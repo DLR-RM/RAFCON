@@ -90,7 +90,7 @@ class StateMachine(Observable, JSONObject, Hashable):
 
         self._execution_histories = []
 
-        # specifies if this state machine supports saving states with state_id + state_name
+        # specifies if this state machine supports saving states with state_name + state_id
         self._supports_saving_state_names = True
 
     def __copy__(self):

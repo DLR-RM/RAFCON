@@ -529,7 +529,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """ Recursively create the storage path of the state.
 
         The path is generated in bottom up method i.e. from the nested child states to the root state. The method
-        concatenates the concatentation of (State.state_id and State.name) as state identifier for the path.
+        concatenates the concatenation of (State.name and State.state_id) as state identifier for the path.
 
         :param str appendix: the part of the path that was already calculated by previous function calls
         :param bool old_delimiter: A flag to indicate the deprecated storage id
@@ -596,10 +596,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             if os.path.exists(path):
                 return path
             else:
-                # print "State_get_file_system_path 22: ", path
                 path = os.path.join(lib_root_state_path, str(self.get_storage_path(old_delimiter=True)))
+                # print "State_get_file_system_path 22: ", path
                 return path
         elif not self.get_state_machine() or self.get_state_machine().file_system_path is None:
+            # in this case the path has not to exist
             if self._file_system_path:
                 # print "State_get_file_system_path 3: "
                 return self._file_system_path
@@ -948,7 +949,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         if self._name and self._name != name and self.get_state_machine():
             # remove old path, as the state will be saved und another directory as its names changes
-            storage.mark_path_for_removal_for_sm_id(self.get_state_machine().state_machine_id, self.get_file_system_path())
+            storage.mark_path_for_removal_for_sm_id(self.get_state_machine().state_machine_id,
+                                                    self.get_file_system_path())
         self._name = name
 
     @property

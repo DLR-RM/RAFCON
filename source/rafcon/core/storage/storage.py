@@ -276,7 +276,6 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     else:
         stream = file(state_machine_file_path_old, 'r')
         tmp_dict = yaml.load(stream)
-        root_state_storage_id = None
         if "root_state" in tmp_dict:
             root_state_storage_id = tmp_dict['root_state']
         else:
@@ -376,7 +375,7 @@ def load_state_recursively(parent, state_path=None):
 
     from rafcon.core.states.execution_state import ExecutionState
     if isinstance(state, ExecutionState):
-        script_text = read_file(state.script.path, state.script.filename)
+        script_text = read_file(state_path, state.script.filename)
         state.script_text = script_text
 
     one_of_my_child_states_not_found = False
@@ -413,6 +412,17 @@ def load_data_file(path_of_file):
     raise ValueError("Data file not found: {0}".format(path_of_file))
 
 
+def clean_string_to_be_path_element(s):
+    # for now
+    elements_to_replace = {'\n': ''}
+    for elem, replace_with in elements_to_replace.iteritems():
+        s = s.replace(elem, replace_with)
+    # # in future when load method is adapted, too, -> core and gui load independent from get_storage_id_for_state
+    # import re
+    # return re.sub('[^a-zA-Z0-9-_*.]', '', s.replace(' ', '_'))
+    return s
+
+
 def get_storage_id_for_state(state, old_delimiter=False):
     """ Calculates the storage id of a state. This ID can be used for generating the file path for a state.
 
@@ -420,7 +430,7 @@ def get_storage_id_for_state(state, old_delimiter=False):
     :param bool old_delimiter: flag to indicate if the old delimiter should be used or not
     """
     if old_delimiter:
-        return state.name + OLD_ID_NAME_DELIMITER + state.state_id
+        return clean_string_to_be_path_element(state.name) + OLD_ID_NAME_DELIMITER + state.state_id
     else:
-        return state.name + ID_NAME_DELIMITER + state.state_id
+        return clean_string_to_be_path_element(state.name) + ID_NAME_DELIMITER + state.state_id
 
