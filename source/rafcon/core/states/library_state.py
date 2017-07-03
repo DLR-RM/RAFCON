@@ -153,6 +153,7 @@ class LibraryState(State):
         # overwrite may by default set True flags by False
         state.use_runtime_value_input_data_ports = copy(self.use_runtime_value_input_data_ports)
         state.use_runtime_value_output_data_ports = copy(self.use_runtime_value_output_data_ports)
+        state._file_system_path = self.file_system_path
         return state
 
     def __deepcopy__(self, memo=None, _nil=[]):

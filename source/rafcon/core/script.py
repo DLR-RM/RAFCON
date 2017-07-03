@@ -183,7 +183,7 @@ class Script(Observable, yaml.YAMLObject):
         if self._path is not None or self.parent is None:
             return self._path
         else:
-            return self.parent.get_file_system_path()
+            return self.parent.get_temp_file_system_path() if self.parent.file_system_path is None else self.parent.file_system_path
 
     @path.setter
     def path(self, value):

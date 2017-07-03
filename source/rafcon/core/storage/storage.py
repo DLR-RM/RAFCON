@@ -95,7 +95,7 @@ def remove_state_machine_paths(state_machine_id):
     if state_machine_id in _paths_to_remove_before_sm_save:
         removed_paths = []
         for path in _paths_to_remove_before_sm_save[state_machine_id]:
-            if os.path.exists(path):
+            if path is not None and os.path.exists(path):
                 shutil.rmtree(path)
                 removed_paths.append(path)
         for path in removed_paths:
@@ -224,10 +224,13 @@ def save_state_recursively(state, base_path, parent_path, temporary_storage=Fals
     state_path_full = os.path.join(base_path, state_path)
     if not os.path.exists(state_path_full):
         os.makedirs(state_path_full)
-    if isinstance(state, ExecutionState):
-        save_script_file_for_state_and_source_path(state, state_path_full, temporary_storage)
 
     storage_utils.write_dict_to_json(state, os.path.join(state_path_full, FILE_NAME_CORE_DATA))
+    if not temporary_storage:
+        state.file_system_path = state_path_full
+
+    if isinstance(state, ExecutionState):
+        save_script_file_for_state_and_source_path(state, state_path_full, temporary_storage)
 
     # create yaml files for all children
     if isinstance(state, ContainerState):
@@ -396,6 +399,8 @@ def load_state_recursively(parent, state_path=None):
         if isinstance(state_info, tuple):
             state.transitions = transitions
             state.data_flows = data_flows
+
+    state.file_system_path = state_path
 
     return state
 

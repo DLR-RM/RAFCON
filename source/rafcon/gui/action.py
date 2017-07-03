@@ -69,6 +69,7 @@ STATE_TUPLE_CHILD_STATES_INDEX = 1
 STATE_TUPLE_META_DICT_INDEX = 2
 STATE_TUPLE_PATH_INDEX = 3
 STATE_TUPLE_SCRIPT_TEXT_INDEX = 4
+STATE_TUPLE_FILE_SYSTEM_PATH_INDEX = 4
 
 
 def get_state_tuple(state, state_m=None):
@@ -98,7 +99,8 @@ def get_state_tuple(state, state_m=None):
 
     script_content = state.script.script if isinstance(state, ExecutionState) else None
 
-    state_tuple = (state_str, state_tuples_dict, state_meta_dict, state.get_path(), script_content)
+    state_tuple = (state_str, state_tuples_dict, state_meta_dict, state.get_path(), script_content,
+                   state.file_system_path)
 
     return state_tuple
 
@@ -115,6 +117,8 @@ def get_state_from_state_tuple(state_tuple):
         state = state_info[0]
         transitions = state_info[1]
         data_flows = state_info[2]
+
+    state._file_system_path = state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX]
 
     if isinstance(state, BarrierConcurrencyState):
         # logger.debug("\n\ninsert decider_state\n\n")
@@ -783,13 +787,13 @@ class Action(ModelMT, AbstractAction):
                     # logger.debug("script1: " + new_state.script_text)
                     if isinstance(new_state, ExecutionState):
                         state.states[new_state.state_id].script_text = new_state.script_text
-                    s_path = state.states[new_state.state_id].get_file_system_path()
+                    s_path = state.states[new_state.state_id].file_system_path
                     sm_id = self.state_machine.state_machine_id
                     storage.unmark_path_for_removal_for_sm_id(sm_id, s_path)
                     # print "unmark from removal: ", s_path
                     if isinstance(new_state, ContainerState):
                         def unmark_state(state_, sm_id_):
-                            spath = state_.get_file_system_path()
+                            spath = state_.file_system_path
                             storage.unmark_path_for_removal_for_sm_id(sm_id_, spath)
                             # print "unmark from removal: ", spath
                             if isinstance(state_, ContainerState):

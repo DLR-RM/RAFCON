@@ -174,6 +174,7 @@ class ContainerState(State):
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, outcomes, states,
                                transitions, data_flows, None, scoped_variables)
         state.description = deepcopy(self.description)
+        state._file_system_path = self.file_system_path
         return state
 
     def __deepcopy__(self, memo=None, _nil=[]):
@@ -741,7 +742,7 @@ class ContainerState(State):
             if self.get_state_machine():
                 own_sm_id = self.get_state_machine().state_machine_id
                 if own_sm_id is not None:
-                    storage.unmark_path_for_removal_for_sm_id(own_sm_id, state.get_file_system_path())
+                    storage.unmark_path_for_removal_for_sm_id(own_sm_id, state.file_system_path)
 
         return state.state_id
 
@@ -772,7 +773,7 @@ class ContainerState(State):
                 logger.warn("Something is going wrong during state removal. State does not belong to "
                             "a state machine!")
             else:
-                storage.mark_path_for_removal_for_sm_id(own_sm_id, self.states[state_id].get_file_system_path())
+                storage.mark_path_for_removal_for_sm_id(own_sm_id, self.states[state_id].file_system_path)
 
         # first delete all transitions and data_flows, which are connected to the state to be deleted
         keys_to_delete = []

@@ -91,13 +91,13 @@ class SourceEditorController(EditorController):
         self.model.state.script_text = text
 
     # ===============================================================
-    def execute_shell_command_with_path(self, command, file_path):
+    def execute_shell_command_with_path(self, command, path):
 
         logger.debug("Opening path with command: {}".format(command))
 
         # This splits the command in a matter so that the editor gets called in a separate shell and thus
         # does not lock the window.
-        args = shlex.split('{0} "{1}"'.format(command, os.path.join(file_path, storage.SCRIPT_FILE)))
+        args = shlex.split('{0} "{1}"'.format(command, os.path.join(path, storage.SCRIPT_FILE)))
 
         try:
             subprocess.Popen(args)
@@ -111,25 +111,30 @@ class SourceEditorController(EditorController):
             logger.error('The operating system raised an error: {}'.format(e))
         return False
 
-    def save_script(self):
-
-        file_path = self.model.state.get_file_system_path()
+    def save_script(self, path):
 
         try:
             # Save the file before opening it to update the applied changes. Use option create_full_path=True
             # to assure that temporary state_machines' script files are saved to
             # (their path doesnt exist when not saved)
-            filesystem.write_file(os.path.join(file_path, storage.SCRIPT_FILE),
+            filesystem.write_file(os.path.join(path, storage.SCRIPT_FILE),
                                   self.view.get_text(), create_full_path=True)
         except IOError as e:
             # Only happens if the file doesnt exist yet and would be written to the temp folder.
             # The method write_file doesnt create the path
             logger.error('The operating system raised an error: {}'.format(e))
-        return file_path
 
     def open_external_clicked(self, button):
 
         prefer_external_editor = global_gui_config.get_config_value("PREFER_EXTERNAL_EDITOR")
+
+        # TODO the chosen path is partly insecure as long as the path could change (by saving state machine or state)
+        # TODO -> additionally, in case temporary file is used the root state id is not globally unique
+        # TODO further the current path violates the state machine save encapsulation
+        file_system_path = self.model.state.file_system_path
+        if file_system_path is None:
+            file_system_path = self.model.state.get_temp_file_system_path()
+            logger.info("External source editor uses temporary storage path {0}.".format(file_system_path))
 
         def set_editor_lock(lock):
             if lock:
@@ -145,14 +150,12 @@ class SourceEditorController(EditorController):
 
             def open_file_in_editor(cmd_to_open_editor, test_command=False):
 
-                file_path = self.model.state.get_file_system_path()
-
                 sm = state_machine_manager_model.state_machine_manager.get_active_state_machine()
                 if sm.marked_dirty and not self.saved_initial:
-                    self.save_script()
+                    self.save_script(file_system_path)
                     self.saved_initial = True
 
-                if not self.execute_shell_command_with_path(cmd_to_open_editor, file_path) and test_command:
+                if not self.execute_shell_command_with_path(cmd_to_open_editor, file_system_path) and test_command:
                     # If a text field exists destroy it. Errors can occur with a specified editor as well
                     # e.g Permission changes or sth.
                     global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', None)
@@ -205,7 +208,7 @@ class SourceEditorController(EditorController):
             set_editor_lock(False)
 
             # Load file contents after unlocking
-            content = filesystem.read_file(self.model.state.get_file_system_path(), storage.SCRIPT_FILE)
+            content = filesystem.read_file(file_system_path, storage.SCRIPT_FILE)
             if content is not None:
                 self.set_script_text(content)
 
