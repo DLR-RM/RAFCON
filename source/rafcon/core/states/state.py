@@ -525,24 +525,23 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             else:
                 return state_identifier + PATH_SEPARATOR + appendix
 
-    def get_storage_path(self, appendix=None, old_delimiter=False):
+    def get_storage_path(self, appendix=None):
         """ Recursively create the storage path of the state.
 
         The path is generated in bottom up method i.e. from the nested child states to the root state. The method
         concatenates the concatenation of (State.name and State.state_id) as state identifier for the path.
 
         :param str appendix: the part of the path that was already calculated by previous function calls
-        :param bool old_delimiter: A flag to indicate the deprecated storage id
         :rtype: str
         :return: the full path to the root state
         """
-        state_identifier = get_storage_id_for_state(self, old_delimiter)
+        state_identifier = get_storage_id_for_state(self)
 
         if not self.is_root_state:
             if appendix is None:
-                return self.parent.get_storage_path(state_identifier, old_delimiter)
+                return self.parent.get_storage_path(state_identifier)
             else:
-                return self.parent.get_storage_path(state_identifier + PATH_SEPARATOR + appendix, old_delimiter)
+                return self.parent.get_storage_path(state_identifier + PATH_SEPARATOR + appendix)
         else:
             if appendix is None:
                 return state_identifier

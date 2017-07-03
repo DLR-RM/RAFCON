@@ -520,8 +520,8 @@ class LibraryState(State):
         else:
             return False
 
-    def get_storage_path(self, appendix=None, old_delimiter=False):
+    def get_storage_path(self, appendix=None):
         if appendix is None:
-            return super(LibraryState, self).get_storage_path(appendix, old_delimiter)
+            return super(LibraryState, self).get_storage_path(appendix)
         else:
             return self.lib_os_path + PATH_SEPARATOR + appendix

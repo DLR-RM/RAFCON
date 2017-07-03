@@ -459,6 +459,8 @@ class AbstractStateModel(MetaModel, Hashable):
         elements (data ports, outcomes, etc.) and stores it on the filesystem.
         Secure that the store meta data method is called after storing the core data otherwise the last_stored_path is
         maybe wrong or None.
+
+        :param str temp_path: optional given temporary path if meta data should not be stored to the file system path
         """
         if temp_path:
             meta_file_path_json = os.path.join(temp_path, self.state.get_storage_path(), storage.FILE_NAME_META_DATA)

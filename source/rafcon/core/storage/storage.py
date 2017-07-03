@@ -17,6 +17,8 @@
 """
 
 import os
+import re
+import math
 import shutil
 import glob
 import copy
@@ -31,6 +33,7 @@ from rafcon.utils import log
 
 from rafcon.core.custom_exceptions import LibraryNotFoundException
 from rafcon.core.constants import DEFAULT_SCRIPT_PATH
+from rafcon.core.config import global_config
 from rafcon.core.state_machine import StateMachine
 
 logger = log.get_logger(__name__)
@@ -47,8 +50,6 @@ SCRIPT_FILE = 'script.py'
 STATEMACHINE_FILE = 'statemachine.json'
 STATEMACHINE_FILE_OLD = 'statemachine.yaml'
 ID_NAME_DELIMITER = "_"
-# only for backward compatibiliy
-OLD_ID_NAME_DELIMITER = "$"
 
 # clean the DEFAULT_SCRIPT_PATH folder at each program start
 if os.path.exists(DEFAULT_SCRIPT_PATH):
@@ -417,25 +418,29 @@ def load_data_file(path_of_file):
     raise ValueError("Data file not found: {0}".format(path_of_file))
 
 
-def clean_string_to_be_path_element(s):
-    # for now
-    elements_to_replace = {'\n': ''}
+def limit_text_to_be_path_element(text, max_length=None, separator='_'):
+    elements_to_replace = {' ': '_', '*': '_'}
     for elem, replace_with in elements_to_replace.iteritems():
-        s = s.replace(elem, replace_with)
-    # # in future when load method is adapted, too, -> core and gui load independent from get_storage_id_for_state
-    # import re
-    # return re.sub('[^a-zA-Z0-9-_*.]', '', s.replace(' ', '_'))
-    return s
+        text = text.replace(elem, replace_with)
+    text = re.sub('[^a-zA-Z0-9-_]', '', text)
+    if max_length is not None:
+        if isinstance(text, basestring) and len(text) > max_length:
+            max_length = int(max_length)
+
+            half_length = float(max_length - 1) / 2
+            return text[:int(math.ceil(half_length))] + separator + text[-int(math.floor(half_length)):]
+    return text
 
 
-def get_storage_id_for_state(state, old_delimiter=False):
+def get_storage_id_for_state(state):
     """ Calculates the storage id of a state. This ID can be used for generating the file path for a state.
 
     :param rafcon.core.states.state.State state: state the storage_id should is composed for
-    :param bool old_delimiter: flag to indicate if the old delimiter should be used or not
     """
-    if old_delimiter:
-        return clean_string_to_be_path_element(state.name) + OLD_ID_NAME_DELIMITER + state.state_id
+    if global_config.get_config_value('STORAGE_PATH_WITH_STATE_NAME'):
+        max_length = global_config.get_config_value('MAX_LENGTH_FOR_STATE_NAME_IN_STORAGE_PATH')
+        return limit_text_to_be_path_element(state.name, max_length) + ID_NAME_DELIMITER + state.state_id
     else:
-        return clean_string_to_be_path_element(state.name) + ID_NAME_DELIMITER + state.state_id
+        return state.state_id
+
 
