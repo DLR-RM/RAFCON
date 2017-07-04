@@ -82,17 +82,6 @@ def check_for_crashed_rafcon_instances():
                         state_machine._file_system_path = None
                     sm_m.storage_lock.release()
 
-                    # re-construct dirty log
-                    with open(full_path_dirty_lock) as f:
-                        lines = f.readlines()
-                        lines.pop(0) # ignore backup path -> first line
-                        lines.pop(0) # remove comment line "marked for removal:"
-                        if len(lines) > 0:
-                            storage._paths_to_remove_before_sm_save[state_machine.state_machine_id] = []
-                            for path in lines:
-                                path = path.replace('\n', '')
-                                if os.path.isdir(path):
-                                    storage.mark_path_for_removal_for_sm_id(state_machine.state_machine_id, path)
                     # force backup re-initialization
                     state_machine.marked_dirty = True
                     sm_m.auto_backup.check_for_auto_backup(force=True)
@@ -275,12 +264,6 @@ class AutoBackupModel(ModelMT):
             self.lock_file_lock.acquire()
             # logger.info('create lock {0} -> path {1}'.format(sm.state_machine_id, self.update_tmp_storage_path()))
             self.lock_file = open(RAFCON_RUNTIME_BACKUP_PATH + '/dirty_lock_' + str(sm.state_machine_id), 'a+')
-            mark_4_removal = []
-            if self.state_machine_model.state_machine.state_machine_id in storage._paths_to_remove_before_sm_save:
-                for path in storage._paths_to_remove_before_sm_save[self.state_machine_model.state_machine.state_machine_id]:
-                    mark_4_removal.append("\n" + path)
-            self.update_tmp_storage_path()
-            self.lock_file.writelines([self._tmp_storage_path + "\n# marked for removal: "] + mark_4_removal)
             self.lock_file.close()
             self.last_lock_file_name = self.lock_file.name
             self.lock_file_lock.release()

@@ -737,13 +737,6 @@ class ContainerState(State):
             state.parent = self
             self._states[state.state_id] = state
 
-        if not storage_load:
-            # unmark path for removal: this is needed when a state with the same id is removed and added again in this state
-            if self.get_state_machine():
-                own_sm_id = self.get_state_machine().state_machine_id
-                if own_sm_id is not None:
-                    storage.unmark_path_for_removal_for_sm_id(own_sm_id, state.file_system_path)
-
         return state.state_id
 
     @lock_state_machine
@@ -765,15 +758,6 @@ class ContainerState(State):
 
         if state_id == self.start_state_id:
             self.set_start_state(None)
-
-        # remove script folder
-        if self.get_state_machine():
-            own_sm_id = self.get_state_machine().state_machine_id
-            if own_sm_id is None:
-                logger.warn("Something is going wrong during state removal. State does not belong to "
-                            "a state machine!")
-            else:
-                storage.mark_path_for_removal_for_sm_id(own_sm_id, self.states[state_id].file_system_path)
 
         # first delete all transitions and data_flows, which are connected to the state to be deleted
         keys_to_delete = []

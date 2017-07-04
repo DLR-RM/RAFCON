@@ -902,10 +902,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             if len(name) < 1:
                 raise ValueError("Name must have at least one character")
 
-        if self._name and self._name != name and self.get_state_machine():
-            # remove old path, as the state will be saved und another directory as its names changes
-            storage.mark_path_for_removal_for_sm_id(self.get_state_machine().state_machine_id,
-                                                    self.file_system_path)
         self._name = name
 
     @property
