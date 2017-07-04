@@ -386,6 +386,13 @@ def get_storage_id_for_state(state):
     """
     if global_config.get_config_value('STORAGE_PATH_WITH_STATE_NAME'):
         max_length = global_config.get_config_value('MAX_LENGTH_FOR_STATE_NAME_IN_STORAGE_PATH')
+
+        max_length_of_state_name_in_folder_name = 255 - len(ID_NAME_DELIMITER + state.state_id)
+        if max_length is None or max_length > max_length_of_state_name_in_folder_name:
+            if max_length_of_state_name_in_folder_name < len(state.name):
+                logger.info("The storage folder name is forced to be maximal 255 characters in length.")
+            max_length = max_length_of_state_name_in_folder_name
+
         return limit_text_to_be_path_element(state.name, max_length) + ID_NAME_DELIMITER + state.state_id
     else:
         return state.state_id
