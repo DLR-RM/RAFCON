@@ -232,7 +232,20 @@ class LibraryManager(Observable):
         # a boolean to indicate if a state was regularly found or by the help of the user
         regularly_found = True
 
+        def check_for_deprecated_naming(_library_path, _library_name):
+            _library_path = storage.clean_state_machine_path(_library_path)
+            _library_name = storage.clean_state_machine_path(_library_name)
+            _library_os_path = self._get_library_os_path_from_library_dict_tree(_library_path, _library_name)
+            if library_os_path is not None:
+                logger.info("File system paths deprecated, your state machine use deprecated library naming '{0}' "
+                            "while the library is already stored in the new format '{1}'."
+                            "".format(original_path_and_name, _library_os_path))
+            return _library_os_path, _library_path, _library_name
+
         library_os_path = self._get_library_os_path_from_library_dict_tree(library_path, library_name)
+        if library_os_path is None:
+            library_os_path, library_path, library_name = check_for_deprecated_naming(library_path, library_name)
+
         while library_os_path is None:  # until the library is found or the user aborts
 
             regularly_found = False
@@ -246,7 +259,7 @@ class LibraryManager(Observable):
                          "loaded library_root_path. If not, please abort.".format(library_name, library_path)
                 interface.show_notice_func(notice)
                 new_library_os_path = interface.open_folder_func("Select root folder for library name '{0}'"
-                                                                  "".format(original_path_and_name))
+                                                                 "".format(original_path_and_name))
             if new_library_os_path is None:
                 # User clicked cancel => cancel library search
                 # If the library root path is existent (e.g. "generic") and only the specific library state is not (
@@ -257,8 +270,8 @@ class LibraryManager(Observable):
                     self._skipped_library_roots.append(library_path_root)
                 else:
                     self._skipped_states.append(original_path_and_name)
-                raise LibraryNotFoundException("Library '{0}' not found in subfolder {1}".format(library_name,
-                                                                                                 library_path))
+                raise LibraryNotFoundException("Library '{0}' not found in sub-folder {1}".format(library_name,
+                                                                                                  library_path))
 
             if not os.path.exists(new_library_os_path):
                 logger.error('Specified library_os_path does not exist')
@@ -273,6 +286,8 @@ class LibraryManager(Observable):
 
             # verification if library is also in library tree
             library_os_path = self._get_library_os_path_from_library_dict_tree(library_path, library_name)
+            if library_os_path is None:
+                library_os_path, library_path, library_name = check_for_deprecated_naming(library_path, library_name)
             if library_os_path is not None:
                 assert library_os_path == new_library_os_path
 

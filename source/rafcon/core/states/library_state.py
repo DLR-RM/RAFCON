@@ -87,6 +87,7 @@ class LibraryState(State):
         if library_path != new_library_path or library_name != new_library_name:
             self.library_name = new_library_name
             self.library_path = new_library_path
+            # TODO this should trigger the marked_dirty of the state machine to become true
             logger.info("Changing information about location of library")
             logger.info("Old library name '{0}' was located at {1}".format(library_name, library_path))
             logger.info("New library name '{0}' is located at {1}".format(new_library_name, new_library_path))

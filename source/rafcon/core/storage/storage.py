@@ -78,6 +78,15 @@ def clean_path_from_not_by_existing_state_substituted_elements(states, path):
         shutil.rmtree(os.path.join(path, folder_name))
 
 
+def clean_state_machine_path(base_path):
+    path_elements = base_path.split(os.path.sep)
+    reduced_path_elements = [limit_text_to_be_path_element(elem, max_length=255) for elem in path_elements]
+    if not all(path_elements[i] == elem for i, elem in enumerate(reduced_path_elements)):
+        logger.info("State machine storage path is reduced")
+        base_path = os.path.sep.join(reduced_path_elements)
+    return base_path
+
+
 def save_state_machine_to_path(state_machine, base_path, delete_old_state_machine=False, save_as=False,
                                temporary_storage=False):
     """Saves a state machine recursively to the file system
@@ -88,6 +97,13 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
     :param bool save_as: Whether to create a copy of the state machine
     :param bool temporary_storage: Whether to use a temporary storage for the state machine
     """
+    # TODO the following is not working if somebody is using a depth library tree with violation of
+    # TODO -> the clean path not only on library/state machine name level, weakening of the rule is not the best option
+    _base_path = base_path
+    base_path = clean_state_machine_path(base_path)
+    # TODO is the removal of existing path without request the right way?
+    if not _base_path == base_path and os.path.exists(_base_path):
+        shutil.rmtree(_base_path)
 
     state_machine.acquire_modification_lock()
     try:
@@ -396,5 +412,3 @@ def get_storage_id_for_state(state):
         return limit_text_to_be_path_element(state.name, max_length) + ID_NAME_DELIMITER + state.state_id
     else:
         return state.state_id
-
-
