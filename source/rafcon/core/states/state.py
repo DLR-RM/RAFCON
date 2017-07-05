@@ -23,7 +23,6 @@
 import Queue
 import copy
 import os
-import sys
 import threading
 from __builtin__ import staticmethod
 from weakref import ref
@@ -39,7 +38,6 @@ from rafcon.core.state_elements.data_port import DataPort, InputDataPort, Output
 from rafcon.core.state_elements.outcome import Outcome
 from rafcon.core.state_elements.scope import ScopedData
 from rafcon.core.storage import storage
-from rafcon.core.storage.storage import get_storage_id_for_state
 from rafcon.utils import classproperty
 from rafcon.utils import log
 from rafcon.utils import multi_event
@@ -535,7 +533,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :rtype: str
         :return: the full path to the root state
         """
-        state_identifier = get_storage_id_for_state(self)
+        state_identifier = storage.get_storage_id_for_state(self)
 
         if not self.is_root_state:
             if appendix is None:
@@ -925,7 +923,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         else:
             from rafcon.core.state_machine import StateMachine
             if not isinstance(parent, (State, StateMachine)):
-                raise TypeError("parent must be of type State or StateMachine")
+                raise TypeError("parent must be of type State or StateMachine or None")
 
             self._parent = ref(parent)
 

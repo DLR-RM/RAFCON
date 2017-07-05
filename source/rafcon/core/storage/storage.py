@@ -291,7 +291,7 @@ def load_state_recursively(parent, state_path=None):
     :param state_path: the path on the filesystem where to find the meta file for the state
     :return:
     """
-    from rafcon.core.states.state import State
+    from rafcon.core.states.execution_state import ExecutionState
     from rafcon.core.states.container_state import ContainerState
     from rafcon.core.states.hierarchy_state import HierarchyState
 
@@ -307,6 +307,7 @@ def load_state_recursively(parent, state_path=None):
         state_info = load_data_file(path_core_data)
     except ValueError, e:
         logger.exception("Error while loading state data: {0}".format(e))
+        return
     except LibraryNotFoundException, e:
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(str(e.message)))
@@ -331,16 +332,12 @@ def load_state_recursively(parent, state_path=None):
         data_flows = state_info[2]
 
     # set parent of state
-    if parent:
-        if isinstance(parent, ContainerState):
-            parent.add_state(state, storage_load=True)
-        else:
-            state.parent = parent
+    if parent is not None and isinstance(parent, ContainerState):
+        parent.add_state(state, storage_load=True)
     else:
-        # as the parent is None the state cannot calculate its path, therefore the path is cached for it
-        state.set_file_system_path(state_path)
+        state.parent = parent
 
-    from rafcon.core.states.execution_state import ExecutionState
+    # read script file if an execution state
     if isinstance(state, ExecutionState):
         script_text = read_file(state_path, state.script.filename)
         state.script_text = script_text

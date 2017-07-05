@@ -39,7 +39,6 @@ from rafcon.core.state_elements.transition import Transition
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.state import State
 from rafcon.core.states.state import StateExecutionStatus
-from rafcon.core.storage import storage
 from rafcon.utils.type_helpers import type_inherits_of_type
 
 try:
