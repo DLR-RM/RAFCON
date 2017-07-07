@@ -134,6 +134,8 @@ def save_state_machine(save_as=False, delete_old_state_machine=False):
     if save_path is None:
         if not save_state_machine_as():
             return
+        else:
+            return True
 
     logger.debug("Saving state machine to {0}".format(save_path))
 
