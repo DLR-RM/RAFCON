@@ -131,8 +131,21 @@ class LibraryManager(Observable):
         self._load_nested_libraries(library_root_path, self._libraries[library_root_key])
         self._libraries[library_root_key] = OrderedDict(sorted(self._libraries[library_root_key].items()))
 
-    @classmethod
-    def _load_nested_libraries(cls, library_path, target_dict):
+    def check_clean_path_of_library(self, folder_path, folder_name):
+        library_root_path = self._library_root_paths[self._get_library_root_key_for_os_path(folder_path)]
+        full_path = os.path.join(folder_path, folder_name)
+        library_path = folder_path[len(library_root_path):]
+        if not storage.clean_path(library_path) == library_path or \
+                not storage.clean_path(folder_name) == folder_name:
+            logger.info("The the path inside of a mounted set of sub-libraries is deprecated please re-save "
+                        "the state machine(s) of path {0} while the library root path {1} is mounted and "
+                        "re-save the state machine(s) the libraries are used in."
+                        "".format(full_path, library_root_path))
+            # TODO maybe insert here a dialog to offer re-save of libraries -> re-save twice would be the save way
+            # return storage.clean_path(library_path), storage.clean_path(folder_name)
+        return folder_path, folder_name
+
+    def _load_nested_libraries(self, library_path, target_dict):
         """Recursively load libraries within path
 
         Adds all libraries specified in a given path and stores them into the provided library dictionary. The library
@@ -142,6 +155,7 @@ class LibraryManager(Observable):
         :param target_dict: the target dictionary to store all loaded libraries to
         """
         for library_name in os.listdir(library_path):
+            library_folder_path, library_name = self.check_clean_path_of_library(library_path, library_name)
             full_library_path = os.path.join(library_path, library_name)
             if os.path.isdir(full_library_path) and library_name[0] != '.':
                 if os.path.exists(os.path.join(full_library_path, storage.STATEMACHINE_FILE)) \
@@ -149,7 +163,7 @@ class LibraryManager(Observable):
                     target_dict[library_name] = full_library_path
                 else:
                     target_dict[library_name] = {}
-                    cls._load_nested_libraries(full_library_path, target_dict[library_name])
+                    self._load_nested_libraries(full_library_path, target_dict[library_name])
                     target_dict[library_name] = OrderedDict(sorted(target_dict[library_name].items()))
 
     @Observable.observed
@@ -232,11 +246,12 @@ class LibraryManager(Observable):
         # a boolean to indicate if a state was regularly found or by the help of the user
         regularly_found = True
 
-        def check_for_deprecated_naming(_library_path, _library_name):
-            _library_path = storage.clean_state_machine_path(_library_path)
-            _library_name = storage.clean_state_machine_path(_library_name)
+        def check_for_deprecated_naming(__library_path, __library_name):
+            _library_path = storage.clean_path(__library_path)
+            _library_name = storage.clean_path(__library_name)
             _library_os_path = self._get_library_os_path_from_library_dict_tree(_library_path, _library_name)
-            if library_os_path is not None:
+            if _library_os_path is not None and \
+                    (not __library_name == _library_name or not __library_path == _library_path):
                 logger.info("File system paths deprecated, your state machine use deprecated library naming '{0}' "
                             "while the library is already stored in the new format '{1}'."
                             "".format(original_path_and_name, _library_os_path))

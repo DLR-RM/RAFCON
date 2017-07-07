@@ -289,7 +289,7 @@ class AutoBackupModel(ModelMT):
             self._tmp_storage_path = os.path.join(RAFCON_RUNTIME_BACKUP_PATH, 'not_stored_' + str(sm.state_machine_id))
         else:
             self._tmp_storage_path = os.path.join(RAFCON_RUNTIME_BACKUP_PATH +  # leave the PLUS !!!
-                                                  storage.clean_state_machine_path(sm.file_system_path))
+                                                  storage.check_path_for_deprecated_naming(sm.file_system_path)[0])
 
     @ModelMT.observe("state_machine", after=True)
     def change_in_state_machine_notification(self, model, prop_name, info):

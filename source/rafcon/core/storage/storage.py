@@ -78,7 +78,42 @@ def clean_path_from_not_by_existing_state_substituted_elements(states, path):
         shutil.rmtree(os.path.join(path, folder_name))
 
 
-def clean_state_machine_path(base_path):
+def check_path_for_deprecated_naming(base_path):
+    """ Checks if the base path includes deprecated characters/format and returns corrected version
+
+    The state machine folder name should be according the universal RAFCON path format. In case the state machine path
+    is inside a mounted library_root_path also the library_path has to have this format. The library path is a
+    partial path of the state machine path. This rules are followed to always provide secure paths for RAFCON and all
+    operating systems.
+
+    :param base_path:
+    :return: 4 values first the corrected base_path and optional not None second to fourth value which are
+    library_root_path, library_path and library_name.
+    """
+    from rafcon.core.singleton import library_manager
+    library_root_path = None
+    _library_path = None
+    _library_name = None
+    if library_manager.is_os_path_within_library_root_paths(base_path):
+        library_path, library_name = library_manager.get_library_path_and_name_for_os_path(base_path)
+        _library_path = clean_path(library_path)
+        _library_name = clean_path(library_name)
+        if not library_name == _library_name or not library_path == _library_path:
+            logger.info("Deprecated library path {0}".format(base_path))
+        library_root_key = library_manager._get_library_root_key_for_os_path(base_path)
+        library_root_path = library_manager._library_root_paths[library_root_key]
+        base_path = os.path.join(library_root_path, _library_path, _library_name)
+    else:
+        path_elements = base_path.split(os.path.sep)
+        state_machine_folder_name = base_path.split(os.path.sep)[-1]
+        path_elements[-1] = clean_path(state_machine_folder_name)
+        if not state_machine_folder_name == path_elements[-1]:
+            logger.info("Deprecated sate machine folder name {0}".format(base_path))
+        base_path = os.path.sep.join(path_elements)
+    return base_path, library_root_path, _library_path, _library_name
+
+
+def clean_path(base_path):
     path_elements = base_path.split(os.path.sep)
     reduced_path_elements = [limit_text_to_be_path_element(elem, max_length=255) for elem in path_elements]
     if not all(path_elements[i] == elem for i, elem in enumerate(reduced_path_elements)):
@@ -100,7 +135,7 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
     # TODO the following is not working if somebody is using a depth library tree with violation of
     # TODO -> the clean path not only on library/state machine name level, weakening of the rule is not the best option
     _base_path = base_path
-    base_path = clean_state_machine_path(base_path)
+    base_path, _, _, _ = check_path_for_deprecated_naming(base_path)
     # TODO is the removal of existing path without request the right way?
     if not _base_path == base_path and os.path.exists(_base_path):
         shutil.rmtree(_base_path)
