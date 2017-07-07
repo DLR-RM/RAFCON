@@ -23,8 +23,7 @@ import glib
 import rafcon.gui.helpers.state as gui_helper_state
 import rafcon.gui.singleton
 from rafcon.core import interface, id_generator
-from rafcon.core.singleton import library_manager
-from rafcon.core.singleton import state_machine_manager, state_machine_execution_engine
+from rafcon.core.singleton import state_machine_manager, state_machine_execution_engine, library_manager
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.hierarchy_state import HierarchyState
@@ -35,7 +34,8 @@ from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateModel, LibraryStateModel, TransitionModel, \
-    DataFlowModel, DataPortModel, ScopedVariableModel, OutcomeModel, StateMachineModel, get_state_model_class_for_state
+    DataFlowModel, DataPortModel, ScopedVariableModel, OutcomeModel, StateMachineModel
+from rafcon.gui.singleton import library_manager_model
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
 from rafcon.utils import log
 
@@ -99,6 +99,7 @@ def save_state_machine(save_as=False, delete_old_state_machine=False):
     if state_machine_m is None:
         logger.warning("Can not 'save state machine' because no state machine is selected.")
         return
+    old_file_system_path = state_machine_m.state_machine.file_system_path
 
     all_tabs = states_editor_ctrl.tabs.values()
     all_tabs.extend(states_editor_ctrl.closed_tabs.values())
@@ -110,8 +111,8 @@ def save_state_machine(save_as=False, delete_old_state_machine=False):
     for dirty_source_editor_ctrl in dirty_source_editor_ctrls:
         state = dirty_source_editor_ctrl.model.state
         message_string = "The source code of the state '{}' (path: {}) has net been applied yet and would " \
-                         "therefore not be stored.\n\nDo you want to apply the changes now?".format(state.name,
-                                                                                                 state.get_path())
+                         "therefore not be stored.\n\nDo you want to apply the changes now?" \
+                         "".format(state.name, state.get_path())
         if global_gui_config.get_config_value("AUTO_APPLY_SOURCE_CODE_CHANGES", False):
             dirty_source_editor_ctrl.apply_clicked(None)
         else:
@@ -141,17 +142,19 @@ def save_state_machine(save_as=False, delete_old_state_machine=False):
 
     state_machine_m = state_machine_manager_model.get_selected_state_machine_model()
     storage.save_state_machine_to_path(state_machine_m.state_machine, state_machine_m.state_machine.file_system_path,
-                                       delete_old_state_machine=delete_old_state_machine, save_as=save_as)
+                                       delete_old_state_machine=delete_old_state_machine)
 
     state_machine_m.store_meta_data()
     logger.debug("Saved state machine and its meta data.")
+    library_manager_model.state_machine_was_stored(state_machine_m, old_file_system_path)
     return True
 
 
 def save_state_machine_as(path=None):
 
     state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
-    if state_machine_manager_model.get_selected_state_machine_model() is None:
+    selected_state_machine_model = state_machine_manager_model.get_selected_state_machine_model()
+    if selected_state_machine_model is None:
         logger.warning("Can not 'save state machine as' because no state machine is selected.")
         return
 
@@ -159,8 +162,7 @@ def save_state_machine_as(path=None):
         if interface.create_folder_func is None:
             logger.error("No function defined for creating a folder")
             return False
-        sm_m = state_machine_manager_model.state_machines[state_machine_manager_model.selected_state_machine_id]
-        folder_name = sm_m.state_machine.root_state.name if sm_m else ''
+        folder_name = selected_state_machine_model.state_machine.root_state.name
         path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
                                             "The default folder name is the name of the root state.",
                                             folder_name)
@@ -168,8 +170,11 @@ def save_state_machine_as(path=None):
             logger.warning("No valid path specified")
             return False
 
-    state_machine_manager_model.get_selected_state_machine_model().state_machine.file_system_path = path
-    return save_state_machine(save_as=True, delete_old_state_machine=True)
+    old_file_system_path = selected_state_machine_model.state_machine.file_system_path
+    selected_state_machine_model.state_machine.file_system_path = path
+    result = save_state_machine(save_as=True, delete_old_state_machine=True)
+    library_manager_model.state_machine_was_stored(selected_state_machine_model, old_file_system_path)
+    return result
 
 
 def save_selected_state_as():
