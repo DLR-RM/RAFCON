@@ -39,26 +39,43 @@ def trigger_gui_signals(*args):
     testing_utils.call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
 @measure_time
-def test_gui(number_child_states=10, number_childs_per_child=10, barrier=False, execute=False, sleep=False):
-    gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
-    gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    rafcon.core.singleton.library_manager.refresh_libraries()
-
-    if barrier:
-        state_machine = StateMachine(create_barrier_concurrency_state(number_child_states, number_childs_per_child))
-    else:
-        state_machine = StateMachine(create_hierarchy_state(number_child_states, sleep=sleep))
+def add_state_machine_to_manager_model(state_machine):
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
+    # Wait for GUI to initialize
+    testing_utils.wait_for_gui()
+
+@measure_time
+def create_main_window():
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_view = MainWindowView()
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
 
     # Wait for GUI to initialize
     testing_utils.wait_for_gui()
+    return main_window_controller
 
-    thread = threading.Thread(target=trigger_gui_signals, args=[testing_utils.sm_manager_model,
-                                                                main_window_controller, execute])
+@measure_time
+def test_gui(number_child_states=10, number_childs_per_child=10, barrier=False, execute=False, sleep=False):
+    gui_config.global_gui_config.set_config_value('HISTORY_ENABLED', False)
+    gui_config.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
+    gui_config.global_gui_config.set_config_value('GAPHAS_EDITOR', True)
+    rafcon.core.singleton.library_manager.refresh_libraries()
+
+    if barrier:
+        state_machine = StateMachine(create_barrier_concurrency_state(number_child_states, number_childs_per_child))
+    else:
+        state_machine = StateMachine(create_hierarchy_state(number_child_states, sleep=sleep))
+
+    main_window_controller = create_main_window()
+
+    add_state_machine_to_manager_model(state_machine)
+
+    exit()
+
+    thread = threading.Thread(target=trigger_gui_signals, args=[rafcon.gui.singleton.state_machine_manager_model,
+                                                                main_window_controller,
+                                                                execute])
     thread.start()
     gtk.main()
     logger.debug("after gtk main")
@@ -69,9 +86,9 @@ if __name__ == '__main__':
     # sys.setrecursionlimit(1000)
     # test_gui(10)  # around 1 second
     # test_gui(10, execute=True)  # around 1.5 seconds
-    # test_gui(100)  # around 10 seconds
+    test_gui(500)  # around 10 seconds
     # TODO: executing states to fast without sleep or too less sleep leads to a recursion error
-    test_gui(100, execute=True, sleep=False)  # smallest state machine leading to recursion error
+    # test_gui(100, execute=True, sleep=False)  # smallest state machine leading to recursion error
     # test_gui(50, execute=True, sleep=False)  # leads to recursion error
     # test_gui(100, execute=True, sleep=False)  # leads to recursion error
     # test_gui(80, execute=True, sleep=True)  # around 23.5 seconds
