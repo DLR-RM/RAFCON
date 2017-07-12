@@ -95,8 +95,7 @@ class MainWindowController(ExtendedController):
         # library tree
         ######################################################
         self.library_manager_model = gui_singletons.library_manager_model
-        library_controller = LibraryTreeController(self.library_manager_model, view.library_tree,
-                                                   state_machine_manager_model)
+        library_controller = LibraryTreeController(self.library_manager_model, view.library_tree)
         self.add_controller('library_controller', library_controller)
 
         ######################################################

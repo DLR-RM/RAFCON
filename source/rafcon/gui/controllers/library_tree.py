@@ -29,8 +29,8 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.library_manager import LibraryManagerModel
-from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.helpers.label import create_image_menu_item, append_sub_menu_to_parent_menu
+import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.utils import log
@@ -44,17 +44,14 @@ class LibraryTreeController(ExtendedController):
     ITEM_STORAGE_ID = 1
     LIB_PATH_STORAGE_ID = 2
 
-    def __init__(self, model=None, view=None, state_machine_manager_model=None):
+    def __init__(self, model, view):
         assert isinstance(model, LibraryManagerModel)
         assert isinstance(view, gtk.TreeView)
-        assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         ExtendedController.__init__(self, model, view)
         self.tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
         view.set_model(self.tree_store)
 
         view.drag_source_set(gtk.gdk.BUTTON1_MASK, [('STRING', 0, 0)], gtk.gdk.ACTION_COPY)
-
-        self.state_machine_manager_model = state_machine_manager_model
 
         self.library_row_iter_dict_by_library_path = {}
         self.__expansion_state = None
@@ -229,10 +226,10 @@ class LibraryTreeController(ExtendedController):
         (model, row_path) = self.view.get_selection().get_selected()
         if row_path:
             physical_library_path = model[row_path][self.ITEM_STORAGE_ID]
-            smm = self.state_machine_manager_model.state_machine_manager
+            smm = gui_singletons.state_machine_manager_model.state_machine_manager
             sm = smm.get_open_state_machine_of_file_system_path(physical_library_path)
             if sm:
-                self.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+                gui_singletons.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
     def open_button_clicked(self, widget):
         try:
@@ -251,7 +248,7 @@ class LibraryTreeController(ExtendedController):
 
     def open_library_as_state_machine(self):
         from rafcon.core.storage import storage
-        smm_m = self.state_machine_manager_model
+        smm_m = gui_singletons.state_machine_manager_model
         (model, row) = self.view.get_selection().get_selected()
         physical_library_path = model[row][self.ITEM_STORAGE_ID]
         assert isinstance(physical_library_path, str)
