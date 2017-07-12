@@ -98,7 +98,7 @@ def save_state_machine(save_as=False, delete_old_state_machine=False):
     state_machine_m = state_machine_manager_model.get_selected_state_machine_model()
     if state_machine_m is None:
         logger.warning("Can not 'save state machine' because no state machine is selected.")
-        return
+        return False
     old_file_system_path = state_machine_m.state_machine.file_system_path
 
     all_tabs = states_editor_ctrl.tabs.values()
@@ -128,15 +128,14 @@ def save_state_machine(save_as=False, delete_old_state_machine=False):
                 logger.debug("Ignoring source code changes of state '{}'".format(state.name))
             else:
                 logger.warning("Response id: {} is not considered".format(response_id))
-                return
+                return False
             dialog.destroy()
 
     save_path = state_machine_m.state_machine.file_system_path
     if save_path is None:
         if not save_state_machine_as():
-            return
-        else:
-            return True
+            return False
+        return True
 
     logger.debug("Saving state machine to {0}".format(save_path))
 
