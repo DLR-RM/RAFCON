@@ -38,7 +38,6 @@ from rafcon.core.state_machine import StateMachine
 
 logger = log.get_logger(__name__)
 
-
 LIBRARY_NOT_FOUND_DUMMY_STATE_NAME = "LIBRARY NOT FOUND DUMMY STATE"
 
 #: File names for various purposes
@@ -50,6 +49,9 @@ SCRIPT_FILE = 'script.py'
 STATEMACHINE_FILE = 'statemachine.json'
 STATEMACHINE_FILE_OLD = 'statemachine.yaml'
 ID_NAME_DELIMITER = "_"
+
+REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION = {'/': '', r'\0': '', '<': '', '>': '', ':': '_',
+                                            '\\': '', '|': '_', '?': '', '*': '_'}
 
 # clean the DEFAULT_SCRIPT_PATH folder at each program start
 if os.path.exists(DEFAULT_SCRIPT_PATH):
@@ -90,6 +92,10 @@ def check_path_for_deprecated_naming(base_path):
     :return: 4 values first the corrected base_path and optional not None second to fourth value which are
     library_root_path, library_path and library_name.
     """
+    def warning_logger_message(insert_string):
+        not_allowed_characters = "'" + "', '".join(REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION.keys()) + "'"
+        logger.warning("Deprecated {2} {0} please avoid to use the following characters {1}."
+                       "".format(base_path, not_allowed_characters, insert_string))
     from rafcon.core.singleton import library_manager
     library_root_path = None
     _library_path = None
@@ -99,7 +105,7 @@ def check_path_for_deprecated_naming(base_path):
         _library_path = clean_path(library_path)
         _library_name = clean_path(library_name)
         if not library_name == _library_name or not library_path == _library_path:
-            logger.info("Deprecated library path {0}".format(base_path))
+            warning_logger_message("library path")
         library_root_key = library_manager._get_library_root_key_for_os_path(base_path)
         library_root_path = library_manager._library_root_paths[library_root_key]
         base_path = os.path.join(library_root_path, _library_path, _library_name)
@@ -108,16 +114,16 @@ def check_path_for_deprecated_naming(base_path):
         state_machine_folder_name = base_path.split(os.path.sep)[-1]
         path_elements[-1] = clean_path(state_machine_folder_name)
         if not state_machine_folder_name == path_elements[-1]:
-            logger.info("Deprecated sate machine folder name {0}".format(base_path))
+            warning_logger_message("state machine folder name")
         base_path = os.path.sep.join(path_elements)
     return base_path, library_root_path, _library_path, _library_name
 
 
 def clean_path(base_path):
     path_elements = base_path.split(os.path.sep)
-    reduced_path_elements = [limit_text_to_be_path_element(elem, max_length=255) for elem in path_elements]
+    reduced_path_elements = [clean_path_element(elem, max_length=255) for elem in path_elements]
     if not all(path_elements[i] == elem for i, elem in enumerate(reduced_path_elements)):
-        logger.info("State machine storage path is reduced")
+        # logger.info("State machine storage path is reduced")
         base_path = os.path.sep.join(reduced_path_elements)
     return base_path
 
@@ -132,13 +138,7 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
     :param bool save_as: Whether to create a copy of the state machine
     :param bool temporary_storage: Whether to use a temporary storage for the state machine
     """
-    # TODO the following is not working if somebody is using a depth library tree with violation of
-    # TODO -> the clean path not only on library/state machine name level, weakening of the rule is not the best option
-    _base_path = base_path
-    base_path, _, _, _ = check_path_for_deprecated_naming(base_path)
-    # TODO is the removal of existing path without request the right way?
-    if not _base_path == base_path and os.path.exists(_base_path):
-        shutil.rmtree(_base_path)
+    _base_path, _, _, _ = check_path_for_deprecated_naming(base_path)
 
     state_machine.acquire_modification_lock()
     try:
@@ -413,17 +413,32 @@ def load_data_file(path_of_file):
     raise ValueError("Data file not found: {0}".format(path_of_file))
 
 
+def limit_text_max_lenght(text, max_length, separator='_'):
+    if max_length is not None:
+        if isinstance(text, basestring) and len(text) > max_length:
+            max_length = int(max_length)
+            half_length = float(max_length - 1) / 2
+            return text[:int(math.ceil(half_length))] + separator + text[-int(math.floor(half_length)):]
+    return text
+
+
+def clean_path_element(text, max_length=None, separator='_'):
+    """Replace characters that conflict with a free OS choice when in a file system path."""
+    elements_to_replace = REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION
+    for elem, replace_with in elements_to_replace.iteritems():
+        text = text.replace(elem, replace_with)
+    if max_length is not None:
+        limit_text_max_lenght(text, max_length, separator)
+    return text
+
+
 def limit_text_to_be_path_element(text, max_length=None, separator='_'):
     elements_to_replace = {' ': '_', '*': '_'}
     for elem, replace_with in elements_to_replace.iteritems():
         text = text.replace(elem, replace_with)
     text = re.sub('[^a-zA-Z0-9-_]', '', text)
     if max_length is not None:
-        if isinstance(text, basestring) and len(text) > max_length:
-            max_length = int(max_length)
-
-            half_length = float(max_length - 1) / 2
-            return text[:int(math.ceil(half_length))] + separator + text[-int(math.floor(half_length)):]
+        limit_text_max_lenght(text, max_length, separator)
     return text
 
 

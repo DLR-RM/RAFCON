@@ -133,16 +133,13 @@ class LibraryManager(Observable):
 
     def check_clean_path_of_library(self, folder_path, folder_name):
         library_root_path = self._library_root_paths[self._get_library_root_key_for_os_path(folder_path)]
-        full_path = os.path.join(folder_path, folder_name)
+        full_path = os.path.join(folder_path, folder_name)[len(library_root_path) + 1:]
         library_path = folder_path[len(library_root_path):]
-        if not storage.clean_path(library_path) == library_path or \
-                not storage.clean_path(folder_name) == folder_name:
-            logger.info("The the path inside of a mounted set of sub-libraries is deprecated please re-save "
-                        "the state machine(s) of path {0} while the library root path {1} is mounted and "
-                        "re-save the state machine(s) the libraries are used in."
-                        "".format(full_path, library_root_path))
-            # TODO maybe insert here a dialog to offer re-save of libraries -> re-save twice would be the save way
-            # return storage.clean_path(library_path), storage.clean_path(folder_name)
+        if not storage.clean_path(library_path) == library_path or not storage.clean_path(folder_name) == folder_name:
+            not_allowed_characters = "'" + "', '".join(storage.REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION.keys()) + "'"
+            logger.warning("The library path {1} is deprecated please avoid use of {0}. If you renaming the "
+                           "state machine also adapt related state machine which make use of this library."
+                           "".format(not_allowed_characters, full_path))
         return folder_path, folder_name
 
     def _load_nested_libraries(self, library_path, target_dict):
@@ -246,21 +243,7 @@ class LibraryManager(Observable):
         # a boolean to indicate if a state was regularly found or by the help of the user
         regularly_found = True
 
-        def check_for_deprecated_naming(__library_path, __library_name):
-            _library_path = storage.clean_path(__library_path)
-            _library_name = storage.clean_path(__library_name)
-            _library_os_path = self._get_library_os_path_from_library_dict_tree(_library_path, _library_name)
-            if _library_os_path is not None and \
-                    (not __library_name == _library_name or not __library_path == _library_path):
-                logger.info("File system paths deprecated, your state machine use deprecated library naming '{0}' "
-                            "while the library is already stored in the new format '{1}'."
-                            "".format(original_path_and_name, _library_os_path))
-            return _library_os_path, _library_path, _library_name
-
         library_os_path = self._get_library_os_path_from_library_dict_tree(library_path, library_name)
-        if library_os_path is None:
-            library_os_path, library_path, library_name = check_for_deprecated_naming(library_path, library_name)
-
         while library_os_path is None:  # until the library is found or the user aborts
 
             regularly_found = False
@@ -301,8 +284,6 @@ class LibraryManager(Observable):
 
             # verification if library is also in library tree
             library_os_path = self._get_library_os_path_from_library_dict_tree(library_path, library_name)
-            if library_os_path is None:
-                library_os_path, library_path, library_name = check_for_deprecated_naming(library_path, library_name)
             if library_os_path is not None:
                 assert library_os_path == new_library_os_path
 
