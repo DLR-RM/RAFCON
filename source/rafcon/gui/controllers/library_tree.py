@@ -321,11 +321,10 @@ class LibraryTreeController(ExtendedController):
             if response_id == 1:
                 if "root" in widget.get_label():
                     from rafcon.gui.singleton import global_config
-                    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+                    logger.info("Remove library root key '{0}' from config.".format(tree_m_row[self.ID_STORAGE_ID]))
                     library_paths = global_config.get_config_value('LIBRARY_PATHS')
                     del library_paths[tree_m_row[self.ID_STORAGE_ID]]
-                    gui_helper_state_machine.refresh_libraries()
-                    logger.info("Remove of library root keys from config is not support until now.")
+                    global_config.save_configuration()
                     self.model.library_manager.refresh_libraries()
                 elif "libraries" in widget.get_label():
                     logger.debug("Remove of all libraries in {} is triggered.".format(tree_m_row[self.OS_PATH_STORAGE_ID]))
