@@ -177,7 +177,7 @@ class StateMachineManagerModel(ModelMT, Observable):
         # TODO -> means StateMachineManagerModel will not need a list for this anymore
         if sm.file_system_path:
             # check if path is in recent path already
-            # print "update recent state machine: ", sm.file_system_path
+            # logger.info("update recent state machine: {}".format(sm.file_system_path))
             if sm.file_system_path in self.recently_opened_state_machines:
                 del self.recently_opened_state_machines[self.recently_opened_state_machines.index(sm.file_system_path)]
             self.recently_opened_state_machines.insert(0, sm.file_system_path)
@@ -187,6 +187,7 @@ class StateMachineManagerModel(ModelMT, Observable):
                            "".format(state_machine_m))
 
     def extend_recently_opened_by_current_open_state_machines(self):
+        # logger.warning("extend by currently opened")
         for sm_m in self.state_machines.itervalues():
             self.update_recently_opened_state_machines(sm_m)
 
@@ -212,6 +213,7 @@ class StateMachineManagerModel(ModelMT, Observable):
 
     def store_session(self):
         from rafcon.gui.models.auto_backup import AutoBackupModel
+        # print "store session"
         # check there are dirty state machines
         # -> use backup file structure maybe it is already stored
         # TODO think about if this is a too strong cross dependency -> best to recover mark dirty and mark for removal
@@ -221,24 +223,24 @@ class StateMachineManagerModel(ModelMT, Observable):
                     sm_m.auto_backup.perform_temp_storage()
             else:
                 # generate a backup
-                AutoBackupModel(sm_m)
+                sm_m.auto_backup = AutoBackupModel(sm_m)
         # store final state machine meta data to restore session in the next run
-        session_storage_dict = {'open_tabs': [sm_m.meta for sm_m in self.state_machines.itervalues()]}
-        storage_utils.write_dict_to_json(session_storage_dict, self.current_session_storage_file)
+        list_of_tab_meta = [sm_m.auto_backup.meta for sm_m in self.state_machines.itervalues()]
+        rafcon.gui.singleton.global_runtime_config.set_config_value('open_tabs', list_of_tab_meta)
 
     def load_session_from_storage(self):
         from rafcon.gui.models.auto_backup import recover_state_machine_from_backup
         # TODO this method needs better documentation and to be moved to a controller because it load's state machines
         session_store_file_json = os.path.join(rafcon.gui.singleton.global_gui_config.path, SESSION_STORE_FILE)
-        # check if session storage file exists
-        if not os.path.exists(session_store_file_json):
+        # check if session storage exists
+        open_tabs = rafcon.gui.singleton.global_runtime_config.get_config_value('open_tabs', None)
+        if open_tabs is None:
             logger.info("No session recovery from: " + session_store_file_json)
             return
 
         # TODO think about a dialog to give the use control -> maybe combine this and auto-backup in one structure
         # load and recover state machines like they were opened before
-        session_storage_dict = storage_utils.load_objects_from_json(session_store_file_json, as_dict=True)
-        for idx, sm_meta_dict in enumerate(session_storage_dict['open_tabs']):
+        for idx, sm_meta_dict in enumerate(open_tabs):
             from_backup_path = None
             # TODO do this decision before storing or maybe store the last stored time in the auto backup?!
             # pick folder name dependent on time, and meta data existence

@@ -26,12 +26,14 @@ from rafcon.gui.utils.dialog import RAFCONCheckBoxTableDialog
 import rafcon.gui.singleton as gui_singletons
 
 from rafcon.gui.utils.constants import RAFCON_INSTANCE_LOCK_FILE_PATH
+from rafcon.utils.vividict import Vividict
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils.i18n import _
 from rafcon.utils import log
 from rafcon.utils.storage_utils import get_time_string_for_float
 logger = log.get_logger(__name__)
 
+FILE_NAME_AUTO_BACKUP = 'auto_backup.json'
 
 MY_RAFCON_TEMP_PATH = str(os.path.sep).join(RAFCON_TEMP_PATH_BASE.split(os.path.sep)[:-1])
 RAFCON_RUNTIME_BACKUP_PATH = os.path.join(RAFCON_TEMP_PATH_BASE, 'runtime_backup')
@@ -108,25 +110,24 @@ def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=No
 
     # find last_save_file_system_path
     try:
-        sm_meta = storage.load_data_file(os.path.join(sm_path, storage.FILE_NAME_META_DATA))
+        auto_backup_meta = storage.load_data_file(os.path.join(sm_path, FILE_NAME_AUTO_BACKUP))
     except ValueError:
-        sm_meta = {}
-    if 'last_saved' in sm_meta and 'file_system_path' in sm_meta['last_saved']:
-        last_save_file_system_path = sm_meta['last_saved']['file_system_path']
+        auto_backup_meta = {}
+    # print auto_backup_meta
+    last_save_file_system_path = None
+    if 'last_saved' in auto_backup_meta and 'file_system_path' in auto_backup_meta['last_saved']:
+        last_save_file_system_path = auto_backup_meta['last_saved']['file_system_path']
+    elif pid is None:
+        pass
     else:  # state machines with old backup format -> backward compatibility check
         reduced_path = sm_path.replace(os.path.join(MY_RAFCON_TEMP_PATH, pid, 'runtime_backup'), '')
         if os.path.isdir(reduced_path) and not reduced_path.split(os.path.sep)[1] == 'tmp':
             last_save_file_system_path = reduced_path
-        else:
-            last_save_file_system_path = None
 
     # check if already open -> # TODO in future backups has to be integrated better to avoid this
     if last_save_file_system_path is not None \
             and core_singletons.state_machine_manager.is_state_machine_open(last_save_file_system_path):
-        # sm = core_singletons.state_machine_manager.get_open_state_machine_of_file_system_path(last_save_file_system_path)
-        # import rafcon.gui.singleton
-        # assert rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id].meta == sm_meta
-        logger.info("Backup state machine is already open by other feature {0}".format(sm_meta))
+        logger.info("Backup state machine is already open by other feature {0}".format(auto_backup_meta))
         move_dirty_lock_file(full_path_dirty_lock, sm_path)
         return
 
@@ -159,12 +160,20 @@ def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=No
     # correct path after add state machine because meta data should be loaded from the backup path
     sm_m.storage_lock.acquire()
     sm_m.state_machine._file_system_path = last_save_file_system_path
-    sm_m.meta['last_saved']['file_system_path'] = sm_m.state_machine.file_system_path
+
+    # fix auto backup meta data
+    if hasattr(sm_m, 'auto_backup'):
+        if last_save_file_system_path is None:
+            del sm_m.auto_backup.meta['last_saved']
+        else:
+            sm_m.auto_backup.meta['last_saved']['time'] = auto_backup_meta['last_saved']['time']
+            sm_m.auto_backup.meta['last_saved']['file_system_path'] = sm_m.state_machine.file_system_path
     sm_m.storage_lock.release()
 
     # set dirty flag -> TODO think about to make it more reliable still not fully sure that the flag is right
-    if 'last_backup' in sm_meta and 'marked_dirty' in sm_meta['last_backup']:  # backward compatibility check
-        state_machine.marked_dirty = sm_meta['last_backup']['marked_dirty']
+    # backward compatibility check
+    if 'last_backup' in auto_backup_meta and 'marked_dirty' in auto_backup_meta['last_backup']:
+        state_machine.marked_dirty = auto_backup_meta['last_backup']['marked_dirty']
     else:
         state_machine.marked_dirty = True  # backward compatibility
 
@@ -315,6 +324,12 @@ class AutoBackupModel(ModelMT):
         self._timer_request_time = None
         self.timer_request_lock = threading.Lock()
         self.tmp_storage_timed_thread = None
+        self.meta = Vividict()
+        if state_machine_model.state_machine.file_system_path is not None:
+            # logger.info("store meta data of {0} to {1}".format(self, meta_data_path))
+            # data used for restore tabs -> (having the information to load state machines without loading them)
+            self.meta['last_saved']['time'] = state_machine_model.state_machine.last_update
+            self.meta['last_saved']['file_system_path'] = state_machine_model.state_machine.file_system_path
 
         logger.debug("The auto-backup for state-machine {2} is {0} and set to '{1}'"
                      "".format('ENABLED' if self.timed_temp_storage_enabled else 'DISABLED',
@@ -398,11 +413,24 @@ class AutoBackupModel(ModelMT):
         else:
             self._tmp_storage_path = os.path.join(RAFCON_RUNTIME_BACKUP_PATH + sm.file_system_path) # leave the PLUS !!!
 
-    def write_meta_data(self):
-        """Write the backup meta data to the state machine meta data"""
-        self.state_machine_model.meta['last_backup']['time'] = get_time_string_for_float(self.last_backup_time)
-        self.state_machine_model.meta['last_backup']['file_system_path'] = self._tmp_storage_path
-        self.state_machine_model.meta['last_backup']['marked_dirty'] = self.state_machine_model.state_machine.marked_dirty
+    def write_backup_meta_data(self):
+        """Write the auto backup meta data into the current tmp-storage path"""
+        auto_backup_meta_file = os.path.join(self._tmp_storage_path, FILE_NAME_AUTO_BACKUP)
+        # print "write meta", self.meta, " to", auto_backup_meta_file
+        storage.storage_utils.write_dict_to_json(self.meta, auto_backup_meta_file)
+
+    def update_last_backup_meta_data(self):
+        """Update the auto backup meta data with internal recovery information"""
+        self.meta['last_backup']['time'] = get_time_string_for_float(self.last_backup_time)
+        self.meta['last_backup']['file_system_path'] = self._tmp_storage_path
+        self.meta['last_backup']['marked_dirty'] = self.state_machine_model.state_machine.marked_dirty
+
+    def update_last_sm_origin_meta_data(self):
+        """Update the auto backup meta data with information of the state machine origin"""
+        # TODO finally maybe remove this when all restore features are integrated into one restore-structure
+        # data also used e.g. to restore tabs
+        self.meta['last_saved']['time'] = self.state_machine_model.state_machine.last_update
+        self.meta['last_saved']['file_system_path'] = self.state_machine_model.state_machine.file_system_path
 
     @ModelMT.observe("state_machine", after=True)
     def change_in_state_machine_notification(self, model, prop_name, info):
@@ -412,6 +440,10 @@ class AutoBackupModel(ModelMT):
             if not self.state_machine_model.state_machine.marked_dirty:
                 self.clean_lock_file()
             self.marked_dirty = self.state_machine_model.state_machine.marked_dirty
+        if info['method_name'] == 'file_system_path' and not self.__perform_storage:
+            # logger.info("update last time stored")
+            self.update_last_sm_origin_meta_data()
+            self.write_backup_meta_data()
 
     def _check_for_dyn_timed_auto_backup(self):
         """ The method implements the timed storage feature.
@@ -424,7 +456,7 @@ class AutoBackupModel(ModelMT):
         """
         current_time = time.time()
         self.timer_request_lock.acquire()
-        sm = self.state_machine_model.state_machine
+        # sm = self.state_machine_model.state_machine
         # TODO check for self._timer_request_time is None to avoid and reset auto-backup in case and fix it better
         # print str(self.timed_temp_storage_interval), str(current_time), str(self._timer_request_time)
         if self._timer_request_time is None:
@@ -468,7 +500,8 @@ class AutoBackupModel(ModelMT):
         self.update_tmp_storage_path()
         storage.save_state_machine_to_path(sm, self._tmp_storage_path, delete_old_state_machine=True,
                                            save_as=True, temporary_storage=True)
-        self.write_meta_data()
+        self.update_last_backup_meta_data()
+        self.write_backup_meta_data()
         self.state_machine_model.store_meta_data(temp_path=self._tmp_storage_path)
         self.last_backup_time = time.time()  # used as 'last-backup' time
         self.timer_request_lock.acquire()
