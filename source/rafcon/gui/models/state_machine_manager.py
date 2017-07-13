@@ -28,9 +28,6 @@ from rafcon.utils import log, storage_utils
 logger = log.get_logger(__name__)
 
 
-SESSION_STORE_FILE = "previous_session_store.json"
-
-
 class StateMachineManagerModel(ModelMT, Observable):
     """This model class manages a StateMachineManager
 
@@ -203,13 +200,9 @@ class StateMachineManagerModel(ModelMT, Observable):
         self.recently_opened_state_machines.extend(recently_opened_state_machines)
         self.clean_recently_opened_state_machines()
 
-    @property
-    def current_session_storage_file(self):
-        return os.path.join(rafcon.gui.singleton.global_gui_config.path, SESSION_STORE_FILE)
-
-    def reset_session_storage(self):
-        if os.path.exists(self.current_session_storage_file):
-            os.remove(self.current_session_storage_file)
+    @staticmethod
+    def reset_session_storage():
+        rafcon.gui.singleton.global_runtime_config.set_config_value('open_tabs', [])
 
     def store_session(self):
         from rafcon.gui.models.auto_backup import AutoBackupModel
@@ -231,11 +224,10 @@ class StateMachineManagerModel(ModelMT, Observable):
     def load_session_from_storage(self):
         from rafcon.gui.models.auto_backup import recover_state_machine_from_backup
         # TODO this method needs better documentation and to be moved to a controller because it load's state machines
-        session_store_file_json = os.path.join(rafcon.gui.singleton.global_gui_config.path, SESSION_STORE_FILE)
         # check if session storage exists
         open_tabs = rafcon.gui.singleton.global_runtime_config.get_config_value('open_tabs', None)
         if open_tabs is None:
-            logger.info("No session recovery from: " + session_store_file_json)
+            logger.info("No session recovery from runtime config file")
             return
 
         # TODO think about a dialog to give the use control -> maybe combine this and auto-backup in one structure
