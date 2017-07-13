@@ -98,9 +98,12 @@ class LibraryTreeController(ExtendedController):
             sub_menu.append(create_image_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
                             partial(self.substitute_as_template_clicked, keep_name=False)))
         elif kind == 'library root':
+            menu.append(create_image_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
             menu.append(create_image_menu_item("Remove library root", constants.BUTTON_DEL, self.delete_button_clicked))
         elif kind == 'libraries':
             menu.append(create_image_menu_item("Remove libraries", constants.BUTTON_DEL, self.delete_button_clicked))
+        elif kind == 'library tree':
+            menu.append(create_image_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
 
         return menu
 
@@ -139,9 +142,10 @@ class LibraryTreeController(ExtendedController):
                         menu = self.generate_right_click_menu('libraries')
                 else:
                     menu = self.generate_right_click_menu('library')
-
-                menu.show_all()
-                menu.popup(None, None, None, event.button, time)
+            else:
+                menu = self.generate_right_click_menu('library tree')
+            menu.show_all()
+            menu.popup(None, None, None, event.button, time)
             return True
 
     @ExtendedController.observe("library_manager", after=True)
@@ -286,6 +290,30 @@ class LibraryTreeController(ExtendedController):
         smm_m.state_machine_manager.add_state_machine(state_machine)
         return state_machine
 
+    def add_button_clicked(self, widget):
+        if "library root" in widget.get_label():
+            logger.info("Get new path and mounting key.")
+            from rafcon.gui import interface
+            from rafcon.gui.singleton import global_config, global_runtime_config
+
+            # TODO write another method and do not misuse create folder -> after interface is OK
+            last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
+            _path = interface.create_folder("Please choose the folder to be mounted and insert your mounting key.",
+                                            "insert your mounting key here")
+            global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', last_path)
+
+            if _path is None:
+                return
+            path_elements = _path.split(os.path.sep)
+            library_root_key = path_elements[-1]  # mounting key
+            library_root_path = os.path.sep.join(path_elements[:-1])
+
+            logger.info("Add new library root '{0}: {1}' to config.".format(library_root_key, library_root_path))
+            library_paths = global_config.get_config_value('LIBRARY_PATHS')
+            library_paths[library_root_key] = library_root_path
+            global_config.save_configuration()
+            self.model.library_manager.refresh_libraries()
+
     def delete_button_clicked(self, widget):
         """Removes library from hard drive after request second confirmation"""
         logger.info("delete library" + str(widget) + str(widget.get_label()))
@@ -320,8 +348,8 @@ class LibraryTreeController(ExtendedController):
             dialog.destroy()
             if response_id == 1:
                 if "root" in widget.get_label():
-                    from rafcon.gui.singleton import global_config
                     logger.info("Remove library root key '{0}' from config.".format(tree_m_row[self.ID_STORAGE_ID]))
+                    from rafcon.gui.singleton import global_config
                     library_paths = global_config.get_config_value('LIBRARY_PATHS')
                     del library_paths[tree_m_row[self.ID_STORAGE_ID]]
                     global_config.save_configuration()
