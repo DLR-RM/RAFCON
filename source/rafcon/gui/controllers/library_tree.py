@@ -45,12 +45,13 @@ class LibraryTreeController(ExtendedController):
     LIB_PATH_STORAGE_ID = 2
     OS_PATH_STORAGE_ID = 3
     TOOL_TIP_STORAGE_ID = 3
+    LIB_KEY_STORAGE_ID = 4
 
     def __init__(self, model, view):
         assert isinstance(model, LibraryManagerModel)
         assert isinstance(view, gtk.TreeView)
         ExtendedController.__init__(self, model, view)
-        self.tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str, str)
+        self.tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str, str, str)
         view.set_model(self.tree_store)
         view.set_tooltip_column(3)
 
@@ -216,7 +217,8 @@ class LibraryTreeController(ExtendedController):
             if len(library_path.split(os.path.sep)) > 1:
                 partial_path = os.path.sep.join(library_path.split(os.path.sep)[1:])
             tool_tip = os.path.join(library_root_path, partial_path, library_key)
-        tree_item = self.tree_store.insert_before(parent, None, (_library_key, library_item, library_path, tool_tip))
+        tree_item = self.tree_store.insert_before(parent, None, (_library_key, library_item, library_path,
+                                                                 tool_tip, library_key))
         if isinstance(library_item, dict) and not library_item:
             return
         if not library_path:
@@ -353,7 +355,7 @@ class LibraryTreeController(ExtendedController):
                     logger.info("Remove library root key '{0}' from config.".format(tree_m_row[self.ID_STORAGE_ID]))
                     from rafcon.gui.singleton import global_config
                     library_paths = global_config.get_config_value('LIBRARY_PATHS')
-                    del library_paths[tree_m_row[self.ID_STORAGE_ID]]
+                    del library_paths[tree_m_row[self.LIB_KEY_STORAGE_ID]]
                     global_config.save_configuration()
                     self.model.library_manager.refresh_libraries()
                 elif "libraries" in widget.get_label():

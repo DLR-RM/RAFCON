@@ -136,7 +136,10 @@ def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_stat
     max_overlaps_x = (parent_state_width - 2*parent_margin - child_width -
                       (parent_margin + (max_cols - 1) * child_spacing + child_spacing - child_width)) // overlapping_step
     max_overlaps_y = (parent_state_height - 2*parent_margin - child_height -
-                      child_spacing * (1.5 * (max_rows - 1) + 0.8)) // overlapping_step
+                      child_spacing * (1.5 * (max_rows - 1) + 1)) // overlapping_step
+    # handle case of less space TODO check again not perfect, maybe that can be done more simple
+    max_overlaps_x = 0 if max_overlaps_x < 0 else max_overlaps_x
+    max_overlaps_y = 0 if max_overlaps_y < 0 else max_overlaps_y
     max_overlaps = min(max_overlaps_x, max_overlaps_y) + 1
     overlapping = divmod(overlapping, max_overlaps)[1]
 
