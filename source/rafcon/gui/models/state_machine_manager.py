@@ -205,11 +205,13 @@ class StateMachineManagerModel(ModelMT, Observable):
         global_runtime_config.set_config_value('open_tabs', [])
 
     def store_session(self):
+        """ Stores reference backup information for all open tabs into runtime config
+
+        The backup of never stored tabs (state machines) and not stored state machine changes will be triggered a last
+        time to secure data lose.
+        """
         from rafcon.gui.models.auto_backup import AutoBackupModel
-        # print "store session"
-        # check there are dirty state machines
-        # -> use backup file structure maybe it is already stored
-        # TODO think about if this is a too strong cross dependency -> best to recover mark dirty and mark for removal
+        # check if there are dirty state machines -> use backup file structure maybe it is already stored
         for sm_m in self.state_machines.itervalues():
             if hasattr(sm_m, 'auto_backup'):
                 if sm_m.state_machine.marked_dirty:
@@ -221,21 +223,28 @@ class StateMachineManagerModel(ModelMT, Observable):
         list_of_tab_meta = [sm_m.auto_backup.meta for sm_m in self.state_machines.itervalues()]
         global_runtime_config.set_config_value('open_tabs', list_of_tab_meta)
 
-    def load_session_from_storage(self):
+    def restore_session_from_storage(self):
+        """ Restore stored tabs from runtime config
+
+        The method checks if the last status of a state machine is in the backup or in tis original path and loads it
+        from there. The original path of these state machines are also insert into the recently opened state machines
+        list.
+        """
+        # TODO add a dirty lock for a crashed rafcon instance also into restore session feature
+        # TODO in case a dialog is needed to give the user control
+        # TODO combine this and auto-backup in one structure/controller/observer
         from rafcon.gui.models.auto_backup import recover_state_machine_from_backup
-        # TODO this method needs better documentation and to be moved to a controller because it load's state machines
         # check if session storage exists
         open_tabs = global_runtime_config.get_config_value('open_tabs', None)
         if open_tabs is None:
             logger.info("No session recovery from runtime config file")
             return
 
-        # TODO think about a dialog to give the use control -> maybe combine this and auto-backup in one structure
         # load and recover state machines like they were opened before
         for idx, sm_meta_dict in enumerate(open_tabs):
             from_backup_path = None
             # TODO do this decision before storing or maybe store the last stored time in the auto backup?!
-            # pick folder name dependent on time, and meta data existence
+            # pick folder name dependent on time, and backup meta data existence
             # problem is that the backup time is maybe not the best choice
             if 'last_backup' in sm_meta_dict:
                 last_backup_time = storage_utils.get_float_time_for_string(sm_meta_dict['last_backup']['time'])
