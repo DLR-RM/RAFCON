@@ -412,9 +412,11 @@ class AbstractStateModel(MetaModel, Hashable):
         # print "1AbstractState_load_meta_data: ", path
         # print not path
         if not path:
-            path = self.state.get_file_system_path()
+            path = self.state.file_system_path
         # print "2AbstractState_load_meta_data: ", path
-
+        if path is None:
+            self.meta = Vividict({})
+            return True
         path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA)
 
         # TODO: Should be removed with next minor release
@@ -455,11 +457,19 @@ class AbstractStateModel(MetaModel, Hashable):
 
         This method generates a dictionary of the meta data of the state together with the meta data of all state
         elements (data ports, outcomes, etc.) and stores it on the filesystem.
+        Secure that the store meta data method is called after storing the core data otherwise the last_stored_path is
+        maybe wrong or None.
+
+        :param str temp_path: optional given temporary path if meta data should not be stored to the file system path
         """
         if temp_path:
             meta_file_path_json = os.path.join(temp_path, self.state.get_storage_path(), storage.FILE_NAME_META_DATA)
         else:
-            meta_file_path_json = os.path.join(self.state.get_file_system_path(), storage.FILE_NAME_META_DATA)
+            if self.state.file_system_path is None:
+                logger.error("Meta data of {0} can be stored temporary arbitrary but by default first after the "
+                             "respective state was stored and a file system path is set.".format(self))
+                return
+            meta_file_path_json = os.path.join(self.state.file_system_path, storage.FILE_NAME_META_DATA)
         meta_data = deepcopy(self.meta)
         self._generate_element_meta_data(meta_data)
         storage_utils.write_dict_to_json(meta_data, meta_file_path_json)

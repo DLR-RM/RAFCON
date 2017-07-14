@@ -32,7 +32,7 @@ class StateModel(AbstractStateModel):
     :param rafcon.core.states.state.State state: The state to be managed
     :param AbstractStateModel parent: The state to be managed
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state
-    :param set expected_future_models: Existing models for new core elements
+    :param __buildIn__.set expected_future_models: Existing models for new core elements
     """
 
     expected_future_models = None

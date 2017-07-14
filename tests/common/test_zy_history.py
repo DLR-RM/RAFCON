@@ -57,7 +57,6 @@ def on_save_activate(state_machine_m, logger):
 
 
 def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None):
-    print "in Removal: \n", storage._paths_to_remove_before_sm_save.values()
 
     def print_states(state):
         if isinstance(state, ContainerState):

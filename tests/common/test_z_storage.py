@@ -325,6 +325,18 @@ def test_storage_with_gui(caplog):
         testing_utils.shutdown_environment(caplog=caplog)
 
 
+# TODO add examples of bad naming that cause before problems \n or [ ] and so on
+def check_state_recursively_if_state_scripts_are_valid(state):
+    from rafcon.core.states.container_state import ContainerState
+    from rafcon.core.states.execution_state import ExecutionState
+    if isinstance(state, ContainerState):
+        for child_state in state.states.itervalues():
+            check_state_recursively_if_state_scripts_are_valid(child_state)
+    else:
+        if isinstance(state, ExecutionState):
+            assert os.path.exists(state.script.path) and state.script.script is not None
+
+
 def test_on_clean_storing_with_name_in_path(caplog):
     testing_utils.initialize_environment(gui_config={"AUTO_BACKUP_ENABLED": True})
 
@@ -334,6 +346,7 @@ def test_on_clean_storing_with_name_in_path(caplog):
                                    "id_to_name_plus_id_storage_format_test_do_not_update")
     shutil.copytree(path_old_format, path_new_format)
     sm = storage.load_state_machine_from_path(path_new_format)
+    check_state_recursively_if_state_scripts_are_valid(sm.root_state)
     sm.base_path = path_new_format
     sm_m = StateMachineModel(sm, rafcon.gui.singleton.state_machine_manager_model)
     try:

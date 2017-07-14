@@ -381,12 +381,6 @@ class AutoBackupModel(ModelMT):
             #                                                  '/dirty_lock_' + str(sm.state_machine_id)))
             self.lock_file = open(RAFCON_RUNTIME_BACKUP_PATH + '/dirty_lock_' + str(sm.state_machine_id), 'a+')
             # TODO move this and the inverse functionality to one location (capsule)
-            mark_4_removal = []
-            if self.state_machine_model.state_machine.state_machine_id in storage._paths_to_remove_before_sm_save:
-                for path in storage._paths_to_remove_before_sm_save[self.state_machine_model.state_machine.state_machine_id]:
-                    mark_4_removal.append("\n" + path)
-            self.update_tmp_storage_path()
-            self.lock_file.writelines([self._tmp_storage_path + "\n# marked for removal: "] + mark_4_removal)
             self.lock_file.close()
             self.last_lock_file_name = self.lock_file.name
             self.lock_file_lock.release()
@@ -411,7 +405,8 @@ class AutoBackupModel(ModelMT):
         if sm.file_system_path is None:
             self._tmp_storage_path = os.path.join(RAFCON_RUNTIME_BACKUP_PATH, 'not_stored_' + str(sm.state_machine_id))
         else:
-            self._tmp_storage_path = os.path.join(RAFCON_RUNTIME_BACKUP_PATH + sm.file_system_path) # leave the PLUS !!!
+            self._tmp_storage_path = os.path.join(RAFCON_RUNTIME_BACKUP_PATH +  # leave the PLUS !!!
+                                                  storage.check_path_for_deprecated_naming(sm.file_system_path)[0])
 
     def write_backup_meta_data(self):
         """Write the auto backup meta data into the current tmp-storage path"""

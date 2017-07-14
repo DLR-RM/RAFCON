@@ -87,6 +87,7 @@ class LibraryState(State):
         if library_path != new_library_path or library_name != new_library_name:
             self.library_name = new_library_name
             self.library_path = new_library_path
+            # TODO this should trigger the marked_dirty of the state machine to become true
             logger.info("Changing information about location of library")
             logger.info("Old library name '{0}' was located at {1}".format(library_name, library_path))
             logger.info("New library name '{0}' is located at {1}".format(new_library_name, new_library_path))
@@ -153,6 +154,7 @@ class LibraryState(State):
         # overwrite may by default set True flags by False
         state.use_runtime_value_input_data_ports = copy(self.use_runtime_value_input_data_ports)
         state.use_runtime_value_output_data_ports = copy(self.use_runtime_value_output_data_ports)
+        state._file_system_path = self.file_system_path
         return state
 
     def __deepcopy__(self, memo=None, _nil=[]):
@@ -519,8 +521,8 @@ class LibraryState(State):
         else:
             return False
 
-    def get_storage_path(self, appendix=None, old_delimiter=False):
+    def get_storage_path(self, appendix=None):
         if appendix is None:
-            return super(LibraryState, self).get_storage_path(appendix, old_delimiter)
+            return super(LibraryState, self).get_storage_path(appendix)
         else:
             return self.lib_os_path + PATH_SEPARATOR + appendix
