@@ -64,6 +64,7 @@ def clean_path_from_not_by_existing_state_substituted_elements(states, path):
     """
     This function removes all folders in a certain file system folder, that do not belong to the states given in the
     "states" parameter
+    
     :param states: the states that should reside in this very folder
     :param path: the file system path to be checked for valid folders
     :return:
@@ -97,7 +98,7 @@ def check_path_for_deprecated_naming(base_path):
 
     :param base_path:
     :return: 4 values first the corrected base_path and optional not None second to fourth value which are
-    library_root_path, library_path and library_name.
+      library_root_path, library_path and library_name.
     """
     def warning_logger_message(insert_string):
         not_allowed_characters = "'" + "', '".join(REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION.keys()) + "'"
@@ -130,6 +131,7 @@ def clean_path(base_path):
     """
     This function cleans a file system path in terms of removing all not allowed characters of each path element.
     A path element is an element of a path between the path separator of the operating system.
+    
     :param base_path: the path to be cleaned
     :return: the clean path
     """
@@ -428,8 +430,9 @@ def load_data_file(path_of_file):
 
 def limit_text_max_length(text, max_length, separator='_'):
     """
-    Limits the length of a string. The returned string will be the first "max_length"/2 characters of the input string
-    plus a separator plus the last "max_length/2" characters of the input string.
+    Limits the length of a string. The returned string will be the first `max_length/2` characters of the input string
+    plus a separator plus the last `max_length/2` characters of the input string.
+    
     :param text: the text to be limited
     :param max_length: the maximum length of the output string
     :param separator: the separator between the first "max_length"/2 characters of the input string and
