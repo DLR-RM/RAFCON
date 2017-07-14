@@ -223,9 +223,6 @@ class MainWindowController(ExtendedController):
         view.right_bar_window.initialize_title('STATE EDITOR')
         view.console_bar_window.initialize_title('CONSOLE')
 
-        # TODO check import problems if called while init of manager model
-        self.model.read_recent_opened_state_machines()
-
     @staticmethod
     def configure_event(widget, event, name):
         # print "configure event", widget, event, name

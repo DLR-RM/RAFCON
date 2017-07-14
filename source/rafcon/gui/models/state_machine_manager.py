@@ -20,7 +20,7 @@ from rafcon.core.state_machine_manager import StateMachineManager
 from rafcon.core.storage import storage
 
 from rafcon.gui.models.state_machine import StateMachineModel
-import rafcon.gui.singleton
+from rafcon.gui.singleton import global_runtime_config, global_gui_config
 
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log, storage_utils
@@ -47,10 +47,9 @@ class StateMachineManagerModel(ModelMT, Observable):
     state_machines = {}
     state_machine_mark_dirty = 0
     state_machine_un_mark_dirty = 0
-    recently_opened_state_machines = []
 
     __observables__ = ("state_machine_manager", "selected_state_machine_id", "state_machines",
-                       "state_machine_mark_dirty", "state_machine_un_mark_dirty", "recently_opened_state_machines")
+                       "state_machine_mark_dirty", "state_machine_un_mark_dirty")
 
     def __init__(self, state_machine_manager, meta=None):
         """Constructor"""
@@ -154,55 +153,56 @@ class StateMachineManagerModel(ModelMT, Observable):
                 raise TypeError("selected_state_machine_id must be of type int")
         self._selected_state_machine_id = selected_state_machine_id
 
-    def clean_recently_opened_state_machines(self):
-        """ Check if state machine paths still valid
+    @staticmethod
+    def clean_file_system_paths_from_not_existing_paths(file_system_paths):
+        """ Clean list of paths from elements that can not be reached anymore
 
-        If the state machine is no more valid the state machine is removed from the path.
+        If the path is no more valid it is removed from the list of file system paths.
+
+        :param list file_system_paths: list of file system paths to check for existing
         :return:
         """
-        # clean state machines that can not be reached anymore
-        sm_to_delete = []
-        for sm_path in self.recently_opened_state_machines:
-            if not os.path.exists(sm_path):
-                sm_to_delete.append(sm_path)
-        for sm_path in sm_to_delete:
-            self.recently_opened_state_machines.remove(sm_path)
+        elems_to_delete = []
+        for path in file_system_paths:
+            if not os.path.exists(path):
+                elems_to_delete.append(path)
+        for path in elems_to_delete:
+            file_system_paths.remove(path)
 
     def update_recently_opened_state_machines(self, state_machine_m):
+        """ Update recently opened list with file system path of handed state machine model
+
+        :param rafcon.gui.models.state_machine.StateMachineModel state_machine_m: State machine model to check
+        :return:
+        """
         sm = state_machine_m.state_machine
-        # TODO finally check if this runs only with observing (menu-bar) and using the runtime config as currently
-        # TODO -> means StateMachineManagerModel will not need a list for this anymore
         if sm.file_system_path:
             # check if path is in recent path already
             # logger.info("update recent state machine: {}".format(sm.file_system_path))
-            if sm.file_system_path in self.recently_opened_state_machines:
-                del self.recently_opened_state_machines[self.recently_opened_state_machines.index(sm.file_system_path)]
-            self.recently_opened_state_machines.insert(0, sm.file_system_path)
-            self.clean_recently_opened_state_machines()
-        else:
-            logger.warning("State machine {0} can not be added to recent open because it has no valid path."
-                           "".format(state_machine_m))
+            recently_opened_state_machines = global_runtime_config.get_config_value('recently_opened_state_machines', [])
+            if sm.file_system_path in recently_opened_state_machines:
+                del recently_opened_state_machines[recently_opened_state_machines.index(sm.file_system_path)]
+            recently_opened_state_machines.insert(0, sm.file_system_path)
+            self.clean_file_system_paths_from_not_existing_paths(recently_opened_state_machines)
+            global_runtime_config.set_config_value('recently_opened_state_machines', recently_opened_state_machines)
 
     def extend_recently_opened_by_current_open_state_machines(self):
-        # logger.warning("extend by currently opened")
+        """ Update list with all in the state machine manager opened state machines
+        """
         for sm_m in self.state_machines.itervalues():
             self.update_recently_opened_state_machines(sm_m)
 
-    def store_recent_opened_state_machines(self):
-        num = rafcon.gui.singleton.global_gui_config.get_config_value('NUMBER_OF_RECENT_OPENED_STATE_MACHINES_STORED')
-        rafcon.gui.singleton.global_runtime_config.set_config_value('recently_opened_state_machines',
-                                                                    self.recently_opened_state_machines[:num])
-
-    def read_recent_opened_state_machines(self):
-        global_runtime_config = rafcon.gui.singleton.global_runtime_config
-        recently_opened_state_machines = global_runtime_config.get_config_value('recently_opened_state_machines', [])
-        del self.recently_opened_state_machines[:]
-        self.recently_opened_state_machines.extend(recently_opened_state_machines)
-        self.clean_recently_opened_state_machines()
+    @staticmethod
+    def prepare_recent_opened_state_machines_list_for_storage():
+        """ Reduce number of paths in the recent opened state machines to limit from gui config
+        """
+        num = global_gui_config.get_config_value('NUMBER_OF_RECENT_OPENED_STATE_MACHINES_STORED')
+        state_machine_paths = global_runtime_config.get_config_value('recently_opened_state_machines', [])
+        global_runtime_config.set_config_value('recently_opened_state_machines', state_machine_paths[:num])
 
     @staticmethod
     def reset_session_storage():
-        rafcon.gui.singleton.global_runtime_config.set_config_value('open_tabs', [])
+        global_runtime_config.set_config_value('open_tabs', [])
 
     def store_session(self):
         from rafcon.gui.models.auto_backup import AutoBackupModel
@@ -219,13 +219,13 @@ class StateMachineManagerModel(ModelMT, Observable):
                 sm_m.auto_backup = AutoBackupModel(sm_m)
         # store final state machine meta data to restore session in the next run
         list_of_tab_meta = [sm_m.auto_backup.meta for sm_m in self.state_machines.itervalues()]
-        rafcon.gui.singleton.global_runtime_config.set_config_value('open_tabs', list_of_tab_meta)
+        global_runtime_config.set_config_value('open_tabs', list_of_tab_meta)
 
     def load_session_from_storage(self):
         from rafcon.gui.models.auto_backup import recover_state_machine_from_backup
         # TODO this method needs better documentation and to be moved to a controller because it load's state machines
         # check if session storage exists
-        open_tabs = rafcon.gui.singleton.global_runtime_config.get_config_value('open_tabs', None)
+        open_tabs = global_runtime_config.get_config_value('open_tabs', None)
         if open_tabs is None:
             logger.info("No session recovery from runtime config file")
             return

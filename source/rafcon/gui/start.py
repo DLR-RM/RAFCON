@@ -176,11 +176,11 @@ def setup_gui():
 
 
 def open_state_machines(paths):
+    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     first_sm = None
     for path in paths:
         try:
-            sm = storage.load_state_machine_from_path(path)
-            core_singletons.state_machine_manager.add_state_machine(sm)
+            sm = gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
             if first_sm is None:
                 first_sm = sm
         except Exception as e:
@@ -278,9 +278,9 @@ def main():
 
     post_setup_plugins(user_input)
 
+    state_machine = None
     if user_input.state_machine_paths:
         state_machine = open_state_machines(user_input.state_machine_paths)
-        main_window_controller.model.extend_recently_opened_by_current_open_state_machines()
 
     if user_input.new:
         create_new_state_machine()
@@ -296,7 +296,7 @@ def main():
     if global_config.get_config_value("PROFILER_RUN", False):
         profiler.start("global")
 
-    if user_input.start_state_machine_flag:
+    if state_machine and user_input.start_state_machine_flag:
         start_state_machine(state_machine, user_input.start_state_path, user_input.quit_flag)
 
     splash_screen.destroy()

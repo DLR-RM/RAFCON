@@ -164,19 +164,18 @@ class MenuBarController(ExtendedController):
             library_manager.refresh_libraries()
         elif config_key == "SHORTCUTS":
             self.refresh_shortcuts()
-        elif config_key == "recently_used":
+        elif config_key == "recently_opened_state_machines":
             self.update_recently_opened_state_machines()
 
-    @ExtendedController.observe("recently_opened_state_machines", after=True)
-    def update_recently_opened_state_machines(self, *args):
+    def update_recently_opened_state_machines(self):
         """Update the sub menu Open Recent in File menu"""
         if not self.registered_view:
             return
         for item in self.view.sub_menu_open_recently.get_children():
             self.view.sub_menu_open_recently.remove(item)
         self.view.sub_menu_open_recently.show_all()
-        for sm_path in self.model.recently_opened_state_machines:
-            # print "insert recent", sm_meta_dict['last_saved']['file_system_path']
+        for sm_path in global_runtime_config.get_config_value("recently_opened_state_machines", []):
+            # print "insert recent", sm_path
 
             # define label string
             root_state_name = gui_helper_state_machine.get_root_state_name_of_sm_file_system_path(sm_path)
@@ -399,7 +398,7 @@ class MenuBarController(ExtendedController):
         config_window_view.get_top_widget().present()
 
     def on_quit_activate(self, widget, data=None, force=False):
-        self.model.store_recent_opened_state_machines()
+        self.model.prepare_recent_opened_state_machines_list_for_storage()
         if force:
             self.model.reset_session_storage()
         if not force and global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
