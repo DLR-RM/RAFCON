@@ -61,6 +61,13 @@ if os.path.exists(DEFAULT_SCRIPT_PATH):
 
 
 def clean_path_from_not_by_existing_state_substituted_elements(states, path):
+    """
+    This function removes all folders in a certain file system folder, that do not belong to the states given in the
+    "states" parameter
+    :param states: the states that should reside in this very folder
+    :param path: the file system path to be checked for valid folders
+    :return:
+    """
     elements_in_folder = os.listdir(path)
     # find all state folder elements in system path
     state_folders_in_file_system = []
@@ -120,6 +127,12 @@ def check_path_for_deprecated_naming(base_path):
 
 
 def clean_path(base_path):
+    """
+    This function cleans a file system path in terms of removing all not allowed characters of each path element.
+    A path element is an element of a path between the path separator of the operating system.
+    :param base_path: the path to be cleaned
+    :return: the clean path
+    """
     path_elements = base_path.split(os.path.sep)
     reduced_path_elements = [clean_path_element(elem, max_length=255) for elem in path_elements]
     if not all(path_elements[i] == elem for i, elem in enumerate(reduced_path_elements)):
@@ -413,7 +426,16 @@ def load_data_file(path_of_file):
     raise ValueError("Data file not found: {0}".format(path_of_file))
 
 
-def limit_text_max_lenght(text, max_length, separator='_'):
+def limit_text_max_length(text, max_length, separator='_'):
+    """
+    Limits the length of a string. The returned string will be the first "max_length"/2 characters of the input string
+    plus a separator plus the last "max_length/2" characters of the input string.
+    :param text: the text to be limited
+    :param max_length: the maximum length of the output string
+    :param separator: the separator between the first "max_length"/2 characters of the input string and
+                      the last "max_length/2" characters of the input string
+    :return: the shortened input string
+    """
     if max_length is not None:
         if isinstance(text, basestring) and len(text) > max_length:
             max_length = int(max_length)
@@ -423,22 +445,36 @@ def limit_text_max_lenght(text, max_length, separator='_'):
 
 
 def clean_path_element(text, max_length=None, separator='_'):
-    """Replace characters that conflict with a free OS choice when in a file system path."""
+    """ Replace characters that conflict with a free OS choice when in a file system path.
+
+    :param text: the string to be cleaned
+    :param max_length: the maximum length of the output string
+    :param separator: the separator used for rafcon.core.storage.storage.limit_text_max_length
+    :return:
+    """
     elements_to_replace = REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION
     for elem, replace_with in elements_to_replace.iteritems():
         text = text.replace(elem, replace_with)
     if max_length is not None:
-        limit_text_max_lenght(text, max_length, separator)
+        limit_text_max_length(text, max_length, separator)
     return text
 
 
 def limit_text_to_be_path_element(text, max_length=None, separator='_'):
+    """ Replace characters that are not in the valid character set of RAFCON.
+
+    :param text: the string to be cleaned
+    :param max_length: the maximum length of the output string
+    :param separator: the separator used for rafcon.core.storage.storage.limit_text_max_length
+    :return:
+    """
+    # TODO: Should there not only be one method i.e. either this one or "clean_path_element"
     elements_to_replace = {' ': '_', '*': '_'}
     for elem, replace_with in elements_to_replace.iteritems():
         text = text.replace(elem, replace_with)
     text = re.sub('[^a-zA-Z0-9-_]', '', text)
     if max_length is not None:
-        limit_text_max_lenght(text, max_length, separator)
+        limit_text_max_length(text, max_length, separator)
     return text
 
 
