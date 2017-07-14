@@ -133,22 +133,6 @@ def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=No
 
     state_machine = storage.load_state_machine_from_path(sm_path)
 
-    # re-construct dirty log -> marked for removal
-    if full_path_dirty_lock is not None:
-        # logger.info("Read dirty lock " + full_path_dirty_lock)
-        with open(full_path_dirty_lock) as f:
-            lines = f.readlines()
-            lines.pop(0)  # ignore backup path -> first line
-            lines.pop(0)  # remove comment line "marked for removal:"
-            if len(lines) > 0:
-                storage._paths_to_remove_before_sm_save[state_machine.state_machine_id] = []
-                for sm_path in lines:
-                    sm_path = sm_path.replace('\n', '')
-                    if os.path.isdir(sm_path):
-                        storage.mark_path_for_removal_for_sm_id(state_machine.state_machine_id, sm_path)
-    else:
-        logger.info("Recover backup of state machine without dirty lock {0}.".format(sm_path))
-
     # move dirty lock file
     move_dirty_lock_file(full_path_dirty_lock, sm_path)
 
@@ -237,7 +221,8 @@ def check_for_crashed_rafcon_instances():
                                 modification_time = time.ctime(os.path.getmtime(os.path.join(MY_RAFCON_TEMP_PATH, folder)))
                                 restorable_sm.append((path, folder, elem, modification_time, full_path))
                             else:
-                                logger.warning("dirty_lock file without consistent state machine path {}!".format(full_path))
+                                logger.warning("dirty_lock file without consistent state machine path '{}'!"
+                                               "".format(full_path))
                                 os.remove(full_path)
 
     # if restorable_sm:
@@ -380,6 +365,7 @@ class AutoBackupModel(ModelMT):
             #                                                  RAFCON_RUNTIME_BACKUP_PATH +
             #                                                  '/dirty_lock_' + str(sm.state_machine_id)))
             self.lock_file = open(RAFCON_RUNTIME_BACKUP_PATH + '/dirty_lock_' + str(sm.state_machine_id), 'a+')
+            self.lock_file.write(self._tmp_storage_path + '\n')
             # TODO move this and the inverse functionality to one location (capsule)
             self.lock_file.close()
             self.last_lock_file_name = self.lock_file.name
