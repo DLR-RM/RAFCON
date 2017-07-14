@@ -73,6 +73,13 @@ def new_state_machine():
 
 
 def open_state_machine(path=None, recent_opened_notification=False):
+    """ Open a state machine from respective file system path
+
+    :param str path: file system path to the state machine
+    :param bool recent_opened_notification: flags that indicates that this call also should update recently open
+    :rtype rafcon.core.state_machine.StateMachine
+    :return: opened state machine
+    """
     if path is None:
         if interface.open_folder_func is None:
             logger.error("No function defined for opening a folder")
@@ -83,6 +90,7 @@ def open_state_machine(path=None, recent_opened_notification=False):
     else:
         load_path = path
 
+    state_machine = None
     try:
         state_machine = storage.load_state_machine_from_path(load_path)
         state_machine_manager.add_state_machine(state_machine)
@@ -91,6 +99,7 @@ def open_state_machine(path=None, recent_opened_notification=False):
             rafcon.gui.singleton.state_machine_manager_model.update_recently_opened_state_machines(sm_m)
     except (AttributeError, ValueError, IOError) as e:
         logger.error('Error while trying to open state machine: {0}'.format(e))
+    return state_machine
 
 
 def save_state_machine(save_as=False, delete_old_state_machine=False, recent_opened_notification=False):
