@@ -23,7 +23,6 @@
 import Queue
 import copy
 import os
-import sys
 import threading
 from __builtin__ import staticmethod
 from weakref import ref
@@ -39,7 +38,6 @@ from rafcon.core.state_elements.data_port import DataPort, InputDataPort, Output
 from rafcon.core.state_elements.outcome import Outcome
 from rafcon.core.state_elements.scope import ScopedData
 from rafcon.core.storage import storage
-from rafcon.core.storage.storage import get_storage_id_for_state
 from rafcon.utils import classproperty
 from rafcon.utils import log
 from rafcon.utils import multi_event
@@ -102,8 +100,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         # detailed execution status of the state
         self._state_execution_status = None
 
-        # before adding a state to a parent state or a sm the get_filesystem_path cannot return the file system path
-        # therefore this variable caches the path until the state gets a parent
+        # before storing a state the file_system_path cannot return the file system path
+        # therefore this variable is None till the state was stored
         self._file_system_path = None
 
         self.thread = None
@@ -525,24 +523,23 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             else:
                 return state_identifier + PATH_SEPARATOR + appendix
 
-    def get_storage_path(self, appendix=None, old_delimiter=False):
+    def get_storage_path(self, appendix=None):
         """ Recursively create the storage path of the state.
 
         The path is generated in bottom up method i.e. from the nested child states to the root state. The method
-        concatenates the concatentation of (State.state_id and State.name) as state identifier for the path.
+        concatenates the concatenation of (State.name and State.state_id) as state identifier for the path.
 
         :param str appendix: the part of the path that was already calculated by previous function calls
-        :param bool old_delimiter: A flag to indicate the deprecated storage id
         :rtype: str
         :return: the full path to the root state
         """
-        state_identifier = get_storage_id_for_state(self, old_delimiter)
+        state_identifier = storage.get_storage_id_for_state(self)
 
         if not self.is_root_state:
             if appendix is None:
-                return self.parent.get_storage_path(state_identifier, old_delimiter)
+                return self.parent.get_storage_path(state_identifier)
             else:
-                return self.parent.get_storage_path(state_identifier + PATH_SEPARATOR + appendix, old_delimiter)
+                return self.parent.get_storage_path(state_identifier + PATH_SEPARATOR + appendix)
         else:
             if appendix is None:
                 return state_identifier
@@ -563,77 +560,35 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         return None
 
-    @lock_state_machine
-    def set_file_system_path(self, file_system_path):
-        """Caches a temporary file system path for the state
+    @property
+    def file_system_path(self):
+        """Provides the path in the file system where the state is stored
 
-        :param file_system_path:
-        :return:
-        """
-        self._file_system_path = file_system_path
-
-    def get_file_system_path(self):
-        """Calculates the path in the filesystem where the state is stored
+        The method returns None if the state was not stored, before,
 
         :rtype: str
-        :return: the path on the filesystem where the state is stored
+        :return: the path on the file system where the state is stored
         """
-        # print "\nget_file_system_path\n"
-        if self.is_root_state_of_library:
-            path = str(self.get_storage_path())
-            # print "State_get_file_system_path 11: ", path, os.path.exists(path)
-            if os.path.exists(path):
-                return path
-            else:
-                path = str(self.get_storage_path(old_delimiter=True))
-                # print "State_get_file_system_path 12: ", path
-                return path
-        elif self.get_library_root_state():
-            lib_state = self.get_library_root_state()
-            lib_root_state_path = lib_state.get_file_system_path()
-            path = os.path.join(lib_root_state_path, str(self.get_storage_path()))
-            # print "State_get_file_system_path 21: ", path
-            if os.path.exists(path):
-                return path
-            else:
-                # print "State_get_file_system_path 22: ", path
-                path = os.path.join(lib_root_state_path, str(self.get_storage_path(old_delimiter=True)))
-                return path
-        elif not self.get_state_machine() or self.get_state_machine().file_system_path is None:
-            if self._file_system_path:
-                # print "State_get_file_system_path 3: "
-                return self._file_system_path
-            elif self.get_state_machine():
-                if self.get_state_machine().supports_saving_state_names:
-                    # print "State_get_file_system_path 41: ",
-                    # os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
-                    path = os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path()))
-                    if os.path.exists(path):
-                        return path
-                    else:
-                        path = os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_storage_path(old_delimiter=True)))
-                        return path
-                else:
-                    # print "State_get_file_system_path 42: "
-                    return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
-            else:
-                # print "State_get_file_system_path 43: "
-                return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
-        else:
-            if self.get_state_machine().supports_saving_state_names:
-                path = os.path.join(self.get_state_machine().file_system_path, str(self.get_storage_path()))
-                # print "State_get_file_system_path 51: ", path
-                if os.path.exists(path):
-                    return path
-                else:
-                    path = os.path.join(self.get_state_machine().file_system_path, str(self.get_storage_path(
-                        old_delimiter=True)))
-                    # print "State_get_file_system_path 52: ", path
-                    return path
-            else:
-                # the default case for ID-formatted state machines when using a GUI
-                # print "State_get_file_system_path 53: "
-                return os.path.join(self.get_state_machine().file_system_path, self.get_path())
+        return self._file_system_path
+
+    @file_system_path.setter
+    @lock_state_machine
+    def file_system_path(self, file_system_path):
+        """Setter for file_system_path attribute of state
+
+        :param str file_system_path:
+        :return:
+        """
+        if not isinstance(file_system_path, basestring):
+            raise TypeError("file_system_path must be of type basestring")
+        self._file_system_path = file_system_path
+
+    def get_temp_file_system_path(self):
+        """Provides a temporary path
+
+        The path is not fully secure because the all state ids are not globally unique.
+        """
+        return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
 
     @lock_state_machine
     @Observable.observed
@@ -945,9 +900,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             if len(name) < 1:
                 raise ValueError("Name must have at least one character")
 
-        if self._name and self._name != name and self.get_state_machine():
-            # remove old path, as the state will be saved und another directory as its names changes
-            storage.mark_path_for_removal_for_sm_id(self.get_state_machine().state_machine_id, self.get_file_system_path())
         self._name = name
 
     @property
@@ -971,7 +923,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         else:
             from rafcon.core.state_machine import StateMachine
             if not isinstance(parent, (State, StateMachine)):
-                raise TypeError("parent must be of type State or StateMachine")
+                raise TypeError("parent must be of type State or StateMachine or None")
 
             self._parent = ref(parent)
 
@@ -1326,9 +1278,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         The method recursively checks state parent states till finding a StateMachine as parent or a library root state.
         If self is a LibraryState the next upper library root state is searched and it is not handed self.state_copy.
-        :return: library root state (Execution or ContainerState) or None if self is not a library root state or
-                 inside of such
-        :rtype: rafcon.core.states.library_state.State
+
+        :return library root state (Execution or ContainerState) or None if self is not a library root state or
+        inside of such
+        :rtype rafcon.core.states.library_state.State:
         """
         from rafcon.core.state_machine import StateMachine
 

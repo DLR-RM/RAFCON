@@ -87,6 +87,7 @@ class LibraryState(State):
         if library_path != new_library_path or library_name != new_library_name:
             self.library_name = new_library_name
             self.library_path = new_library_path
+            # TODO this should trigger the marked_dirty of the state machine to become true
             logger.info("Changing information about location of library")
             logger.info("Old library name '{0}' was located at {1}".format(library_name, library_path))
             logger.info("New library name '{0}' is located at {1}".format(new_library_name, new_library_path))
@@ -153,6 +154,7 @@ class LibraryState(State):
         # overwrite may by default set True flags by False
         state.use_runtime_value_input_data_ports = copy(self.use_runtime_value_input_data_ports)
         state.use_runtime_value_output_data_ports = copy(self.use_runtime_value_output_data_ports)
+        state._file_system_path = self.file_system_path
         return state
 
     def __deepcopy__(self, memo=None, _nil=[]):
@@ -498,18 +500,6 @@ class LibraryState(State):
                 raise TypeError("use_runtime_value_output_data_ports must be of type dict")
             self._use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
 
-    @lock_state_machine
-    @staticmethod
-    def copy_state(source_state):
-        """
-        Copies a state.
-        :param source_state: the state to copy
-        :return: the copy of the source state
-        """
-        state_copy = LibraryState()
-        # TODO: copy fields from source_state into the state_copy
-        return state_copy
-
     @property
     def child_execution(self):
         """Property for the _child_execution field
@@ -519,9 +509,9 @@ class LibraryState(State):
         else:
             return False
 
-    def get_storage_path(self, appendix=None, old_delimiter=False):
+    def get_storage_path(self, appendix=None):
         if appendix is None:
-            return super(LibraryState, self).get_storage_path(appendix, old_delimiter)
+            return super(LibraryState, self).get_storage_path(appendix)
         else:
             return self.lib_os_path + PATH_SEPARATOR + appendix
 

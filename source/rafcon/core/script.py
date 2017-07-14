@@ -60,10 +60,21 @@ class Script(Observable, yaml.YAMLObject):
         self._parent = None
         self._check_path = check_path
 
-        self.script = DEFAULT_SCRIPT
+        self._script = DEFAULT_SCRIPT
         self.filename = filename
-        self.path = path
+        if path:
+            self.load_script_from_path_and_take_over_path(path, with_build_module=True)
         self.parent = parent
+
+    @property
+    def script(self):
+        return self._script
+
+    @script.setter
+    def script(self, value):
+        if not isinstance(value, str):
+            raise ValueError("The script text of  Script class needs to be string it was handed {0}".format(value))
+        self._script = value
 
     def execute(self, state, inputs=None, outputs=None, backward_execution=False):
         """Execute the user 'execute' function specified in the script
@@ -99,8 +110,8 @@ class Script(Observable, yaml.YAMLObject):
         script_text = filesystem.read_file(self.path, self.filename)
 
         if not script_text:
-            raise IOError("Script file could not be opened or was empty: {0}".format(os.path.join(self.path,
-                                                                                                  self.filename)))
+            raise IOError("Script file could not be opened or was empty: {0}"
+                          "".format(os.path.join(self.path, self.filename)))
         self.script = script_text
 
     def build_module(self):
@@ -172,34 +183,34 @@ class Script(Observable, yaml.YAMLObject):
         if self._path is not None or self.parent is None:
             return self._path
         else:
-            return self.parent.get_file_system_path()
+            return self.parent.get_temp_file_system_path() if self.parent.file_system_path is None else self.parent.file_system_path
 
     @path.setter
     def path(self, value):
-        if value is not None:
-            if not isinstance(value, basestring):
-                raise TypeError("The path of a script has to be a string or None to use the default value.")
-
-            if self._check_path:
-                if not os.path.exists(value):
-                    raise RuntimeError("Script path '{}' does not exist".format(value))
-                if not os.path.exists(os.path.join(value, self._filename)):
-                    raise RuntimeError("Script '{}' does not exist".format(os.path.join(value, self._filename)))
-
-                # load and build the module per default else the default scripts will be loaded in self.script
-                old_path = self._path
-                self._path = value
-                try:
-                    self._load_script()
-                    self.build_module()
-                except:
-                    self._path = old_path
-                    raise
-        else:
-            if self.parent is not None:
-                value = self.parent.get_file_system_path()
-
+        if not isinstance(value, basestring):
+            raise TypeError("The path of a script has to be a string or None to use the default value.")
         self._path = value
+
+    def load_script_from_path_and_take_over_path(self, path, with_build_module=True):
+        if not isinstance(path, basestring):
+            raise TypeError("The path of a script has to be a string or None to use the default value.")
+
+        if self._check_path:
+            if not os.path.exists(path):
+                raise RuntimeError("Script path '{}' does not exist".format(path))
+            if not os.path.exists(os.path.join(path, self._filename)):
+                raise RuntimeError("Script '{}' does not exist".format(os.path.join(path, self._filename)))
+
+            # load and build the module per default else the default scripts will be loaded in self.script
+            old_path = self._path
+            self.path = path
+            try:
+                self._load_script()
+                if with_build_module:
+                    self.build_module()
+            except:
+                self._path = old_path
+                raise
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

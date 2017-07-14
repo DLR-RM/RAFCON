@@ -88,9 +88,11 @@ class ExecutionHistoryStorage(object):
 
 class ExecutionHistory(Observable, Iterable, Sized):
     """A class for the history of a state machine execution
-    It stores all history elements in a stack wise fashion.
-    :ivar initial_prev: optional link to a previous element for the first element pushed into this history
-        type :class:`rafcon.core.execution.execution_history.HistoryItem`
+
+        It stores all history elements in a stack wise fashion.
+
+        :ivar initial_prev: optional link to a previous element for the first element pushed into this history of
+                            type :class:`rafcon.core.execution.execution_history.HistoryItem`
     """
 
     def __init__(self, initial_prev=None):

@@ -131,8 +131,18 @@ class LibraryManager(Observable):
         self._load_nested_libraries(library_root_path, self._libraries[library_root_key])
         self._libraries[library_root_key] = OrderedDict(sorted(self._libraries[library_root_key].items()))
 
-    @classmethod
-    def _load_nested_libraries(cls, library_path, target_dict):
+    def check_clean_path_of_library(self, folder_path, folder_name):
+        library_root_path = self._library_root_paths[self._get_library_root_key_for_os_path(folder_path)]
+        full_path = os.path.join(folder_path, folder_name)[len(library_root_path) + 1:]
+        library_path = folder_path[len(library_root_path):]
+        if not storage.clean_path(library_path) == library_path or not storage.clean_path(folder_name) == folder_name:
+            not_allowed_characters = "'" + "', '".join(storage.REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION.keys()) + "'"
+            logger.warning("The library path {1} is deprecated please avoid use of {0}. If you renaming the "
+                           "state machine also adapt related state machine which make use of this library."
+                           "".format(not_allowed_characters, full_path))
+        return folder_path, folder_name
+
+    def _load_nested_libraries(self, library_path, target_dict):
         """Recursively load libraries within path
 
         Adds all libraries specified in a given path and stores them into the provided library dictionary. The library
@@ -142,6 +152,7 @@ class LibraryManager(Observable):
         :param target_dict: the target dictionary to store all loaded libraries to
         """
         for library_name in os.listdir(library_path):
+            library_folder_path, library_name = self.check_clean_path_of_library(library_path, library_name)
             full_library_path = os.path.join(library_path, library_name)
             if os.path.isdir(full_library_path) and library_name[0] != '.':
                 if os.path.exists(os.path.join(full_library_path, storage.STATEMACHINE_FILE)) \
@@ -149,7 +160,7 @@ class LibraryManager(Observable):
                     target_dict[library_name] = full_library_path
                 else:
                     target_dict[library_name] = {}
-                    cls._load_nested_libraries(full_library_path, target_dict[library_name])
+                    self._load_nested_libraries(full_library_path, target_dict[library_name])
                     target_dict[library_name] = OrderedDict(sorted(target_dict[library_name].items()))
 
     @Observable.observed
@@ -246,7 +257,7 @@ class LibraryManager(Observable):
                          "loaded library_root_path. If not, please abort.".format(library_name, library_path)
                 interface.show_notice_func(notice)
                 new_library_os_path = interface.open_folder_func("Select root folder for library name '{0}'"
-                                                                  "".format(original_path_and_name))
+                                                                 "".format(original_path_and_name))
             if new_library_os_path is None:
                 # User clicked cancel => cancel library search
                 # If the library root path is existent (e.g. "generic") and only the specific library state is not (
@@ -257,8 +268,8 @@ class LibraryManager(Observable):
                     self._skipped_library_roots.append(library_path_root)
                 else:
                     self._skipped_states.append(original_path_and_name)
-                raise LibraryNotFoundException("Library '{0}' not found in subfolder {1}".format(library_name,
-                                                                                                 library_path))
+                raise LibraryNotFoundException("Library '{0}' not found in sub-folder {1}".format(library_name,
+                                                                                                  library_path))
 
             if not os.path.exists(new_library_os_path):
                 logger.error('Specified library_os_path does not exist')
@@ -319,11 +330,11 @@ class LibraryManager(Observable):
         """Generate valid library_path and library_name
 
         The method checks if the given os path is in the list of loaded library root paths and use respective 
-        library root key/mounting point to concanate the respective library_path and separate respective library_name.
+        library root key/mounting point to concatenate the respective library_path and separate respective library_name.
 
         :param str path: A library os path a library is situated in.
-        :return library path library name
-        :rtype str, str
+        :return: library path library name
+        :rtype: str, str
         """
         library_path = None
         library_name = None

@@ -10,7 +10,7 @@ Next release
 - Refactoring of "Save state as state machine/library"
 
 Patch releases 0.10.\*
----------------------
+----------------------
 
 0.10.1
 """"""

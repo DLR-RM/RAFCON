@@ -46,3 +46,16 @@ class LibraryManagerModel(ModelMT):
 
         # this class is an observer of its own properties:
         self.register_observer(self)
+
+    def state_machine_was_stored(self, state_machine_m, old_path):
+        """ Updates library manager and notifies the state machines if a mounted library was saved.
+
+        :param state_machine_m:
+        :param old_path:
+        :return:
+        """
+        # check if the state machine path old or new is inside of the library root paths
+
+        # check if the state machine has changed location or has been insert newly
+
+        pass
