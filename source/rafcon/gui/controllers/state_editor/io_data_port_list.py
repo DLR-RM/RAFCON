@@ -63,19 +63,20 @@ class DataPortListController(ListViewController):
 
         view['name_col'].add_attribute(view['name_text'], 'text', self.NAME_STORAGE_ID)
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', self.DATA_TYPE_NAME_STORAGE_ID)
-        if not isinstance(self.model.state, LibraryState):
+        if not isinstance(self.model.state, LibraryState) and self.model.state.get_library_root_state() is None:
             view['name_text'].set_property("editable", True)
             view['data_type_text'].set_property("editable", True)
 
         # in the linkage overview the the default value is not shown
         if isinstance(view, InputPortsListView) or isinstance(view, OutputPortsListView):
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', self.DEFAULT_VALUE_STORAGE_ID)
-            # if not isinstance(self.model.state, LibraryState):
-            view['default_value_text'].set_property("editable", True)
             self._apply_value_on_edited_and_focus_out(view['default_value_text'], self._apply_new_data_port_default_value)
             if isinstance(self.model.state, LibraryState):
                 view['default_value_col'].set_title("Used value")
-            view['default_value_col'].set_cell_data_func(view['default_value_text'], self._default_value_cell_data_func)
+            if self.model.state.get_library_root_state() is None:  # never enabled means it is disabled
+                view['default_value_text'].set_property("editable", True)
+                view['default_value_col'].set_cell_data_func(view['default_value_text'],
+                                                             self._default_value_cell_data_func)
 
         self._apply_value_on_edited_and_focus_out(view['name_text'], self._apply_new_data_port_name)
         self._apply_value_on_edited_and_focus_out(view['data_type_text'], self._apply_new_data_port_type)
@@ -89,8 +90,9 @@ class DataPortListController(ListViewController):
             view['use_runtime_value_col'].pack_start(view['use_runtime_value_toggle'], True)
             view['use_runtime_value_col'].add_attribute(view['use_runtime_value_toggle'], 'active',
                                                         self.USE_RUNTIME_VALUE_STORAGE_ID)
-            view['use_runtime_value_toggle'].set_property("activatable", True)
-            view['use_runtime_value_toggle'].connect("toggled", self.on_use_runtime_value_toggled)
+            if self.model.state.get_library_root_state() is None:
+                view['use_runtime_value_toggle'].set_property("activatable", True)
+                view['use_runtime_value_toggle'].connect("toggled", self.on_use_runtime_value_toggled)
 
         self._reload_data_port_list_store()
 
