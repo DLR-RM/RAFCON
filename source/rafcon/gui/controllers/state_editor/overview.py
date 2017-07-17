@@ -26,14 +26,13 @@ from gtkmvc import Model
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.states.state import StateType
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import format_cell
 from rafcon.gui.models.signals import MetaSignalMsg
-from rafcon.gui.models.abstract_state import AbstractStateModel
+from rafcon.gui.models import AbstractStateModel, LibraryStateModel
 from rafcon.gui.views.state_editor.overview import StateOverviewView
 from rafcon.gui.utils import constants
 from rafcon.utils import log
@@ -111,7 +110,7 @@ class StateOverviewController(ExtendedController, Model):
         view['type_viewport'].show()
 
         # Prepare label for state_name -> Library states cannot be changed
-        if isinstance(self.model.state, LibraryState):
+        if isinstance(self.model, LibraryStateModel):
             l_store.prepend(['LIBRARY'])
             combo.set_sensitive(False)
 
@@ -152,6 +151,9 @@ class StateOverviewController(ExtendedController, Model):
         if self.model.state.get_library_root_state() is not None:
             view['entry_name'].set_editable(False)
             combo.set_sensitive(False)
+            view['is_start_state_checkbutton'].set_sensitive(False)
+            if isinstance(self.model, LibraryStateModel):
+                self.view['show_content_checkbutton'].set_sensitive(False)
 
     def register_adapters(self):
         """Adapters should be registered in this method call
