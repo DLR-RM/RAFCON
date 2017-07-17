@@ -36,15 +36,13 @@ class LibraryStateModel(AbstractStateModel):
     state_copy = None
 
     def __init__(self, state, parent=None, meta=None, load_meta_data=True):
-        """Constructor
-        """
+        assert isinstance(state, LibraryState)
         # TODO maybe find a different way to load the meta data of ports correctly
         # at the moment the models of state_copy get initialized and the meta data taken from there if not found in
         # state itself
         self.state_copy_initialized = False
         self.meta_data_was_scaled = False
         super(LibraryStateModel, self).__init__(state, parent, meta)
-        assert isinstance(state, LibraryState)
         model_class = get_state_model_class_for_state(state.state_copy)
         if model_class is not None:
             # print "load library inner state meta data\n", model_class, state.state_copy.file_system_path

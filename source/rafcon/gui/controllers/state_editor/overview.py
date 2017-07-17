@@ -33,6 +33,8 @@ from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import format_cell
 from rafcon.gui.models.signals import MetaSignalMsg
+from rafcon.gui.models.abstract_state import AbstractStateModel
+from rafcon.gui.views.state_editor.overview import StateOverviewView
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 
@@ -54,6 +56,8 @@ class StateOverviewController(ExtendedController, Model):
     def __init__(self, model, view, with_is_start_state_check_box=False):
         """Constructor
         """
+        assert isinstance(model, AbstractStateModel)
+        assert isinstance(view, StateOverviewView)
         ExtendedController.__init__(self, model, view)
 
         self.state_types_dict = {}
@@ -81,6 +85,8 @@ class StateOverviewController(ExtendedController, Model):
         """Called when the View was registered
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
+
+        :param rafcon.gui.views.state_editor.overview.StateOverviewView view: A state overview view instance
         """
         # prepare State Type Change ComboBox
         self.state_types_dict = self.change_state_type_class_dict(self.model.state)
@@ -140,6 +146,11 @@ class StateOverviewController(ExtendedController, Model):
             view['is_start_state_checkbutton'].connect('toggled', self.on_toggle_is_start_state)
 
         if isinstance(self.model.state, DeciderState):
+            combo.set_sensitive(False)
+
+        # in case the state is inside of a library
+        if self.model.state.get_library_root_state() is not None:
+            view['entry_name'].set_editable(False)
             combo.set_sensitive(False)
 
     def register_adapters(self):

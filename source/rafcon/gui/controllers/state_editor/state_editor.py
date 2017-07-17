@@ -34,7 +34,7 @@ from rafcon.gui.controllers.state_editor.source_editor import SourceEditorContro
 from rafcon.gui.controllers.state_editor.transitions import StateTransitionsEditorController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.label as gui_helper_label
-from rafcon.gui.models import ContainerStateModel
+from rafcon.gui.models import ContainerStateModel, AbstractStateModel, LibraryStateModel
 from rafcon.gui.views.state_editor.state_editor import StateEditorView
 from rafcon.gui.utils import constants
 from rafcon.utils import log
@@ -60,6 +60,7 @@ class StateEditorController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor"""
+        assert isinstance(model, AbstractStateModel)
         assert isinstance(view, StateEditorView)
         ExtendedController.__init__(self, model, view)
 
@@ -90,8 +91,12 @@ class StateEditorController(ExtendedController):
         # Container states do not have a source editor and library states does not show there source code
         # Thus, for those states we do not have to add the source controller and can hide the source code tab
         # logger.info("init state: {0}".format(model))
-        if not isinstance(model, ContainerStateModel) and not isinstance(model.state, LibraryState):
-            self.add_controller('source_ctrl', SourceEditorController(model, view.source_view))
+        lib_with_show_content_and_ES_as_root = isinstance(model, LibraryStateModel) and model.show_content() and \
+            not isinstance(model.state_copy, ContainerStateModel)
+        if not isinstance(model, ContainerStateModel) and not isinstance(model, LibraryStateModel) or \
+                lib_with_show_content_and_ES_as_root:
+            _model = model.state_copy if lib_with_show_content_and_ES_as_root else model
+            self.add_controller('source_ctrl', SourceEditorController(_model, view.source_view))
             view.source_view.show()
             scoped_var_page = view['ports_notebook'].page_num(view['scoped_variable_vbox'])
             view['ports_notebook'].remove_page(scoped_var_page)

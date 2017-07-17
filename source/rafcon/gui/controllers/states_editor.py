@@ -273,7 +273,7 @@ class StatesEditorController(ExtendedController):
             self.add_controller(state_identifier, state_editor_ctrl)
             if state_editor_ctrl.get_controller('source_ctrl'):
                 handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
-                                                                                   state_m)
+                                                                                state_m)
             else:
                 handler_id = None
             source_code_view_is_dirty = False
@@ -457,10 +457,8 @@ class StatesEditorController(ExtendedController):
             # The desired state is not open, yet
             if state_identifier not in self.tabs:
                 # add tab for desired state
-                if state_m.state.get_library_root_state() is None:
-                    page_id = self.add_state_editor(state_m)
-                    self.view.notebook.set_current_page(page_id)
-
+                page_id = self.add_state_editor(state_m)
+                self.view.notebook.set_current_page(page_id)
             # bring tab for desired state into foreground
             else:
                 page = self.tabs[state_identifier]['page']
