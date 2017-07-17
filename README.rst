@@ -1,7 +1,7 @@
-.. image:: http://rmc-chimaere:8010/badge.png?builder=common/rafcon&branch=master
-   :target: http://rmc-chimaere:8010/builders/common%2Frafcon/
-.. image:: http://rmc-chimaere:8010/badge.png?builder=common/rafcon&branch=develop
-   :target: http://rmc-chimaere:8010/builders/common%2Frafcon/
+.. image:: http://buildbot.robotic.dlr.de:8010/badge.png?builder=common/rafcon&branch=master
+   :target: http://buildbot.robotic.dlr.de:8010/builders/common%2Frafcon/
+.. image:: http://buildbot.robotic.dlr.de:8010/badge.png?builder=common/rafcon&branch=develop
+   :target: http://buildbot.robotic.dlr.de:8010/builders/common%2Frafcon/
 
 RAFCON
 ======
