@@ -64,13 +64,18 @@ class StateEditorController(ExtendedController):
         assert isinstance(view, StateEditorView)
         ExtendedController.__init__(self, model, view)
 
+        lib_with_show_content_and_ES_as_root = isinstance(model, LibraryStateModel) and model.show_content() and \
+            not isinstance(model.state_copy, ContainerStateModel)
+        _model = model.state_copy if isinstance(model, LibraryStateModel) else model
+
         self.add_controller('properties_ctrl', StateOverviewController(model, view.properties_view))
 
         self.inputs_ctrl = InputPortListController(model, view.inputs_view)
         self.add_controller('input_data_ports', self.inputs_ctrl)
         self.outputs_ctrl = OutputPortListController(model, view.outputs_view)
         self.add_controller('output_data_ports', self.outputs_ctrl)
-        self.scopes_ctrl = ScopedVariableListController(model, view.scopes_view)
+        # TODO add observation of show content and to toggle
+        self.scopes_ctrl = ScopedVariableListController(_model, view.scopes_view)
         self.add_controller('scoped_variables', self.scopes_ctrl)
         self.add_controller('outcomes', StateOutcomesEditorController(model, view.outcomes_view))
 
@@ -91,11 +96,9 @@ class StateEditorController(ExtendedController):
         # Container states do not have a source editor and library states does not show there source code
         # Thus, for those states we do not have to add the source controller and can hide the source code tab
         # logger.info("init state: {0}".format(model))
-        lib_with_show_content_and_ES_as_root = isinstance(model, LibraryStateModel) and model.show_content() and \
-            not isinstance(model.state_copy, ContainerStateModel)
+
         if not isinstance(model, ContainerStateModel) and not isinstance(model, LibraryStateModel) or \
                 lib_with_show_content_and_ES_as_root:
-            _model = model.state_copy if lib_with_show_content_and_ES_as_root else model
             self.add_controller('source_ctrl', SourceEditorController(_model, view.source_view))
             view.source_view.show()
             scoped_var_page = view['ports_notebook'].page_num(view['scoped_variable_vbox'])
@@ -139,7 +142,7 @@ class StateEditorController(ExtendedController):
         view['remove_output_port_button'].connect('clicked', self.outputs_ctrl.on_remove)
         view['remove_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_remove)
 
-        if isinstance(self.model.state, LibraryState):
+        if isinstance(self.model, LibraryStateModel) or self.model.state.get_library_root_state() is not None:
             view['add_input_port_button'].set_sensitive(False)
             view['remove_input_port_button'].set_sensitive(False)
             view['add_output_port_button'].set_sensitive(False)
@@ -147,12 +150,9 @@ class StateEditorController(ExtendedController):
             view['add_scoped_variable_button'].set_sensitive(False)
             view['remove_scoped_variable_button'].set_sensitive(False)
 
-        state = self.model.state
-        if isinstance(state, LibraryState):
-            state = self.model.state.state_copy
-            view['description_text_view'].set_sensitive(False)
-        if state.description is not None:
-            view['description_text_view'].get_buffer().set_text(state.description)
+        # show scoped variables if show content is enabled -> if disabled the tab stays and indicates a container state
+        if isinstance(self.model, LibraryStateModel) and not self.model.show_content():
+            view.scopes_view.hide()
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -165,6 +165,15 @@ class StateEditorController(ExtendedController):
     def rename(self):
         state_overview_controller = self.get_controller('properties_ctrl')
         state_overview_controller.rename()
+
+    @ExtendedController.observe("meta_signal", signal=True)
+    def show_content_changed(self, model, prop_name, info):
+        meta_signal_message = info['arg']
+        if meta_signal_message.change == 'show_content':
+            if self.model.meta['gui']['show_content']:
+                self.scopes_ctrl.view.show()
+            else:
+                self.scopes_ctrl.view.hide()
 
     @ExtendedController.observe("action_signal", signal=True)
     def state_type_changed(self, model, prop_name, info):
