@@ -80,7 +80,7 @@ class SourceEditorController(EditorController):
         view['open_external_button'].set_tooltip_text("Open source in external editor. " +
                                                       global_gui_config.get_config_value('SHORTCUTS')['open_external_editor'][0])
 
-        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state() is not None:
+        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
             view['pylint_check_button'].set_sensitive(False)
             view.textview.set_editable(False)
             view['apply_button'].set_sensitive(False)

@@ -90,7 +90,7 @@ class StateOutcomesListController(ListViewController):
             view['to_state_combo'].connect("edited", self.on_to_state_edited)
             view['to_outcome_combo'].connect("edited", self.on_to_outcome_edited)
 
-        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state() is not None:
+        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
             view['id_cell'].set_property('editable', False)
             view['name_cell'].set_property('editable', False)
 
@@ -348,7 +348,7 @@ class StateOutcomesEditorController(ExtendedController):
             view['add_button'].connect("clicked", self.oc_list_ctrl.on_add)
             view['remove_button'].connect("clicked", self.oc_list_ctrl.on_remove)
 
-            if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state() is not None:
+            if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
                 view['add_button'].set_sensitive(False)
                 view['remove_button'].set_sensitive(False)
 

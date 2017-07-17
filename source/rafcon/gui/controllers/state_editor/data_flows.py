@@ -62,7 +62,8 @@ class StateDataFlowsListController(LinkageListController):
     from_port_external = None
     CORE_ELEMENT_CLASS = DataFlow
 
-    # TODO siblings ports are not observed
+    # TODO siblings ports are not observed -> check if this is still right
+    # TODO if a library with show content flag True is selected also the internal linkage should be shown and fit
 
     def __init__(self, model, view):
         """Constructor
@@ -113,10 +114,16 @@ class StateDataFlowsListController(LinkageListController):
         view['from_key_col'].set_cell_data_func(view['from_key_combo'], cell_text, self.model)
         view['to_key_col'].set_cell_data_func(view['to_key_combo'], cell_text, self.model)
 
-        view['from_state_combo'].connect("edited", self.on_combo_changed_from_state)
-        view['from_key_combo'].connect("edited", self.on_combo_changed_from_key)
-        view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
-        view['to_key_combo'].connect("edited", self.on_combo_changed_to_key)
+        if self.model.state.get_library_root_state():
+            view['from_state_combo'].set_property("editable", False)
+            view['from_key_combo'].set_property("editable", False)
+            view['to_state_combo'].set_property("editable", False)
+            view['to_key_combo'].set_property("editable", False)
+        else:
+            view['from_state_combo'].connect("edited", self.on_combo_changed_from_state)
+            view['from_key_combo'].connect("edited", self.on_combo_changed_from_key)
+            view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
+            view['to_key_combo'].connect("edited", self.on_combo_changed_to_key)
 
         self.tree_view.connect("grab-focus", self.on_focus)
         self.update()
@@ -810,7 +817,8 @@ class StateDataFlowsEditorController(ExtendedController):
             view['internal_d_checkbutton'].set_sensitive(False)
             view['internal_d_checkbutton'].set_active(False)
 
-        if self.model.parent is not None and isinstance(self.model.parent.state, LibraryState):
+        if self.model.parent is not None and isinstance(self.model.parent.state, LibraryState) or \
+                self.model.state.get_library_root_state():
             view['add_d_button'].set_sensitive(False)
             view['remove_d_button'].set_sensitive(False)
 

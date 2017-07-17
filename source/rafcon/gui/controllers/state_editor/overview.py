@@ -148,7 +148,7 @@ class StateOverviewController(ExtendedController, Model):
             combo.set_sensitive(False)
 
         # in case the state is inside of a library
-        if self.model.state.get_library_root_state() is not None:
+        if self.model.state.get_library_root_state():
             view['entry_name'].set_editable(False)
             combo.set_sensitive(False)
             view['is_start_state_checkbutton'].set_sensitive(False)
