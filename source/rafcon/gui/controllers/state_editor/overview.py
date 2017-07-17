@@ -40,7 +40,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateOverviewController(ExtendedController, Model):
+class StateOverviewController(ExtendedController):
     """Controller handling the view of properties/attributes of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -59,6 +59,7 @@ class StateOverviewController(ExtendedController, Model):
         assert isinstance(view, StateOverviewView)
         ExtendedController.__init__(self, model, view)
 
+        self._external_update = False
         self.state_types_dict = {}
         self.with_is_start_state_check_box = with_is_start_state_check_box
 
@@ -173,16 +174,26 @@ class StateOverviewController(ExtendedController, Model):
             gui_helper_state_machine.selected_state_toggle_is_start_state()
 
     def on_toggle_show_content(self, checkbox):
+        if self._external_update:
+            return
         self.model.meta['gui']['show_content'] = checkbox.get_active()
         msg = MetaSignalMsg(origin='state_overview', change='show_content', affects_children=False)
         self.model.meta_signal.emit(msg)
 
-    @Model.observe('is_start', assign=True)
+    @ExtendedController.observe("meta_signal", signal=True)
+    def show_content_changed(self, model, prop_name, info):
+        meta_signal_message = info['arg']
+        if meta_signal_message.change == 'show_content':
+            self._external_update = True
+            self.view['show_content_checkbutton'].set_active(model.meta['gui']['show_content'])
+            self._external_update = False
+
+    @ExtendedController.observe('is_start', assign=True)
     def notify_is_start(self, model, prop_name, info):
         if self.view is not None and not self.view['is_start_state_checkbutton'].get_active() == self.model.is_start:
             self.view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
 
-    @Model.observe('state', after=True)
+    @ExtendedController.observe('state', after=True)
     def notify_name_change(self, model, prop_name, info):
         if self.view is not None and info['method_name'] == 'name':
             self.view['entry_name'].set_text(self.model.state.name)
