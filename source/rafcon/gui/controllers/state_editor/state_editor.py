@@ -68,13 +68,13 @@ class StateEditorController(ExtendedController):
             not isinstance(model.state_copy, ContainerStateModel)
         _model = model.state_copy if isinstance(model, LibraryStateModel) else model
 
+        # TODO think about to make linkage overview list for scoped variables and respective data linkage tab add and removeable
         self.add_controller('properties_ctrl', StateOverviewController(model, view.properties_view))
 
         self.inputs_ctrl = InputPortListController(model, view.inputs_view)
         self.add_controller('input_data_ports', self.inputs_ctrl)
         self.outputs_ctrl = OutputPortListController(model, view.outputs_view)
         self.add_controller('output_data_ports', self.outputs_ctrl)
-        # TODO add observation of show content and to toggle
         self.scopes_ctrl = ScopedVariableListController(_model, view.scopes_view)
         self.add_controller('scoped_variables', self.scopes_ctrl)
         self.add_controller('outcomes', StateOutcomesEditorController(model, view.outcomes_view))
@@ -97,6 +97,7 @@ class StateEditorController(ExtendedController):
         # Thus, for those states we do not have to add the source controller and can hide the source code tab
         # logger.info("init state: {0}".format(model))
 
+        # TODO think about to make the source editor add and removeable for show content flag (for now hide and show would also be OK)
         if not isinstance(model, ContainerStateModel) and not isinstance(model, LibraryStateModel) or \
                 lib_with_show_content_and_ES_as_root:
             self.add_controller('source_ctrl', SourceEditorController(_model, view.source_view))
@@ -153,6 +154,7 @@ class StateEditorController(ExtendedController):
         # show scoped variables if show content is enabled -> if disabled the tab stays and indicates a container state
         if isinstance(self.model, LibraryStateModel) and not self.model.show_content():
             view.scopes_view.hide()
+            view.linkage_overview.scope_view.hide()
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -172,8 +174,10 @@ class StateEditorController(ExtendedController):
         if meta_signal_message.change == 'show_content':
             if self.model.meta['gui']['show_content']:
                 self.scopes_ctrl.view.show()
+                self.view.linkage_overview.scope_view.show()
             else:
                 self.scopes_ctrl.view.hide()
+                self.view.linkage_overview.scope_view.hide()
 
     @ExtendedController.observe("action_signal", signal=True)
     def state_type_changed(self, model, prop_name, info):
