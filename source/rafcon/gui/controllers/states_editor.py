@@ -271,7 +271,7 @@ class StatesEditorController(ExtendedController):
                     state_editor_view['main_notebook_1'].page_num(state_editor_view.page_dict["Data Linkage"]))
             state_editor_ctrl = StateEditorController(state_m, state_editor_view)
             self.add_controller(state_identifier, state_editor_ctrl)
-            if state_editor_ctrl.get_controller('source_ctrl'):
+            if state_editor_ctrl.get_controller('source_ctrl') and state_m.state.get_library_root_state() is None:
                 handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
                                                                                 state_m)
             else:
