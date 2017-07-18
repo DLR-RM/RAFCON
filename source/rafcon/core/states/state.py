@@ -1306,7 +1306,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         parent_library_root_state = library_root_state
         # initial a library root state has to be found and if there is no further parent root state
         # parent_library_root_state and library_root_state are no more identical
-        while library_root_state and library_root_state is parent_library_root_state:
+        while parent_library_root_state and library_root_state is parent_library_root_state:
             if library_root_state:
                 parent_library_root_state = library_root_state.parent.get_library_root_state()
 
