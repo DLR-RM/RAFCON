@@ -258,11 +258,24 @@ class GraphicalEditorController(ExtendedController):
             self.update_selection_gaphas_major = False
 
     def _update_selection_from_external(self):
-        selected_items = [self.canvas.get_view_for_model(model) for model in self.model.selection]
+
         if self.update_selection_gaphas_major:
             return
         # else:
         #     print "_update_selection_from_external", selected_items
+
+        # filter models that are not drawn
+        selected_models = []
+        for model in self.model.selection:
+            if isinstance(model, AbstractStateModel) and model.state.get_library_root_state():
+                next_library_state_m = self.model.get_state_model_by_path(model.state.get_library_root_state().parent.get_path())
+                if not next_library_state_m.show_content():
+                    logger.info("Skip selection of state '{}' because is not drawn.".format(model.state.name))
+                    continue
+            selected_models.append(model)
+        selected_items = [self.canvas.get_view_for_model(model) for model in selected_models]
+
+        # filter elements that ge selected and deselected and do so
         select_items = filter(lambda item: item not in self.view.editor.selected_items, selected_items)
         deselect_items = filter(lambda item: item not in selected_items, self.view.editor.selected_items)
         for item in deselect_items:
@@ -275,7 +288,7 @@ class GraphicalEditorController(ExtendedController):
             self.update_selection_external_major = True
             self.view.editor.emit('selection-changed', self.view.editor.selected_items)
             self.update_selection_external_major = False
-        # TODO: Jump to the selected state in the view and adjust the zoom
+            # TODO: Jump to the selected state in the view and adjust the zoom
 
     def _meta_data_changed(self, view, model, name, affects_children):
         msg = MetaSignalMsg('graphical_editor_gaphas', name, affects_children)

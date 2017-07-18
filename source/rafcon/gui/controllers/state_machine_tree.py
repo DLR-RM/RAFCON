@@ -305,6 +305,27 @@ class StateMachineTreeController(TreeViewController):
             self.tree_store[state_row_path][self.MODEL_STORAGE_ID] = state_model
             self.tree_store.row_changed(state_row_path, state_row_iter)
 
+    def show_content(self, state_model):
+        """Check state machine tree specific show content flag.
+
+        Is returning true if the upper most library state of a state model has a enabled show content flag or if there
+        is no library root state above this state.
+
+        :param rafcon.gui.models.abstract_state.AbstractStateModel state_model: The state model to check
+        """
+        upper_most_lib_state_m = None
+        if isinstance(state_model, LibraryStateModel):
+            uppermost_library_root_state = state_model.state.get_uppermost_library_root_state()
+            if uppermost_library_root_state is None:
+                upper_most_lib_state_m = state_model
+            else:
+                upper_lib_state = uppermost_library_root_state.parent
+                upper_most_lib_state_m = self._selected_sm_model.get_state_model_by_path(upper_lib_state.get_path())
+        if upper_most_lib_state_m:
+            return upper_most_lib_state_m.show_content()
+        else:
+            return True
+
     def insert_and_update_recursively(self, parent_iter, state_model, with_expand=False):
         """ Insert and/or update the handed state model in parent tree store element iterator
 
@@ -326,7 +347,7 @@ class StateMachineTreeController(TreeViewController):
         # print "insert ", state_model
 
         # if state model is LibraryStateModel with enabled show content state_model becomes the library root state model
-        if isinstance(state_model, LibraryStateModel) and state_model.show_content():
+        if isinstance(state_model, LibraryStateModel) and self.show_content(state_model):
             # print "new state model is", state_model, state_model.state.get_path()
             _state_model = state_model
             state_model = state_model.state_copy
@@ -389,25 +410,17 @@ class StateMachineTreeController(TreeViewController):
             if self._selected_sm_model.state_machine.get_state_by_path(child_state_path, as_check=True):
                 child_model = self._selected_sm_model.get_state_model_by_path(child_state_path)
             child_id = self.tree_store.get_value(child_iter, self.ID_STORAGE_ID)
+
             # check if there are left over rows of old states (switch from HS or CS to S and so on)
-            child_is_lib_with_show_content = isinstance(child_model, LibraryStateModel) and child_model.show_content()
-            child_is_lib_without_show_content = isinstance(child_model, LibraryStateModel) and not child_model.show_content()
-
-            # print "check ", child_id, child_model, not isinstance(state_model, ContainerStateModel), \
-            #     child_id not in state_model.states
-            # print not isinstance(state_model, ContainerStateModel), \
-            #     child_id not in state_model.states and not child_is_lib_with_show_content and \
-            #     child_id == child_model.state.state_copy.state_id, \
-            #     child_is_lib_without_show_content and child_id == child_model.state.state_copy.state_id, \
-            #     isinstance(_state_model, LibraryStateModel) and not _state_model.show_content(), \
-            #     child_model.state.is_root_state_of_library and not child_model.parent.show_content()
-
+            show_content_flag = isinstance(child_model, LibraryStateModel) and self.show_content(child_model)
+            child_is_lib_with_show_content = isinstance(child_model, LibraryStateModel) and show_content_flag
+            child_is_lib_without_show_content = isinstance(child_model, LibraryStateModel) and not show_content_flag
             if not isinstance(state_model, ContainerStateModel) or child_model is None or \
                     child_id not in state_model.states and not child_is_lib_with_show_content and \
                     child_id == child_model.state.state_copy.state_id or \
                     child_is_lib_without_show_content and child_id == child_model.state.state_copy.state_id or \
-                    isinstance(_state_model, LibraryStateModel) and not _state_model.show_content() or \
-                    child_model.state.is_root_state_of_library and not child_model.parent.show_content():
+                    isinstance(_state_model, LibraryStateModel) and not self.show_content(_state_model) or \
+                    child_model.state.is_root_state_of_library and not self.show_content(child_model.parent):
 
                 # print "remove", self.tree_store.get_value(child_iter, self.ID_STORAGE_ID), "of state", state_model.state, state_model.states.keys()
                 self.remove_tree_children(child_iter)
@@ -441,7 +454,7 @@ class StateMachineTreeController(TreeViewController):
                 self.view.collapse_row(paths[0])
             else:
                 if isinstance(state_model, ContainerStateModel) or \
-                        isinstance(state_model, LibraryStateModel) and state_model.show_content():
+                        isinstance(state_model, LibraryStateModel) and self.show_content(state_model):
                     self.view.expand_to_path(paths[0])
 
             return True
