@@ -33,6 +33,7 @@ class MenuBarView(View):
         # -----------------------------------------------
         'new':                  constants.BUTTON_NEW,
         'open':                 constants.BUTTON_OPEN,
+        'open_recent':          constants.BUTTON_OPEN,
         'save':                 constants.BUTTON_SAVE,
         'save_as':              constants.BUTTON_SAVE,
         'save_state_as':        constants.BUTTON_SAVE,
@@ -98,6 +99,8 @@ class MenuBarView(View):
                                     # 'undo': gtk.accelerator_parse('<control>Z'),  # no default accelerator insert
                                     # 'redo': gtk.accelerator_parse('<control>Y'),  # no default accelerator insert
                                     }
+        self.sub_menu_open_recently = gtk.Menu()
+        self['open_recent'].set_submenu(self.sub_menu_open_recently)
 
         for menu_item_name in self.buttons.iterkeys():
             # set icon

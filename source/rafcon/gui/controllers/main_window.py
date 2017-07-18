@@ -70,7 +70,6 @@ class MainWindowController(ExtendedController):
         ExtendedController.__init__(self, state_machine_manager_model, view)
 
         gui_singletons.main_window_controller = self
-        self.state_machine_manager_model = state_machine_manager_model
         self.observe_model(gui_singletons.gui_config_model)
 
         self.shortcut_manager = None
@@ -96,8 +95,7 @@ class MainWindowController(ExtendedController):
         # library tree
         ######################################################
         self.library_manager_model = gui_singletons.library_manager_model
-        library_controller = LibraryTreeController(self.library_manager_model, view.library_tree,
-                                                   state_machine_manager_model)
+        library_controller = LibraryTreeController(self.library_manager_model, view.library_tree)
         self.add_controller('library_controller', library_controller)
 
         ######################################################

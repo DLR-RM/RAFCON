@@ -34,12 +34,8 @@ import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.config_window import ConfigWindowController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers import state as gui_helper_state
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.models.abstract_state import AbstractStateModel
-from rafcon.gui.models.container_state import ContainerStateModel
-from rafcon.gui.models.scoped_variable import ScopedVariableModel
-from rafcon.gui.models.state import StateModel
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
@@ -70,6 +66,7 @@ class MenuBarController(ExtendedController):
         self.main_window_view = view
         self.observe_model(gui_singletons.core_config_model)
         self.observe_model(gui_singletons.gui_config_model)
+        self.observe_model(gui_singletons.runtime_config_model)
 
         self._destroyed = False
         self.handler_ids = {}
@@ -150,6 +147,7 @@ class MenuBarController(ExtendedController):
         self.full_screen_window.connect('key_press_event', self.on_key_press_event)
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
         self.registered_view = True
+        self.update_recently_opened_state_machines()
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
@@ -166,6 +164,35 @@ class MenuBarController(ExtendedController):
             library_manager.refresh_libraries()
         elif config_key == "SHORTCUTS":
             self.refresh_shortcuts()
+        elif config_key == "recently_opened_state_machines":
+            self.update_recently_opened_state_machines()
+
+    def update_recently_opened_state_machines(self):
+        """Update the sub menu Open Recent in File menu"""
+        if not self.registered_view:
+            return
+        for item in self.view.sub_menu_open_recently.get_children():
+            self.view.sub_menu_open_recently.remove(item)
+        self.view.sub_menu_open_recently.show_all()
+        for sm_path in global_runtime_config.get_config_value("recently_opened_state_machines", []):
+            # print "insert recent", sm_path
+
+            # define label string
+            root_state_name = gui_helper_state_machine.get_root_state_name_of_sm_file_system_path(sm_path)
+            label_string = "'{0}' -> {1}".format(root_state_name, sm_path) if root_state_name is not None else sm_path
+
+            # define icon of menu item
+            is_in_libs = library_manager.is_os_path_within_library_root_paths(sm_path)
+            button_image = constants.SIGN_LIB if is_in_libs else constants.BUTTON_LEFTA
+
+            # prepare state machine open call_back function
+            sm_open_function = partial(self.on_open_activate, path=sm_path)
+
+            # create and insert new menu item
+            menu_item = gui_helper_label.create_image_menu_item(label_string, button_image, sm_open_function)
+            self.view.sub_menu_open_recently.append(menu_item)
+
+        self.view.sub_menu_open_recently.show_all()
 
     def on_toggle_full_screen_mode(self, *args):
         if self.view["full_screen"].get_active():
@@ -328,14 +355,15 @@ class MenuBarController(ExtendedController):
 
     @staticmethod
     def on_open_activate(widget=None, data=None, path=None):
-        gui_helper_state_machine.open_state_machine(path=path)
+        gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
 
     def on_save_activate(self, widget, data=None, save_as=False, delete_old_state_machine=False):
         return gui_helper_state_machine.save_state_machine(save_as=save_as,
-                                                           delete_old_state_machine=delete_old_state_machine)
+                                                           delete_old_state_machine=delete_old_state_machine,
+                                                           recent_opened_notification=True)
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
-        return gui_helper_state_machine.save_state_machine_as(path=path)
+        return gui_helper_state_machine.save_state_machine_as(path=path, recent_opened_notification=True)
 
     @staticmethod
     def on_refresh_libraries_activate():
@@ -370,6 +398,13 @@ class MenuBarController(ExtendedController):
         config_window_view.get_top_widget().present()
 
     def on_quit_activate(self, widget, data=None, force=False):
+        self.model.prepare_recent_opened_state_machines_list_for_storage()
+        if force:
+            self.model.reset_session_storage()
+        if not force and global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
+            self.model.store_session()
+            self.on_delete_check_sm_running()
+            force = True
         avoid_shutdown = self.on_delete_event(widget, None, force=force)
         if not avoid_shutdown:
             self.on_destroy(None)

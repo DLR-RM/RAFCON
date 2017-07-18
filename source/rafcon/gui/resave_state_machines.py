@@ -22,17 +22,15 @@ from rafcon.utils import log
 
 from rafcon.core.config import global_config
 import rafcon.core.singleton as core_singletons
-import rafcon.core.storage.storage as storage
 
 from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 from rafcon.core.start import setup_environment
-
-import testing_utils
 
 
 def setup_logger():
@@ -82,7 +80,7 @@ def trigger_gui_signals(*args):
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     try:
         sm_manager_model.selected_state_machine_id = state_machine.state_machine_id
-        menubar_ctrl.on_save_as_activate(None, None, setup_config['target_path'][0])
+        gui_helper_state_machine.save_state_machine_as(path=setup_config['target_path'][0])
         while state_machine.marked_dirty:
             time.sleep(0.1)
     except:
@@ -127,8 +125,7 @@ def convert(config_path, source_path, target_path=None):
             exit(-1)
         for path in setup_config['source_path']:
             try:
-                state_machine = storage.load_state_machine_from_path(path)
-                core_singletons.state_machine_manager.add_state_machine(state_machine)
+                state_machine = gui_helper_state_machine.open_state_machine(path)
             except Exception as e:
                 logger.error("Could not load state machine {0}: {1}".format(path, e))
     else:

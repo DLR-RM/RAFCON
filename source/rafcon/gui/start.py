@@ -176,11 +176,11 @@ def setup_gui():
 
 
 def open_state_machines(paths):
+    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     first_sm = None
     for path in paths:
         try:
-            sm = storage.load_state_machine_from_path(path)
-            core_singletons.state_machine_manager.add_state_machine(sm)
+            sm = gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
             if first_sm is None:
                 first_sm = sm
         except Exception as e:
@@ -278,18 +278,25 @@ def main():
 
     post_setup_plugins(user_input)
 
+    state_machine = None
     if user_input.state_machine_paths:
         state_machine = open_state_machines(user_input.state_machine_paths)
 
     if user_input.new:
         create_new_state_machine()
 
+    # TODO find out why this works and rearrange it -> most proper because of the pending gtk events
+    # initiate stored session # TODO think about a controller for this
+    if not user_input.new and not user_input.state_machine_paths \
+            and rafcon.gui.singleton.global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
+        main_window_controller.model.restore_session_from_storage()
+
     log_ready_output()
 
     if global_config.get_config_value("PROFILER_RUN", False):
         profiler.start("global")
 
-    if user_input.start_state_machine_flag:
+    if state_machine and user_input.start_state_machine_flag:
         start_state_machine(state_machine, user_input.start_state_path, user_input.quit_flag)
 
     splash_screen.destroy()

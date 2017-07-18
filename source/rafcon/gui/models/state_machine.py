@@ -93,7 +93,7 @@ class StateMachineModel(ModelMT, Hashable):
 
         self.selection = Selection(self.sm_selection_changed_signal)
 
-        self.storage_lock = threading.Lock()
+        self.storage_lock = threading.Lock()  # TODO check if this lock can be substituted by the state machine lock
 
         if global_gui_config.get_config_value('HISTORY_ENABLED'):
             from rafcon.gui.models.modification_history import ModificationsHistoryModel
@@ -343,7 +343,6 @@ class StateMachineModel(ModelMT, Hashable):
         :param str path: Optional path to the meta data file. If not given, the path will be derived from the state
             machine's path on the filesystem
         """
-
         meta_data_path = path if path is not None else self.state_machine.file_system_path
 
         if meta_data_path:

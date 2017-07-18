@@ -30,8 +30,8 @@ logger = log.get_logger(__name__)
 
 class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
 
-    def __init__(self, model=None, view=None, state_machine_manager_model=None, dialog_widget=None):
-        super(StateSubstituteChooseLibraryDialogTreeController, self).__init__(model, view, state_machine_manager_model)
+    def __init__(self, model, view, dialog_widget=None):
+        super(StateSubstituteChooseLibraryDialogTreeController, self).__init__(model, view)
         self.dialog_widget = dialog_widget
         self.keep_name = global_gui_config.get_config_value('SUBSTITUTE_STATE_KEEPS_STATE_NAME')
 

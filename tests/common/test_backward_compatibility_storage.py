@@ -18,6 +18,7 @@ logger = log.get_logger(__name__)
 
 def run_state_machines(state_machines_path):
     from rafcon.gui.singleton import main_window_controller
+    import rafcon.gui.helpers.state_machine as gui_helper_statemachine
     gvm = rafcon.core.singleton.global_variable_manager
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     execution_engine = singletons.state_machine_execution_engine
@@ -32,7 +33,7 @@ def run_state_machines(state_machines_path):
             raise RuntimeError("The execution engine is not stopped")
 
         print "Loading state machine from path: {}".format(state_machine_path)
-        call_gui_callback(menubar_ctrl.on_open_activate, None, None, state_machine_path)
+        call_gui_callback(gui_helper_statemachine.open_state_machine, state_machine_path)
 
         testing_utils.remove_all_gvm_variables()
 

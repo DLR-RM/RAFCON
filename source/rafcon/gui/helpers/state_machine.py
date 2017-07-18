@@ -72,25 +72,37 @@ def new_state_machine():
     glib.idle_add(grab_focus)
 
 
-def open_state_machine(path=None):
+def open_state_machine(path=None, recent_opened_notification=False):
+    """ Open a state machine from respective file system path
+
+    :param str path: file system path to the state machine
+    :param bool recent_opened_notification: flags that indicates that this call also should update recently open
+    :rtype rafcon.core.state_machine.StateMachine
+    :return: opened state machine
+    """
     if path is None:
-            if interface.open_folder_func is None:
-                logger.error("No function defined for opening a folder")
-                return
-            load_path = interface.open_folder_func("Please choose the folder of the state machine")
-            if load_path is None:
-                return
+        if interface.open_folder_func is None:
+            logger.error("No function defined for opening a folder")
+            return
+        load_path = interface.open_folder_func("Please choose the folder of the state machine")
+        if load_path is None:
+            return
     else:
         load_path = path
 
+    state_machine = None
     try:
         state_machine = storage.load_state_machine_from_path(load_path)
         state_machine_manager.add_state_machine(state_machine)
+        if recent_opened_notification:
+            sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
+            rafcon.gui.singleton.state_machine_manager_model.update_recently_opened_state_machines(sm_m)
     except (AttributeError, ValueError, IOError) as e:
         logger.error('Error while trying to open state machine: {0}'.format(e))
+    return state_machine
 
 
-def save_state_machine(save_as=False, delete_old_state_machine=False):
+def save_state_machine(save_as=False, delete_old_state_machine=False, recent_opened_notification=False):
 
     state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
     states_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('states_editor_ctrl')
@@ -101,6 +113,8 @@ def save_state_machine(save_as=False, delete_old_state_machine=False):
         return False
     old_file_system_path = state_machine_m.state_machine.file_system_path
 
+    previous_path = state_machine_m.state_machine.file_system_path
+    previous_marked_dirty = state_machine_m.state_machine.marked_dirty
     all_tabs = states_editor_ctrl.tabs.values()
     all_tabs.extend(states_editor_ctrl.closed_tabs.values())
     dirty_source_editor_ctrls = [tab_dict['controller'].get_controller('source_ctrl') for tab_dict in all_tabs if
@@ -142,14 +156,16 @@ def save_state_machine(save_as=False, delete_old_state_machine=False):
     state_machine_m = state_machine_manager_model.get_selected_state_machine_model()
     storage.save_state_machine_to_path(state_machine_m.state_machine, state_machine_m.state_machine.file_system_path,
                                        delete_old_state_machine=delete_old_state_machine)
-
+    if recent_opened_notification and \
+            (not previous_path == save_path or previous_path == save_path and previous_marked_dirty):
+        rafcon.gui.singleton.state_machine_manager_model.update_recently_opened_state_machines(state_machine_m)
     state_machine_m.store_meta_data()
     logger.debug("Saved state machine and its meta data.")
     library_manager_model.state_machine_was_stored(state_machine_m, old_file_system_path)
     return True
 
 
-def save_state_machine_as(path=None):
+def save_state_machine_as(path=None, recent_opened_notification=False):
 
     state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
     selected_state_machine_model = state_machine_manager_model.get_selected_state_machine_model()
@@ -171,7 +187,8 @@ def save_state_machine_as(path=None):
 
     old_file_system_path = selected_state_machine_model.state_machine.file_system_path
     selected_state_machine_model.state_machine.file_system_path = path
-    result = save_state_machine(save_as=True, delete_old_state_machine=True)
+    result = save_state_machine(save_as=True, delete_old_state_machine=True,
+                                recent_opened_notification=recent_opened_notification)
     library_manager_model.state_machine_was_stored(selected_state_machine_model, old_file_system_path)
     return result
 
@@ -197,8 +214,7 @@ def save_selected_state_as():
         def open_as_state_machine_saved_state_as_separate_state_machine():
             logger.debug("Open state machine.")
             try:
-                state_machine = storage.load_state_machine_from_path(path)
-                state_machine_manager.add_state_machine(state_machine)
+                open_state_machine(path=path, recent_opened_notification=True)
             except (ValueError, IOError) as e:
                 logger.error('Error while trying to open state machine: {0}'.format(e))
 
@@ -731,3 +747,22 @@ def ungroup_selected_state():
             not selected_states[0].state.is_root_state:
         logger.debug("do ungroup")
         gui_helper_state.ungroup_state(selected_states[0])
+
+
+def get_root_state_name_of_sm_file_system_path(file_system_path):
+    import os
+    if os.path.isdir(file_system_path) and os.path.exists(os.path.join(file_system_path, storage.STATEMACHINE_FILE)):
+        try:
+            sm_dict = storage.load_data_file(os.path.join(file_system_path, storage.STATEMACHINE_FILE))
+        except ValueError:
+            return
+        if 'root_state_id' not in sm_dict and 'root_state_storage_id' not in sm_dict:
+            return
+        root_state_folder = sm_dict['root_state_id'] if 'root_state_id' in sm_dict else sm_dict['root_state_storage_id']
+        root_state_file = os.path.join(file_system_path, root_state_folder, storage.FILE_NAME_CORE_DATA)
+        root_state = storage.load_data_file(root_state_file)
+        if isinstance(root_state, tuple):
+            root_state = root_state[0]
+        if isinstance(root_state, State):
+            return root_state.name
+        return

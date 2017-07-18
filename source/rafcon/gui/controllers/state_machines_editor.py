@@ -118,7 +118,7 @@ class StateMachinesEditorController(ExtendedController):
     :param rafcon.gui.views.state_machines_editor.StateMachinesEditorView view: The GTK view showing the tabs of state
         machines.
     """
-
+    # TODO the state machine manger controller needs to to adapt the labels according file_system_path changes (observe)
     def __init__(self, state_machine_manager_model, view):
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         assert isinstance(view, StateMachinesEditorView)
