@@ -500,18 +500,6 @@ class LibraryState(State):
                 raise TypeError("use_runtime_value_output_data_ports must be of type dict")
             self._use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
 
-    @lock_state_machine
-    @staticmethod
-    def copy_state(source_state):
-        """
-        Copies a state.
-        :param source_state: the state to copy
-        :return: the copy of the source state
-        """
-        state_copy = LibraryState()
-        # TODO: copy fields from source_state into the state_copy
-        return state_copy
-
     @property
     def child_execution(self):
         """Property for the _child_execution field
