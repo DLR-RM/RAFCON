@@ -459,7 +459,7 @@ def clean_path_element(text, max_length=None, separator='_'):
     for elem, replace_with in elements_to_replace.iteritems():
         text = text.replace(elem, replace_with)
     if max_length is not None:
-        limit_text_max_length(text, max_length, separator)
+        text = limit_text_max_length(text, max_length, separator)
     return text
 
 
@@ -477,7 +477,7 @@ def limit_text_to_be_path_element(text, max_length=None, separator='_'):
         text = text.replace(elem, replace_with)
     text = re.sub('[^a-zA-Z0-9-_]', '', text)
     if max_length is not None:
-        limit_text_max_length(text, max_length, separator)
+        text = limit_text_max_length(text, max_length, separator)
     return text
 
 
