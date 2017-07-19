@@ -22,7 +22,6 @@
 from gtkmvc import Observable
 
 from rafcon.core.state_machine import StateMachine
-from rafcon.core.storage import storage
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -114,13 +113,16 @@ class StateMachineManager(Observable):
 
         :param state_machine_id: the id of the state machine to be removed
         """
+        import rafcon.core.singleton as core_singletons
         if state_machine_id in self._state_machines:
             logger.debug("Remove state machine with id {0}".format(state_machine_id))
             del self._state_machines[state_machine_id]
         else:
             logger.error("There is no state_machine with state_machine_id: %s" % state_machine_id)
 
-        if state_machine_id is self.active_state_machine_id:
+        # a not stopped or finished state machine will stay the active state machine TODO test this and rethink it
+        if state_machine_id is self.active_state_machine_id and \
+                core_singletons.state_machine_execution_engine.finished_or_stopped():
             if len(self._state_machines) > 0:
                 self.active_state_machine_id = self._state_machines[self._state_machines.keys()[0]].state_machine_id
             else:
@@ -162,7 +164,12 @@ class StateMachineManager(Observable):
     @active_state_machine_id.setter
     @Observable.observed
     def active_state_machine_id(self, state_machine_id):
+        import rafcon.core.singleton as core_singletons
         if state_machine_id is not None:
             if state_machine_id not in self.state_machines.keys():
                 raise AttributeError("State machine not in list of all state machines")
+        if not core_singletons.state_machine_execution_engine.finished_or_stopped() and \
+                state_machine_id != self._active_state_machine_id:
+            raise AttributeError("Active state machine can not be changed because state machine execution is active.")
+
         self._active_state_machine_id = state_machine_id
