@@ -50,6 +50,10 @@ class ExecutionHistoryTreeController(ExtendedController):
         tree.
     :param rafcon.core.state_machine_manager.StateMachineManager state_machine_manager:
     """
+    LABEL_NAME_STORAGE_ID = 0
+    HISTORY_ITEM_STORAGE_ID = 1
+    TOOL_TIP_STORAGE_ID = 2
+    DOUBLE_CLICK_TOOL_TIP = "double click element to focus state machine and select state"
 
     def __init__(self, model=None, view=None, state_machine_manager=None):
 
@@ -59,10 +63,11 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.state_machine_manager = state_machine_manager
 
         ExtendedController.__init__(self, model, view)
-        self.history_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT)
+        self.history_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
         # a TreeView
         self.history_tree = view['history_tree']
         self.history_tree.set_model(self.history_tree_store)
+        view['history_tree'].set_tooltip_column(self.TOOL_TIP_STORAGE_ID)
 
         self._start_idx = 0
 
@@ -114,9 +119,18 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.history_tree.collapse_row(histroy_item_path)
                     else:
                         self.history_tree.expand_to_path(histroy_item_path)
-
+                sm = model[row][self.HISTORY_ITEM_STORAGE_ID].state_reference.get_state_machine()
+                if sm:
+                    if sm.state_machine_id != self.model.selected_state_machine_id:
+                        self.model.selected_state_machine_id = sm.state_machine_id
+                else:
+                    logger.info("No state machine could be found for selected item's state reference and "
+                                "therefore no selection is performed.")
+                    return
                 active_sm_m = self.model.get_selected_state_machine_model()
-                ref_state_m = active_sm_m.get_state_model_by_path(model[row][1].state_reference.get_path())
+                assert active_sm_m.state_machine is sm
+                state_path = model[row][self.HISTORY_ITEM_STORAGE_ID].state_reference.get_path()
+                ref_state_m = active_sm_m.get_state_model_by_path(state_path)
                 if ref_state_m and active_sm_m:
                     active_sm_m.selection.set(ref_state_m)
 
@@ -234,16 +248,16 @@ class ExecutionHistoryTreeController(ExtendedController):
                             None,
                             None,
                             (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
-                             first_history_item))
+                             first_history_item, self.DOUBLE_CLICK_TOOL_TIP))
                         self.insert_execution_history(tree_item, execution_history[1:], is_root=True)
                     else:
-                        pass # there was only the Start item in the history
+                        pass  # there was only the Start item in the history
                 else:
                     tree_item = self.history_tree_store.insert_after(
                         None,
                         None,
                         (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
-                         first_history_item))
+                         first_history_item, self.DOUBLE_CLICK_TOOL_TIP))
                     self.insert_execution_history(tree_item, execution_history, is_root=True)
 
     def insert_history_item(self, parent, history_item, description, dummy=False):
@@ -257,7 +271,8 @@ class ExecutionHistoryTreeController(ExtendedController):
         :rtype: gtk.TreeItem
         """
         tree_item = self.history_tree_store.insert_before(
-            parent, None, (history_item.state_reference.name + " - " + description, None if dummy else history_item))
+            parent, None, (history_item.state_reference.name + " - " + description, None if dummy else history_item,
+                           None if dummy else self.DOUBLE_CLICK_TOOL_TIP))
         return tree_item
 
     def insert_execution_history(self, parent, execution_history, is_root=False):
