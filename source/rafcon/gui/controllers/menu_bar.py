@@ -147,7 +147,7 @@ class MenuBarController(ExtendedController):
         self.full_screen_window.connect('key_press_event', self.on_key_press_event)
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
         self.registered_view = True
-        self.update_recently_opened_state_machines()
+        self._update_recently_opened_state_machines()
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
@@ -165,25 +165,24 @@ class MenuBarController(ExtendedController):
         elif config_key == "SHORTCUTS":
             self.refresh_shortcuts()
         elif config_key == "recently_opened_state_machines":
-            self.update_recently_opened_state_machines()
+            self._update_recently_opened_state_machines()
 
-    def update_recently_opened_state_machines(self):
+    def _update_recently_opened_state_machines(self):
         """Update the sub menu Open Recent in File menu"""
         if not self.registered_view:
             return
         for item in self.view.sub_menu_open_recently.get_children():
             self.view.sub_menu_open_recently.remove(item)
-        self.view.sub_menu_open_recently.show_all()
         for sm_path in global_runtime_config.get_config_value("recently_opened_state_machines", []):
             # print "insert recent", sm_path
 
             # define label string
             root_state_name = gui_helper_state_machine.get_root_state_name_of_sm_file_system_path(sm_path)
-            label_string = "'{0}' -> {1}".format(root_state_name, sm_path) if root_state_name is not None else sm_path
+            label_string = "'{0}' in {1}".format(root_state_name, sm_path) if root_state_name is not None else sm_path
 
             # define icon of menu item
             is_in_libs = library_manager.is_os_path_within_library_root_paths(sm_path)
-            button_image = constants.SIGN_LIB if is_in_libs else constants.BUTTON_LEFTA
+            button_image = constants.SIGN_LIB if is_in_libs else constants.BUTTON_OPEN
 
             # prepare state machine open call_back function
             sm_open_function = partial(self.on_open_activate, path=sm_path)
