@@ -32,6 +32,7 @@ from rafcon.core.states.state import State, StateType
 from rafcon.core.storage import storage
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
+from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateModel, LibraryStateModel, TransitionModel, \
     DataFlowModel, DataPortModel, ScopedVariableModel, OutcomeModel, StateMachineModel
@@ -96,7 +97,7 @@ def open_state_machine(path=None, recent_opened_notification=False):
         state_machine_manager.add_state_machine(state_machine)
         if recent_opened_notification:
             sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
-            rafcon.gui.singleton.state_machine_manager_model.update_recently_opened_state_machines(sm_m)
+            global_runtime_config.update_recently_opened_state_machines_with(sm_m)
     except (AttributeError, ValueError, IOError) as e:
         logger.error('Error while trying to open state machine: {0}'.format(e))
     return state_machine
@@ -158,7 +159,7 @@ def save_state_machine(save_as=False, delete_old_state_machine=False, recent_ope
                                        delete_old_state_machine=delete_old_state_machine)
     if recent_opened_notification and \
             (not previous_path == save_path or previous_path == save_path and previous_marked_dirty):
-        rafcon.gui.singleton.state_machine_manager_model.update_recently_opened_state_machines(state_machine_m)
+        global_runtime_config.update_recently_opened_state_machines_with(state_machine_m)
     state_machine_m.store_meta_data()
     logger.debug("Saved state machine and its meta data.")
     library_manager_model.state_machine_was_stored(state_machine_m, old_file_system_path)

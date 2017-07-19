@@ -27,6 +27,7 @@ from functools import partial
 
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.config import global_gui_config
+from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.library_manager import LibraryManagerModel
 from rafcon.gui.helpers.label import create_image_menu_item, append_sub_menu_to_parent_menu
@@ -291,7 +292,7 @@ class LibraryTreeController(ExtendedController):
         state_machine = storage.load_state_machine_from_path(physical_library_path)
 
         smm_m.state_machine_manager.add_state_machine(state_machine)
-        smm_m.update_recently_opened_state_machines(smm_m.state_machines[state_machine.state_machine_id])
+        global_runtime_config.update_recently_opened_state_machines_with(smm_m.state_machines[state_machine.state_machine_id])
         return state_machine
 
     def add_button_clicked(self, widget):

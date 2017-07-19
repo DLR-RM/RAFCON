@@ -289,7 +289,7 @@ def main():
     # initiate stored session # TODO think about a controller for this
     if not user_input.new and not user_input.state_machine_paths \
             and rafcon.gui.singleton.global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
-        main_window_controller.model.restore_session_from_storage()
+        global_runtime_config.restore_session_from_storage()
 
     log_ready_output()
 

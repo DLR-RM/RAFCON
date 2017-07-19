@@ -397,11 +397,11 @@ class MenuBarController(ExtendedController):
         config_window_view.get_top_widget().present()
 
     def on_quit_activate(self, widget, data=None, force=False):
-        self.model.prepare_recent_opened_state_machines_list_for_storage()
+        global_runtime_config.prepare_recent_opened_state_machines_list_for_storage()
         if force:
-            self.model.reset_session_storage()
+            global_runtime_config.reset_session_storage()
         if not force and global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
-            self.model.store_session()
+            global_runtime_config.store_session()
             self.on_delete_check_sm_running()
             force = True
         avoid_shutdown = self.on_delete_event(widget, None, force=force)
