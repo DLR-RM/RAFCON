@@ -128,9 +128,23 @@ def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_stat
     # print "parent size", parent_size, parent_margin
     max_cols = (parent_state_width - 2*parent_margin) // child_spacing
     (row, col) = divmod(num_child_state, max_cols)
-    child_rel_pos_x = parent_margin + col * child_spacing + child_spacing - child_width
-    child_rel_pos_y = child_spacing * (1.5 * row + 1)
-    # print "default rel_pos and size", (child_rel_pos_x, child_rel_pos_y), (new_state_side_size, new_state_side_size)
+
+    max_rows = (parent_state_height - 2*parent_margin - 0.5*child_spacing) // (1.5*child_spacing)
+    (overlapping, row) = divmod(row, max_rows)
+
+    overlapping_step = 0.5*parent_margin
+    max_overlaps_x = (parent_state_width - 2*parent_margin - child_width -
+                      (parent_margin + (max_cols - 1) * child_spacing + child_spacing - child_width)) // overlapping_step
+    max_overlaps_y = (parent_state_height - 2*parent_margin - child_height -
+                      child_spacing * (1.5 * (max_rows - 1) + 1)) // overlapping_step
+    # handle case of less space TODO check again not perfect, maybe that can be done more simple
+    max_overlaps_x = 0 if max_overlaps_x < 0 else max_overlaps_x
+    max_overlaps_y = 0 if max_overlaps_y < 0 else max_overlaps_y
+    max_overlaps = min(max_overlaps_x, max_overlaps_y) + 1
+    overlapping = divmod(overlapping, max_overlaps)[1]
+
+    child_rel_pos_x = parent_margin + col * child_spacing + child_spacing - child_width + overlapping*overlapping_step
+    child_rel_pos_y = child_spacing * (1.5 * row + 1.) + overlapping*overlapping_step
     return (child_rel_pos_x, child_rel_pos_y), (new_state_side_size, new_state_side_size)
 
 
