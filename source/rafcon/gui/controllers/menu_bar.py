@@ -398,7 +398,7 @@ class MenuBarController(ExtendedController):
         config_window_view.get_top_widget().present()
 
     def on_quit_activate(self, widget, data=None, force=False):
-        global_runtime_config.prepare_recent_opened_state_machines_list_for_storage()
+        global_runtime_config.prepare_recently_opened_state_machines_list_for_storage()
         if force:
             global_runtime_config.reset_session_tabs()
         if not force and global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):

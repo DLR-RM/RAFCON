@@ -86,15 +86,13 @@ class RuntimeConfig(ObservableConfig):
             self.set_config_value('recently_opened_state_machines', recently_opened_state_machines)
 
     def extend_recently_opened_by_current_open_state_machines(self):
-        """ Update list with all in the state machine manager opened state machines
-        """
+        """ Update list with all in the state machine manager opened state machines """
         from rafcon.gui.singleton import state_machine_manager_model as state_machine_manager_m
         for sm_m in state_machine_manager_m.state_machines.itervalues():
             self.update_recently_opened_state_machines_with(sm_m)
 
-    def prepare_recent_opened_state_machines_list_for_storage(self):
-        """ Reduce number of paths in the recent opened state machines to limit from gui config
-        """
+    def prepare_recently_opened_state_machines_list_for_storage(self):
+        """ Reduce number of paths in the recent opened state machines to limit from gui config """
         from rafcon.gui.singleton import global_gui_config
         self.clean_recently_opended_state_machines()
         num = global_gui_config.get_config_value('NUMBER_OF_RECENT_OPENED_STATE_MACHINES_STORED')
