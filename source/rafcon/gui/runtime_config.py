@@ -36,6 +36,7 @@ class RuntimeConfig(ObservableConfig):
         if config_file is None:
             config_file = CONFIG_FILE
         super(RuntimeConfig, self).load(config_file, path)
+        self.clean_recently_opended_state_machines()
 
     def store_widget_properties(self, widget, title):
         """Sets configuration values for widgets
@@ -95,10 +96,16 @@ class RuntimeConfig(ObservableConfig):
         """ Reduce number of paths in the recent opened state machines to limit from gui config
         """
         from rafcon.gui.singleton import global_gui_config
+        self.clean_recently_opended_state_machines()
         num = global_gui_config.get_config_value('NUMBER_OF_RECENT_OPENED_STATE_MACHINES_STORED')
         state_machine_paths = self.get_config_value('recently_opened_state_machines', [])
-        filesystem.clean_file_system_paths_from_not_existing_paths(state_machine_paths)
         self.set_config_value('recently_opened_state_machines', state_machine_paths[:num])
+
+    def clean_recently_opended_state_machines(self):
+        """Remove state machines who's file system path does not exist"""
+        state_machine_paths = self.get_config_value('recently_opened_state_machines', [])
+        filesystem.clean_file_system_paths_from_not_existing_paths(state_machine_paths)
+        self.set_config_value('recently_opened_state_machines', state_machine_paths)
 
     def reset_session_tabs(self):
         self.set_config_value('open_tabs', [])
