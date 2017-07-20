@@ -291,16 +291,13 @@ class LibraryTreeController(ExtendedController):
             from rafcon.gui import interface
             from rafcon.gui.singleton import global_config, global_runtime_config
 
-            # TODO write another method and do not misuse create folder -> after interface is OK
-            last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
-            _path = interface.create_folder("Please choose the folder to be mounted and insert your mounting key.",
-                                            "insert your mounting key here")
-            global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', last_path)
+            _path = interface.save_folder("Please choose the folder to be mounted and insert your mounting key.",
+                                          "insert your mounting key here")
 
             if _path is None:
                 return
             path_elements = _path.split(os.path.sep)
-            library_root_key = path_elements[-1]  # mounting key
+            library_root_key = path_elements[-1]  # the file/folder name is the mounting key
             library_root_path = os.path.sep.join(path_elements[:-1])
 
             logger.info("Add new library root '{0}: {1}' to config.".format(library_root_key, library_root_path))
