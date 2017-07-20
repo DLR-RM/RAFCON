@@ -15,6 +15,7 @@ def store_session():
     """
     from rafcon.gui.singleton import state_machine_manager_model, global_runtime_config
     from rafcon.gui.models.auto_backup import AutoBackupModel
+    from rafcon.gui.singleton import main_window_controller
     # check if there are dirty state machines -> use backup file structure maybe it is already stored
     for sm_m in state_machine_manager_model.state_machines.itervalues():
         if hasattr(sm_m, 'auto_backup'):
@@ -23,9 +24,18 @@ def store_session():
         else:
             # generate a backup
             sm_m.auto_backup = AutoBackupModel(sm_m)
-    # store final state machine meta data to backup session in the next run
-    list_of_tab_meta = [sm_m.auto_backup.meta for sm_m in state_machine_manager_model.state_machines.itervalues()]
+
+    # collect order of tab state machine ids from state machines editor
+    state_machines_editor_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
+    number_of_pages = state_machines_editor_ctrl.view['notebook'].get_n_pages()
+    ordered_sm_ids = []
+    for page_number in range(number_of_pages):
+        page = state_machines_editor_ctrl.view['notebook'].get_nth_page(page_number)
+        ordered_sm_ids.append(state_machines_editor_ctrl.get_state_machine_id_for_page(page))
+    # store final state machine backup meta data to backup session for the next run
+    list_of_tab_meta = [state_machine_manager_model.state_machines[sm_id].auto_backup.meta for sm_id in ordered_sm_ids]
     global_runtime_config.set_config_value('open_tabs', list_of_tab_meta)
+    # TODO backup selection
 
 
 def restore_session_from_runtime_config():
@@ -94,3 +104,4 @@ def restore_session_from_runtime_config():
             state_machine_manager_model.state_machine_manager.add_state_machine(state_machine)
 
     global_runtime_config.extend_recently_opened_by_current_open_state_machines()
+    # TODO restore backup-ed selection
