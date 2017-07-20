@@ -400,8 +400,8 @@ class AutoBackupModel(ModelMT):
 
     def update_last_sm_origin_meta_data(self):
         """Update the auto backup meta data with information of the state machine origin"""
-        # TODO finally maybe remove this when all restore features are integrated into one restore-structure
-        # data also used e.g. to restore tabs
+        # TODO finally maybe remove this when all backup features are integrated into one backup-structure
+        # data also used e.g. to backup tabs
         self.meta['last_saved']['time'] = self.state_machine_model.state_machine.last_update
         self.meta['last_saved']['file_system_path'] = self.state_machine_model.state_machine.file_system_path
 

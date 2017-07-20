@@ -36,11 +36,11 @@ from rafcon.gui.runtime_config import global_runtime_config
 import rafcon.gui.models.auto_backup
 from rafcon.gui.utils.splash_screen import SplashScreen
 from rafcon.gui.helpers import installation
+import rafcon.gui.backup.session as backup_session
 
 # state machine
 from rafcon.core.start import parse_state_machine_path, setup_environment, reactor_required, \
     setup_configuration, post_setup_plugins, register_signal_handlers
-from rafcon.core.storage import storage
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.hierarchy_state import HierarchyState
 import rafcon.core.singleton as core_singletons
@@ -289,7 +289,7 @@ def main():
     # initiate stored session # TODO think about a controller for this
     if not user_input.new and not user_input.state_machine_paths \
             and rafcon.gui.singleton.global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
-        global_runtime_config.restore_session_from_storage()
+        backup_session.restore_session_from_runtime_config()
 
     log_ready_output()
 

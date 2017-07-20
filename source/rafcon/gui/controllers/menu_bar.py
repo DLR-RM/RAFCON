@@ -42,6 +42,7 @@ from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.config_window import ConfigWindowView
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.views.utils.about_dialog import AboutDialogView
+import rafcon.gui.backup.session as backup_session
 from rafcon.utils import plugins
 from rafcon.utils import log, log_helpers
 
@@ -399,9 +400,9 @@ class MenuBarController(ExtendedController):
     def on_quit_activate(self, widget, data=None, force=False):
         global_runtime_config.prepare_recent_opened_state_machines_list_for_storage()
         if force:
-            global_runtime_config.reset_session_storage()
+            global_runtime_config.reset_session_tabs()
         if not force and global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
-            global_runtime_config.store_session()
+            backup_session.store_session()
             self.on_delete_check_sm_running()
             force = True
         avoid_shutdown = self.on_delete_event(widget, None, force=force)
