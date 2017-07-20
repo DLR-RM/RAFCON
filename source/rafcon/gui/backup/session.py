@@ -49,8 +49,15 @@ def store_session():
     list_of_tab_meta = [state_machine_manager_model.state_machines[sm_id].auto_backup.meta for sm_id in ordered_sm_ids]
     global_runtime_config.set_config_value('open_tabs', list_of_tab_meta)
     # store state-machines-editor- and selected-state-machine-selection
-    global_runtime_config.set_config_value('selection', {'state_machine_page_number': selected_page_number ,
+    global_runtime_config.set_config_value('selection', {'state_machine_page_number': selected_page_number,
                                                          'selection_of_selected_sm': selection_of_selected_sm})
+
+
+def reset_session():
+    """Remove all information from the current session """
+    from rafcon.gui.singleton import global_runtime_config
+    global_runtime_config.set_config_value('open_tabs', [])
+    global_runtime_config.set_config_value('selection', {})
 
 
 def restore_session_from_runtime_config():

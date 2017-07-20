@@ -105,9 +105,6 @@ class RuntimeConfig(ObservableConfig):
         filesystem.clean_file_system_paths_from_not_existing_paths(state_machine_paths)
         self.set_config_value('recently_opened_state_machines', state_machine_paths)
 
-    def reset_session_tabs(self):
-        self.set_config_value('open_tabs', [])
-
 
 # This variable holds the global configuration parameters for the runtime parameters
 global_runtime_config = RuntimeConfig()

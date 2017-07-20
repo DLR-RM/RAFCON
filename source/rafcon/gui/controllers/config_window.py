@@ -432,8 +432,9 @@ class ConfigWindowController(ExtendedController):
         refresh_required |= self.gui_config_model.apply_preliminary_config()
 
         if not self.gui_config_model.config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
-            logger.info("Removing all open tabs from session restore")
-            global_runtime_config.reset_session_tabs()
+            import rafcon.gui.backup.session as backup_session
+            logger.info("Removing current session")
+            backup_session.reset_session()
         if refresh_required:
             from rafcon.gui.singleton import main_window_controller
             main_window_controller.get_controller('menu_bar_controller').on_refresh_all_activate(None, None)
