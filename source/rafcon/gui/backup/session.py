@@ -76,7 +76,7 @@ def restore_session_from_runtime_config():
     # check if session storage exists
     open_tabs = global_runtime_config.get_config_value('open_tabs', None)
     if open_tabs is None:
-        logger.info("No session recovery from runtime config file")
+        logger.info("No session found for recovery")
         return
 
     # load and recover state machines like they were opened before
@@ -105,14 +105,14 @@ def restore_session_from_runtime_config():
         # check in case that the backup folder is valid or use last saved path
         if from_backup_path is not None and not os.path.isdir(from_backup_path):
             logger.warning("The backup of tab {0} from backup path {1} was not possible. "
-                           "The last saved path will be used what maybe include lose of changes."
+                           "The last saved path will be used for recovery, which could result is loss of changes."
                            "".format(idx, from_backup_path))
             from_backup_path = None
 
         # open state machine
         if from_backup_path is not None:
             # open state machine, recover mark dirty flags, cleans dirty lock files
-            logger.info("Recover from backup {0}".format(from_backup_path))
+            logger.info("Restoring from backup {0}".format(from_backup_path))
             recover_state_machine_from_backup(from_backup_path)
         else:
             if 'last_saved' not in backup_meta_dict or backup_meta_dict['last_saved']['file_system_path'] is None:
