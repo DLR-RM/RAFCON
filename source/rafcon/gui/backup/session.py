@@ -15,6 +15,7 @@ def store_session():
     """
     from rafcon.gui.singleton import state_machine_manager_model, global_runtime_config
     from rafcon.gui.models.auto_backup import AutoBackupModel
+    from rafcon.gui.models import AbstractStateModel
     from rafcon.gui.singleton import main_window_controller
     # check if there are dirty state machines -> use backup file structure maybe it is already stored
     for sm_m in state_machine_manager_model.state_machines.itervalues():
@@ -25,17 +26,31 @@ def store_session():
             # generate a backup
             sm_m.auto_backup = AutoBackupModel(sm_m)
 
-    # collect order of tab state machine ids from state machines editor
+    # collect order of tab state machine ids from state machines editor and find selected state machine page number
     state_machines_editor_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
     number_of_pages = state_machines_editor_ctrl.view['notebook'].get_n_pages()
+    selected_page_number = None
     ordered_sm_ids = []
     for page_number in range(number_of_pages):
         page = state_machines_editor_ctrl.view['notebook'].get_nth_page(page_number)
         ordered_sm_ids.append(state_machines_editor_ctrl.get_state_machine_id_for_page(page))
-    # store final state machine backup meta data to backup session for the next run
+        if ordered_sm_ids[-1] == state_machine_manager_model.selected_state_machine_id:
+            selected_page_number = page_number
+
+    # backup state machine selection
+    selection_of_selected_sm = []
+    if selected_page_number:
+        for model in state_machine_manager_model.get_selected_state_machine_model().selection.get_all():
+            if isinstance(model, AbstractStateModel):
+                # TODO extend to full range of selection -> see core_identifier action-module
+                selection_of_selected_sm.append(model.state.get_path())
+
+    # store final state machine backup meta data to backup session tabs for the next run
     list_of_tab_meta = [state_machine_manager_model.state_machines[sm_id].auto_backup.meta for sm_id in ordered_sm_ids]
     global_runtime_config.set_config_value('open_tabs', list_of_tab_meta)
-    # TODO backup selection
+    # store state-machines-editor- and selected-state-machine-selection
+    global_runtime_config.set_config_value('selection', {'state_machine_page_number': selected_page_number ,
+                                                         'selection_of_selected_sm': selection_of_selected_sm})
 
 
 def restore_session_from_runtime_config():
@@ -48,8 +63,9 @@ def restore_session_from_runtime_config():
     # TODO add a dirty lock for a crashed rafcon instance also into backup session feature
     # TODO in case a dialog is needed to give the user control
     # TODO combine this and auto-backup in one structure/controller/observer
-    from rafcon.gui.singleton import state_machine_manager_model, global_runtime_config
+    from rafcon.gui.singleton import state_machine_manager_model, global_runtime_config, global_gui_config
     from rafcon.gui.models.auto_backup import recover_state_machine_from_backup
+    from rafcon.gui.singleton import main_window_controller
     # check if session storage exists
     open_tabs = global_runtime_config.get_config_value('open_tabs', None)
     if open_tabs is None:
@@ -104,4 +120,30 @@ def restore_session_from_runtime_config():
             state_machine_manager_model.state_machine_manager.add_state_machine(state_machine)
 
     global_runtime_config.extend_recently_opened_by_current_open_state_machines()
-    # TODO restore backup-ed selection
+
+    # restore backup-ed selection
+    session_selection = global_runtime_config.get_config_value('selection', None)
+    if session_selection and session_selection['state_machine_page_number']:
+        selected_state_machine_page_number = session_selection['state_machine_page_number']
+        if selected_state_machine_page_number is None:
+            return
+        state_machines_editor_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
+        if not state_machines_editor_ctrl.view['notebook'].get_n_pages() >= selected_state_machine_page_number:
+            logger.warning("Page id {0} does not exist so session restore can not re-create selection."
+                           "".format(selected_state_machine_page_number))
+            return
+        notebook = state_machines_editor_ctrl.view['notebook']
+        page = state_machines_editor_ctrl.on_switch_page(notebook, None, selected_state_machine_page_number)
+        selected_sm_id = state_machine_manager_model.selected_state_machine_id
+        if not selected_sm_id == state_machines_editor_ctrl.get_state_machine_id_for_page(page):
+            logger.warning("Selection was not set correctly so session restore can not re-create selection.")
+            return
+        selected_sm_m = state_machine_manager_model.get_selected_state_machine_model()
+        selected_model_set = []
+        if global_gui_config.get_config_value('GAPHAS_EDITOR'):
+            import gtk
+            while gtk.events_pending():
+                gtk.main_iteration(False)
+        for core_element_identifier in session_selection['selection_of_selected_sm']:
+            selected_model_set.append(selected_sm_m.get_state_model_by_path(core_element_identifier))
+        selected_sm_m.selection.set(selected_model_set)
