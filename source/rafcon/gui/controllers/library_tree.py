@@ -268,11 +268,7 @@ class LibraryTreeController(ExtendedController):
         try:
             self.open_library_as_state_machine()
         except (AttributeError, ValueError) as e:
-            if isinstance(e, AttributeError) and "The state-machine is already open" == str(e):
-                logger.info("Could not open library: {0}".format(e))
-                self.select_open_state_machine_of_selected_library_element()
-            else:
-                logger.error("Could not open library: {0}".format(e))
+            logger.error("Could not open library: {0}".format(e))
 
     def open_run_button_clicked(self, widget):
         from rafcon.core.singleton import state_machine_execution_engine
@@ -280,16 +276,13 @@ class LibraryTreeController(ExtendedController):
         state_machine_execution_engine.start(state_machine.state_machine_id)
 
     def open_library_as_state_machine(self):
-        from rafcon.core.storage import storage
-        smm_m = self.state_machine_manager_model
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         (model, row) = self.view.get_selection().get_selected()
         physical_library_path = model[row][self.ITEM_STORAGE_ID]
         assert isinstance(physical_library_path, str)
 
         logger.debug("Opening library as state-machine from path '{0}'".format(physical_library_path))
-        state_machine = storage.load_state_machine_from_path(physical_library_path)
-
-        smm_m.state_machine_manager.add_state_machine(state_machine)
+        state_machine = gui_helper_state_machine.open_state_machine(physical_library_path)
         return state_machine
 
     def add_button_clicked(self, widget):

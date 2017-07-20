@@ -83,11 +83,19 @@ def open_state_machine(path=None):
     else:
         load_path = path
 
+    if state_machine_manager.is_state_machine_open(load_path):
+        logger.info("State machine already open. Select state machine instance from path {0}.".format(load_path))
+        sm = state_machine_manager.get_open_state_machine_of_file_system_path(load_path)
+        gui_helper_state.gui_singletons.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+        return state_machine_manager.get_open_state_machine_of_file_system_path(load_path)
+
+    state_machine = None
     try:
         state_machine = storage.load_state_machine_from_path(load_path)
         state_machine_manager.add_state_machine(state_machine)
     except (AttributeError, ValueError, IOError) as e:
         logger.error('Error while trying to open state machine: {0}'.format(e))
+    return state_machine
 
 
 def save_state_machine(save_as=False, delete_old_state_machine=False):
