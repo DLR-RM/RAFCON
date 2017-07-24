@@ -330,9 +330,8 @@ class MenuBarController(ExtendedController):
     def on_open_activate(widget=None, data=None, path=None):
         gui_helper_state_machine.open_state_machine(path=path)
 
-    def on_save_activate(self, widget, data=None, save_as=False, delete_old_state_machine=False):
-        return gui_helper_state_machine.save_state_machine(save_as=save_as,
-                                                           delete_old_state_machine=delete_old_state_machine)
+    def on_save_activate(self, widget, data=None, delete_old_state_machine=False):
+        return gui_helper_state_machine.save_state_machine(delete_old_state_machine=delete_old_state_machine)
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
         return gui_helper_state_machine.save_state_machine_as(path=path)

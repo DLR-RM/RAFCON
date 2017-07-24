@@ -143,14 +143,12 @@ def clean_path(base_path):
     return base_path
 
 
-def save_state_machine_to_path(state_machine, base_path, delete_old_state_machine=False, save_as=False,
-                               temporary_storage=False):
+def save_state_machine_to_path(state_machine, base_path, delete_old_state_machine=False, temporary_storage=False):
     """Saves a state machine recursively to the file system
 
     :param rafcon.core.state_machine.StateMachine state_machine: the state_machine to be saved
     :param str base_path: base_path to which all further relative paths refers to
     :param bool delete_old_state_machine: Whether to delete any state machine existing at the given path
-    :param bool save_as: Whether to create a copy of the state machine
     :param bool temporary_storage: Whether to use a temporary storage for the state machine
     """
     _base_path, _, _, _ = check_path_for_deprecated_naming(base_path)

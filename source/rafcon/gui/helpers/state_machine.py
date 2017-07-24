@@ -98,7 +98,20 @@ def open_state_machine(path=None):
     return state_machine
 
 
-def save_state_machine(save_as=False, delete_old_state_machine=False):
+def save_state_machine(delete_old_state_machine=False):
+    """ Save selected state machine
+
+     The function checks if states of the state machine has not stored script data abd triggers dialog windows to
+     take user input how to continue (ignoring or storing this script changes).
+     If the state machine file_system_path is None function save_state_machine_as is used to collect respective path and
+     to store the state machine.
+     The delete flag will remove all data in existing state machine folder (if plugins or feature use non-standard
+     RAFCON files this data will be removed)
+
+    :param bool delete_old_state_machine: Flag to delete existing state machine folder before storing current version
+    :return: True if the storing was successful, False if the storing process was canceled or stopped by condition fail
+    :rtype bool:
+    """
 
     state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
     states_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('states_editor_ctrl')
@@ -158,12 +171,21 @@ def save_state_machine(save_as=False, delete_old_state_machine=False):
 
 
 def save_state_machine_as(path=None):
+    """ Store selected state machine to path
+
+     If there is no handed path the interface dialog "create folder" is used to collect one. The state machine finally
+     is stored by the save_state_machine function.
+
+    :param str path: Path of state machine folder where selected state machine should be stored
+    :return: True if successfully stored, False if the storing process was canceled or stopped by condition fail
+    :rtype bool:
+    """
 
     state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
     selected_state_machine_model = state_machine_manager_model.get_selected_state_machine_model()
     if selected_state_machine_model is None:
         logger.warning("Can not 'save state machine as' because no state machine is selected.")
-        return
+        return False
 
     if path is None:
         if interface.create_folder_func is None:
@@ -179,12 +201,19 @@ def save_state_machine_as(path=None):
 
     old_file_system_path = selected_state_machine_model.state_machine.file_system_path
     selected_state_machine_model.state_machine.file_system_path = path
-    result = save_state_machine(save_as=True, delete_old_state_machine=True)
+    result = save_state_machine(delete_old_state_machine=True)
     library_manager_model.state_machine_was_stored(selected_state_machine_model, old_file_system_path)
     return result
 
 
 def save_selected_state_as():
+    """Save selected state as separate state machine
+
+    :return True if successfully stored, False if the storing process was canceled or stopped by condition fail
+    :rtype bool:
+    :raises exceptions.ValueError: If dialog response ids are out of bounds
+    """
+
     state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
     selected_states = state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
     state_machine_id = state_machine_manager_model.get_selected_state_machine_model().state_machine.state_machine_id
@@ -196,7 +225,7 @@ def save_selected_state_as():
                                             "state is saved in. The default folder name is the name of state.",
                                             selected_states[0].state.name)
         if path:
-            storage.save_state_machine_to_path(sm_m.state_machine, base_path=path, save_as=True)
+            storage.save_state_machine_to_path(sm_m.state_machine, base_path=path)
             sm_m.store_meta_data()
         else:
             logger.warning("No valid path specified")
