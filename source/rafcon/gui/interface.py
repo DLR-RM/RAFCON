@@ -157,7 +157,8 @@ def save_folder(query, default_name=None):
 
     :param str query: Prompt asking the user for a specific path and a name in the entry widget
     :param str default_name: Default name of mounting point/library root key
-    :return: Path created by the user `\`name` if the path is not valid or dialog canceled None
+    :return: Path handed by the user or `last_path`\`default_name` if no path was specified and None if directory
+      does not exist (parent of name)
     :rtype: str
     """
     from os.path import expanduser, dirname, join, exists, isdir
@@ -201,6 +202,10 @@ def save_folder(query, default_name=None):
     if not exists(dirname(path)):
         return None
     return path
+
+# overwrite the save_folder_func of the interface: thus the user input is now retrieved from a dialog box and not
+# from raw input any more
+core_interface.save_folder_func = save_folder
 
 
 def show_notice(query):
