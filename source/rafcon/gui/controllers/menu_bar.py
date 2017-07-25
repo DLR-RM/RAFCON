@@ -169,14 +169,24 @@ class MenuBarController(ExtendedController):
             self._update_recently_opened_state_machines()
 
     def _update_recently_opened_state_machines(self):
-        """Update the sub menu Open Recent in File menu"""
+        """Update the sub menu Open Recent in File menu
+
+        Method clean's first all menu items of the sub menu 'recent open', then insert the user menu item to clean
+        recent opened state machine paths and finally insert menu items for all elements in recent opened state machines
+        list.
+        """
         if not self.registered_view:
             return
+
         for item in self.view.sub_menu_open_recently.get_children():
             self.view.sub_menu_open_recently.remove(item)
-        for sm_path in global_runtime_config.get_config_value("recently_opened_state_machines", []):
-            # print "insert recent", sm_path
 
+        menu_item = gui_helper_label.create_image_menu_item("cleanup onto feasible paths", constants.ICON_ERASE,
+                                                            global_runtime_config.clean_recently_opened_state_machines)
+        self.view.sub_menu_open_recently.append(menu_item)
+        self.view.sub_menu_open_recently.append(gtk.SeparatorMenuItem())
+
+        for sm_path in global_runtime_config.get_config_value("recently_opened_state_machines", []):
             # define label string
             root_state_name = gui_helper_state_machine.get_root_state_name_of_sm_file_system_path(sm_path)
             label_string = "'{0}' in {1}".format(root_state_name, sm_path) if root_state_name is not None else sm_path

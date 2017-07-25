@@ -73,7 +73,7 @@ class RuntimeConfig(ObservableConfig):
         """ Update recently opened list with file system path of handed state machine model
 
         The inserts handed state machine file system path into the recent opened state machines or moves it to be the
-        first element in the list. Call of this method also does a cleanup from not existing paths.
+        first element in the list.
 
         :param rafcon.gui.models.state_machine.StateMachineModel state_machine_m: State machine model to check
         :return:
@@ -87,7 +87,6 @@ class RuntimeConfig(ObservableConfig):
                 del recently_opened_state_machines[recently_opened_state_machines.index(sm.file_system_path)]
             recently_opened_state_machines.insert(0, sm.file_system_path)
             self.set_config_value('recently_opened_state_machines', recently_opened_state_machines)
-        self.clean_recently_opened_state_machines()
 
     def extend_recently_opened_by_current_open_state_machines(self):
         """ Update list with all in the state machine manager opened state machines """
@@ -98,7 +97,6 @@ class RuntimeConfig(ObservableConfig):
     def prepare_recently_opened_state_machines_list_for_storage(self):
         """ Reduce number of paths in the recent opened state machines to limit from gui config """
         from rafcon.gui.singleton import global_gui_config
-        self.clean_recently_opened_state_machines()
         num = global_gui_config.get_config_value('NUMBER_OF_RECENT_OPENED_STATE_MACHINES_STORED')
         state_machine_paths = self.get_config_value('recently_opened_state_machines', [])
         self.set_config_value('recently_opened_state_machines', state_machine_paths[:num])

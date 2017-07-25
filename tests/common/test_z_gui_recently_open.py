@@ -1,5 +1,6 @@
 import gtk
 import threading
+import shutil
 from os.path import join
 
 # gui elements
@@ -72,7 +73,9 @@ def check_order_and_consistency_of_menu(menubar_ctrl):
     assert isinstance(menubar_ctrl, MenuBarController)
     recently_opened = rafcon.gui.singleton.global_runtime_config.get_config_value('recently_opened_state_machines')
     for index, elem in enumerate(menubar_ctrl.view.sub_menu_open_recently):
-        assert recently_opened[index] in elem.get_label()
+        if index in [0, 1]:
+            continue
+        assert recently_opened[index - 2] in elem.get_label()
 
 
 @log.log_exceptions(None, gtk_quit=True)
@@ -93,6 +96,8 @@ def trigger_gui_signals(*args):
     - TESTED tool-bar: Save state machine as with existing state machine (check in list and in menu)
     - THOUGHT right-click menu: Save state as (check in list and in menu)
     - TESTED auto backup: recover state machine from backup functionality (check in list and in menu) - no update
+    - TESTED menu bar: open state machine by recent opened sub-menu
+    - TESTED menu bar: try to open state machine that is not there by recent opened sub-menu without fatal failure
     - THOUGHT menu-bar: refresh
     - THOUGHT tool-bar: refresh
     - THOUGHT tool-bar: refresh selected
@@ -156,24 +161,33 @@ def trigger_gui_signals(*args):
     sm_manager_model.selected_state_machine_id = first_sm_id
     sm_manager_model.get_selected_state_machine_model().selection.set(sm_manager_model.get_selected_state_machine_model().root_state)
     call_gui_callback(menubar_ctrl.on_add_state_activate, None, None)
-    import time
-    time.sleep(0.1)
+    # import time
+    # time.sleep(0.1)
     call_gui_callback(menubar_ctrl.on_save_activate, None, None)
     assert sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path == recently_opened_state_machines_paths[0]
     assert library_os_path == recently_opened_state_machines_paths[1]
     check_order_and_consistency_of_menu(menubar_ctrl)
 
-    import shutil
-    shutil.rmtree(sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path)
+    # open state machine by recent opened sub-menu in menu bar
+    global_runtime_config.update_recently_opened_state_machines_with(sm_manager_model.state_machines[first_sm_id])
+    first_sm_path = sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path
+    assert first_sm_path in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
+    call_gui_callback(sm_manager_model.state_machine_manager.remove_state_machine, first_sm_id)
+    call_gui_callback(menubar_ctrl.view.sub_menu_open_recently.get_children()[2].activate)
+    first_sm_id = sm_manager_model.selected_state_machine_id
+    assert sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path == first_sm_path
+    check_order_and_consistency_of_menu(menubar_ctrl)
 
     # clean check after every update and re-save of library (both paths are in)
+    shutil.rmtree(sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path)
     sm_manager_model.selected_state_machine_id = lib_sm_m.state_machine.state_machine_id
     call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
     assert lib_sm_m.state_machine.file_system_path == recently_opened_state_machines_paths[0]
     print recently_opened_state_machines_paths, library_os_path, sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path
+    assert sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path == recently_opened_state_machines_paths[1]
+    call_gui_callback(global_runtime_config.clean_recently_opened_state_machines)
     assert not sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path == recently_opened_state_machines_paths[1]
     assert library_os_path == recently_opened_state_machines_paths[1]
-
     check_order_and_consistency_of_menu(menubar_ctrl)
 
     ####################
@@ -186,6 +200,21 @@ def trigger_gui_signals(*args):
     lib_state = LibraryState(join("generic", "dialog"), "Dialog [3 options]", "0.1", "Dialog [3 options]")
     call_gui_callback(gui_helper_state_machine.insert_state_into_selected_state, lib_state, True)
     assert recently_opened_state_machines_paths == global_runtime_config.get_config_value('recently_opened_state_machines')
+
+    # try to open state machine that is not there -> no fatal failure
+    print "OPEN FAILURE CASE"
+    global_runtime_config.update_recently_opened_state_machines_with(lib_sm_m)
+    lib_sm_path = lib_sm_m.state_machine.file_system_path
+    shutil.rmtree(lib_sm_m.state_machine.file_system_path)
+    call_gui_callback(sm_manager_model.state_machine_manager.remove_state_machine, lib_sm_m.state_machine.state_machine_id)
+    call_gui_callback(menubar_ctrl.view.sub_menu_open_recently.get_children()[2].activate)
+    # was not open
+    selected_sm_id = sm_manager_model.selected_state_machine_id
+    assert not sm_manager_model.state_machines[selected_sm_id].state_machine.file_system_path == lib_sm_path
+    # is still in and after clean removed
+    assert lib_sm_path in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
+    call_gui_callback(global_runtime_config.clean_recently_opened_state_machines)
+    assert lib_sm_path not in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
 
     # TODO maybe finally move this into the auto-backup or restore test module
     print "AUTO BACKUP TEST"
@@ -233,7 +262,7 @@ def test_gui(caplog):
     logger.debug("after gtk main")
     thread.join()
 
-    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 
 if __name__ == '__main__':
