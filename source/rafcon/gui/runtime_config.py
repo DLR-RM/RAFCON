@@ -72,6 +72,9 @@ class RuntimeConfig(ObservableConfig):
     def update_recently_opened_state_machines_with(self, state_machine_m):
         """ Update recently opened list with file system path of handed state machine model
 
+        The inserts handed state machine file system path into the recent opened state machines or moves it to be the
+        first element in the list. Call of this method also does a cleanup from not existing paths.
+
         :param rafcon.gui.models.state_machine.StateMachineModel state_machine_m: State machine model to check
         :return:
         """
@@ -84,6 +87,7 @@ class RuntimeConfig(ObservableConfig):
                 del recently_opened_state_machines[recently_opened_state_machines.index(sm.file_system_path)]
             recently_opened_state_machines.insert(0, sm.file_system_path)
             self.set_config_value('recently_opened_state_machines', recently_opened_state_machines)
+        self.clean_recently_opended_state_machines()
 
     def extend_recently_opened_by_current_open_state_machines(self):
         """ Update list with all in the state machine manager opened state machines """
