@@ -264,9 +264,12 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
 
     # was the root state specified as state machine base_path to load from?
     if not os.path.exists(state_machine_file_path) and not os.path.exists(state_machine_file_path_old):
-        base_path = os.path.dirname(base_path)
-        state_machine_file_path = os.path.join(base_path, STATEMACHINE_FILE)
-        state_machine_file_path_old = os.path.join(base_path, STATEMACHINE_FILE_OLD)
+
+        # catch the case that a state machine root file is handed
+        if os.path.exists(base_path) and os.path.isfile(base_path):
+            base_path = os.path.dirname(base_path)
+            state_machine_file_path = os.path.join(base_path, STATEMACHINE_FILE)
+            state_machine_file_path_old = os.path.join(base_path, STATEMACHINE_FILE_OLD)
 
         if not os.path.exists(state_machine_file_path) and not os.path.exists(state_machine_file_path_old):
             raise ValueError("Provided path doesn't contain a valid state machine: {0}".format(base_path))
