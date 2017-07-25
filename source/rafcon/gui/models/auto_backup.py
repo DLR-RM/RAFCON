@@ -471,7 +471,7 @@ class AutoBackupModel(ModelMT):
         logger.debug('Performing auto backup of state machine {} to temp folder'.format(sm.state_machine_id))
         self.update_tmp_storage_path()
         storage.save_state_machine_to_path(sm, self._tmp_storage_path, delete_old_state_machine=True,
-                                           save_as=True, temporary_storage=True)
+                                           temporary_storage=True)
         self.update_last_backup_meta_data()
         self.write_backup_meta_data()
         self.state_machine_model.store_meta_data(temp_path=self._tmp_storage_path)

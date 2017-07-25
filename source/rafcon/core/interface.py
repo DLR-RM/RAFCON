@@ -39,10 +39,10 @@ open_folder_func = open_folder_cmd_line
 
 def create_folder_cmd_line(query, default_name=None, default_path=None):
     """Queries the user for a path to be created
-    
+
     :param str query: Query that asks the user for a specific folder path  to be created
-    :param str default_name: Default name of the folder to be created 
-    :param str default_path: Path in which the folder is created if the user doesn't specify a path 
+    :param str default_name: Default name of the folder to be created
+    :param str default_path: Path in which the folder is created if the user doesn't specify a path
     :return: Input path from the user or `default_path` if nothing is specified or None if directory could ne be created
     :rtype: str
     """
@@ -63,6 +63,32 @@ def create_folder_cmd_line(query, default_name=None, default_path=None):
     return user_input
 
 create_folder_func = create_folder_cmd_line
+
+
+def save_folder_cmd_line(query, default_name=None, default_path=None):
+    """Queries the user for a path or file to be saved into
+
+    The folder or file has not to be created already and will not be created by this function. The parent directory
+    of folder and file has to exist otherwise the function will return None.
+
+    :param str query: Query that asks the user for a specific folder/file path to be created
+    :param str default_name: Default name of the folder to be created
+    :param str default_path: Path in which the folder is created if the user doesn't specify a path
+    :return: Input path from the user or `default_path` if nothing is specified and None if directory does not exist
+    :rtype: str
+    """
+    default = None
+    if default_name and default_path:
+        default = os.path.join(default_path, default_name)
+    user_input = raw_input(query + ' [default {}]: '.format(default))
+    if len(user_input) == 0:
+        user_input = default
+
+    if not user_input or not os.path.isdir(os.path.dirname(user_input)):
+        return None
+    return user_input
+
+save_folder_func = save_folder_cmd_line
 
 
 def show_notice(notice):
