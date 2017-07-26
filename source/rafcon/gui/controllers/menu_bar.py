@@ -295,21 +295,24 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('new', partial(self.call_action_callback, "on_new_activate"))
         self.add_callback_to_shortcut_manager('quit', partial(self.call_action_callback, "on_quit_activate"))
 
-        self.add_callback_to_shortcut_manager('is_start_state', partial(self.call_action_callback, "on_toggle_is_start_state_active"))
+        self.add_callback_to_shortcut_manager('is_start_state', partial(self.call_action_callback,
+                                                                        "on_toggle_is_start_state_active"))
         self.add_callback_to_shortcut_manager('group', partial(self.call_action_callback, "on_group_states_activate"))
-        self.add_callback_to_shortcut_manager('ungroup', partial(self.call_action_callback, "on_ungroup_state_activate"))
+        self.add_callback_to_shortcut_manager('ungroup', partial(self.call_action_callback,
+                                                                 "on_ungroup_state_activate"))
 
         self.add_callback_to_shortcut_manager('start', partial(self.call_action_callback, "on_start_activate"))
         self.add_callback_to_shortcut_manager('start_from_selected', partial(self.call_action_callback,
-                                                                                   "on_start_from_selected_state_activate"))
+                                                                             "on_start_from_selected_state_activate"))
         self.add_callback_to_shortcut_manager('run_to_selected', partial(self.call_action_callback,
-                                                                               "on_run_to_selected_state_activate"))
+                                                                         "on_run_to_selected_state_activate"))
 
         self.add_callback_to_shortcut_manager('stop', partial(self.call_action_callback, "on_stop_activate"))
         self.add_callback_to_shortcut_manager('pause', partial(self.call_action_callback, "on_pause_activate"))
         self.add_callback_to_shortcut_manager('step_mode', partial(self.call_action_callback, "on_step_mode_activate"))
         self.add_callback_to_shortcut_manager('step', partial(self.call_action_callback, "on_step_into_activate"))
-        self.add_callback_to_shortcut_manager('backward_step', partial(self.call_action_callback, "on_backward_step_activate"))
+        self.add_callback_to_shortcut_manager('backward_step', partial(self.call_action_callback,
+                                                                       "on_backward_step_activate"))
 
         self.add_callback_to_shortcut_manager('reload', partial(self.call_action_callback, "on_refresh_all_activate"))
 
