@@ -81,6 +81,7 @@ def check_order_and_consistency_of_menu(menubar_ctrl):
 
 
 def prepare_tab_data_of_open_state_machines(main_window_controller, sm_manager_model, open_state_machines):
+    testing_utils.wait_for_gui()
     state_machines_editor_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
     number_of_pages = state_machines_editor_ctrl.view['notebook'].get_n_pages()
     for page_number in range(number_of_pages):
@@ -267,8 +268,6 @@ def test_restore_session(caplog):
     testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
     # second run
-    change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False,
-                            'AUTO_SESSION_RECOVERY_ENABLED': True, 'GAPHAS_EDITOR': False}
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
                  "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
