@@ -239,7 +239,7 @@ def trigger_gui_signals(*args):
     call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
 
-def test_gui(caplog):
+def test_recent_opened_state_machine_list(caplog):
     change_in_gui_config = {'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': False}
 
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
