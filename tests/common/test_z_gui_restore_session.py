@@ -2,7 +2,7 @@ import gtk
 import threading
 import shutil
 import time
-from os.path import join
+from os.path import join, exists
 
 # gui elements
 import rafcon.gui.singleton
@@ -20,6 +20,7 @@ from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.state_machine import StateMachine
 import rafcon.core.singleton
+from rafcon.core.storage import storage
 from test_z_gui_state_type_change import get_state_editor_ctrl_and_store_id_dict
 
 # general tool elements
@@ -303,12 +304,20 @@ def test_restore_session(caplog):
     PATH_INDEX = 2
     PAGE_NUMBER_INDEX = 3
     MARKED_DIRTY_INDEX = 4
+    order_of_pages_to_be_dirty = [True, False, False, False, True, False, True]
     for index, sm_tuple in enumerate(open_state_machines['list_of_hash_path_tab_page_number_tuple']):
         assert index == sm_tuple[PAGE_NUMBER_INDEX]
         if not final_tuple_list[index][CORE_HASH_INDEX] == sm_tuple[CORE_HASH_INDEX]:
             print "CORE hashes page {4} are not equal: {0} != {1}, path: {2} {3}" \
                   "".format(final_tuple_list[index][CORE_HASH_INDEX], sm_tuple[CORE_HASH_INDEX],
                             sm_tuple[PATH_INDEX], sm_tuple[MARKED_DIRTY_INDEX], sm_tuple[PAGE_NUMBER_INDEX])
+            print sm_tuple[PATH_INDEX], storage.STATEMACHINE_FILE
+            sm_file_path = join(sm_tuple[PATH_INDEX], storage.STATEMACHINE_FILE)
+            if exists(sm_tuple[PATH_INDEX]) and exists(sm_file_path):
+                print "sm_file_path: ", sm_file_path
+                print storage.load_data_file(join(sm_tuple[PATH_INDEX], storage.STATEMACHINE_FILE))
+            else:
+                print "does not exist sm_file_path ", sm_file_path
         # assert final_tuple_list[index][CORE_HASH_INDEX] == sm_tuple[CORE_HASH_INDEX]
         assert final_tuple_list[index][PATH_INDEX] == sm_tuple[PATH_INDEX]
         if not final_tuple_list[index][GUI_HASH_INDEX] == sm_tuple[GUI_HASH_INDEX]:
@@ -317,10 +326,14 @@ def test_restore_session(caplog):
                             sm_tuple[PATH_INDEX], sm_tuple[MARKED_DIRTY_INDEX], sm_tuple[PAGE_NUMBER_INDEX])
         # assert final_tuple_list[index][GUI_HASH_INDEX] == sm_tuple[GUI_HASH_INDEX]
         assert final_tuple_list[index][PAGE_NUMBER_INDEX] == sm_tuple[PAGE_NUMBER_INDEX]
-        # page dirty 0, 4, 6 and not dirty 1, 2, 3, 5 -> at the moment 3 is dirty but after restore no more
+        # page dirty 0, 4, 6 and not dirty 1, 2, 3, 5
         if not final_tuple_list[index][MARKED_DIRTY_INDEX] == sm_tuple[MARKED_DIRTY_INDEX]:
             print "MARKED DIRTY page {4} is not equal: {0} != {1}, path: {2} {3}" \
                   "".format(final_tuple_list[index][MARKED_DIRTY_INDEX], sm_tuple[MARKED_DIRTY_INDEX],
+                            sm_tuple[PATH_INDEX], sm_tuple[MARKED_DIRTY_INDEX], sm_tuple[PAGE_NUMBER_INDEX])
+        if not final_tuple_list[index][MARKED_DIRTY_INDEX] == order_of_pages_to_be_dirty[index]:
+            print "Aspect different dirty flag page {4} is not equal: {0} != {1}, path: {2} {3}" \
+                  "".format(final_tuple_list[index][MARKED_DIRTY_INDEX], order_of_pages_to_be_dirty[index],
                             sm_tuple[PATH_INDEX], sm_tuple[MARKED_DIRTY_INDEX], sm_tuple[PAGE_NUMBER_INDEX])
     testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
