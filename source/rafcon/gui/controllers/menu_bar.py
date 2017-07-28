@@ -419,7 +419,7 @@ class MenuBarController(ExtendedController):
         global_runtime_config.prepare_recently_opened_state_machines_list_for_storage()
         if force:
             backup_session.reset_session()
-        if not force and global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
+        if not force and global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
             backup_session.store_session()
             self.on_delete_check_sm_running()
             force = True
