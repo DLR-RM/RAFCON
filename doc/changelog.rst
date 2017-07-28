@@ -9,6 +9,12 @@ Next release
 
 - Refactoring of "Save state as state machine/library"
 
+- New Features:
+
+  - "Session restore" by default disabled
+  - "Open Recent" recently opened state state machines sub menu in menu bar under sub-menu Files
+  - "Save as copy" in menu bar under sub-menu Files
+
 Patch releases 0.10.\*
 ----------------------
 

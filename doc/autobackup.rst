@@ -1,8 +1,19 @@
 Auto Backup
 ===========
 
-RAFCON creates temporary backups of open state machines. You can find
-these after a crash of RAFCON on your computer in
+There are a session restore and an auto backup on state machine level
+which are enabled by default and which can be used to backup your work.
+These features can be enabled/disabled by the parameter
+``SESSION_RESTORE_ENABLED`` and ``AUTO_BACKUP_ENABLED`` in the GUI config.
+
+The session restore uses the backup of state machines and other GUI
+information to restore your open state machine tabs and respective
+selection situation without storing directly into your library folders
+or origin folders of state machines.
+
+If state machine auto backup is enabled RAFCON creates temporary backups
+of open state machines.
+You can find these after a crash of RAFCON on your computer in
 ``$RUNTIME_BACKUP_PATH = /tmp/rafcon-$USER/$PID/runtime_backup/``.
 ``$USER`` is your user name and ``$PID`` was/is the process id of your
 RAFCON instance. If a state machine hasn't been saved before, it will be
@@ -46,3 +57,6 @@ default those parameters are set ``False``. In more detail
 respective state machines by re-open those. So it is possible to general
 enable lock file generation and only enable the check on lock files if
 explicitly needed.
+
+A auto recovery of crashed sessions and there open state machines and
+there tabs situation is not supported, for now.

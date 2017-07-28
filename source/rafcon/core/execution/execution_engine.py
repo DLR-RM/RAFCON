@@ -76,18 +76,20 @@ class ExecutionEngine(Observable):
         The method returns a value which is equivalent with not 'active' status of the current state machine.
 
         :return: outcome of condition check stopped or finished
-        :rtype bool
+        :rtype: bool
         """
         return (self._status.execution_mode is StateMachineExecutionStatus.STOPPED) or \
                (self._status.execution_mode is StateMachineExecutionStatus.FINISHED)
 
     @Observable.observed
     def start(self, state_machine_id=None, start_state_path=None):
-        """
+        """ Start state machine
+
         If no state machine is running start a specific state machine.
         If no state machine is provided the currently active state machine is started.
         If there is already a state machine running, just resume it without taking the passed state_machine_id argument
         into account.
+
         :param state_machine_id: The id if the state machine to be started
         :param start_state_path: The path of the state in the state machine, from which the execution will start
         :return:

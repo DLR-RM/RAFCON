@@ -78,6 +78,7 @@ def open_state_machine(path=None, recent_opened_notification=False):
 
     :param str path: file system path to the state machine
     :param bool recent_opened_notification: flags that indicates that this call also should update recently open
+
     :rtype rafcon.core.state_machine.StateMachine
     :return: opened state machine
     """
