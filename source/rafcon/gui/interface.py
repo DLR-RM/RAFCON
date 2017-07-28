@@ -10,6 +10,7 @@
 # Rico Belder <rico.belder@dlr.de>
 
 import os
+import glib
 from rafcon.core import interface as core_interface
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.singleton import main_window_controller, library_manager
@@ -55,7 +56,13 @@ def open_folder(query, default_path=None):
     library_paths = library_manager.library_root_paths
     library_keys = sorted(library_paths)
     for library_key in library_keys:
-        dialog.add_shortcut_folder(library_paths[library_key])
+        try:
+            dialog.add_shortcut_folder(library_paths[library_key])
+        except glib.GError, e:
+            # this occurs if the shortcut file already exists
+            # unfortunately dialog.list_shortcut_folders() does not work
+            # that's why the error is caught
+            pass
 
     response = dialog.run()
 
