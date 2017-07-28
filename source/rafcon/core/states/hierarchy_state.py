@@ -164,7 +164,6 @@ class HierarchyState(ContainerState):
             # do not set the last state to inactive before executing the new one
             self.last_child.state_execution_status = StateExecutionStatus.INACTIVE
 
-
         self.child_state.generate_run_id()
         if not self.backward_execution:  # only add history item if it is not a backward execution
             self.execution_history.push_call_history_item(

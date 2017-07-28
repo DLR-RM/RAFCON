@@ -179,7 +179,7 @@ class StateMachinesEditorController(ExtendedController):
                     self.model.selected_state_machine_id = new_sm_id
                 if self.last_opened_state_machines[len(self.last_opened_state_machines) - 1] != new_sm_id:
                     self.last_opened_state_machines.append(new_sm_id)
-                return
+                return page
 
     def rearrange_state_machines(self, page_num_by_sm_id):
         for sm_id, page_num in page_num_by_sm_id.iteritems():

@@ -361,14 +361,17 @@ class ContainerStateModel(StateModel):
 
     # ---------------------------------------- meta data methods ---------------------------------------------
 
-    def store_meta_data(self, temp_path=None):
+    def store_meta_data(self, copy_path=None):
         """Store meta data of container states to the filesystem
 
-        Recursively stores meta data of child states.
+        Recursively stores meta data of child states. For further insides read the description of also called respective
+        super class method.
+
+        :param str copy_path: Optional copy path if meta data is not stored to the file system path of state machine
         """
-        super(ContainerStateModel, self).store_meta_data(temp_path)
+        super(ContainerStateModel, self).store_meta_data(copy_path)
         for state_key, state in self.states.iteritems():
-            state.store_meta_data(temp_path)
+            state.store_meta_data(copy_path)
 
     def copy_meta_data_from_state_m(self, source_state_m):
         """Dismiss current meta data and copy meta data from given state model

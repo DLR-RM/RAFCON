@@ -10,9 +10,18 @@
 # Rico Belder <rico.belder@dlr.de>
 
 import os
+import gtk
+
 from rafcon.core import interface as core_interface
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.singleton import main_window_controller, library_manager
+
+
+def add_library_root_path_to_shortcut_folders_of_dialog(dialog):
+    library_paths = library_manager.library_root_paths
+    library_keys = sorted(library_paths)
+    for library_key in library_keys:
+        dialog.add_shortcut_folder(library_paths[library_key])
 
 
 def open_folder(query, default_path=None):
@@ -26,7 +35,6 @@ def open_folder(query, default_path=None):
     :return: Path selected by the user or `default_path` if no path was specified or None if none of the paths is valid
     :rtype: str
     """
-    import gtk
     from os.path import expanduser, pathsep
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
     selected_filename = None
@@ -52,10 +60,7 @@ def open_folder(query, default_path=None):
     dialog.set_show_hidden(False)
 
     # Add library roots to list of shortcut folders
-    library_paths = library_manager.library_root_paths
-    library_keys = sorted(library_paths)
-    for library_key in library_keys:
-        dialog.add_shortcut_folder(library_paths[library_key])
+    add_library_root_path_to_shortcut_folders_of_dialog(dialog)
 
     response = dialog.run()
 
@@ -92,10 +97,9 @@ def create_folder(query, default_name=None, default_path=None):
       paths is valid
     :rtype: str
     """
-    import gtk
     from os.path import expanduser, dirname, join, exists, isdir
     from rafcon.core.storage.storage import STATEMACHINE_FILE
-    last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
+    last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', "")
 
     if isdir(last_path) and not exists(join(last_path, STATEMACHINE_FILE)):
         pass
@@ -119,10 +123,7 @@ def create_folder(query, default_name=None, default_path=None):
     dialog.set_show_hidden(False)
 
     # Add library roots to list of shortcut folders
-    library_paths = library_manager.library_root_paths
-    library_keys = sorted(library_paths)
-    for library_key in library_keys:
-        dialog.add_shortcut_folder(library_paths[library_key])
+    add_library_root_path_to_shortcut_folders_of_dialog(dialog)
 
     response = dialog.run()
 
@@ -147,8 +148,67 @@ def create_folder(query, default_name=None, default_path=None):
 core_interface.create_folder_func = create_folder
 
 
+def save_folder(query, default_name=None):
+    """Shows a user dialog to save a folder/file
+
+    A dialog is opened with the prompt `query`. The current path is set to the last path that was opened/created. The
+    roots of all libraries is added to the list of shortcut folders. The file name can be folder or file.
+    No existence check is performed.
+
+    :param str query: Prompt asking the user for a specific path and a name in the entry widget
+    :param str default_name: Default name of mounting point/library root key
+    :return: Path handed by the user or `last_path`\`default_name` if no path was specified and None if directory
+      does not exist (parent of name)
+    :rtype: str
+    """
+    from os.path import expanduser, dirname, join, exists, isdir
+    from rafcon.core.storage.storage import STATEMACHINE_FILE
+    last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', "")
+
+    if isdir(last_path) and not exists(join(last_path, STATEMACHINE_FILE)):
+        pass
+    elif last_path:
+        last_path = dirname(last_path)
+    else:
+        last_path = expanduser('~')
+
+    dialog = gtk.FileChooserDialog(query,
+                                   None,
+                                   gtk.FILE_CHOOSER_ACTION_SAVE,
+                                   (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                    gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+    # Allows confirming with Enter and double-click
+    dialog.set_default_response(gtk.RESPONSE_OK)
+    if main_window_controller:
+        dialog.set_transient_for(main_window_controller.view.get_top_widget())
+    dialog.set_current_folder(last_path)
+    if default_name:
+        dialog.set_current_name(default_name)
+    dialog.set_show_hidden(False)
+
+    # Add library roots to list of shortcut folders
+    add_library_root_path_to_shortcut_folders_of_dialog(dialog)
+
+    response = dialog.run()
+
+    if response != gtk.RESPONSE_OK:
+        dialog.destroy()
+        return None
+
+    path = dialog.get_filename()
+    dialog.destroy()
+
+    # check path existence
+    if not exists(dirname(path)):
+        return None
+    return path
+
+# overwrite the save_folder_func of the interface: thus the user input is now retrieved from a dialog box and not
+# from raw input any more
+core_interface.save_folder_func = save_folder
+
+
 def show_notice(query):
-    import gtk
     from rafcon.gui.helpers.label import set_button_children_size_request
     from xml.sax.saxutils import escape
     dialog = gtk.MessageDialog(flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)

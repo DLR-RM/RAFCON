@@ -115,3 +115,18 @@ def separate_folder_path_and_file_name(path):
         return path, None
     else:
         return os.path.split(path)
+
+
+def clean_file_system_paths_from_not_existing_paths(file_system_paths):
+    """Cleans list of paths from elements that do not exist
+
+    If a path is no more valid/existing, it is removed from the list.
+
+    :param list[str] file_system_paths: list of file system paths to be checked for existing
+    """
+    paths_to_delete = []
+    for path in file_system_paths:
+        if not os.path.exists(path):
+            paths_to_delete.append(path)
+    for path in paths_to_delete:
+        file_system_paths.remove(path)

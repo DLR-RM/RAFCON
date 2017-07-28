@@ -24,6 +24,7 @@
 from contextlib import contextmanager
 from copy import copy
 from threading import RLock
+from datetime import datetime
 
 from gtkmvc import Observable
 from jsonconversion.jsonobject import JSONObject
@@ -82,6 +83,11 @@ class StateMachine(Observable, JSONObject, Hashable):
             self.creation_time = creation_time
         else:
             self.creation_time = get_current_time_string()
+
+        # this case happens if old state machines are loaded which do not have statemachine.json yet
+        if isinstance(last_update, datetime):
+            # see https://stackoverflow.com/questions/8022161/python-converting-from-datetime-datetime-to-time-time
+            last_update = time.mktime(last_update.timetuple()) + last_update.microsecond / 1E6
 
         if last_update:
             self.last_update = last_update

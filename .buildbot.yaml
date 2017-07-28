@@ -9,6 +9,8 @@ doc_dir: 'build_doc'
 
 test:
   - rm -rf build build_doc source/rafcon.egg-info source/RAFCON.egg-info
+  - pip2 install setuptools --upgrade
+  - pip2 install pytest --upgrade
   - python setup.py test
 
 env:

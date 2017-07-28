@@ -4,9 +4,9 @@ import rafcon
 import os
 
 
-def search_for_print_statements(path):
+def search_for_print_statements_in_python_files(path):
     # subprocess output retrieval somehow does not work with grep commands
-    command = "grep -Rn -v '# print' " + join(dirname(realpath(rafcon.__file__)), path) + \
+    command = "grep -Rn -v '# print' --include '*.py' " + join(dirname(realpath(rafcon.__file__)), path) + \
               "  | grep -v '# .* print' | grep ' print '"
     output = os.popen(command).read()
     # print output
@@ -15,9 +15,9 @@ def search_for_print_statements(path):
 
 
 def test_number_of_whitespaces():
-    gui_print_lines = search_for_print_statements("gui")
-    core_print_lines = search_for_print_statements("core")
-    utils_print_lines = search_for_print_statements("utils")
+    gui_print_lines = search_for_print_statements_in_python_files("gui")
+    core_print_lines = search_for_print_statements_in_python_files("core")
+    utils_print_lines = search_for_print_statements_in_python_files("utils")
     print "\n".join([str(line) for line in gui_print_lines])
     print len(gui_print_lines)
     assert len(gui_print_lines) == 36

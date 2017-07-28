@@ -63,11 +63,9 @@ def remove_rafcon_instance_lock_file():
 
 
 def check_path_for_correct_dirty_lock_file(sm_path, path):
-    # print "run check for lock file", sm_path, path, os.listdir(path)
     for elem in os.listdir(path):
         full_path = os.path.join(path, elem)
         if not os.path.isdir(full_path) and 'dirty_lock_' in elem:
-            # print "check lock file", full_path
             with open(full_path) as f:
                 if sm_path in f.readline().replace('\n', ''):
                     return full_path
@@ -76,14 +74,11 @@ def check_path_for_correct_dirty_lock_file(sm_path, path):
 def find_dirty_lock_file_for_state_machine_path(sm_path):
     full_path_dirty_lock = None
     # -> can be in the root tmp folder of the instance
-    # print MY_RAFCON_TEMP_PATH, "in", sm_path
     if MY_RAFCON_TEMP_PATH in sm_path:
         runtime_backup_path_len = len(MY_RAFCON_TEMP_PATH.split(os.sep)) + 2
         runtime_backup_path_of_rafcon_instance = os.sep.join(sm_path.split(os.sep)[:runtime_backup_path_len])
-        # print "check tmp root folder", runtime_backup_path_len, runtime_backup_path_of_rafcon_instance
         assert 'runtime_backup' in runtime_backup_path_of_rafcon_instance
         full_path_dirty_lock = check_path_for_correct_dirty_lock_file(sm_path, runtime_backup_path_of_rafcon_instance)
-        # print "check tmp root folder tmp lock", full_path_dirty_lock
 
     # -> or in the state machine folder
     if full_path_dirty_lock is None:
@@ -94,7 +89,6 @@ def find_dirty_lock_file_for_state_machine_path(sm_path):
 
 def move_dirty_lock_file(dirty_lock_file, sm_path):
     """ Move the dirt_lock file to the sm_path and thereby is not found by auto recovery of backup anymore """
-    # print "clean dirty lock", dirty_lock_file_path, sm_path, dirty_lock_file_path is not None
     if dirty_lock_file is not None \
             and not dirty_lock_file == os.path.join(sm_path, dirty_lock_file.split(os.sep)[-1]):
         logger.debug("Move dirty lock from root tmp folder {0} to state machine folder {1}"
@@ -113,7 +107,6 @@ def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=No
         auto_backup_meta = storage.load_data_file(os.path.join(sm_path, FILE_NAME_AUTO_BACKUP))
     except ValueError:
         auto_backup_meta = {}
-    # print auto_backup_meta
     last_save_file_system_path = None
     if 'last_saved' in auto_backup_meta and 'file_system_path' in auto_backup_meta['last_saved']:
         last_save_file_system_path = auto_backup_meta['last_saved']['file_system_path']
@@ -397,7 +390,6 @@ class AutoBackupModel(ModelMT):
     def write_backup_meta_data(self):
         """Write the auto backup meta data into the current tmp-storage path"""
         auto_backup_meta_file = os.path.join(self._tmp_storage_path, FILE_NAME_AUTO_BACKUP)
-        # print "write meta", self.meta, " to", auto_backup_meta_file
         storage.storage_utils.write_dict_to_json(self.meta, auto_backup_meta_file)
 
     def update_last_backup_meta_data(self):
@@ -408,8 +400,8 @@ class AutoBackupModel(ModelMT):
 
     def update_last_sm_origin_meta_data(self):
         """Update the auto backup meta data with information of the state machine origin"""
-        # TODO finally maybe remove this when all restore features are integrated into one restore-structure
-        # data also used e.g. to restore tabs
+        # TODO finally maybe remove this when all backup features are integrated into one backup-structure
+        # data also used e.g. to backup tabs
         self.meta['last_saved']['time'] = self.state_machine_model.state_machine.last_update
         self.meta['last_saved']['file_system_path'] = self.state_machine_model.state_machine.file_system_path
 
@@ -439,7 +431,6 @@ class AutoBackupModel(ModelMT):
         self.timer_request_lock.acquire()
         # sm = self.state_machine_model.state_machine
         # TODO check for self._timer_request_time is None to avoid and reset auto-backup in case and fix it better
-        # print str(self.timed_temp_storage_interval), str(current_time), str(self._timer_request_time)
         if self._timer_request_time is None:
             # logger.warning("timer_request is None")
             return self.timer_request_lock.release()
@@ -479,11 +470,10 @@ class AutoBackupModel(ModelMT):
         sm = self.state_machine_model.state_machine
         logger.debug('Performing auto backup of state machine {} to temp folder'.format(sm.state_machine_id))
         self.update_tmp_storage_path()
-        storage.save_state_machine_to_path(sm, self._tmp_storage_path, delete_old_state_machine=True,
-                                           save_as=True, temporary_storage=True)
+        storage.save_state_machine_to_path(sm, self._tmp_storage_path, delete_old_state_machine=True, as_copy=True)
         self.update_last_backup_meta_data()
         self.write_backup_meta_data()
-        self.state_machine_model.store_meta_data(temp_path=self._tmp_storage_path)
+        self.state_machine_model.store_meta_data(copy_path=self._tmp_storage_path)
         self.last_backup_time = time.time()  # used as 'last-backup' time
         self.timer_request_lock.acquire()
         self._timer_request_time = None

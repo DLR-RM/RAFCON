@@ -27,6 +27,7 @@ from functools import partial
 
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.config import global_gui_config
+from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.library_manager import LibraryManagerModel
 from rafcon.gui.helpers.label import create_image_menu_item, append_sub_menu_to_parent_menu
@@ -269,11 +270,7 @@ class LibraryTreeController(ExtendedController):
         try:
             self.open_library_as_state_machine()
         except (AttributeError, ValueError) as e:
-            if isinstance(e, AttributeError) and "The state-machine is already open" == str(e):
-                logger.info("Could not open library: {0}".format(e))
-                self.select_open_state_machine_of_selected_library_element()
-            else:
-                logger.error("Could not open library: {0}".format(e))
+            logger.error("Could not open library: {0}".format(e))
 
     def open_run_button_clicked(self, widget):
         from rafcon.core.singleton import state_machine_execution_engine
@@ -281,17 +278,15 @@ class LibraryTreeController(ExtendedController):
         state_machine_execution_engine.start(state_machine.state_machine_id)
 
     def open_library_as_state_machine(self):
-        from rafcon.core.storage import storage
-        smm_m = gui_singletons.state_machine_manager_model
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         (model, row) = self.view.get_selection().get_selected()
         physical_library_path = model[row][self.ITEM_STORAGE_ID]
         assert isinstance(physical_library_path, str)
 
         logger.debug("Opening library as state-machine from path '{0}'".format(physical_library_path))
-        state_machine = storage.load_state_machine_from_path(physical_library_path)
-
-        smm_m.state_machine_manager.add_state_machine(state_machine)
-        smm_m.update_recently_opened_state_machines(smm_m.state_machines[state_machine.state_machine_id])
+        state_machine = gui_helper_state_machine.open_state_machine(physical_library_path)
+        sm_m = gui_singletons.state_machine_manager_model.state_machines[state_machine.state_machine_id]
+        global_runtime_config.update_recently_opened_state_machines_with(sm_m)
         return state_machine
 
     def add_button_clicked(self, widget):
@@ -300,16 +295,13 @@ class LibraryTreeController(ExtendedController):
             from rafcon.gui import interface
             from rafcon.gui.singleton import global_config, global_runtime_config
 
-            # TODO write another method and do not misuse create folder -> after interface is OK
-            last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
-            _path = interface.create_folder("Please choose the folder to be mounted and insert your mounting key.",
-                                            "insert your mounting key here")
-            global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', last_path)
+            _path = interface.save_folder("Please choose the folder to be mounted and insert your mounting key.",
+                                          "insert your mounting key here")
 
             if _path is None:
                 return
             path_elements = _path.split(os.path.sep)
-            library_root_key = path_elements[-1]  # mounting key
+            library_root_key = path_elements[-1]  # the file/folder name is the mounting key
             library_root_path = os.path.sep.join(path_elements[:-1])
 
             logger.info("Add new library root '{0}: {1}' to config.".format(library_root_key, library_root_path))

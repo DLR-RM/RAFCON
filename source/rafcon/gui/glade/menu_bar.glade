@@ -58,6 +58,15 @@
               </object>
             </child>
             <child>
+              <object class="GtkImageMenuItem" id="save_as_copy">
+                <property name="label">Save As Copy</property>
+                <property name="visible">True</property>
+                <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
+                <property name="accel_group">accelgroup1</property>
+              </object>
+            </child>
+            <child>
               <object class="GtkImageMenuItem" id="menu_properties">
                 <property name="label">gtk-properties</property>
                 <property name="visible">True</property>

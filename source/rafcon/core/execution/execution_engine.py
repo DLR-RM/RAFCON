@@ -71,16 +71,25 @@ class ExecutionEngine(Observable):
         self.set_execution_mode(StateMachineExecutionStatus.PAUSED)
 
     def finished_or_stopped(self):
+        """ Condition check on finished or stopped status
+
+        The method returns a value which is equivalent with not 'active' status of the current state machine.
+
+        :return: outcome of condition check stopped or finished
+        :rtype: bool
+        """
         return (self._status.execution_mode is StateMachineExecutionStatus.STOPPED) or \
                (self._status.execution_mode is StateMachineExecutionStatus.FINISHED)
 
     @Observable.observed
     def start(self, state_machine_id=None, start_state_path=None):
-        """
+        """ Start state machine
+
         If no state machine is running start a specific state machine.
         If no state machine is provided the currently active state machine is started.
         If there is already a state machine running, just resume it without taking the passed state_machine_id argument
         into account.
+
         :param state_machine_id: The id if the state machine to be started
         :param start_state_path: The path of the state in the state machine, from which the execution will start
         :return:
@@ -91,6 +100,11 @@ class ExecutionEngine(Observable):
             self.run_to_states = []
             if self.state_machine_manager.get_active_state_machine() is not None:
                 self.state_machine_manager.get_active_state_machine().root_state.recursively_resume_states()
+                if isinstance(state_machine_id, int) and \
+                        state_machine_id != self.state_machine_manager.get_active_state_machine().state_machine_id:
+                    logger.info("Resumed state machine with id {0} but start of state machine id {1} was requested."
+                                "".format(self.state_machine_manager.get_active_state_machine().state_machine_id,
+                                          state_machine_id))
             self.set_execution_mode(StateMachineExecutionStatus.STARTED)
         else:
             # do not start another state machine before the old one did not finish its execution

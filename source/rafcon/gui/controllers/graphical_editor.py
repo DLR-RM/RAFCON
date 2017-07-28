@@ -132,6 +132,10 @@ class GraphicalEditorController(ExtendedController):
 
         self._suspend_drawing = False
 
+        self.last_time = time.time()
+
+    def register_view(self, view):
+        """Called when the View was registered"""
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
         view.editor.connect('button-release-event', self._on_mouse_release)
@@ -144,11 +148,7 @@ class GraphicalEditorController(ExtendedController):
         view.editor.connect("drag-data-received", self.on_drag_data_received)
         view.editor.connect("drag-motion", self.on_drag_motion)
 
-        self.last_time = time.time()
-
-    def register_view(self, view):
-        """Called when the View was registered"""
-        pass
+        self.setup_opengl()
 
     def register_adapters(self):
         """Adapters should be registered in this method call"""
@@ -188,6 +188,17 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("right", partial(self._move_in_direction, Direction.right))
         shortcut_manager.add_callback_for_action("up", partial(self._move_in_direction, Direction.top))
         shortcut_manager.add_callback_for_action("down", partial(self._move_in_direction, Direction.bottom))
+
+    def setup_opengl(self):
+        with self.model.state_machine.modification_lock():
+            hash_before = self.model.mutable_hash()
+            self._redraw()
+            hash_after = self.model.mutable_hash()
+            if hash_before.digest() != hash_after.digest():
+                logger.debug("Hash has changed from {0} to {1}".format(hash_before.hexdigest(), hash_after.hexdigest()))
+                self._meta_data_changed(self.root_state_m, 'append_initial_change', True)
+                logger.info("Opening the state machine caused some meta data to be generated, which will be stored "
+                            " when the state machine is being saved.")
 
     @property
     def suspend_drawing(self):
@@ -524,7 +535,7 @@ class GraphicalEditorController(ExtendedController):
             else:
                 parent_m = self.changed_models[0]
             if self._last_meta_data_changed:
-                self._publish_changes(parent_m, self._last_meta_data_changed, self.changes_affect_children)
+                self._meta_data_changed(parent_m, self._last_meta_data_changed, self.changes_affect_children)
                 self._last_meta_data_changed = None
             self.changed_models = []
             self.changes_affect_children = False
@@ -919,7 +930,7 @@ class GraphicalEditorController(ExtendedController):
                 waypoints = copy(connection_m.get_meta_data_editor(for_gaphas=False)['waypoints'])
                 waypoints.remove(waypoint)
                 connection_m.set_meta_data_editor('waypoints', waypoints, from_gaphas=False)
-                self._publish_changes(connection_m, "waypoint_remove", False)
+                self._meta_data_changed(connection_m, "waypoint_remove", False)
                 self._redraw()
                 return True
         return False
@@ -972,7 +983,7 @@ class GraphicalEditorController(ExtendedController):
                 rel_coords[0], rel_coords[1], coords[0], coords[1]))
         connection_m.set_meta_data_editor('waypoints', waypoint_list, from_gaphas=False)
 
-        self._publish_changes(connection_m, "waypoint_add", False)
+        self._meta_data_changed(connection_m, "waypoint_add", False)
         self._redraw()
 
     @lock_state_machine
@@ -1013,7 +1024,7 @@ class GraphicalEditorController(ExtendedController):
                 if self.temporary_waypoints:
                     transition_m = responsible_parent_m.get_transition_m(transition_id)
                     transition_m.set_meta_data_editor('waypoints', self.temporary_waypoints, from_gaphas=False)
-                    self._publish_changes(model=transition_m, change='append_to_last_change')
+                    self._meta_data_changed(model=transition_m, change='append_to_last_change')
         except (AttributeError, ValueError) as e:
             logger.warn("Transition couldn't be added: {0}".format(e))
             # import traceback
@@ -1054,7 +1065,7 @@ class GraphicalEditorController(ExtendedController):
                 if self.temporary_waypoints:
                     data_flow_m = responsible_parent.get_data_flow_m(data_flow_id)
                     data_flow_m.set_meta_data_editor('waypoints', self.temporary_waypoints, from_gaphas=False)
-                    self._publish_changes(model=data_flow_m, change='append_to_last_change')
+                    self._meta_data_changed(model=data_flow_m, change='append_to_last_change')
             except AttributeError as e:
                 logger.warn("Data flow couldn't be added: {0}".format(e))
             except Exception as e:
@@ -1089,9 +1100,9 @@ class GraphicalEditorController(ExtendedController):
 
         if publish_changes:
             if combined_action:
-                self._publish_changes(state_m, "append_to_last_change", affects_children=False)
+                self._meta_data_changed(state_m, "append_to_last_change", affects_children=False)
             else:
-                self._publish_changes(state_m, "position", affects_children=False)
+                self._meta_data_changed(state_m, "position", affects_children=False)
         if redraw:
             self._redraw()
 
@@ -1125,7 +1136,7 @@ class GraphicalEditorController(ExtendedController):
         port_m.set_meta_data_editor('inner_rel_pos', new_rel_pos, from_gaphas=False)
 
         if publish_changes:
-            self._publish_changes(port_m, "position", affects_children=False)
+            self._meta_data_changed(port_m, "position", affects_children=False)
         if redraw:
             self._redraw()
 
@@ -1185,7 +1196,7 @@ class GraphicalEditorController(ExtendedController):
                         parent_m = reduced_list[0]
                 else:
                     parent_m = self.model.selection[0]
-                self._publish_changes(parent_m, "position", affects_children)
+                self._meta_data_changed(parent_m, "position", affects_children)
                 self._redraw()
             elif isinstance(self.single_selection, AbstractStateModel):
                 move_state(self.single_selection)
@@ -1264,7 +1275,7 @@ class GraphicalEditorController(ExtendedController):
         connection_m.set_meta_data_editor('waypoints', waypoints, from_gaphas=False)
 
         if publish_changes:
-            self._publish_changes(connection_m, "waypoint_position", affects_children=False)
+            self._meta_data_changed(connection_m, "waypoint_position", affects_children=False)
         if redraw:
             self._redraw()
 
@@ -1425,7 +1436,7 @@ class GraphicalEditorController(ExtendedController):
             resize_children(state_m, old_size, state_meta['size'])
 
         if publish_changes:
-            self._publish_changes(state_m, "size", affects_children=resize_content)
+            self._meta_data_changed(state_m, "size", affects_children=resize_content)
         if redraw:
             self._redraw()
 
@@ -2165,7 +2176,7 @@ class GraphicalEditorController(ExtendedController):
         abs_pos = add_pos(rel_pos, state_pos)
         return abs_pos
 
-    def _publish_changes(self, model, change, affects_children=False):
+    def _meta_data_changed(self, model, change, affects_children=False):
         # self.model.history.meta_changed_notify_after(model.parent, model, affects_children)
         msg = MetaSignalMsg('graphical_editor', change, affects_children)
         model.meta_signal.emit(msg)

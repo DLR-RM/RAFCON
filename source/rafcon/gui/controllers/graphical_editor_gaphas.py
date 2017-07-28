@@ -86,13 +86,14 @@ class GraphicalEditorController(ExtendedController):
     def register_view(self, view):
         """Called when the View was registered"""
         assert self.view == view
-        self.setup_canvas()
 
         self.view.editor.connect('selection-changed', self._update_selection_from_gaphas)
         self.view.connect('remove_state_from_state_machine', self._remove_state_view)
         self.view.connect('meta_data_changed', self._meta_data_changed)
         self.view.editor.connect("drag-data-received", self.on_drag_data_received)
         self.view.editor.connect("drag-motion", self.on_drag_motion)
+
+        self.setup_canvas()
 
     def register_adapters(self):
         """Adapters should be registered in this method call"""
@@ -726,10 +727,11 @@ class GraphicalEditorController(ExtendedController):
 
     def setup_canvas(self):
         with self.model.state_machine.modification_lock():
-            hash_before = self.model.mutable_hash().digest()
+            hash_before = self.model.mutable_hash()
             self.add_state_view_for_model(self.root_state_m, rel_pos=(10, 10))
-            hash_after = self.model.mutable_hash().digest()
-            if hash_before != hash_after:
+            hash_after = self.model.mutable_hash()
+            if hash_before.digest() != hash_after.digest():
+                logger.debug("Hash has changed from {0} to {1}".format(hash_before.hexdigest(), hash_after.hexdigest()))
                 self._meta_data_changed(None, self.root_state_m, 'append_initial_change', True)
                 logger.info("Opening the state machine caused some meta data to be generated, which will be stored "
                             " when the state machine is being saved.")

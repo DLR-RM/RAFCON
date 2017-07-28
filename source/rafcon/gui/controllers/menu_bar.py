@@ -42,6 +42,7 @@ from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.config_window import ConfigWindowView
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.views.utils.about_dialog import AboutDialogView
+import rafcon.gui.backup.session as backup_session
 from rafcon.utils import plugins
 from rafcon.utils import log, log_helpers
 
@@ -107,6 +108,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('open', 'activate', self.on_open_activate)
         self.connect_button_to_function('save', 'activate', self.on_save_activate)
         self.connect_button_to_function('save_as', 'activate', self.on_save_as_activate)
+        self.connect_button_to_function('save_as_copy', 'activate', self.on_save_as_copy_activate)
         self.connect_button_to_function('menu_properties', 'activate', self.on_menu_properties_activate)
         self.connect_button_to_function('refresh_all', 'activate', self.on_refresh_all_activate)
         self.connect_button_to_function('refresh_libraries', 'activate', self.on_refresh_libraries_activate)
@@ -147,7 +149,7 @@ class MenuBarController(ExtendedController):
         self.full_screen_window.connect('key_press_event', self.on_key_press_event)
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
         self.registered_view = True
-        self.update_recently_opened_state_machines()
+        self._update_recently_opened_state_machines()
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
@@ -165,25 +167,34 @@ class MenuBarController(ExtendedController):
         elif config_key == "SHORTCUTS":
             self.refresh_shortcuts()
         elif config_key == "recently_opened_state_machines":
-            self.update_recently_opened_state_machines()
+            self._update_recently_opened_state_machines()
 
-    def update_recently_opened_state_machines(self):
-        """Update the sub menu Open Recent in File menu"""
+    def _update_recently_opened_state_machines(self):
+        """Update the sub menu Open Recent in File menu
+
+        Method clean's first all menu items of the sub menu 'recent open', then insert the user menu item to clean
+        recent opened state machine paths and finally insert menu items for all elements in recent opened state machines
+        list.
+        """
         if not self.registered_view:
             return
+
         for item in self.view.sub_menu_open_recently.get_children():
             self.view.sub_menu_open_recently.remove(item)
-        self.view.sub_menu_open_recently.show_all()
-        for sm_path in global_runtime_config.get_config_value("recently_opened_state_machines", []):
-            # print "insert recent", sm_path
 
+        menu_item = gui_helper_label.create_image_menu_item("cleanup onto feasible paths", constants.ICON_ERASE,
+                                                            global_runtime_config.clean_recently_opened_state_machines)
+        self.view.sub_menu_open_recently.append(menu_item)
+        self.view.sub_menu_open_recently.append(gtk.SeparatorMenuItem())
+
+        for sm_path in global_runtime_config.get_config_value("recently_opened_state_machines", []):
             # define label string
             root_state_name = gui_helper_state_machine.get_root_state_name_of_sm_file_system_path(sm_path)
-            label_string = "'{0}' -> {1}".format(root_state_name, sm_path) if root_state_name is not None else sm_path
+            label_string = "'{0}' in {1}".format(root_state_name, sm_path) if root_state_name is not None else sm_path
 
             # define icon of menu item
             is_in_libs = library_manager.is_os_path_within_library_root_paths(sm_path)
-            button_image = constants.SIGN_LIB if is_in_libs else constants.BUTTON_LEFTA
+            button_image = constants.SIGN_LIB if is_in_libs else constants.BUTTON_OPEN
 
             # prepare state machine open call_back function
             sm_open_function = partial(self.on_open_activate, path=sm_path)
@@ -274,6 +285,8 @@ class MenuBarController(ExtendedController):
         """
         self.add_callback_to_shortcut_manager('save', partial(self.call_action_callback, "on_save_activate"))
         self.add_callback_to_shortcut_manager('save_as', partial(self.call_action_callback, "on_save_as_activate"))
+        self.add_callback_to_shortcut_manager('save_as_copy', partial(self.call_action_callback,
+                                                                      "on_save_as_copy_activate"))
         self.add_callback_to_shortcut_manager('save_state_as', partial(self.call_action_callback,
                                                                        "on_save_selected_state_as_activate"))
         self.add_callback_to_shortcut_manager('substitute_state', partial(self.call_action_callback,
@@ -285,21 +298,24 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('new', partial(self.call_action_callback, "on_new_activate"))
         self.add_callback_to_shortcut_manager('quit', partial(self.call_action_callback, "on_quit_activate"))
 
-        self.add_callback_to_shortcut_manager('is_start_state', partial(self.call_action_callback, "on_toggle_is_start_state_active"))
+        self.add_callback_to_shortcut_manager('is_start_state', partial(self.call_action_callback,
+                                                                        "on_toggle_is_start_state_active"))
         self.add_callback_to_shortcut_manager('group', partial(self.call_action_callback, "on_group_states_activate"))
-        self.add_callback_to_shortcut_manager('ungroup', partial(self.call_action_callback, "on_ungroup_state_activate"))
+        self.add_callback_to_shortcut_manager('ungroup', partial(self.call_action_callback,
+                                                                 "on_ungroup_state_activate"))
 
         self.add_callback_to_shortcut_manager('start', partial(self.call_action_callback, "on_start_activate"))
         self.add_callback_to_shortcut_manager('start_from_selected', partial(self.call_action_callback,
-                                                                                   "on_start_from_selected_state_activate"))
+                                                                             "on_start_from_selected_state_activate"))
         self.add_callback_to_shortcut_manager('run_to_selected', partial(self.call_action_callback,
-                                                                               "on_run_to_selected_state_activate"))
+                                                                         "on_run_to_selected_state_activate"))
 
         self.add_callback_to_shortcut_manager('stop', partial(self.call_action_callback, "on_stop_activate"))
         self.add_callback_to_shortcut_manager('pause', partial(self.call_action_callback, "on_pause_activate"))
         self.add_callback_to_shortcut_manager('step_mode', partial(self.call_action_callback, "on_step_mode_activate"))
         self.add_callback_to_shortcut_manager('step', partial(self.call_action_callback, "on_step_into_activate"))
-        self.add_callback_to_shortcut_manager('backward_step', partial(self.call_action_callback, "on_backward_step_activate"))
+        self.add_callback_to_shortcut_manager('backward_step', partial(self.call_action_callback,
+                                                                       "on_backward_step_activate"))
 
         self.add_callback_to_shortcut_manager('reload', partial(self.call_action_callback, "on_refresh_all_activate"))
 
@@ -357,13 +373,15 @@ class MenuBarController(ExtendedController):
     def on_open_activate(widget=None, data=None, path=None):
         gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
 
-    def on_save_activate(self, widget, data=None, save_as=False, delete_old_state_machine=False):
-        return gui_helper_state_machine.save_state_machine(save_as=save_as,
-                                                           delete_old_state_machine=delete_old_state_machine,
+    def on_save_activate(self, widget, data=None, delete_old_state_machine=False):
+        return gui_helper_state_machine.save_state_machine(delete_old_state_machine=delete_old_state_machine,
                                                            recent_opened_notification=True)
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
         return gui_helper_state_machine.save_state_machine_as(path=path, recent_opened_notification=True)
+
+    def on_save_as_copy_activate(self, widget=None, data=None, path=None):
+        return gui_helper_state_machine.save_state_machine_as(path, recent_opened_notification=True, as_copy=True)
 
     @staticmethod
     def on_refresh_libraries_activate():
@@ -398,11 +416,11 @@ class MenuBarController(ExtendedController):
         config_window_view.get_top_widget().present()
 
     def on_quit_activate(self, widget, data=None, force=False):
-        self.model.prepare_recent_opened_state_machines_list_for_storage()
+        global_runtime_config.prepare_recently_opened_state_machines_list_for_storage()
         if force:
-            self.model.reset_session_storage()
-        if not force and global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
-            self.model.store_session()
+            backup_session.reset_session()
+        if not force and global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
+            backup_session.store_session()
             self.on_delete_check_sm_running()
             force = True
         avoid_shutdown = self.on_delete_event(widget, None, force=force)
@@ -610,11 +628,25 @@ class MenuBarController(ExtendedController):
     ######################################################
     # menu bar functionality - Execution
     ######################################################
+    def execution_status_dependent_correction_of_selected_and_active_state_machine(self):
+        active_state_machine_id = None
+        if core_singletons.state_machine_manager.get_active_state_machine():
+            active_state_machine_id = core_singletons.state_machine_manager.get_active_state_machine().state_machine_id
+        selected_state_machine_id = gui_singletons.state_machine_manager_model.selected_state_machine_id
+        if core_singletons.state_machine_manager.get_active_state_machine():
+            # is the state machine active change the selection accordingly to be the active state machine
+            if not self.state_machine_execution_engine.finished_or_stopped():
+                gui_singletons.state_machine_manager_model.selected_state_machine_id = active_state_machine_id
+            else:  # change the active state machine to be the selected state machine
+                core_singletons.state_machine_manager.active_state_machine_id = selected_state_machine_id
+
     def on_start_activate(self, widget, data=None):
+        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.start(self.model.selected_state_machine_id)
 
     def on_start_from_selected_state_activate(self, widget, data=None):
         logger.debug("Run from selected state ...")
+        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         selected_state_models = selection.get_states()
         if len(selected_state_models) is not 1:
@@ -624,27 +656,35 @@ class MenuBarController(ExtendedController):
                                                       selected_state_models[0].state.get_path())
 
     def on_pause_activate(self, widget, data=None):
+        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.pause()
 
     def on_stop_activate(self, widget, data=None):
+        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.stop()
 
     def on_step_mode_activate(self, widget, data=None):
+        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.step_mode(self.model.selected_state_machine_id)
 
     def on_step_into_activate(self, widget, data=None):
+        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.step_into()
 
     def on_step_over_activate(self, widget, data=None):
+        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.step_over()
 
     def on_step_out_activate(self, widget, data=None):
+        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.step_out()
 
     def on_backward_step_activate(self, widget, data=None):
+        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.backward_step()
 
     def on_run_to_selected_state_activate(self, widget, data=None):
+        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         logger.debug("Run to selected state ...")
 
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
