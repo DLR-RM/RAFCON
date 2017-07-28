@@ -95,7 +95,7 @@ def create_folder(query, default_name=None, default_path=None):
     import gtk
     from os.path import expanduser, dirname, join, exists, isdir
     from rafcon.core.storage.storage import STATEMACHINE_FILE
-    last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
+    last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', "")
 
     if isdir(last_path) and not exists(join(last_path, STATEMACHINE_FILE)):
         pass
