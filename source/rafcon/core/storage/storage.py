@@ -146,8 +146,8 @@ def clean_path(base_path):
 def save_state_machine_to_path(state_machine, base_path, delete_old_state_machine=False, as_copy=False):
     """Saves a state machine recursively to the file system
 
-    The as_copy=True determines if the state machine dirty_flag, file_system_path and so on are not changed.
-    What means the state machine stays dirty.
+    The `as_copy` flag determines whether the state machine is saved as copy. If so (`as_copy=True`), some state
+    machine attributes will be left untouched, such as the `file_system_path` or the `dirty_flag`.
 
     :param rafcon.core.state_machine.StateMachine state_machine: the state_machine to be saved
     :param str base_path: base_path to which all further relative paths refers to
