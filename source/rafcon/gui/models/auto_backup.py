@@ -470,11 +470,10 @@ class AutoBackupModel(ModelMT):
         sm = self.state_machine_model.state_machine
         logger.debug('Performing auto backup of state machine {} to temp folder'.format(sm.state_machine_id))
         self.update_tmp_storage_path()
-        storage.save_state_machine_to_path(sm, self._tmp_storage_path, delete_old_state_machine=True,
-                                           temporary_storage=True)
+        storage.save_state_machine_to_path(sm, self._tmp_storage_path, delete_old_state_machine=True, as_copy=True)
         self.update_last_backup_meta_data()
         self.write_backup_meta_data()
-        self.state_machine_model.store_meta_data(temp_path=self._tmp_storage_path)
+        self.state_machine_model.store_meta_data(copy_path=self._tmp_storage_path)
         self.last_backup_time = time.time()  # used as 'last-backup' time
         self.timer_request_lock.acquire()
         self._timer_request_time = None

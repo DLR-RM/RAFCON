@@ -367,18 +367,18 @@ class StateMachineModel(ModelMT, Hashable):
             self.meta = tmp_meta
             self.meta_signal.emit(MetaSignalMsg("load_meta_data", "all", True))
 
-    def store_meta_data(self, temp_path=None):
+    def store_meta_data(self, copy_path=None):
         """Save meta data of the state machine model to the file system
 
         This method generates a dictionary of the meta data of the state machine and stores it on the filesystem.
 
-        :param str temp_path: Optional, if the path is specified, it will be used instead of the file system path
+        :param str copy_path: Optional, if the path is specified, it will be used instead of the file system path
         """
-        if temp_path:
-            meta_file_json = os.path.join(temp_path, storage.FILE_NAME_META_DATA)
+        if copy_path:
+            meta_file_json = os.path.join(copy_path, storage.FILE_NAME_META_DATA)
         else:
             meta_file_json = os.path.join(self.state_machine.file_system_path, storage.FILE_NAME_META_DATA)
 
         storage_utils.write_dict_to_json(self.meta, meta_file_json)
 
-        self.root_state.store_meta_data(temp_path)
+        self.root_state.store_meta_data(copy_path)

@@ -143,13 +143,16 @@ def clean_path(base_path):
     return base_path
 
 
-def save_state_machine_to_path(state_machine, base_path, delete_old_state_machine=False, temporary_storage=False):
+def save_state_machine_to_path(state_machine, base_path, delete_old_state_machine=False, as_copy=False):
     """Saves a state machine recursively to the file system
+
+    The as_copy=True determines if the state machine dirty_flag, file_system_path and so on are not changed.
+    What means the state machine stays dirty.
 
     :param rafcon.core.state_machine.StateMachine state_machine: the state_machine to be saved
     :param str base_path: base_path to which all further relative paths refers to
     :param bool delete_old_state_machine: Whether to delete any state machine existing at the given path
-    :param bool temporary_storage: Whether to use a temporary storage for the state machine
+    :param bool as_copy: Whether to use a copy storage for the state machine
     """
     _base_path, _, _, _ = check_path_for_deprecated_naming(base_path)
 
@@ -172,16 +175,16 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
         storage_utils.write_dict_to_json(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE))
 
         # set the file_system_path of the state machine
-        if not temporary_storage:
+        if not as_copy:
             state_machine.file_system_path = copy.copy(base_path)
         else:
             state_machine.last_update = old_update_time
 
         # add root state recursively
         clean_path_from_not_by_existing_state_substituted_elements([root_state], base_path)
-        save_state_recursively(root_state, base_path, "", temporary_storage)
+        save_state_recursively(root_state, base_path, "", as_copy)
 
-        if state_machine.marked_dirty and not temporary_storage:
+        if state_machine.marked_dirty and not as_copy:
             state_machine.marked_dirty = False
         logger.debug("State machine with id {0} was saved at {1}".format(state_machine.state_machine_id, base_path))
     except Exception:
@@ -190,14 +193,14 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
         state_machine.release_modification_lock()
 
 
-def save_script_file_for_state_and_source_path(state, state_path_full, temporary_storage=False):
+def save_script_file_for_state_and_source_path(state, state_path_full, as_copy=False):
     """Saves the script file for a state to the directory of the state.
 
     The script name will be set to the SCRIPT_FILE constant.
 
     :param state: The state of which the script file should be saved
     :param str state_path_full: The path to the file system storage location of the state
-    :param bool temporary_storage: Temporary storage flag to signal that the given path is not the new file_system_path
+    :param bool as_copy: Temporary storage flag to signal that the given path is not the new file_system_path
     """
     from rafcon.core.states.execution_state import ExecutionState
     if isinstance(state, ExecutionState):
@@ -211,20 +214,20 @@ def save_script_file_for_state_and_source_path(state, state_path_full, temporary
                                                                                 destination_script_file))
             raise
 
-        if not source_script_file == destination_script_file and not temporary_storage:
+        if not source_script_file == destination_script_file and not as_copy:
             state.script.filename = SCRIPT_FILE
             state.script.path = state_path_full
 
 
-def save_state_recursively(state, base_path, parent_path, temporary_storage=False):
-    """Recursively saves a state to a yaml file
+def save_state_recursively(state, base_path, parent_path, as_copy=False):
+    """Recursively saves a state to a json file
 
     It calls this method on all its substates.
 
     :param state: State to be stored
     :param base_path: Path to the state machine
     :param parent_path: Path to the parent state
-    :param bool temporary_storage: Temporary storage flag to signal that the given path is not the new file_system_path
+    :param bool as_copy: Temporary storage flag to signal that the given path is not the new file_system_path
     :return:
     """
     from rafcon.core.states.execution_state import ExecutionState
@@ -236,18 +239,18 @@ def save_state_recursively(state, base_path, parent_path, temporary_storage=Fals
         os.makedirs(state_path_full)
 
     storage_utils.write_dict_to_json(state, os.path.join(state_path_full, FILE_NAME_CORE_DATA))
-    if not temporary_storage:
+    if not as_copy:
         state.file_system_path = state_path_full
 
     if isinstance(state, ExecutionState):
-        save_script_file_for_state_and_source_path(state, state_path_full, temporary_storage)
+        save_script_file_for_state_and_source_path(state, state_path_full, as_copy)
 
     # create yaml files for all children
     if isinstance(state, ContainerState):
         clean_path_from_not_by_existing_state_substituted_elements(state.states.values(),
                                                                    os.path.join(base_path, state_path))
         for state in state.states.itervalues():
-            save_state_recursively(state, base_path, state_path, temporary_storage)
+            save_state_recursively(state, base_path, state_path, as_copy)
 
 
 def load_state_machine_from_path(base_path, state_machine_id=None):
