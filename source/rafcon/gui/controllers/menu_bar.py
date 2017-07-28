@@ -108,6 +108,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('open', 'activate', self.on_open_activate)
         self.connect_button_to_function('save', 'activate', self.on_save_activate)
         self.connect_button_to_function('save_as', 'activate', self.on_save_as_activate)
+        self.connect_button_to_function('save_as_copy', 'activate', self.on_save_as_copy_activate)
         self.connect_button_to_function('menu_properties', 'activate', self.on_menu_properties_activate)
         self.connect_button_to_function('refresh_all', 'activate', self.on_refresh_all_activate)
         self.connect_button_to_function('refresh_libraries', 'activate', self.on_refresh_libraries_activate)
@@ -284,6 +285,8 @@ class MenuBarController(ExtendedController):
         """
         self.add_callback_to_shortcut_manager('save', partial(self.call_action_callback, "on_save_activate"))
         self.add_callback_to_shortcut_manager('save_as', partial(self.call_action_callback, "on_save_as_activate"))
+        self.add_callback_to_shortcut_manager('save_as_copy', partial(self.call_action_callback,
+                                                                      "on_save_as_copy_activate"))
         self.add_callback_to_shortcut_manager('save_state_as', partial(self.call_action_callback,
                                                                        "on_save_selected_state_as_activate"))
         self.add_callback_to_shortcut_manager('substitute_state', partial(self.call_action_callback,
@@ -376,6 +379,9 @@ class MenuBarController(ExtendedController):
 
     def on_save_as_activate(self, widget=None, data=None, path=None):
         return gui_helper_state_machine.save_state_machine_as(path=path, recent_opened_notification=True)
+
+    def on_save_as_copy_activate(self, widget=None, data=None, path=None):
+        return gui_helper_state_machine.save_state_machine_as(path, recent_opened_notification=True, as_copy=True)
 
     @staticmethod
     def on_refresh_libraries_activate():

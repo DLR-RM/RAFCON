@@ -96,6 +96,7 @@ SHORTCUTS:
     run_to_selected: <Control><Shift>R
     save: <Control>S
     save_as: <Control><Shift>S
+    save_as_copy: <Control><Shift><Alt>S
     save_state_as: <Control><Alt>S
     substitute_state: <Control><Shift><Alt>S
     show_aborted_preempted: <Control>P
