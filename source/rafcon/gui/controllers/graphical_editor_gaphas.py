@@ -262,8 +262,6 @@ class GraphicalEditorController(ExtendedController):
 
         if self.update_selection_gaphas_major:
             return
-        # else:
-        #     print "_update_selection_from_external", selected_items
 
         # filter models that are not drawn
         selected_models = []
@@ -271,12 +269,12 @@ class GraphicalEditorController(ExtendedController):
             if isinstance(model, AbstractStateModel) and model.state.get_library_root_state():
                 next_library_state_m = self.model.get_state_model_by_path(model.state.get_library_root_state().parent.get_path())
                 if not next_library_state_m.show_content():
-                    logger.info("Skip selection of state '{}' because is not drawn.".format(model.state.name))
+                    logger.debug("Skipping selection of state '{}' as it is not shown.".format(model.state.name))
                     continue
             selected_models.append(model)
         selected_items = [self.canvas.get_view_for_model(model) for model in selected_models]
 
-        # filter elements that ge selected and deselected and do so
+        # filter elements that get selected and deselected and do so
         select_items = filter(lambda item: item not in self.view.editor.selected_items, selected_items)
         deselect_items = filter(lambda item: item not in selected_items, self.view.editor.selected_items)
         for item in deselect_items:

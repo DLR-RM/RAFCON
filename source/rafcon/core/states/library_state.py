@@ -517,11 +517,12 @@ class LibraryState(State):
 
     @property
     def library_hierarchy_depth(self):
-        """ Calculate library hierarchy depth
+        """ Calculates the library hierarchy depth
 
-        The count start with the actual library state. So if the there is no upper library state the depth is one.
-        :return: library_hierarchy_depth
-        :rtype int
+        Counting starts at the current library state. So if the there is no upper library state the depth is one.
+        
+        :return: library hierarchy depth
+        :rtype: int
         """
         current_library_hierarchy_depth = 1
         library_root_state = self.get_library_root_state()
