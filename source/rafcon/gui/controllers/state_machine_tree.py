@@ -228,7 +228,6 @@ class StateMachineTreeController(TreeViewController):
         self.redo_expansion_state()
 
     def store_expansion_state(self):
-        # print "\n\n store of state machine {0} \n\n".format(self.__my_selected_sm_id)
         try:
             act_expansion_state = {}
             for state_path, state_row_iter in self.state_row_iter_dict_by_state_path.iteritems():
@@ -294,12 +293,10 @@ class StateMachineTreeController(TreeViewController):
 
     def update_tree_store_row(self, state_model):
         state_row_iter = self.state_row_iter_dict_by_state_path[state_model.state.get_path()]
-        # print "check for update row of state: ", state_model.state.get_path()
         state_row_path = self.tree_store.get_path(state_row_iter)
 
         if not type(state_model.state).__name__ == self.tree_store[state_row_path][self.TYPE_NAME_STORAGE_ID] or \
                 not state_model.state.name == self.tree_store[state_row_path][self.NAME_STORAGE_ID]:
-            # print "update row of state: ", state_model.state.get_path()
             self.tree_store[state_row_path][self.NAME_STORAGE_ID] = state_model.state.name
             self.tree_store[state_row_path][self.TYPE_NAME_STORAGE_ID] = type(state_model.state).__name__
             self.tree_store[state_row_path][self.MODEL_STORAGE_ID] = state_model
@@ -344,11 +341,8 @@ class StateMachineTreeController(TreeViewController):
         # 4 - in as library without show content -> switch library with show content, add children + remove LibState
         # 4.1 - in as library without show content -> nothing to do
 
-        # print "insert ", state_model
-
         # if state model is LibraryStateModel with enabled show content state_model becomes the library root state model
         if isinstance(state_model, LibraryStateModel) and self.show_content(state_model):
-            # print "new state model is", state_model, state_model.state.get_path()
             _state_model = state_model
             state_model = state_model.state_copy
         else:
@@ -384,12 +378,10 @@ class StateMachineTreeController(TreeViewController):
                                                                 _state_model,
                                                                 state_model.state.get_path()))
             self.state_row_iter_dict_by_state_path[state_path] = state_row_iter
-            # print "insert row", state_model
             if with_expand:
                 parent_path = self.tree_store.get_path(state_row_iter)
                 self.view.expand_to_path(parent_path)
         else:
-            # print "update", state_model
             # if in -> check if up to date
             state_row_iter = self.state_row_iter_dict_by_state_path[state_model.state.get_path()]
             self.update_tree_store_row(state_model)
@@ -402,7 +394,6 @@ class StateMachineTreeController(TreeViewController):
 
         # - check if TOO MUCH children are in
         # if state_model.state.get_library_root_state() is not None or isinstance(state_model, LibraryStateModel):
-        # print "CHECK \n{0}\n{1}".format(state_model, _state_model)
         for n in reversed(range(self.tree_store.iter_n_children(state_row_iter))):
             child_iter = self.tree_store.iter_nth_child(state_row_iter, n)
             child_state_path = self.tree_store.get_value(child_iter, self.STATE_PATH_STORAGE_ID)
@@ -422,7 +413,6 @@ class StateMachineTreeController(TreeViewController):
                     isinstance(_state_model, LibraryStateModel) and not self.show_content(_state_model) or \
                     child_model.state.is_root_state_of_library and not self.show_content(child_model.parent):
 
-                # print "remove", self.tree_store.get_value(child_iter, self.ID_STORAGE_ID), "of state", state_model.state, state_model.states.keys()
                 self.remove_tree_children(child_iter)
                 del self.state_row_iter_dict_by_state_path[self.tree_store.get_value(child_iter, self.STATE_PATH_STORAGE_ID)]
                 self.tree_store.remove(child_iter)

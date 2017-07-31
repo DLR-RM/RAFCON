@@ -45,7 +45,6 @@ class LibraryStateModel(AbstractStateModel):
         super(LibraryStateModel, self).__init__(state, parent, meta)
         model_class = get_state_model_class_for_state(state.state_copy)
         if model_class is not None:
-            # print "load library inner state meta data\n", model_class, state.state_copy.file_system_path
             self.state_copy = model_class(state.state_copy, parent=self)  # TODO think about load_meta_data=False)
         else:
             logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
@@ -56,21 +55,13 @@ class LibraryStateModel(AbstractStateModel):
         self._load_outcome_models()
 
         if load_meta_data:
-            # print "load library hull state meta data\n", self.state.file_system_path
-            # for m in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
-            #     print "lib init 1: ", m, m.meta
-            # self.load_meta_data()
 
             if not self.load_meta_data():
                 # TODO decide to scale here or still in the editor -> at the moment meta data is missing here
-                # print "try to scale accordingly to state copy proportion"
                 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
                 # gui_helper_meta_data.scale_library_ports_meta_data(self)
             else:
                 self.meta_data_was_scaled = True
-
-        # for m in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
-        #     print "lib init 2: ", m, m.meta
 
     def __eq__(self, other):
         # logger.info("compare method")
