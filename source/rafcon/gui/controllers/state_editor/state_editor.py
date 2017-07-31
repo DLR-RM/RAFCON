@@ -66,7 +66,7 @@ class StateEditorController(ExtendedController):
 
         lib_with_show_content_and_ES_as_root = isinstance(model, LibraryStateModel) and model.show_content() and \
             not isinstance(model.state_copy, ContainerStateModel)
-        _model = model.state_copy if isinstance(model, LibraryStateModel) else model
+        scoped_variable_state_m = model.state_copy if isinstance(model, LibraryStateModel) else model
 
         # TODO think about to make linkage overview list for scoped variables and respective data linkage tab add and removeable
         self.add_controller('properties_ctrl', StateOverviewController(model, view.properties_view))
@@ -75,7 +75,7 @@ class StateEditorController(ExtendedController):
         self.add_controller('input_data_ports', self.inputs_ctrl)
         self.outputs_ctrl = OutputPortListController(model, view.outputs_view)
         self.add_controller('output_data_ports', self.outputs_ctrl)
-        self.scopes_ctrl = ScopedVariableListController(_model, view.scopes_view)
+        self.scopes_ctrl = ScopedVariableListController(scoped_variable_state_m, view.scopes_view)
         self.add_controller('scoped_variables', self.scopes_ctrl)
         self.add_controller('outcomes', StateOutcomesEditorController(model, view.outcomes_view))
 
@@ -100,7 +100,7 @@ class StateEditorController(ExtendedController):
         # TODO think about to make the source editor add and removeable for show content flag (for now hide and show would also be OK)
         if not isinstance(model, ContainerStateModel) and not isinstance(model, LibraryStateModel) or \
                 lib_with_show_content_and_ES_as_root:
-            self.add_controller('source_ctrl', SourceEditorController(_model, view.source_view))
+            self.add_controller('source_ctrl', SourceEditorController(scoped_variable_state_m, view.source_view))
             view.source_view.show()
             scoped_var_page = view['ports_notebook'].page_num(view['scoped_variable_vbox'])
             view['ports_notebook'].remove_page(scoped_var_page)
