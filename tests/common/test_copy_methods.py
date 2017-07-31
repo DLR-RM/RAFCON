@@ -329,16 +329,15 @@ def run_copy_performance_test_and_check_storage_copy(*args):
     # performance tests
     time_only_storage_before = time.time()
     storage.save_state_machine_to_path(sm_m.state_machine, tmp_sm_system_path, delete_old_state_machine=False,
-                                       temporary_storage=True)
-    sm_m.store_meta_data(temp_path=tmp_sm_system_path)
+                                       as_copy=True)
+    sm_m.store_meta_data(copy_path=tmp_sm_system_path)
     time_only_storage_after = time.time()
     only_storage_duration = round(time_only_storage_after*1000000) - round(time_only_storage_before*1000000)
 
     time_storage_before = time.time()
     storage.save_state_machine_to_path(sm_m.state_machine, tmp_sm_system_path, delete_old_state_machine=False,
-                                       temporary_storage=True)
-    sm_m.store_meta_data(temp_path=tmp_sm_system_path)
-
+                                       as_copy=True)
+    sm_m.store_meta_data(copy_path=tmp_sm_system_path)
 
     sm1 = storage.load_state_machine_from_path(tmp_sm_system_path)
     time_model_before = time.time()

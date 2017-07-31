@@ -431,7 +431,7 @@ class ConfigWindowController(ExtendedController):
         refresh_required = self.core_config_model.apply_preliminary_config()
         refresh_required |= self.gui_config_model.apply_preliminary_config()
 
-        if not self.gui_config_model.config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
+        if not self.gui_config_model.config.get_config_value("SESSION_RESTORE_ENABLED"):
             import rafcon.gui.backup.session as backup_session
             logger.info("Removing current session")
             backup_session.reset_session()

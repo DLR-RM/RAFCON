@@ -20,7 +20,6 @@
 
 import gtk
 
-import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
@@ -61,6 +60,7 @@ class StateIconController(ExtendedController):
         :param info:
         :param time:
         """
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         state = self._get_state()
         gui_helper_state_machine.add_state_by_drag_and_drop(state, data)
 
@@ -86,6 +86,7 @@ class StateIconController(ExtendedController):
         :param widget:
         :param gtk.gdk.Event event: mouse click event
         """
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         if self.view.get_path_at_pos(int(event.x), int(event.y)) is not None \
                 and len(self.view.get_selected_items()) > 0:
             return gui_helper_state_machine.insert_state_into_selected_state(self._get_state(), False)

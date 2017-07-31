@@ -121,6 +121,10 @@ A typical config file looks like this:
     AUTO_RECOVERY_CHECK: False
     AUTO_RECOVERY_LOCK_ENABLED: False
 
+    SESSION_RESTORE_ENABLED: False
+
+    NUMBER_OF_RECENT_OPENED_STATE_MACHINES_STORED: 20
+
     AUTO_APPLY_SOURCE_CODE_CHANGES: True
 
     CHECK_PYTHON_FILES_WITH_PYLINT: False
@@ -177,6 +181,7 @@ A typical config file looks like this:
         run_to_selected: <Control><Shift>R
         save: <Control>S
         save_as: <Control><Shift>S
+        save_as_copy: <Control><Shift><Alt>S
         save_state_as: <Control><Alt>S
         substitute_state: <Control><Shift><Alt>S
         show_aborted_preempted: <Control>P
@@ -381,6 +386,15 @@ AUTO\_RECOVERY\_LOCK\_ENABLED:
   | If True, the auto backup will put lock-files into the respective backup folder
     to label not correctly/cleanly closed state machines and instances.
     The auto recovery check is searching for these locks.
+
+SESSION\_RESTORE\_ENABLED:
+  | Default: ``True``
+  | If True the current session is stored into the runtime configuration and restored
+    after restarting RAFCON with respective runtime configuration file.
+
+NUMBER\_OF\_RECENT\_OPENED\_STATE\_MACHINES\_STORED:
+  | default: 20
+  | Maximum number of stored recently opened state machine paths.
 
 RESTORE\_UNDOCKED\_SIDEBARS
   | Default: ``False``

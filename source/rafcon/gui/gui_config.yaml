@@ -37,7 +37,8 @@ AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL: 20
 AUTO_RECOVERY_CHECK: False
 AUTO_RECOVERY_LOCK_ENABLED: False
 
-AUTO_SESSION_RECOVERY_ENABLED: False
+SESSION_RESTORE_ENABLED: True
+
 NUMBER_OF_RECENT_OPENED_STATE_MACHINES_STORED: 20
 
 AUTO_APPLY_SOURCE_CODE_CHANGES: True
@@ -96,6 +97,7 @@ SHORTCUTS:
     run_to_selected: <Control><Shift>R
     save: <Control>S
     save_as: <Control><Shift>S
+    save_as_copy: <Control><Shift><Alt>S
     save_state_as: <Control><Alt>S
     substitute_state: <Control><Shift><Alt>S
     show_aborted_preempted: <Control>P

@@ -108,6 +108,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('open', 'activate', self.on_open_activate)
         self.connect_button_to_function('save', 'activate', self.on_save_activate)
         self.connect_button_to_function('save_as', 'activate', self.on_save_as_activate)
+        self.connect_button_to_function('save_as_copy', 'activate', self.on_save_as_copy_activate)
         self.connect_button_to_function('menu_properties', 'activate', self.on_menu_properties_activate)
         self.connect_button_to_function('refresh_all', 'activate', self.on_refresh_all_activate)
         self.connect_button_to_function('refresh_libraries', 'activate', self.on_refresh_libraries_activate)
@@ -284,6 +285,8 @@ class MenuBarController(ExtendedController):
         """
         self.add_callback_to_shortcut_manager('save', partial(self.call_action_callback, "on_save_activate"))
         self.add_callback_to_shortcut_manager('save_as', partial(self.call_action_callback, "on_save_as_activate"))
+        self.add_callback_to_shortcut_manager('save_as_copy', partial(self.call_action_callback,
+                                                                      "on_save_as_copy_activate"))
         self.add_callback_to_shortcut_manager('save_state_as', partial(self.call_action_callback,
                                                                        "on_save_selected_state_as_activate"))
         self.add_callback_to_shortcut_manager('substitute_state', partial(self.call_action_callback,
@@ -377,6 +380,9 @@ class MenuBarController(ExtendedController):
     def on_save_as_activate(self, widget=None, data=None, path=None):
         return gui_helper_state_machine.save_state_machine_as(path=path, recent_opened_notification=True)
 
+    def on_save_as_copy_activate(self, widget=None, data=None, path=None):
+        return gui_helper_state_machine.save_state_machine_as(path, recent_opened_notification=True, as_copy=True)
+
     @staticmethod
     def on_refresh_libraries_activate():
         gui_helper_state_machine.refresh_libraries()
@@ -413,7 +419,7 @@ class MenuBarController(ExtendedController):
         global_runtime_config.prepare_recently_opened_state_machines_list_for_storage()
         if force:
             backup_session.reset_session()
-        if not force and global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
+        if not force and global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
             backup_session.store_session()
             self.on_delete_check_sm_running()
             force = True

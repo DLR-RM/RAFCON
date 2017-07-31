@@ -452,18 +452,22 @@ class AbstractStateModel(MetaModel, Hashable):
             # print "nothing to parse", tmp_meta
             return False
 
-    def store_meta_data(self, temp_path=None):
+    def store_meta_data(self, copy_path=None):
         """Save meta data of state model to the file system
 
         This method generates a dictionary of the meta data of the state together with the meta data of all state
         elements (data ports, outcomes, etc.) and stores it on the filesystem.
         Secure that the store meta data method is called after storing the core data otherwise the last_stored_path is
         maybe wrong or None.
+        The copy path is considered to be a state machine file system path but not the current one but e.g.
+        of a as copy saved state machine. The meta data will be stored in respective relative state folder in the state
+        machine  hierarchy. This folder has to exist.
+        Dues the core elements of the state machine has to be stored first.
 
-        :param str temp_path: optional given temporary path if meta data should not be stored to the file system path
+        :param str copy_path: Optional copy path if meta data is not stored to the file system path of state machine
         """
-        if temp_path:
-            meta_file_path_json = os.path.join(temp_path, self.state.get_storage_path(), storage.FILE_NAME_META_DATA)
+        if copy_path:
+            meta_file_path_json = os.path.join(copy_path, self.state.get_storage_path(), storage.FILE_NAME_META_DATA)
         else:
             if self.state.file_system_path is None:
                 logger.error("Meta data of {0} can be stored temporary arbitrary but by default first after the "

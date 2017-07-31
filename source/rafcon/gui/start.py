@@ -288,7 +288,7 @@ def main():
     # TODO find out why this works and rearrange it -> most proper because of the pending gtk events
     # initiate stored session # TODO think about a controller for this
     if not user_input.new and not user_input.state_machine_paths \
-            and rafcon.gui.singleton.global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
+            and rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
         backup_session.restore_session_from_runtime_config()
 
     log_ready_output()

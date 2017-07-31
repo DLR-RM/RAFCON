@@ -230,7 +230,7 @@ def trigger_gui_signals_second_run(*args):
     open_state_machines = args[2]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     import rafcon.gui.backup.session as backup_session
-    if rafcon.gui.singleton.global_gui_config.get_config_value("AUTO_SESSION_RECOVERY_ENABLED"):
+    if rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
         call_gui_callback(backup_session.restore_session_from_runtime_config)
 
     prepare_tab_data_of_open_state_machines(main_window_controller, sm_manager_model, open_state_machines)
@@ -243,7 +243,7 @@ def trigger_gui_signals_second_run(*args):
 
 def test_restore_session(caplog):
     change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False,
-                            'AUTO_SESSION_RECOVERY_ENABLED': True, 'GAPHAS_EDITOR': False}
+                            'SESSION_RESTORE_ENABLED': True, 'GAPHAS_EDITOR': False}
 
     # first run
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
