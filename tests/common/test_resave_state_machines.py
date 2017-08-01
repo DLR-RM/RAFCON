@@ -6,9 +6,9 @@ import sys
 import testing_utils
 
 
-def test_library_resave():
+def test_library_resave(caplog):
     script = join(dirname(realpath(rafcon.__file__)), "gui", "resave_state_machines.py")
-    config_path = join(testing_utils.TESTS_PATH, "common", "configs_for_start_script_test", "valid_config")
+    config_path = join(testing_utils.TESTS_PATH, "assets", "configs", "valid_config")
     library_folder = join(testing_utils.LIBRARY_SM_PATH, "generic")
     target_folder = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "resave_test", "test_library_resave")
     cmd = "PYTHONPATH={}:$PYTHONPATH".format(dirname(rafcon.__path__[0]))
