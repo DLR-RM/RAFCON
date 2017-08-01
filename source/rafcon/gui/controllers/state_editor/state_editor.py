@@ -22,7 +22,7 @@
 """
 
 from rafcon.core.states.library_state import LibraryState
-from rafcon.gui.config import global_gui_config
+
 from rafcon.gui.controllers.state_editor.data_flows import StateDataFlowsEditorController
 from rafcon.gui.controllers.state_editor.description_editor import DescriptionEditorController
 from rafcon.gui.controllers.state_editor.io_data_port_list import InputPortListController, OutputPortListController
@@ -33,12 +33,10 @@ from rafcon.gui.controllers.state_editor.scoped_variable_list import ScopedVaria
 from rafcon.gui.controllers.state_editor.source_editor import SourceEditorController
 from rafcon.gui.controllers.state_editor.transitions import StateTransitionsEditorController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, LibraryStateModel
 from rafcon.gui.views.state_editor.state_editor import StateEditorView
-from rafcon.gui.utils import constants
-from rafcon.utils import log
 
+from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -50,32 +48,21 @@ class StateEditorController(ExtendedController):
     :param rafcon.gui.models.state.StateModel model: The state model
     """
 
-    icons = {
-        "Source": constants.ICON_SOURCE,
-        "Data Linkage": constants.ICON_DLINK,
-        "Logical Linkage": constants.ICON_LLINK,
-        "Linkage Overview": constants.ICON_OVERV,
-        "Description": constants.ICON_DESC
-    }
-
     def __init__(self, model, view):
         """Constructor"""
         assert isinstance(model, AbstractStateModel)
         assert isinstance(view, StateEditorView)
         ExtendedController.__init__(self, model, view)
 
-        lib_with_show_content_and_ES_as_root = isinstance(model, LibraryStateModel) and model.show_content() and \
-            not isinstance(model.state_copy, ContainerStateModel)
-        scoped_variable_state_m = model.state_copy if isinstance(model, LibraryStateModel) else model
+        sv_and_source_script_state_m = model.state_copy if isinstance(model, LibraryStateModel) else model
 
-        # TODO think about to make linkage overview list for scoped variables and respective data linkage tab add and removeable
         self.add_controller('properties_ctrl', StateOverviewController(model, view.properties_view))
 
         self.inputs_ctrl = InputPortListController(model, view.inputs_view)
         self.add_controller('input_data_ports', self.inputs_ctrl)
         self.outputs_ctrl = OutputPortListController(model, view.outputs_view)
         self.add_controller('output_data_ports', self.outputs_ctrl)
-        self.scopes_ctrl = ScopedVariableListController(scoped_variable_state_m, view.scopes_view)
+        self.scopes_ctrl = ScopedVariableListController(sv_and_source_script_state_m, view.scopes_view)
         self.add_controller('scoped_variables', self.scopes_ctrl)
         self.add_controller('outcomes', StateOutcomesEditorController(model, view.outcomes_view))
 
@@ -85,50 +72,9 @@ class StateEditorController(ExtendedController):
         self.add_controller('linkage_overview_ctrl', LinkageOverviewController(model, view.linkage_overview))
 
         self.add_controller('description_ctrl', DescriptionEditorController(model, view.description_view))
-
-        view.inputs_view.show()
-        view.outputs_view.show()
-        view.scopes_view.show()
-        view.outcomes_view.show()
-        view.transitions_view.show()
-        view.data_flows_view.show()
-
-        # Container states do not have a source editor and library states does not show there source code
-        # Thus, for those states we do not have to add the source controller and can hide the source code tab
-        # logger.info("init state: {0}".format(model))
-
-        # TODO think about to make the source editor add and removeable for show content flag (for now hide and show would also be OK)
         if not isinstance(model, ContainerStateModel) and not isinstance(model, LibraryStateModel) or \
-                lib_with_show_content_and_ES_as_root:
-            self.add_controller('source_ctrl', SourceEditorController(scoped_variable_state_m, view.source_view))
-            view.source_view.show()
-            scoped_var_page = view['ports_notebook'].page_num(view['scoped_variable_vbox'])
-            view['ports_notebook'].remove_page(scoped_var_page)
-        else:
-            view.scopes_view.show()
-            source_page = view['main_notebook_1'].page_num(view['source_viewport'])
-            view['main_notebook_1'].remove_page(source_page)
-
-        for notebook_name in view.notebook_names:
-            notebook = view[notebook_name]
-            for i in xrange(notebook.get_n_pages()):
-                child = notebook.get_nth_page(i)
-                tab_label = notebook.get_tab_label(child)
-                if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
-                    tab_label_text = tab_label.get_text()
-                    notebook.set_tab_label(child, gui_helper_label.create_tab_header_label(tab_label_text, self.icons))
-                else:
-                    tab_label.set_angle(270)
-                notebook.set_tab_reorderable(child, True)
-                notebook.set_tab_detachable(child, True)
-
-        if isinstance(model.state, LibraryState):
-            view.bring_tab_to_the_top('Description')
-        else:
-            view.bring_tab_to_the_top('Linkage Overview')
-
-        if isinstance(model, ContainerStateModel):
-            self.scopes_ctrl.reload_scoped_variables_list_store()
+                isinstance(model, LibraryStateModel) and not isinstance(model.state_copy, ContainerStateModel):
+            self.add_controller('source_ctrl', SourceEditorController(sv_and_source_script_state_m, view.source_view))
 
     def register_view(self, view):
         """Called when the View was registered
@@ -151,10 +97,43 @@ class StateEditorController(ExtendedController):
             view['add_scoped_variable_button'].set_sensitive(False)
             view['remove_scoped_variable_button'].set_sensitive(False)
 
+        view.inputs_view.show()
+        view.outputs_view.show()
+        view.scopes_view.show()
+        view.outcomes_view.show()
+        view.transitions_view.show()
+        view.data_flows_view.show()
+
         # show scoped variables if show content is enabled -> if disabled the tab stays and indicates a container state
         if isinstance(self.model, LibraryStateModel) and not self.model.show_content():
             view.scopes_view.hide()
             view.linkage_overview.scope_view.hide()
+
+        # Container states do not have a source editor and library states does not show there source code
+        # Thus, for those states we do not have to add the source controller and can hide the source code tab
+        # logger.info("init state: {0}".format(model))
+        lib_with_and_ES_as_root = isinstance(self.model, LibraryStateModel) and \
+                                  not isinstance(self.model.state_copy, ContainerStateModel)
+        if not isinstance(self.model, ContainerStateModel) and not isinstance(self.model, LibraryStateModel) or \
+                lib_with_and_ES_as_root:
+            view.source_view.show()
+            if isinstance(self.model, LibraryStateModel) and not self.model.show_content():
+                view.remove_source_tab()
+            view.remove_scoped_variables_tab()
+        else:
+            view.scopes_view.show()
+            if isinstance(self.model, LibraryStateModel) and \
+                    (not self.model.show_content() or not isinstance(self.model.state_copy, ContainerStateModel)):
+                view.remove_scoped_variables_tab()
+            view.remove_source_tab()
+
+        if isinstance(self.model.state, LibraryState):
+            view.bring_tab_to_the_top('Description')
+        else:
+            view.bring_tab_to_the_top('Linkage Overview')
+
+        if isinstance(self.model, ContainerStateModel):
+            self.scopes_ctrl.reload_scoped_variables_list_store()
 
     def register_adapters(self):
         """Adapters should be registered in this method call
@@ -173,10 +152,16 @@ class StateEditorController(ExtendedController):
         meta_signal_message = info['arg']
         if meta_signal_message.change == 'show_content':
             if self.model.meta['gui']['show_content']:
-                self.scopes_ctrl.view.show()
+                if isinstance(model.state_copy, ContainerStateModel):
+                    self.view.insert_scoped_variables_tab()
+                else:
+                    self.view.insert_source_tab()
                 self.view.linkage_overview.scope_view.show()
             else:
-                self.scopes_ctrl.view.hide()
+                if isinstance(model.state_copy, ContainerStateModel):
+                    self.view.remove_scoped_variables_tab()
+                else:
+                    self.view.remove_source_tab()
                 self.view.linkage_overview.scope_view.hide()
 
     @ExtendedController.observe("action_signal", signal=True)
