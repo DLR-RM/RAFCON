@@ -21,7 +21,7 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.core.state_machine import StateMachine
 import rafcon.core.singleton
 from rafcon.core.storage import storage
-from test_z_gui_state_type_change import get_state_editor_ctrl_and_store_id_dict
+from test_state_type_change import get_state_editor_ctrl_and_store_id_dict
 
 # general tool elements
 from rafcon.utils import log

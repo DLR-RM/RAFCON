@@ -28,11 +28,11 @@ from rafcon.utils import log
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
-from test_z_gui_state_type_change import store_state_elements, check_state_elements, \
+from test_state_type_change import store_state_elements, check_state_elements, \
      check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
      check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
      get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
-from test_z_gui_states_editor_widget import check_state_editor_models
+from test_states_editor_widget import check_state_editor_models
 import pytest
 
 NO_SAVE = False
@@ -75,7 +75,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
         print "by Function"
         on_save_activate(sm_model, logger)
 
-    from test_z_storage import check_that_all_files_are_there
+    from test_storage import check_that_all_files_are_there
 
     check_that_all_files_are_there(sm_model, path, False, True)
 
@@ -1388,7 +1388,7 @@ def trigger_state_type_change_tests(*args):
     [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
 
     print "\n\n ###### State: %s" % state_dict[state_of_type_change]
-    from test_z_storage import check_that_all_files_are_there
+    from test_storage import check_that_all_files_are_there
     check_that_all_files_are_there(sm_model, state_machine_path + '_before2', False, True)
     check_that_all_files_are_there(sm_model, state_machine_path + '_after2', False, True)
 

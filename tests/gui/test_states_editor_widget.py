@@ -22,7 +22,7 @@ from rafcon.utils import log
 # test environment elements
 
 from testing_utils import call_gui_callback
-from test_z_gui_state_type_change import get_state_editor_ctrl_and_store_id_dict
+from test_state_type_change import get_state_editor_ctrl_and_store_id_dict
 import pytest
 
 logger = log.get_logger(__name__)

@@ -17,7 +17,7 @@ from rafcon.utils import log
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
-from test_z_gui_menu_bar import focus_graphical_editor_in_page, create_state_machine
+from test_menu_bar import focus_graphical_editor_in_page, create_state_machine
 
 import pytest
 

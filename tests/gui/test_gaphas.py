@@ -20,7 +20,7 @@ from rafcon.utils import log
 
 # test environment elements
 import testing_utils
-from test_z_gui_menu_bar import select_and_paste_state
+from test_menu_bar import select_and_paste_state
 from testing_utils import call_gui_callback
 import pytest
 
