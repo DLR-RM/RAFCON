@@ -1,4 +1,3 @@
-import pytest
 from os.path import join, realpath, dirname
 import rafcon
 import subprocess
@@ -6,7 +5,7 @@ import sys
 import testing_utils
 
 
-def test_library_resave(caplog):
+def test_library_resave():
     script = join(dirname(realpath(rafcon.__file__)), "gui", "resave_state_machines.py")
     config_path = join(testing_utils.TESTS_PATH, "assets", "configs", "valid_config")
     library_folder = join(testing_utils.LIBRARY_SM_PATH, "generic")

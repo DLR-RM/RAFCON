@@ -1,6 +1,5 @@
 import os
 import time
-import pytest
 
 # state machine
 import rafcon.core.singleton

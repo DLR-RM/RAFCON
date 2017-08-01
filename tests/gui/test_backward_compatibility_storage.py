@@ -1,9 +1,5 @@
 import os
 
-# gui elements
-import rafcon.gui.config as gui_config
-import rafcon.gui.singleton
-
 # core elements
 import rafcon.core.config
 import rafcon.core.singleton as singletons

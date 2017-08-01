@@ -2,21 +2,14 @@ import os
 import time
 import threading
 
-# mvc
-import rafcon.gui.singleton
-
 # core elements
 import rafcon.core.singleton
 from rafcon.core.storage import storage
 from rafcon.core.singleton import global_variable_manager
 from rafcon.core.singleton import state_machine_execution_engine
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 
 # test environment elements
 import testing_utils
-import pytest
 
 
 def test_preemption_behaviour_in_preemption_state(caplog):

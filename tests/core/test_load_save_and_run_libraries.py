@@ -1,8 +1,5 @@
 import os
-from os.path import dirname, join, realpath
-
-# mvc
-import rafcon.gui.singleton
+from os.path import join
 
 # core elements
 import rafcon.core.singleton

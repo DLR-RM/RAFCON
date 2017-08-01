@@ -1,12 +1,9 @@
 import os
 import time
-import pytest
 
 # core elements
 from rafcon.core.storage import storage
 import rafcon.core.singleton
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.hierarchy_state import HierarchyState
 
 # test environment elements
 import testing_utils

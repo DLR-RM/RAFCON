@@ -31,9 +31,14 @@ class PyTest(TestCommand):
         sys.path.insert(0, test_path)
         sys.path.insert(0, rafcon_path)
         os.environ["PYTHONPATH"] = rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
+        print "=== Running network tests ==="
         error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'network')])
         if not error_number:
-            error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'common')])
+            print "=== Running core tests ==="
+            error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'core')])
+        if not error_number:
+            print "=== Running GUI tests ==="
+            error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'gui')])
         sys.exit(error_number)
 
 
