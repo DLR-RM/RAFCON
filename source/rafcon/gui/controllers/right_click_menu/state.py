@@ -132,22 +132,24 @@ class StateMachineRightClickMenu(object):
                     change_type_sub_menu.append(class_item)
         menu.append(gtk.SeparatorMenuItem())
 
-        save_as_sub_menu_item, save_as_sub_menu = append_sub_menu_to_parent_menu("Save state as", menu,
-                                                                                 constants.BUTTON_SAVE)
+        # save state as but not for root state, therefore the user should use save state machine as
+        if len(state_m_list) == 1 and not state_m_list[0].state.is_root_state:
+            save_as_sub_menu_item, save_as_sub_menu = append_sub_menu_to_parent_menu("Save state as", menu,
+                                                                                     constants.BUTTON_SAVE)
 
-        save_as_sub_menu.append(create_image_menu_item("State machine", constants.BUTTON_SAVE,
-                                                       self.on_save_state_as_state_machine_activate,
-                                                       accel_code=shortcuts_dict['save_state_as'][0],
-                                                       accel_group=accel_group))
-        save_as_library_sub_menu_item, save_as_library_sub_menu = append_sub_menu_to_parent_menu("Library",
-                                                                                                 save_as_sub_menu,
-                                                                                                 constants.SIGN_LIB)
-        library_root_paths = core_singletons.library_manager.library_root_paths
-        for library_root_key in library_root_paths.iterkeys():
-            save_as_library_sub_menu.append(create_image_menu_item(library_root_key, constants.SIGN_LIB,
-                                                                   partial(self.on_save_state_as_state_machine_activate,
-                                                                           path=library_root_paths[library_root_key]),
-                                                                   accel_code=None, accel_group=accel_group))
+            save_as_sub_menu.append(create_image_menu_item("State machine", constants.BUTTON_SAVE,
+                                                           self.on_save_state_as_state_machine_activate,
+                                                           accel_code=shortcuts_dict['save_state_as'][0],
+                                                           accel_group=accel_group))
+            save_as_library_sub_menu_item, save_as_library_sub_menu = append_sub_menu_to_parent_menu("Library",
+                                                                                                     save_as_sub_menu,
+                                                                                                     constants.SIGN_LIB)
+            library_root_paths = core_singletons.library_manager.library_root_paths
+            for library_root_key in library_root_paths.iterkeys():
+                save_as_library_sub_menu.append(create_image_menu_item(library_root_key, constants.SIGN_LIB,
+                                                                       partial(self.on_save_state_as_state_machine_activate,
+                                                                               path=library_root_paths[library_root_key]),
+                                                                       accel_code=None, accel_group=accel_group))
 
         return menu
 
@@ -276,9 +278,6 @@ class StateMachineRightClickMenu(object):
     def on_ungroup_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action("ungroup", None, None)
 
-    def on_save_as_state_machine_activate(self, widget, data=None):
-        self.shortcut_manager.trigger_action("save_as_sm", None, None)
-
     def on_run_from_selected_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('start_from_selected', None, None)
 
@@ -287,7 +286,6 @@ class StateMachineRightClickMenu(object):
 
     @staticmethod
     def on_save_state_as_state_machine_activate(widget, data=None, path=None):
-        # TODO if the state is a root state the state machine will get chosen path a physical system path?!
         # workaround to set the initial path in the 'choose folder' dialog to the handed one
         old_last_path_open = gui_singletons.global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
         try:
