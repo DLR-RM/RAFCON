@@ -125,7 +125,7 @@ class StateMachinesEditorController(ExtendedController):
         ExtendedController.__init__(self, state_machine_manager_model, view, spurious=True)
 
         self.tabs = {}
-        self.last_opened_state_machines = collections.deque(maxlen=10)
+        self.last_focused_state_machine_ids = collections.deque(maxlen=10)
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -177,8 +177,9 @@ class StateMachinesEditorController(ExtendedController):
                 new_sm_id = get_state_machine_id(tab_info['state_machine_m'])
                 if self.model.selected_state_machine_id != new_sm_id:
                     self.model.selected_state_machine_id = new_sm_id
-                if self.last_opened_state_machines[len(self.last_opened_state_machines) - 1] != new_sm_id:
-                    self.last_opened_state_machines.append(new_sm_id)
+                if self.last_focused_state_machine_ids and \
+                        self.last_focused_state_machine_ids[len(self.last_focused_state_machine_ids) - 1] != new_sm_id:
+                    self.last_focused_state_machine_ids.append(new_sm_id)
                 return page
 
     def rearrange_state_machines(self, page_num_by_sm_id):
@@ -238,7 +239,7 @@ class StateMachinesEditorController(ExtendedController):
 
         graphical_editor_view.show()
         self.view.notebook.show()
-        self.last_opened_state_machines.append(sm_id)
+        self.last_focused_state_machine_ids.append(sm_id)
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def notification_selected_sm_changed(self, model, prop_name, info):
@@ -367,7 +368,7 @@ class StateMachinesEditorController(ExtendedController):
         """
         sm_id = get_state_machine_id(state_machine_m)
 
-        copy_of_last_opened_state_machines = copy.deepcopy(self.last_opened_state_machines)
+        copy_of_last_opened_state_machines = copy.deepcopy(self.last_focused_state_machine_ids)
 
         # the following statement will switch the selected notebook tab automatically and the history of the
         # last opened state machines will be destroyed
@@ -376,7 +377,7 @@ class StateMachinesEditorController(ExtendedController):
         self.view.notebook.remove_page(page_id)
         del self.tabs[sm_id]
         self.remove_controller(sm_id)
-        self.last_opened_state_machines = copy_of_last_opened_state_machines
+        self.last_focused_state_machine_ids = copy_of_last_opened_state_machines
 
         # self.model is the state_machine_manager_model
         # if the state_machine is removed by a core function the state_machine_editor listens to this event, closes
@@ -390,8 +391,8 @@ class StateMachinesEditorController(ExtendedController):
         if len(sm_keys) > 0:
             sm_id = -1
             while sm_id not in sm_keys:
-                if len(self.last_opened_state_machines) > 0:
-                    sm_id = self.last_opened_state_machines.pop()
+                if len(self.last_focused_state_machine_ids) > 0:
+                    sm_id = self.last_focused_state_machine_ids.pop()
                 else:
                     sm_id = self.model.state_machine_manager.state_machines[sm_keys[0]].state_machine_id
 
