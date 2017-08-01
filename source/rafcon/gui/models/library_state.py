@@ -132,7 +132,8 @@ class LibraryStateModel(AbstractStateModel):
             uppermost_lib_state_m = self.get_state_machine_m().get_state_model_by_path(uppermost_lib_state.get_path())
         else:
             uppermost_lib_state_m = self
-        return uppermost_lib_state_m.meta['gui']['show_content']
+        uppermost_lib_meta = uppermost_lib_state_m.meta
+        return False if 'show_content' not in uppermost_lib_meta['gui'] else uppermost_lib_meta['gui']['show_content']
 
     def copy_meta_data_from_state_m(self, source_state_m):
         super(LibraryStateModel, self).copy_meta_data_from_state_m(source_state_m)
