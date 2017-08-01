@@ -511,7 +511,7 @@ class MenuBarController(ExtendedController):
         """Saves current configuration of windows and panes to the runtime config file, before RAFCON is closed."""
         plugins.run_hook("pre_destruction")
 
-        logger.debug("Saving runtime config")
+        logger.debug("Saving runtime config to {0}".format(global_runtime_config.config_file_path))
 
         global_runtime_config.store_widget_properties(self.main_window_view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.main_window_view['right_h_pane'], 'RIGHT_BAR_DOCKED')

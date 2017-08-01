@@ -39,7 +39,7 @@ def store_session():
 
     # backup state machine selection
     selection_of_selected_sm = []
-    if selected_page_number:
+    if selected_page_number is not None:
         for model in state_machine_manager_model.get_selected_state_machine_model().selection.get_all():
             if isinstance(model, AbstractStateModel):
                 # TODO extend to full range of selection -> see core_identifier action-module
@@ -128,9 +128,14 @@ def restore_session_from_runtime_config():
 
     global_runtime_config.extend_recently_opened_by_current_open_state_machines()
 
+    if global_gui_config.get_config_value('GAPHAS_EDITOR'):
+        import gtk
+        while gtk.events_pending():
+            gtk.main_iteration(False)
+
     # restore backup-ed selection
     session_selection = global_runtime_config.get_config_value('selection', None)
-    if session_selection and session_selection['state_machine_page_number']:
+    if session_selection and session_selection['state_machine_page_number'] is not None:
         selected_state_machine_page_number = session_selection['state_machine_page_number']
         if selected_state_machine_page_number is None:
             return
@@ -147,10 +152,6 @@ def restore_session_from_runtime_config():
             return
         selected_sm_m = state_machine_manager_model.get_selected_state_machine_model()
         selected_model_set = []
-        if global_gui_config.get_config_value('GAPHAS_EDITOR'):
-            import gtk
-            while gtk.events_pending():
-                gtk.main_iteration(False)
         for core_element_identifier in session_selection['selection_of_selected_sm']:
             selected_model_set.append(selected_sm_m.get_state_model_by_path(core_element_identifier))
         selected_sm_m.selection.set(selected_model_set)

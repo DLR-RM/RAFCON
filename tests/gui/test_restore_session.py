@@ -96,6 +96,11 @@ def prepare_tab_data_of_open_state_machines(main_window_controller, sm_manager_m
                     page_number,
                     sm_manager_model.state_machines[sm_id].state_machine.marked_dirty)
         open_state_machines['list_of_hash_path_tab_page_number_tuple'].append(sm_tuple)
+    selected_sm = sm_manager_model.get_selected_state_machine_model()
+    if selected_sm and selected_sm.selection.states:
+        open_state_machines['selection_state_machine'] = selected_sm.selection.states[0].state.get_path()
+    else:
+        open_state_machines['selection_state_machine'] = None
 
 
 @log.log_exceptions(None, gtk_quit=True)
@@ -203,7 +208,12 @@ def trigger_gui_signals_first_run(*args):
 
     # change tab position
     state_machines_editor_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
-    call_gui_callback(state_machines_editor_ctrl.rearrange_state_machines, {move_this_sm_id: 1})
+    call_gui_callback(state_machines_editor_ctrl.rearrange_state_machines, {move_this_sm_id: 0})
+
+    # defined selection
+    sm = sm_manager_model.state_machines[move_this_sm_id]
+    sm_manager_model.selected_state_machine_id = move_this_sm_id
+    call_gui_callback(sm.selection.set, sm.root_state.states.values()[0])
 
     ####################
     # NEGATIVE EXAMPLES -> supposed to not been added to the recently opened state machines list
@@ -299,12 +309,14 @@ def test_restore_session(caplog):
     assert open_state_machines['selected_sm_page_number'] == final_open_state_machines['selected_sm_page_number']
     final_tuple_list = final_open_state_machines['list_of_hash_path_tab_page_number_tuple']
 
+    assert open_state_machines['selection_state_machine'] == final_open_state_machines['selection_state_machine']
+
     CORE_HASH_INDEX = 0
     GUI_HASH_INDEX = 1
     PATH_INDEX = 2
     PAGE_NUMBER_INDEX = 3
     MARKED_DIRTY_INDEX = 4
-    order_of_pages_to_be_dirty = [True, False, False, False, True, False, True]
+    order_of_pages_to_be_dirty = [False, True, False, False, True, False, True]
     for index, sm_tuple in enumerate(open_state_machines['list_of_hash_path_tab_page_number_tuple']):
         assert index == sm_tuple[PAGE_NUMBER_INDEX]
         if not final_tuple_list[index][CORE_HASH_INDEX] == sm_tuple[CORE_HASH_INDEX]:
