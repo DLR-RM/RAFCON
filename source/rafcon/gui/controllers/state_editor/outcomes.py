@@ -208,18 +208,13 @@ class StateOutcomesListController(ListViewController):
                 logger.debug("outcome-editor got None in to_outcome-combo-change no transition is added")
 
     def on_add(self, button, info=None):
-        outcome_id = None
-        num_success_outcomes = len(self.model.state.outcomes) - 2
-        for run_id in range(num_success_outcomes + 1, 0, -1):
-            try:
-                gui_helper_state_machine.add_outcome_to_selected_states()
-                outcome_id = self.model.state.add_outcome('success' + str(run_id))
-                break
-            except ValueError as e:
-                if run_id == num_success_outcomes:
-                    logger.warn("The outcome couldn't be added: {0}".format(e))
-                    return True
-        self.select_entry(outcome_id)
+        try:
+            outcome_ids = gui_helper_state_machine.add_outcome_to_selected_states(selected_states=[self.model])
+            if outcome_ids:
+                self.select_entry(outcome_ids[self.model.state])
+        except ValueError as e:
+            logger.warn("The outcome couldn't be added: {0}".format(e))
+            return False
         return True
 
     def remove_core_element(self, model):

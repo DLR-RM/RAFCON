@@ -137,18 +137,14 @@ class ScopedVariableListController(ListViewController):
     def on_add(self, widget, data=None):
         """Create a new scoped variable with default values"""
         if isinstance(self.model, ContainerStateModel):
-            num_data_ports = len(self.model.state.scoped_variables)
-            data_port_id = None
-            for run_id in range(num_data_ports + 1, 0, -1):
-                try:
-                    gui_helper_state_machine.add_scoped_variable_to_selected_states(int)
-                    # data_port_id = self.model.state.add_scoped_variable("scoped_%s" % run_id, "int", 0)
-                    break
-                except ValueError as e:
-                    if run_id == num_data_ports:
-                        logger.warn("The scoped variable couldn't be added: {0}".format(e))
-                        return False
-            self.select_entry(data_port_id)
+            try:
+                scoped_var_ids = gui_helper_state_machine.add_scoped_variable_to_selected_states(selected_states=[self.model])
+                if scoped_var_ids:
+                    self.select_entry(scoped_var_ids[self.model.state])
+            except ValueError as e:
+                logger.warn("The scoped variable couldn't be added: {0}".format(e))
+                return False
+
             return True
 
     def remove_core_element(self, model):

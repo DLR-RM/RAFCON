@@ -732,9 +732,9 @@ def add_scoped_variable_to_selected_states(data_type=None, selected_states=None)
         if isinstance(state_m.state, ContainerState):
             # save name with generated data port id
             data_port_id = id_generator.generate_data_port_id(state_m.state.get_data_port_ids())
-            ids[state_m.state] = data_port_id
             try:
                 state_m.state.add_scoped_variable("scoped_{0}".format(data_port_id), data_type, 0)
+                ids[state_m.state] = data_port_id
             except ValueError as e:
                 logger.warn("The scoped variable couldn't be added: {0}".format(e))
 
@@ -747,15 +747,17 @@ def add_outcome_to_selected_states(selected_states=None):
     if is_selection_inside_of_library_state(selected_elements=selected_states):
         logger.error("Add outcome is not performed because target state is inside of a library state.")
         return
+    ids = {}
     for state_m in selected_states:
         # save name with generated outcome id
         outcome_id = id_generator.generate_outcome_id(state_m.state.outcomes.keys())
-        name = "outcome_" + str(outcome_id)
+        name = "success_" + str(outcome_id)
         try:
             state_m.state.add_outcome(name=name, outcome_id=outcome_id)
+            ids[state_m.state] = outcome_id
         except ValueError as e:
             logger.warn("The outcome couldn't be added: {0}".format(e))
-    return
+    return ids
 
 
 def change_state_type_with_error_handling_and_logger_messages(state_m, target_class):
