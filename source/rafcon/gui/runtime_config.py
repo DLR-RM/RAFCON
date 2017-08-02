@@ -60,9 +60,6 @@ class RuntimeConfig(ObservableConfig):
         self.set_config_value('{0}_POS'.format(title), position)
 
     def save_configuration(self):
-        # screen = main_window.get_screen()
-        # logger.debug("Main window screen:, {0}".format(screen))
-
         # if the runtime_config was not loaded in some startup routine then load it explicitly (= create it)
         if not self.config_file_path:
             self.load()

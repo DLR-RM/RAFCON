@@ -54,7 +54,7 @@ def test_start_script_valid_config():
     # valid config
     bin_path = join(dirname(testing_utils.RAFCON_PATH), "..", "bin")
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
-    config = join(testing_utils.TESTS_PATH, "common", "configs_for_start_script_test", "valid_config", "config.yaml")
+    config = join(testing_utils.TESTS_PATH, "assets", "configs", "valid_config", "config.yaml")
     cmd = "export PATH={0}:$PATH && rafcon_start -o {1} -c {2}".format(bin_path, start_path, config)
     print "\ntest_start_script_valid_config: \n", cmd
     cmd_res = subprocess.call(cmd, shell=True)
@@ -76,7 +76,7 @@ def test_start_script_valid_rmpm_env():
     if not distutils.spawn.find_executable("rmpm_do"):
         print "Could not find rmpm_do, skipping test"
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
-    config = join(testing_utils.TESTS_PATH, "common", "configs_for_start_script_test", "valid_config", "config.yaml")
+    config = join(testing_utils.TESTS_PATH, "assets", "configs", "valid_config", "config.yaml")
     cmd = "eval `rmpm_do env --env-format=embed_sh sw.common.rafcon` && rafcon_start -o {0} -c {1}" \
           "".format(start_path, config)
     print "\ntest_start_script_valid_config: \n", cmd
@@ -102,22 +102,6 @@ def test_start_script_print_help_with_gui():
     rafcon_gui_process.wait()
     assert rafcon_gui_process.returncode == 0
 
-
-'''
-def test_start_script_invalid_config(caplog):
-    # invalid config
-    script = join(dirname(realpath(rafcon.__file__)), "core", "start.py")
-    start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
-    config = join(testing_utils.TESTS_PATH, "common", "configs_for_start_script_test", "invalid_config")
-    cmd = "python %s -o %s -c %s" % (script, start_path, config)
-    subprocess.call(cmd, shell=True)
-    tmp = open("/tmp/rafcon_unit_tests/test_start_script.txt", "r")
-    res = tmp.read()
-    tmp.close()
-    assert (res == "start, state, "), "start with invalid config failed"
-    os.remove("/tmp/rafcon_unit_tests/test_start_script.txt")
-    testing_utils.assert_logger_warnings_and_errors(caplog, 0, 0)
-'''
 
 if __name__ == '__main__':
     # test_start_script_open()

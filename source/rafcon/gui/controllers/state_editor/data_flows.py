@@ -32,6 +32,7 @@ from rafcon.gui.controllers.state_editor.linkage_list import LinkageListControll
 from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
 from rafcon.utils import log, type_helpers
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 logger = log.get_logger(__name__)
 PORT_TYPE_TAG = {InputDataPort: 'IP', OutputDataPort: 'OP', ScopedVariable: 'SV'}
@@ -62,7 +63,8 @@ class StateDataFlowsListController(LinkageListController):
     from_port_external = None
     CORE_ELEMENT_CLASS = DataFlow
 
-    # TODO siblings ports are not observed
+    # TODO siblings ports are not observed -> check if this is still right
+    # TODO if a library with show content flag True is selected also the internal linkage should be shown and fit
 
     def __init__(self, model, view):
         """Constructor
@@ -113,10 +115,16 @@ class StateDataFlowsListController(LinkageListController):
         view['from_key_col'].set_cell_data_func(view['from_key_combo'], cell_text, self.model)
         view['to_key_col'].set_cell_data_func(view['to_key_combo'], cell_text, self.model)
 
-        view['from_state_combo'].connect("edited", self.on_combo_changed_from_state)
-        view['from_key_combo'].connect("edited", self.on_combo_changed_from_key)
-        view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
-        view['to_key_combo'].connect("edited", self.on_combo_changed_to_key)
+        if self.model.state.get_library_root_state():
+            view['from_state_combo'].set_property("editable", False)
+            view['from_key_combo'].set_property("editable", False)
+            view['to_state_combo'].set_property("editable", False)
+            view['to_key_combo'].set_property("editable", False)
+        else:
+            view['from_state_combo'].connect("edited", self.on_combo_changed_from_state)
+            view['from_key_combo'].connect("edited", self.on_combo_changed_from_key)
+            view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
+            view['to_key_combo'].connect("edited", self.on_combo_changed_to_key)
 
         self.tree_view.connect("grab-focus", self.on_focus)
         self.update()
@@ -160,6 +168,9 @@ class StateDataFlowsListController(LinkageListController):
 
     def on_add(self, button, info=None):
         # print "ADD DATA_FLOW"
+        if gui_helper_state_machine.is_selection_inside_of_library_state(selected_elements=[self.model]):
+            logger.error("New data flow is not added because target state is inside of library state.")
+            return
         own_state_id = self.model.state.state_id
         [possible_internal_data_flows, possible_external_data_flows] = self.find_free_and_valid_data_flows(own_state_id)
         # print "\n\npossible internal data_flows\n %s" % possible_internal_data_flows
@@ -210,10 +221,7 @@ class StateDataFlowsListController(LinkageListController):
         :return:
         """
         assert model.data_flow.parent is self.model.state or model.data_flow.parent is self.model.parent.state
-        if self.model.parent and model.data_flow.parent is self.model.parent.state:
-            self.model.parent.state.remove_data_flow(model.data_flow.data_flow_id)
-        else:
-            self.model.state.remove_data_flow(model.data_flow.data_flow_id)
+        gui_helper_state_machine.delete_core_element_of_model(model)
 
     def on_combo_changed_from_state(self, widget, path, text):
         if text is None or self.list_store[path][self.FROM_STATE_STORAGE_ID] == text:
@@ -810,7 +818,8 @@ class StateDataFlowsEditorController(ExtendedController):
             view['internal_d_checkbutton'].set_sensitive(False)
             view['internal_d_checkbutton'].set_active(False)
 
-        if self.model.parent is not None and isinstance(self.model.parent.state, LibraryState):
+        if self.model.parent is not None and isinstance(self.model.parent.state, LibraryState) or \
+                self.model.state.get_library_root_state():
             view['add_d_button'].set_sensitive(False)
             view['remove_d_button'].set_sensitive(False)
 

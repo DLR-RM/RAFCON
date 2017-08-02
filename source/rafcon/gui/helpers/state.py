@@ -23,7 +23,7 @@ from rafcon.gui import singleton as gui_singletons
 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateModel, StateMachineModel, \
     LibraryStateModel, get_state_model_class_for_state
-from rafcon.gui.models.signals import ActionSignalMsg
+from rafcon.gui.models.signals import ActionSignalMsg, MetaSignalMsg
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 
@@ -691,3 +691,18 @@ def ungroup_state(state_m):
 
     del action_parent_m.ungroup_state.__func__.tmp_models_storage
     del action_parent_m.group_states.__func__.affected_models
+
+
+def toggle_show_content_flag_of_library_state_model(state_m):
+    if not isinstance(state_m, LibraryStateModel):
+        logger.warning("The show content is only available for LibraryStateModel instances and can not be toggled for"
+                       "{0}".format(state_m))
+        return
+
+    if state_m.state.get_library_root_state() is not None:
+        logger.warning("Can not change show content of library state that is not uppermost library state.")
+        return
+
+    state_m.meta['gui']['show_content'] = False if state_m.meta['gui']['show_content'] else True
+    msg = MetaSignalMsg(origin='state_overview', change='show_content', affects_children=False)
+    state_m.meta_signal.emit(msg)

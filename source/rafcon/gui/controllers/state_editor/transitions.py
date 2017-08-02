@@ -29,6 +29,7 @@ from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers.label import format_cell
 from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -53,6 +54,8 @@ class StateTransitionsListController(LinkageListController):
     IS_EXTERNAL_STORAGE_ID = 5
     MODEL_STORAGE_ID = 9
     CORE_ELEMENT_CLASS = Transition
+
+    # TODO if a library with show content flag True is selected also the internal linkage should be shown and fit
 
     def __init__(self, model, view):
         # ListStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
@@ -102,10 +105,16 @@ class StateTransitionsListController(LinkageListController):
         view['from_outcome_col'].set_cell_data_func(view['from_outcome_combo'], cell_text)
         view['to_outcome_col'].set_cell_data_func(view['to_outcome_combo'], cell_text)
 
-        view['from_state_combo'].connect("edited", self.on_combo_changed_from_state)
-        view['from_outcome_combo'].connect("edited", self.on_combo_changed_from_outcome)
-        view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
-        view['to_outcome_combo'].connect("edited", self.on_combo_changed_to_outcome)
+        if self.model.state.get_library_root_state():
+            view['from_state_combo'].set_property("editable", False)
+            view['from_outcome_combo'].set_property("editable", False)
+            view['to_state_combo'].set_property("editable", False)
+            view['to_outcome_combo'].set_property("editable", False)
+        else:
+            view['from_state_combo'].connect("edited", self.on_combo_changed_from_state)
+            view['from_outcome_combo'].connect("edited", self.on_combo_changed_from_outcome)
+            view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
+            view['to_outcome_combo'].connect("edited", self.on_combo_changed_to_outcome)
 
         view.tree_view.connect("grab-focus", self.on_focus)
         self.update()
@@ -118,6 +127,9 @@ class StateTransitionsListController(LinkageListController):
 
     def on_add(self, button, info=None):
 
+        if gui_helper_state_machine.is_selection_inside_of_library_state(selected_elements=[self.model]):
+            logger.error("New transition is not added because target state is inside of library state.")
+            return
         free_outcomes = None
 
         if self.view_dict['transitions_internal'] and self.combo['free_from_outcomes_dict']:
@@ -160,10 +172,7 @@ class StateTransitionsListController(LinkageListController):
         :return:
         """
         assert model.transition.parent is self.model.state or model.transition.parent is self.model.parent.state
-        if self.model.parent and model.transition.parent is self.model.parent.state:
-            self.model.parent.state.remove_transition(model.transition.transition_id)
-        else:
-            self.model.state.remove_transition(model.transition.transition_id)
+        gui_helper_state_machine.delete_core_element_of_model(model)
 
     def on_combo_changed_from_state(self, widget, path, text):
         # Check whether the from state was changed or the combo entry is empty
@@ -671,7 +680,8 @@ class StateTransitionsEditorController(ExtendedController):
             view['internal_t_checkbutton'].set_sensitive(False)
             view['internal_t_checkbutton'].set_active(False)
 
-        if self.model.parent is not None and isinstance(self.model.parent.state, LibraryState):
+        if self.model.parent is not None and isinstance(self.model.parent.state, LibraryState) or \
+                self.model.state.get_library_root_state():
             view['add_t_button'].set_sensitive(False)
             view['remove_t_button'].set_sensitive(False)
 

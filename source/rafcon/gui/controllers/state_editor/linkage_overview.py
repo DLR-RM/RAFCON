@@ -21,12 +21,14 @@
 from gtkmvc import Model
 
 from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.library_state import LibraryState
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.controllers.state_editor.io_data_port_list import InputPortListController, OutputPortListController
 from rafcon.gui.controllers.state_editor.scoped_variable_list import ScopedVariableListController
 from rafcon.gui.controllers.state_editor.outcomes import StateOutcomesEditorController
+from rafcon.gui.models import LibraryStateModel, ContainerStateModel
 
 
 class LinkageOverviewController(ExtendedController, Model):
@@ -35,10 +37,12 @@ class LinkageOverviewController(ExtendedController, Model):
 
         self.add_controller('input_data_ports', InputPortListController(model, view.inputs_view))
         self.add_controller('output_data_ports', OutputPortListController(model, view.outputs_view))
-        self.add_controller('scoped_variables', ScopedVariableListController(model, view.scope_view))
         self.add_controller('outcomes', StateOutcomesEditorController(model, view.outcomes_view))
 
-        if isinstance(self.model.state, LibraryState) or isinstance(self.model.state, ExecutionState):
+        scoped_variable_state_m = model.state_copy if isinstance(model, LibraryStateModel) else model
+        self.add_controller('scoped_variables', ScopedVariableListController(scoped_variable_state_m, view.scope_view))
+
+        if not isinstance(scoped_variable_state_m, ContainerStateModel):
             view['scoped_box'].destroy()
 
         view.inputs_view.show()

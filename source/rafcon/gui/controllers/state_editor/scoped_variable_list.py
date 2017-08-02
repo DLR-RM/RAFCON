@@ -30,6 +30,7 @@ from rafcon.gui.controllers.utils.tree_view_controller import ListViewController
 from rafcon.gui.views.state_editor.scoped_variables_list import ScopedVariablesListView
 from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.clipboard import global_clipboard
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 from rafcon.gui.utils.comparison import compare_variables
 from rafcon.utils import log
@@ -73,14 +74,14 @@ class ScopedVariableListController(ListViewController):
         super(ScopedVariableListController, self).register_view(view)
 
         view['name_col'].add_attribute(view['name_text'], 'text', self.NAME_STORAGE_ID)
-        if not isinstance(self.model.state, LibraryState):
+        if not isinstance(self.model.state, LibraryState) and self.model.state.get_library_root_state() is None:
             view['name_text'].set_property("editable", True)
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', self.DATA_TYPE_NAME_STORAGE_ID)
-        if not isinstance(self.model.state, LibraryState):
+        if not isinstance(self.model.state, LibraryState) and self.model.state.get_library_root_state() is None:
             view['data_type_text'].set_property("editable", True)
         if isinstance(view, ScopedVariablesListView):
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', self.DEFAULT_VALUE_STORAGE_ID)
-            if not isinstance(self.model.state, LibraryState):
+            if not isinstance(self.model.state, LibraryState) and self.model.state.get_library_root_state() is None:
                 view['default_value_text'].set_property("editable", True)
             self._apply_value_on_edited_and_focus_out(view['default_value_text'],
                                                       self.apply_new_scoped_variable_default_value)
@@ -136,17 +137,14 @@ class ScopedVariableListController(ListViewController):
     def on_add(self, widget, data=None):
         """Create a new scoped variable with default values"""
         if isinstance(self.model, ContainerStateModel):
-            num_data_ports = len(self.model.state.scoped_variables)
-            data_port_id = None
-            for run_id in range(num_data_ports + 1, 0, -1):
-                try:
-                    data_port_id = self.model.state.add_scoped_variable("scoped_%s" % run_id, "int", 0)
-                    break
-                except ValueError as e:
-                    if run_id == num_data_ports:
-                        logger.warn("The scoped variable couldn't be added: {0}".format(e))
-                        return False
-            self.select_entry(data_port_id)
+            try:
+                scoped_var_ids = gui_helper_state_machine.add_scoped_variable_to_selected_states(selected_states=[self.model])
+                if scoped_var_ids:
+                    self.select_entry(scoped_var_ids[self.model.state])
+            except ValueError as e:
+                logger.warn("The scoped variable couldn't be added: {0}".format(e))
+                return False
+
             return True
 
     def remove_core_element(self, model):
@@ -156,7 +154,7 @@ class ScopedVariableListController(ListViewController):
         :return:
         """
         assert model.scoped_variable.parent is self.model.state
-        self.model.state.remove_scoped_variable(model.scoped_variable.data_port_id)
+        gui_helper_state_machine.delete_core_element_of_model(model)
 
     def apply_new_scoped_variable_name(self, path, new_name):
         """Applies the new name of the scoped variable defined by path

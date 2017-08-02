@@ -1,11 +1,7 @@
 import os
 import pytest
-import rafcon.gui.singleton
 import testing_utils
 
-import rafcon.core.states.execution_state
-import rafcon.core.states.hierarchy_state
-import rafcon.core.states.preemptive_concurrency_state
 from rafcon.core.storage import storage as global_storage
 
 from rafcon.core.singleton import global_variable_manager as gvm

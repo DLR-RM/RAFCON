@@ -37,6 +37,8 @@ from rafcon.gui.controllers.utils.editor import EditorController
 from rafcon.gui.singleton import state_machine_manager_model
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
+from rafcon.gui.models import AbstractStateModel, LibraryStateModel
+from rafcon.gui.views.utils.editor import EditorView
 from rafcon.utils import filesystem
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
@@ -57,13 +59,15 @@ class SourceEditorController(EditorController):
     tmp_file = os.path.join(RAFCON_TEMP_PATH_STORAGE, 'file_to_get_pylinted.py')
 
     def __init__(self, model, view):
-        """Constructor"""
+        assert isinstance(model, AbstractStateModel)
+        assert isinstance(view, EditorView)
+        lib_with_show_content = isinstance(model, LibraryStateModel) and not model.show_content()
+        model = model.state_copy if lib_with_show_content else model
         super(SourceEditorController, self).__init__(model, view, observed_method="script_text")
+        self.saved_initial = False
 
     def register_view(self, view):
         super(SourceEditorController, self).register_view(view)
-
-        self.saved_initial = False
 
         view['open_external_button'].connect('clicked', self.open_external_clicked)
         view['apply_button'].connect('clicked', self.apply_clicked)
@@ -76,11 +80,12 @@ class SourceEditorController(EditorController):
         view['open_external_button'].set_tooltip_text("Open source in external editor. " +
                                                       global_gui_config.get_config_value('SHORTCUTS')['open_external_editor'][0])
 
-        if isinstance(self.model.state, LibraryState):
+        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
             view['pylint_check_button'].set_sensitive(False)
-            view.textview.set_sensitive(False)
+            view.textview.set_editable(False)
             view['apply_button'].set_sensitive(False)
             view['cancel_button'].set_sensitive(False)
+            view['open_external_button'].set_sensitive(False)
 
     @property
     def source_text(self):

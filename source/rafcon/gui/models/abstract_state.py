@@ -67,7 +67,7 @@ class AbstractStateModel(MetaModel, Hashable):
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state).
 
-    :param rafcon.core.states.state.State state: The state to be managed
+    :param state: The state to be managed which can be any derivative of rafcon.core.states.state.State.
     :param AbstractStateModel parent: The state to be managed
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state
      """

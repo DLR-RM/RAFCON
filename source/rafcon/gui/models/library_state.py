@@ -30,24 +30,21 @@ class LibraryStateModel(AbstractStateModel):
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state).
 
-    :param State state: The state to be managed
+    :param rafcon.core.states.library_state.LibraryState state: The state to be managed
      """
 
     state_copy = None
 
     def __init__(self, state, parent=None, meta=None, load_meta_data=True):
-        """Constructor
-        """
+        assert isinstance(state, LibraryState)
         # TODO maybe find a different way to load the meta data of ports correctly
         # at the moment the models of state_copy get initialized and the meta data taken from there if not found in
         # state itself
         self.state_copy_initialized = False
         self.meta_data_was_scaled = False
         super(LibraryStateModel, self).__init__(state, parent, meta)
-        assert isinstance(state, LibraryState)
         model_class = get_state_model_class_for_state(state.state_copy)
         if model_class is not None:
-            # print "load library inner state meta data\n", model_class, state.state_copy.file_system_path
             self.state_copy = model_class(state.state_copy, parent=self)  # TODO think about load_meta_data=False)
         else:
             logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
@@ -58,21 +55,13 @@ class LibraryStateModel(AbstractStateModel):
         self._load_outcome_models()
 
         if load_meta_data:
-            # print "load library hull state meta data\n", self.state.file_system_path
-            # for m in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
-            #     print "lib init 1: ", m, m.meta
-            # self.load_meta_data()
 
             if not self.load_meta_data():
                 # TODO decide to scale here or still in the editor -> at the moment meta data is missing here
-                # print "try to scale accordingly to state copy proportion"
                 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
                 # gui_helper_meta_data.scale_library_ports_meta_data(self)
             else:
                 self.meta_data_was_scaled = True
-
-        # for m in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
-        #     print "lib init 2: ", m, m.meta
 
     def __eq__(self, other):
         # logger.info("compare method")
@@ -128,25 +117,23 @@ class LibraryStateModel(AbstractStateModel):
     def show_content(self):
         """Check if content of library is to be shown
         
-        Content is shown, if the state's meta flag "show_content" is True or if the same flag for a library up in
-        the hierarchy (up to a certain configurable level) is True.
+        Content is shown, if the uppermost state's meta flag "show_content" is True and the library hierarchy depth
+        (up to MAX_VISIBLE_LIBRARY_HIERARCHY level) is not to high.
         
-        :return: Whether the content is to be drawn
+        :return: Whether the content is to be shown
         :rtype: bool
         """
-        current_hierarchy_depth = 1
+        current_hierarchy_depth = self.state.library_hierarchy_depth
         max_hierarchy_depth = global_gui_config.get_config_value("MAX_VISIBLE_LIBRARY_HIERARCHY", 2)
-        state_m = self
-        while True:
-            if isinstance(state_m, LibraryStateModel) and state_m.meta['gui']['show_content']:
-                return True
-            if current_hierarchy_depth >= max_hierarchy_depth:
-                return False
-            if state_m.state.is_root_state_of_library:
-                current_hierarchy_depth += 1
-            if not state_m.parent:
-                return False
-            state_m = state_m.parent
+        if current_hierarchy_depth >= max_hierarchy_depth:
+            return False
+        if current_hierarchy_depth > 1:
+            uppermost_lib_state = self.state.get_uppermost_library_root_state().parent
+            uppermost_lib_state_m = self.get_state_machine_m().get_state_model_by_path(uppermost_lib_state.get_path())
+        else:
+            uppermost_lib_state_m = self
+        uppermost_lib_meta = uppermost_lib_state_m.meta
+        return False if 'show_content' not in uppermost_lib_meta['gui'] else uppermost_lib_meta['gui']['show_content']
 
     def copy_meta_data_from_state_m(self, source_state_m):
         super(LibraryStateModel, self).copy_meta_data_from_state_m(source_state_m)

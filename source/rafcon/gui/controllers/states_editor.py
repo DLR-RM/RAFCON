@@ -27,8 +27,7 @@ import gtk
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.state_editor.state_editor import StateEditorController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.models.abstract_state import AbstractStateModel
-from rafcon.gui.models.container_state import ContainerStateModel
+from rafcon.gui.models import AbstractStateModel, ContainerStateModel, LibraryStateModel
 from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.singleton import gui_config_model
@@ -37,8 +36,6 @@ from rafcon.gui.utils.notification_overview import NotificationOverview, \
     is_execution_status_update_notification_from_state_machine_model
 from rafcon.gui.views.state_editor.state_editor import StateEditorView
 from rafcon.gui.helpers import text_formatting
-
-from rafcon.core.states.library_state import LibraryState
 
 from rafcon.utils import log
 
@@ -266,14 +263,14 @@ class StatesEditorController(ExtendedController):
             del self.closed_tabs[state_identifier]  # pages not in self.closed_tabs and self.tabs at the same time
         else:
             state_editor_view = StateEditorView()
-            if isinstance(state_m.state, LibraryState):
+            if isinstance(state_m, LibraryStateModel):
                 state_editor_view['main_notebook_1'].set_current_page(
                     state_editor_view['main_notebook_1'].page_num(state_editor_view.page_dict["Data Linkage"]))
             state_editor_ctrl = StateEditorController(state_m, state_editor_view)
             self.add_controller(state_identifier, state_editor_ctrl)
-            if state_editor_ctrl.get_controller('source_ctrl'):
+            if state_editor_ctrl.get_controller('source_ctrl') and state_m.state.get_library_root_state() is None:
                 handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
-                                                                                   state_m)
+                                                                                state_m)
             else:
                 handler_id = None
             source_code_view_is_dirty = False
@@ -326,12 +323,16 @@ class StatesEditorController(ExtendedController):
             return
         current_text = tab_list[state_identifier]['controller'].get_controller('source_ctrl').view.get_text()
         old_is_dirty = tab_list[state_identifier]['source_code_view_is_dirty']
-        if state_m.state.script_text == current_text:
+        source_script_state_m = state_m.state_copy if isinstance(state_m, LibraryStateModel) else state_m
+        # remove next two lines and tab is also set dirty for source scripts inside of a LibraryState (maybe in future)
+        if isinstance(state_m, LibraryStateModel) or state_m.state.get_library_root_state() is not None:
+            return
+        if source_script_state_m.state.script_text == current_text:
             tab_list[state_identifier]['source_code_view_is_dirty'] = False
         else:
             tab_list[state_identifier]['source_code_view_is_dirty'] = True
         if old_is_dirty is not tab_list[state_identifier]['source_code_view_is_dirty']:
-            self.update_tab_label(state_m)
+            self.update_tab_label(source_script_state_m)
 
     def destroy_page(self, tab_dict):
         """ Destroys desired page
@@ -459,7 +460,6 @@ class StatesEditorController(ExtendedController):
                 # add tab for desired state
                 page_id = self.add_state_editor(state_m)
                 self.view.notebook.set_current_page(page_id)
-
             # bring tab for desired state into foreground
             else:
                 page = self.tabs[state_identifier]['page']

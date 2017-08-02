@@ -2,13 +2,12 @@ import copy
 import signal
 import tempfile
 from os import mkdir, environ
-from os.path import join, dirname, realpath, isdir, exists, abspath
+from os.path import join, dirname, realpath, exists, abspath
 from threading import Lock, Condition, Event, Thread
 
 import rafcon
 from rafcon.utils import log, constants
 from rafcon.core.config import global_config
-global_config.load(path=join(dirname(abspath(__file__)), "common", "config_path"))
 
 test_multithreading_lock = Lock()
 
@@ -34,6 +33,8 @@ TUTORIAL_PATH = join(TESTS_PATH, "..", "share", "examples", "tutorials")
 RAFCON_SHARED_LIBRARY_PATH = join(dirname(RAFCON_PATH), '..', 'share', 'libraries')
 print LIBRARY_SM_PATH
 print RAFCON_SHARED_LIBRARY_PATH
+
+global_config.load(path=join(TESTS_PATH, "assets", "configs", "valid_config"))
 
 
 def get_unique_temp_path():

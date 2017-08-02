@@ -26,20 +26,21 @@ from gtkmvc import Model
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.states.state import StateType
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import format_cell
 from rafcon.gui.models.signals import MetaSignalMsg
+from rafcon.gui.models import AbstractStateModel, LibraryStateModel
+from rafcon.gui.views.state_editor.overview import StateOverviewView
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
 
-class StateOverviewController(ExtendedController, Model):
+class StateOverviewController(ExtendedController):
     """Controller handling the view of properties/attributes of the ContainerStateModel
 
     This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
@@ -54,8 +55,11 @@ class StateOverviewController(ExtendedController, Model):
     def __init__(self, model, view, with_is_start_state_check_box=False):
         """Constructor
         """
+        assert isinstance(model, AbstractStateModel)
+        assert isinstance(view, StateOverviewView)
         ExtendedController.__init__(self, model, view)
 
+        self._external_update = False
         self.state_types_dict = {}
         self.with_is_start_state_check_box = with_is_start_state_check_box
 
@@ -81,6 +85,8 @@ class StateOverviewController(ExtendedController, Model):
         """Called when the View was registered
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
+
+        :param rafcon.gui.views.state_editor.overview.StateOverviewView view: A state overview view instance
         """
         # prepare State Type Change ComboBox
         self.state_types_dict = self.change_state_type_class_dict(self.model.state)
@@ -105,7 +111,7 @@ class StateOverviewController(ExtendedController, Model):
         view['type_viewport'].show()
 
         # Prepare label for state_name -> Library states cannot be changed
-        if isinstance(self.model.state, LibraryState):
+        if isinstance(self.model, LibraryStateModel):
             l_store.prepend(['LIBRARY'])
             combo.set_sensitive(False)
 
@@ -142,6 +148,14 @@ class StateOverviewController(ExtendedController, Model):
         if isinstance(self.model.state, DeciderState):
             combo.set_sensitive(False)
 
+        # in case the state is inside of a library
+        if self.model.state.get_library_root_state():
+            view['entry_name'].set_editable(False)
+            combo.set_sensitive(False)
+            view['is_start_state_checkbutton'].set_sensitive(False)
+            if isinstance(self.model, LibraryStateModel):
+                self.view['show_content_checkbutton'].set_sensitive(False)
+
     def register_adapters(self):
         """Adapters should be registered in this method call
 
@@ -160,16 +174,26 @@ class StateOverviewController(ExtendedController, Model):
             gui_helper_state_machine.selected_state_toggle_is_start_state()
 
     def on_toggle_show_content(self, checkbox):
+        if self._external_update:
+            return
         self.model.meta['gui']['show_content'] = checkbox.get_active()
         msg = MetaSignalMsg(origin='state_overview', change='show_content', affects_children=False)
         self.model.meta_signal.emit(msg)
 
-    @Model.observe('is_start', assign=True)
+    @ExtendedController.observe("meta_signal", signal=True)
+    def show_content_changed(self, model, prop_name, info):
+        meta_signal_message = info['arg']
+        if meta_signal_message.change == 'show_content':
+            self._external_update = True
+            self.view['show_content_checkbutton'].set_active(model.meta['gui']['show_content'])
+            self._external_update = False
+
+    @ExtendedController.observe('is_start', assign=True)
     def notify_is_start(self, model, prop_name, info):
         if self.view is not None and not self.view['is_start_state_checkbutton'].get_active() == self.model.is_start:
             self.view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
 
-    @Model.observe('state', after=True)
+    @ExtendedController.observe('state', after=True)
     def notify_name_change(self, model, prop_name, info):
         if self.view is not None and info['method_name'] == 'name':
             self.view['entry_name'].set_text(self.model.state.name)

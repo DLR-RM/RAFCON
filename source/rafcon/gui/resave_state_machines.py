@@ -196,5 +196,5 @@ if __name__ == '__main__':
     target_path = None
     if len(sys.argv) >= 4:
         target_path = sys.argv[3]
-    logger.error("folder to convert: " + folder_to_convert)
+    logger.info("folder to convert: " + folder_to_convert)
     convert_libraries_in_path(config_path, folder_to_convert, target_path)

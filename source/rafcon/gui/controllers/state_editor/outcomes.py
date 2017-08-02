@@ -30,7 +30,8 @@ from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController, react_to_event
 from rafcon.gui.views.state_editor.outcomes import StateOutcomesTreeView, StateOutcomesEditorView
-from rafcon.gui.models.container_state import ContainerStateModel
+from rafcon.gui.models.container_state import ContainerStateModel, AbstractStateModel
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -56,6 +57,7 @@ class StateOutcomesListController(ListViewController):
     CORE_ELEMENT_CLASS = Outcome
 
     def __init__(self, model, view):
+        assert isinstance(model, AbstractStateModel)
         # initiate data base and tree
         # id, name, to-state, to-outcome, name-color, to-state-color, outcome, state, outcome_model
         list_store = gtk.ListStore(int, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
@@ -88,6 +90,10 @@ class StateOutcomesListController(ListViewController):
         if isinstance(view, StateOutcomesTreeView):
             view['to_state_combo'].connect("edited", self.on_to_state_edited)
             view['to_outcome_combo'].connect("edited", self.on_to_outcome_edited)
+
+        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
+            view['id_cell'].set_property('editable', False)
+            view['name_cell'].set_property('editable', False)
 
         self._apply_value_on_edited_and_focus_out(view['name_cell'], self.apply_new_outcome_name)
 
@@ -202,17 +208,13 @@ class StateOutcomesListController(ListViewController):
                 logger.debug("outcome-editor got None in to_outcome-combo-change no transition is added")
 
     def on_add(self, button, info=None):
-        outcome_id = None
-        num_success_outcomes = len(self.model.state.outcomes) - 2
-        for run_id in range(num_success_outcomes + 1, 0, -1):
-            try:
-                outcome_id = self.model.state.add_outcome('success' + str(run_id))
-                break
-            except ValueError as e:
-                if run_id == num_success_outcomes:
-                    logger.warn("The outcome couldn't be added: {0}".format(e))
-                    return True
-        self.select_entry(outcome_id)
+        try:
+            outcome_ids = gui_helper_state_machine.add_outcome_to_selected_states(selected_states=[self.model])
+            if outcome_ids:
+                self.select_entry(outcome_ids[self.model.state])
+        except ValueError as e:
+            logger.warn("The outcome couldn't be added: {0}".format(e))
+            return False
         return True
 
     def remove_core_element(self, model):
@@ -222,7 +224,7 @@ class StateOutcomesListController(ListViewController):
         :return:
         """
         assert model.outcome.parent is self.model.state
-        self.model.state.remove_outcome(model.outcome.outcome_id)
+        gui_helper_state_machine.delete_core_element_of_model(model)
 
     def on_right_click_menu(self):
         pass
@@ -296,13 +298,15 @@ class StateOutcomesListController(ListViewController):
 
         if isinstance(self.view, StateOutcomesTreeView):
             for cell_renderer in self.view['to_state_col'].get_cell_renderers():
-                cell_renderer.set_property("editable", True)
+                if self.model.state.get_library_root_state() is None:
+                    cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_state_combo_list)
                 cell_renderer.set_property("text-column", self.ID_STORAGE_ID)
                 cell_renderer.set_property("has-entry", False)
         if self.view and isinstance(self.view, StateOutcomesTreeView):
             for cell_renderer in self.view['to_outcome_col'].get_cell_renderers():
-                cell_renderer.set_property("editable", True)
+                if self.model.state.get_library_root_state() is None:
+                    cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_outcome_combo_list)
                 cell_renderer.set_property("text-column", self.ID_STORAGE_ID)
                 cell_renderer.set_property("has-entry", False)
@@ -341,7 +345,7 @@ class StateOutcomesEditorController(ExtendedController):
             view['add_button'].connect("clicked", self.oc_list_ctrl.on_add)
             view['remove_button'].connect("clicked", self.oc_list_ctrl.on_remove)
 
-            if isinstance(self.model.state, LibraryState):
+            if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
                 view['add_button'].set_sensitive(False)
                 view['remove_button'].set_sensitive(False)
 

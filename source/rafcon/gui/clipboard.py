@@ -69,6 +69,9 @@ class Clipboard(Observable):
         :return:
         """
         assert isinstance(selection, Selection)
+        if any([state_m.state.get_library_root_state() is not None for state_m in selection.states]):
+            logger.warning("Cut is not performed because elements inside of a library state are selected.")
+            return
         self.reset_clipboard()
         self.__create_core_object_copies(selection, smart_selection_adaption)
         self.do_cut_removal()
@@ -92,8 +95,13 @@ class Clipboard(Observable):
         via points
         :return:
         """
-        assert isinstance(target_state_m, StateModel)
-        # logger.info("PASTE -> meta data adaptation has to be implemented")
+        if not isinstance(target_state_m, StateModel):
+            logger.error("Paste is not performed because target state has to be represented by a StateModel not {0}"
+                         "".format(target_state_m.__class__.__name__))
+            return
+        if target_state_m.state.get_library_root_state() is not None:
+            logger.error("Paste is not performed because selected target state is inside of a library state.")
+            return
 
         element_m_copy_lists = self.model_copies
         self.prepare_new_copy()  # threaded in future -> important that the copy is prepared here!!!

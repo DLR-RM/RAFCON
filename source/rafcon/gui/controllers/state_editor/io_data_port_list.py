@@ -33,6 +33,7 @@ from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.views.state_editor.input_port_list import InputPortsListView
 from rafcon.gui.views.state_editor.output_port_list import OutputPortsListView
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 from rafcon.gui.utils.comparison import compare_variables
 from rafcon.utils import log
@@ -63,19 +64,20 @@ class DataPortListController(ListViewController):
 
         view['name_col'].add_attribute(view['name_text'], 'text', self.NAME_STORAGE_ID)
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', self.DATA_TYPE_NAME_STORAGE_ID)
-        if not isinstance(self.model.state, LibraryState):
+        if not isinstance(self.model.state, LibraryState) and self.model.state.get_library_root_state() is None:
             view['name_text'].set_property("editable", True)
             view['data_type_text'].set_property("editable", True)
 
         # in the linkage overview the the default value is not shown
         if isinstance(view, InputPortsListView) or isinstance(view, OutputPortsListView):
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', self.DEFAULT_VALUE_STORAGE_ID)
-            # if not isinstance(self.model.state, LibraryState):
-            view['default_value_text'].set_property("editable", True)
             self._apply_value_on_edited_and_focus_out(view['default_value_text'], self._apply_new_data_port_default_value)
             if isinstance(self.model.state, LibraryState):
                 view['default_value_col'].set_title("Used value")
-            view['default_value_col'].set_cell_data_func(view['default_value_text'], self._default_value_cell_data_func)
+            if self.model.state.get_library_root_state() is None:  # never enabled means it is disabled
+                view['default_value_text'].set_property("editable", True)
+                view['default_value_col'].set_cell_data_func(view['default_value_text'],
+                                                             self._default_value_cell_data_func)
 
         self._apply_value_on_edited_and_focus_out(view['name_text'], self._apply_new_data_port_name)
         self._apply_value_on_edited_and_focus_out(view['data_type_text'], self._apply_new_data_port_type)
@@ -89,8 +91,9 @@ class DataPortListController(ListViewController):
             view['use_runtime_value_col'].pack_start(view['use_runtime_value_toggle'], True)
             view['use_runtime_value_col'].add_attribute(view['use_runtime_value_toggle'], 'active',
                                                         self.USE_RUNTIME_VALUE_STORAGE_ID)
-            view['use_runtime_value_toggle'].set_property("activatable", True)
-            view['use_runtime_value_toggle'].connect("toggled", self.on_use_runtime_value_toggled)
+            if self.model.state.get_library_root_state() is None:
+                view['use_runtime_value_toggle'].set_property("activatable", True)
+                view['use_runtime_value_toggle'].connect("toggled", self.on_use_runtime_value_toggled)
 
         self._reload_data_port_list_store()
 
@@ -341,21 +344,16 @@ class InputPortListController(DataPortListController):
 
     def add_new_data_port(self):
         """Add a new port with default values and select it"""
-        num_data_ports = len(self.model.state.input_data_ports)
-        for run_id in range(num_data_ports + 1, 0, -1):
-            new_port_name = "input_{0}".format(run_id)
-            try:
-                new_data_port_id = self.model.state.add_input_data_port(new_port_name, "int", "0")
-                self.select_entry(new_data_port_id)
-                break
-            except ValueError:
-                pass
-        else:
-            logger.error("Could not create new input data port")
+        try:
+            new_data_port_ids = gui_helper_state_machine.add_data_port_to_selected_states('INPUT', int, [self.model])
+            if new_data_port_ids:
+                self.select_entry(new_data_port_ids[self.model.state])
+        except ValueError:
+            pass
 
     def remove_core_element(self, model):
         assert model.data_port.parent is self.model.state
-        self.model.state.remove_input_data_port(model.data_port.data_port_id)
+        gui_helper_state_machine.delete_core_element_of_model(model)
 
     def toggle_runtime_value_usage(self, data_port_id):
         current_flag = self.model.state.use_runtime_value_input_data_ports[data_port_id]
@@ -417,21 +415,16 @@ class OutputPortListController(DataPortListController):
 
     def add_new_data_port(self):
         """Add a new port with default values and select it"""
-        num_data_ports = len(self.model.state.output_data_ports)
-        for run_id in range(num_data_ports + 1, 0, -1):
-            new_port_name = "output_{0}".format(run_id)
-            try:
-                new_data_port_id = self.model.state.add_output_data_port(new_port_name, "int", "0")
-                self.select_entry(new_data_port_id)
-                break
-            except ValueError:
-                pass
-        else:
-            logger.error("Could not create new output data port")
+        try:
+            new_data_port_ids = gui_helper_state_machine.add_data_port_to_selected_states('OUTPUT', int, [self.model])
+            if new_data_port_ids:
+                self.select_entry(new_data_port_ids[self.model.state])
+        except ValueError:
+            pass
 
     def remove_core_element(self, model):
         assert model.data_port.parent is self.model.state
-        self.model.state.remove_output_data_port(model.data_port.data_port_id)
+        gui_helper_state_machine.delete_core_element_of_model(model)
 
     def toggle_runtime_value_usage(self, data_port_id):
         current_flag = self.model.state.use_runtime_value_output_data_ports[data_port_id]

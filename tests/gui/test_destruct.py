@@ -14,7 +14,7 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 import rafcon.gui.controllers
 import rafcon.gui.controllers.utils
 
-import test_states as basic_state_machines
+import core.test_states as basic_state_machines
 import testing_utils
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -220,7 +220,7 @@ def check_destruction_logs(elements, print_method=None):
 
 def run_model_construction():
 
-    from test_zy_history import create_models
+    from gui.test_history import create_models
     logger, sm_m, state_dict = create_models()
     # root_state = sm_m.root_state
 
@@ -238,7 +238,7 @@ def run_model_construction():
 
 def run_controller_construction(caplog, with_gui):
     # for a start load one of the type change tests to generate a lot of controllers which also close the GUI
-    from test_z_gui_states_editor_widget import create_models, MainWindowView, \
+    from test_states_editor_widget import create_models, MainWindowView, \
         MainWindowController, trigger_state_type_change_tests, gtk, threading
 
     sm_m, state_dict = create_models()

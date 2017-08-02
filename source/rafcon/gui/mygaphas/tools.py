@@ -44,11 +44,11 @@ class RemoveItemTool(Tool):
         if gtk.gdk.keyval_name(event.keyval) == "Delete":
             # Delete Transition from state machine
             if isinstance(self.view.focused_item, TransitionView):
-                gui_helper_state_machine.delete_model(self.view.focused_item.model)
+                gui_helper_state_machine.delete_core_element_of_model(self.view.focused_item.model)
                 return True
             # Delete DataFlow from state machine
             if isinstance(self.view.focused_item, DataFlowView):
-                gui_helper_state_machine.delete_model(self.view.focused_item.model)
+                gui_helper_state_machine.delete_core_element_of_model(self.view.focused_item.model)
                 return True
             # Delete selected state(s) from state machine
             if isinstance(self.view.focused_item, StateView):
@@ -187,7 +187,8 @@ class HoverItemTool(HoverTool):
         # Reset cursor
         self.view.window.set_cursor(gtk.gdk.Cursor(DEFAULT_CURSOR))
 
-        # Check if hovered_item is within a LibraryState, if so, set hovered_item to the LibraryState
+        # Check if hovered_item is within a LibraryState, if so, set hovered_item to the LibraryState or
+        # upper most LibraryState
         if view.hovered_item:
             if isinstance(view.hovered_item, StateView):
                 state = view.hovered_item.model.state
@@ -196,22 +197,20 @@ class HoverItemTool(HoverTool):
                 hovered_state_v = view.canvas.get_parent(view.hovered_item)
                 state = hovered_state_v.model.state
 
-            # Find state_copy of uppermost LibraryState
-            library_root_state = state.get_library_root_state()
-            while True:
+            global_gui_config = gui_helper_state_machine.global_gui_config
+            if global_gui_config.get_config_value('STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED'):
+                # select the library state instate library_root_state because it is hidden
+                if state.is_root_state_of_library:
+                    view.hovered_item = self.view.canvas.get_view_for_core_element(state.parent)
+            else:
+                # Find state_copy of uppermost LibraryState
+                library_root_state = state.get_uppermost_library_root_state()
+
+                # If the hovered element is a child of a library, make the library the hovered_item
                 if library_root_state:
-                    parent_library_root_state = library_root_state.parent.get_library_root_state()
-                else:
-                    break
-                if parent_library_root_state:
-                    library_root_state = parent_library_root_state
-                else:
-                    break
-            # If the hovered element is a child of a library, make the library the hovered_item
-            if library_root_state:
-                library_parent = library_root_state.parent
-                library_parent_v = self.view.canvas.get_view_for_core_element(library_parent)
-                view.hovered_item = library_parent_v
+                    library_state = library_root_state.parent
+                    library_state_v = self.view.canvas.get_view_for_core_element(library_state)
+                    view.hovered_item = library_state_v
 
         if isinstance(view.hovered_item, StateView):
             distance = view.hovered_item.border_width / 2.

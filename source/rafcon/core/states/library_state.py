@@ -514,3 +514,19 @@ class LibraryState(State):
             return super(LibraryState, self).get_storage_path(appendix)
         else:
             return self.lib_os_path + PATH_SEPARATOR + appendix
+
+    @property
+    def library_hierarchy_depth(self):
+        """ Calculates the library hierarchy depth
+
+        Counting starts at the current library state. So if the there is no upper library state the depth is one.
+        
+        :return: library hierarchy depth
+        :rtype: int
+        """
+        current_library_hierarchy_depth = 1
+        library_root_state = self.get_library_root_state()
+        while library_root_state is not None:
+            current_library_hierarchy_depth += 1
+            library_root_state = library_root_state.parent.get_library_root_state()
+        return current_library_hierarchy_depth
