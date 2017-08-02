@@ -29,6 +29,7 @@ from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers.label import format_cell
 from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -126,6 +127,9 @@ class StateTransitionsListController(LinkageListController):
 
     def on_add(self, button, info=None):
 
+        if gui_helper_state_machine.is_selection_inside_of_library_state(selected_elements=[self.model]):
+            logger.error("New transition is not added because target state is inside of library state.")
+            return
         free_outcomes = None
 
         if self.view_dict['transitions_internal'] and self.combo['free_from_outcomes_dict']:
@@ -168,10 +172,7 @@ class StateTransitionsListController(LinkageListController):
         :return:
         """
         assert model.transition.parent is self.model.state or model.transition.parent is self.model.parent.state
-        if self.model.parent and model.transition.parent is self.model.parent.state:
-            self.model.parent.state.remove_transition(model.transition.transition_id)
-        else:
-            self.model.state.remove_transition(model.transition.transition_id)
+        gui_helper_state_machine.delete_core_element_of_model(model)
 
     def on_combo_changed_from_state(self, widget, path, text):
         # Check whether the from state was changed or the combo entry is empty

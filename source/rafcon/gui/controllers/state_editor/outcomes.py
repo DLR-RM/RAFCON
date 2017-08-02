@@ -31,6 +31,7 @@ from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController, react_to_event
 from rafcon.gui.views.state_editor.outcomes import StateOutcomesTreeView, StateOutcomesEditorView
 from rafcon.gui.models.container_state import ContainerStateModel, AbstractStateModel
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -211,6 +212,7 @@ class StateOutcomesListController(ListViewController):
         num_success_outcomes = len(self.model.state.outcomes) - 2
         for run_id in range(num_success_outcomes + 1, 0, -1):
             try:
+                gui_helper_state_machine.add_outcome_to_selected_states()
                 outcome_id = self.model.state.add_outcome('success' + str(run_id))
                 break
             except ValueError as e:
@@ -227,7 +229,7 @@ class StateOutcomesListController(ListViewController):
         :return:
         """
         assert model.outcome.parent is self.model.state
-        self.model.state.remove_outcome(model.outcome.outcome_id)
+        gui_helper_state_machine.delete_core_element_of_model(model)
 
     def on_right_click_menu(self):
         pass

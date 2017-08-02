@@ -33,6 +33,7 @@ from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.views.state_editor.input_port_list import InputPortsListView
 from rafcon.gui.views.state_editor.output_port_list import OutputPortsListView
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 from rafcon.gui.utils.comparison import compare_variables
 from rafcon.utils import log
@@ -343,21 +344,16 @@ class InputPortListController(DataPortListController):
 
     def add_new_data_port(self):
         """Add a new port with default values and select it"""
-        num_data_ports = len(self.model.state.input_data_ports)
-        for run_id in range(num_data_ports + 1, 0, -1):
-            new_port_name = "input_{0}".format(run_id)
-            try:
-                new_data_port_id = self.model.state.add_input_data_port(new_port_name, "int", "0")
-                self.select_entry(new_data_port_id)
-                break
-            except ValueError:
-                pass
-        else:
-            logger.error("Could not create new input data port")
+        try:
+            new_data_port_ids = gui_helper_state_machine.add_data_port_to_selected_states('INPUT', int, [self.model])
+            if new_data_port_ids:
+                self.select_entry(new_data_port_ids[self.model.state])
+        except ValueError:
+            pass
 
     def remove_core_element(self, model):
         assert model.data_port.parent is self.model.state
-        self.model.state.remove_input_data_port(model.data_port.data_port_id)
+        gui_helper_state_machine.delete_core_element_of_model(model)
 
     def toggle_runtime_value_usage(self, data_port_id):
         current_flag = self.model.state.use_runtime_value_input_data_ports[data_port_id]
@@ -419,21 +415,16 @@ class OutputPortListController(DataPortListController):
 
     def add_new_data_port(self):
         """Add a new port with default values and select it"""
-        num_data_ports = len(self.model.state.output_data_ports)
-        for run_id in range(num_data_ports + 1, 0, -1):
-            new_port_name = "output_{0}".format(run_id)
-            try:
-                new_data_port_id = self.model.state.add_output_data_port(new_port_name, "int", "0")
-                self.select_entry(new_data_port_id)
-                break
-            except ValueError:
-                pass
-        else:
-            logger.error("Could not create new output data port")
+        try:
+            new_data_port_ids = gui_helper_state_machine.add_data_port_to_selected_states('OUTPUT', int, [self.model])
+            if new_data_port_ids:
+                self.select_entry(new_data_port_ids[self.model.state])
+        except ValueError:
+            pass
 
     def remove_core_element(self, model):
         assert model.data_port.parent is self.model.state
-        self.model.state.remove_output_data_port(model.data_port.data_port_id)
+        gui_helper_state_machine.delete_core_element_of_model(model)
 
     def toggle_runtime_value_usage(self, data_port_id):
         current_flag = self.model.state.use_runtime_value_output_data_ports[data_port_id]

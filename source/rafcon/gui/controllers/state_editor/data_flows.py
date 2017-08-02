@@ -32,6 +32,7 @@ from rafcon.gui.controllers.state_editor.linkage_list import LinkageListControll
 from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
 from rafcon.utils import log, type_helpers
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 logger = log.get_logger(__name__)
 PORT_TYPE_TAG = {InputDataPort: 'IP', OutputDataPort: 'OP', ScopedVariable: 'SV'}
@@ -167,6 +168,9 @@ class StateDataFlowsListController(LinkageListController):
 
     def on_add(self, button, info=None):
         # print "ADD DATA_FLOW"
+        if gui_helper_state_machine.is_selection_inside_of_library_state(selected_elements=[self.model]):
+            logger.error("New data flow is not added because target state is inside of library state.")
+            return
         own_state_id = self.model.state.state_id
         [possible_internal_data_flows, possible_external_data_flows] = self.find_free_and_valid_data_flows(own_state_id)
         # print "\n\npossible internal data_flows\n %s" % possible_internal_data_flows
@@ -217,10 +221,7 @@ class StateDataFlowsListController(LinkageListController):
         :return:
         """
         assert model.data_flow.parent is self.model.state or model.data_flow.parent is self.model.parent.state
-        if self.model.parent and model.data_flow.parent is self.model.parent.state:
-            self.model.parent.state.remove_data_flow(model.data_flow.data_flow_id)
-        else:
-            self.model.state.remove_data_flow(model.data_flow.data_flow_id)
+        gui_helper_state_machine.delete_core_element_of_model(model)
 
     def on_combo_changed_from_state(self, widget, path, text):
         if text is None or self.list_store[path][self.FROM_STATE_STORAGE_ID] == text:

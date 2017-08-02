@@ -30,6 +30,7 @@ from rafcon.gui.controllers.utils.tree_view_controller import ListViewController
 from rafcon.gui.views.state_editor.scoped_variables_list import ScopedVariablesListView
 from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.clipboard import global_clipboard
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 from rafcon.gui.utils.comparison import compare_variables
 from rafcon.utils import log
@@ -140,7 +141,8 @@ class ScopedVariableListController(ListViewController):
             data_port_id = None
             for run_id in range(num_data_ports + 1, 0, -1):
                 try:
-                    data_port_id = self.model.state.add_scoped_variable("scoped_%s" % run_id, "int", 0)
+                    gui_helper_state_machine.add_scoped_variable_to_selected_states(int)
+                    # data_port_id = self.model.state.add_scoped_variable("scoped_%s" % run_id, "int", 0)
                     break
                 except ValueError as e:
                     if run_id == num_data_ports:
@@ -156,7 +158,7 @@ class ScopedVariableListController(ListViewController):
         :return:
         """
         assert model.scoped_variable.parent is self.model.state
-        self.model.state.remove_scoped_variable(model.scoped_variable.data_port_id)
+        gui_helper_state_machine.delete_core_element_of_model(model)
 
     def apply_new_scoped_variable_name(self, path, new_name):
         """Applies the new name of the scoped variable defined by path

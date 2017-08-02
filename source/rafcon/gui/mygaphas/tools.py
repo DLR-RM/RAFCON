@@ -44,11 +44,11 @@ class RemoveItemTool(Tool):
         if gtk.gdk.keyval_name(event.keyval) == "Delete":
             # Delete Transition from state machine
             if isinstance(self.view.focused_item, TransitionView):
-                gui_helper_state_machine.delete_model(self.view.focused_item.model)
+                gui_helper_state_machine.delete_core_element_of_model(self.view.focused_item.model)
                 return True
             # Delete DataFlow from state machine
             if isinstance(self.view.focused_item, DataFlowView):
-                gui_helper_state_machine.delete_model(self.view.focused_item.model)
+                gui_helper_state_machine.delete_core_element_of_model(self.view.focused_item.model)
                 return True
             # Delete selected state(s) from state machine
             if isinstance(self.view.focused_item, StateView):
