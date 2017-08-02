@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<style-scheme id="awesome-style" _name="Awesome Style" version="1.0">
+<style-scheme id="rafcon-dark" _name="RAFCON Dark" version="1.0">
   <author>Matthias Buettner</author>
 
   <style name="bracket-match"  background="#33333c" bold="true"/> <!-- done -->
