@@ -33,7 +33,6 @@ def store_session():
     list_of_tab_meta = []
     for page_number in range(number_of_pages):
         page = state_machines_editor_ctrl.view['notebook'].get_nth_page(page_number)
-        state_machines_editor_ctrl.get_state_machine_id_for_page(page)
         sm_id = state_machines_editor_ctrl.get_state_machine_id_for_page(page)
         if sm_id == state_machine_manager_model.selected_state_machine_id:
             selected_page_number = page_number
