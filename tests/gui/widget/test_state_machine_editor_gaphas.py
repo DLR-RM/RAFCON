@@ -1,7 +1,7 @@
-import gtk
 import threading
 from os.path import join
 
+import gtk
 # gui elements
 import rafcon.gui.config as gui_config
 import rafcon.gui.singleton
@@ -20,9 +20,8 @@ from rafcon.utils import log
 
 # test environment elements
 import testing_utils
-from test_menu_bar import select_and_paste_state
+from gui.widget.test_menu_bar import select_and_paste_state
 from testing_utils import call_gui_callback
-import pytest
 
 logger = log.get_logger(__name__)
 
