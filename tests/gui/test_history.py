@@ -2,7 +2,6 @@ import logging
 import gtk
 import threading
 import time
-import signal
 
 
 # gui elements
@@ -13,7 +12,6 @@ from rafcon.gui.views.main_window import MainWindowView
 
 # core elements
 import rafcon.core.singleton
-from rafcon.core.config import global_config
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.container_state import ContainerState
@@ -32,7 +30,7 @@ from test_state_type_change import store_state_elements, check_state_elements, \
      check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
      check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
      get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
-from test_states_editor_widget import check_state_editor_models
+from gui.widget.test_states_editor import check_state_editor_models
 import pytest
 
 NO_SAVE = False

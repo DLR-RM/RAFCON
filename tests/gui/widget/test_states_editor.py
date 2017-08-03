@@ -3,8 +3,6 @@ import threading
 import time
 
 # gui elements
-import testing_utils
-from rafcon.gui.config import global_gui_config
 import rafcon.gui.singleton
 from rafcon.gui.models import ContainerStateModel
 from rafcon.gui.controllers.main_window import MainWindowController
@@ -20,9 +18,9 @@ from rafcon.core.state_machine import StateMachine
 from rafcon.utils import log
 
 # test environment elements
-
+import testing_utils
 from testing_utils import call_gui_callback
-from test_state_type_change import get_state_editor_ctrl_and_store_id_dict
+from gui.test_state_type_change import get_state_editor_ctrl_and_store_id_dict
 import pytest
 
 logger = log.get_logger(__name__)

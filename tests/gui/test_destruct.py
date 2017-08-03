@@ -238,7 +238,7 @@ def run_model_construction():
 
 def run_controller_construction(caplog, with_gui):
     # for a start load one of the type change tests to generate a lot of controllers which also close the GUI
-    from test_states_editor_widget import create_models, MainWindowView, \
+    from gui.widget.test_states_editor_widget import create_models, MainWindowView, \
         MainWindowController, trigger_state_type_change_tests, gtk, threading
 
     sm_m, state_dict = create_models()
