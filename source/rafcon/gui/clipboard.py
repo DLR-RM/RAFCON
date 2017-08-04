@@ -170,12 +170,12 @@ class Clipboard(Observable):
                 models_dict[state_element_attr][new_core_element_id] = new_state_element_m
 
         # commented parts are here for later use to detect empty meta data fields and debug those
-        # if all([all([gui_helpers_state.model_has_empty_meta(state_element_m) for state_element_m in elems_dict.itervalues()])
-        #     if isinstance(elems_dict, dict) else gui_helpers_state.model_has_empty_meta(elems_dict)
-        #         for elems_dict in models_dict.itervalues()]):
-        gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
-        # else:
-        #     logger.info("Paste miss meta to scale.")
+        if all([all([gui_helpers_meta_data.model_has_empty_meta(state_element_m) for state_element_m in elems_dict.itervalues()])
+                if isinstance(elems_dict, dict) else gui_helpers_meta_data.model_has_empty_meta(elems_dict)
+                for elems_dict in models_dict.itervalues()]):
+            gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
+        else:
+            logger.info("Paste miss meta to scale.")
 
         affected_models = []
         del models_dict['state']
@@ -250,12 +250,13 @@ class Clipboard(Observable):
         oc_id = target_state_m.state.add_outcome(oc.name)
         self.outcome_id_mapping_dict[old_oc_tuple] = oc_id
         target_state_m.get_outcome_m(oc_id).meta = orig_outcome_copy_m.meta
-        return target_state_m.get_outcome_m(oc_id), orig_outcome_copy_m
+        return target_state_m.get_outcome_m(oc_id)
 
-    def _insert_data_port(self, target_state_m, add_data_port_method, orig_data_port_copy_m, instance_to_check_for):
+    def _insert_data_port(self, target_state_m, add_data_port_method, orig_data_port_copy_m, instance_to_check_for,
+                          data_ports_exist):
         data_port = orig_data_port_copy_m.core_element
         old_port_tuple = (self.copy_parent_state_id, data_port.data_port_id)
-        if data_port.name in [target_state_m.state.get_data_port_by_id(dp_id).name for dp_id in target_state_m.state.get_data_port_ids()]:
+        if data_port.name in [target_state_m.state.get_data_port_by_id(dp_id).name for dp_id in data_ports_exist]:
             name = data_port.name + '_' + str(generate_data_port_id(target_state_m.state.get_data_port_ids()))
         else:
             name = data_port.name
@@ -267,15 +268,15 @@ class Clipboard(Observable):
 
     def _insert_input_data_port(self, target_state_m, orig_data_port_copy_m):
         return self._insert_data_port(target_state_m, target_state_m.state.add_input_data_port,
-                                      orig_data_port_copy_m, InputDataPort)
+                                      orig_data_port_copy_m, InputDataPort, target_state_m.state.input_data_ports)
 
     def _insert_output_data_port(self, target_state_m, orig_data_port_copy_m):
         return self._insert_data_port(target_state_m, target_state_m.state.add_output_data_port,
-                                      orig_data_port_copy_m, OutputDataPort)
+                                      orig_data_port_copy_m, OutputDataPort, target_state_m.state.output_data_ports)
 
     def _insert_scoped_variable(self, target_state_m, orig_data_port_copy_m):
         return self._insert_data_port(target_state_m, target_state_m.state.add_scoped_variable,
-                                      orig_data_port_copy_m, ScopedVariable)
+                                      orig_data_port_copy_m, ScopedVariable, target_state_m.state.scoped_variables)
 
     def reset_clipboard(self):
         """ Resets the clipboard, so that old elements do not pollute the new selection that is copied into the
