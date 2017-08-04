@@ -158,7 +158,7 @@ def test_drag_and_drop_test(caplog):
         thread.join()
         logger.debug("Joined test triggering thread!")
 
-    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
+    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=1, expected_errors=0)
 
 
 if __name__ == '__main__':

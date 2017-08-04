@@ -481,8 +481,8 @@ def delete_core_element_of_model(model, raise_exceptions=False):
             raise ValueError(msg)
         logger.error(msg)
         return False
-    if is_selection_inside_of_library_state(selected_elements=[state_m]):
-        logger.error("Deletion of elements inside of a library is not allowed.")
+    if is_selection_inside_of_library_state(selected_elements=[model]):
+        logger.warn("Deletion is not allowed. Element {0} is inside of a library.".format(model.core_element))
         return False
     assert isinstance(state_m, StateModel)
     state = state_m.state
@@ -535,8 +535,12 @@ def is_selection_inside_of_library_state(state_machine_m=None, selected_elements
     selection_in_lib = []
     selected_elements = state_machine_m.selection.get_all() if selected_elements is None else selected_elements
     for model in selected_elements:
+        # check if model is element of child state or the root state (or its scoped variables) of a LibraryState
         state_m = model if isinstance(model.core_element, State) else model.parent
         selection_in_lib.append(state_m.state.get_library_root_state() is not None)
+        # check if model is part of the shell (io-port or outcome) of a LibraryState
+        if not isinstance(model.core_element, State) and isinstance(state_m, LibraryStateModel):
+            selection_in_lib.append(True)
     if any(selection_in_lib):
         return True
     return False
@@ -545,7 +549,7 @@ def is_selection_inside_of_library_state(state_machine_m=None, selected_elements
 def delete_selected_elements(state_machine_m):
     # avoid to delete any element inside of a library
     if is_selection_inside_of_library_state(state_machine_m):
-        logger.error("Deletion of elements inside of a library is not allowed.")
+        logger.warn("Deletion of elements inside of a library is not allowed.")
         return
 
     if len(state_machine_m.selection.get_all()) > 0:
@@ -558,7 +562,7 @@ def paste_into_selected_state(state_machine_m):
     selection = state_machine_m.selection
     selected_states = selection.get_states()
     if len(selection) != 1 or len(selected_states) < 1:
-        logger.error("Please select a single container state for pasting the clipboard")
+        logger.warn("Please select a single container state for pasting the clipboard")
         return
 
     # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
@@ -576,8 +580,8 @@ def selected_state_toggle_is_start_state():
             not state_m_list[0].state.is_root_state:
         state_model = state_m_list[0]
         if state_model.state.get_library_root_state() is not None:
-            logger.error("Toggle is start state is not performed because selected target state is inside of a "
-                         "library state.")
+            logger.warn("Toggle is start state is not performed because selected target state is inside of a "
+                        "library state.")
             return False
         try:
             if not state_model.is_start:
@@ -611,14 +615,14 @@ def add_new_state(state_machine_m, state_type):
         return
     model = selected_state_models[0]
     if is_selection_inside_of_library_state(selected_elements=[model]):
-        logger.error("Add new state is not performed because selected target state is inside of a library state.")
+        logger.warn("Add new state is not performed because selected target state is inside of a library state.")
         return
 
     if isinstance(model, StateModel):
         return gui_helper_state.add_state(model, state_type)
     else:
-        logger.error("Add new state is not performed because target state has to be represented by a StateModel not {0}"
-                     "".format(model.__class__.__name__))
+        logger.warn("Add new state is not performed because target state indication has to be a {1} not {0}"
+                    "".format(model.__class__.__name__, StateModel.__name__))
 
     # TODO this code can not be reached -> recover again? -> e.g. feature select transition add's state to parent
     if isinstance(model, (TransitionModel, DataFlowModel)) or \
@@ -650,24 +654,24 @@ def insert_state_into_selected_state(state, as_template=False):
     smm_m = rafcon.gui.singleton.state_machine_manager_model
 
     if not isinstance(state, State):
-        logger.error("A state is needed to be insert not {0}".format(state))
+        logger.warn("A state is needed to be insert not {0}".format(state))
         return False
 
     if not smm_m.selected_state_machine_id:
-        logger.error("Please select a container state within a state machine first")
+        logger.warn("Please select a container state within a state machine first")
         return False
 
     selected_state_models = smm_m.state_machines[smm_m.selected_state_machine_id].selection.get_states()
     if len(selected_state_models) > 1:
-        logger.error("Please select exactly one state for the insertion")
+        logger.warn("Please select exactly one state for the insertion")
         return False
 
     if len(selected_state_models) == 0:
-        logger.error("Please select a state for the insertion")
+        logger.warn("Please select a state for the insertion")
         return False
 
     if is_selection_inside_of_library_state(selected_elements=[selected_state_models[0]]):
-        logger.error("State is not insert because target state is inside of a library state.")
+        logger.warn("State is not insert because target state is inside of a library state.")
         return False
 
     gui_helper_state.insert_state_as(selected_state_models[0], state, as_template)
@@ -690,7 +694,11 @@ def add_data_port_to_selected_states(data_port_type, data_type=None, selected_st
     if selected_states is None:
         selected_states = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
     if is_selection_inside_of_library_state(selected_elements=selected_states):
-        logger.error("Add data port is not performed because target state is inside of a library state.")
+        logger.warn("The data port couldn't be added because target state is inside of a library state.")
+        return
+    if all([isinstance(state_m.state, LibraryState) for state_m in selected_states]):
+        logger.warn("The data port couldn't be added to state of type {0}"
+                    "".format(LibraryState.__name__))
         return
     ids = {}
     for state_m in selected_states:
@@ -720,7 +728,7 @@ def add_scoped_variable_to_selected_states(data_type=None, selected_states=None)
     if selected_states is None:
         selected_states = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
     if is_selection_inside_of_library_state(selected_elements=selected_states):
-        logger.error("Add scoped variable is not performed because target state is inside of a library state.")
+        logger.warn("The scoped variable couldn't be added because target state is inside of a library state.")
         return
     if all([not isinstance(state_m.state, ContainerState) for state_m in selected_states]):
         logger.warn("The scoped variable couldn't be added to state of type {0}"
@@ -745,7 +753,11 @@ def add_outcome_to_selected_states(selected_states=None):
     if selected_states is None:
         selected_states = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
     if is_selection_inside_of_library_state(selected_elements=selected_states):
-        logger.error("Add outcome is not performed because target state is inside of a library state.")
+        logger.warn("The outcome couldn't be added because target state is inside of a library state.")
+        return
+    if all([isinstance(state_m.state, LibraryState) for state_m in selected_states]):
+        logger.warn("The outcome couldn't be added to state of type {0}"
+                    "".format(LibraryState.__name__))
         return
     ids = {}
     for state_m in selected_states:
@@ -762,7 +774,7 @@ def add_outcome_to_selected_states(selected_states=None):
 
 def change_state_type_with_error_handling_and_logger_messages(state_m, target_class):
     if is_selection_inside_of_library_state(selected_elements=[state_m]):
-        logger.error("Change state type is not performed because target state is inside of a library state.")
+        logger.warn("Change state type is not performed because target state is inside of a library state.")
         return
     if not isinstance(state_m.state, target_class):
         logger.debug("Change type of State '{0}' from {1} to {2}".format(state_m.state.name,
@@ -783,7 +795,7 @@ def change_state_type_with_error_handling_and_logger_messages(state_m, target_cl
 def substitute_selected_state_and_use_choice_dialog():
     selected_states = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
     if selected_states and len(selected_states) == 1 and \
-            is_selection_inside_of_library_state(selected_elements=[selected_states[0]]):
+            not is_selection_inside_of_library_state(selected_elements=[selected_states[0]]):
         # calculate position for dialog window
         root_window = rafcon.gui.singleton.main_window_controller.get_root_window()
         x, y = root_window.get_position()
@@ -821,7 +833,7 @@ def substitute_selected_state(state, as_template=False, keep_name=False):
         logger.error("Please select exactly one state for the substitution")
         return False
     if is_selection_inside_of_library_state(selected_elements=[selected_state_models[0]]):
-        logger.error("Substitute is not performed because target state is inside of a library state.")
+        logger.warn("Substitute is not performed because target state is inside of a library state.")
         return
 
     gui_helper_state.substitute_state_as(selected_state_models[0], state, as_template, keep_name)
@@ -871,7 +883,7 @@ def ungroup_selected_state():
             not selected_states[0].state.is_root_state:
         logger.debug("do ungroup")
         if is_selection_inside_of_library_state(selected_elements=[selected_states[0]]):
-            logger.error("Ungroup is not performed because target state is inside of a library state.")
+            logger.warn("Ungroup is not performed because target state is inside of a library state.")
             return
         gui_helper_state.ungroup_state(selected_states[0])
 
