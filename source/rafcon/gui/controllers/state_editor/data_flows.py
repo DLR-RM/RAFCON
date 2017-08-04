@@ -167,7 +167,6 @@ class StateDataFlowsListController(LinkageListController):
             self.tree_view.set_cursor(path)
 
     def on_add(self, button, info=None):
-        # print "ADD DATA_FLOW"
         if gui_helper_state_machine.is_selection_inside_of_library_state(selected_elements=[self.model]):
             logger.error("New data flow is not added because target state is inside of library state.")
             return
@@ -439,6 +438,7 @@ class StateDataFlowsListController(LinkageListController):
                 self.store_debug_log_file(str(traceback.format_exc()))
             logger.error("update of data_flow widget fails while detecting change in state %s %s" %
                          (self.model.state.name, self.model.state.state_id))
+
 
 def get_key_combos(ports, keys_store, not_key=None):
 

@@ -361,12 +361,11 @@ class StateOutcomesEditorController(ExtendedController):
 
         :param rafcon.gui.shortcut_manager.ShortcutManager shortcut_manager:
         """
-        if not isinstance(self.model.state, LibraryState):
-            shortcut_manager.add_callback_for_action("delete", self.oc_list_ctrl.remove_action_callback)
-            shortcut_manager.add_callback_for_action("add", self.oc_list_ctrl.add_action_callback)
-            shortcut_manager.add_callback_for_action("copy", self.oc_list_ctrl.copy_action_callback)
-            shortcut_manager.add_callback_for_action("cut", self.oc_list_ctrl.cut_action_callback)
-            shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
+        shortcut_manager.add_callback_for_action("copy", self.oc_list_ctrl.copy_action_callback)
+        shortcut_manager.add_callback_for_action("delete", self.oc_list_ctrl.remove_action_callback)
+        shortcut_manager.add_callback_for_action("add", self.oc_list_ctrl.add_action_callback)
+        shortcut_manager.add_callback_for_action("cut", self.oc_list_ctrl.cut_action_callback)
+        shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
 
     def paste_action_callback(self, *event):
         """Callback method for paste action"""

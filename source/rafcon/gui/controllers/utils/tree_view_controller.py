@@ -215,18 +215,18 @@ class ListViewController(ExtendedController):
 
     def on_remove(self, widget, data=None):
         """Remove respective selected core elements and select the next one"""
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         path_list = None
         if self.view is not None:
             model, path_list = self.tree_view.get_selection().get_selected_rows()
         old_path = self.get_path()
         models = [self.list_store[path][self.MODEL_STORAGE_ID] for path in path_list] if path_list else []
         if models:
-            for model in models:
-                try:
-                    self.remove_core_element(model)
-                except AttributeError as e:
-                    self._logger.warn("The respective core element of {1}.list_store couldn't be removed. -> {0}"
-                                      "".format(e, self.__class__.__name__))
+            try:
+                gui_helper_state_machine.delete_core_elements_of_models(models)
+            except AttributeError as e:
+                self._logger.warn("The respective core element of {1}.list_store couldn't be removed. -> {0}"
+                                  "".format(e, self.__class__.__name__))
             if len(self.list_store) > 0:
                 self.tree_view.set_cursor(min(old_path[0], len(self.list_store) - 1))
             return True

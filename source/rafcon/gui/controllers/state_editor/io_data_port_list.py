@@ -103,12 +103,11 @@ class DataPortListController(ListViewController):
         :param rafcon.gui.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
             between shortcuts and actions.
         """
-        if not isinstance(self.model.state, LibraryState):
-            shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)
-            shortcut_manager.add_callback_for_action("add", self.add_action_callback)
-            shortcut_manager.add_callback_for_action("copy", self.copy_action_callback)
-            shortcut_manager.add_callback_for_action("cut", self.cut_action_callback)
-            shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
+        shortcut_manager.add_callback_for_action("copy", self.copy_action_callback)
+        shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)
+        shortcut_manager.add_callback_for_action("add", self.add_action_callback)
+        shortcut_manager.add_callback_for_action("cut", self.cut_action_callback)
+        shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
 
     def paste_action_callback(self, *event):
         raise NotImplementedError()
