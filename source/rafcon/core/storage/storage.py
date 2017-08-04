@@ -60,14 +60,14 @@ if os.path.exists(DEFAULT_SCRIPT_PATH):
         shutil.rmtree(f)
 
 
-def clean_path_from_not_by_existing_state_substituted_elements(states, path):
-    """
-    This function removes all folders in a certain file system folder, that do not belong to the states given in the
-    "states" parameter
+def remove_obsolete_folders(states, path):
+    """Removes obsolete state machine folders
+
+    This function removes all folders in the file system folder `path` that do not belong to the states given by
+    `states`.
     
-    :param states: the states that should reside in this very folder
-    :param path: the file system path to be checked for valid folders
-    :return:
+    :param list states: the states that should reside in this very folder
+    :param str path: the file system path to be checked for valid folders
     """
     elements_in_folder = os.listdir(path)
     # find all state folder elements in system path
@@ -88,7 +88,7 @@ def clean_path_from_not_by_existing_state_substituted_elements(states, path):
         shutil.rmtree(os.path.join(path, folder_name))
 
 
-def check_path_for_deprecated_naming(base_path):
+def clean_path_from_deprecated_naming(base_path):
     """ Checks if the base path includes deprecated characters/format and returns corrected version
 
     The state machine folder name should be according the universal RAFCON path format. In case the state machine path
@@ -97,34 +97,31 @@ def check_path_for_deprecated_naming(base_path):
     operating systems.
 
     :param base_path:
-    :return: 4 values first the corrected base_path and optional not None second to fourth value which are
-      library_root_path, library_path and library_name.
+    :return: cleaned base_path
+    :rtype: str
     """
     def warning_logger_message(insert_string):
         not_allowed_characters = "'" + "', '".join(REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION.keys()) + "'"
-        logger.warning("Deprecated {2} {0} please avoid to use the following characters {1}."
+        logger.warning("Deprecated {2} in {0}. Please avoid to use the following characters {1}."
                        "".format(base_path, not_allowed_characters, insert_string))
     from rafcon.core.singleton import library_manager
-    library_root_path = None
-    _library_path = None
-    _library_name = None
     if library_manager.is_os_path_within_library_root_paths(base_path):
         library_path, library_name = library_manager.get_library_path_and_name_for_os_path(base_path)
-        _library_path = clean_path(library_path)
-        _library_name = clean_path(library_name)
-        if not library_name == _library_name or not library_path == _library_path:
+        clean_library_path = clean_path(library_path)
+        clean_library_name = clean_path(library_name)
+        if library_name != clean_library_name or library_path != clean_library_path:
             warning_logger_message("library path")
         library_root_key = library_manager._get_library_root_key_for_os_path(base_path)
         library_root_path = library_manager._library_root_paths[library_root_key]
-        base_path = os.path.join(library_root_path, _library_path, _library_name)
+        clean_base_path = os.path.join(library_root_path, clean_library_path, clean_library_name)
     else:
         path_elements = base_path.split(os.path.sep)
         state_machine_folder_name = base_path.split(os.path.sep)[-1]
         path_elements[-1] = clean_path(state_machine_folder_name)
         if not state_machine_folder_name == path_elements[-1]:
             warning_logger_message("state machine folder name")
-        base_path = os.path.sep.join(path_elements)
-    return base_path, library_root_path, _library_path, _library_name
+        clean_base_path = os.path.sep.join(path_elements)
+    return clean_base_path
 
 
 def clean_path(base_path):
@@ -154,7 +151,8 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
     :param bool delete_old_state_machine: Whether to delete any state machine existing at the given path
     :param bool as_copy: Whether to use a copy storage for the state machine
     """
-    _base_path, _, _, _ = check_path_for_deprecated_naming(base_path)
+    # warns the user in the logger when using deprecated names
+    clean_path_from_deprecated_naming(base_path)
 
     state_machine.acquire_modification_lock()
     try:
@@ -181,7 +179,7 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
             state_machine.last_update = old_update_time
 
         # add root state recursively
-        clean_path_from_not_by_existing_state_substituted_elements([root_state], base_path)
+        remove_obsolete_folders([root_state], base_path)
         save_state_recursively(root_state, base_path, "", as_copy)
 
         if state_machine.marked_dirty and not as_copy:
@@ -247,8 +245,7 @@ def save_state_recursively(state, base_path, parent_path, as_copy=False):
 
     # create yaml files for all children
     if isinstance(state, ContainerState):
-        clean_path_from_not_by_existing_state_substituted_elements(state.states.values(),
-                                                                   os.path.join(base_path, state_path))
+        remove_obsolete_folders(state.states.values(), os.path.join(base_path, state_path))
         for state in state.states.itervalues():
             save_state_recursively(state, base_path, state_path, as_copy)
 
