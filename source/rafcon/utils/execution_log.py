@@ -2,6 +2,7 @@ import shelve
 import json
 import pandas as pd
 
+
 def log_to_raw_structure(execution_history_items):
     """
     :param dict executiion_history_items: history items, in the simplest case
@@ -21,34 +22,40 @@ def log_to_raw_structure(execution_history_items):
     grouped_by_run_id = {}
     start_item = None
 
-    for k,v in execution_history_items.items():
-        if v['item_type'] == 'StateMachineStartItem':
-            start_item = v
-        else:
-
-            # connect the item to its predecessor
-            prev_item_id = v['prev_history_item_id']
-            previous[k] = prev_item_id
-
-            if execution_history_items[prev_item_id]['item_type'] == 'ConcurrencyItem' and \
-               execution_history_items[k]['item_type'] != 'ReturnItem':
-                # this is not a return  item, thus this 'previous' relationship of this
-                # item must be a call item of one of the concurrent branches of
-                # the concurrency state
-                if prev_item_id in concurrent:
-                    concurrent[prev_item_id].append(k)
-                else:
-                    concurrent[prev_item_id] = [k]
+    # if a shelve was not closed properly not all data can be caught, thus try + catch
+    try:
+        for k,v in execution_history_items.items():
+            if v['item_type'] == 'StateMachineStartItem':
+                start_item = v
             else:
-                # this is a logical 'next' relationship
-                next_[prev_item_id] = k
 
-        rid = v['run_id']
-        if rid in grouped_by_run_id:
-            grouped_by_run_id[rid].append(v)
-        else:
-            grouped_by_run_id[rid] = [v]
+                # connect the item to its predecessor
+                prev_item_id = v['prev_history_item_id']
+                previous[k] = prev_item_id
+
+                if execution_history_items[prev_item_id]['item_type'] == 'ConcurrencyItem' and \
+                   execution_history_items[k]['item_type'] != 'ReturnItem':
+                    # this is not a return  item, thus this 'previous' relationship of this
+                    # item must be a call item of one of the concurrent branches of
+                    # the concurrency state
+                    if prev_item_id in concurrent:
+                        concurrent[prev_item_id].append(k)
+                    else:
+                        concurrent[prev_item_id] = [k]
+                else:
+                    # this is a logical 'next' relationship
+                    next_[prev_item_id] = k
+
+            rid = v['run_id']
+            if rid in grouped_by_run_id:
+                grouped_by_run_id[rid].append(v)
+            else:
+                grouped_by_run_id[rid] = [v]
+    except Exception:
+        pass
+
     return start_item, previous, next_, concurrent, grouped_by_run_id
+
 
 def log_to_collapsed_structure(execution_history_items):
     """
@@ -78,6 +85,7 @@ def log_to_collapsed_structure(execution_history_items):
     collapsed_concurrent ={}
     collapsed_hierarchy = {}
     collapsed_items = {}
+
     # build collapsed items
     for rid, gitems in grouped.items():
         if gitems[0]['item_type'] == 'StateMachineStartItem':
@@ -89,6 +97,11 @@ def log_to_collapsed_structure(execution_history_items):
                 execution_item[l] = item[l]
 
             start_item = execution_item
+
+            if len(next_) == 0:
+                # single state executions are not supported
+                return start_item, collapsed_next, collapsed_concurrent, collapsed_hierarchy, collapsed_items
+
             collapsed_next[rid] = execution_history_items[next_[gitems[0]['history_item_id']]]['run_id']
             collapsed_items[rid] = execution_item
         elif gitems[0]['state_type'] == 'ExecutionState' or \
@@ -173,6 +186,7 @@ def log_to_collapsed_structure(execution_history_items):
 
     return start_item, collapsed_next, collapsed_concurrent, collapsed_hierarchy, collapsed_items
 
+
 def log_to_DataFrame(execution_history_items):
     """
     Returns all collapsed items in a table-like structure (pandas.DataFrame). The data flow is
@@ -207,6 +221,7 @@ def log_to_DataFrame(execution_history_items):
     df_timed.sort_index(inplace=True)
 
     return df_timed
+
 
 def log_to_ganttplot(execution_history_items):
     """
