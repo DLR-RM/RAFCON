@@ -14,6 +14,13 @@ New Features:
 Patch releases 0.10.\*
 ----------------------
 
+0.10.3
+""""""
+
+- Bug Fixes:
+
+  - File Chooser crashed if the same folder was added to the shortcut_folders twice
+
 0.10.2
 """"""
 
