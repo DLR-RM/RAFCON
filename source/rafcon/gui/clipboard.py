@@ -106,9 +106,12 @@ class Clipboard(Observable):
 
         element_m_copy_lists = self.model_copies
         self.prepare_new_copy()  # threaded in future -> important that the copy is prepared here!!!
+        # use non empty list dict to create arguments for action signal msg and logger messages
+        non_empty_lists_dict = {key: elems for key, elems in element_m_copy_lists.iteritems() if elems}
         target_state_m.action_signal.emit(ActionSignalMsg(action='paste', origin='model',
                                                           action_parent_m=target_state_m,
-                                                          affected_models=[], after=False))
+                                                          affected_models=[], after=False,
+                                                          kwargs={'insert': non_empty_lists_dict}))
         self.state_id_mapping_dict[self.copy_parent_state_id] = target_state_m.state.state_id
 
         # prepare list of lists to copy for limited or converted paste of objects
@@ -170,19 +173,25 @@ class Clipboard(Observable):
                 new_core_element_id = new_state_element_m.core_element.core_element_id
                 models_dict[state_element_attr][new_core_element_id] = new_state_element_m
 
+        affected_models = []
+        for key, state_elements in insert_dict.iteritems():
+            if key == 'state':
+                continue
+            for new_state_element_m, copied_state_element_m in state_elements:
+                affected_models.append(new_state_element_m)
+
         # commented parts are here for later use to detect empty meta data fields and debug those
         if all([all([gui_helpers_meta_data.model_has_empty_meta(state_element_m) for state_element_m in elems_dict.itervalues()])
                 if isinstance(elems_dict, dict) else gui_helpers_meta_data.model_has_empty_meta(elems_dict)
-                for elems_dict in models_dict.itervalues()]):
+                for elems_dict in models_dict.itervalues()]) or \
+                len(non_empty_lists_dict) == 1 and 'states' in non_empty_lists_dict:
             gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
         else:
-            logger.info("Paste miss meta to scale.")
+            # TODO this should be come a warning in the future or the meta module has to handle the empty data fields
+            logger.info("Paste miss meta to scale. {0}".format(affected_models))
 
-        affected_models = []
-        del models_dict['state']
-        for state_elements in insert_dict.itervalues():
-            for new_state_element_m, copied_state_element_m in state_elements:
-                affected_models.append(new_state_element_m)
+        if not affected_models:
+            logger.warning("Paste with no effect. No elements pasted from {0}".format(non_empty_lists_dict))
         target_state_m.action_signal.emit(ActionSignalMsg(action='paste', origin='clipboard',
                                                           action_parent_m=target_state_m,
                                                           affected_models=affected_models, after=True))
