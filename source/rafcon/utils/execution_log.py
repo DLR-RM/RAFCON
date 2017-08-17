@@ -2,6 +2,9 @@ import shelve
 import json
 import pandas as pd
 
+from rafcon.utils import log
+logger = log.get_logger(__name__)
+
 
 def log_to_raw_structure(execution_history_items):
     """
@@ -52,12 +55,13 @@ def log_to_raw_structure(execution_history_items):
             else:
                 grouped_by_run_id[rid] = [v]
     except Exception:
+        logger.error("Shelve was not properly closed!")
         pass
 
     return start_item, previous, next_, concurrent, grouped_by_run_id
 
 
-def log_to_collapsed_structure(execution_history_items):
+def log_to_collapsed_structure(execution_history_items, full_next=False):
     """
     Collapsed structure means that all history items belonging the same state execution are
     merged together into one object (e.g. CallItem and ReturnItem of an ExecutionState). This
@@ -86,6 +90,19 @@ def log_to_collapsed_structure(execution_history_items):
     collapsed_hierarchy = {}
     collapsed_items = {}
 
+    # single state executions are not supported
+    if len(next_) == 0 or len(next_) == 1:
+        for rid, gitems in grouped.items():
+            if gitems[0]['item_type'] == 'StateMachineStartItem':
+                item = gitems[0]
+                execution_item = {}
+                for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
+                          'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
+                          'used_rafcon_version', 'creation_time', 'last_update']:
+                    execution_item[l] = item[l]
+                start_item = execution_item
+        return start_item, collapsed_next, collapsed_concurrent, collapsed_hierarchy, collapsed_items
+
     # build collapsed items
     for rid, gitems in grouped.items():
         if gitems[0]['item_type'] == 'StateMachineStartItem':
@@ -97,10 +114,6 @@ def log_to_collapsed_structure(execution_history_items):
                 execution_item[l] = item[l]
 
             start_item = execution_item
-
-            if len(next_) == 0:
-                # single state executions are not supported
-                return start_item, collapsed_next, collapsed_concurrent, collapsed_hierarchy, collapsed_items
 
             collapsed_next[rid] = execution_history_items[next_[gitems[0]['history_item_id']]]['run_id']
             collapsed_items[rid] = execution_item
@@ -139,8 +152,11 @@ def log_to_collapsed_structure(execution_history_items):
             # next item (on same hierarchy level) is always after return item
             if return_item['history_item_id'] in next_:
                 # no next relationship at the end of containers
-                if execution_history_items[next_[return_item['history_item_id']]]['state_type'] == 'HierarchyState' and execution_history_items[next_[return_item['history_item_id']]]['item_type'] == 'ReturnItem':
-                    pass
+                if execution_history_items[next_[return_item['history_item_id']]]['state_type'] == 'HierarchyState' and execution_history_items[next_[return_item['history_item_id']]]['item_type'] == 'ReturnItem' and execution_history_items[next_[return_item['history_item_id']]]['call_type'] == 'CONTAINER':
+                    if full_next:
+                        collapsed_next[rid] = execution_history_items[next_[return_item['history_item_id']]]['run_id']
+                    else:
+                        pass
                 else:
                     collapsed_next[rid] = execution_history_items[next_[return_item['history_item_id']]]['run_id']
 

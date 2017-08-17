@@ -166,8 +166,7 @@ class ExecutionHistory(Observable, Iterable, Sized):
             backward stepping)
         """
         last_history_item = self.get_last_history_item()
-        return_item = ReturnItem(state, self.get_last_history_item(),
-                                 call_type, state_for_scoped_data, output_data,
+        return_item = ReturnItem(state, last_history_item, call_type, state_for_scoped_data, output_data,
                                  state.run_id)
         return self._push_item(last_history_item, return_item)
 
