@@ -485,6 +485,13 @@ def delete_core_element_of_model(model, raise_exceptions=False):
         logger.warn("Deletion is not allowed. Element {0} is inside of a library.".format(model.core_element))
         return False
     assert isinstance(state_m, StateModel)
+
+    # remove model from selection to avoid conflicts
+    # -> selection is not observing state machine changes and state machine model is not updating it
+    selection = state_m.get_state_machine_m().selection if state_m and state_m.get_state_machine_m() else None
+    if selection and model in selection:
+        selection.remove(model)
+
     state = state_m.state
     core_element = model.core_element
 

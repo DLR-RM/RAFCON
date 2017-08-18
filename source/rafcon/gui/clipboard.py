@@ -37,7 +37,6 @@ class Clipboard(Observable):
     def __init__(self):
         Observable.__init__(self)
 
-        self.selected_models = {state_element_attr: [] for state_element_attr in ContainerState.state_element_attrs}
         self.model_copies = {state_element_attr: [] for state_element_attr in ContainerState.state_element_attrs}
 
         self.copy_parent_state_id = None
@@ -47,8 +46,9 @@ class Clipboard(Observable):
         self.state_id_mapping_dict = {}
 
     def __str__(self):
-        return "Clipboard: parent of copy is state with state_id {0} and selection is {1}" \
-               "".format(self.copy_parent_state_id, self.selected_models)
+        return "Clipboard: parent of copy is state with state_id {0} and copies in are {1}" \
+               "".format(self.copy_parent_state_id,
+                         {key: elems for key, elems in self.model_copies.iteritems() if elems})
 
     def copy(self, selection, smart_selection_adaption=True):
         """ Copy all selected items to the clipboard using smart selection adaptation by default
@@ -74,8 +74,9 @@ class Clipboard(Observable):
             logger.warn("Cut is not performed because elements inside of a library state are selected.")
             return
         self.reset_clipboard()
-        self.__create_core_object_copies(selection, smart_selection_adaption)
-        self.do_cut_removal()
+        selection_dict_of_copied_models = self.__create_core_object_copies(selection, smart_selection_adaption)
+        for state_element_attr, models_list in selection_dict_of_copied_models.iteritems():
+            gui_helper_state_machine.delete_core_elements_of_models(models_list)
 
     def prepare_new_copy(self):
         self.model_copies = deepcopy(self.model_copies)
@@ -197,21 +198,6 @@ class Clipboard(Observable):
                                                           affected_models=affected_models, after=True))
         return insert_dict
 
-    def do_cut_removal(self):
-        for state_element_attr in ContainerState.state_element_attrs:
-            element_key_singular = state_element_attr[:-1]
-            for model in self.selected_models[state_element_attr]:
-                # remove model from selection to avoid conflicts
-                # -> selection is not observing state machine changes and state machine model is not updating it
-                if model.parent is None and isinstance(model, StateModel) and model.state.is_root_state:
-                    selection = model.get_state_machine_m().selection if model.get_state_machine_m() else None
-                else:
-                    selection = model.parent.get_state_machine_m().selection if model.parent.get_state_machine_m() else None
-                if selection and model in getattr(selection, state_element_attr):
-                    selection.remove(model)
-                # remove element
-                getattr(model.core_element.parent, 'remove_{0}'.format(element_key_singular))(model.core_element.core_element_id)
-
     def _insert_state(self, target_state_m, orig_state_copy_m):
         target_state = target_state_m.state
         orig_state_copy = orig_state_copy_m.state
@@ -296,7 +282,6 @@ class Clipboard(Observable):
         """
         # reset selections
         for state_element_attr in ContainerState.state_element_attrs:
-            self.selected_models[state_element_attr] = []
             self.model_copies[state_element_attr] = []
 
         # reset parent state_id the copied elements are taken from
@@ -441,11 +426,18 @@ class Clipboard(Observable):
             self.do_smart_selection_adaption(selection, parent_m)
 
         # store all lists of selection
+        selected_models_dict = {}
         for state_element_attr in ContainerState.state_element_attrs:
-            self.selected_models[state_element_attr] = getattr(selection, state_element_attr)
+            selected_models_dict[state_element_attr] = getattr(selection, state_element_attr)
 
         # copy all selected elements
-        self.model_copies = deepcopy(self.selected_models)
+        self.model_copies = deepcopy(selected_models_dict)
+
+        new_content_of_clipboard = ', '.join(["{0} {1}".format(len(elems), key if len(elems) > 1 else key[:-1])
+                                             for key, elems in self.model_copies.iteritems() if elems])
+        logger.info("The new content is {0}".format(new_content_of_clipboard.replace('_', ' ')))
+
+        return selected_models_dict
 
 
 # To enable copy, cut and paste between state machines a global clipboard is used
