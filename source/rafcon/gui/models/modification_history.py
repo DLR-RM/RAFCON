@@ -502,7 +502,8 @@ class ModificationsHistoryModel(ModelMT):
             return
         # print "state: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
         if isinstance(model, StateMachineModel) and isinstance(info['arg'], ActionSignalMsg) and \
-                not info['arg'].after and info['arg'].action in ['change_root_state_type', 'change_state_type', 'paste',
+                not info['arg'].after and info['arg'].action in ['change_root_state_type', 'change_state_type',
+                                                                 'paste', 'cut',
                                                                  'substitute_state', 'group_states', 'ungroup_state']:
 
             overview = NotificationOverview(info, self.with_prints, self.__class__.__name__)
@@ -523,9 +524,8 @@ class ModificationsHistoryModel(ModelMT):
                                                  state_machine_model=self.state_machine_model,
                                                  overview=overview)
 
-
             self.before_count()
-            if info['arg'].action in ['group_states', 'paste']:
+            if info['arg'].action in ['group_states', 'paste', 'cut']:
                 self.observe_model(info['arg'].action_parent_m)
                 # print "OBSERVE MODEL", info['arg'].action_parent_m
             else:
@@ -538,12 +538,13 @@ class ModificationsHistoryModel(ModelMT):
         if self.busy:  # if proceeding undo or redo
             return
         if isinstance(model, AbstractStateModel) and isinstance(info['arg'], ActionSignalMsg) and \
-                info['arg'].after and info['arg'].action in ['change_root_state_type', 'change_state_type', 'paste',
+                info['arg'].after and info['arg'].action in ['change_root_state_type', 'change_state_type',
+                                                             'paste', 'cut',
                                                              'substitute_state', 'group_states', 'ungroup_state']:
             # print "\n\nIN AFTER\n\n", info['arg'].action, type(info['arg'].result), self.count_before
 
             overview = NotificationOverview(info, self.with_prints, "History state_machine_AFTER")
-            if info['arg'].action in ['change_state_type', 'paste',
+            if info['arg'].action in ['change_state_type', 'paste', 'cut',
                                       'substitute_state', 'group_states', 'ungroup_state']:
 
                 if not model.state.is_root_state:

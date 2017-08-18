@@ -30,6 +30,7 @@ def divide_two_vectors(vec1, vec2):
 def cal_margin(parent_size):
     return min(parent_size[0], parent_size[1]) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR
 
+
 def contains_geometric_info(var):
     """ Check whether the passed variable is a tuple with two floats """
     return isinstance(var, tuple) and len(var) == 2 and all(isinstance(val, (int, float)) for val in var)

@@ -342,10 +342,10 @@ class GraphicalEditorController(ExtendedController):
     def state_action_signal(self, model, prop_name, info):
         # print "GSME state_action_signal: ", info['arg'] if 'arg' in info else "XXX" + str(info)
         if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state',
-                                                    'group_states', 'ungroup_state', 'paste', 'undo/redo']:
+                                                    'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
             if info['arg'].after is False:
                 self._complex_action = True
-                if info['arg'].action in ['group_states', 'paste']:
+                if info['arg'].action in ['group_states', 'paste', 'cut']:
                     self.observe_model(info['arg'].action_parent_m)
                     # print "GSME observe: ", info['arg'].action_parent_m
                 else:
@@ -361,7 +361,7 @@ class GraphicalEditorController(ExtendedController):
     def action_signal(self, model, prop_name, info):
         # print "GSME action_signal: ", self.__class__.__name__, "action_signal check", info
         if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and\
-                info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'undo/redo']:
+                info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
 
             old_state_m = self.state_action_signal.__func__.target
             new_state_m = info['arg'].action_parent_m

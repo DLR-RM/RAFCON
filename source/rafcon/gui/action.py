@@ -1460,7 +1460,7 @@ class StateAction(Action):
                              'set_use_input_runtime_value', 'set_use_output_runtime_value',
                              'input_data_port_runtime_values', 'output_data_port_runtime_values',
                              'use_runtime_value_input_data_ports', 'use_runtime_value_output_data_ports',
-                             'group_states', 'ungroup_state', 'substitute_state', 'paste']
+                             'group_states', 'ungroup_state', 'substitute_state', 'paste', 'cut']
     possible_args = ['name', 'description', 'script_text', 'start_state_id',  # ContainerState
                      'library_name', 'library_path', 'version', 'state_copy',  # LibraryState
                      'input_data_port_runtime_values', 'output_data_port_runtime_values',
@@ -1537,7 +1537,7 @@ class StateAction(Action):
         if self.action_type in ['parent', 'outcomes', 'input_data_ports', 'output_data_ports']:
             Action.undo(self)
         elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type',
-                                  'group_states', 'ungroup_state', 'substitute_state', 'paste']:
+                                  'group_states', 'ungroup_state', 'substitute_state', 'paste', 'cut']:
             Action.undo(self)
         elif self.action_type in ['add_input_data_port', 'remove_input_data_port',  # LibraryState
                                   'add_output_data_port', 'remove_output_data_port']:
@@ -1552,7 +1552,7 @@ class StateAction(Action):
         if self.action_type in ['outcomes', 'input_data_ports', 'output_data_ports']:
             Action.redo(self)
         elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type',
-                                  'group_states', 'ungroup_state', 'substitute_state', 'paste']:
+                                  'group_states', 'ungroup_state', 'substitute_state', 'paste', 'cut']:
             Action.redo(self)
         elif self.action_type in ['add_input_data_port', 'remove_input_data_port',  # LibraryState
                                   'add_output_data_port', 'remove_output_data_port']:
