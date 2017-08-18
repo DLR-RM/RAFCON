@@ -6,10 +6,49 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 
 Next release
 ------------
+- New Features:
 
-New Features:
 
+- Improvements:
+
+
+- Bug Fixes:
+
+    - Fix issues when copying/converting logical or data ports with clipboard while cut/copy/paste
+
+Patch releases 0.11.\*
+----------------------
+
+
+0.11.0
+""""""
+
+- New Features:
+
+  - "Session restore" by default disabled
+  - "Open Recent" recently opened state state machines sub menu in menu bar under sub-menu Files
   - "Save as copy" in menu bar under sub-menu Files
+  - "Show library content" supported for gaphas graphical viewer
+  - The inner library states can be selected, copied and used to run the execution from or to this state, see :issue:`366`
+  - The state machine tree shows inner library states, too, and can be used to explore all "leaf"-states
+  - Storage format can be adapted by the user (e.g. names of states in paths and there length)
+  - The library manager widget/tree supports modifications by right click (remove library, add/remove library roots)
+  - Execution tool-bar supports buttons for run to- and run from-state (like right click menu, too)
+
+- Improvements:
+  - Refactoring of "Save state as state machine/library"
+  - Better default position meta data for states in graphical viewer
+  - Proper resize of graphical meta data for complex actions and show library content
+  - :issue:`369` Storage/Load module for state machines more flexible and robust
+  - Storage module supports the user to store state machines without platform specific file system format conflicts
+  - :issue:`365` substitute widget in now scrollable
+  - The gtkmvc version 1.99.2 is fully supported (:issue:`388` corrected version in older releases)
+
+- Bug Fixes:
+  :issue:`382` Currently active state machine not correct
+  :issue:`362` Data flows between scoped variables
+  :issue:`354` Meta data broken when adding state as template to state machine
+  :issue:`353` Label not shown when adding state from library
 
 Patch releases 0.10.\*
 ----------------------
@@ -24,17 +63,12 @@ Patch releases 0.10.\*
 0.10.2
 """"""
 
-- Refactoring of "Save state as state machine/library"
+- Bug Fixes:
 
-- New Features:
-
-  - "Session restore" by default disabled
-  - "Open Recent" recently opened state state machines sub menu in menu bar under sub-menu Files
+  - :issue:`385` If runtime config is newly created the last open path is empty and now state machine could be saved
 
 0.10.1
 """"""
-
-
 
 - Bug Fixes:
   
@@ -47,12 +81,13 @@ Patch releases 0.10.\*
 - Improvements:
   
   - complex actions(copy & paste, resize) are properly handled in gaphas and in the modification history
-  - drag and drop now drops the state at the mouse position
+  - :issue:`342` drag and drop now drops the state at the mouse position
 
 - Bug Fixes:
   
   - show library content for OpenGL works again  
   - add as template works again
+  - :issue:`343` Text field does not follow cursor
 
 Patch releases 0.9.\*
 ---------------------
@@ -71,18 +106,18 @@ Patch releases 0.9.\*
 
   - logging is configured with a JSON file
   - logging configuration can be specified by a user and the env variable :envvar:`RAFCON_LOGGING_CONF`
-  - :issue:`336`: Use custom popup menu in state machin editor to quickly navigate in open state machines
+  - :issue:`336`: Use custom popup menu in state machine editor to quickly navigate in open state machines
 
 - Bug Fixes
 
-  - :issue:`349`
-  - :issue:`314`
-  - :issue:`341`
-  - :issue:`339`
-  - :issue:`338`
-  - :issue:`327`
-  - :issue:`343`
-  - :issue:`346`
+  - :issue:`349` Save as library functionality erroneous
+  - :issue:`314` Recursion limit reached when including top statemachine as replacement for missing state machine
+  - :issue:`341` Reload only selected state machine
+  - :issue:`339` Only save the statemachine.json
+  - :issue:`338` Selecting a library state should show the data ports widget per default
+  - :issue:`327` State machines are not properly selected
+  - :issue:`337` Pressing the right arrow in the state machine editor opens a new state machine
+  - :issue:`346` Barrier State cannot be deleted
 
 0.9.6
 """""
@@ -126,8 +161,8 @@ Patch releases 0.9.\*
 - Bug Fixes
 
   - Fix complex issues including the decider state
-  - :issue:`322`
-  - :issue:`326`
+  - :issue:`322` Group/Ungroup is not working when performed on childs of a BarrierConcurrencyState
+  - :issue:`326` RAFCON_INSTANCE_LOCK_FILE exception
 
 0.9.1
 """""
