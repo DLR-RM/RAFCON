@@ -135,7 +135,8 @@ class Clipboard(Observable):
         action_parent_m.action_signal.emit(ActionSignalMsg(action='paste', origin='clipboard',
                                                            action_parent_m=action_parent_m,
                                                            affected_models=[], after=False,
-                                                           kwargs={'insert': non_empty_lists_dict}))
+                                                           kwargs={'insert': non_empty_lists_dict, 'convert': convert,
+                                                                   'limited': limited}))
         self.state_id_mapping_dict[self.copy_parent_state_id] = target_state_m.state.state_id
 
         # prepare list of lists to copy for limited or converted paste of objects
