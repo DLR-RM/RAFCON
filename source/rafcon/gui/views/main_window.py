@@ -52,8 +52,11 @@ class MainWindowView(View):
         # Undock Buttons
         ################################################
         self['undock_left_bar_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_left_bar_button'].set_tooltip_text("Undock left side bar widget")
         self['undock_right_bar_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_right_bar_button'].set_tooltip_text("Undock right side bar widget")
         self['undock_console_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
+        self['undock_console_button'].set_tooltip_text("Undock debug console widget")
         self['collapse_tree_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_COLLAPSE))
         self['collapse_tree_button'].set_tooltip_text("Collapse tree of widget")
 
