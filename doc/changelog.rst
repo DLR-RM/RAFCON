@@ -7,14 +7,16 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 - New Features:
-
+    - :issue:`384` add "Collapse all" button for library manager and enable the feature for the state machine tree, too
 
 - Improvements:
-
+    - port position default values
 
 - Bug Fixes:
 
     - Fix issues when copying/converting logical or data ports with clipboard while cut/copy/paste
+    - Fix library state port position scaling after adding
+    - Fix gaphas viewer problems with undo/redo of complex actions like copy and paste or add/remove of ports
 
 Patch releases 0.11.\*
 ----------------------
