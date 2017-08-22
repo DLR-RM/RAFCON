@@ -206,9 +206,9 @@ class Clipboard(Observable):
                 affected_models.append(new_state_element_m)
 
         # commented parts are here for later use to detect empty meta data fields and debug those
-        if all([all([gui_helpers_meta_data.model_has_empty_meta(state_element_m) for state_element_m in elems_dict.itervalues()])
-                if isinstance(elems_dict, dict) else gui_helpers_meta_data.model_has_empty_meta(elems_dict)
-                for elems_dict in models_dict.itervalues()]) or \
+        if all([all([not gui_helpers_meta_data.model_has_empty_meta(state_element_m) for state_element_m, _ in elems_list])
+                if isinstance(elems_list, list) else gui_helpers_meta_data.model_has_empty_meta(elems_list)
+                for elems_list in insert_dict.itervalues()]) or \
                 len(non_empty_lists_dict) == 1 and 'states' in non_empty_lists_dict:
             gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
         else:
