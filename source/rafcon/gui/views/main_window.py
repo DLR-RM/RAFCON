@@ -54,6 +54,8 @@ class MainWindowView(View):
         self['undock_left_bar_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
         self['undock_right_bar_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
         self['undock_console_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
+        self['collapse_tree_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_COLLAPSE))
+        self['collapse_tree_button'].set_tooltip_text("Collapse tree of widget")
 
         ######################################################
         # Library Tree
