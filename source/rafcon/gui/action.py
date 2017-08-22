@@ -992,7 +992,6 @@ class AddObjectAction(Action):
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
         previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
@@ -1006,7 +1005,6 @@ class AddObjectAction(Action):
         self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
                                state_model=actual_state_model, level=1)
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     def undo(self):
 
@@ -1019,7 +1017,6 @@ class AddObjectAction(Action):
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
         previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
@@ -1037,8 +1034,6 @@ class AddObjectAction(Action):
         self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
                                state_model=actual_state_model, level=1)
-
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     def correct_reference_state(self, state, storage_version_of_state, storage_path):
 
