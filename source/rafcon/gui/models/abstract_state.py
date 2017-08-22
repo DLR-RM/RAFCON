@@ -416,7 +416,7 @@ class AbstractStateModel(MetaModel, Hashable):
         # print "2AbstractState_load_meta_data: ", path
         if path is None:
             self.meta = Vividict({})
-            return True
+            return False
         path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA)
 
         # TODO: Should be removed with next minor release
