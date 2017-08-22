@@ -631,51 +631,11 @@ class GraphicalEditorController(ExtendedController):
 
         # Otherwise we only look at the modified state and its children
         else:
-            # self.canvas.get_view_for_model(old_state_m.get_state_machine_m().root_state).remove()
-            # self.root_state_m = new_state_m.get_state_machine_m().root_state
-            # root_state_v = self.add_state_view_for_model(self.root_state_m)
-            # self.canvas.request_update(root_state_v)
-
-            state_v.model = new_state_m
-            if isinstance(new_state_m, ContainerStateModel):
-                # Check for old StateViews (typically DeciderState), TransitionViews and DataFlowViews,
-                # no longer existing
-                for child_v in self.canvas.get_children(state_v)[:]:
-                    if isinstance(child_v, StateView):
-                        if child_v.model not in new_state_m.states.itervalues() and \
-                                child_v.model.state.state_id not in new_state_m.states:
-                            child_v.remove()
-                        else:
-                            # TODO maybe make it again not recursive because this could be handled by affected_models
-                            self.adapt_complex_action(child_v.model,
-                                                      new_state_m.states[child_v.model.state.state_id])
-                    elif isinstance(child_v, TransitionView):
-                        if child_v.model not in new_state_m.transitions:
-                            self.canvas.remove(child_v)
-                    elif isinstance(child_v, DataFlowView):
-                        if child_v.model not in new_state_m.data_flows:
-                            self.canvas.remove(child_v)
-
-                # Check for new states, which do not have a StateView (typically DeciderState)
-                for child_state_m in new_state_m.states.itervalues():
-                    if not self.canvas.get_view_for_model(child_state_m):
-                        self.add_state_view_with_meta_data_for_model(child_state_m, new_state_m)
-                # Check for new transitions, which do not have a TransitionView (typically related to DeciderState)
-                for transition_m in new_state_m.transitions:
-                    if not self.canvas.get_view_for_model(transition_m):
-                        self.add_transition_view_for_model(transition_m, new_state_m)
-                # Check for new data flows, which do not have a DataFlowView (typically related to group and ungroup)
-                for data_flow_m in new_state_m.data_flows:
-                    if not self.canvas.get_view_for_model(data_flow_m):
-                        self.add_data_flow_view_for_model(data_flow_m, new_state_m)
-            else:
-                # Remove all child states, as StateModels cannot have children
-                for child_v in self.canvas.get_children(state_v)[:]:
-                    if isinstance(child_v, StateView):
-                        child_v.remove()
-                    elif not isinstance(child_v, NameView):  # Remove transitions and data flows but keep the NameView
-                        self.canvas.remove(child_v)
-            parent_v = self.canvas.get_parent(state_v)
+            # TODO make the redraw again not recursive for all elements because that is expansive (longer drawing waits)
+            # TODO use the handed affected_models list
+            parent_v = self.canvas.get_view_for_model(state_v.model.parent)
+            state_v.remove()
+            self.add_state_view_with_meta_data_for_model(new_state_m, parent_v.model)
             self.canvas.request_update(parent_v)
 
         self.canvas.perform_update()
