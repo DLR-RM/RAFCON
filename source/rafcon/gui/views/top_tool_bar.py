@@ -33,11 +33,13 @@ class TopToolBarView(View):
 
         close_label = gui_helper_label.create_button_label(constants.BUTTON_CLOSE)
         self['close_button'].set_label_widget(close_label)
+        self['close_button'].set_tooltip_text("Close RAFCON")
 
         maximize_label = gui_helper_label.create_button_label(constants.BUTTON_EXP)
         self['maximize_button'].set_label_widget(maximize_label)
 
         self['minimize_button'].set_label('_')
+        self['minimize_button'].set_tooltip_text("Minimize main window")
 
         redock_label = gui_helper_label.create_button_label(constants.BUTTON_UNDOCK)
         self['redock_button'].set_label_widget(redock_label)
