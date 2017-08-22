@@ -32,7 +32,7 @@ def cal_margin(parent_size):
 
 
 def contains_geometric_info(var):
-    """ Check whether the passed variable is a tuple with two floats """
+    """ Check whether the passed variable is a tuple with two floats or integers """
     return isinstance(var, tuple) and len(var) == 2 and all(isinstance(val, (int, float)) for val in var)
 
 

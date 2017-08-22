@@ -601,7 +601,7 @@ class StateView(Element):
         self._map_handles_port_v[income_v.handle] = income_v
 
         port_meta = self.model.get_meta_data_editor()['income']
-        if not isinstance(port_meta['rel_pos'], tuple) or not len(port_meta['rel_pos']) == 2:
+        if not contains_geometric_info(port_meta['rel_pos']):
             # print "generate rel_pos"
             # Position income on the top of the left state side
             income_v.side = SnappedSide.LEFT
@@ -622,7 +622,7 @@ class StateView(Element):
         self._map_handles_port_v[outcome_v.handle] = outcome_v
 
         port_meta = outcome_m.get_meta_data_editor()
-        if not isinstance(port_meta['rel_pos'], tuple) or not len(port_meta['rel_pos']) == 2:
+        if not contains_geometric_info(port_meta['rel_pos']):
             # print "generate rel_pos"
             if outcome_m.outcome.outcome_id < 0:
                 # Position aborted/preempted in upper right corner
@@ -633,8 +633,9 @@ class StateView(Element):
                 # Distribute outcomes on the right side of the state, starting from top
                 outcome_v.side = SnappedSide.RIGHT
                 pos_x = self.width
-                num_outcomes = len([o for o in self.outcomes if o.model.outcome.outcome_id >= 0])
-                pos_y = self._calculate_port_pos_on_line(num_outcomes, self.height)
+
+                number_of_outcome = [o.model for o in self.outcomes if o.model.outcome.outcome_id >= 0].index(outcome_m) + 1
+                pos_y = self._calculate_port_pos_on_line(number_of_outcome, self.height)
             port_meta = outcome_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
         # print "add outcome", self.model, self.model.parent, port_meta['rel_pos']
         outcome_v.handle.pos = port_meta['rel_pos']
@@ -658,13 +659,13 @@ class StateView(Element):
         self._map_handles_port_v[input_port_v.handle] = input_port_v
 
         port_meta = port_m.get_meta_data_editor()
-        if not isinstance(port_meta['rel_pos'], tuple) or not len(port_meta['rel_pos']) == 2:
+        if not contains_geometric_info(port_meta['rel_pos']):
             # print "generate rel_pos"
             # Distribute input ports on the left side of the state, starting from bottom
             input_port_v.side = SnappedSide.LEFT
-            num_inputs = len(self._inputs)
+            number_of_input = self.model.input_data_ports.index(port_m) + 1
             pos_x = 0
-            pos_y = self.height - self._calculate_port_pos_on_line(num_inputs, self.height)
+            pos_y = self.height - self._calculate_port_pos_on_line(number_of_input, self.height)
             port_meta = port_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
         # print "add input_port", self.model, self.model.parent, port_meta['rel_pos']
         input_port_v.handle.pos = port_meta['rel_pos']
@@ -688,13 +689,13 @@ class StateView(Element):
         self._map_handles_port_v[output_port_v.handle] = output_port_v
 
         port_meta = port_m.get_meta_data_editor()
-        if not isinstance(port_meta['rel_pos'], tuple) or not len(port_meta['rel_pos']) == 2:
+        if not contains_geometric_info(port_meta['rel_pos']):
             # Distribute output ports on the right side of the state, starting from bottom
             # print "generate rel_pos"
             output_port_v.side = SnappedSide.RIGHT
-            num_outputs = len(self._outputs)
+            number_of_output = self.model.output_data_ports.index(port_m) + 1
             pos_x = self.width
-            pos_y = self.height - self._calculate_port_pos_on_line(num_outputs, self.height)
+            pos_y = self.height - self._calculate_port_pos_on_line(number_of_output, self.height)
             port_meta = port_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
         # print "add output_port", self.model, self.model.parent, port_meta['rel_pos']
         output_port_v.handle.pos = port_meta['rel_pos']
@@ -720,12 +721,13 @@ class StateView(Element):
         scoped_variable_port_v.handle.pos = self.width * (0.1 * len(self._scoped_variables_ports)), 0
 
         port_meta = scoped_variable_m.get_meta_data_editor()
-        if not isinstance(port_meta['rel_pos'], tuple) or not len(port_meta['rel_pos']) == 2:
+        if not contains_geometric_info(port_meta['rel_pos']):
             # Distribute scoped variables on the top side of the state, starting from left
             # print "generate rel_pos"
             scoped_variable_port_v.side = SnappedSide.BOTTOM
-            num_scoped_vars = len(self._scoped_variables_ports)
-            pos_x = self._calculate_port_pos_on_line(num_scoped_vars, self.width,
+
+            number_of_scoped_var = self.model.scoped_variables.index(scoped_variable_m) + 1
+            pos_x = self._calculate_port_pos_on_line(number_of_scoped_var, self.width,
                                                      port_width=self.border_width * 4)
             pos_y = self.height
             port_meta = scoped_variable_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
