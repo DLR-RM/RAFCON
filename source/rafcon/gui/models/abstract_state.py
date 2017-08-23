@@ -399,18 +399,18 @@ class AbstractStateModel(MetaModel, Hashable):
 
         The meta data of the state model is loaded from the file system and stored in the meta property of the model.
         Existing meta data is removed. Also the meta data of all state elements (data ports, outcomes,
-        etc) are loaded, as it is stored in the same file as the meta data of the state.
+        etc) are loaded, as those stored in the same file as the meta data of the state.
 
         This is either called on the __init__ of a new state model or if a state model for a container state is created,
         which then calls load_meta_data for all its children.
 
-        TODO: for a Execution state this is called for each hierarchy level again and again
-
         :param str path: Optional file system path to the meta data file. If not given, the path will be derived from
             the state's path on the filesystem
+        :return: if meta data file was loaded True otherwise False
+        :rtype: bool
         """
-        # print "1AbstractState_load_meta_data: ", path
-        # print not path
+        # TODO: for an Execution state this method is called for each hierarchy level again and again, still?? check it!
+        # print "1AbstractState_load_meta_data: ", path, not path
         if not path:
             path = self.state.file_system_path
         # print "2AbstractState_load_meta_data: ", path
