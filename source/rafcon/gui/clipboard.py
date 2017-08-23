@@ -37,7 +37,6 @@ class Clipboard(Observable):
     def __init__(self):
         Observable.__init__(self)
 
-        self.selected_models = {state_element_attr: [] for state_element_attr in ContainerState.state_element_attrs}
         self.model_copies = {state_element_attr: [] for state_element_attr in ContainerState.state_element_attrs}
 
         self.copy_parent_state_id = None
@@ -47,8 +46,24 @@ class Clipboard(Observable):
         self.state_id_mapping_dict = {}
 
     def __str__(self):
-        return "Clipboard: parent of copy is state with state_id {0} and selection is {1}" \
-               "".format(self.copy_parent_state_id, self.selected_models)
+        return "Clipboard: parent of copy is state with state_id {0} and copies in are {1}" \
+               "".format(self.copy_parent_state_id,
+                         {key: elems for key, elems in self.model_copies.iteritems() if elems})
+
+    def get_action_arguments(self, target_state_m):
+        """ Collect argument attributes for action signal
+
+        Use non empty list dict to create arguments for action signal msg and logger messages. The action parent model
+        can be different then the target state model because logical and data port changes also may influence the
+        linkage, see action-module (undo/redo).
+
+        :param rafcon.gui.models.abstract_state.AbstractStateModel target_state_m: State model of target of action
+        :return: dict with lists of elements part of the action, action parent model
+        """
+        non_empty_lists_dict = {key: elems for key, elems in self.model_copies.iteritems() if elems}
+        port_attrs = ['input_data_ports', 'output_data_ports', 'scoped_variables', 'outcomes']
+        port_is_pasted = any([key in non_empty_lists_dict for key in port_attrs])
+        return non_empty_lists_dict, target_state_m.parent if target_state_m.parent and port_is_pasted else target_state_m
 
     def copy(self, selection, smart_selection_adaption=True):
         """ Copy all selected items to the clipboard using smart selection adaptation by default
@@ -58,7 +73,6 @@ class Clipboard(Observable):
         :return:
         """
         assert isinstance(selection, Selection)
-        self.reset_clipboard()
         self.__create_core_object_copies(selection, smart_selection_adaption)
 
     def cut(self, selection, smart_selection_adaption=True):
@@ -73,9 +87,18 @@ class Clipboard(Observable):
         if gui_helper_state_machine.is_selection_inside_of_library_state(selected_elements=selection.get_all()):
             logger.warn("Cut is not performed because elements inside of a library state are selected.")
             return
-        self.reset_clipboard()
-        self.__create_core_object_copies(selection, smart_selection_adaption)
-        self.do_cut_removal()
+        selection_dict_of_copied_models, parent_m = self.__create_core_object_copies(selection, smart_selection_adaption)
+        non_empty_lists_dict, action_parent_m = self.get_action_arguments(parent_m if parent_m else None)
+        action_parent_m.action_signal.emit(ActionSignalMsg(action='cut', origin='clipboard',
+                                                           action_parent_m=action_parent_m,
+                                                           affected_models=[], after=False,
+                                                           kwargs={'remove': non_empty_lists_dict}))
+        for state_element_attr, models_list in selection_dict_of_copied_models.iteritems():
+            gui_helper_state_machine.delete_core_elements_of_models(models_list)
+        affected_models = [model for models in non_empty_lists_dict.itervalues() for model in models]
+        action_parent_m.action_signal.emit(ActionSignalMsg(action='cut', origin='clipboard',
+                                                           action_parent_m=action_parent_m,
+                                                           affected_models=affected_models, after=True))
 
     def prepare_new_copy(self):
         self.model_copies = deepcopy(self.model_copies)
@@ -96,6 +119,7 @@ class Clipboard(Observable):
         via points
         :return:
         """
+        self.reset_clipboard_mapping_dicts()
         if not isinstance(target_state_m, StateModel):
             logger.warn("Paste is not performed because target state indication has to be a StateModel not {0}"
                         "".format(target_state_m.__class__.__name__))
@@ -107,11 +131,12 @@ class Clipboard(Observable):
         element_m_copy_lists = self.model_copies
         self.prepare_new_copy()  # threaded in future -> important that the copy is prepared here!!!
         # use non empty list dict to create arguments for action signal msg and logger messages
-        non_empty_lists_dict = {key: elems for key, elems in element_m_copy_lists.iteritems() if elems}
-        target_state_m.action_signal.emit(ActionSignalMsg(action='paste', origin='model',
-                                                          action_parent_m=target_state_m,
-                                                          affected_models=[], after=False,
-                                                          kwargs={'insert': non_empty_lists_dict}))
+        non_empty_lists_dict, action_parent_m = self.get_action_arguments(target_state_m)
+        action_parent_m.action_signal.emit(ActionSignalMsg(action='paste', origin='clipboard',
+                                                           action_parent_m=action_parent_m,
+                                                           affected_models=[], after=False,
+                                                           kwargs={'insert': non_empty_lists_dict, 'convert': convert,
+                                                                   'limited': limited}))
         self.state_id_mapping_dict[self.copy_parent_state_id] = target_state_m.state.state_id
 
         # prepare list of lists to copy for limited or converted paste of objects
@@ -181,9 +206,9 @@ class Clipboard(Observable):
                 affected_models.append(new_state_element_m)
 
         # commented parts are here for later use to detect empty meta data fields and debug those
-        if all([all([gui_helpers_meta_data.model_has_empty_meta(state_element_m) for state_element_m in elems_dict.itervalues()])
-                if isinstance(elems_dict, dict) else gui_helpers_meta_data.model_has_empty_meta(elems_dict)
-                for elems_dict in models_dict.itervalues()]) or \
+        if all([all([not gui_helpers_meta_data.model_has_empty_meta(state_element_m) for state_element_m, _ in elems_list])
+                if isinstance(elems_list, list) else gui_helpers_meta_data.model_has_empty_meta(elems_list)
+                for elems_list in insert_dict.itervalues()]) or \
                 len(non_empty_lists_dict) == 1 and 'states' in non_empty_lists_dict:
             gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
         else:
@@ -192,25 +217,10 @@ class Clipboard(Observable):
 
         if not affected_models:
             logger.warning("Paste with no effect. No elements pasted from {0}".format(non_empty_lists_dict))
-        target_state_m.action_signal.emit(ActionSignalMsg(action='paste', origin='clipboard',
-                                                          action_parent_m=target_state_m,
-                                                          affected_models=affected_models, after=True))
+        action_parent_m.action_signal.emit(ActionSignalMsg(action='paste', origin='clipboard',
+                                                           action_parent_m=action_parent_m,
+                                                           affected_models=affected_models, after=True))
         return insert_dict
-
-    def do_cut_removal(self):
-        for state_element_attr in ContainerState.state_element_attrs:
-            element_key_singular = state_element_attr[:-1]
-            for model in self.selected_models[state_element_attr]:
-                # remove model from selection to avoid conflicts
-                # -> selection is not observing state machine changes and state machine model is not updating it
-                if model.parent is None and isinstance(model, StateModel) and model.state.is_root_state:
-                    selection = model.get_state_machine_m().selection if model.get_state_machine_m() else None
-                else:
-                    selection = model.parent.get_state_machine_m().selection if model.parent.get_state_machine_m() else None
-                if selection and model in getattr(selection, state_element_attr):
-                    selection.remove(model)
-                # remove element
-                getattr(model.core_element.parent, 'remove_{0}'.format(element_key_singular))(model.core_element.core_element_id)
 
     def _insert_state(self, target_state_m, orig_state_copy_m):
         target_state = target_state_m.state
@@ -296,13 +306,15 @@ class Clipboard(Observable):
         """
         # reset selections
         for state_element_attr in ContainerState.state_element_attrs:
-            self.selected_models[state_element_attr] = []
             self.model_copies[state_element_attr] = []
 
         # reset parent state_id the copied elements are taken from
         self.copy_parent_state_id = None
 
-        # reset mapping dictionaries
+        self.reset_clipboard_mapping_dicts()
+
+    def reset_clipboard_mapping_dicts(self):
+        """ Reset mapping dictionaries """
         self.outcome_id_mapping_dict = {}
         self.port_id_mapping_dict = {}
         self.state_id_mapping_dict = {}
@@ -426,7 +438,7 @@ class Clipboard(Observable):
 
         :param Selection selection: an arbitrary selection, whose elements should be copied
         .param bool smart_selection_adaption: flag to enable smart selection adaptation mode
-        :return:
+        :return: dictionary of selected models copied, parent model of copy
         """
 
         all_models_selected = selection.get_all()
@@ -441,11 +453,18 @@ class Clipboard(Observable):
             self.do_smart_selection_adaption(selection, parent_m)
 
         # store all lists of selection
+        selected_models_dict = {}
         for state_element_attr in ContainerState.state_element_attrs:
-            self.selected_models[state_element_attr] = getattr(selection, state_element_attr)
+            selected_models_dict[state_element_attr] = getattr(selection, state_element_attr)
 
         # copy all selected elements
-        self.model_copies = deepcopy(self.selected_models)
+        self.model_copies = deepcopy(selected_models_dict)
+
+        new_content_of_clipboard = ', '.join(["{0} {1}".format(len(elems), key if len(elems) > 1 else key[:-1])
+                                             for key, elems in self.model_copies.iteritems() if elems])
+        logger.info("The new content is {0}".format(new_content_of_clipboard.replace('_', ' ')))
+
+        return selected_models_dict, parent_m
 
 
 # To enable copy, cut and paste between state machines a global clipboard is used

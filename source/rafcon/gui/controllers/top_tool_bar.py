@@ -23,9 +23,11 @@
 
 import gtk
 
+import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui import singleton as gui_singletons
 from rafcon.utils import log
+from rafcon.gui.utils import constants
 
 logger = log.get_logger(__name__)
 
@@ -54,6 +56,7 @@ class TopToolBarController(ExtendedController):
         view['minimize_button'].connect('clicked', self.on_minimize_button_clicked)
         view['maximize_button'].connect('clicked', self.on_maximize_button_clicked)
         view['close_button'].connect('clicked', self.on_close_button_clicked)
+        self.update_maximize_button()
 
     def on_minimize_button_clicked(self, widget, data=None):
         self.top_level_window.iconify()
@@ -66,6 +69,15 @@ class TopToolBarController(ExtendedController):
         else:
             self.top_level_window.maximize()
             self.full_screen = True
+        self.update_maximize_button()
+
+    def update_maximize_button(self):
+        if self.full_screen:
+            self.view['maximize_button'].set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_COLLAPSE))
+            self.view['maximize_button'].set_tooltip_text("Un-maximize window")
+        else:
+            self.view['maximize_button'].set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_EXP))
+            self.view['maximize_button'].set_tooltip_text("Maximize window")
 
     def on_close_button_clicked(self, widget, data=None):
         self.menu_bar_controller.on_quit_activate(None)
@@ -114,6 +126,7 @@ class TopToolBarUndockedWindowController(TopToolBarController):
         view.get_top_widget().connect("button_press_event", self.button_pressed_event)
         view['maximize_button'].connect('clicked', self.on_maximize_button_clicked)
         view['redock_button'].connect('clicked', self.on_redock_button_clicked)
+        self.update_maximize_button()
 
     def on_redock_button_clicked(self, widget, event=None):
         """Triggered when the redock button in any window is clicked.

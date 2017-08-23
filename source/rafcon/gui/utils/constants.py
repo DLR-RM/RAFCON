@@ -87,6 +87,7 @@ DEFAULT_PANE_POS = {'LEFT_BAR_DOCKED_POS': 300,
 
 # The codes written down here are the codes provided on the font_awesome website
 BUTTON_CHECK = "f046"
+BUTTON_COLLAPSE = "f066"
 BUTTON_SQUARE = "f096"
 BUTTON_EXP = "f065"
 BUTTON_EXCHANGE = "f0ec"

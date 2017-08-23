@@ -504,10 +504,9 @@ class ListViewController(ExtendedController):
             if isinstance(widget, gtk.TreeView):
                 if current_row_path is not None and len(current_row_path) == 1 and isinstance(current_row_path[0], int):
                     self.tree_view.scroll_to_cell(current_row_path[0], current_focused_column, use_align=False)
-                else:
-                    self._logger.warning("A ListViewController aspects a current_row_path of dimension 1 with integer "
-                                         "but it is but it is {0} and column is {1}".format(current_row_path,
-                                                                                            current_focused_column))
+                # else:
+                #     self._logger.debug("A ListViewController aspects a current_row_path of dimension 1 with integer but"
+                #                        " it is {0} and column is {1}".format(current_row_path, current_focused_column))
             elif isinstance(widget, gtk.Entry) and self.view.scrollbar_widget is not None:
                 # calculate the position of the scrollbar to be always centered with the entry widget cursor
                 # TODO check how to get sufficient the scroll-offset in the entry widget -> some times zero when not

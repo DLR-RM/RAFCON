@@ -31,18 +31,16 @@ class TopToolBarView(View):
         self.get_top_widget().set_events(gtk.gdk.POINTER_MOTION_MASK | gtk.gdk.POINTER_MOTION_HINT_MASK |
                                          gtk.gdk.BUTTON_PRESS_MASK)
 
-        close_button = self['close_button']
-        maximize_button = self['maximize_button']
-        minimize_button = self['minimize_button']
-        redock_button = self['redock_button']
-
         close_label = gui_helper_label.create_button_label(constants.BUTTON_CLOSE)
-        close_button.set_label_widget(close_label)
+        self['close_button'].set_label_widget(close_label)
+        self['close_button'].set_tooltip_text("Close RAFCON")
 
         maximize_label = gui_helper_label.create_button_label(constants.BUTTON_EXP)
-        maximize_button.set_label_widget(maximize_label)
+        self['maximize_button'].set_label_widget(maximize_label)
 
-        minimize_button.set_label('_')
+        self['minimize_button'].set_label('_')
+        self['minimize_button'].set_tooltip_text("Minimize main window")
 
         redock_label = gui_helper_label.create_button_label(constants.BUTTON_UNDOCK)
-        redock_button.set_label_widget(redock_label)
+        self['redock_button'].set_label_widget(redock_label)
+        self['redock_button'].set_tooltip_text("Re-Dock widget to main window")

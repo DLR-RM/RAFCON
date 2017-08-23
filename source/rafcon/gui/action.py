@@ -992,7 +992,6 @@ class AddObjectAction(Action):
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
         previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
@@ -1006,7 +1005,6 @@ class AddObjectAction(Action):
         self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
                                state_model=actual_state_model, level=1)
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     def undo(self):
 
@@ -1019,7 +1017,6 @@ class AddObjectAction(Action):
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
         previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
@@ -1037,8 +1034,6 @@ class AddObjectAction(Action):
         self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
                                state_model=actual_state_model, level=1)
-
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     def correct_reference_state(self, state, storage_version_of_state, storage_path):
 
@@ -1460,7 +1455,7 @@ class StateAction(Action):
                              'set_use_input_runtime_value', 'set_use_output_runtime_value',
                              'input_data_port_runtime_values', 'output_data_port_runtime_values',
                              'use_runtime_value_input_data_ports', 'use_runtime_value_output_data_ports',
-                             'group_states', 'ungroup_state', 'substitute_state', 'paste']
+                             'group_states', 'ungroup_state', 'substitute_state', 'paste', 'cut']
     possible_args = ['name', 'description', 'script_text', 'start_state_id',  # ContainerState
                      'library_name', 'library_path', 'version', 'state_copy',  # LibraryState
                      'input_data_port_runtime_values', 'output_data_port_runtime_values',
@@ -1537,7 +1532,7 @@ class StateAction(Action):
         if self.action_type in ['parent', 'outcomes', 'input_data_ports', 'output_data_ports']:
             Action.undo(self)
         elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type',
-                                  'group_states', 'ungroup_state', 'substitute_state', 'paste']:
+                                  'group_states', 'ungroup_state', 'substitute_state', 'paste', 'cut']:
             Action.undo(self)
         elif self.action_type in ['add_input_data_port', 'remove_input_data_port',  # LibraryState
                                   'add_output_data_port', 'remove_output_data_port']:
@@ -1552,7 +1547,7 @@ class StateAction(Action):
         if self.action_type in ['outcomes', 'input_data_ports', 'output_data_ports']:
             Action.redo(self)
         elif self.action_type in ['states', 'scoped_variables', 'data_flows', 'transitions', 'change_state_type',
-                                  'group_states', 'ungroup_state', 'substitute_state', 'paste']:
+                                  'group_states', 'ungroup_state', 'substitute_state', 'paste', 'cut']:
             Action.redo(self)
         elif self.action_type in ['add_input_data_port', 'remove_input_data_port',  # LibraryState
                                   'add_output_data_port', 'remove_output_data_port']:

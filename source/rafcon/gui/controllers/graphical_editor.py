@@ -218,7 +218,7 @@ class GraphicalEditorController(ExtendedController):
                 self.suspend_drawing = True
                 # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
                 self.observe_model(info['arg'].affected_models[0])
-        if info['arg'].action in ['group_states', 'paste']:
+        if info['arg'].action in ['group_states', 'paste', 'cut']:
             if not info['arg'].after:
                 self.suspend_drawing = True
                 # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
@@ -229,12 +229,12 @@ class GraphicalEditorController(ExtendedController):
         # from rafcon.gui.utils.notification_overview import NotificationOverview
         # logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
         if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'group_states',
-                                  'ungroup_state', 'paste', 'undo/redo']:
+                                  'ungroup_state', 'paste', 'cut', 'undo/redo']:
             if info['arg'].after:
                 self.suspend_drawing = False
                 self.relieve_model(model)
                 # logger.info("drawing suspended: {0} redraw".format(self.suspend_drawing))
-                if not info['arg'].action == 'paste':
+                if not info['arg'].action in ['paste', 'cut']:
                     self._redraw()
 
     @ExtendedController.observe("state_machine", after=True)

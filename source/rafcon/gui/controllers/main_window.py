@@ -267,6 +267,7 @@ class MainWindowController(ExtendedController):
                                         partial(self.undock_sidebar, "CONSOLE_BAR_WINDOW", "console",
                                                 "undock_console_button", "console_return_button",
                                                 self.on_console_hide_clicked, None))
+        self.connect_button_to_function('collapse_tree_button', "clicked", self.on_collapse_button_clicked)
 
         # Connect Shortcut buttons' signals to their corresponding methods
         self.connect_button_to_function('button_start_shortcut', "toggled", self.on_button_start_shortcut_toggled)
@@ -578,8 +579,7 @@ class MainWindowController(ExtendedController):
             active = gui_config.get_config_value("LOGGING_SHOW_{}".format(level.upper()))
             self.view["button_show_{}".format(level)].set_active(active)
 
-    @staticmethod
-    def on_notebook_tab_switch(notebook, page, page_num, title_label, window, notebook_identifier):
+    def on_notebook_tab_switch(self, notebook, page, page_num, title_label, window, notebook_identifier):
         """Triggered whenever a left-bar notebook tab is changed.
 
         Updates the title of the corresponding notebook and updates the title of the left-bar window in case un-docked.
@@ -592,3 +592,25 @@ class MainWindowController(ExtendedController):
         """
         title = gui_helper_label.set_notebook_title(notebook, page_num, title_label)
         window.reset_title(title, notebook_identifier)
+        self.on_switch_page_check_collapse_button(notebook, page_num)
+
+    def on_switch_page_check_collapse_button(self, notebook, page_num):
+        upper_page_num = self.view['upper_notebook'].get_current_page() if notebook is not self.view['upper_notebook'] else page_num
+        upper_notebook_title = gui_helper_label.get_notebook_tab_title(self.view['upper_notebook'], upper_page_num)
+        lower_page_num = self.view['lower_notebook'].get_current_page() if notebook is not self.view['lower_notebook'] else page_num
+        lower_notebook_title = gui_helper_label.get_notebook_tab_title(self.view['lower_notebook'], lower_page_num)
+        if any([title in upper_notebook_title for title in ['LIBRARIES', "STATES TREE"]]) or \
+                any([title in lower_notebook_title for title in ['LIBRARIES', "STATES TREE"]]):
+            self.view["collapse_tree_button"].show()
+        else:
+            self.view["collapse_tree_button"].hide()
+
+    def on_collapse_button_clicked(self, button):
+        upper_page_num = self.view['upper_notebook'].get_current_page()
+        upper_notebook_title = gui_helper_label.get_notebook_tab_title(self.view['upper_notebook'], upper_page_num)
+        lower_page_num = self.view['lower_notebook'].get_current_page()
+        lower_notebook_title = gui_helper_label.get_notebook_tab_title(self.view['lower_notebook'], lower_page_num)
+        if any(['LIBRARIES' in title for title in [upper_notebook_title, lower_notebook_title]]):
+            self.get_controller('library_controller').view.collapse_all()
+        if any(["STATES TREE" in title for title in [upper_notebook_title, lower_notebook_title]]):
+            self.get_controller('state_machine_tree_controller').view.collapse_all()
