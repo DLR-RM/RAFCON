@@ -7,9 +7,23 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 - New Features:
+
+- Improvements:
+
+- Bug Fixes:
+
+Patch releases 0.11.\*
+----------------------
+
+0.11.1
+""""""
+
+- New Features:
+
     - :issue:`384` add "Collapse all" button for library manager and enable the feature for the state machine tree, too
 
 - Improvements:
+
     - port position default values
 
 - Bug Fixes:
@@ -17,27 +31,26 @@ Next release
     - Fix issues when copying/converting logical or data ports with clipboard while cut/copy/paste
     - Fix library state port position scaling after adding
     - Fix gaphas viewer problems with undo/redo of complex actions like copy and paste or add/remove of ports
-
-Patch releases 0.11.\*
-----------------------
-
+    - :issue:`10` Fully integrate modification history with gaphas
 
 0.11.0
 """"""
 
 - New Features:
 
-  - "Session restore" by default disabled
-  - "Open Recent" recently opened state state machines sub menu in menu bar under sub-menu Files
+  - "Session restore" by default enabled
+  - :issue:`364` "Open Recent" recently opened state state machines sub menu in menu bar under sub-menu Files
   - "Save as copy" in menu bar under sub-menu Files
   - "Show library content" supported for gaphas graphical viewer
-  - The inner library states can be selected, copied and used to run the execution from or to this state, see :issue:`366`
-  - The state machine tree shows inner library states, too, and can be used to explore all "leaf"-states
+  - The inner library states can be selected, copied and used to run the execution from or to this state,
+    see :issue:`366` and :issue:`367`, too
+  - :issue:`255` The state machine tree shows inner library states, too, and can be used to explore all "leaf"-states
   - Storage format can be adapted by the user (e.g. names of states in paths and there length)
   - The library manager widget/tree supports modifications by right click (remove library, add/remove library roots)
   - Execution tool-bar supports buttons for run to- and run from-state (like right click menu, too)
 
 - Improvements:
+
   - Refactoring of "Save state as state machine/library"
   - Better default position meta data for states in graphical viewer
   - Proper resize of graphical meta data for complex actions and show library content
@@ -47,6 +60,7 @@ Patch releases 0.11.\*
   - The gtkmvc version 1.99.2 is fully supported (:issue:`388` corrected version in older releases)
 
 - Bug Fixes:
+
   :issue:`382` Currently active state machine not correct
   :issue:`362` Data flows between scoped variables
   :issue:`354` Meta data broken when adding state as template to state machine
