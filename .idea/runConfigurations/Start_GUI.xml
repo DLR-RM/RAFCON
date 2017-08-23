@@ -13,7 +13,7 @@
     <module name="rafcon" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/source/rafcon/gui/start.py" />
     <option name="PARAMETERS" value="" />
-    <option name="SHOW_COMMAND_LINE" value="true" />
+    <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <method />
   </configuration>
