@@ -1,18 +1,22 @@
 import os
-import pytest
 import gc
 import time
 import gtkmvc
 
 import rafcon
 import rafcon.gui
+import rafcon.gui.controllers
+import rafcon.gui.controllers.utils.extended_controller
 import rafcon.gui.models
-from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
+import rafcon.gui.models.state_element
+
+import rafcon.core.singleton
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
+import rafcon.core.states.state
+import rafcon.core.state_elements.state_element
 
-import rafcon.gui.controllers
-import rafcon.gui.controllers.utils
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
 import core.test_states as basic_state_machines
 import testing_utils
@@ -134,7 +138,7 @@ def create_container_state(*args, **kargs):
 def generate_sm_for_garbage_collector():
     ctr_state, dict_states = create_container_state()
     from rafcon.core.state_machine import StateMachine
-    my_sm = StateMachine(ctr_state)
+    _ = StateMachine(ctr_state)
 
 
 def get_log_elements(elements, with_prints=False, print_method=None):
@@ -146,8 +150,8 @@ def get_log_elements(elements, with_prints=False, print_method=None):
             element_gen_file = f.readlines()
         with open(del_file) as f:
             element_del_file = f.readlines()
-        element_gen_file = [line.replace('\n','') for line in element_gen_file]
-        element_del_file = [line.replace('\n','') for line in element_del_file]
+        element_gen_file = [line.replace('\n', '') for line in element_gen_file]
+        element_del_file = [line.replace('\n', '') for line in element_del_file]
         # if element_name == 'state':
         for elem in element_gen_file:
             mem_id = elem.split(" ")
@@ -184,7 +188,7 @@ def check_log_files(elements):
         print "check file: ", file_path
         if os.path.exists(file_path):
             print "exists before: ", file_path
-        with open(file_path, 'a+') as f:
+        with open(file_path, 'a+'):
             pass
         if os.path.exists(file_path):
             print "exists after: ", file_path
@@ -238,7 +242,7 @@ def run_model_construction():
 
 def run_controller_construction(caplog, with_gui):
     # for a start load one of the type change tests to generate a lot of controllers which also close the GUI
-    from gui.widget.test_states_editor_widget import create_models, MainWindowView, \
+    from gui.widget.test_states_editor import create_models, MainWindowView, \
         MainWindowController, trigger_state_type_change_tests, gtk, threading
 
     sm_m, state_dict = create_models()
@@ -618,4 +622,5 @@ if __name__ == '__main__':
     test_model_and_core_destruct(None)
     # _test_model_and_core_destruct_with_gui(None)
     # _test_widget_destruct(None)
+    # import pytest
     # pytest.main(['-s', __file__])
