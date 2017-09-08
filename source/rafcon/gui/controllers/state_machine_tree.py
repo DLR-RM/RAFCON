@@ -342,14 +342,14 @@ class StateMachineTreeController(TreeViewController):
         # 4.1 - in as library without show content -> nothing to do
 
         # if state model is LibraryStateModel with enabled show content state_model becomes the library root state model
-        if isinstance(state_model, LibraryStateModel) and self.show_content(state_model):
+        if isinstance(state_model, LibraryStateModel) and self.show_content(state_model) and state_model.state_copy_initialized:
             _state_model = state_model
             state_model = state_model.state_copy
         else:
             _state_model = state_model
 
         # TODO remove this workaround for removing LibraryStateModel or there root states by default
-        if isinstance(_state_model, LibraryStateModel):
+        if isinstance(_state_model, LibraryStateModel) and _state_model.state_copy_initialized:
             state_row_iter = None
             if _state_model.state.get_path() in self.state_row_iter_dict_by_state_path:
                 state_row_iter = self.state_row_iter_dict_by_state_path[_state_model.state.get_path()]
@@ -403,7 +403,8 @@ class StateMachineTreeController(TreeViewController):
             child_id = self.tree_store.get_value(child_iter, self.ID_STORAGE_ID)
 
             # check if there are left over rows of old states (switch from HS or CS to S and so on)
-            show_content_flag = isinstance(child_model, LibraryStateModel) and self.show_content(child_model)
+            show_content_flag = isinstance(child_model, LibraryStateModel) and self.show_content(child_model) and \
+                                child_model.state_copy_initialized
             child_is_lib_with_show_content = isinstance(child_model, LibraryStateModel) and show_content_flag
             child_is_lib_without_show_content = isinstance(child_model, LibraryStateModel) and not show_content_flag
             if not isinstance(state_model, ContainerStateModel) or child_model is None or \

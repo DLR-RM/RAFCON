@@ -319,14 +319,20 @@ class GraphicalEditorController(ExtendedController):
         if meta_signal_message.change == 'show_content':
             library_state_m = model
             library_state_v = view
-            if model.meta['gui']['show_content']:
+            if model.meta['gui']['show_content'] is not library_state_m.show_content():
+                logger.warning("Minor show content flag is not considered because of major show content depth "
+                               "limitations for {0}, see GUI config MAX_VISIBLE_LIBRARY_HIERARCHY.".format(model))
+            if library_state_m.show_content():
+                if not library_state_m.state_copy_initialized:
+                    logger.warning("Show library content without initialized state copy does not work {0}".format(model))
                 logger.debug("Show content of {}".format(library_state_m.state))
                 gui_helper_meta_data.scale_library_content(library_state_m)
                 self.add_state_view_for_model(library_state_m.state_copy, view, hierarchy_level=library_state_v.hierarchy_level + 1)
             else:
                 logger.debug("Hide content of {}".format(library_state_m.state))
                 state_copy_v = self.canvas.get_view_for_model(library_state_m.state_copy)
-                state_copy_v.remove()
+                if state_copy_v:
+                    state_copy_v.remove()
                 self.canvas.request_update(library_state_v)
                 self.canvas.perform_update()
         else:
@@ -750,7 +756,7 @@ class GraphicalEditorController(ExtendedController):
             # Keep state within parent
             pass
 
-        if isinstance(state_m, LibraryStateModel) and state_m.show_content():
+        if isinstance(state_m, LibraryStateModel) and state_m.show_content() and state_m.state_copy_initialized:
             gui_helper_meta_data.scale_library_content(state_m)
             self.add_state_view_for_model(state_m.state_copy, state_v, hierarchy_level=hierarchy_level + 1)
 

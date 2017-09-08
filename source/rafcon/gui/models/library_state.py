@@ -43,25 +43,37 @@ class LibraryStateModel(AbstractStateModel):
         self.state_copy_initialized = False
         self.meta_data_was_scaled = False
         super(LibraryStateModel, self).__init__(state, parent, meta)
-        model_class = get_state_model_class_for_state(state.state_copy)
-        if model_class is not None:
-            self.state_copy = model_class(state.state_copy, parent=self)  # TODO think about load_meta_data=False)
+
+        # regulate depth of library model generation to reduce resource consumption
+        current_hierarchy_depth = self.state.library_hierarchy_depth
+        max_hierarchy_depth = global_gui_config.get_config_value("MAX_VISIBLE_LIBRARY_HIERARCHY", 2)
+        no_fully_rec_lib_model = global_gui_config.get_config_value("NO_FULLY_RECURSIVE_LIBRARY_MODEL", False)
+        recursive_model_generation = not (current_hierarchy_depth > max_hierarchy_depth) or not no_fully_rec_lib_model
+        if recursive_model_generation:
+            # logger.debug("initialize state copy {0}".format(self))
+            self.initiate_library_root_state_model()
         else:
-            logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
-        self.state_copy_initialized = True
+            logger.debug("Do not initialize state copy {0}".format(self))
 
         self._load_input_data_port_models()
         self._load_output_data_port_models()
         self._load_outcome_models()
 
         if load_meta_data:
-
             if not self.load_meta_data():
                 # TODO decide to scale here or still in the editor -> at the moment meta data is missing here
                 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
                 # gui_helper_meta_data.scale_library_ports_meta_data(self)
             else:
                 self.meta_data_was_scaled = True
+
+    def initiate_library_root_state_model(self):
+        model_class = get_state_model_class_for_state(self.state.state_copy)
+        if model_class is not None:
+            self.state_copy = model_class(self.state.state_copy, parent=self)
+            self.state_copy_initialized = True
+        else:
+            logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(self.state)))
 
     def __eq__(self, other):
         # logger.info("compare method")
@@ -136,5 +148,6 @@ class LibraryStateModel(AbstractStateModel):
         return False if 'show_content' not in uppermost_lib_meta['gui'] else uppermost_lib_meta['gui']['show_content']
 
     def copy_meta_data_from_state_m(self, source_state_m):
+        assert isinstance(source_state_m, LibraryStateModel)
         super(LibraryStateModel, self).copy_meta_data_from_state_m(source_state_m)
         self.meta_data_was_scaled = source_state_m.meta_data_was_scaled

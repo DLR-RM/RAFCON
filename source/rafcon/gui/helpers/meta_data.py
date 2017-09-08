@@ -485,12 +485,14 @@ def resize_state_meta(state_m, factor, gaphas_editor):
 
     if isinstance(state_m, LibraryStateModel):
         # print "LIBRARY", state_m
-        if gaphas_editor:
+        if gaphas_editor and state_m.state_copy_initialized:
             if state_m.meta_data_was_scaled:
                 resize_state_port_meta(state_m, factor, gaphas_editor)
             else:
                 scale_library_ports_meta_data(state_m, gaphas_editor)
-        resize_state_meta(state_m.state_copy, factor, gaphas_editor)
+
+        if state_m.state_copy_initialized:
+            resize_state_meta(state_m.state_copy, factor, gaphas_editor)
         # print "END LIBRARY RESIZE"
     else:
         # print "resize_state_meta -> resize_state_port_meta"
