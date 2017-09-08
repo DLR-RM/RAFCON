@@ -16,6 +16,7 @@
 """
 
 import copy
+import time
 
 import gtk
 import glib
@@ -82,6 +83,7 @@ def open_state_machine(path=None, recent_opened_notification=False):
     :rtype rafcon.core.state_machine.StateMachine
     :return: opened state machine
     """
+    start_time = time.time()
     if path is None:
         if interface.open_folder_func is None:
             logger.error("No function defined for opening a folder")
@@ -107,6 +109,10 @@ def open_state_machine(path=None, recent_opened_notification=False):
             global_runtime_config.update_recently_opened_state_machines_with(sm_m)
     except (AttributeError, ValueError, IOError) as e:
         logger.error('Error while trying to open state machine: {0}'.format(e))
+        raise
+    duration = time.time() - start_time
+    stat = state_machine.root_state.get_states_statistics(0)
+    logger.info("It took {0} seconds to load {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
     return state_machine
 
 
