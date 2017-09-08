@@ -319,12 +319,13 @@ class GraphicalEditorController(ExtendedController):
         if meta_signal_message.change == 'show_content':
             library_state_m = model
             library_state_v = view
-            if model.meta['gui']['show_content'] is not library_state_m.show_content():
+            if library_state_m.meta['gui']['show_content'] is not library_state_m.show_content():
                 logger.warning("Minor show content flag is not considered because of major show content depth "
-                               "limitations for {0}, see GUI config MAX_VISIBLE_LIBRARY_HIERARCHY.".format(model))
+                               "limitations for {0}, see GUI config MAX_VISIBLE_LIBRARY_HIERARCHY.".format(library_state_m))
             if library_state_m.show_content():
                 if not library_state_m.state_copy_initialized:
-                    logger.warning("Show library content without initialized state copy does not work {0}".format(model))
+                    logger.warning("Show library content without initialized state copy does not work {0}"
+                                   "".format(library_state_m))
                 logger.debug("Show content of {}".format(library_state_m.state))
                 gui_helper_meta_data.scale_library_content(library_state_m)
                 self.add_state_view_for_model(library_state_m.state_copy, view, hierarchy_level=library_state_v.hierarchy_level + 1)

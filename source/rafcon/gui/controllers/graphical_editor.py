@@ -258,7 +258,13 @@ class GraphicalEditorController(ExtendedController):
         elif 'signal' in info:
             msg = info.arg
             if msg.change == 'show_content':
-                self._redraw()
+                library_state_m = msg.notification.model
+                if library_state_m.meta['gui']['show_content'] is not library_state_m.show_content():
+                    logger.warning("Minor show content flag is not considered because of major show content depth "
+                                   "limitations for {0}, see GUI config MAX_VISIBLE_LIBRARY_HIERARCHY."
+                                   "".format(library_state_m))
+                else:
+                    self._redraw()
 
     @ExtendedController.observe("root_state", assign=True)
     def root_state_change(self, model, prop_name, info):
@@ -1583,7 +1589,7 @@ class GraphicalEditorController(ExtendedController):
                 (state_m.state.is_root_state_of_library and parent_execution_status is not StateExecutionStatus.INACTIVE):
             if isinstance(state_m, ContainerStateModel) and state_m.state.child_execution:
                 active = StateExecutionStatus.EXECUTE_CHILDREN
-            elif isinstance(state_m, LibraryStateModel) and not state_m.meta['gui']['show_content']:
+            elif isinstance(state_m, LibraryStateModel) and not state_m.show_content():
                 active = StateExecutionStatus.ACTIVE
             elif isinstance(state_m, LibraryStateModel) and isinstance(state_m.state_copy, ContainerStateModel) and \
                     state_m.state_copy.state.child_execution:
@@ -1674,7 +1680,8 @@ class GraphicalEditorController(ExtendedController):
                 redraw = True
 
         elif isinstance(state_m, LibraryStateModel):
-            show_content = state_m.meta['gui']['show_content'] is True
+
+            show_content = state_m.show_content() is True
             is_first_draw_of_lib_state = not contains_geometric_info(state_m.state_copy.temp['gui']['editor']['pos'])
 
             if show_content or is_child_of_library:
