@@ -302,7 +302,7 @@ class ScopedDataItem(HistoryItem):
         else:
             raise Exception('unkown calltype, neither CONTAINER nor EXECUTE')
         self.call_type = call_type
-        self.scoped_data = copy.deepcopy(state_for_scoped_data._scoped_data)
+        self.scoped_data = {} if state_for_scoped_data is None else copy.deepcopy(state_for_scoped_data._scoped_data)
         self.child_state_input_output_data = copy.deepcopy(child_state_input_output_data)
 
     def to_dict(self):

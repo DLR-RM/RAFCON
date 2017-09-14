@@ -30,6 +30,7 @@ from rafcon.core.decorators import lock_state_machine
 from rafcon.core.state_elements.outcome import Outcome
 from rafcon.core.script import Script
 from rafcon.core.states.state import StateExecutionStatus
+from rafcon.core.execution.execution_history import CallType
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -126,6 +127,9 @@ class ExecutionState(State):
 
         :return:
         """
+        if self.is_root_state:
+            self.execution_history.push_call_history_item(self, CallType.EXECUTE, None, self.input_data)
+
         logger.debug("Running {0}{1}".format(self, " (backwards)" if self.backward_execution else ""))
         if self.backward_execution:
             self.setup_backward_run()
@@ -133,22 +137,20 @@ class ExecutionState(State):
             self.setup_run()
 
         try:
+            outcome = self._execute(self.input_data, self.output_data, self.backward_execution)
+            self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
 
             if self.backward_execution:
-                self._execute(self.input_data, self.output_data, backward_execution=True)
                 # outcome handling is not required as we are in backward mode and the execution order is fixed
-                self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
-                return self.finalize()
-
+                result = self.finalize()
             else:
-                outcome = self._execute(self.input_data, self.output_data)
-
-                self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
                 # check output data
                 self.check_output_data_type()
+                result = self.finalize(outcome)
 
-                return self.finalize(outcome)
-
+            if self.is_root_state:
+                self.execution_history.push_return_history_item(self, CallType.EXECUTE, None, self.output_data)
+            return result
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             formatted_exc = traceback.format_exception(exc_type, exc_value, exc_traceback)
