@@ -188,7 +188,7 @@ class ExecutionHistory(Observable, Iterable, Sized):
         return self._push_item(last_history_item, return_item)
 
     @Observable.observed
-    def push_statemachine_start_item(self, state_machine, run_id):
+    def push_state_machine_start_history_item(self, state_machine, run_id):
         return_item = StateMachineStartItem(state_machine, run_id)
         if self.execution_history_storage is not None:
             self.execution_history_storage.store_item(return_item.history_item_id, return_item.to_dict())
