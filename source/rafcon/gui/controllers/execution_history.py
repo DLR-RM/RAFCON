@@ -22,7 +22,6 @@
 
 import gtk
 import gobject
-import sys
 
 import rafcon
 
@@ -69,10 +68,10 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.history_tree.set_model(self.history_tree_store)
         view['history_tree'].set_tooltip_column(self.TOOL_TIP_STORAGE_ID)
 
-        self._start_idx = 0
-
         self.state_machine_execution_model = rafcon.gui.singleton.state_machine_execution_model
         self.observe_model(self.state_machine_execution_model)
+        self.__expansion_state = {}
+        self.__current_selected_sm_id = self.model.selected_state_machine_id
 
         self.update()
 
@@ -197,6 +196,12 @@ class ExecutionHistoryTreeController(ExtendedController):
     #     #self.update()
 
     def get_history_item_for_tree_iter(self, child_tree_iter):
+        """Hands history item for tree iter and compensate if tree item is a dummy item
+
+        :param gtk.TreeIter child_tree_iter: Tree iter of row
+        :rtype rafcon.core.execution.execution_history.HistoryItem:
+        :return history tree item:
+        """
         history_item = self.history_tree_store[child_tree_iter][self.HISTORY_ITEM_STORAGE_ID]
         if history_item is None:  # is dummy item
             if self.history_tree_store.iter_n_children(child_tree_iter) > 0:
@@ -206,13 +211,70 @@ class ExecutionHistoryTreeController(ExtendedController):
                 logger.warning("In a dummy history should be respective real call element.")
         return history_item
 
+    def store_expansion_state(self):
+        """Iter recursively all tree items and store expansion state"""
+
+        def store_tree_expansion(child_tree_iter, expansion_state):
+
+            tree_item_path = self.history_tree_store.get_path(child_tree_iter)
+            history_item = self.get_history_item_for_tree_iter(child_tree_iter)
+
+            # store expansion state if tree item path is valid and expansion state was not stored already
+            if tree_item_path is not None:
+                # if first element of sub-tree has same history_item as the parent ignore it's expansion state
+                if history_item not in expansion_state:
+                    expansion_state[history_item] = self.history_tree.row_expanded(tree_item_path)
+
+            for n in range(self.history_tree_store.iter_n_children(child_tree_iter)):
+                child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, n)
+                store_tree_expansion(child_iter, expansion_state)
+
+        current_expansion_state = {}
+        self.__expansion_state[self.__current_selected_sm_id] = current_expansion_state
+        try:
+            root_iter = self.history_tree_store.get_iter_root()
+            while root_iter:
+                store_tree_expansion(root_iter, current_expansion_state)
+                root_iter = self.history_tree_store.iter_next(root_iter)
+        except TypeError:
+            logger.error("Expansion state of state machine {0} could not be stored"
+                         "".format(self.__current_selected_sm_id))
+
+    def restore_expansion_state(self):
+        """Iter recursively all tree items and restore expansion state"""
+
+        def restore_tree_expansion(child_tree_iter, expansion_state):
+            tree_item_path = self.history_tree_store.get_path(child_tree_iter)
+            history_item = self.get_history_item_for_tree_iter(child_tree_iter)
+
+            # restore expansion state if tree item path is valid and expansion state was not stored already
+            if tree_item_path and history_item in expansion_state:
+                if expansion_state[history_item]:
+                    self.history_tree.expand_to_path(tree_item_path)
+
+            for n in range(self.history_tree_store.iter_n_children(child_tree_iter)):
+                child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, n)
+                restore_tree_expansion(child_iter, expansion_state)
+
+        try:
+            root_iter = self.history_tree_store.get_iter_root()
+            while root_iter and self.model.selected_state_machine_id in self.__expansion_state:
+                restore_tree_expansion(root_iter, self.__expansion_state[self.model.selected_state_machine_id])
+                root_iter = self.history_tree_store.iter_next(root_iter)
+        except TypeError:
+            logger.error("Expansion state of state machine {0} could not be restored"
+                         "".format(self.__current_selected_sm_id))
+
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def notification_selected_sm_changed(self, model, prop_name, info):
-        """If a new state machine is selected, make sure the tab is open"""
+        """If a new state machine is selected, make sure expansion state is stored and tree updated"""
         selected_state_machine_id = self.model.selected_state_machine_id
         if selected_state_machine_id is None:
             return
+        self.store_expansion_state()
         self.update()
+        self.__current_selected_sm_id = self.model.selected_state_machine_id
+        self.restore_expansion_state()
 
     @ExtendedController.observe("execution_engine", after=True)
     def execution_history_focus(self, model, prop_name, info):
@@ -231,7 +293,9 @@ class ExecutionHistoryTreeController(ExtendedController):
             if not self.model.selected_state_machine_id == self.state_machine_manager.active_state_machine_id:
                 self.model.selected_state_machine_id = self.state_machine_manager.active_state_machine_id
             else:
+                self.store_expansion_state()
                 self.update()
+                self.restore_expansion_state()
 
     def clean_history(self, widget, event=None):
         """Triggered when the 'Clean History' button is clicked.
@@ -243,6 +307,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         if selected_sm_m:
             selected_sm_m.state_machine.clear_execution_histories()
             self.update()
+            self.store_expansion_state()
 
     def reload_history(self, widget, event=None):
         """Triggered when the 'Reload History' button is clicked."""
