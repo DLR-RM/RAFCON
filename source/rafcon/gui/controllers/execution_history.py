@@ -53,7 +53,7 @@ class ExecutionHistoryTreeController(ExtendedController):
     LABEL_NAME_STORAGE_ID = 0
     HISTORY_ITEM_STORAGE_ID = 1
     TOOL_TIP_STORAGE_ID = 2
-    DOUBLE_CLICK_TOOL_TIP = "double click element to focus state machine and select state"
+    DOUBLE_CLICK_TOOL_TIP = "- right click for details\n- double click element to focus state machine and select state"
 
     def __init__(self, model=None, view=None, state_machine_manager=None):
 
@@ -196,6 +196,14 @@ class ExecutionHistoryTreeController(ExtendedController):
     # def model_changed(self, model, prop_name, info):
     #     #self.update()
 
+    @ExtendedController.observe("selected_state_machine_id", assign=True)
+    def notification_selected_sm_changed(self, model, prop_name, info):
+        """If a new state machine is selected, make sure the tab is open"""
+        selected_state_machine_id = self.model.selected_state_machine_id
+        if selected_state_machine_id is None:
+            return
+        self.update()
+
     @ExtendedController.observe("execution_engine", after=True)
     def execution_history_focus(self, model, prop_name, info):
         """ Arranges to put execution-history widget page to become top page in notebook when execution starts and stops
@@ -207,9 +215,13 @@ class ExecutionHistoryTreeController(ExtendedController):
             if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):
                 # request focus -> which has not have to be satisfied
                 self.parent.focus_notebook_page_of_controller(self)
+                self.model.selected_state_machine_id = self.state_machine_manager.active_state_machine_id
 
         if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
-            self.update()
+            if not self.model.selected_state_machine_id == self.state_machine_manager.active_state_machine_id:
+                self.model.selected_state_machine_id = self.state_machine_manager.active_state_machine_id
+            else:
+                self.update()
 
     def clean_history(self, widget, event=None):
         """Triggered when the 'Clean History' button is clicked.
@@ -217,9 +229,9 @@ class ExecutionHistoryTreeController(ExtendedController):
         Empties the execution history tree by adjusting the start index and updates tree store and view.
         """
         self.history_tree_store.clear()
-        active_sm = self.state_machine_manager.get_active_state_machine()
-        if active_sm:
-            active_sm.clear_execution_histories()
+        selected_sm_m = self.model.get_selected_state_machine_model()
+        if selected_sm_m:
+            selected_sm_m.state_machine.clear_execution_histories()
             self.update()
 
     def reload_history(self, widget, event=None):
@@ -232,11 +244,11 @@ class ExecutionHistoryTreeController(ExtendedController):
         :return:
         """
         self.history_tree_store.clear()
-        active_sm = self.state_machine_manager.get_active_state_machine()
-        if not active_sm:
+        selected_sm_m = self.model.get_selected_state_machine_model()
+        if not selected_sm_m:
             return
 
-        for execution_number, execution_history in enumerate(active_sm.execution_histories):
+        for execution_number, execution_history in enumerate(selected_sm_m.state_machine.execution_histories):
             if len(execution_history) > 0:
                 first_history_item = execution_history[0]
                 # the next lines filter out the StateMachineStartItem, which is not intended to
