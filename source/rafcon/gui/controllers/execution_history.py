@@ -119,7 +119,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.history_tree.collapse_row(histroy_item_path)
                     else:
                         self.history_tree.expand_to_path(histroy_item_path)
-                sm = model[row][self.HISTORY_ITEM_STORAGE_ID].state_reference.get_state_machine()
+                sm = self.get_history_item_for_tree_iter(histroy_item_iter).state_reference.get_state_machine()
                 if sm:
                     if sm.state_machine_id != self.model.selected_state_machine_id:
                         self.model.selected_state_machine_id = sm.state_machine_id
@@ -129,7 +129,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                     return
                 active_sm_m = self.model.get_selected_state_machine_model()
                 assert active_sm_m.state_machine is sm
-                state_path = model[row][self.HISTORY_ITEM_STORAGE_ID].state_reference.get_path()
+                state_path = self.get_history_item_for_tree_iter(histroy_item_iter).state_reference.get_path()
                 ref_state_m = active_sm_m.get_state_model_by_path(state_path)
                 if ref_state_m and active_sm_m:
                     active_sm_m.selection.set(ref_state_m)
@@ -195,6 +195,16 @@ class ExecutionHistoryTreeController(ExtendedController):
     # @ExtendedController.observe("execution_history_container", after=True)
     # def model_changed(self, model, prop_name, info):
     #     #self.update()
+
+    def get_history_item_for_tree_iter(self, child_tree_iter):
+        history_item = self.history_tree_store[child_tree_iter][self.HISTORY_ITEM_STORAGE_ID]
+        if history_item is None:  # is dummy item
+            if self.history_tree_store.iter_n_children(child_tree_iter) > 0:
+                child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, 0)
+                history_item = self.history_tree_store[child_iter][self.HISTORY_ITEM_STORAGE_ID]
+            else:
+                logger.warning("In a dummy history should be respective real call element.")
+        return history_item
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def notification_selected_sm_changed(self, model, prop_name, info):
