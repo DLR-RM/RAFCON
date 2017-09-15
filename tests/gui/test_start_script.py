@@ -1,9 +1,10 @@
 import pytest
 from os.path import realpath, dirname, join
-import rafcon
+import rafcon.utils.filesystem
 import subprocess
 import os
 import sys
+import shutil
 import testing_utils
 FILE_MODIFIED_BY_STATE_MACHINE = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE,
                                               "test_start_script.txt")
@@ -45,6 +46,29 @@ def test_start_script_state():
     tmp_file.close()
     assert (res == "state, "), "start from state failed"
     os.remove(FILE_MODIFIED_BY_STATE_MACHINE)
+
+
+def test_initial_default_config_folder_generation():
+    """ Test core.start.py and gui.start.py script run on console which should initiate the config folder.
+    """
+
+    user_config_folder = rafcon.utils.filesystem.get_default_config_path()
+    backup_user_config_folder = os.path.join(os.path.expanduser('~'), '.config', 'rafcon_backup')
+    try:
+        if os.path.exists(user_config_folder):
+            shutil.move(user_config_folder, backup_user_config_folder)
+
+        test_start_script_open()
+        assert os.path.exists(user_config_folder)
+        shutil.rmtree(user_config_folder)
+
+        test_start_script_print_help_with_gui()
+        assert os.path.exists(user_config_folder)
+    finally:
+        if os.path.exists(user_config_folder):
+            shutil.rmtree(user_config_folder)
+        if os.path.exists(backup_user_config_folder):
+            shutil.move(backup_user_config_folder, user_config_folder)
 
 
 def test_start_script_valid_config():

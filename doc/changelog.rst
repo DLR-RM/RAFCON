@@ -11,6 +11,7 @@ Next release
 - Improvements:
 
 - Bug Fixes:
+    - :issue:`393` $HOME/.config/rafcon is not generated initially + tests
 
 Patch releases 0.11.\*
 ----------------------
