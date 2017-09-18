@@ -71,8 +71,11 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         self.state_machine_execution_model = rafcon.gui.singleton.state_machine_execution_model
         self.observe_model(self.state_machine_execution_model)
-        self.__expansion_state = {}
-        self.__current_selected_sm_id = self.model.selected_state_machine_id
+        # There is no (easy) way to derive the selected state machine id from a history tree store or item
+        # Therefore, we have to remember the id, to be able to assign the expansion state to the correct state
+        # machine id
+        self._current_selected_sm_id = self.model.selected_state_machine_id
+        self._expansion_state = {}
 
         self.update()
 
@@ -231,7 +234,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 store_tree_expansion(child_iter, expansion_state)
 
         current_expansion_state = {}
-        self.__expansion_state[self.__current_selected_sm_id] = current_expansion_state
+        self._expansion_state[self._current_selected_sm_id] = current_expansion_state
         try:
             root_iter = self.history_tree_store.get_iter_root()
             while root_iter:
@@ -239,7 +242,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 root_iter = self.history_tree_store.iter_next(root_iter)
         except TypeError:
             logger.error("Expansion state of state machine {0} could not be stored"
-                         "".format(self.__current_selected_sm_id))
+                         "".format(self._current_selected_sm_id))
 
     def _restore_expansion_state(self):
         """Iter recursively all tree items and restore expansion state"""
@@ -259,12 +262,12 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         try:
             root_iter = self.history_tree_store.get_iter_root()
-            while root_iter and self.model.selected_state_machine_id in self.__expansion_state:
-                restore_tree_expansion(root_iter, self.__expansion_state[self.model.selected_state_machine_id])
+            while root_iter and self.model.selected_state_machine_id in self._expansion_state:
+                restore_tree_expansion(root_iter, self._expansion_state[self.model.selected_state_machine_id])
                 root_iter = self.history_tree_store.iter_next(root_iter)
         except TypeError:
             logger.error("Expansion state of state machine {0} could not be restored"
-                         "".format(self.__current_selected_sm_id))
+                         "".format(self._current_selected_sm_id))
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def notification_selected_sm_changed(self, model, prop_name, info):
@@ -273,7 +276,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         if selected_state_machine_id is None:
             return
         self.update()
-        self.__current_selected_sm_id = self.model.selected_state_machine_id
+        self._current_selected_sm_id = self.model.selected_state_machine_id
 
     @ExtendedController.observe("execution_engine", after=True)
     def execution_history_focus(self, model, prop_name, info):
