@@ -56,14 +56,11 @@ class ExecutionHistoryTreeController(ExtendedController):
     TOOL_TIP_TEXT = "Right click for more details\n" \
                     "Double click to select corresponding state"
 
-    def __init__(self, model=None, view=None, state_machine_manager=None):
-
+    def __init__(self, model=None, view=None):
         assert isinstance(model, StateMachineManagerModel)
         assert isinstance(view, ExecutionHistoryView)
-        assert isinstance(state_machine_manager, StateMachineManager)
-        self.state_machine_manager = state_machine_manager
 
-        ExtendedController.__init__(self, model, view)
+        super(ExecutionHistoryTreeController, self).__init__(model, view)
         self.history_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
         # a TreeView
         self.history_tree = view['history_tree']
@@ -288,11 +285,11 @@ class ExecutionHistoryTreeController(ExtendedController):
             if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):
                 # request focus -> which has not have to be satisfied
                 self.parent.focus_notebook_page_of_controller(self)
-                self.model.selected_state_machine_id = self.state_machine_manager.active_state_machine_id
+                self.model.selected_state_machine_id = self.model.state_machine_manager.active_state_machine_id
 
         if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
-            if not self.model.selected_state_machine_id == self.state_machine_manager.active_state_machine_id:
-                self.model.selected_state_machine_id = self.state_machine_manager.active_state_machine_id
+            if not self.model.selected_state_machine_id == self.model.state_machine_manager.active_state_machine_id:
+                self.model.selected_state_machine_id = self.model.state_machine_manager.active_state_machine_id
             else:
                 self.update()
 
