@@ -52,7 +52,8 @@ class ExecutionHistoryTreeController(ExtendedController):
     LABEL_NAME_STORAGE_ID = 0
     HISTORY_ITEM_STORAGE_ID = 1
     TOOL_TIP_STORAGE_ID = 2
-    DOUBLE_CLICK_TOOL_TIP = "- right click for details\n- double click element to focus state machine and select state"
+    TOOL_TIP_TEXT = "Right click for more details\n" \
+                    "Double click to select corresponding state"
 
     def __init__(self, model=None, view=None, state_machine_manager=None):
 
@@ -335,7 +336,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                             None,
                             None,
                             (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
-                             first_history_item, self.DOUBLE_CLICK_TOOL_TIP))
+                             first_history_item, self.TOOL_TIP_TEXT))
                         self.insert_execution_history(tree_item, execution_history[1:], is_root=True)
                     else:
                         pass  # there was only the Start item in the history
@@ -344,7 +345,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                         None,
                         None,
                         (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
-                         first_history_item, self.DOUBLE_CLICK_TOOL_TIP))
+                         first_history_item, self.TOOL_TIP_TEXT))
                     self.insert_execution_history(tree_item, execution_history, is_root=True)
 
     def insert_history_item(self, parent, history_item, description, dummy=False):
@@ -359,7 +360,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         """
         tree_item = self.history_tree_store.insert_before(
             parent, None, (history_item.state_reference.name + " - " + description, None if dummy else history_item,
-                           None if dummy else self.DOUBLE_CLICK_TOOL_TIP))
+                           None if dummy else self.TOOL_TIP_TEXT))
         return tree_item
 
     def insert_execution_history(self, parent, execution_history, is_root=False):
