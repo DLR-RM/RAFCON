@@ -22,7 +22,6 @@
 
 import gtk
 import gobject
-import sys
 
 import rafcon
 
@@ -35,6 +34,7 @@ from rafcon.core.execution.execution_history import CallType, StateMachineStartI
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.views.execution_history import ExecutionHistoryView
+from rafcon.gui.singleton import state_machine_execution_model
 
 from rafcon.utils import log
 
@@ -53,26 +53,22 @@ class ExecutionHistoryTreeController(ExtendedController):
     LABEL_NAME_STORAGE_ID = 0
     HISTORY_ITEM_STORAGE_ID = 1
     TOOL_TIP_STORAGE_ID = 2
-    DOUBLE_CLICK_TOOL_TIP = "double click element to focus state machine and select state"
+    TOOL_TIP_TEXT = "Right click for more details\n" \
+                    "Double click to select corresponding state"
 
-    def __init__(self, model=None, view=None, state_machine_manager=None):
-
+    def __init__(self, model=None, view=None):
         assert isinstance(model, StateMachineManagerModel)
         assert isinstance(view, ExecutionHistoryView)
-        assert isinstance(state_machine_manager, StateMachineManager)
-        self.state_machine_manager = state_machine_manager
 
-        ExtendedController.__init__(self, model, view)
+        super(ExecutionHistoryTreeController, self).__init__(model, view)
         self.history_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
         # a TreeView
         self.history_tree = view['history_tree']
         self.history_tree.set_model(self.history_tree_store)
         view['history_tree'].set_tooltip_column(self.TOOL_TIP_STORAGE_ID)
 
-        self._start_idx = 0
-
-        self.state_machine_execution_model = rafcon.gui.singleton.state_machine_execution_model
-        self.observe_model(self.state_machine_execution_model)
+        self.observe_model(state_machine_execution_model)
+        self._expansion_state = {}
 
         self.update()
 
@@ -83,17 +79,6 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.history_tree.connect('button_press_event', self.mouse_click)
         view['reload_button'].connect('clicked', self.reload_history)
         view['clean_button'].connect('clicked', self.clean_history)
-
-    # TODO: unused
-    def switch_state_machine_execution_manager_model(self, new_state_machine_execution_engine):
-        """
-        Switch the state machine execution engine model to observe.
-        :param new_state_machine_execution_engine: the new sm execution engine manager model
-        :return:
-        """
-        self.relieve_model(self.state_machine_execution_model)
-        self.state_machine_execution_model = new_state_machine_execution_engine
-        self.observe_model(self.state_machine_execution_model)
 
     def append_string_to_menu(self, popup_menu, menu_item_string):
         menu_item = gtk.MenuItem(menu_item_string)
@@ -119,7 +104,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.history_tree.collapse_row(histroy_item_path)
                     else:
                         self.history_tree.expand_to_path(histroy_item_path)
-                sm = model[row][self.HISTORY_ITEM_STORAGE_ID].state_reference.get_state_machine()
+                sm = self.get_history_item_for_tree_iter(histroy_item_iter).state_reference.get_state_machine()
                 if sm:
                     if sm.state_machine_id != self.model.selected_state_machine_id:
                         self.model.selected_state_machine_id = sm.state_machine_id
@@ -129,7 +114,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                     return
                 active_sm_m = self.model.get_selected_state_machine_model()
                 assert active_sm_m.state_machine is sm
-                state_path = model[row][self.HISTORY_ITEM_STORAGE_ID].state_reference.get_path()
+                state_path = self.get_history_item_for_tree_iter(histroy_item_iter).state_reference.get_path()
                 ref_state_m = active_sm_m.get_state_model_by_path(state_path)
                 if ref_state_m and active_sm_m:
                     active_sm_m.selection.set(ref_state_m)
@@ -196,6 +181,99 @@ class ExecutionHistoryTreeController(ExtendedController):
     # def model_changed(self, model, prop_name, info):
     #     #self.update()
 
+    def get_history_item_for_tree_iter(self, child_tree_iter):
+        """Hands history item for tree iter and compensate if tree item is a dummy item
+
+        :param gtk.TreeIter child_tree_iter: Tree iter of row
+        :rtype rafcon.core.execution.execution_history.HistoryItem:
+        :return history tree item:
+        """
+        history_item = self.history_tree_store[child_tree_iter][self.HISTORY_ITEM_STORAGE_ID]
+        if history_item is None:  # is dummy item
+            if self.history_tree_store.iter_n_children(child_tree_iter) > 0:
+                child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, 0)
+                history_item = self.history_tree_store[child_iter][self.HISTORY_ITEM_STORAGE_ID]
+            else:
+                logger.warning("In a dummy history should be respective real call element.")
+        return history_item
+
+    def _store_expansion_state(self):
+        """Iter recursively all tree items and store expansion state"""
+
+        def store_tree_expansion(child_tree_iter, expansion_state):
+
+            tree_item_path = self.history_tree_store.get_path(child_tree_iter)
+            history_item = self.get_history_item_for_tree_iter(child_tree_iter)
+
+            # store expansion state if tree item path is valid and expansion state was not stored already
+            if tree_item_path is not None:
+                # if first element of sub-tree has same history_item as the parent ignore it's expansion state
+                if history_item not in expansion_state:
+                    expansion_state[history_item] = self.history_tree.row_expanded(tree_item_path)
+
+            for n in range(self.history_tree_store.iter_n_children(child_tree_iter)):
+                child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, n)
+                store_tree_expansion(child_iter, expansion_state)
+
+        root_iter = self.history_tree_store.get_iter_root()
+        if not root_iter:
+            return
+        current_expansion_state = {}
+        state_machine = self.get_history_item_for_tree_iter(root_iter).state_reference.get_state_machine()
+        self._expansion_state[state_machine.state_machine_id] = current_expansion_state
+        while root_iter:
+            try:
+                store_tree_expansion(root_iter, current_expansion_state)
+                root_iter = self.history_tree_store.iter_next(root_iter)
+            except TypeError:
+                logger.error("Expansion state of state machine {0} could not be stored"
+                             "".format(state_machine.state_machine_id))
+
+    def _restore_expansion_state(self):
+        """Iter recursively all tree items and restore expansion state"""
+
+        def restore_tree_expansion(child_tree_iter, expansion_state):
+            tree_item_path = self.history_tree_store.get_path(child_tree_iter)
+            history_item = self.get_history_item_for_tree_iter(child_tree_iter)
+
+            # restore expansion state if tree item path is valid and expansion state was not stored already
+            if tree_item_path and history_item in expansion_state:
+                if expansion_state[history_item]:
+                    self.history_tree.expand_to_path(tree_item_path)
+
+            for n in range(self.history_tree_store.iter_n_children(child_tree_iter)):
+                child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, n)
+                restore_tree_expansion(child_iter, expansion_state)
+
+        root_iter = self.history_tree_store.get_iter_root()
+        if not root_iter:
+            return
+        state_machine = self.get_history_item_for_tree_iter(root_iter).state_reference.get_state_machine()
+        if state_machine.state_machine_id not in self._expansion_state:
+            return
+        while root_iter:
+            try:
+                restore_tree_expansion(root_iter, self._expansion_state[state_machine.state_machine_id])
+                root_iter = self.history_tree_store.iter_next(root_iter)
+            except TypeError:
+                logger.error("Expansion state of state machine {0} could not be restored"
+                             "".format(state_machine.state_machine_id))
+
+    @ExtendedController.observe("selected_state_machine_id", assign=True)
+    def notification_selected_sm_changed(self, model, prop_name, info):
+        """If a new state machine is selected, make sure expansion state is stored and tree updated"""
+        selected_state_machine_id = self.model.selected_state_machine_id
+        if selected_state_machine_id is None:
+            return
+        self.update()
+
+    @ExtendedController.observe("state_machines", after=True)
+    def notification_sm_changed(self, model, prop_name, info):
+        """Remove references to non-existing state machines"""
+        for state_machine_id in self._expansion_state.keys():
+            if state_machine_id not in self.model.state_machines:
+                del self._expansion_state[state_machine_id]
+
     @ExtendedController.observe("execution_engine", after=True)
     def execution_history_focus(self, model, prop_name, info):
         """ Arranges to put execution-history widget page to become top page in notebook when execution starts and stops
@@ -207,9 +285,13 @@ class ExecutionHistoryTreeController(ExtendedController):
             if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):
                 # request focus -> which has not have to be satisfied
                 self.parent.focus_notebook_page_of_controller(self)
+                self.model.selected_state_machine_id = self.model.state_machine_manager.active_state_machine_id
 
         if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
-            self.update()
+            if not self.model.selected_state_machine_id == self.model.state_machine_manager.active_state_machine_id:
+                self.model.selected_state_machine_id = self.model.state_machine_manager.active_state_machine_id
+            else:
+                self.update()
 
     def clean_history(self, widget, event=None):
         """Triggered when the 'Clean History' button is clicked.
@@ -217,9 +299,9 @@ class ExecutionHistoryTreeController(ExtendedController):
         Empties the execution history tree by adjusting the start index and updates tree store and view.
         """
         self.history_tree_store.clear()
-        active_sm = self.state_machine_manager.get_active_state_machine()
-        if active_sm:
-            active_sm.clear_execution_histories()
+        selected_sm_m = self.model.get_selected_state_machine_model()
+        if selected_sm_m:
+            selected_sm_m.state_machine.clear_execution_histories()
             self.update()
 
     def reload_history(self, widget, event=None):
@@ -231,12 +313,13 @@ class ExecutionHistoryTreeController(ExtendedController):
         rebuild the tree view of the history item tree store
         :return:
         """
+        self._store_expansion_state()
         self.history_tree_store.clear()
-        active_sm = self.state_machine_manager.get_active_state_machine()
-        if not active_sm:
+        selected_sm_m = self.model.get_selected_state_machine_model()
+        if not selected_sm_m:
             return
 
-        for execution_number, execution_history in enumerate(active_sm.execution_histories):
+        for execution_number, execution_history in enumerate(selected_sm_m.state_machine.execution_histories):
             if len(execution_history) > 0:
                 first_history_item = execution_history[0]
                 # the next lines filter out the StateMachineStartItem, which is not intended to
@@ -248,7 +331,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                             None,
                             None,
                             (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
-                             first_history_item, self.DOUBLE_CLICK_TOOL_TIP))
+                             first_history_item, self.TOOL_TIP_TEXT))
                         self.insert_execution_history(tree_item, execution_history[1:], is_root=True)
                     else:
                         pass  # there was only the Start item in the history
@@ -257,8 +340,10 @@ class ExecutionHistoryTreeController(ExtendedController):
                         None,
                         None,
                         (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
-                         first_history_item, self.DOUBLE_CLICK_TOOL_TIP))
+                         first_history_item, self.TOOL_TIP_TEXT))
                     self.insert_execution_history(tree_item, execution_history, is_root=True)
+
+        self._restore_expansion_state()
 
     def insert_history_item(self, parent, history_item, description, dummy=False):
         """Enters a single history item into the tree store
@@ -272,7 +357,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         """
         tree_item = self.history_tree_store.insert_before(
             parent, None, (history_item.state_reference.name + " - " + description, None if dummy else history_item,
-                           None if dummy else self.DOUBLE_CLICK_TOOL_TIP))
+                           None if dummy else self.TOOL_TIP_TEXT))
         return tree_item
 
     def insert_execution_history(self, parent, execution_history, is_root=False):

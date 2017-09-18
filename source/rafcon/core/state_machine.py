@@ -139,7 +139,7 @@ class StateMachine(Observable, JSONObject, Hashable):
         self._root_state.input_data = self._root_state.get_default_input_values_for_state(self._root_state)
         self._root_state.output_data = self._root_state.create_output_dictionary_for_state(self._root_state)
         new_execution_history = self._add_new_execution_history()
-        new_execution_history.push_statemachine_start_item(self, run_id_generator())
+        new_execution_history.push_state_machine_start_history_item(self, run_id_generator())
         self._root_state.start(new_execution_history)
 
     def join(self):

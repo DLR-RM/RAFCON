@@ -188,7 +188,7 @@ class ExecutionHistory(Observable, Iterable, Sized):
         return self._push_item(last_history_item, return_item)
 
     @Observable.observed
-    def push_statemachine_start_item(self, state_machine, run_id):
+    def push_state_machine_start_history_item(self, state_machine, run_id):
         return_item = StateMachineStartItem(state_machine, run_id)
         if self.execution_history_storage is not None:
             self.execution_history_storage.store_item(return_item.history_item_id, return_item.to_dict())
@@ -302,7 +302,7 @@ class ScopedDataItem(HistoryItem):
         else:
             raise Exception('unkown calltype, neither CONTAINER nor EXECUTE')
         self.call_type = call_type
-        self.scoped_data = copy.deepcopy(state_for_scoped_data._scoped_data)
+        self.scoped_data = {} if state_for_scoped_data is None else copy.deepcopy(state_for_scoped_data._scoped_data)
         self.child_state_input_output_data = copy.deepcopy(child_state_input_output_data)
 
     def to_dict(self):

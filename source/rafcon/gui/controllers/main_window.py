@@ -75,9 +75,6 @@ class MainWindowController(ExtendedController):
         self.shortcut_manager = None
         self.handler_ids = {}
 
-        # state machine manager
-        state_machine_manager = state_machine_manager_model.state_machine_manager
-
         self.state_machine_execution_model = gui_singletons.state_machine_execution_model
         self.observe_model(self.state_machine_execution_model)
         self.state_machine_execution_model.register_observer(self)
@@ -142,8 +139,7 @@ class MainWindowController(ExtendedController):
         ######################################################
         # state machine execution history
         ######################################################
-        execution_history_ctrl = ExecutionHistoryTreeController(state_machine_manager_model, view.execution_history,
-                                                                state_machine_manager)
+        execution_history_ctrl = ExecutionHistoryTreeController(state_machine_manager_model, view.execution_history)
         self.add_controller('execution_history_ctrl', execution_history_ctrl)
 
         ######################################################
