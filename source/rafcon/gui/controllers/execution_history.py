@@ -34,6 +34,7 @@ from rafcon.core.execution.execution_history import CallType, StateMachineStartI
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.views.execution_history import ExecutionHistoryView
+from rafcon.gui.singleton import state_machine_execution_model
 
 from rafcon.utils import log
 
@@ -69,8 +70,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.history_tree.set_model(self.history_tree_store)
         view['history_tree'].set_tooltip_column(self.TOOL_TIP_STORAGE_ID)
 
-        self.state_machine_execution_model = rafcon.gui.singleton.state_machine_execution_model
-        self.observe_model(self.state_machine_execution_model)
+        self.observe_model(state_machine_execution_model)
         self._expansion_state = {}
 
         self.update()
@@ -82,17 +82,6 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.history_tree.connect('button_press_event', self.mouse_click)
         view['reload_button'].connect('clicked', self.reload_history)
         view['clean_button'].connect('clicked', self.clean_history)
-
-    # TODO: unused
-    def switch_state_machine_execution_manager_model(self, new_state_machine_execution_engine):
-        """
-        Switch the state machine execution engine model to observe.
-        :param new_state_machine_execution_engine: the new sm execution engine manager model
-        :return:
-        """
-        self.relieve_model(self.state_machine_execution_model)
-        self.state_machine_execution_model = new_state_machine_execution_engine
-        self.observe_model(self.state_machine_execution_model)
 
     def append_string_to_menu(self, popup_menu, menu_item_string):
         menu_item = gtk.MenuItem(menu_item_string)
