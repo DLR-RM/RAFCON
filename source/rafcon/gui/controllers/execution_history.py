@@ -71,10 +71,6 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         self.state_machine_execution_model = rafcon.gui.singleton.state_machine_execution_model
         self.observe_model(self.state_machine_execution_model)
-        # There is no (easy) way to derive the selected state machine id from a history tree store or item
-        # Therefore, we have to remember the id, to be able to assign the expansion state to the correct state
-        # machine id
-        self._current_selected_sm_id = self.model.selected_state_machine_id
         self._expansion_state = {}
 
         self.update()
@@ -233,18 +229,19 @@ class ExecutionHistoryTreeController(ExtendedController):
                 child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, n)
                 store_tree_expansion(child_iter, expansion_state)
 
-        if not self._current_selected_sm_id:
+        root_iter = self.history_tree_store.get_iter_root()
+        if not root_iter:
             return
         current_expansion_state = {}
-        self._expansion_state[self._current_selected_sm_id] = current_expansion_state
-        try:
-            root_iter = self.history_tree_store.get_iter_root()
-            while root_iter:
+        state_machine = self.get_history_item_for_tree_iter(root_iter).state_reference.get_state_machine()
+        self._expansion_state[state_machine.state_machine_id] = current_expansion_state
+        while root_iter:
+            try:
                 store_tree_expansion(root_iter, current_expansion_state)
                 root_iter = self.history_tree_store.iter_next(root_iter)
-        except TypeError:
-            logger.error("Expansion state of state machine {0} could not be stored"
-                         "".format(self._current_selected_sm_id))
+            except TypeError:
+                logger.error("Expansion state of state machine {0} could not be stored"
+                             "".format(state_machine.state_machine_id))
 
     def _restore_expansion_state(self):
         """Iter recursively all tree items and restore expansion state"""
@@ -262,16 +259,19 @@ class ExecutionHistoryTreeController(ExtendedController):
                 child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, n)
                 restore_tree_expansion(child_iter, expansion_state)
 
-        if not self._current_selected_sm_id:
+        root_iter = self.history_tree_store.get_iter_root()
+        if not root_iter:
             return
-        try:
-            root_iter = self.history_tree_store.get_iter_root()
-            while root_iter and self.model.selected_state_machine_id in self._expansion_state:
-                restore_tree_expansion(root_iter, self._expansion_state[self.model.selected_state_machine_id])
+        state_machine = self.get_history_item_for_tree_iter(root_iter).state_reference.get_state_machine()
+        if state_machine.state_machine_id not in self._expansion_state:
+            return
+        while root_iter:
+            try:
+                restore_tree_expansion(root_iter, self._expansion_state[state_machine.state_machine_id])
                 root_iter = self.history_tree_store.iter_next(root_iter)
-        except TypeError:
-            logger.error("Expansion state of state machine {0} could not be restored"
-                         "".format(self._current_selected_sm_id))
+            except TypeError:
+                logger.error("Expansion state of state machine {0} could not be restored"
+                             "".format(state_machine.state_machine_id))
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def notification_selected_sm_changed(self, model, prop_name, info):
@@ -280,7 +280,6 @@ class ExecutionHistoryTreeController(ExtendedController):
         if selected_state_machine_id is None:
             return
         self.update()
-        self._current_selected_sm_id = self.model.selected_state_machine_id
 
     @ExtendedController.observe("state_machines", after=True)
     def notification_sm_changed(self, model, prop_name, info):
