@@ -233,6 +233,8 @@ class ExecutionHistoryTreeController(ExtendedController):
                 child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, n)
                 store_tree_expansion(child_iter, expansion_state)
 
+        if not self._current_selected_sm_id:
+            return
         current_expansion_state = {}
         self._expansion_state[self._current_selected_sm_id] = current_expansion_state
         try:
@@ -260,6 +262,8 @@ class ExecutionHistoryTreeController(ExtendedController):
                 child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, n)
                 restore_tree_expansion(child_iter, expansion_state)
 
+        if not self._current_selected_sm_id:
+            return
         try:
             root_iter = self.history_tree_store.get_iter_root()
             while root_iter and self.model.selected_state_machine_id in self._expansion_state:
@@ -277,6 +281,13 @@ class ExecutionHistoryTreeController(ExtendedController):
             return
         self.update()
         self._current_selected_sm_id = self.model.selected_state_machine_id
+
+    @ExtendedController.observe("state_machines", after=True)
+    def notification_sm_changed(self, model, prop_name, info):
+        """Remove references to non-existing state machines"""
+        for state_machine_id in self._expansion_state.keys():
+            if state_machine_id not in self.model.state_machines:
+                del self._expansion_state[state_machine_id]
 
     @ExtendedController.observe("execution_engine", after=True)
     def execution_history_focus(self, model, prop_name, info):
