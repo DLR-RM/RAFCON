@@ -257,3 +257,12 @@ def wait_for_gui_quit(timeout=5):
     global gui_thread
     gui_thread.join(timeout)
     return not gui_thread.is_alive()
+
+
+def close_gui():
+    from rafcon.gui.singleton import main_window_controller
+    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+    call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
+
+    if not wait_for_gui_quit():
+        assert False, "Could not close the GUI"

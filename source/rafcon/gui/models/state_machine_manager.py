@@ -60,7 +60,7 @@ class StateMachineManagerModel(ModelMT, Observable):
         self.state_machine_manager = state_machine_manager
         self.state_machines = {}
         for sm_id, sm in state_machine_manager.state_machines.iteritems():
-            self.state_machines[sm_id] = StateMachineModel(sm, self)
+            self.state_machines[sm_id] = StateMachineModel(sm)
 
         self._selected_state_machine_id = None
         if len(self.state_machines.keys()) > 0:
@@ -97,7 +97,7 @@ class StateMachineManagerModel(ModelMT, Observable):
                 if sm_id not in self.state_machines:
                     logger.debug("Create new state machine model for state machine with id %s", sm.state_machine_id)
                     with sm.modification_lock():
-                        self.state_machines[sm_id] = StateMachineModel(sm, self)
+                        self.state_machines[sm_id] = StateMachineModel(sm)
                         self.selected_state_machine_id = sm_id
         elif info["method_name"] == "remove_state_machine":
             sm_id_to_delete = None

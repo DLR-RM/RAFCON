@@ -59,7 +59,7 @@ class StateMachineModel(ModelMT, Hashable):
     __observables__ = ("state_machine", "root_state", "meta_signal", "state_meta_signal", "sm_selection_changed_signal",
                        "action_signal", "state_action_signal")
 
-    def __init__(self, state_machine, sm_manager_model, meta=None, load_meta_data=True):
+    def __init__(self, state_machine, meta=None, load_meta_data=True):
         """Constructor
         """
         ModelMT.__init__(self)  # pass columns as separate parameters
@@ -73,8 +73,6 @@ class StateMachineModel(ModelMT, Hashable):
             self.root_state = ContainerStateModel(root_state, parent=self, load_meta_data=load_meta_data)
         else:
             self.root_state = StateModel(root_state, parent=self, load_meta_data=load_meta_data)
-
-        self.sm_manager_model = sm_manager_model
 
         if isinstance(meta, Vividict):
             self.meta = meta
@@ -116,7 +114,7 @@ class StateMachineModel(ModelMT, Hashable):
             return False
 
     def __copy__(self):
-        sm_m = self.__class__(copy(self.state_machine), self.sm_manager_model)
+        sm_m = self.__class__(copy(self.state_machine))
         sm_m.root_state.copy_meta_data_from_state_m(self.root_state)
         sm_m.meta = deepcopy(self.meta)
         return sm_m
@@ -163,21 +161,23 @@ class StateMachineModel(ModelMT, Hashable):
 
     @ModelMT.observe("state_machine", after=True)
     def marked_dirty_flag_changed(self, model, prop_name, info):
+        from rafcon.gui.singleton import state_machine_manager_model
         if info.method_name != 'marked_dirty':
             return
         if not self.state_machine.old_marked_dirty == self.state_machine.marked_dirty:
             if self.state_machine.marked_dirty:
-                self.sm_manager_model.state_machine_mark_dirty = self.state_machine.state_machine_id
+                state_machine_manager_model.state_machine_mark_dirty = self.state_machine.state_machine_id
             else:
-                self.sm_manager_model.state_machine_un_mark_dirty = self.state_machine.state_machine_id
+                state_machine_manager_model.state_machine_un_mark_dirty = self.state_machine.state_machine_id
 
     @ModelMT.observe("state", after=True)
     def name_of_root_state_changed(self, model, prop_name, info):
+        from rafcon.gui.singleton import state_machine_manager_model
         if info["method_name"] is "name":
             if self.state_machine.marked_dirty:
-                self.sm_manager_model.state_machine_mark_dirty = self.state_machine.state_machine_id
+                state_machine_manager_model.state_machine_mark_dirty = self.state_machine.state_machine_id
             else:
-                self.sm_manager_model.state_machine_un_mark_dirty = self.state_machine.state_machine_id
+                state_machine_manager_model.state_machine_un_mark_dirty = self.state_machine.state_machine_id
 
     @ModelMT.observe("state", before=True)
     @ModelMT.observe("outcomes", before=True)

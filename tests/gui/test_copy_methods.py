@@ -6,7 +6,6 @@ import time
 import threading
 
 # mvc
-import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.models.state_machine import StateMachineModel
 
 # core elements
@@ -341,7 +340,7 @@ def run_copy_performance_test_and_check_storage_copy(*args):
 
     sm1 = storage.load_state_machine_from_path(tmp_sm_system_path)
     time_model_before = time.time()
-    sm1_m = StateMachineModel(sm1, gui_singletons.state_machine_manager_model)
+    sm1_m = StateMachineModel(sm1)
     time_model_after = time.time()
     time_storage_after = time_model_after
     only_model_duration = round(time_model_after*1000000) - round(time_model_before*1000000)

@@ -348,7 +348,7 @@ def test_on_clean_storing_with_name_in_path(caplog):
     sm = storage.load_state_machine_from_path(path_new_format)
     check_state_recursively_if_state_scripts_are_valid(sm.root_state)
     sm.base_path = path_new_format
-    sm_m = StateMachineModel(sm, rafcon.gui.singleton.state_machine_manager_model)
+    sm_m = StateMachineModel(sm)
     try:
         on_save_activate(sm_m, logger)
 

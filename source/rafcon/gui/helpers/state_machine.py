@@ -250,7 +250,7 @@ def save_selected_state_as():
     state_machine_id = state_machine_manager_model.get_selected_state_machine_model().state_machine.state_machine_id
     if selected_states and len(selected_states) == 1:
         state_m = copy.copy(selected_states[0])
-        sm_m = StateMachineModel(StateMachine(root_state=state_m.state), state_machine_manager_model)
+        sm_m = StateMachineModel(StateMachine(root_state=state_m.state))
         sm_m.root_state = state_m
         path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine your "
                                             "state is saved in. The default folder name is the name of state.",
