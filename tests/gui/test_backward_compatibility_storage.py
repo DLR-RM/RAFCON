@@ -1,15 +1,19 @@
+import pytest
 import os
+import hashlib
 from distutils.version import StrictVersion
 
 # core elements
 import rafcon.core.config
 import rafcon.core.singleton as singletons
+from rafcon.core.storage import storage
+from rafcon.gui.models.state_machine import StateMachineModel
 
 # general tool elements
-from rafcon.utils import log
 import testing_utils
-from testing_utils import call_gui_callback, run_gui, close_gui
+from testing_utils import call_gui_callback, run_gui, close_gui, initialize_environment
 
+from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
@@ -50,6 +54,7 @@ def run_state_machine(state_machine_path):
 
 
 def test_backward_compatibility_storage(caplog):
+    """This test ensures that old state machines storage formats can still be opened with the current RAFCON version"""
     path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_compatibility"))
 
     run_gui(gui_config={'HISTORY_ENABLED': False,
@@ -65,6 +70,62 @@ def test_backward_compatibility_storage(caplog):
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=(state_machines - 1)*2)
 
 
+def test_unchanged_storage_format(caplog):
+    """This test ensures that the state machine storage format does not change in patch releases"""
+    path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_compatibility"))
+
+    initialize_environment(gui_config={'HISTORY_ENABLED': False,
+                                       'AUTO_BACKUP_ENABLED': False},
+                           libraries={'unit_test_state_machines': testing_utils.get_test_sm_path(
+                               "unit_test_state_machines")})
+    try:
+        current_rafcon_version = StrictVersion(rafcon.__version__).version
+        current_minor = "{}.{}".format(current_rafcon_version[0], current_rafcon_version[1])
+        for filename in os.listdir(path):
+            if filename.startswith(current_minor):
+                old_state_machine_path = os.path.join(path, filename)
+                break
+        else:
+            assert False, "There is no state machine for the current RAFCON minor version {}".format(current_minor)
+
+        state_machine = storage.load_state_machine_from_path(old_state_machine_path)
+        state_machine_m = StateMachineModel(state_machine)
+        new_state_machine_path = testing_utils.get_unique_temp_path()
+        storage.save_state_machine_to_path(state_machine, new_state_machine_path, True, True)
+        state_machine_m.store_meta_data(copy_path=new_state_machine_path)
+
+        old_state_machine_hash = calculate_state_machine_hash(old_state_machine_path)
+        new_state_machine_hash = calculate_state_machine_hash(new_state_machine_path)
+        assert old_state_machine_hash.digest() == new_state_machine_hash.digest()
+    finally:
+        testing_utils.shutdown_environment(caplog=caplog)
+
+
+def calculate_state_machine_hash(path):
+    """Calculates the hash of a state machine
+
+    The function calculates the MD5 hash of all files in file system path belonging to a state machine, excluding the
+    STATEMACHINE_FILE, but including the meta data.
+
+    :param str path: The path to the state machine
+    :return: The hash of the files
+    :rtype: hashlib.Hashable
+    """
+
+    paths_to_hash = []
+    for root, dirs, filenames in os.walk(path):
+        for filename in filenames:
+            # The STATEMACHINE_FILE cannot be used for the hash as it e.g. includes a timestamp
+            if filename != storage.STATEMACHINE_FILE:
+                paths_to_hash.append(os.path.join(root, filename))
+
+    paths_to_hash.sort()
+    hash = hashlib.md5()
+    for path in paths_to_hash:
+        hash.update(open(path, 'rb').read())
+    return hash
+
 if __name__ == '__main__':
-    test_backward_compatibility_storage(None)
-    # pytest.main(['-s', __file__])
+    # test_backward_compatibility_storage(None)
+    # test_unchanged_storage_format(None)
+    pytest.main(['-s', __file__])
