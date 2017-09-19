@@ -260,9 +260,8 @@ class GraphicalEditorController(ExtendedController):
             if msg.change == 'show_content':
                 library_state_m = msg.notification.model
                 if library_state_m.meta['gui']['show_content'] is not library_state_m.show_content():
-                    logger.warning("Minor show content flag is not considered because of major show content depth "
-                                   "limitations for {0}, see GUI config MAX_VISIBLE_LIBRARY_HIERARCHY."
-                                   "".format(library_state_m))
+                    logger.warning("The content of the LibraryState won't be shown, "
+                                   "because MAX_VISIBLE_LIBRARY_HIERARCHY is 1.")
                 else:
                     self._redraw()
 
