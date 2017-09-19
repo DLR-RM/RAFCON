@@ -3,5 +3,5 @@
     "last_update": "2017-06-05 18:28:26", 
     "root_state_storage_id": "backward compatibility storage test _IIFOLJ", 
     "state_machine_version": null, 
-    "used_rafcon_version": "0.10.0a1"
+    "used_rafcon_version": "0.10.0"
 }

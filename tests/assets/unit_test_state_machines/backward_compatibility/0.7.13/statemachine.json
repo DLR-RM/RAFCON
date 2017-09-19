@@ -2,5 +2,6 @@
     "creation_time": "2016-11-30 10:06:58", 
     "last_update": "2016-12-08 14:46:52", 
     "root_state_storage_id": "backward compatibility storage test $IIFOLJ", 
-    "version": null
+    "state_machine_version": null,
+    "used_rafcon_version": "0.7.13"
 }
