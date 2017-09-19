@@ -12,10 +12,12 @@
 from cairo import ImageSurface, FORMAT_ARGB32, Context
 from gtk.gdk import CairoContext
 
-from math import ceil
+from math import ceil, sqrt
 
 from rafcon.gui.config import global_gui_config
 
+
+MAX_ALLOWED_AREA = 5000. * 5000.
 
 class ImageCache(object):
     def __init__(self, multiplicator=2):
@@ -60,10 +62,9 @@ class ImageCache(object):
 
         # Restrict image surface size to prevent excessive use of memory
         self.__limiting_multiplicator = 1
-        max_allowed_size_length = 5000.
-        max_side_length = max(width * zoom * self.__zoom_multiplicator, height * zoom * self.__zoom_multiplicator)
-        if max_side_length > max_allowed_size_length:
-            self.__limiting_multiplicator = max_allowed_size_length / max_side_length
+        area = width * zoom * self.__zoom_multiplicator * height * zoom * self.__zoom_multiplicator
+        if area > MAX_ALLOWED_AREA:
+            self.__limiting_multiplicator = sqrt(MAX_ALLOWED_AREA / area)
 
         image = ImageSurface(self.__format, int(ceil(width * zoom * self.multiplicator)),
                              int(ceil(height * zoom * self.multiplicator)))
