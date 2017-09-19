@@ -277,12 +277,35 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     if os.path.exists(state_machine_file_path):
         state_machine_dict = storage_utils.load_objects_from_json(state_machine_file_path)
         if 'used_rafcon_version' in state_machine_dict:
-            previous_used_rafcon_version = StrictVersion(state_machine_dict['used_rafcon_version'])
-            active_rafcon_version = StrictVersion(rafcon.__version__)
-            if active_rafcon_version < previous_used_rafcon_version:
-                logger.warning("You try to read a stored state machine that was stored in a newer format ({0}) "
-                               "then the RAFCON version ({1}) in use right, now.".format(previous_used_rafcon_version,
-                                                                                         active_rafcon_version))
+            previously_used_rafcon_version = StrictVersion(state_machine_dict['used_rafcon_version']).version
+            active_rafcon_version = StrictVersion(rafcon.__version__).version
+
+            rafcon_newer_than_sm_version = "You are trying to load a state machine that was stored with an older " \
+                                           "version of RAFCON ({0}) than the one you are using ({1}).".format(
+                                            state_machine_dict['used_rafcon_version'], rafcon.__version__)
+            rafcon_older_than_sm_version = "You are trying to load a state machine that was stored with an newer " \
+                                           "version of RAFCON ({0}) than the one you are using ({1}).".format(
+                                            state_machine_dict['used_rafcon_version'], rafcon.__version__)
+            note_about_possible_incompatibility = "The state machine will be loaded with no guarantee of success."
+
+            if active_rafcon_version[0] > previously_used_rafcon_version[0]:
+                logger.warn(rafcon_newer_than_sm_version)
+                logger.warn(note_about_possible_incompatibility)
+            elif active_rafcon_version[0] == previously_used_rafcon_version[0]:
+                if active_rafcon_version[1] > previously_used_rafcon_version[1]:
+                    logger.warn(rafcon_newer_than_sm_version)
+                    logger.warn(note_about_possible_incompatibility)
+                elif active_rafcon_version[1] == previously_used_rafcon_version[1]:
+                    # Major and minor version of RAFCON and the state machine match
+                    # It should be safe to load the state machine, as the patch level does not change the format
+                    pass
+                else:
+                    logger.warn(rafcon_older_than_sm_version)
+                    logger.warn(note_about_possible_incompatibility)
+            else:
+                logger.warn(rafcon_older_than_sm_version)
+                logger.warn(note_about_possible_incompatibility)
+
         state_machine = StateMachine.from_dict(state_machine_dict, state_machine_id)
         if "root_state_storage_id" not in state_machine_dict:
             root_state_storage_id = state_machine_dict['root_state_id']
