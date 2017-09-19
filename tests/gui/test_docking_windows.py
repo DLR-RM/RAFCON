@@ -6,7 +6,7 @@ from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
 
 import testing_utils
-from testing_utils import call_gui_callback, run_gui, wait_for_gui_quit
+from testing_utils import call_gui_callback, run_gui, close_gui
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -180,13 +180,8 @@ def test_window_positions(caplog):
     finally:
         for key, value in original_runtime_config.iteritems():
             global_runtime_config.set_config_value(key, value)
-        from rafcon.gui.singleton import main_window_controller
-        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
-        wait_for_gui_quit()
-        logger.debug("after gtk main")
-
+        close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
 
@@ -200,13 +195,8 @@ def test_pane_positions(caplog):
     finally:
         for key, value in original_runtime_config.iteritems():
             global_runtime_config.set_config_value(key, value)
-        from rafcon.gui.singleton import main_window_controller
-        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
-        wait_for_gui_quit()
-        logger.debug("after gtk main")
-
+        close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
 if __name__ == '__main__':
