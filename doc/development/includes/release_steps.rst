@@ -28,13 +28,18 @@ Steps to perform, when releasing a new version of RAFCON:
 
 4. Create a test state machine for the new version *(only minor/major releases)*
 
-  If the file system format of the state machine changes, a special state machine is to be created for tests. As the
-  format should only change in minor releases, this step is only relevant for releases increasing the minor or major
-  version.
+  For each minor release, a state machine must be created to ensure backwards compatibility using a special test.
 
-  Open the state machine in ``[project directory]/tests/assets/unit_test_state_machines/[latest version number]`` and
-  save it to ``[project directory]/source/test_scripts/backwards_compatibility/[new version number]``. Commit your
-  changes.
+  Before creating the required state machine, RAFCON must be correctly installed so its version can be determined.
+  For this, navigate to the RAFCON root folder (where ``setup.py`` resides) and call
+
+  .. code:: bash
+
+     $ python setup.py develop
+
+  Then, open the state machine in ``[project directory]/tests/assets/unit_test_state_machines/[latest version
+  number]`` and save it to ``[project directory]/source/test_scripts/backwards_compatibility/[new version number]``.
+  Commit your changes.
 
 5. Check tests
 
