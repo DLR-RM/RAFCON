@@ -330,7 +330,7 @@ class GraphicalEditorController(ExtendedController):
         # Check if initialized
         # and whether the last redraw was more than redraw_after ago
         if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after) and \
-                        self.model.sm_manager_model.selected_state_machine_id == \
+                        rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id == \
                         self.model.state_machine.state_machine_id \
                 and not self.suspend_drawing:
             # Remove any existing timer id
