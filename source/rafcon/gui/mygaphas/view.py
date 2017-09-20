@@ -12,6 +12,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gaphas.view import GtkView
+from gaphas.item import Element
 
 from rafcon.gui.mygaphas.painter import RAFCONBoundingBoxPainter
 
@@ -128,3 +129,19 @@ class ExtendedGtkView(GtkView):
         """
         zoom = self.get_zoom_factor()
         return pixel / zoom
+
+    def queue_draw_item(self, *items):
+        """Extends the base class method to allow Ports to be passed as item
+
+        :param items: Items that are to be redrawn
+        """
+        gaphas_items = []
+        for item in items:
+            if isinstance(item, Element):
+                gaphas_items.append(item)
+            else:
+                try:
+                    gaphas_items.append(item.parent)
+                except AttributeError:
+                    pass
+        super(ExtendedGtkView, self).queue_draw_item(*gaphas_items)
