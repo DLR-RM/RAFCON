@@ -238,6 +238,7 @@ class PortView(object):
                                               parent_state_m.show_content()
 
         parameters = {
+            'selected': self.is_selected(),
             'direction': self.direction,
             'side_length': side_length,
             'fill_color': fill_color,
@@ -275,7 +276,7 @@ class PortView(object):
         if self.name and self.has_label():
             self.draw_name(context, transparent, value)
 
-        if self.handle is view.hovered_handle or context.draw_all:
+        if self.is_selected() or self.handle is view.hovered_handle or context.draw_all:
             context.cairo.move_to(*self.pos)
             self._draw_hover_effect(context.cairo, self.direction, fill_color, transparent)
 
