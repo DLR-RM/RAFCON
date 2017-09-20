@@ -161,6 +161,9 @@ class PortView(object):
     def has_label(self):
         return False
 
+    def is_selected(self):
+        return self in self._parent.canvas.get_first_view().selected_items
+
     def _add_connection(self, connection_view):
         if connection_view not in self._connected_connections:
             self._connected_connections.append(connection_view)
