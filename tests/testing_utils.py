@@ -1,3 +1,4 @@
+import sys
 import copy
 import signal
 import tempfile
@@ -13,6 +14,7 @@ test_multithreading_lock = Lock()
 
 gui_thread = None
 gui_ready = None
+exception_info = None
 
 RAFCON_TEMP_PATH_TEST_BASE = join(constants.RAFCON_TEMP_PATH_BASE, 'unit_tests')
 if not exists(RAFCON_TEMP_PATH_TEST_BASE):
@@ -95,16 +97,23 @@ def call_gui_callback(callback, *args):
     :param callback: The callback method, e.g. on_open_activate
     :param args: The parameters to be passed to the callback method
     """
+    global exception_info
     import glib
     condition = Condition()
+    exception_info = None
 
     @log.log_exceptions()
     def fun():
         """Call callback and notify condition variable
         """
+        global exception_info
         try:
             callback(*args)
-        finally:  # Finally is also executed in the case of exceptions and reraises the exception at the end
+        except:
+            # Exception within this asynchronously called function won't reach pytest. This is why we have to store
+            # the information about the exception to re-raise it at the end of the synchronous call.
+            exception_info = sys.exc_info()
+        finally:  # Finally is also executed in the case of exceptions
             condition.acquire()
             condition.notify()
             condition.release()
@@ -115,6 +124,8 @@ def call_gui_callback(callback, *args):
     # TODO: implement timeout that raises an exception
     condition.wait()
     condition.release()
+    if exception_info:
+        raise exception_info[0], exception_info[1], exception_info[2]
 
 
 def rewind_and_set_libraries(libraries=None):
