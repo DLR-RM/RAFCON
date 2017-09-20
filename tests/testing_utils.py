@@ -109,7 +109,7 @@ def call_gui_callback(callback, *args):
             condition.notify()
             condition.release()
 
-    glib.idle_add(fun)
+    glib.idle_add(fun, priority=glib.PRIORITY_LOW)
     # Wait for the condition to be notified
     condition.acquire()
     # TODO: implement timeout that raises an exception
