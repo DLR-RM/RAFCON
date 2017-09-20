@@ -67,7 +67,7 @@ def test_backward_compatibility_storage(caplog):
         # two warning per minor version lower than the current RAFCON version
         state_machines = len([filename for filename in os.listdir(path) if os.path.isdir(os.path.join(path, filename))])
         close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=(state_machines - 1)*2)
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0)
 
 
 def test_unchanged_storage_format(caplog):

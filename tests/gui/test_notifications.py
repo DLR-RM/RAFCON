@@ -1644,7 +1644,7 @@ def test_state_property_modify_notification(caplog):
 # - step_mode
 # - set_execution_mode_to_stopped
 
-# StateMachineStatus
+# StateMachineExecutionStatus
 # - execution_mode
 
 

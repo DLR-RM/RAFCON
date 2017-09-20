@@ -423,7 +423,7 @@ class ExecutionEngine(Observable):
         :raises exceptions.TypeError: if the execution mode is of the wrong type
         """
         if not isinstance(execution_mode, StateMachineExecutionStatus):
-            raise TypeError("status must be of type StateMachineStatus")
+            raise TypeError("status must be of type StateMachineExecutionStatus")
         self._status.execution_mode = execution_mode
         if notify:
             self._status.execution_condition_variable.acquire()

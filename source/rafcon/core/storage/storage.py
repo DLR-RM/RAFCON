@@ -293,8 +293,8 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
                 logger.warn(note_about_possible_incompatibility)
             elif active_rafcon_version[0] == previously_used_rafcon_version[0]:
                 if active_rafcon_version[1] > previously_used_rafcon_version[1]:
-                    logger.warn(rafcon_newer_than_sm_version)
-                    logger.warn(note_about_possible_incompatibility)
+                    logger.info(rafcon_newer_than_sm_version)
+                    logger.info(note_about_possible_incompatibility)
                 elif active_rafcon_version[1] == previously_used_rafcon_version[1]:
                     # Major and minor version of RAFCON and the state machine match
                     # It should be safe to load the state machine, as the patch level does not change the format
