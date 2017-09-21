@@ -1243,6 +1243,26 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     testing_utils.shutdown_environment(caplog=caplog)
 
 
+def test_multiple_undo_redo_bug_with_gui(caplog):
+
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
+    rafcon.core.singleton.state_machine_manager.add_state_machine(StateMachine(HierarchyState()))
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines.values()[-1]
+
+    main_window_view = MainWindowView()
+    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
+    with_gui = True
+    testing_utils.wait_for_gui()
+    thread = threading.Thread(target=trigger_multiple_undo_redo_bug_tests,
+                              args=[rafcon.gui.singleton.state_machine_manager_model,
+                                    main_window_controller, sm_m, with_gui])
+    thread.start()
+    gtk.main()
+    thread.join()
+
+    testing_utils.shutdown_environment(caplog=caplog)
+
+
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(*args):
     import rafcon.gui.helpers.state as gui_helper_state
@@ -1823,12 +1843,12 @@ def trigger_state_type_change_typical_bug_tests(*args):
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
         # call_gui_callback(menubar_ctrl.on_new_activate, None)
         call_gui_callback(sm_manager_model.state_machine_manager.add_state_machine, state_machine)
-        sm_manager_model.state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
+        sm_manager_model.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     else:
         menubar_ctrl = None
         logger.debug("Creating new state-machine...")
         sm_manager_model.state_machine_manager.add_state_machine(state_machine)
-        sm_manager_model.state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
+        sm_manager_model.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
     logger.debug('number of sm is : {0}'.format(sm_manager_model.state_machines.keys()))
     # import time
@@ -1886,6 +1906,51 @@ def trigger_state_type_change_typical_bug_tests(*args):
 
     check_elements_ignores.remove("internal_transitions")
     print check_elements_ignores
+
+
+@log.log_exceptions(None, gtk_quit=True)
+def trigger_multiple_undo_redo_bug_tests(*args):
+    with_gui = bool(args[3])
+    main_window_controller = args[1]
+    sm_m = args[2]
+
+    sm_m.selection.add(sm_m.root_state)
+
+    try:
+        import time
+        import pykeyboard
+
+        keyboard = pykeyboard.PyKeyboard()
+
+        def press_key(characters, duration=0.05):
+            assert all([isinstance(character, (int, str)) for character in characters])
+            assert isinstance(duration, (int, float))
+            for character in characters:
+                print "press_key: ", character
+                keyboard.press_key(character=character)
+            print "for {0} seconds".format(duration)
+            time.sleep(duration)
+            for character in characters:
+                print "release_key: ", character
+                keyboard.release_key(character=character)
+
+        sm_id = sm_m.state_machine.state_machine_id
+        state_machines_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('state_machines_editor_ctrl')
+        state_machines_editor_ctrl.get_controller(sm_id).view.get_top_widget().grab_focus()
+        state_machines_editor_ctrl.get_controller(sm_id).view.editor.grab_focus()
+        press_key([keyboard.control_l_key, 'a'], duration=0.8)
+        time.sleep(0.1)  # wait that last add is fully done
+        assert sm_m.history.modifications.single_trail_history()
+        press_key([keyboard.control_l_key, 'z'], duration=0.8)
+        press_key([keyboard.control_l_key, keyboard.shift_l_key, 'z'], duration=0.8)
+    except ImportError as e:
+        print "ERROR: ", e
+
+    if with_gui:
+        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+        call_gui_callback(menubar_ctrl.on_stop_activate, None)
+        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
+
 
 if __name__ == '__main__':
     # test_add_remove_history(None)
