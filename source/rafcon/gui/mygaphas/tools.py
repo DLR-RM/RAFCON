@@ -379,7 +379,7 @@ class MoveHandleTool(HandleTool):
             return True
 
     def on_motion_notify(self, event):
-        if not self.grabbed_handle or not event.state & gtk.gdk.BUTTON_PRESS_MASK or not self.do_move:
+        if not self.grabbed_handle or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
             return
         item = self.grabbed_item
         resize_recursive = isinstance(item, StateView) and self.grabbed_handle in item.corner_handles and \
