@@ -87,6 +87,7 @@ class GraphicalEditorController(ExtendedController):
 
         self._signal_id_selection_changed = self.view.editor.connect('selection-changed',
                                                                      self._update_selection_from_gaphas)
+        self.view.editor.connect('focus-changed', self._move_focused_item_into_viewport)
         self.view.connect('remove_state_from_state_machine', self._remove_state_view)
         self.view.connect('meta_data_changed', self._meta_data_changed)
         self.view.editor.connect("drag-data-received", self.on_drag_data_received)
@@ -236,8 +237,11 @@ class GraphicalEditorController(ExtendedController):
             gui_helper_state_machine.paste_into_selected_state(self.model)
             return True
 
+    def _move_focused_item_into_viewport(self, view, focused_item):
+        # TODO: move focused_item into the viewport
+        pass
+
     def _update_selection_from_gaphas(self, view, selected_items):
-        selected_items = self.view.editor.selected_items
         selected_models = []
         for item in selected_items:
             if isinstance(item, (StateView, TransitionView, DataFlowView, OutcomeView, DataPortView,
