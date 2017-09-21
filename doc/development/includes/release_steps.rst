@@ -35,7 +35,7 @@ Steps to perform, when releasing a new version of RAFCON:
 
   .. code:: bash
 
-     $ python setup.py develop
+     $ python setup.py develop --user
 
   Then, open the state machine in ``[project directory]/tests/assets/unit_test_state_machines/[latest version
   number]`` and save it to ``[project directory]/source/test_scripts/backwards_compatibility/[new version number]``.
