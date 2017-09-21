@@ -427,7 +427,7 @@ class MoveHandleTool(HandleTool):
                                     self.view.select_item(port)
                             else:
                                 self.view.unselect_all()
-                                self.view.select_item(port)
+                                self.view.focused_item = port
                             break
 
         super(MoveHandleTool, self).on_button_release(event)
@@ -619,7 +619,7 @@ class ConnectionCreationTool(ConnectionTool):
                     self.view.select_item(self._start_port_v)
             else:
                 self.view.unselect_all()
-                self.view.select_item(self._start_port_v)
+                self.view.focused_item = self._start_port_v
 
         super(ConnectionCreationTool, self).on_button_release(event)
 
