@@ -86,6 +86,21 @@ class PortView(object):
         return 0
 
     @property
+    def _matrix_i2v(self):
+        if self.parent:
+            return self.parent._matrix_i2v
+        return None
+
+    @property
+    def _matrix_v2i(self):
+        if self.parent:
+            return self.parent._matrix_v2i
+        return None
+
+    def handles(self):
+        return [self.handle]
+
+    @property
     def side(self):
         return self._side
 
