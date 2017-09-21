@@ -43,20 +43,20 @@ def create_models(*args, **kargs):
     rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
 
-def test_state_type_change(caplog):
-    pass
-
-
-def test_substitute_state(caplog):
-    pass
-
-
-def test_group_states(caplog):
-    pass
-
-
-def test_ungroup_state(caplog):
-    pass
+# def test_state_type_change(caplog):
+#     pass
+#
+#
+# def test_substitute_state(caplog):
+#     pass
+#
+#
+# def test_group_states(caplog):
+#     pass
+#
+#
+# def test_ungroup_state(caplog):
+#     pass
 
 
 @log.log_exceptions(None, gtk_quit=True)
@@ -189,11 +189,11 @@ def test_repetitive_ungroup_state_and_group_states(caplog):
     pass
 
 
-def test_paste_method(caplog):
-    """Check multiple Scenarios of paste methods"""
-    # meta data adjustments
-    # model assignments
-    pass
+# def test_paste_method(caplog):
+#     """Check multiple Scenarios of paste methods"""
+#     # meta data adjustments
+#     # model assignments
+#     pass
 
 if __name__ == '__main__':
     # test_repetitive_ungroup_state_and_group_states(None)
