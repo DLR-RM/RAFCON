@@ -104,7 +104,7 @@ class MoveItemTool(ItemTool):
             pass
         else:
             if not event.state & constants.EXTEND_SELECTION_MODIFIER and self._item not in self.view.selected_items:
-                del self.view.selected_items
+                self.view.unselect_all()
             if self._item not in self.view.selected_items:
                 # remember items that should not be unselected and maybe focused if movement occur
                 self._do_not_unselect = self._item
@@ -159,7 +159,7 @@ class MoveItemTool(ItemTool):
                     self.view.unselect_item(self._item)
             else:
                 if not event.state & constants.EXTEND_SELECTION_MODIFIER:
-                    del self.view.selected_items
+                    self.view.unselect_all()
                 self.view.focused_item = self._item
         self._do_not_unselect = None
 
@@ -368,7 +368,7 @@ class MoveHandleTool(HandleTool):
             # or the item is already selected.
             if not (event.state & (constants.EXTEND_SELECTION_MODIFIER | constants.RUBBERBAND_MODIFIER)
                     or view.hovered_item in view.selected_items):
-                del view.selected_items
+                self.view.unselect_all()
 
             view.hovered_item = item
 
