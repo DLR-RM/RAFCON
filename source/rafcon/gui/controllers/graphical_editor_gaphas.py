@@ -62,6 +62,7 @@ class GraphicalEditorController(ExtendedController):
     """
 
     _complex_action = False
+    _signal_id_selection_changed = None
 
     def __init__(self, model, view):
         """Constructor"""
@@ -71,9 +72,6 @@ class GraphicalEditorController(ExtendedController):
         self.observe_model(rafcon.gui.singleton.gui_config_model)
         self.observe_model(rafcon.gui.singleton.runtime_config_model)
         self.root_state_m = model.root_state
-
-        self.update_selection_gaphas_major = False
-        self.update_selection_external_major = False
 
         self.canvas = MyCanvas()
         self.zoom = 3.
@@ -87,7 +85,8 @@ class GraphicalEditorController(ExtendedController):
         """Called when the View was registered"""
         assert self.view == view
 
-        self.view.editor.connect('selection-changed', self._update_selection_from_gaphas)
+        self._signal_id_selection_changed = self.view.editor.connect('selection-changed',
+                                                                     self._update_selection_from_gaphas)
         self.view.connect('remove_state_from_state_machine', self._remove_state_view)
         self.view.connect('meta_data_changed', self._meta_data_changed)
         self.view.editor.connect("drag-data-received", self.on_drag_data_received)
@@ -238,10 +237,6 @@ class GraphicalEditorController(ExtendedController):
             return True
 
     def _update_selection_from_gaphas(self, view, selected_items):
-        if self.update_selection_external_major:
-            return
-        # else:
-        #     print "_update_selection_from_gaphas", self.view.editor.selected_items
         selected_items = self.view.editor.selected_items
         selected_models = []
         for item in selected_items:
@@ -254,15 +249,11 @@ class GraphicalEditorController(ExtendedController):
                 logger.debug("Cannot select item {}".format(item))
         new_selected_models = any([model not in self.model.selection for model in selected_models])
         if new_selected_models or len(self.model.selection) != len(selected_models):
-            self.update_selection_gaphas_major = True
+            self.relieve_model(self.model)
             self.model.selection.set(selected_models)
-            self.update_selection_gaphas_major = False
+            self.observe_model(self.model)
 
     def _update_selection_from_external(self):
-
-        if self.update_selection_gaphas_major:
-            return
-
         # filter models that are not drawn
         selected_models = []
         for model in self.model.selection:
@@ -277,6 +268,10 @@ class GraphicalEditorController(ExtendedController):
         # filter elements that get selected and deselected and do so
         select_items = filter(lambda item: item not in self.view.editor.selected_items, selected_items)
         deselect_items = filter(lambda item: item not in selected_items, self.view.editor.selected_items)
+
+        # Prevent recursive call of this method by temporary deactivation of the signal handler
+        self.view.editor.handler_block(self._signal_id_selection_changed)
+
         for item in deselect_items:
             self.view.editor.selected_items.discard(item)
             self.view.editor.queue_draw_item(item)
@@ -288,6 +283,8 @@ class GraphicalEditorController(ExtendedController):
             self.view.editor.emit('selection-changed', self.view.editor.selected_items)
             self.update_selection_external_major = False
             # TODO: Jump to the selected state in the view and adjust the zoom
+
+        self.view.editor.handler_unblock(self._signal_id_selection_changed)
 
     def _meta_data_changed(self, view, model, name, affects_children):
         msg = MetaSignalMsg('graphical_editor_gaphas', name, affects_children)
