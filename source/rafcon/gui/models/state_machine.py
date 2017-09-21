@@ -91,7 +91,7 @@ class StateMachineModel(ModelMT, Hashable):
 
         self.selection = Selection(self.sm_selection_changed_signal)
 
-        self.storage_lock = threading.Lock()  # TODO check if this lock can be substituted by the state machine lock
+        self.storage_lock = threading.Lock()  # lock can not be substituted by the state machine lock -> maybe because it is a RLock
 
         if global_gui_config.get_config_value('HISTORY_ENABLED'):
             from rafcon.gui.models.modification_history import ModificationsHistoryModel

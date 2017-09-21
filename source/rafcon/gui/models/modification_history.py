@@ -120,7 +120,9 @@ class ModificationsHistoryModel(ModelMT):
         undo_redo_list = self.modifications.get_undo_redo_list_from_active_trail_history_item_to_version_id(pointer_on_version_to_recover)
         logger.debug("Multiple undo and redo to reach modification history element of version {0} "
                      "-> undo-redo-list is: {1}".format(pointer_on_version_to_recover, undo_redo_list))
+        # logger.debug("acquire lock 1 - for multiple action {0}".format(self.modifications.trail_pointer))
         self.state_machine_model.storage_lock.acquire()
+        # logger.debug("acquired lock 1 - for multiple action {0}".format(self.modifications.trail_pointer))
         for elem in undo_redo_list:
             if elem[1] == 'undo':
                 # do undo
@@ -130,8 +132,10 @@ class ModificationsHistoryModel(ModelMT):
                 self._redo(elem[0])
 
         self.modifications.reorganize_trail_history_for_version_id(pointer_on_version_to_recover)
-        self.state_machine_model.storage_lock.release()
         self.change_count += 1
+        # logger.debug("release lock 1 - for multiple action {0}".format(self.modifications.trail_pointer))
+        self.state_machine_model.storage_lock.release()
+        # logger.debug("released lock 1 - for multiple action {0}".format(self.modifications.trail_pointer))
 
     def _undo(self, version_id):
         self.busy = True
@@ -149,7 +153,12 @@ class ModificationsHistoryModel(ModelMT):
                 or not self.modifications.trail_pointer < len(self.modifications.trail_history):
             logger.debug("There is no more action that can be undone")
             return
+        # logger.debug("acquire lock 2 - for undo {0}".format(self.modifications.trail_pointer))
+        if self.state_machine_model.storage_lock.locked():
+            # logger.debug("is locked already 2 - for undo {0}".format(self.modifications.trail_pointer))
+            return
         self.state_machine_model.storage_lock.acquire()
+        # logger.debug("acquired lock 2 - for undo {0}".format(self.modifications.trail_pointer))
         self.busy = True
         # print "undo 2", self.modifications
         self.modifications.undo()
@@ -158,8 +167,10 @@ class ModificationsHistoryModel(ModelMT):
             # logger.debug("StateMachineAction Undo")
             self._re_initiate_observation()
         self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
-        self.state_machine_model.storage_lock.release()
         self.change_count += 1
+        # logger.debug("release lock 2 - for undo {0}".format(self.modifications.trail_pointer))
+        self.state_machine_model.storage_lock.release()
+        # logger.debug("release lock 2 - for undo {0}".format(self.modifications.trail_pointer))
 
     def _redo(self, version_id):
         self.busy = True
@@ -178,7 +189,12 @@ class ModificationsHistoryModel(ModelMT):
                 self.modifications.trail_history):
             logger.debug("There is no more action that can be redone")
             return
+        # logger.debug("acquire lock 3 - for redo")
+        if self.state_machine_model.storage_lock.locked():
+            # logger.debug("is locked already 3 - for redo {0}".format(self.modifications.trail_pointer))
+            return
         self.state_machine_model.storage_lock.acquire()
+        # logger.debug("acquired lock 3 - for redo")
         self.busy = True
         self.modifications.redo()
         self.busy = False
@@ -186,8 +202,10 @@ class ModificationsHistoryModel(ModelMT):
             # logger.debug("StateMachineAction Redo")
             self._re_initiate_observation()
         self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
-        self.state_machine_model.storage_lock.release()
         self.change_count += 1
+        # logger.debug("release lock 3 - for redo")
+        self.state_machine_model.storage_lock.release()
+        # logger.debug("release lock 3 - for redo")
 
     def _interrupt_active_action(self, info=None):
         if self.with_prints:
@@ -202,7 +220,9 @@ class ModificationsHistoryModel(ModelMT):
         if self.with_prints and info is not None:
             logger.debug(NotificationOverview(info, False, self.__class__.__name__))
         if self.state_machine_model.storage_lock.locked():
+            # logger.debug("release lock 0 - for interrupt active action")
             self.state_machine_model.storage_lock.release()
+            # logger.debug("release lock 0 - for interrupt active action")
 
     def _re_initiate_observation(self):
         # logger.info("re initiate root_state observation")
@@ -481,7 +501,9 @@ class ModificationsHistoryModel(ModelMT):
 
     def before_count(self):
         if self.count_before == 0:
+            # logger.debug('acquire lock 0 - for before count')
             self.state_machine_model.storage_lock.acquire()
+            # logger.debug('acquired lock 0 - for before count')
             self.locked = True
         self.count_before += 1
         if self.with_prints:
@@ -493,7 +515,9 @@ class ModificationsHistoryModel(ModelMT):
             print "LOCKED count down", self.count_before
         if self.count_before == 0:
             self.locked = False
+            # logger.debug("release lock 1 - for after_count")
             self.state_machine_model.storage_lock.release()
+            # logger.debug("release lock 1 - for after_count")
 
     @ModelMT.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):

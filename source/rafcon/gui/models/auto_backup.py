@@ -463,7 +463,9 @@ class AutoBackupModel(ModelMT):
             return
         # logger.debug('acquire lock')
         self.state_machine_model.storage_lock.acquire()
-        # logger.debug('got lock')
+        # logger.debug('acquired storage lock')
+        self.state_machine_model.state_machine.acquire_modification_lock()
+        # logger.debug('acquired state machine lock')
         self.timer_request_lock.acquire()
         self.__perform_storage = True
         self.timer_request_lock.release()
@@ -482,8 +484,11 @@ class AutoBackupModel(ModelMT):
         self.__perform_storage = False
         self.marked_dirty = False
         self.check_lock_file()
+        # logger.debug('release lock')
+        self.state_machine_model.state_machine.release_modification_lock()
+        # logger.debug('released state machine lock')
         self.state_machine_model.storage_lock.release()
-        # logger.debug('released lock')
+        # logger.debug('released storage lock')
 
     def check_for_auto_backup(self, force=False):
         """ The method implements the checks for possible auto backup of the state-machine according duration till
