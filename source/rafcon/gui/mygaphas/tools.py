@@ -23,8 +23,9 @@ from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, ConnectHandleTool
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGaphas
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import react_to_event
-from rafcon.gui.mygaphas.aspect import HandleInMotion, StateHandleFinder
-from rafcon.gui.mygaphas.items.connection import ConnectionView, TransitionPlaceholderView, DataFlowPlaceholderView, TransitionView, DataFlowView
+from rafcon.gui.mygaphas.aspect import HandleInMotion
+from rafcon.gui.mygaphas.items.connection import ConnectionView, TransitionPlaceholderView, DataFlowPlaceholderView, \
+    TransitionView, DataFlowView
 from rafcon.gui.mygaphas.items.ports import InputPortView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils import gap_helper
@@ -370,7 +371,6 @@ class MoveHandleTool(HandleTool):
                 del view.selected_items
 
             view.hovered_item = item
-            view.focused_item = item
 
             self.motion_handle = None
 
@@ -379,7 +379,7 @@ class MoveHandleTool(HandleTool):
             return True
 
     def on_motion_notify(self, event):
-        if not self.grabbed_handle or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
+        if not self.grabbed_handle or not event.state & gtk.gdk.BUTTON_PRESS_MASK or not self.do_move:
             return
         item = self.grabbed_item
         resize_recursive = isinstance(item, StateView) and self.grabbed_handle in item.corner_handles and \
@@ -400,17 +400,36 @@ class MoveHandleTool(HandleTool):
     def on_button_release(self, event):
         if self.grabbed_item:
             item = self.grabbed_item
-            graphical_editor = self.view.graphical_editor
-            if isinstance(item, NameView):
-                gap_helper.update_meta_data_for_name_view(graphical_editor, item, publish=True)
-            elif isinstance(item, ConnectionView):
-                gap_helper.update_meta_data_for_transition_waypoints(graphical_editor, item, None)
-            else:  # StateView
-                if self.grabbed_handle in [port.handle for port in item.get_all_ports()]:
-                    gap_helper.update_meta_data_for_port(graphical_editor, item, self.grabbed_handle)
-                else:
-                    gap_helper.update_meta_data_for_state_view(graphical_editor, item, affects_children=True,
-                                                               publish=True)
+
+            # A handle was moved. Store the corresponding data into the meta data.
+            if self.motion_handle:
+                graphical_editor = self.view.graphical_editor
+                if isinstance(item, NameView):
+                    gap_helper.update_meta_data_for_name_view(graphical_editor, item, publish=True)
+                elif isinstance(item, ConnectionView):
+                    gap_helper.update_meta_data_for_transition_waypoints(graphical_editor, item, None)
+                else:  # StateView
+                    if self.grabbed_handle in [port.handle for port in item.get_all_ports()]:
+                        gap_helper.update_meta_data_for_port(graphical_editor, item, self.grabbed_handle)
+                    else:
+                        gap_helper.update_meta_data_for_state_view(graphical_editor, item, affects_children=True,
+                                                                   publish=True)
+            # The handle was not moved. Check if the handle is to be selected.
+            else:
+                # Only handles belonging to a state (i.e. port handles) can be selected
+                if isinstance(item, StateView):
+                    for port in item.get_all_ports():
+                        if port.handle is self.grabbed_handle:
+                            if event.state & constants.EXTEND_SELECTION_MODIFIER:
+                                if port in self.view.selected_items:
+                                    self.view.unselect_item(port)
+                                else:
+                                    self.view.select_item(port)
+                            else:
+                                self.view.unselect_all()
+                                self.view.select_item(port)
+                            break
+
         super(MoveHandleTool, self).on_button_release(event)
 
 
@@ -553,8 +572,8 @@ class ConnectionCreationTool(ConnectionTool):
                     self._parent_state_v = port.parent
                 elif port.parent.parent:
                     self._parent_state_v = port.parent.parent
-                else:
-                    return False
+                else:  # Outgoing port of the root state was clicked on, no connection can be drawn here
+                    self._parent_state_v = None
 
         return True
 
@@ -576,21 +595,31 @@ class ConnectionCreationTool(ConnectionTool):
         self._handle_temporary_connection(last_sink, self._current_sink, of_target=True)
 
     def on_button_release(self, event):
-        if not self._connection_v:
-            return False
-
-        self.view.canvas.update_now()
-        if self._current_sink:
-            if self.motion_handle:
-                self.motion_handle.stop_move()
-            sink_port_v = self._current_sink.port.port_v
-            self._disconnect_temporarily(sink_port_v, target=True)
-            gap_helper.create_new_connection(self._connection_v.from_port, sink_port_v)
-
-        # remove placeholder from canvas
+        # A temporary connection was created. Check if it is a valid one.
         if self._connection_v:
-            self._connection_v.remove_connection_from_ports()
-            self.view.canvas.remove(self._connection_v)
+            self.view.canvas.update_now()
+            if self._current_sink:
+                if self.motion_handle:
+                    self.motion_handle.stop_move()
+                sink_port_v = self._current_sink.port.port_v
+                self._disconnect_temporarily(sink_port_v, target=True)
+                gap_helper.create_new_connection(self._connection_v.from_port, sink_port_v)
+
+            # remove placeholder from canvas
+            if self._connection_v:
+                self._connection_v.remove_connection_from_ports()
+                self.view.canvas.remove(self._connection_v)
+
+        # No connection was created, but only a handle was clicked on. Check whether it is to be selected
+        else:
+            if event.state & constants.EXTEND_SELECTION_MODIFIER:
+                if self._start_port_v in self.view.selected_items:
+                    self.view.unselect_item(self._start_port_v)
+                else:
+                    self.view.select_item(self._start_port_v)
+            else:
+                self.view.unselect_all()
+                self.view.select_item(self._start_port_v)
 
         super(ConnectionCreationTool, self).on_button_release(event)
 
