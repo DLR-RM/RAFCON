@@ -1,7 +1,7 @@
 {
     "creation_time": "2017-02-21 16:47:30", 
-    "last_update": "2017-04-20 12:13:30", 
+    "last_update": "2017-09-21 16:25:30", 
     "root_state_storage_id": "SpawnMessageDialog_PWIXZB", 
     "state_machine_version": null, 
-    "used_rafcon_version": "0.9.1a1"
+    "used_rafcon_version": "0.11.1"
 }
