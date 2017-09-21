@@ -273,16 +273,13 @@ class GraphicalEditorController(ExtendedController):
         self.view.editor.handler_block(self._signal_id_selection_changed)
 
         for item in deselect_items:
-            self.view.editor.selected_items.discard(item)
-            self.view.editor.queue_draw_item(item)
-        for item in select_items:
-            self.view.editor.selected_items.add(item)
-            self.view.editor.queue_draw_item(item)
-        if select_items or deselect_items:
-            self.update_selection_external_major = True
-            self.view.editor.emit('selection-changed', self.view.editor.selected_items)
-            self.update_selection_external_major = False
-            # TODO: Jump to the selected state in the view and adjust the zoom
+            self.view.editor.unselect_item(item)
+        # Set item as focused item if it is the only item that is selected
+        if len(self.view.editor.selected_items) == 0 and len(select_items) == 1:
+            self.view.editor.focused_item = select_items[0]
+        else:
+            for item in select_items:
+                self.view.editor.select_item(item)
 
         self.view.editor.handler_unblock(self._signal_id_selection_changed)
 
