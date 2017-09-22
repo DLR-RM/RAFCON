@@ -119,9 +119,11 @@ def setup_argument_parser():
                         nargs='?', const=home_path,
                         help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "
                              "a config file and use the default configuration. Default: {0}".format(home_path))
-    parser.add_argument('--remote', action='store_true', default=False, help="Remote Control Mode")
-    parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path',
-                        default=None, nargs='?', help="path of to the state that should be launched")
+    parser.add_argument('-r', '--remote', action='store_true', help="Remote Control Mode")
+    parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path', default=None, nargs='?',
+                        help="path within a state machine to the state that should be launched which consists of "
+                             "state ids e.g. QPOXGD/YVWJKZ where QPOXGD is the root state and YVWJKZ its child states "
+                             "to start from.")
     return parser
 
 

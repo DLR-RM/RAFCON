@@ -114,7 +114,7 @@ def start_stop_state_machine(state_machine, start_state_path, quit_flag):
     # Wait for GUI to initialize
     while gtk.events_pending():
         gtk.main_iteration(False)
-
+    print "start state machine", state_machine.file_system_path, start_state_path
     state_machine_execution_engine = core_singletons.state_machine_execution_engine
     state_machine_execution_engine.execute_state_machine_from_path(state_machine=state_machine,
                                                                    start_state_path=start_state_path,
@@ -137,24 +137,24 @@ def setup_argument_parser():
     parser = core_singletons.argument_parser
     parser.add_argument('-n', '--new', action='store_true', help=_("whether to create a new state-machine"))
     parser.add_argument('-o', '--open', action='store', nargs='*', type=parse_state_machine_path,
-                        dest='state_machine_paths', metavar='path', help=_(
-            "specify directories of state-machines that shall be opened. Paths must contain a statemachine.yaml file"))
+                        dest='state_machine_paths', metavar='path',
+                        help=_("specify directories of state-machines that shall be opened. Paths must contain a "
+                               "statemachine.json file"))
     parser.add_argument('-c', '--config', action='store', type=config_path, metavar='path', dest='config_path',
                         default=home_path, nargs='?', const=home_path,
-                        help=_(
-                            "path to the configuration file config.yaml. Use 'None' to prevent the generation of a config file and use the default configuration. Default: {0}").format(
-                            home_path))
+                        help=_("path to the configuration file config.yaml. Use 'None' to prevent the generation of a "
+                               "config file and use the default configuration. Default: {0}").format(home_path))
     parser.add_argument('-g', '--gui_config', action='store', type=config_path, metavar='path', dest='gui_config_path',
-                        default=home_path, nargs='?', const=home_path, help=_(
-            "path to the configuration file gui_config.yaml. Use 'None' to prevent the generation of a config file and use the default configuration. Default: {0}").format(
-            home_path))
-    parser.add_argument('-ss', '--start_state_machine', metavar='path', dest='start_state_machine_flag',
-                        default=False, nargs='?',
-                        help=_("a flag to specify if the state machine should be started after launching rafcon"))
-    parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path',
-                        default=None, nargs='?', help=_("path of to the state that should be launched"))
-    parser.add_argument('-q', '--quit', metavar='path', dest='quit_flag',
-                        default=False, nargs='?',
+                        default=home_path, nargs='?', const=home_path,
+                        help=_("path to the configuration file gui_config.yaml. Use 'None' to prevent the generation of"
+                               " a config file and use the default configuration. Default: {0}").format(home_path))
+    parser.add_argument('-ss', '--start_state_machine', dest='start_state_machine_flag', action='store_true',
+                        help=_("a flag to specify if the first state machine of -o should be started after opening"))
+    parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path', default=None, nargs='?',
+                        help=_("path within a state machine to the state that should be launched which consists of "
+                               "state ids e.g. QPOXGD/YVWJKZ where QPOXGD is the root state and YVWJKZ its child states"
+                               " to start from."))
+    parser.add_argument('-q', '--quit', dest='quit_flag', action='store_true',
                         help=_("a flag to specify if the gui should quit after launching a state machine"))
     return parser
 
@@ -237,7 +237,7 @@ def signal_handler(signal, frame):
 
 def main():
     register_signal_handlers(signal_handler)
-
+    print "test"
     splash_screen = SplashScreen(contains_image=True, width=530, height=350)
     splash_screen.rotate_image(random_=True)
     splash_screen.set_text("Starting RAFCON...")
@@ -296,7 +296,7 @@ def main():
     if global_config.get_config_value("PROFILER_RUN", False):
         profiler.start("global")
 
-    if state_machine and user_input.start_state_machine_flag:
+    if state_machine and (user_input.start_state_machine_flag or state_machine.get_state_by_path(user_input.start_state_path)):
         start_state_machine(state_machine, user_input.start_state_path, user_input.quit_flag)
 
     splash_screen.destroy()
