@@ -23,6 +23,7 @@
 import gtk
 from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
+from gaphas.item import Item
 from gtk.gdk import ACTION_COPY
 
 from rafcon.core.decorators import lock_state_machine
@@ -32,6 +33,7 @@ from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.helpers.meta_data import generate_default_state_meta_data
+import rafcon.gui.utils.constants as gui_constants
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.library_state import LibraryStateModel
@@ -238,8 +240,52 @@ class GraphicalEditorController(ExtendedController):
             return True
 
     def _move_focused_item_into_viewport(self, view, focused_item):
-        # TODO: move focused_item into the viewport
-        pass
+        """Called when an item is focused, moves the item into the viewport
+
+        :param view:
+        :param StateView | ConnectionView | PortView focused_item: The focused item
+        """
+        self.move_item_into_viewport(focused_item)
+
+    def move_item_into_viewport(self, item):
+        """Causes the `item` to be moved into the viewport
+
+        The zoom factor and the position of the viewport are updated to move the `item` into the viewport. If `item`
+        is not a `StateView`, the parental `StateView` is moved into the viewport.
+
+        :param StateView | ConnectionView | PortView item: The item to be moved into the viewport
+        """
+        if not item:
+            return
+        HORIZONTAL = 0
+        VERTICAL = 1
+        if not isinstance(item, Item):
+            state = item.parent
+        elif not isinstance(item, StateView):
+            state = self.canvas.get_parent(item)
+        else:
+            state = item
+        viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
+        state_size = self.view.editor.get_matrix_i2v(item).transform_distance(state.width, state.height)
+        min_relative_size = min(viewport_size[i] / state_size[i] for i in [HORIZONTAL, VERTICAL])
+        if min_relative_size < 1 or min_relative_size > 2:
+            # Allow margin around state
+            margin_relative = 1. / gui_constants.BORDER_WIDTH_STATE_SIZE_FACTOR
+            zoom_factor = min_relative_size * (1 - margin_relative)
+            self.view.editor.zoom(zoom_factor)
+            # The zoom operation must be performed before the pan operation to work on updated GtkAdjustments (scroll
+            # bars)
+            self.canvas.perform_update()
+
+        state_pos = self.view.editor.get_matrix_i2v(item).transform_point(0, 0)
+        state_size = self.view.editor.get_matrix_i2v(item).transform_distance(state.width, state.height)
+        viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
+
+        # Calculate offset around state so that the state is centered in the viewport
+        padding_offset_horizontal = (viewport_size[HORIZONTAL] - state_size[HORIZONTAL]) / 2.
+        padding_offset_vertical = (viewport_size[VERTICAL] - state_size[VERTICAL]) / 2.
+        self.view.editor.hadjustment.set_value(state_pos[HORIZONTAL] - padding_offset_horizontal)
+        self.view.editor.vadjustment.set_value(state_pos[VERTICAL] - padding_offset_vertical)
 
     def _update_selection_from_gaphas(self, view, selected_items):
         selected_models = []
