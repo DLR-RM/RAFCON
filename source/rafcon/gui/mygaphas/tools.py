@@ -26,7 +26,7 @@ from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.mygaphas.aspect import HandleInMotion
 from rafcon.gui.mygaphas.items.connection import ConnectionView, TransitionPlaceholderView, DataFlowPlaceholderView, \
     TransitionView, DataFlowView
-from rafcon.gui.mygaphas.items.ports import InputPortView
+from rafcon.gui.mygaphas.items.ports import InputPortView, PortView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils import gap_helper
 from rafcon.gui.utils import constants
@@ -213,7 +213,13 @@ class HoverItemTool(HoverTool):
                     library_state_v = self.view.canvas.get_view_for_core_element(library_state)
                     view.hovered_item = library_state_v
 
-        if isinstance(view.hovered_item, StateView):
+        if isinstance(view.hovered_item, PortView):
+            if event.state & constants.MOVE_PORT_MODIFIER:
+                self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
+            else:
+                self.view.window.set_cursor(gtk.gdk.Cursor(constants.CREATION_CURSOR))
+
+        elif isinstance(view.hovered_item, StateView):
             distance = view.hovered_item.border_width / 2.
             state_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos, distance)
 
@@ -355,8 +361,9 @@ class MoveHandleTool(HandleTool):
             return False
 
         # Only move ports when the MOVE_PORT_MODIFIER key is pressed
-        if isinstance(item, StateView) and handle in [port.handle for port in item.get_all_ports()] and not (
-                    event.state & constants.MOVE_PORT_MODIFIER):
+        if isinstance(item, (StateView, PortView)) and \
+            handle in [port.handle for port in item.get_all_ports()] and \
+                not (event.state & constants.MOVE_PORT_MODIFIER):
             return False
 
         # Do not move from/to handles of connections (only their waypoints)
