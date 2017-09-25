@@ -93,12 +93,14 @@ class StateMachineModel(ModelMT, Hashable):
 
         self.storage_lock = threading.Lock()  # lock can not be substituted by the state machine lock -> maybe because it is a RLock
 
+        self.history = None
         if global_gui_config.get_config_value('HISTORY_ENABLED'):
             from rafcon.gui.models.modification_history import ModificationsHistoryModel
             self.history = ModificationsHistoryModel(self)
         else:
             logger.info("The modification history is disabled")
 
+        self.auto_backup = None
         if global_gui_config.get_config_value('AUTO_BACKUP_ENABLED'):
             from rafcon.gui.models.auto_backup import AutoBackupModel
             self.auto_backup = AutoBackupModel(self)
@@ -133,8 +135,7 @@ class StateMachineModel(ModelMT, Hashable):
         self.destroy()
 
     def destroy(self):
-        # print "run destroy " + str(self.state_machine.state_machine_id)
-        if getattr(self, "auto_backup", None):
+        if self.auto_backup is not None:
             self.auto_backup.destroy()
             self.auto_backup = None
 
@@ -143,9 +144,9 @@ class StateMachineModel(ModelMT, Hashable):
 
         Unregister itself as observer from the state machine and the root state
         """
-        if getattr(self, "history", None):
+        if self.history is not None:
             self.history.prepare_destruction()
-        if getattr(self, "auto_backup", None):
+        if self.auto_backup is not None:
             self.auto_backup.prepare_destruction()
         try:
             self.unregister_observer(self)

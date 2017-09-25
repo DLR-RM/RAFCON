@@ -139,7 +139,7 @@ def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=No
     sm_m.state_machine._file_system_path = last_save_file_system_path
 
     # fix auto backup meta data
-    if hasattr(sm_m, 'auto_backup'):
+    if sm_m.auto_backup:
         if last_save_file_system_path is None:
             del sm_m.auto_backup.meta['last_saved']
         else:

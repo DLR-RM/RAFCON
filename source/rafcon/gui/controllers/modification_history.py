@@ -27,7 +27,7 @@ from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
-from rafcon.gui.config import global_gui_config as gui_config
+from rafcon.gui.singleton import global_gui_config
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -84,15 +84,20 @@ class ModificationHistoryTreeController(ExtendedController):
         if self.__my_selected_sm_id is not None:  # no old models available
             self.relieve_model(self._selected_sm_model.history)
 
-        if self.model.selected_state_machine_id is not None and gui_config.get_config_value('HISTORY_ENABLED'):
+        if self.model.selected_state_machine_id is not None and global_gui_config.get_config_value('HISTORY_ENABLED'):
 
             # set own selected state machine id
             self.__my_selected_sm_id = self.model.selected_state_machine_id
 
             # observe new models
             self._selected_sm_model = self.model.state_machines[self.__my_selected_sm_id]
-            self.observe_model(self._selected_sm_model.history)
-            self.update(None, None, None)
+            if self._selected_sm_model.history:
+                self.observe_model(self._selected_sm_model.history)
+                self.update(None, None, None)
+            else:
+                logger.warning("The history is enabled but not generated {0}. {1}"
+                               "".format(self._selected_sm_model.state_machine.state_machine_id,
+                                         self._selected_sm_model.state_machine.file_system_path))
         else:
             if self.__my_selected_sm_id is not None:
                 self.history_tree_store.clear()
