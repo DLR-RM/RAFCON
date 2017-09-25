@@ -102,10 +102,11 @@ def trigger_gui_signals(*args):
     - THOUGHT tool-bar: refresh
     - THOUGHT tool-bar: refresh selected
     """
-    sm_manager_model = args[0]
-    main_window_controller = args[1]
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    main_window_controller = rafcon.gui.singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     global_runtime_config = rafcon.gui.singleton.global_runtime_config
+    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, create_state_machine())
     assert isinstance(menubar_ctrl, MenuBarController)
     assert isinstance(sm_manager_model, StateMachineManagerModel)
 
@@ -247,19 +248,12 @@ def test_recent_opened_state_machine_list(caplog):
                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
     testing_utils.initialize_environment(gui_config=change_in_gui_config, libraries=libraries)
 
-    state_machine = create_state_machine()
-    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-
-    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
-
-    # Wait for GUI to initialize
+    MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
     testing_utils.wait_for_gui()
 
-    thread = threading.Thread(target=trigger_gui_signals, args=[rafcon.gui.singleton.state_machine_manager_model,
-                                                                main_window_controller])
+    thread = threading.Thread(target=trigger_gui_signals)
     thread.start()
     gtk.main()
-    logger.debug("after gtk main")
     thread.join()
 
     testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)

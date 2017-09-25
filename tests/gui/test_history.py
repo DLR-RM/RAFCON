@@ -1246,16 +1246,12 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
 def test_multiple_undo_redo_bug_with_gui(caplog):
 
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
-    rafcon.core.singleton.state_machine_manager.add_state_machine(StateMachine(HierarchyState()))
-    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines.values()[-1]
 
     main_window_view = MainWindowView()
-    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
-    with_gui = True
+    MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
     testing_utils.wait_for_gui()
-    thread = threading.Thread(target=trigger_multiple_undo_redo_bug_tests,
-                              args=[rafcon.gui.singleton.state_machine_manager_model,
-                                    main_window_controller, sm_m, with_gui])
+
+    thread = threading.Thread(target=trigger_multiple_undo_redo_bug_tests, args=[True])
     thread.start()
     gtk.main()
     thread.join()
@@ -1263,7 +1259,7 @@ def test_multiple_undo_redo_bug_with_gui(caplog):
     testing_utils.shutdown_environment(caplog=caplog)
 
 
-@log.log_exceptions(None, gtk_quit=True)
+@log.log_exceptions(None, gtk_quit=False)
 def trigger_state_type_change_tests(*args):
     import rafcon.gui.helpers.state as gui_helper_state
     with_gui = bool(args[4])
@@ -1908,11 +1904,11 @@ def trigger_state_type_change_typical_bug_tests(*args):
     print check_elements_ignores
 
 
-@log.log_exceptions(None, gtk_quit=True)
-def trigger_multiple_undo_redo_bug_tests(*args):
-    with_gui = bool(args[3])
-    main_window_controller = args[1]
-    sm_m = args[2]
+@log.log_exceptions(None, gtk_quit=False)
+def trigger_multiple_undo_redo_bug_tests(with_gui=False):
+    main_window_controller = rafcon.gui.singleton.main_window_controller
+    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, StateMachine(HierarchyState()))
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines.values()[-1]
 
     sm_m.selection.add(sm_m.root_state)
 
