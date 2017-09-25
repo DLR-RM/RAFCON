@@ -71,31 +71,16 @@ class PortView(object):
         self._last_label_size = 0, 0
         self._last_label_relative_pos = 0, 0
 
-    @property
-    def _canvas_index(self):
-        """Index within the canvas
+    def __getattr__(self, name):
+        """Return parental attributes for unknown attributes
 
-        This is required for sorting. The index is set identical to the corresponding state index, as the ports are
-        no items with their own index.
+        The PortView class is now Gaphas item, however it is often treated like that. Therefore, several expected
+        attributes are missing. In these cases, the corresponding attribute of the parental StateView is returned.
 
-        :return: Index within the canvas
-        :rtype: int
+        :param str name: Name of teh requested attribute
+        :return: Parental value of the attribute
         """
-        if self.parent:
-            return self.parent._canvas_index
-        return 0
-
-    @property
-    def _matrix_i2v(self):
-        if self.parent:
-            return self.parent._matrix_i2v
-        return None
-
-    @property
-    def _matrix_v2i(self):
-        if self.parent:
-            return self.parent._matrix_v2i
-        return None
+        return getattr(self.parent, name)
 
     def handles(self):
         return [self.handle]
