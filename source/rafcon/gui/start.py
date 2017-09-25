@@ -114,7 +114,7 @@ def start_stop_state_machine(state_machine, start_state_path, quit_flag):
     # Wait for GUI to initialize
     while gtk.events_pending():
         gtk.main_iteration(False)
-    print "start state machine", state_machine.file_system_path, start_state_path
+
     state_machine_execution_engine = core_singletons.state_machine_execution_engine
     state_machine_execution_engine.execute_state_machine_from_path(state_machine=state_machine,
                                                                    start_state_path=start_state_path,
@@ -220,7 +220,7 @@ def signal_handler(signal, frame):
     except Exception as e:
         import traceback
         print _("Could not stop state machine: {0} {1}").format(e.message, traceback.format_exc())
-# from rafcon.utils import log
+
     logger.info(_("RAFCON launcher"))
     gui_singletons.main_window_controller.get_controller('menu_bar_controller').prepare_destruction()
 
@@ -237,10 +237,10 @@ def signal_handler(signal, frame):
 
 def main():
     register_signal_handlers(signal_handler)
-    print "test"
+
     splash_screen = SplashScreen(contains_image=True, width=530, height=350)
     splash_screen.rotate_image(random_=True)
-    splash_screen.set_text("Starting RAFCON...")
+    splash_screen.set_text(_("Starting RAFCON..."))
     while gtk.events_pending():
         gtk.main_iteration()
 
@@ -250,10 +250,9 @@ def main():
 
     splash_screen.set_text("Setting up logger...")
     setup_gtkmvc_logger()
+
     splash_screen.set_text("Initializing plugins...")
     pre_setup_plugins()
-
-    # logger.info(_("RAFCON launcher"))
 
     splash_screen.set_text("Setting up environment...")
     setup_mvc_environment()
@@ -271,7 +270,7 @@ def main():
     # setup the gui before loading the state machine as then the debug console shows the errors that emerged during
     # loading the state state machine
     splash_screen.set_text("Loading GUI...")
-    main_window_controller = setup_gui()
+    setup_gui()
 
     while gtk.events_pending():
         gtk.main_iteration(False)
@@ -327,10 +326,6 @@ def main():
         logger.info(_("State machine execution has finished"))
 
     logger.info(_("Exiting ..."))
-
-    # this is a ugly process shutdown method but works if gtk or twisted process are still blocking
-    # import os
-    # os._exit(0)
 
 
 if __name__ == '__main__':
