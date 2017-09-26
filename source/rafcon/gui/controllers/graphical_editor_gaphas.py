@@ -23,6 +23,7 @@
 import gtk
 from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
+from gaphas.item import Item
 from gtk.gdk import ACTION_COPY
 
 from rafcon.core.decorators import lock_state_machine
@@ -32,6 +33,7 @@ from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.helpers.meta_data import generate_default_state_meta_data
+import rafcon.gui.utils.constants as gui_constants
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.library_state import LibraryStateModel
@@ -62,6 +64,7 @@ class GraphicalEditorController(ExtendedController):
     """
 
     _complex_action = False
+    _signal_id_selection_changed = None
 
     def __init__(self, model, view):
         """Constructor"""
@@ -71,9 +74,6 @@ class GraphicalEditorController(ExtendedController):
         self.observe_model(rafcon.gui.singleton.gui_config_model)
         self.observe_model(rafcon.gui.singleton.runtime_config_model)
         self.root_state_m = model.root_state
-
-        self.update_selection_gaphas_major = False
-        self.update_selection_external_major = False
 
         self.canvas = MyCanvas()
         self.zoom = 3.
@@ -87,7 +87,9 @@ class GraphicalEditorController(ExtendedController):
         """Called when the View was registered"""
         assert self.view == view
 
-        self.view.editor.connect('selection-changed', self._update_selection_from_gaphas)
+        self._signal_id_selection_changed = self.view.editor.connect('selection-changed',
+                                                                     self._update_selection_from_gaphas)
+        self.view.editor.connect('focus-changed', self._move_focused_item_into_viewport)
         self.view.connect('remove_state_from_state_machine', self._remove_state_view)
         self.view.connect('meta_data_changed', self._meta_data_changed)
         self.view.editor.connect("drag-data-received", self.on_drag_data_received)
@@ -237,12 +239,57 @@ class GraphicalEditorController(ExtendedController):
             gui_helper_state_machine.paste_into_selected_state(self.model)
             return True
 
-    def _update_selection_from_gaphas(self, view, selected_items):
-        if self.update_selection_external_major:
+    def _move_focused_item_into_viewport(self, view, focused_item):
+        """Called when an item is focused, moves the item into the viewport
+
+        :param view:
+        :param StateView | ConnectionView | PortView focused_item: The focused item
+        """
+        # Do nothing for the moment
+        # self.move_item_into_viewport(focused_item)
+        pass
+
+    def move_item_into_viewport(self, item):
+        """Causes the `item` to be moved into the viewport
+
+        The zoom factor and the position of the viewport are updated to move the `item` into the viewport. If `item`
+        is not a `StateView`, the parental `StateView` is moved into the viewport.
+
+        :param StateView | ConnectionView | PortView item: The item to be moved into the viewport
+        """
+        if not item:
             return
-        # else:
-        #     print "_update_selection_from_gaphas", self.view.editor.selected_items
-        selected_items = self.view.editor.selected_items
+        HORIZONTAL = 0
+        VERTICAL = 1
+        if not isinstance(item, Item):
+            state = item.parent
+        elif not isinstance(item, StateView):
+            state = self.canvas.get_parent(item)
+        else:
+            state = item
+        viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
+        state_size = self.view.editor.get_matrix_i2v(item).transform_distance(state.width, state.height)
+        min_relative_size = min(viewport_size[i] / state_size[i] for i in [HORIZONTAL, VERTICAL])
+        if min_relative_size < 1 or min_relative_size > 2:
+            # Allow margin around state
+            margin_relative = 1. / gui_constants.BORDER_WIDTH_STATE_SIZE_FACTOR
+            zoom_factor = min_relative_size * (1 - margin_relative)
+            self.view.editor.zoom(zoom_factor)
+            # The zoom operation must be performed before the pan operation to work on updated GtkAdjustments (scroll
+            # bars)
+            self.canvas.perform_update()
+
+        state_pos = self.view.editor.get_matrix_i2v(item).transform_point(0, 0)
+        state_size = self.view.editor.get_matrix_i2v(item).transform_distance(state.width, state.height)
+        viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
+
+        # Calculate offset around state so that the state is centered in the viewport
+        padding_offset_horizontal = (viewport_size[HORIZONTAL] - state_size[HORIZONTAL]) / 2.
+        padding_offset_vertical = (viewport_size[VERTICAL] - state_size[VERTICAL]) / 2.
+        self.view.editor.hadjustment.set_value(state_pos[HORIZONTAL] - padding_offset_horizontal)
+        self.view.editor.vadjustment.set_value(state_pos[VERTICAL] - padding_offset_vertical)
+
+    def _update_selection_from_gaphas(self, view, selected_items):
         selected_models = []
         for item in selected_items:
             if isinstance(item, (StateView, TransitionView, DataFlowView, OutcomeView, DataPortView,
@@ -254,15 +301,11 @@ class GraphicalEditorController(ExtendedController):
                 logger.debug("Cannot select item {}".format(item))
         new_selected_models = any([model not in self.model.selection for model in selected_models])
         if new_selected_models or len(self.model.selection) != len(selected_models):
-            self.update_selection_gaphas_major = True
+            self.relieve_model(self.model)
             self.model.selection.set(selected_models)
-            self.update_selection_gaphas_major = False
+            self.observe_model(self.model)
 
     def _update_selection_from_external(self):
-
-        if self.update_selection_gaphas_major:
-            return
-
         # filter models that are not drawn
         selected_models = []
         for model in self.model.selection:
@@ -277,17 +320,20 @@ class GraphicalEditorController(ExtendedController):
         # filter elements that get selected and deselected and do so
         select_items = filter(lambda item: item not in self.view.editor.selected_items, selected_items)
         deselect_items = filter(lambda item: item not in selected_items, self.view.editor.selected_items)
+
+        # Prevent recursive call of this method by temporary deactivation of the signal handler
+        self.view.editor.handler_block(self._signal_id_selection_changed)
+
         for item in deselect_items:
-            self.view.editor.selected_items.discard(item)
-            self.view.editor.queue_draw_item(item)
-        for item in select_items:
-            self.view.editor.selected_items.add(item)
-            self.view.editor.queue_draw_item(item)
-        if select_items or deselect_items:
-            self.update_selection_external_major = True
-            self.view.editor.emit('selection-changed', self.view.editor.selected_items)
-            self.update_selection_external_major = False
-            # TODO: Jump to the selected state in the view and adjust the zoom
+            self.view.editor.unselect_item(item)
+        # Set item as focused item if it is the only item that is selected
+        if len(self.view.editor.selected_items) == 0 and len(select_items) == 1:
+            self.view.editor.focused_item = select_items[0]
+        else:
+            for item in select_items:
+                self.view.editor.select_item(item)
+
+        self.view.editor.handler_unblock(self._signal_id_selection_changed)
 
     def _meta_data_changed(self, view, model, name, affects_children):
         msg = MetaSignalMsg('graphical_editor_gaphas', name, affects_children)

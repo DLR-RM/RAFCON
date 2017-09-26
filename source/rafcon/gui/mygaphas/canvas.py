@@ -12,6 +12,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gaphas.canvas import Canvas, VariableProjection
+from gaphas.item import Item
 
 
 class MyCanvas(Canvas):
@@ -70,6 +71,12 @@ class MyCanvas(Canvas):
     def update_root_items(self):
         for root_item in self.get_root_items():
             self.request_update(root_item)
+            
+    def get_parent(self, item):
+        if not isinstance(item, Item):
+            return item.parent
+        return super(MyCanvas, self).get_parent(item)
+            
 
     def get_first_view(self):
         """Return first registered view object
