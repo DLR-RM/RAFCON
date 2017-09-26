@@ -207,7 +207,7 @@ def test_rafcon_library_path_variable(caplog):
 
 
 def teardown_module(module=None):
-    testing_utils.reload_config()
+    testing_utils.reload_config(gui_config=False)
 
 
 if __name__ == '__main__':

@@ -8,7 +8,6 @@ from threading import Lock, Condition, Event, Thread
 
 import rafcon
 from rafcon.utils import log, constants
-from rafcon.core.config import global_config
 
 test_multithreading_lock = Lock()
 
@@ -36,7 +35,8 @@ RAFCON_SHARED_LIBRARY_PATH = join(dirname(RAFCON_PATH), '..', 'share', 'librarie
 print LIBRARY_SM_PATH
 print RAFCON_SHARED_LIBRARY_PATH
 
-global_config.load(path=join(TESTS_PATH, "assets", "configs", "valid_config"))
+# from rafcon.core.config import global_config
+# global_config.load(path=join(TESTS_PATH, "assets", "configs", "valid_config"))
 
 
 def get_unique_temp_path():
@@ -131,6 +131,7 @@ def call_gui_callback(callback, *args):
 def rewind_and_set_libraries(libraries=None):
     """ Clear libraries, set new libraries and secure default libraries set."""
     from rafcon.core.config import global_config
+    import rafcon.core.singleton
     if libraries is None:
         libraries = {}
     remove_all_libraries(init_library_manager=False)
@@ -143,7 +144,7 @@ def rewind_and_set_libraries(libraries=None):
     rafcon.core.singleton.library_manager.initialize()
 
 
-def initialize_environment(core_config=None, gui_config=None, runtime_config=None, libraries=None):
+def initialize_environment(core_config=None, gui_config=None, runtime_config=None, libraries=None, only_core=False):
     """ Initialize global configs, libraries and aquire multi threading lock
 
      The function accepts tuples as arguments to load a config with (config-file, path) as tuple or a
@@ -159,10 +160,7 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
     :return:
     """
     from rafcon.core.config import global_config
-    from rafcon.core.singleton import library_manager, state_machine_manager
-    from rafcon.gui.config import global_gui_config
-    from rafcon.gui.runtime_config import global_runtime_config
-    from rafcon.gui.start import signal_handler
+    from rafcon.core.singleton import state_machine_manager
 
     test_multithreading_lock.acquire()
 
@@ -184,6 +182,12 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
     rewind_and_set_libraries(libraries=libraries)
 
     state_machine_manager.delete_all_state_machines()
+    if only_core:
+        return
+
+    from rafcon.gui.config import global_gui_config
+    from rafcon.gui.runtime_config import global_runtime_config
+    from rafcon.gui.start import signal_handler
 
     # initialize global gui config
     if isinstance(gui_config, tuple) and exists(join(gui_config[1], gui_config[0])):
@@ -204,6 +208,10 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
                 global_runtime_config.set_config_value(key, value)
 
     signal.signal(signal.SIGINT, signal_handler)
+
+
+def initialize_environment_only_core(core_config=None, libraries=None):
+    initialize_environment(core_config=core_config, libraries=libraries, only_core=True)
 
 
 def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0):
@@ -229,6 +237,10 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
         rewind_and_set_libraries()
         reload_config(config, gui_config)
         test_multithreading_lock.release()
+
+
+def shutdown_environment_only_core(config=True, caplog=None, expected_warnings=0, expected_errors=0):
+    shutdown_environment(config, False, caplog, expected_warnings, expected_errors)
 
 
 def wait_for_gui():

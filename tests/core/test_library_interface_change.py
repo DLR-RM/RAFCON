@@ -29,8 +29,6 @@ def get_test_state_machine(name):
 def test_load_data_ports_not_existing(caplog):
     testing_utils.test_multithreading_lock.acquire()
 
-    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
-    rafcon.core.singleton.library_manager.initialize()
     state_machine = get_test_state_machine("data_ports_not_existing")
     # state_machine = get_test_state_machine("correct_library_inclusion")
 
@@ -43,7 +41,7 @@ def test_load_data_ports_not_existing(caplog):
     try:
         assert rafcon.core.singleton.global_variable_manager.get_variable("x") == 1
     finally:
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=2)
+        testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=2)
 
     logger.info("State machine execution finished!")
 
@@ -67,7 +65,7 @@ def test_load_wrong_data_types(caplog):
         # 4 data type errors -> 2 data flow port to port data type inequality and while runtime 1 input- and 1 output data type error
         # 2 data type warnings -> 1 input- and  1 output-data port  data type warnings while loading of state machine
     finally:
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=2, expected_errors=4)
+        testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=2, expected_errors=4)
 
     logger.info("State machine execution finished!")
 
@@ -82,13 +80,12 @@ def test_load_not_existing_outcome(caplog):
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
-    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
+    testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=1)
 
     logger.info("State machine execution finished!")
 
 
 if __name__ == '__main__':
-    setup_module()
     test_load_not_existing_outcome(None)
     # test_load_wrong_data_types(None)
     # test_load_data_ports_not_existing(None)

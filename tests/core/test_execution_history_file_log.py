@@ -11,7 +11,7 @@ import os
 
 def test_execution_log(caplog):
     try:
-        testing_utils.initialize_environment(
+        testing_utils.initialize_environment_only_core(
             core_config={'EXECUTION_LOG_ENABLE': True,
                          'EXECUTION_LOG_PATH': testing_utils.get_unique_temp_path()+'/test_execution_log'})
 
@@ -58,7 +58,7 @@ def test_execution_log(caplog):
 
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     finally:
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+        testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=0)
 
 if __name__ == '__main__':
     pytest.main([__file__])

@@ -8,7 +8,7 @@ import testing_utils
 
 
 def test_custom_entry_point(caplog):
-    testing_utils.initialize_environment()
+    testing_utils.initialize_environment_only_core()
 
     start_state_id = "RWUZOP/ZDWBKU/HADSLI"
     sm = rafcon.core.singleton.state_machine_execution_engine.execute_state_machine_from_path(
@@ -18,7 +18,7 @@ def test_custom_entry_point(caplog):
     try:
         assert not rafcon.core.singleton.global_variable_manager.variable_exist("start_id21")
     finally:
-        testing_utils.shutdown_environment(caplog=caplog)
+        testing_utils.shutdown_environment_only_core(caplog=caplog)
 
 
 if __name__ == '__main__':

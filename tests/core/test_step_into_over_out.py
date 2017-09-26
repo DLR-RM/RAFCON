@@ -17,7 +17,7 @@ def wait_and_join(state_machine, state_id):
 
 def test_custom_entry_point(caplog):
 
-    testing_utils.initialize_environment()
+    testing_utils.initialize_environment_only_core()
 
     state_machine = storage.load_state_machine_from_path(
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "stepping_test")))
@@ -67,7 +67,7 @@ def test_custom_entry_point(caplog):
     try:
         assert rafcon.core.singleton.global_variable_manager.get_variable("bottles") == 95
     finally:
-        testing_utils.shutdown_environment(caplog=caplog)
+        testing_utils.shutdown_environment_only_core(caplog=caplog)
 
 
 if __name__ == '__main__':
