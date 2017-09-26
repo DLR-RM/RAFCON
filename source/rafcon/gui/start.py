@@ -22,6 +22,7 @@ import os
 import sys
 import logging
 import gtk
+import glib
 import threading
 import signal
 from yaml_configuration.config import config_path
@@ -284,11 +285,10 @@ def main():
     if user_input.new:
         create_new_state_machine()
 
-    # TODO find out why this works and rearrange it -> most proper because of the pending gtk events
     # initiate stored session # TODO think about a controller for this
     if not user_input.new and not user_input.state_machine_paths \
             and rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
-        backup_session.restore_session_from_runtime_config()
+        glib.idle_add(backup_session.restore_session_from_runtime_config, priority=glib.PRIORITY_LOW)
 
     log_ready_output()
 
