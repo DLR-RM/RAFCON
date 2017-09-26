@@ -98,25 +98,26 @@ class StateMachineRightClickMenu(object):
         self.insert_copy_cut_paste_in_menu(menu, shortcuts_dict, accel_group)
 
         from rafcon.core.states.barrier_concurrency_state import DeciderState
-        state_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
+        selected_state_m = selection.get_selected_state()
         all_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_all()
         if all([isinstance(elem, (AbstractStateModel, ScopedVariableModel)) for elem in all_m_list]) and \
-                not any([state_m.state.is_root_state for state_m in state_m_list]):
+                not any([state_m.state.is_root_state for state_m in selection.states]):
             menu.append(create_image_menu_item("Group states", constants.BUTTON_GROUP, self.on_group_states_activate,
                                                accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
-        if len(state_m_list) == 1 and isinstance(state_m_list[0], AbstractStateModel):
-            if isinstance(state_m_list[0], ContainerStateModel) and not state_m_list[0].state.is_root_state:
+        if len(selection.states) == 1:
+            if isinstance(selected_state_m, ContainerStateModel) and not selected_state_m.state.is_root_state:
                 menu.append(create_image_menu_item("Ungroup states", constants.BUTTON_UNGR,
                                                    self.on_ungroup_state_activate,
                                                    accel_code=shortcuts_dict['ungroup'][0], accel_group=accel_group))
-            if not isinstance(state_m_list[0].state, DeciderState) and not state_m_list[0].state.is_root_state:
+            if not isinstance(selected_state_m.state, DeciderState) and not selected_state_m.state.is_root_state:
                 menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
                                                    self.on_substitute_state_activate,
                                                    accel_code=shortcuts_dict['substitute_state'][0],
                                                    accel_group=accel_group))
 
             from rafcon.gui.controllers.state_editor.overview import StateOverviewController
-            state_type_class_dict = StateOverviewController.change_state_type_class_dict(state_m_list[0].state)
+            state_type_class_dict = StateOverviewController.change_state_type_class_dict(selected_state_m.state)
             if len(state_type_class_dict) > 1:
                 change_type_sub_menu_item, change_type_sub_menu = append_sub_menu_to_parent_menu("Change state type",
                                                                                                  menu,
@@ -127,13 +128,13 @@ class StateMachineRightClickMenu(object):
                                                                 target_class=item['class']),
                                                                 accel_code=None,
                                                                 accel_group=accel_group)
-                    if isinstance(state_m_list[0].state, item['class']):
+                    if isinstance(selected_state_m.state, item['class']):
                         class_item.set_sensitive(False)
                     change_type_sub_menu.append(class_item)
         menu.append(gtk.SeparatorMenuItem())
 
         # save state as but not for root state, therefore the user should use save state machine as
-        if len(state_m_list) == 1 and not state_m_list[0].state.is_root_state:
+        if len(selection.states) == 1 and not selected_state_m.state.is_root_state:
             save_as_sub_menu_item, save_as_sub_menu = append_sub_menu_to_parent_menu("Save state as", menu,
                                                                                      constants.BUTTON_SAVE)
 
@@ -155,19 +156,21 @@ class StateMachineRightClickMenu(object):
 
     def insert_show_library_content_in_menu(self, menu, shortcuts_dict, accel_group):
 
-        state_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
-        if len(state_m_list) == 1 and isinstance(state_m_list[0], LibraryStateModel):
-            menu.append(create_check_menu_item("Show library content", state_m_list[0].meta['gui']['show_content'],
-                                               partial(self.on_toggle_show_library_content, state_m=state_m_list[0])))
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
+        selected_state_m = selection.get_selected_state()
+        if len(selection.states) == 1 and isinstance(selected_state_m, LibraryStateModel):
+            menu.append(create_check_menu_item("Show library content", selected_state_m.meta['gui']['show_content'],
+                                               partial(self.on_toggle_show_library_content, state_m=selected_state_m)))
 
     def insert_is_start_state_in_menu(self, menu, shortcuts_dict, accel_group):
 
-        state_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
+        selected_state_m = selection.get_selected_state()
         has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
-        if len(state_m_list) == 1 and isinstance(state_m_list[0], AbstractStateModel) and \
-                not state_m_list[0].state.is_root_state and \
-                not isinstance(state_m_list[0].parent.state, has_no_start_state_state_types):
-            menu.append(create_check_menu_item("Is start state", state_m_list[0].is_start, self.on_toggle_is_start_state,
+        if len(selection.states) == 1 and \
+                not selected_state_m.state.is_root_state and \
+                not isinstance(selected_state_m.parent.state, has_no_start_state_state_types):
+            menu.append(create_check_menu_item("Is start state", selected_state_m.is_start, self.on_toggle_is_start_state,
                                                accel_code=shortcuts_dict['is_start_state'][0], accel_group=accel_group))
 
     def insert_execution_sub_menu_in_menu(self, menu, shortcuts_dict, accel_group):
@@ -265,7 +268,7 @@ class StateMachineRightClickMenu(object):
     def on_paste_activate(self, widget, data=None):
         # logger.info("trigger default paste")
         active_sm_m = self.state_machine_manager_model.get_selected_state_machine_model()
-        global_clipboard.paste(active_sm_m.selection.get_states()[0])
+        global_clipboard.paste(active_sm_m.selection.get_selected_state())
 
     def on_cut_activate(self, widget, data=None):
         # logger.info("trigger default cut")
@@ -302,7 +305,7 @@ class StateMachineRightClickMenu(object):
 
     @staticmethod
     def on_open_activate(widget, data=None):
-        state_m = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_states()[0]
+        state_m = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_selected_state()
         path, _, _ = gui_singletons.library_manager.get_os_path_to_library(state_m.state.library_path,
                                                                            state_m.state.library_name)
         gui_helper_state_machine.open_state_machine(path)
@@ -317,8 +320,8 @@ class StateMachineRightClickMenu(object):
     @staticmethod
     def on_type_change_activate(widget, data=None, target_class=None):
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
-        if len(selection.get_all()) == 1 and len(selection.get_states()) == 1:
-            gui_helper_state_machine.change_state_type_with_error_handling_and_logger_messages(selection.get_states()[0],
+        if len(selection) == 1 and len(selection.states) == 1:
+            gui_helper_state_machine.change_state_type_with_error_handling_and_logger_messages(selection.get_selected_state(),
                                                                                                target_class)
 
     def mouse_click(self, widget, event=None):
@@ -327,8 +330,8 @@ class StateMachineRightClickMenu(object):
         #             "".format(gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_all()))
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
-            if len(selection.get_all()) == 1 and len(selection.get_states()) == 1 and \
-                    isinstance(selection.get_states()[0], LibraryStateModel):
+            if len(selection) == 1 and len(selection.states) == 1 and \
+                    isinstance(selection.get_selected_state(), LibraryStateModel):
                 menu = self.generate_right_click_menu_library()
             else:
                 menu = self.generate_right_click_menu_state()
@@ -379,7 +382,7 @@ class StateRightClickMenuControllerOpenGLEditor(StateMachineRightClickMenuContro
     def activate_menu(self, event, menu):
         # logger.info("activate_menu by " + self.__class__.__name__)
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
-        if selection.get_num_states() > 0 or selection.get_num_scoped_variables() > 0:
+        if len(selection.states) > 0 or len(selection.scoped_variables) > 0:
             menu.popup(None, None, None, event.button, event.time)
             return True
         else:
@@ -403,7 +406,7 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
     def activate_menu(self, event, menu):
         # logger.info("activate_menu by " + self.__class__.__name__)
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
-        if selection.get_num_states() > 0 or selection.get_num_scoped_variables() > 0:
+        if len(selection.states) > 0 or len(selection.scoped_variables) > 0:
             menu.popup(None, None, None, event.button, event.time)
             return True
         else:

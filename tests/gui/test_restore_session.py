@@ -98,7 +98,7 @@ def prepare_tab_data_of_open_state_machines(main_window_controller, sm_manager_m
         open_state_machines['list_of_hash_path_tab_page_number_tuple'].append(sm_tuple)
     selected_sm = sm_manager_model.get_selected_state_machine_model()
     if selected_sm and selected_sm.selection.states:
-        open_state_machines['selection_state_machine'] = selected_sm.selection.states[0].state.get_path()
+        open_state_machines['selection_state_machine'] = selected_sm.selection.get_selected_state().state.get_path()
     else:
         open_state_machines['selection_state_machine'] = None
 
