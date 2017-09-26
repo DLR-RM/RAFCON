@@ -259,6 +259,9 @@ class StateMachine(Observable, JSONObject, Hashable):
         self._marked_dirty = marked_dirty
 
     def get_state_by_path(self, path, as_check=False):
+        if not path:
+            logger.debug("No start state specified!")
+            return None
         from rafcon.core.states.library_state import LibraryState
         from rafcon.core.states.execution_state import ExecutionState
         path_item_list = path.split('/')
