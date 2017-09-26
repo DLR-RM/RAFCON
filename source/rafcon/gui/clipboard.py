@@ -338,11 +338,11 @@ class Clipboard(Observable):
         for possible_parent_m, count in parent_m_count_dict.iteritems():
             parent_m = possible_parent_m if current_count_parent < count else parent_m
         # if root no parent exist and only on model can be selected
-        if len(selection.states) == 1 and selection.states[0].state.is_root_state:
+        if len(selection.states) == 1 and selection.get_selected_state().state.is_root_state:
             parent_m = None
             # kick all selection except root_state
             if len(all_models_selected) > 1:
-                selection.set(selection.states[0])
+                selection.set(selection.get_selected_state())
         if parent_m is not None:
             # check and reduce selection
             for model in all_models_selected:
@@ -455,7 +455,7 @@ class Clipboard(Observable):
         # store all lists of selection
         selected_models_dict = {}
         for state_element_attr in ContainerState.state_element_attrs:
-            selected_models_dict[state_element_attr] = getattr(selection, state_element_attr)
+            selected_models_dict[state_element_attr] = list(getattr(selection, state_element_attr))
 
         # copy all selected elements
         self.model_copies = deepcopy(selected_models_dict)

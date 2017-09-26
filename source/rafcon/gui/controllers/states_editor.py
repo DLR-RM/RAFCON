@@ -212,8 +212,8 @@ class StatesEditorController(ExtendedController):
         """
         if self.current_state_machine_m is not None:
             selection = self.current_state_machine_m.selection
-            if selection.get_num_states() > 0:
-                self.activate_state_tab(selection.get_states()[0])
+            if len(selection.states) > 0:
+                self.activate_state_tab(selection.get_selected_state())
 
     def clean_up_tabs(self):
         """ Method remove state-tabs for those no state machine exists anymore.
@@ -504,15 +504,8 @@ class StatesEditorController(ExtendedController):
             return
         state_machine_m = model
         assert isinstance(state_machine_m.selection, Selection)
-        if state_machine_m.selection.get_num_states() == 1 and len(state_machine_m.selection) == 1:
-            if state_machine_m.selection.get_states()[0].get_state_machine_m() is None or \
-                    state_machine_m.selection.get_states()[0].get_state_machine_m() is not state_machine_m:
-                # TODO maybe can be moved to state machine model
-                logger.warning("Selection of state machine {1} seems to be inconsistent. "
-                               "{0} is not known by state machine {1}."
-                               "".format(state_machine_m.selection.get_states()[0],
-                                         state_machine_m.state_machine.state_machine_id))
-            self.activate_state_tab(state_machine_m.selection.get_states()[0])
+        if len(state_machine_m.selection.states) == 1 and len(state_machine_m.selection) == 1:
+            self.activate_state_tab(state_machine_m.selection.get_selected_state())
 
     @ExtendedController.observe("state_machine", after=True)
     def notify_state_removal(self, model, prop_name, info):
@@ -597,8 +590,8 @@ class StatesEditorController(ExtendedController):
         :param modifier_mask:
         """
         selection = self.current_state_machine_m.selection
-        if selection.get_num_states() == 1 and len(selection) == 1:
-            selected_state = selection.get_states()[0]
+        if len(selection.states) == 1 and len(selection) == 1:
+            selected_state = selection.get_selected_state()
             self.activate_state_tab(selected_state)
             _, state_identifier = self.find_page_of_state_m(selected_state)
             state_controller = self.tabs[state_identifier]['controller']
