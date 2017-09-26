@@ -112,7 +112,10 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type', \
                       'path', 'timestamp', 'root_state_storage_id', 'state_machine_version', \
                       'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
-                execution_item[l] = item[l]
+                try:
+                    execution_item[l] = item[l]
+                except KeyError:
+                    logger.debug("{} not found in meta data!".format(l))
 
             start_item = execution_item
 
@@ -186,19 +189,23 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
 
             def unpickle_data(data_dict):
                 r = dict()
-                for k, v in data_dict.iteritems():
-                    if not k.startswith('!'): # ! indicates storage error
-                        try:
-                            r[k] = pickle.loads(v)
-                        except Exception as e:
-                            if throw_on_pickle_error:
-                                raise
-                            elif include_erronous_data_ports:
-                                r['!' + k] = (str(e), v)
-                            else:
-                                pass # ignore
-                    elif include_erronous_data_ports:
-                        r[k] = v
+                # support backward compatibility
+                if isinstance(data_dict, basestring):  # formerly data dict was a json string
+                    r = json.loads(data_dict)
+                else:
+                    for k, v in data_dict.iteritems():
+                        if not k.startswith('!'): # ! indicates storage error
+                            try:
+                                r[k] = pickle.loads(v)
+                            except Exception as e:
+                                if throw_on_pickle_error:
+                                    raise
+                                elif include_erronous_data_ports:
+                                    r['!' + k] = (str(e), v)
+                                else:
+                                    pass # ignore
+                        elif include_erronous_data_ports:
+                            r[k] = v
 
                 return r
 
