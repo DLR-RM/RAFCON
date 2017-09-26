@@ -1,6 +1,7 @@
 import shelve
 import json
 import pandas as pd
+import pickle
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -61,7 +62,7 @@ def log_to_raw_structure(execution_history_items):
     return start_item, previous, next_, concurrent, grouped_by_run_id
 
 
-def log_to_collapsed_structure(execution_history_items, full_next=False):
+def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=True, include_erronous_data_ports=False, full_next=False):
     """
     Collapsed structure means that all history items belonging the same state execution are
     merged together into one object (e.g. CallItem and ReturnItem of an ExecutionState). This
@@ -110,7 +111,7 @@ def log_to_collapsed_structure(execution_history_items, full_next=False):
             execution_item = {}
             for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type', \
                       'path', 'timestamp', 'root_state_storage_id', 'state_machine_version', \
-                      'used_rafcon_version', 'creation_time', 'last_update']:
+                      'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
                 execution_item[l] = item[l]
 
             start_item = execution_item
@@ -183,20 +184,28 @@ def log_to_collapsed_structure(execution_history_items, full_next=False):
                 execution_item[l+'_call'] = call_item[l]
                 execution_item[l+'_return'] = return_item[l]
 
+            def unpickle_data(data_dict):
+                r = dict()
+                for k, v in data_dict.iteritems():
+                    if not k.startswith('!'): # ! indicates storage error
+                        try:
+                            r[k] = pickle.loads(v)
+                        except Exception as e:
+                            if throw_on_pickle_error:
+                                raise
+                            elif include_erronous_data_ports:
+                                r['!' + k] = (str(e), v)
+                            else:
+                                pass # ignore
+                    elif include_erronous_data_ports:
+                        r[k] = v
 
-            execution_item['data_ins'] = json.loads(call_item['input_output_data'])
-            execution_item['data_outs'] = json.loads(return_item['input_output_data'])
+                return r
 
-            execution_item['scoped_data_ins'] = {}
-            for k, v in json.loads(call_item['scoped_data']).items():
-                if k.startswith('error'):
-                    pass
-                execution_item['scoped_data_ins'][v['name']] = v['value']
-            execution_item['scoped_data_outs'] = {}
-            for k, v in json.loads(return_item['scoped_data']).items():
-                if k.startswith('error'):
-                    pass
-                execution_item['scoped_data_outs'][v['name']] = v['value']
+            execution_item['data_ins'] = unpickle_data(call_item['input_output_data'])
+            execution_item['data_outs'] = unpickle_data(return_item['input_output_data'])
+            execution_item['scoped_data_ins'] = unpickle_data(call_item['scoped_data'])
+            execution_item['scoped_data_outs'] = unpickle_data(return_item['scoped_data'])
 
             collapsed_items[rid] = execution_item
 

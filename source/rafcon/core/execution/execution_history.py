@@ -30,6 +30,8 @@ import traceback
 from rafcon.core.id_generator import history_item_id_generator
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+import os
+import pickle
 
 
 class ExecutionHistoryStorage(object):
@@ -268,6 +270,7 @@ class StateMachineStartItem(HistoryItem):
         from rafcon.core.state_machine import StateMachine
         self.sm_dict = StateMachine.state_machine_to_dict(state_machine)
         self.prev = None
+        self.os_environment = dict(os.environ)
 
     def __str__(self):
         return "StateMachineStartItem with name %s (time: %s)" % (self.sm_dict['root_state_storage_id'], self.timestamp)
@@ -280,6 +283,7 @@ class StateMachineStartItem(HistoryItem):
         record['state_type'] = 'StateMachine'
         record['path'] = ''
         record['path_by_name'] = ''
+        record['os_environment'] = self.os_environment
         if self.prev is not None:
             record['prev_history_item_id'] = self.prev.history_item_id
         else:
@@ -307,61 +311,39 @@ class ScopedDataItem(HistoryItem):
 
     def to_dict(self):
         record = HistoryItem.to_dict(self)
-        try:
-            record['scoped_data'] = json.dumps(self.scoped_data, cls=JSONObjectEncoder)
-        except TypeError as e:
+        scoped_data_dict = {}
+        for k, v in self.scoped_data.iteritems():
+            try:
+                scoped_data_dict[v.name] = pickle.dumps(v.value)
+            except Exception as e:
+                scoped_data_dict['!' + v.name] = (str(e), str(v.value))
             # logger.debug('TypeError: Could not serialize one of the scoped data port types.')
             # record['scoped_data'] = json.dumps({'error_type': 'TypeError',
             #                                     'error_message': e.message}, cls=JSONObjectEncoder)
+        record['scoped_data'] = scoped_data_dict
 
-            scoped_data_dict_strings = {}
-            for k, v in self.scoped_data.iteritems():
-                scoped_data_dict_strings[k] = str(v)
-            record['scoped_data'] = json.dumps(
-                {"key_all": {"name": "all_scoped_data_as_string",
-                             "value": scoped_data_dict_strings}}, cls=JSONObjectEncoder
-            )
-
-        try:
-            if 'error' in self.child_state_input_output_data and \
-                    isinstance(self.child_state_input_output_data['error'], BaseException):
-                # manually serialize Exceptions
-                # If an error occurs within a state execution, the catched exception
-                # gets stored to the output data port 'error'. But the exception object
-                # is not json-serializable so for this special case I added a manual
-                # serializiation.
-                export_dict_ = copy.deepcopy(self.child_state_input_output_data)
-                export_dict_.pop('error')
-                export_dict_['error_message'] = self.child_state_input_output_data['error'].message
-                export_dict_['error_type'] = str(type(self.child_state_input_output_data['error']))
-                record['input_output_data'] = json.dumps(export_dict_, cls=JSONObjectEncoder)
-            else:
-                record['input_output_data'] = json.dumps(self.child_state_input_output_data,
-                                                         cls=JSONObjectEncoder)
-        except TypeError as e:
-            # logger.exception('TypeError: Could not serialize one of the input/output data port types.')
-            # record['input_output_data'] = json.dumps({'error_type': 'TypeError',
-            #                                           'error_message': e.message}, cls=JSONObjectEncoder)
-            record['input_output_data'] = json.dumps(
-                {"key_all": {"name": "all_input_output_data_as_string",
-                             "value": str(self.child_state_input_output_data)}}, cls=JSONObjectEncoder
-            )
-
-        from rafcon.core.states.container_state import ContainerState
-        if isinstance(self.state_reference, ContainerState):
+        child_state_input_output_dict = {}
+        for k, v in self.child_state_input_output_data.iteritems():
             try:
-                record['scoped_variables'] = json.dumps(self.state_reference.scoped_variables, cls=JSONObjectEncoder)
-            except TypeError as e:
-                # logger.exception('TypeError: Could not serialize one of the scoped variables types.')
-                # record['scoped_variables'] = json.dumps({'error_type': 'TypeError',
-                #                                          'error_message': e.message}, cls=JSONObjectEncoder)
-                record['scoped_variables'] = json.dumps(
-                    {"key_all": {"name": "all_scoped_variables_as_string",
-                                 "value": str(self.state_reference.scoped_variables)}}, cls=JSONObjectEncoder
-                )
+                child_state_input_output_dict[k] = pickle.dumps(v)
+            except Exception as e:
+                child_state_input_output_dict['!' + k] = (str(e), str(v))
+        record['input_output_data'] = child_state_input_output_dict
 
-        else:
-            record['scoped_variables'] = json.dumps({})
+        # from rafcon.core.states.container_state import ContainerState
+        # if isinstance(self.state_reference, ContainerState):
+        #     try:
+        #         record['scoped_variables'] = json.dumps(self.state_reference.scoped_variables, cls=JSONObjectEncoder)
+        #     except TypeError as e:
+        #         # logger.exception('TypeError: Could not serialize one of the scoped variables types.')
+        #         # record['scoped_variables'] = json.dumps({'error_type': 'TypeError',
+        #         #                                          'error_message': e.message}, cls=JSONObjectEncoder)
+        #         record['scoped_variables'] = json.dumps(
+        #             {"key_all": {"name": "all_scoped_variables_as_string",
+        #                          "value": str(self.state_reference.scoped_variables)}}, cls=JSONObjectEncoder
+        #         )
+        # else:
+        #     record['scoped_variables'] = json.dumps({})
 
         record['call_type'] = self.call_type_str
         return record
