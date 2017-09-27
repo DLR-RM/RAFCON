@@ -219,6 +219,11 @@ class MainWindowController(ExtendedController):
         view.right_bar_window.initialize_title('STATE EDITOR')
         view.console_bar_window.initialize_title('CONSOLE')
 
+        self.left_bar_hidden = False
+        self.right_bar_hidden = False
+        self.console_hidden = False
+
+
     @staticmethod
     def configure_event(widget, event, name):
         # print "configure event", widget, event, name
@@ -315,7 +320,11 @@ class MainWindowController(ExtendedController):
         for config_id in constants.PANE_ID.keys():
             self.set_pane_position(config_id)
 
-
+        # set the hidden status of all bars
+        for config_value in constants.WIDGET_HIDE_FUNCTIONS.keys():
+            if global_runtime_config.get_config_value(config_value):
+                func = getattr(self, constants.WIDGET_HIDE_FUNCTIONS[config_value])
+                func(None)
 
         # restore undock state of bar windows
         if gui_config.get_config_value("RESTORE_UNDOCKED_SIDEBARS"):
@@ -460,26 +469,32 @@ class MainWindowController(ExtendedController):
     def on_left_bar_return_clicked(self, widget, event=None):
         self.view['left_bar_return_button'].hide()
         self.view['top_level_h_pane'].pack1(self.left_bar_child, resize=True, shrink=False)
+        self.left_bar_hidden = False
 
     def on_right_bar_return_clicked(self, widget, event=None):
         self.view['right_bar_return_button'].hide()
         self.view['right_h_pane'].pack2(self.right_bar_child, resize=True, shrink=False)
+        self.right_bar_hidden = False
 
     def on_console_return_clicked(self, widget, event=None):
         self.view['console_return_button'].hide()
         self.view['central_v_pane'].pack2(self.console_child, resize=True, shrink=False)
+        self.console_hidden = False
 
     def on_left_bar_hide_clicked(self, widget, event=None):
         self.view['top_level_h_pane'].remove(self.left_bar_child)
         self.view['left_bar_return_button'].show()
+        self.left_bar_hidden = True
 
     def on_right_bar_hide_clicked(self, widget, event=None):
         self.view['right_h_pane'].remove(self.right_bar_child)
         self.view['right_bar_return_button'].show()
+        self.right_bar_hidden = True
 
     def on_console_hide_clicked(self, widget, event=None):
         self.view['central_v_pane'].remove(self.console_child)
         self.view['console_return_button'].show()
+        self.console_hidden = True
 
     def undock_window_callback(self, widget, event, undocked_window, key):
         if event.new_window_state & gtk.gdk.WINDOW_STATE_WITHDRAWN or event.new_window_state & gtk.gdk.WINDOW_STATE_ICONIFIED:
@@ -623,6 +638,9 @@ class MainWindowController(ExtendedController):
         global_runtime_config.store_widget_properties(self.view['right_h_pane'], 'RIGHT_BAR_DOCKED')
         global_runtime_config.store_widget_properties(self.view['central_v_pane'], 'CONSOLE_DOCKED')
         global_runtime_config.store_widget_properties(self.view['left_bar'], 'LEFT_BAR_INNER_PANE')
+        global_runtime_config.set_config_value('LEFT_BAR_HIDDEN', self.left_bar_hidden)
+        global_runtime_config.set_config_value('RIGHT_BAR_HIDDEN', self.right_bar_hidden)
+        global_runtime_config.set_config_value('CONSOLE_HIDDEN', self.console_hidden)
         global_runtime_config.save_configuration()
 
         import glib

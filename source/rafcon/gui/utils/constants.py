@@ -80,6 +80,13 @@ PANE_ID = {'LEFT_BAR_DOCKED_POS': 'top_level_h_pane',
            'RIGHT_BAR_DOCKED_POS': 'right_h_pane',
            'CONSOLE_DOCKED_POS': 'central_v_pane',
            'LEFT_BAR_INNER_PANE_POS': 'left_bar'}
+
+# a mapping of runtime config values for the hidden status of all three main bars (left, right and console)
+# to hide functions (located in the main_window controller)
+WIDGET_HIDE_FUNCTIONS = {'LEFT_BAR_HIDDEN': 'on_left_bar_hide_clicked',
+                         'RIGHT_BAR_HIDDEN': 'on_right_bar_hide_clicked',
+                         'CONSOLE_HIDDEN': 'on_console_hide_clicked'}
+
 DEFAULT_PANE_POS = {'LEFT_BAR_DOCKED_POS': 300,
                     'RIGHT_BAR_DOCKED_POS': 1000,
                     'CONSOLE_DOCKED_POS': 600,
