@@ -524,7 +524,7 @@ def delete_core_elements_of_models(models, raise_exceptions=False):
     """
     num_deleted = 0
     # If only one model is given, make a list out of it
-    if not isinstance(models, list):
+    if not hasattr(models, '__iter__'):
         models = [models]
     for model in models:
         if delete_core_element_of_model(model, raise_exceptions):
@@ -566,7 +566,7 @@ def delete_selected_elements(state_machine_m):
         logger.warn("Deletion of elements inside of a library is not allowed.")
         return
 
-    if len(state_machine_m.selection.get_all()) > 0:
+    if len(state_machine_m.selection) > 0:
         delete_core_elements_of_models(state_machine_m.selection.get_all())
         state_machine_m.selection.clear()
         return True
