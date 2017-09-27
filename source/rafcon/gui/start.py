@@ -239,9 +239,9 @@ def signal_handler(signal, frame):
 def main():
     register_signal_handlers(signal_handler)
 
-    # splash_screen = SplashScreen(contains_image=True, width=530, height=350)
-    # splash_screen.rotate_image(random_=True)
-    # splash_screen.set_text(_("Starting RAFCON..."))
+    splash_screen = SplashScreen(contains_image=True, width=530, height=350)
+    splash_screen.rotate_image(random_=True)
+    splash_screen.set_text(_("Starting RAFCON..."))
     while gtk.events_pending():
         gtk.main_iteration()
 
@@ -249,19 +249,19 @@ def main():
     setup_l10n()
     setup_l10n_gtk()
 
-    # splash_screen.set_text("Setting up logger...")
+    splash_screen.set_text("Setting up logger...")
     setup_gtkmvc_logger()
 
-    # splash_screen.set_text("Initializing plugins...")
+    splash_screen.set_text("Initializing plugins...")
     pre_setup_plugins()
 
-    # splash_screen.set_text("Setting up environment...")
+    splash_screen.set_text("Setting up environment...")
     setup_mvc_environment()
 
     parser = setup_argument_parser()
     user_input = parser.parse_args()
 
-    # splash_screen.set_text("Loading configurations...")
+    splash_screen.set_text("Loading configurations...")
     setup_mvc_configuration(user_input.config_path, user_input.gui_config_path, user_input.gui_config_path)
 
     # create lock file -> keep behavior for hole instance
@@ -270,7 +270,7 @@ def main():
 
     # setup the gui before loading the state machine as then the debug console shows the errors that emerged during
     # loading the state state machine
-    # splash_screen.set_text("Loading GUI...")
+    splash_screen.set_text("Loading GUI...")
     setup_gui()
 
     while gtk.events_pending():
@@ -298,7 +298,7 @@ def main():
     if state_machine and (user_input.start_state_machine_flag or state_machine.get_state_by_path(user_input.start_state_path)):
         start_state_machine(state_machine, user_input.start_state_path, user_input.quit_flag)
 
-    # splash_screen.destroy()
+    splash_screen.destroy()
     try:
         # check if twisted is imported
         if reactor_required():
