@@ -11,18 +11,26 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from contextlib import contextmanager
+
 from gaphas.view import GtkView
 from gaphas.item import Element
+
+from gtkmvc.observer import Observer
 
 from rafcon.gui.mygaphas.painter import RAFCONBoundingBoxPainter
 
 
-class ExtendedGtkView(GtkView):
+class ExtendedGtkView(GtkView, Observer):
 
     hovered_handle = None
+    _selection = None
 
-    def __init__(self, graphical_editor_v, *args):
-        super(ExtendedGtkView, self).__init__(*args)
+    def __init__(self, graphical_editor_v, selection_m, *args):
+        GtkView.__init__(self, *args)
+        Observer.__init__(self, selection_m, True)
+        self.observe_model(selection_m)
+        self._selection = selection_m
         self._bounding_box_painter = RAFCONBoundingBoxPainter(self)
         self.graphical_editor = graphical_editor_v
 
@@ -145,3 +153,50 @@ class ExtendedGtkView(GtkView):
                 except AttributeError:
                     pass
         super(ExtendedGtkView, self).queue_draw_item(*gaphas_items)
+
+    @Observer.observe("selection_changed_signal", signal=True)
+    def _on_selection_changed_externally(self, model, prop_name, info):
+        selected_items = self._get_selected_items()
+        previously_selected_items = set(self.canvas.get_view_for_model(model) for model in info.arg.old_selection)
+        affected_items = selected_items ^ previously_selected_items
+        self.queue_draw_item(*affected_items)
+        self.emit('selection-changed', selected_items)
+
+    @contextmanager
+    def _suppress_selection_events(self):
+        self.relieve_model(self._selection)
+        try:
+            yield
+        finally:
+            self.observe_model(self._selection)
+
+    def select_item(self, item):
+        """ Select an item. This adds @item to the set of selected items. """
+        self.queue_draw_item(item)
+        if item.model not in self._selection:
+            with self._suppress_selection_events():
+                self._selection.add(item.model)
+            self.emit('selection-changed', self._get_selected_items())
+
+    def unselect_item(self, item):
+        """ Unselect an item. """
+        self.queue_draw_item(item)
+        if item.model in self._selection:
+            with self._suppress_selection_events():
+                self._selection.remove(item.model)
+            self.emit('selection-changed', self._get_selected_items())
+
+    def unselect_all(self):
+        """ Clearing the selected_item also clears the focused_item. """
+        items = self._get_selected_items()
+        with self._suppress_selection_events():
+            self._selection.clear()
+        self.queue_draw_item(*items)
+        self.focused_item = None
+        self.emit('selection-changed', self._get_selected_items())
+
+    def _get_selected_items(self):
+        """ Return an Item (e.g. StateView) for each model (e.g. StateModel) in the current selection """
+        return set(self.canvas.get_view_for_model(model) for model in self._selection)
+
+    selected_items = property(_get_selected_items, select_item, unselect_all, "Items selected by the view")

@@ -32,7 +32,7 @@ logger = log.get_logger(__name__)
 
 class GraphicalEditorView(View, gobject.GObject):
 
-    def __init__(self):
+    def __init__(self, selection_m):
         """View holding the graphical editor
 
         The purpose of the view is only to hold the graphical editor. The class ob the actual editor with the OpenGL
@@ -44,7 +44,7 @@ class GraphicalEditorView(View, gobject.GObject):
         self.v_box = gtk.VBox()
         self.scroller = gtk.ScrolledWindow()
         self.scroller.set_name('graphical_editor_scroller')
-        self.editor = ExtendedGtkView(self)
+        self.editor = ExtendedGtkView(self, selection_m)
         self.editor.modify_bg(gtk.STATE_NORMAL, global_gui_config.gtk_colors['INPUT_BACKGROUND'])
         self.editor.tool = tool.ToolChain(self.editor). \
             append(HoverItemTool()). \
