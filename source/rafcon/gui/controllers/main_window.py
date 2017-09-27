@@ -49,7 +49,7 @@ from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.shortcut_manager import ShortcutManager
 from rafcon.gui.utils import constants
-from rafcon.utils import log
+from rafcon.utils import log, log_helpers
 from rafcon.utils import plugins
 
 logger = log.get_logger(__name__)
@@ -314,6 +314,8 @@ class MainWindowController(ExtendedController):
         # Initializing Pane positions
         for config_id in constants.PANE_ID.keys():
             self.set_pane_position(config_id)
+
+
 
         # restore undock state of bar windows
         if gui_config.get_config_value("RESTORE_UNDOCKED_SIDEBARS"):
@@ -610,3 +612,23 @@ class MainWindowController(ExtendedController):
             self.get_controller('library_controller').view.collapse_all()
         if any(["STATES TREE" in title for title in [upper_notebook_title, lower_notebook_title]]):
             self.get_controller('state_machine_tree_controller').view.collapse_all()
+
+    def prepare_destruction(self):
+        """Saves current configuration of windows and panes to the runtime config file, before RAFCON is closed."""
+        plugins.run_hook("pre_destruction")
+
+        logger.debug("Saving runtime config to {0}".format(global_runtime_config.config_file_path))
+
+        global_runtime_config.store_widget_properties(self.view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
+        global_runtime_config.store_widget_properties(self.view['right_h_pane'], 'RIGHT_BAR_DOCKED')
+        global_runtime_config.store_widget_properties(self.view['central_v_pane'], 'CONSOLE_DOCKED')
+        global_runtime_config.store_widget_properties(self.view['left_bar'], 'LEFT_BAR_INNER_PANE')
+        global_runtime_config.save_configuration()
+
+        import glib
+        # Should close all tabs
+        rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+        # Recursively destroys the main window
+        self.get_controller('menu_bar_controller').logging_console_view.quit_flag = True
+        glib.idle_add(log_helpers.LoggingViewHandler.remove_logging_view, 'main')
+        self.destroy()

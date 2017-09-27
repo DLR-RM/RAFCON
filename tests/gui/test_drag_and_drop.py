@@ -114,7 +114,7 @@ def trigger_drag_and_drop_tests(*args):
 
     print "quitting"
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    call_gui_callback(menubar_ctrl.prepare_destruction)
+    call_gui_callback(main_window_controller.prepare_destruction)
 
 def test_drag_and_drop_test(caplog):
 

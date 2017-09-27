@@ -44,7 +44,7 @@ from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.views.utils.about_dialog import AboutDialogView
 import rafcon.gui.backup.session as backup_session
 from rafcon.utils import plugins
-from rafcon.utils import log, log_helpers
+from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
@@ -437,7 +437,7 @@ class MenuBarController(ExtendedController):
         if not force and self.on_delete_check_sm_running():
             return True  # prevents closing operation
 
-        self.prepare_destruction()
+        gui_singletons.main_window_controller.prepare_destruction()
         return False
 
     def refresh_shortcuts(self):
@@ -464,7 +464,7 @@ class MenuBarController(ExtendedController):
                 if not self.state_machine_execution_engine.finished_or_stopped():
                     self.on_delete_check_sm_running()
                 else:
-                    self.prepare_destruction()
+                    gui_singletons.main_window_controller.prepare_destruction()
                     self.on_destroy(None)
             elif response_id == 2:  # Cancel - button pressed
                 logger.debug("Close main window canceled")
@@ -483,7 +483,7 @@ class MenuBarController(ExtendedController):
                 self.state_machine_execution_engine.stop()
             elif response_id == 2:  # Keep running
                 logger.debug("State machine will stay running!")
-            self.prepare_destruction()
+                gui_singletons.main_window_controller.prepare_destruction()
             self.on_destroy(None)
             return True
         return False
@@ -506,28 +506,6 @@ class MenuBarController(ExtendedController):
         # Run the GTK loop until no more events are being generated and thus the GUI is fully destroyed
         while gtk.events_pending():
             gtk.main_iteration(False)
-
-    def prepare_destruction(self):
-        """Saves current configuration of windows and panes to the runtime config file, before RAFCON is closed."""
-        plugins.run_hook("pre_destruction")
-
-        logger.debug("Saving runtime config to {0}".format(global_runtime_config.config_file_path))
-
-        global_runtime_config.store_widget_properties(self.main_window_view['top_level_h_pane'], 'LEFT_BAR_DOCKED')
-        global_runtime_config.store_widget_properties(self.main_window_view['right_h_pane'], 'RIGHT_BAR_DOCKED')
-        global_runtime_config.store_widget_properties(self.main_window_view['central_v_pane'], 'CONSOLE_DOCKED')
-        global_runtime_config.store_widget_properties(self.main_window_view['left_bar'], 'LEFT_BAR_INNER_PANE')
-
-        global_runtime_config.save_configuration()
-
-        import glib
-
-        # Should close all tabs
-        core_singletons.state_machine_manager.delete_all_state_machines()
-        # Recursively destroys the main window
-        gui_singletons.main_window_controller.destroy()
-        self.logging_console_view.quit_flag = True
-        glib.idle_add(log_helpers.LoggingViewHandler.remove_logging_view, 'main')
 
     ######################################################
     # menu bar functionality - Edit

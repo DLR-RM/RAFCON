@@ -126,7 +126,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.execution_history = None
         self.backward_execution = False
 
-        logger.debug("New {0} created".format(self))
+        # logger.debug("New {0} created".format(self))
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- generic methods -----------------------------------------

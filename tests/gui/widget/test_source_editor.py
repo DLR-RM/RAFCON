@@ -115,7 +115,7 @@ def trigger_source_editor_signals(main_window_controller):
 
     # ----------- Test requiring gedit to work ------------
     if not check_for_editor('gedit'):
-        t_u.call_gui_callback(menubar_ctrl.prepare_destruction)
+        t_u.call_gui_callback(main_window_controller.prepare_destruction)
         return False
 
     # ---check if the open external button opens a gedit instance
@@ -133,7 +133,7 @@ def trigger_source_editor_signals(main_window_controller):
     t_u.call_gui_callback(button.set_active, False)
     assert button.get_label() == 'Open externally'
 
-    t_u.call_gui_callback(menubar_ctrl.prepare_destruction)
+    t_u.call_gui_callback(main_window_controller.prepare_destruction)
     return True
 
 
