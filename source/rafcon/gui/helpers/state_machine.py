@@ -515,21 +515,18 @@ def delete_core_element_of_model(model, raise_exceptions=False):
 
 
 def delete_core_elements_of_models(models, raise_exceptions=False):
-    """Deletes all respective core elements of given models from their state machines
+    """Deletes all respective core elements for the given models
 
-    Calls the :func:`delete_core_element_of_model` for all models given.
+    Calls the :func:`delete_core_element_of_model` for all given models.
 
     :param models: A single model or a list of models of respective core element to be deleted
+    :param bool raise_exceptions: Whether to raise exceptions or log error messages in case of an error
     :return: The number of models that were successfully deleted
     """
-    num_deleted = 0
     # If only one model is given, make a list out of it
     if not hasattr(models, '__iter__'):
         models = [models]
-    for model in models:
-        if delete_core_element_of_model(model, raise_exceptions):
-            num_deleted += 1
-    return num_deleted
+    return sum(delete_core_element_of_model(model, raise_exceptions) for model in models)
 
 
 def is_selection_inside_of_library_state(state_machine_m=None, selected_elements=None):
