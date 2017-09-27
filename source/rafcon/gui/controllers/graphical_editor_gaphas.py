@@ -64,7 +64,6 @@ class GraphicalEditorController(ExtendedController):
     """
 
     _complex_action = False
-    _signal_id_selection_changed = None
 
     def __init__(self, model, view):
         """Constructor"""
@@ -87,8 +86,6 @@ class GraphicalEditorController(ExtendedController):
         """Called when the View was registered"""
         assert self.view == view
 
-        self._signal_id_selection_changed = self.view.editor.connect('selection-changed',
-                                                                     self._update_selection_from_gaphas)
         self.view.editor.connect('focus-changed', self._move_focused_item_into_viewport)
         self.view.connect('remove_state_from_state_machine', self._remove_state_view)
         self.view.connect('meta_data_changed', self._meta_data_changed)
@@ -199,7 +196,7 @@ class GraphicalEditorController(ExtendedController):
 
     @lock_state_machine
     def data_flow_mode(self, *args):
-        self.handle_selected_states(self.model.selection.get_states())
+        self.handle_selected_states(self.model.selection.states)
         self.canvas.update_root_items()
 
     @lock_state_machine
@@ -288,52 +285,6 @@ class GraphicalEditorController(ExtendedController):
         padding_offset_vertical = (viewport_size[VERTICAL] - state_size[VERTICAL]) / 2.
         self.view.editor.hadjustment.set_value(state_pos[HORIZONTAL] - padding_offset_horizontal)
         self.view.editor.vadjustment.set_value(state_pos[VERTICAL] - padding_offset_vertical)
-
-    def _update_selection_from_gaphas(self, view, selected_items):
-        selected_models = []
-        for item in selected_items:
-            if isinstance(item, (StateView, TransitionView, DataFlowView, OutcomeView, DataPortView,
-                                 ScopedVariablePortView)):
-                selected_models.append(item.model)
-            elif isinstance(item, NameView):
-                selected_models.append(item.parent.model)
-            else:
-                logger.debug("Cannot select item {}".format(item))
-        new_selected_models = any([model not in self.model.selection for model in selected_models])
-        if new_selected_models or len(self.model.selection) != len(selected_models):
-            self.relieve_model(self.model)
-            self.model.selection.set(selected_models)
-            self.observe_model(self.model)
-
-    def _update_selection_from_external(self):
-        # filter models that are not drawn
-        selected_models = []
-        for model in self.model.selection:
-            if isinstance(model, AbstractStateModel) and model.state.get_library_root_state():
-                next_library_state_m = self.model.get_state_model_by_path(model.state.get_library_root_state().parent.get_path())
-                if not next_library_state_m.show_content():
-                    logger.debug("Skipping selection of state '{}' as it is not shown.".format(model.state.name))
-                    continue
-            selected_models.append(model)
-        selected_items = [self.canvas.get_view_for_model(model) for model in selected_models]
-
-        # filter elements that get selected and deselected and do so
-        select_items = filter(lambda item: item not in self.view.editor.selected_items, selected_items)
-        deselect_items = filter(lambda item: item not in selected_items, self.view.editor.selected_items)
-
-        # Prevent recursive call of this method by temporary deactivation of the signal handler
-        self.view.editor.handler_block(self._signal_id_selection_changed)
-
-        for item in deselect_items:
-            self.view.editor.unselect_item(item)
-        # Set item as focused item if it is the only item that is selected
-        if len(self.view.editor.selected_items) == 0 and len(select_items) == 1:
-            self.view.editor.focused_item = select_items[0]
-        else:
-            for item in select_items:
-                self.view.editor.select_item(item)
-
-        self.view.editor.handler_unblock(self._signal_id_selection_changed)
 
     def _meta_data_changed(self, view, model, name, affects_children):
         msg = MetaSignalMsg('graphical_editor_gaphas', name, affects_children)
@@ -697,18 +648,6 @@ class GraphicalEditorController(ExtendedController):
             self._meta_data_changed(None, new_state_m, 'append_to_last_change', True)
         except Exception as e:
             logger.error('Error while trying to emit meta data signal {}'.format(e))
-
-    @ExtendedController.observe("sm_selection_changed_signal", signal=True)
-    def selection_change(self, model, prop_name, info):
-        """Called when the selection was changed externally
-
-        Updates the local selection and redraws.
-
-        :param rafcon.gui.models.state_machine.StateMachineModel model: The state machine model
-        :param str prop_name: The selection
-        :param dict info: Information about the change
-        """
-        self._update_selection_from_external()
 
     @staticmethod
     def _extract_info_data(info):
