@@ -879,6 +879,10 @@ class NameView(Element):
         return self.canvas.get_parent(self)
 
     @property
+    def model(self):
+        return self.parent.model
+
+    @property
     def position(self):
         _, _, _, _, x0, y0 = self.matrix
         return x0, y0
