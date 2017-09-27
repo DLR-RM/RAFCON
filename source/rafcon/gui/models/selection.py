@@ -114,7 +114,7 @@ class Selection(ModelMT):
     @updates_selection
     def add(self, models):
         """ Adds the passed model(s) to the selection"""
-        if not hasattr(models, "__len__"):
+        if not hasattr(models, "__iter__"):
             models = [models]
         self.__selected.update(models)
         self.__selected = reduce_to_parent_states(self.__selected)
@@ -122,7 +122,7 @@ class Selection(ModelMT):
     @updates_selection
     def remove(self, models):
         """ Removed the passed model(s) from the selection"""
-        if not hasattr(models, "__len__"):
+        if not hasattr(models, "__iter__"):
             models = [models]
         for model in models:
             if model in self.__selected:
@@ -136,7 +136,7 @@ class Selection(ModelMT):
         if models is None:
             models = []
 
-        if not hasattr(models, "__len__"):
+        if not hasattr(models, "__iter__"):
             models = [models]
             models = reduce_to_parent_states(models)
         self.__selected.update(models)
