@@ -72,6 +72,12 @@ PROFILER\_RESULT\_PATH
   | Path pointing to where the profiler will dump its results. The files
     in the path can be used for later evaluation.
 
+LIBRARY\_RECOVERY\_MODE
+  | Type: boolean
+  | Default: ``False``
+  | If this flag is activated, state machine with consistency erros concerning their data ports can be loaded.
+    Erros are just printed out as warnings. This can be used to fix erroneous state machines.
+
 GUI configuration
 -----------------
 
