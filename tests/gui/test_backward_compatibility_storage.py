@@ -128,4 +128,4 @@ def calculate_state_machine_hash(path):
 if __name__ == '__main__':
     # test_backward_compatibility_storage(None)
     # test_unchanged_storage_format(None)
-    pytest.main(['-s', __file_ _])
+    pytest.main(['-s', __file__])
