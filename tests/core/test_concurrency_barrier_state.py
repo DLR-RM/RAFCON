@@ -82,7 +82,7 @@ def test_concurrency_barrier_save_load(caplog):
 
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     finally:
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
+        testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 if __name__ == '__main__':
     pytest.main([__file__])

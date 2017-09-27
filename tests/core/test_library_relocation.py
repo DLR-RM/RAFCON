@@ -37,7 +37,7 @@ def open_folder(query):
 
 def test_library_relocation(caplog):
 
-    testing_utils.initialize_environment(libraries={"test_scripts": testing_utils.TEST_ASSETS_PATH})
+    testing_utils.initialize_environment_only_core(libraries={"test_scripts": testing_utils.TEST_ASSETS_PATH})
 
     interface.open_folder_func = open_folder
 
@@ -55,7 +55,7 @@ def test_library_relocation(caplog):
     try:
         assert state_machine.root_state.output_data["output_0"] == 27
     finally:
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
+        testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=1)
 
     logger.info("State machine execution finished!")
 
