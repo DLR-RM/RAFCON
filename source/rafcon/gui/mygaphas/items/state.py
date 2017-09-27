@@ -187,7 +187,6 @@ class StateView(Element):
             if isinstance(child, StateView):
                 child.remove()
             if isinstance(child, NameView):
-                self.canvas.get_first_view().unselect_item(child)
                 self.canvas.remove(child)
         self.remove_keep_rect_within_constraint_from_parent()
         for constraint in self._constraints:
@@ -395,12 +394,10 @@ class StateView(Element):
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
-            # print "draw state from cache"
             self._image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
         else:
-            # print "draw state"
             c = self._image_cache.get_context_for_image(current_zoom)
             multiplicator = self._image_cache.multiplicator
             default_line_width = border_width / constants.BORDER_WIDTH_OUTLINE_WIDTH_FACTOR * multiplicator
