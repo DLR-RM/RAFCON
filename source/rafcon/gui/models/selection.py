@@ -22,8 +22,7 @@ from rafcon.core.state_elements.scope import ScopedVariable
 from rafcon.core.state_elements.transition import Transition
 from rafcon.core.state_elements.data_flow import DataFlow
 
-from rafcon.gui.models import AbstractStateModel, TransitionModel, DataFlowModel, DataPortModel, OutcomeModel, \
-    ScopedVariableModel
+from rafcon.gui.models import AbstractStateModel
 from rafcon.gui.models.signals import SelectionChangedSignalMsg
 
 from rafcon.utils import log
@@ -57,10 +56,29 @@ def reduce_to_parent_states(models):
     return models
 
 
-class Selection(ModelMT):
-    """This class contains the selected item (States, Transitions and Data Flows) of a state_machine
+def updates_selection(update_selection):
+    """ Decorator indicating that the decorated method could change the selection"""
+    def handle_update(self, *args, **kwargs):
+        """Check for changes in the selection
 
-    """
+        If the selection is changed by the decorated method, the internal core element lists are updated and a signal is
+        emitted with the old and new selection as well as the name of the method that caused the change..
+        """
+        old_selection = self.get_all()
+        update_selection(self, *args, **kwargs)
+        new_selection = self.get_all()
+
+        if len(old_selection ^ new_selection) != 0:  # The selection was updated
+            self.update_core_element_lists()
+            msg_namedtuple = SelectionChangedSignalMsg(update_selection.__name__, new_selection, old_selection)
+            self.selection_changed_signal.emit(msg_namedtuple)
+            if self.parent_signal is not None:
+                self.parent_signal.emit(msg_namedtuple)
+    return handle_update
+
+
+class Selection(ModelMT):
+    """ This class contains the selected models of a state_machine """
     __selected = None
     _input_data_ports = None
     _output_data_ports = None
@@ -86,8 +104,6 @@ class Selection(ModelMT):
         self._scoped_variables = []
         self.selection_changed_signal = Signal()
         self.parent_signal = parent_signal
-        # flag to enable new method to use list updates -> cause additional but unique notifications -> support for better code
-        self.__with_updates = True
 
     def __str__(self):
         return_string = "Selected: "
@@ -95,35 +111,39 @@ class Selection(ModelMT):
             return_string = "%s, %s" % (return_string, str(item))
         return return_string
 
-    def add(self, item):
-        self.__selected.add(item)
+    @updates_selection
+    def add(self, models):
+        """ Adds the passed model(s) to the selection"""
+        if not hasattr(models, "__len__"):
+            models = [models]
+        self.__selected.update(models)
         self.__selected = reduce_to_parent_states(self.__selected)
-        self.__update(method_name='add')
 
-    def remove(self, item):
-        if item in self.__selected:
-            self.__selected.remove(item)
-            self.__update(method_name='remove')
-        # else:
-        #     logger.warning("Can not remove item not in selection: {0}".format(item))
+    @updates_selection
+    def remove(self, models):
+        """ Removed the passed model(s) from the selection"""
+        if not hasattr(models, "__len__"):
+            models = [models]
+        for model in models:
+            if model in self.__selected:
+                self.__selected.remove(model)
 
-    def append(self, selection):
-        self.__selected.update(selection)
-        self.__selected = reduce_to_parent_states(self.__selected)
-        self.__update(method_name='append')
-
-    def set(self, selection):
+    @updates_selection
+    def set(self, models):
+        """ Sets the selection to the passed model(s) """
         self.__selected.clear()
         # Do not add None values to selection
-        if selection is None:
-            selection = []
+        if models is None:
+            models = []
 
-        if not isinstance(selection, list):
-            selection = [selection]
-        else:
-            selection = reduce_to_parent_states(selection)
-        self.__selected.update(selection)
-        self.__update(method_name='set')
+        if not hasattr(models, "__len__"):
+            models = [models]
+            models = reduce_to_parent_states(models)
+        self.__selected.update(models)
+
+    def clear(self):
+        """ Removes all models from the selection """
+        self.set([])
 
     def __iter__(self):
         return self.__selected.__iter__()
@@ -137,66 +157,87 @@ class Selection(ModelMT):
     def __getitem__(self, key):
         return [s for s in self.__selected][key]
 
-    def __update(self, method_name):
-        core_element_types_of_changed_lists = set()
-        if not self._states == self.get_states():
-            self._states = self.get_states()
-            core_element_types_of_changed_lists.add(State)
-        if not self._transitions == self.get_transitions():
-            self._transitions = self.get_transitions()
-            core_element_types_of_changed_lists.add(Transition)
-        if not self._data_flows == self.get_data_flows():
-            self._data_flows = self.get_data_flows()
-            core_element_types_of_changed_lists.add(DataFlow)
-        if not self._input_data_ports == self.get_input_data_ports():
-            self._input_data_ports = self.get_input_data_ports()
-            core_element_types_of_changed_lists.add(InputDataPort)
-        if not self._output_data_ports == self.get_output_data_ports():
-            self._output_data_ports = self.get_output_data_ports()
-            core_element_types_of_changed_lists.add(OutputDataPort)
-        if not self._scoped_variables == self.get_scoped_variables():
-            self._scoped_variables = self.get_scoped_variables()
-            core_element_types_of_changed_lists.add(ScopedVariable)
-        if not self._outcomes == self.get_outcomes():
-            self._outcomes = self.get_outcomes()
-            core_element_types_of_changed_lists.add(Outcome)
-
-        if core_element_types_of_changed_lists:
-            # emit selection changed signal
-            msg_namedtuple = SelectionChangedSignalMsg(method_name, core_element_types_of_changed_lists)
-            self.selection_changed_signal.emit(msg_namedtuple)
-            if self.parent_signal is not None:
-                self.parent_signal.emit(msg_namedtuple)
+    def update_core_element_lists(self):
+        """ Maintains inner lists of selected elements with a specific core element class """
+        def get_selected_elements_of_core_class(core_class):
+            return set(element for element in self.__selected if isinstance(element.core_element, core_class))
+        self._states = get_selected_elements_of_core_class(State)
+        self._transitions = get_selected_elements_of_core_class(Transition)
+        self._data_flows = get_selected_elements_of_core_class(DataFlow)
+        self._input_data_ports = get_selected_elements_of_core_class(InputDataPort)
+        self._scoped_variables = get_selected_elements_of_core_class(OutputDataPort)
+        self._output_data_ports = get_selected_elements_of_core_class(ScopedVariable)
+        self._outcomes = get_selected_elements_of_core_class(Outcome)
 
     @property
     def states(self):
+        """Returns all selected states
+
+        :return: Subset of the selection, only containing states
+        :rtype: set
+        """
         return self._states
 
     @property
     def transitions(self):
+        """Returns all selected transitions
+
+        :return: Subset of the selection, only containing transitions
+        :rtype: set
+        """
         return self._transitions
 
     @property
     def data_flows(self):
+        """Returns all selected data flows
+
+        :return: Subset of the selection, only containing data flows
+        :rtype: set
+        """
         return self._data_flows
 
     @property
     def outcomes(self):
+        """Returns all selected outcomes
+
+        :return: Subset of the selection, only containing outcomes
+        :rtype: set
+        """
         return self._outcomes
 
     @property
     def input_data_ports(self):
+        """Returns all selected input data ports
+
+        :return: Subset of the selection, only containing input data ports
+        :rtype: set
+        """
         return self._input_data_ports
 
     @property
     def output_data_ports(self):
+        """Returns all selected output data ports
+
+        :return: Subset of the selection, only containing output data ports
+        :rtype: set
+        """
         return self._output_data_ports
 
     @property
     def scoped_variables(self):
+        """Returns all selected scoped variables
+
+        :return: Subset of the selection, only containing scoped variables
+        :rtype: set
+        """
         return self._scoped_variables
 
-    def get_selection_of_core_element_type(self, core_element_type):
+    def get_selected_elements_of_core_class(self, core_element_type):
+        """Returns all selected elements having the specified `core_element_type` as state element class
+
+        :return: Subset of the selection, only containing elements having `core_element_type` as state element class
+        :rtype: set
+        """
         if core_element_type is Outcome:
             return self.outcomes
         elif core_element_type is InputDataPort:
@@ -211,66 +252,34 @@ class Selection(ModelMT):
             return self.data_flows
         elif core_element_type is State:
             return self.states
-        else:
-            logger.warning("There is no core element type '{0}' which selection could be requested".format(core_element_type))
+        raise RuntimeError("Invalid core element type: " + core_element_type)
 
-    def is_selected(self, item):
-        if item is None:
+    def is_selected(self, model):
+        """Checks whether the given model is selected
+
+        :param model:
+        :return: True if the model is within the selection, False else
+        :rtype: bool
+        """
+        if model is None:
             return len(self.__selected) == 0
-        return item in self.__selected
+        return model in self.__selected
 
     def get_all(self):
-        return [s for s in self.__selected]
+        """Return a copy of the selection
 
-    def get_states(self):
-        return [s for s in self.__selected if isinstance(s, AbstractStateModel)]
-
-    def get_num_states(self):
-        return sum((1 for s in self.__selected if isinstance(s, AbstractStateModel)))
-
-    def get_transitions(self):
-        return [s for s in self.__selected if isinstance(s, TransitionModel)]
-
-    def get_num_transitions(self):
-        return sum((1 for s in self.__selected if isinstance(s, TransitionModel)))
-
-    def get_data_flows(self):
-        return [s for s in self.__selected if isinstance(s, DataFlowModel)]
-
-    def get_outcomes(self):
-        return [s for s in self.__selected if isinstance(s, OutcomeModel)]
-
-    def get_num_outcomes(self):
-        return sum((1 for s in self.__selected if isinstance(s, OutcomeModel)))
-
-    def get_num_data_flows(self):
-        return sum((1 for s in self.__selected if isinstance(s, DataFlowModel)))
-
-    def get_input_data_ports(self):
-        return [s for s in self.__selected if isinstance(s, DataPortModel) and isinstance(s.data_port, InputDataPort)]
-
-    def get_num_input_data_ports(self):
-        return sum((1 for s in self.__selected if isinstance(s, DataPortModel) and isinstance(s.data_port, InputDataPort)))
-
-    def get_output_data_ports(self):
-        return [s for s in self.__selected if isinstance(s, DataPortModel) and isinstance(s.data_port, OutputDataPort)]
-
-    def get_num_output_data_ports(self):
-        return sum((1 for s in self.__selected if isinstance(s, DataPortModel) and isinstance(s.data_port, OutputDataPort)))
-
-    def get_scoped_variables(self):
-        return [s for s in self.__selected if isinstance(s, ScopedVariableModel)]
-
-    def get_num_scoped_variables(self):
-        return sum((1 for s in self.__selected if isinstance(s, ScopedVariableModel)))
-
-    def clear(self):
-        self.set([])
-        self.__update(method_name='clear')
+        :return: Copy of the set of selected elements
+        :rtype: set
+        """
+        return set(s for s in self.__selected)
 
     def get_selected_state(self):
-        selected_states = self.get_states()
-        if not selected_states:
+        """Return the first state within the selection
+
+        :return: First state within the selection or None if there is none
+        :rtype: AbstractStateModel
+        """
+        if not self.states:
             return None
         else:
-            return selected_states[0]
+            return next(iter(self.states))  # sets don't support indexing
