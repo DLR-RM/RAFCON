@@ -256,9 +256,8 @@ class ListViewController(ExtendedController):
         :return: selection
         :rtype: rafcon.gui.selection.Selection
         """
-        # print type(self).__name__, "get state machine selection", self.model
         sm_selection = self.model.get_state_machine_m().selection if self.model.get_state_machine_m() else None
-        return sm_selection, sm_selection.get_selection_of_core_element_type(self.CORE_ELEMENT_CLASS) if sm_selection else []
+        return sm_selection, sm_selection.get_selected_elements_of_core_class(self.CORE_ELEMENT_CLASS) if sm_selection else []
 
     def get_selections(self):
         """Get actual model selection status in state machine selection and tree selection of the widget"""
@@ -375,8 +374,10 @@ class ListViewController(ExtendedController):
         self._do_selection_update = False
 
     @ExtendedController.observe("sm_selection_changed_signal", signal=True)
-    def state_machine_selection_changed(self, model, prop_name, signal_msg):
-        if self.CORE_ELEMENT_CLASS in signal_msg.arg.core_element_types:
+    def state_machine_selection_changed(self, state_machine_m, prop_name, signal_msg):
+        affected_models = signal_msg.arg.old_selection ^ state_machine_m.selection.get_all()
+        affected_classes = set(model.core_element for model in affected_models)
+        if self.CORE_ELEMENT_CLASS in affected_classes:
             self.update_selection_sm_prior()
 
     def selection_changed(self, widget, event=None):
