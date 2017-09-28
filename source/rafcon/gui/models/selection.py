@@ -90,6 +90,22 @@ def updates_selection(update_selection):
     return handle_update
 
 
+def extend_selection():
+    """Checks is the selection is to be extended
+
+    The selection is to be extended, if a special modifier key (typically <Ctrl>) is being pressed.
+
+    :return: If to extend the selection
+    :rtype: True
+    """
+    from rafcon.gui.singleton import main_window_controller
+    currently_pressed_keys = main_window_controller.currently_pressed_keys if main_window_controller else set()
+    if any(key in currently_pressed_keys for key in [constants.EXTEND_SELECTION_KEY,
+                                                     constants.EXTEND_SELECTION_KEY_ALT]):
+        return True
+    return False
+
+
 class Selection(ModelMT):
     """ This class contains the selected models of a state_machine """
     __selected = None
@@ -161,7 +177,7 @@ class Selection(ModelMT):
 
     @updates_selection
     def handle_selection_of_core_class_elements(self, core_class, models):
-        """Handles the selection for widgets maintaining lists of a specific `core_class` elements
+        """Handles the selection for TreeStore widgets maintaining lists of a specific `core_class` elements
 
         If a widgets hold a TreeStore with elements of a specific `core_class`, the local selection of that element
         type is handled by that widget. This method is called to integrate the local selection with the overall
@@ -174,14 +190,41 @@ class Selection(ModelMT):
         :param State | StateElement core_class: The core class of the elements the widget handles
         :param models: The list of models that are currently being selected locally
         """
-        from rafcon.gui.singleton import main_window_controller
-        currently_pressed_keys = main_window_controller.currently_pressed_keys if main_window_controller else set()
-        if any(key in currently_pressed_keys for key in [constants.EXTEND_SELECTION_KEY,
-                                                         constants.EXTEND_SELECTION_KEY_ALT]):
+        if extend_selection():
             self.__selected.difference_update(self.get_selected_elements_of_core_class(core_class))
         else:
             self.__selected.clear()
+        if not hasattr(models, "__iter__"):
+            models = [models]
         self.__selected.update(models)
+
+    @updates_selection
+    def handle_selection(self, models):
+        """Handles the selection for generic widgets
+
+        This is a helper method for generic widgets that want to modify the selection. These widgets can pass a list
+        of newly selected (or clicked on) models.
+
+        The method looks at the previous selection, the passed models and the lift of pressed (modifier) keys:
+
+        * If no modifier key is pressed, the previous selection is cleared and the new selection is set to the passed
+          models
+        * If the extend-selection modifier key is pressed, elements of `models` that are _not_ in the previous
+          selection are selected, those that are in the previous selection are deselected
+
+        :param models: The list of models that are newly selected/clicked on
+        """
+        if not hasattr(models, "__iter__"):
+            models = [models]
+        models = set(models)
+        if extend_selection():
+            already_selected_elements = models & self.__selected
+            newly_selected_elements = models - self.__selected
+            self.__selected.difference_update(already_selected_elements)
+            self.__selected.update(newly_selected_elements)
+        else:
+            self.__selected.clear()
+            self.__selected.update(models)
 
     def __iter__(self):
         return self.__selected.__iter__()
