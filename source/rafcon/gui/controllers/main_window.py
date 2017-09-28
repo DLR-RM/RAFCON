@@ -74,6 +74,7 @@ class MainWindowController(ExtendedController):
 
         self.shortcut_manager = None
         self.handler_ids = {}
+        self.currently_pressed_keys = set()
 
         self.state_machine_execution_model = gui_singletons.state_machine_execution_model
         self.observe_model(self.state_machine_execution_model)
@@ -226,6 +227,9 @@ class MainWindowController(ExtendedController):
 
     def register_view(self, view):
         self.register_actions(self.shortcut_manager)
+
+        self.view.get_top_widget().connect("key-press-event", self._on_key_press)
+        self.view.get_top_widget().connect("key-release-event", self._on_key_release)
 
         # using helper function to connect functions to GUI elements to be able to access the handler id later on
 
@@ -610,3 +614,19 @@ class MainWindowController(ExtendedController):
             self.get_controller('library_controller').view.collapse_all()
         if any(["STATES TREE" in title for title in [upper_notebook_title, lower_notebook_title]]):
             self.get_controller('state_machine_tree_controller').view.collapse_all()
+
+    def _on_key_press(self, widget, event):
+        """Updates the currently pressed keys
+
+        :param gtk.Widget widget: The main window
+        :param gtk.gdk.Event event: The key press event
+        """
+        self.currently_pressed_keys.add(event.keyval)
+
+    def _on_key_release(self, widget, event):
+        """Updates the currently pressed keys
+
+        :param gtk.Widget widget: The main window
+        :param gtk.gdk.Event event: The key release event
+        """
+        self.currently_pressed_keys.discard(event.keyval)
