@@ -863,8 +863,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self.remove_output_data_port(out_key, True)
 
         for outcome_key in self.outcomes.keys():
-            if outcome_key is not -1 and outcome_key is not -2:
-                self.remove_outcome(outcome_key, True)
+            self.remove_outcome(outcome_key, True)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
