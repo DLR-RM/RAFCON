@@ -68,7 +68,8 @@ def updates_selection(update_selection):
         update_selection(self, *args, **kwargs)
         new_selection = self.get_all()
 
-        if len(old_selection ^ new_selection) != 0:  # The selection was updated
+        affected_models = old_selection ^ new_selection
+        if len(affected_models) != 0:  # The selection was updated
             # Observe models in the selection
             deselected_models = old_selection - new_selection
             selected_models = new_selection - old_selection
@@ -79,7 +80,9 @@ def updates_selection(update_selection):
             self.update_core_element_lists()
 
             # Send notifications about changes
-            msg_namedtuple = SelectionChangedSignalMsg(update_selection.__name__, new_selection, old_selection)
+            affected_classes = set(type(model.core_element) for model in affected_models)
+            msg_namedtuple = SelectionChangedSignalMsg(update_selection.__name__, new_selection, old_selection,
+                                                       affected_classes)
             self.selection_changed_signal.emit(msg_namedtuple)
             if self.parent_signal is not None:
                 self.parent_signal.emit(msg_namedtuple)
