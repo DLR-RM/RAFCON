@@ -24,6 +24,7 @@ from rafcon.core.state_elements.data_flow import DataFlow
 
 from rafcon.gui.models import AbstractStateModel
 from rafcon.gui.models.signals import SelectionChangedSignalMsg
+from rafcon.gui.utils import constants
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -157,6 +158,30 @@ class Selection(ModelMT):
     def clear(self):
         """ Removes all models from the selection """
         self.__selected.clear()
+
+    @updates_selection
+    def handle_selection_of_core_class_elements(self, core_class, models):
+        """Handles the selection for widgets maintaining lists of a specific `core_class` elements
+
+        If a widgets hold a TreeStore with elements of a specific `core_class`, the local selection of that element
+        type is handled by that widget. This method is called to integrate the local selection with the overall
+        selection of the state machine.
+
+        If no modifier key (indicating to extend the selection) is pressed, the state machine selection is set to the
+        passed selection. If the selection is to be extended, the state machine collection will consist of the widget
+        selection plus all previously selected elements not having the core class `core_class`.
+
+        :param State | StateElement core_class: The core class of the elements the widget handles
+        :param models: The list of models that are currently being selected locally
+        """
+        from rafcon.gui.singleton import main_window_controller
+        currently_pressed_keys = main_window_controller.currently_pressed_keys if main_window_controller else set()
+        if any(key in currently_pressed_keys for key in [constants.EXTEND_SELECTION_KEY,
+                                                         constants.EXTEND_SELECTION_KEY_ALT]):
+            self.__selected.difference_update(self.get_selected_elements_of_core_class(core_class))
+        else:
+            self.__selected.clear()
+        self.__selected.update(models)
 
     def __iter__(self):
         return self.__selected.__iter__()
