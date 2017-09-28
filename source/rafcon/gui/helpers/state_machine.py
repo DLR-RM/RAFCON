@@ -493,12 +493,6 @@ def delete_core_element_of_model(model, raise_exceptions=False):
         return False
     assert isinstance(state_m, StateModel)
 
-    # remove model from selection to avoid conflicts
-    # -> selection is not observing state machine changes and state machine model is not updating it
-    selection = state_m.get_state_machine_m().selection if state_m and state_m.get_state_machine_m() else None
-    if selection and model in selection:
-        selection.remove(model)
-
     state = state_m.state
     core_element = model.core_element
 
@@ -565,7 +559,6 @@ def delete_selected_elements(state_machine_m):
 
     if len(state_machine_m.selection) > 0:
         delete_core_elements_of_models(state_machine_m.selection.get_all())
-        state_machine_m.selection.clear()
         return True
 
 
