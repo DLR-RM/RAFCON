@@ -153,9 +153,10 @@ class Selection(ModelMT):
             models = reduce_to_parent_states(models)
         self.__selected.update(models)
 
+    @updates_selection
     def clear(self):
         """ Removes all models from the selection """
-        self.set([])
+        self.__selected.clear()
 
     def __iter__(self):
         return self.__selected.__iter__()
