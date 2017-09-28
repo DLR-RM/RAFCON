@@ -69,7 +69,16 @@ def updates_selection(update_selection):
         new_selection = self.get_all()
 
         if len(old_selection ^ new_selection) != 0:  # The selection was updated
+            # Observe models in the selection
+            deselected_models = old_selection - new_selection
+            selected_models = new_selection - old_selection
+            map(self.relieve_model, deselected_models)
+            map(self.observe_model, selected_models)
+
+            # Maintain internal lists for fast access
             self.update_core_element_lists()
+
+            # Send notifications about changes
             msg_namedtuple = SelectionChangedSignalMsg(update_selection.__name__, new_selection, old_selection)
             self.selection_changed_signal.emit(msg_namedtuple)
             if self.parent_signal is not None:
@@ -283,3 +292,8 @@ class Selection(ModelMT):
             return None
         else:
             return next(iter(self.states))  # sets don't support indexing
+
+    @ModelMT.observe("destruction_signal", signal=True)
+    def on_model_destruct(self, destructed_model, signal, info):
+        """ Deselect models that are being destroyed """
+        self.remove(destructed_model)
