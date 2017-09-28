@@ -451,12 +451,10 @@ class StateMachineTreeController(TreeViewController):
             return True
 
     @TreeViewController.observe("sm_selection_changed_signal", signal=True)
-    def assign_notification_selection(self, state_machine_m, prop_name, info):
+    def assign_notification_selection(self, state_machine_m, signal_name, signal_msg):
         if state_machine_m is None and self._selected_sm_model and \
                 self._selected_sm_model.selection.get_selected_state():
             self.update_selection_sm_prior()
-        elif info and self.tree_store.get_iter_root():
-            affected_models = info.arg.old_selection ^ state_machine_m.selection.get_all()
-            affected_classes = set(model.core_element for model in affected_models)
-            if self.CORE_ELEMENT_CLASS in affected_classes:
+        elif signal_msg and self.tree_store.get_iter_root():
+            if any(issubclass(cls, self.CORE_ELEMENT_CLASS) for cls in signal_msg.arg.affected_core_element_classes):
                 self.update_selection_sm_prior()
