@@ -199,4 +199,8 @@ class ExtendedGtkView(GtkView, Observer):
         """ Return an Item (e.g. StateView) for each model (e.g. StateModel) in the current selection """
         return set(self.canvas.get_view_for_model(model) for model in self._selection)
 
+    def handle_new_selection(self, items):
+        models = set(item.model for item in items)
+        self._selection.handle_new_selection(models)
+
     selected_items = property(_get_selected_items, select_item, unselect_all, "Items selected by the view")
