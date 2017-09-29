@@ -176,7 +176,7 @@ class Selection(ModelMT):
         self.__selected.clear()
 
     @updates_selection
-    def handle_selection_of_core_class_elements(self, core_class, models):
+    def handle_prepared_selection_of_core_class_elements(self, core_class, models):
         """Handles the selection for TreeStore widgets maintaining lists of a specific `core_class` elements
 
         If a widgets hold a TreeStore with elements of a specific `core_class`, the local selection of that element
@@ -199,7 +199,7 @@ class Selection(ModelMT):
         self.__selected.update(models)
 
     @updates_selection
-    def handle_selection(self, models):
+    def handle_new_selection(self, models):
         """Handles the selection for generic widgets
 
         This is a helper method for generic widgets that want to modify the selection. These widgets can pass a list
