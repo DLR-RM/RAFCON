@@ -250,9 +250,20 @@ def get_boundaries_of_elements_in_dict(models_dict, clearance=0.):
     if 'states' in models_dict and models_dict['states']:
         left = models_dict['states'].items()[0][1].get_meta_data_editor(gaphas_editor)['rel_pos'][0]
         top = y_axis_mirror * models_dict['states'].items()[0][1].get_meta_data_editor(gaphas_editor)['rel_pos'][1]
-    else:
+    elif 'scoped_variables' in models_dict and models_dict['scoped_variables']:
         left = models_dict['scoped_variables'].items()[0][1].get_meta_data_editor(gaphas_editor)['inner_rel_pos'][0]
         top = y_axis_mirror * models_dict['scoped_variables'].items()[0][1].get_meta_data_editor(gaphas_editor)['inner_rel_pos'][1]
+    else:
+        all_ports = models_dict['input_data_ports'].values() + models_dict['output_data_ports'].values() + \
+                    models_dict['scoped_variables'].values() + models_dict['outcomes'].values()
+        if len(set([port_m.core_element.parent for port_m in all_ports])) == 1:
+            logger.info("Only one parent {0} {1}".format(all_ports[0].core_element.parent, all_ports[0].parent.get_meta_data_editor(gaphas_editor)))
+        if all_ports:
+            left = all_ports[0].parent.get_meta_data_editor(gaphas_editor)['rel_pos'][0]
+            top = y_axis_mirror * all_ports[0].parent.get_meta_data_editor(gaphas_editor)['rel_pos'][1]
+        else:
+            raise ValueError("Get boundary method does not aspects all list elements empty in dictionary. {0}"
+                             "".format(models_dict))
 
     def cal_max(max_x, max_y, rel_pos, size):
         max_x = size[0] + rel_pos[0] if size[0] + rel_pos[0] > max_x else max_x
@@ -420,8 +431,16 @@ def scale_library_content(library_state_m, gaphas_editor=True):
         models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
 
     # perform final resize
-    resize_factor = scale_meta_data_according_state(models_dict, fill_up=True)
-    resize_income_of_state_m(library_state_m.state_copy, resize_factor, gaphas_editor)
+    resize_factor = (1., 1.)
+    try:
+        if not models_dict['states'] and (not models_dict['scoped_variables'] or gaphas_editor):
+            logger.info("Skip scaling for empty root state {0}.".format(library_state_m.state))
+        else:
+            resize_factor = scale_meta_data_according_state(models_dict, fill_up=True)
+    except:
+        logger.exception("Scale library content of {0} cause a problem.".format(library_state_m.state))
+    finally:
+        resize_income_of_state_m(library_state_m.state_copy, resize_factor, gaphas_editor)
 
 
 def _resize_port_models_list(port_models, rel_pos_key, factor, gaphas_editor):
