@@ -287,48 +287,9 @@ class MultiSelectionTool(RubberbandTool):
          """
         self.queue_draw(self.view)
         x0, y0, x1, y1 = self.x0, self.y0, self.x1, self.y1
-        # Hold down Ctrl-key to add selection to current selection
-        if event.state & constants.EXTEND_SELECTION_MODIFIER:
-            old_items_selected = []
-        else:
-            old_items_selected = list(self.view.selected_items)
-        for item in old_items_selected:
-            if item in self.view.selected_items:
-                self.view.unselect_item(item)
-        self.view.select_in_rectangle((min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0)))
-
-        old_items_in_new_selection = [item in self.view.selected_items for item in old_items_selected]
-        current_items_which_are_old_selection = [item in old_items_selected for item in self.view.selected_items]
-        rubber_band_selection = list(self.view.selected_items)
-        new_selection = old_items_selected
-        if any(old_items_in_new_selection) and not all(current_items_which_are_old_selection):  # reselect elements
-            # add new  rubber band selection by preserving old state selection
-            for item in rubber_band_selection:
-                if item not in old_items_selected:
-                    old_items_selected.append(item)
-        else:
-            if not any(current_items_which_are_old_selection):
-                # add rubber band selection
-                for item in rubber_band_selection:
-                    old_items_selected.append(item)
-            else:
-                # remove rubber band selection
-                for item in rubber_band_selection:
-                    old_items_selected.remove(item)
-
-        # unselect views that are not representing states or old states -> unselect all
-        items_intermediate_selected = list(old_items_selected) + list(rubber_band_selection)
-        for item in self.view.selected_items:
-            if not isinstance(item, StateView):
-                items_intermediate_selected.append(item)
-
-        for item in items_intermediate_selected:
-            if item in self.view.selected_items:
-                self.view.unselect_item(item)
-
-        # select actual selection
-        for item in new_selection:
-            self.view.select_item(item)
+        rectangle = (min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0))
+        selected_items = self.view.get_items_in_rectangle(rectangle, intersect=False)
+        self.view.handle_new_selection(selected_items)
 
         return True
 
