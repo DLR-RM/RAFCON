@@ -98,20 +98,8 @@ class ZoomTool(gaphas.tool.ZoomTool):
 
     def on_scroll(self, event):
         if event.state & gtk.gdk.CONTROL_MASK or not self.zoom_with_control:
-            view = self.view
-            sx = view._matrix[0]
-            sy = view._matrix[3]
-            ox = (view._matrix[4] - event.x) / sx
-            oy = (view._matrix[5] - event.y) / sy
-            factor = 0.9
-            if event.direction == gtk.gdk.SCROLL_UP:
-                factor = 1. / factor
-            view._matrix.translate(-ox, -oy)
-            view._matrix.scale(factor, factor)
-            view._matrix.translate(+ox, +oy)
-            # Make sure everything's updated
-            view.request_update((), view._canvas.get_all_items())
-            return True
+            event.state |= gtk.gdk.CONTROL_MASK  # Set CONTROL_MASK
+            return super(ZoomTool, self).on_scroll(event)
 
 
 class RemoveItemTool(gaphas.tool.Tool):
