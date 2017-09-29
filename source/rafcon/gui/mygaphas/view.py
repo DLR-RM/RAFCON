@@ -199,6 +199,8 @@ class ExtendedGtkView(GtkView, Observer):
         return set(self.canvas.get_view_for_model(model) for model in self._selection)
 
     def handle_new_selection(self, items):
+        if not hasattr(items, "__iter__"):
+            items = (items,)
         models = set(item.model for item in items)
         self._selection.handle_new_selection(models)
 
