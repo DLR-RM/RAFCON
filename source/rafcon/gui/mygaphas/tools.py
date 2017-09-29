@@ -39,11 +39,7 @@ PortMoved = Enum('PORT', 'FROM TO')
 
 
 class ToolChain(gaphas.tool.ToolChain):
-    def __init__(self, view=None):
-        super(ToolChain, self).__init__(view)
-        self.zoom_with_control = global_gui_config.get_config_value("ZOOM_WITH_CTRL", False)
 
-    # taken from ToolChain class and slightly modified
     def handle(self, event):
         """
         Handle the event by calling each tool until the event is handled
@@ -52,30 +48,19 @@ class ToolChain(gaphas.tool.ToolChain):
         If a tool is returning True on a button press event, the motion and
         button release events are also passed to this
         """
-        # print "handle event"
-        handler = self.EVENT_HANDLERS.get(event.type)
 
-        self.validate_grabbed_tool(event)
+        # Allow to handle a subset of events while having a grabbed tool (between a button press & release event)
+        suppressed_grabbed_tool = None
+        if event.type in (gtk.gdk.SCROLL, gtk.gdk.KEY_PRESS, gtk.gdk.KEY_RELEASE):
+            suppressed_grabbed_tool = self._grabbed_tool
+            self._grabbed_tool = None
 
-        jump_grab_check = False
-        if not self.zoom_with_control:
-            if event.type == gtk.gdk.SCROLL:
-                jump_grab_check = True
+        rt = super(ToolChain, self).handle(event)
 
-        if self._grabbed_tool and handler and not jump_grab_check:
-            try:
-                return self._grabbed_tool.handle(event)
-            finally:
-                if event.type == gtk.gdk.BUTTON_RELEASE:
-                    self.ungrab(self._grabbed_tool)
-        else:
-            for tool in self._tools:
-                rt = tool.handle(event)
-                if rt:
-                    if event.type == gtk.gdk.BUTTON_PRESS:
-                        self.view.grab_focus()
-                        self.grab(tool)
-                    return rt
+        if suppressed_grabbed_tool:
+            self._grabbed_tool = suppressed_grabbed_tool
+
+        return rt
 
 
 class PanTool(gaphas.tool.PanTool):
