@@ -169,12 +169,20 @@ class ExtendedGtkView(GtkView, Observer):
         finally:
             self.observe_model(self._selection)
 
-    def select_item(self, item):
-        """ Select an item. This adds @item to the set of selected items. """
-        self.queue_draw_item(item)
-        if item.model not in self._selection:
-            with self._suppress_selection_events():
-                self._selection.add(item.model)
+    def select_item(self, items):
+        """ Select an items. This adds `items` to the set of selected items. """
+        if not items:
+            return
+        elif not hasattr(items, "__iter__"):
+            items = (items,)
+        selection_changed = False
+        with self._suppress_selection_events():
+            for item in items:
+                self.queue_draw_item(item)
+                if item.model not in self._selection:
+                    self._selection.add(item.model)
+                    selection_changed = True
+        if selection_changed:
             self.emit('selection-changed', self._get_selected_items())
 
     def unselect_item(self, item):
