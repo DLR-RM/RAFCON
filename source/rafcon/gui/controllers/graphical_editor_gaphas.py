@@ -86,9 +86,8 @@ class GraphicalEditorController(ExtendedController):
         """Called when the View was registered"""
         assert self.view == view
 
-        self.view.editor.connect('focus-changed', self._move_focused_item_into_viewport)
-        self.view.connect('remove_state_from_state_machine', self._remove_state_view)
         self.view.connect('meta_data_changed', self._meta_data_changed)
+        self.view.editor.connect('focus-changed', self._move_focused_item_into_viewport)
         self.view.editor.connect("drag-data-received", self.on_drag_data_received)
         self.view.editor.connect("drag-motion", self.on_drag_motion)
 
@@ -846,9 +845,6 @@ class GraphicalEditorController(ExtendedController):
                                                  hierarchy_level=parent_state_m.hierarchy_level + 1)
         else:
             return self.add_state_view_for_model(state_m, parent_state_v, hierarchy_level=parent_state_m.hierarchy_level + 1)
-
-    def _remove_state_view(self, view):
-        return gui_helper_state_machine.delete_selected_elements(self.model)
 
     @lock_state_machine
     def _connect_transition_to_ports(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
