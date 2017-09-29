@@ -109,21 +109,17 @@ class RemoveItemTool(gaphas.tool.Tool):
 
 
 class MoveItemTool(gaphas.tool.ItemTool):
-    """This class is responsible of moving states, names, connections, etc.
+    """This class is responsible for moving states, names, connections, etc.
     """
 
     def __init__(self, view=None, buttons=(1,)):
         super(MoveItemTool, self).__init__(view, buttons)
-        self._move_name_v = False
-
         self._item = None
-        self._do_not_unselect = None
+        self._move_name_v = False
+        self._old_selection = None
 
     def movable_items(self):
         view = self.view
-
-        if self._do_not_unselect:
-            view.focused_item = self._do_not_unselect
 
         if self._move_name_v:
             yield InMotion(self._item, view)
@@ -144,20 +140,25 @@ class MoveItemTool(gaphas.tool.ItemTool):
         if event.state & constants.RUBBERBAND_MODIFIER:
             return False  # Mouse clicks with pressed shift key are handled in another tool
 
+        # Special case: moving the NameView
+        # This is only allowed, if the hovered item is a NameView and the Ctrl-key is pressed and the only selected
+        # item is the parental StateView. In this case, the selection and _item will no longer be looked at,
+        # but only _move_name_v
         self._item = self.get_item()
+        if isinstance(self._item, NameView):
+            selected_items = self.view.selected_items
+            if event.state & gtk.gdk.CONTROL_MASK and len(selected_items) == 1 and next(iter(selected_items)) is \
+                    self._item.parent:
+                self._move_name_v = True
+            else:
+                self._item = self._item.parent
 
-        # NameView can only be moved when the Ctrl-key is pressed
-        self._move_name_v = isinstance(self._item, NameView) and event.state & gtk.gdk.CONTROL_MASK
-        if self._item in self.view.selected_items and \
-                isinstance(self._item, NameView) and event.state & gtk.gdk.CONTROL_MASK:
-            # self.view.unselect_item(self._item)
-            pass
-        else:
-            if not event.state & constants.EXTEND_SELECTION_MODIFIER and self._item not in self.view.selected_items:
-                self.view.unselect_all()
-            if self._item not in self.view.selected_items:
-                # remember items that should not be unselected and maybe focused if movement occur
-                self._do_not_unselect = self._item
+        if not self._move_name_v:
+            self._old_selection = self.view.selected_items
+            if not self._item in self.view.selected_items:
+                # When items are to be moved, a button-press should not cause any deselection.
+                # However, the selection is stored, in case no move operation is performed.
+                self.view.handle_new_selection(self._item)
 
         if not self.view.is_focus():
             self.view.grab_focus()
@@ -203,15 +204,13 @@ class MoveItemTool(gaphas.tool.ItemTool):
             if position_changed:
                 self.view.graphical_editor.emit('meta_data_changed', self._item.model, "waypoints", False)
 
-        if not position_changed:
-            if self._item in self.view.selected_items and event.state & constants.EXTEND_SELECTION_MODIFIER:
-                if self._do_not_unselect is not self._item:
-                    self.view.unselect_item(self._item)
-            else:
-                if not event.state & constants.EXTEND_SELECTION_MODIFIER:
-                    self.view.unselect_all()
-                self.view.focused_item = self._item
-        self._do_not_unselect = None
+        if not position_changed and self._old_selection:
+            # The selection is handled differently depending on whether states were moved or not
+            # If no move operation was performed, we reset the selection to that is was before the button-press event
+            # and let the state machine selection handle the selection
+            self.view.unselect_all()
+            self.view.select_item(self._old_selection)
+            self.view.handle_new_selection(self._item)
 
         return super(MoveItemTool, self).on_button_release(event)
 
@@ -382,11 +381,8 @@ class MoveHandleTool(gaphas.tool.HandleTool):
             return False
 
         if handle:
-            # Deselect all items unless EXTEND_SELECTION_MODIFIER or RUBBERBAND_MODIFIER is pressed
-            # or the item is already selected.
-            if not (event.state & (constants.EXTEND_SELECTION_MODIFIER | constants.RUBBERBAND_MODIFIER)
-                    or view.hovered_item in view.selected_items):
-                self.view.unselect_all()
+            # Check which items are to be selected and therefore moved
+            view.handle_new_selection(item)
 
             view.hovered_item = item
 
