@@ -41,21 +41,11 @@ class RemoveItemTool(Tool):
     """This tool is responsible of deleting the selected item
     """
 
-    def on_key_release(self, event):
+    def on_key_press(self, event):
         if gtk.gdk.keyval_name(event.keyval) == "Delete":
-            # Delete Transition from state machine
-            if isinstance(self.view.focused_item, TransitionView):
-                gui_helper_state_machine.delete_core_element_of_model(self.view.focused_item.model)
-                return True
-            # Delete DataFlow from state machine
-            if isinstance(self.view.focused_item, DataFlowView):
-                gui_helper_state_machine.delete_core_element_of_model(self.view.focused_item.model)
-                return True
-            # Delete selected state(s) from state machine
-            if isinstance(self.view.focused_item, StateView):
-                if react_to_event(self.view, self.view, event):
-                    self.view.graphical_editor.emit('remove_state_from_state_machine')
-                    return True
+            selected_models = [item.model for item in self.view.selected_items]
+            gui_helper_state_machine.delete_core_elements_of_models(selected_models)
+            return True
 
 
 class MoveItemTool(ItemTool):
