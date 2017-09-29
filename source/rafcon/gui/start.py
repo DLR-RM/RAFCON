@@ -133,7 +133,8 @@ def setup_argument_parser():
 
     :return: The parser object
     """
-    home_path = filesystem.get_home_path()
+    default_config_path = filesystem.get_default_config_path()
+    filesystem.create_path(default_config_path)
 
     parser = core_singletons.argument_parser
     parser.add_argument('-n', '--new', action='store_true', help=_("whether to create a new state-machine"))
@@ -142,13 +143,15 @@ def setup_argument_parser():
                         help=_("specify directories of state-machines that shall be opened. Paths must contain a "
                                "statemachine.json file"))
     parser.add_argument('-c', '--config', action='store', type=config_path, metavar='path', dest='config_path',
-                        default=home_path, nargs='?', const=home_path,
+                        default=default_config_path, nargs='?', const=default_config_path,
                         help=_("path to the configuration file config.yaml. Use 'None' to prevent the generation of a "
-                               "config file and use the default configuration. Default: {0}").format(home_path))
+                               "config file and use the default configuration. Default: {0}"
+                               "").format(default_config_path))
     parser.add_argument('-g', '--gui_config', action='store', type=config_path, metavar='path', dest='gui_config_path',
-                        default=home_path, nargs='?', const=home_path,
-                        help=_("path to the configuration file gui_config.yaml. Use 'None' to prevent the generation of"
-                               " a config file and use the default configuration. Default: {0}").format(home_path))
+                        default=default_config_path, nargs='?', const=default_config_path,
+                        help=_("path to the configuration file gui_config.yaml. "
+                               "Use 'None' to prevent the generation of a config file and use the default "
+                               "configuration. Default: {0}").format(default_config_path))
     parser.add_argument('-ss', '--start_state_machine', dest='start_state_machine_flag', action='store_true',
                         help=_("a flag to specify if the first state machine of -o should be started after opening"))
     parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path', default=None, nargs='?',

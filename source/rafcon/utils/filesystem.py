@@ -103,7 +103,7 @@ def write_file(file_path, content, create_full_path=False):
         file_pointer.write(content)
     
         
-def get_home_path():
+def get_default_config_path():
     home_path = expanduser('~')
     if home_path:
         return join(home_path, ".config", "rafcon")
