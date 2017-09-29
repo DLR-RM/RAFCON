@@ -14,7 +14,7 @@
 from gaphas.view import GtkView
 from gaphas.item import Element
 
-from rafcon.gui.mygaphas.painter import RAFCONBoundingBoxPainter
+from rafcon.gui.mygaphas.painter import BoundingBoxPainter
 
 
 class ExtendedGtkView(GtkView):
@@ -23,7 +23,7 @@ class ExtendedGtkView(GtkView):
 
     def __init__(self, graphical_editor_v, *args):
         super(ExtendedGtkView, self).__init__(*args)
-        self._bounding_box_painter = RAFCONBoundingBoxPainter(self)
+        self._bounding_box_painter = BoundingBoxPainter(self)
         self.graphical_editor = graphical_editor_v
 
     def get_port_at_point(self, vpos, distance=10, exclude=None, exclude_port_fun=None):
