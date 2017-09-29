@@ -381,9 +381,6 @@ class MoveHandleTool(gaphas.tool.HandleTool):
             return False
 
         if handle:
-            # Check which items are to be selected and therefore moved
-            view.handle_new_selection(item)
-
             view.hovered_item = item
 
             self.motion_handle = None
@@ -432,17 +429,9 @@ class MoveHandleTool(gaphas.tool.HandleTool):
             else:
                 # Only handles belonging to a state (i.e. port handles) can be selected
                 if isinstance(item, StateView):
-                    for port in item.get_all_ports():
-                        if port.handle is self.grabbed_handle:
-                            if event.state & constants.EXTEND_SELECTION_MODIFIER:
-                                if port in self.view.selected_items:
-                                    self.view.unselect_item(port)
-                                else:
-                                    self.view.select_item(port)
-                            else:
-                                self.view.unselect_all()
-                                self.view.focused_item = port
-                            break
+                    corresponding_ports = [port for port in item.get_all_ports() if port.handle is self.grabbed_handle]
+                    if corresponding_ports:  # should be exactly one
+                        self.view.handle_new_selection(corresponding_ports[0])
 
         super(MoveHandleTool, self).on_button_release(event)
 
