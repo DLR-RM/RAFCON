@@ -196,6 +196,7 @@ class Selection(ModelMT):
             self.__selected.clear()
         if not hasattr(models, "__iter__"):
             models = [models]
+            models = reduce_to_parent_states(models)
         self.__selected.update(models)
 
     @updates_selection
@@ -225,6 +226,7 @@ class Selection(ModelMT):
         else:
             self.__selected.clear()
             self.__selected.update(models)
+        self.__selected = reduce_to_parent_states(self.__selected)
 
     def __iter__(self):
         return self.__selected.__iter__()
