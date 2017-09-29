@@ -154,7 +154,7 @@ class MoveItemTool(ItemTool):
             if position_changed:
                 self.view.graphical_editor.emit('meta_data_changed', self._item.model, "waypoints", False)
 
-        if not position_changed and self._old_selection:
+        if not position_changed and self._old_selection is not None:
             # The selection is handled differently depending on whether states were moved or not
             # If no move operation was performed, we reset the selection to that is was before the button-press event
             # and let the state machine selection handle the selection
@@ -565,14 +565,7 @@ class ConnectionCreationTool(ConnectionTool):
 
         # No connection was created, but only a handle was clicked on. Check whether it is to be selected
         else:
-            if event.state & constants.EXTEND_SELECTION_MODIFIER:
-                if self._start_port_v in self.view.selected_items:
-                    self.view.unselect_item(self._start_port_v)
-                else:
-                    self.view.select_item(self._start_port_v)
-            else:
-                self.view.unselect_all()
-                self.view.focused_item = self._start_port_v
+            self.view.handle_new_selection(self._start_port_v)
 
         super(ConnectionCreationTool, self).on_button_release(event)
 
