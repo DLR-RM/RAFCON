@@ -18,7 +18,7 @@ import gtk
 from enum import Enum
 from gaphas.aspect import HandleFinder, InMotion
 from gaphas.item import NW, Item
-from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, ConnectHandleTool, RubberbandTool
+from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, ConnectHandleTool, RubberbandTool, ZoomTool, PanTool, ToolChain
 
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGaphas
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
@@ -31,10 +31,87 @@ from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils import gap_helper
 from rafcon.gui.utils import constants
 from rafcon.utils import log
+from rafcon.gui.config import global_gui_config
 
 logger = log.get_logger(__name__)
 
 PortMoved = Enum('PORT', 'FROM TO')
+
+
+class MyToolChain(ToolChain):
+    def __init__(self, view=None):
+        super(MyToolChain, self).__init__(view)
+        self.zoom_with_control = global_gui_config.get_config_value("ZOOM_WITH_CTRL", False)
+
+    # taken from ToolChain class and slightly modified
+    def handle(self, event):
+        """
+        Handle the event by calling each tool until the event is handled
+        or grabbed.
+
+        If a tool is returning True on a button press event, the motion and
+        button release events are also passed to this
+        """
+        # print "handle event"
+        handler = self.EVENT_HANDLERS.get(event.type)
+
+        self.validate_grabbed_tool(event)
+
+        jump_grab_check = False
+        if not self.zoom_with_control:
+            if event.type == gtk.gdk.SCROLL:
+                jump_grab_check = True
+
+        if self._grabbed_tool and handler and not jump_grab_check:
+            try:
+                return self._grabbed_tool.handle(event)
+            finally:
+                if event.type == gtk.gdk.BUTTON_RELEASE:
+                    self.ungrab(self._grabbed_tool)
+        else:
+            for tool in self._tools:
+                rt = tool.handle(event)
+                if rt:
+                    if event.type == gtk.gdk.BUTTON_PRESS:
+                        self.view.grab_focus()
+                        self.grab(tool)
+                    return rt
+
+
+class MyPanTool(PanTool):
+    def __init__(self, view=None):
+        super(MyPanTool, self).__init__(view)
+        self.zoom_with_control = global_gui_config.get_config_value("ZOOM_WITH_CTRL", False)
+
+    def on_scroll(self, event):
+        if self.zoom_with_control:
+            return False
+        else:
+            super(MyPanTool, self).on_scroll(event)
+
+
+class MyZoomTool(ZoomTool):
+
+    def __init__(self, view=None):
+        super(MyZoomTool, self).__init__(view)
+        self.zoom_with_control = global_gui_config.get_config_value("ZOOM_WITH_CTRL", False)
+
+    def on_scroll(self, event):
+        if event.state & gtk.gdk.CONTROL_MASK or not self.zoom_with_control:
+            view = self.view
+            sx = view._matrix[0]
+            sy = view._matrix[3]
+            ox = (view._matrix[4] - event.x) / sx
+            oy = (view._matrix[5] - event.y) / sy
+            factor = 0.9
+            if event.direction == gtk.gdk.SCROLL_UP:
+                factor = 1. / factor
+            view._matrix.translate(-ox, -oy)
+            view._matrix.scale(factor, factor)
+            view._matrix.translate(+ox, +oy)
+            # Make sure everything's updated
+            view.request_update((), view._canvas.get_all_items())
+            return True
 
 
 class RemoveItemTool(Tool):
