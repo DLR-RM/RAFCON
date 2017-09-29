@@ -200,6 +200,12 @@ class ExtendedGtkView(GtkView, Observer):
         return set(self.canvas.get_view_for_model(model) for model in self._selection)
 
     def handle_new_selection(self, items):
+        """ Determines the selection
+
+        The selection is based on the previous selection, the currently pressed keys and the passes newly selected items
+
+        :param items: The newly selected item(s)
+        """
         if items is None:
             items = ()
         elif not hasattr(items, "__iter__"):
