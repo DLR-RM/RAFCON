@@ -466,7 +466,7 @@ class PortView(object):
         # Current pos is center
         # Arrow is drawn upright
 
-        arrow_height = height / 6.
+        arrow_height = height / 1.0
 
         # First move to bottom left corner
         c.rel_move_to(-width / 2., height / 2.)
@@ -521,7 +521,7 @@ class PortView(object):
         # Current pos is center
         # Arrow is drawn upright
 
-        arrow_height = height / 6.
+        arrow_height = height / 2.5
         gap = height / 6.
         connector_height = (height - gap) / 2.
 

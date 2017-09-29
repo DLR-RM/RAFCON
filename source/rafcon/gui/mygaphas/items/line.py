@@ -298,7 +298,11 @@ class PerpLine(Line):
     def _head_offset(self, port):
         if not port:
             return 0.
-        return port.parent.border_width / 2
+        factor = 1.25
+        parent_state_v = self.get_parent_state_v()
+        if parent_state_v == port.parent:
+            factor = 2
+        return port.parent.border_width / factor
 
     def _update_ports(self):
         assert len(self._handles) >= 2, 'Not enough segments'
