@@ -155,9 +155,9 @@ class ExtendedGtkView(GtkView, Observer):
         super(ExtendedGtkView, self).queue_draw_item(*gaphas_items)
 
     @Observer.observe("selection_changed_signal", signal=True)
-    def _on_selection_changed_externally(self, model, prop_name, info):
+    def _on_selection_changed_externally(self, selection_m, signal_name, signal_msg):
         selected_items = self._get_selected_items()
-        previously_selected_items = set(self.canvas.get_view_for_model(model) for model in info.arg.old_selection)
+        previously_selected_items = set(self.canvas.get_view_for_model(model) for model in signal_msg.arg.old_selection)
         affected_items = selected_items ^ previously_selected_items
         self.queue_draw_item(*affected_items)
         self.emit('selection-changed', selected_items)
@@ -223,17 +223,24 @@ class ExtendedGtkView(GtkView, Observer):
 
     selected_items = property(_get_selected_items, select_item, unselect_all, "Items selected by the view")
 
+    @Observer.observe("focus_signal", signal=True)
+    def _on_focus_changed_externally(self, selection_m, signal_name, signal_msg):
+        previous_focus = self.canvas.get_view_for_model(signal_msg.arg.old_focus)
+        current_focus = self.canvas.get_view_for_model(signal_msg.arg.new_focus)
+        self.queue_draw_item(previous_focus, current_focus)
+        self.emit('focus-changed', current_focus)
+
     def _get_focused_item(self):
         """ Returns the currently focused item """
         focused_model = self._selection.focus
         if not focused_model:
             return None
-        return self.canvas.get_view_for_model()
+        return self.canvas.get_view_for_model(focused_model)
 
     def _set_focused_item(self, item):
         """ Sets the focus to the passed item"""
         if not item:
-            self._del_focused_item()
+            return self._del_focused_item()
 
         if item.model is not self._selection.focus:
             self.queue_draw_item(self._focused_item, item)
