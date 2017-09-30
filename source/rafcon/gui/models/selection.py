@@ -239,6 +239,10 @@ class Selection(ModelMT):
     @property
     @updates_selection
     def focus(self, model):
+        """Sets the passed model as focused element
+
+        :param model: The element to be focused
+        """
         focus_msg = FocusSignalMsg(model, self._focus)
         self._focus = model
         self.__selected.add(model)
@@ -246,10 +250,12 @@ class Selection(ModelMT):
 
     @focus.getter
     def focus(self):
+        """ Returns the currently focused element """
         return self._focus
 
     @focus.deleter
     def focus(self):
+        """ Unsets the focused element """
         focus_msg = FocusSignalMsg(None, self._focus)
         self._focus = None
         self.focus_signal.emit(focus_msg)
