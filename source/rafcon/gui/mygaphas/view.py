@@ -199,7 +199,6 @@ class ExtendedGtkView(GtkView, Observer):
         with self._suppress_selection_events():
             self._selection.clear()
         self.queue_draw_item(*items)
-        self.focused_item = None
         self.emit('selection-changed', self._get_selected_items())
 
     def _get_selected_items(self):
