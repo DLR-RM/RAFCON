@@ -241,9 +241,7 @@ class GraphicalEditorController(ExtendedController):
         :param view:
         :param StateView | ConnectionView | PortView focused_item: The focused item
         """
-        # Do nothing for the moment
-        # self.move_item_into_viewport(focused_item)
-        pass
+        self.move_item_into_viewport(focused_item)
 
     def move_item_into_viewport(self, item):
         """Causes the `item` to be moved into the viewport
