@@ -221,3 +221,27 @@ class ExtendedGtkView(GtkView, Observer):
         self._selection.handle_new_selection(models)
 
     selected_items = property(_get_selected_items, select_item, unselect_all, "Items selected by the view")
+
+    def _get_focused_item(self):
+        """ Returns the currently focused item """
+        focused_model = self._selection.focus
+        if not focused_model:
+            return None
+        return self.canvas.get_view_for_model()
+
+    def _set_focused_item(self, item):
+        """ Sets the focus to the passed item"""
+        if not item:
+            self._del_focused_item()
+
+        if item.model is not self._selection.focus:
+            self.queue_draw_item(self._focused_item, item)
+            self._selection.focus = item.model
+            self.emit('focus-changed', item)
+
+    def _del_focused_item(self):
+        """ Clears the focus """
+        del self._selection.focus
+
+    focused_item = property(_get_focused_item, _set_focused_item, _del_focused_item,
+                            "The item with focus (receives key events a.o.)")
