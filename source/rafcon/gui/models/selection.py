@@ -23,7 +23,7 @@ from rafcon.core.state_elements.transition import Transition
 from rafcon.core.state_elements.data_flow import DataFlow
 
 from rafcon.gui.models import AbstractStateModel
-from rafcon.gui.models.signals import SelectionChangedSignalMsg
+from rafcon.gui.models.signals import SelectionChangedSignalMsg, FocusSignalMsg
 from rafcon.gui.utils import constants
 
 from rafcon.utils import log
@@ -80,6 +80,10 @@ def updates_selection(update_selection):
             # Maintain internal lists for fast access
             self.update_core_element_lists()
 
+            # Clear focus if no longer in selection
+            if self.focus not in new_selection:
+                del self.focus
+
             # Send notifications about changes
             affected_classes = set(type(model.core_element) for model in affected_models)
             msg_namedtuple = SelectionChangedSignalMsg(update_selection.__name__, new_selection, old_selection,
@@ -116,9 +120,13 @@ class Selection(ModelMT):
     _data_flows = None
     _transitions = None
     _states = None
-    selection_changed_signal = Signal()
 
-    __observables__ = ("selection_changed_signal", )
+    _focus = None
+
+    selection_changed_signal = Signal()
+    focus_signal = Signal()
+
+    __observables__ = ("selection_changed_signal", "focus_signal")
 
     def __init__(self, parent_signal=None):
         ModelMT.__init__(self)
@@ -227,6 +235,24 @@ class Selection(ModelMT):
             self.__selected.clear()
             self.__selected.update(models)
         self.__selected = reduce_to_parent_states(self.__selected)
+
+    @property
+    @updates_selection
+    def focus(self, model):
+        focus_msg = FocusSignalMsg(model, self._focus)
+        self._focus = model
+        self.__selected.add(model)
+        self.focus_signal.emit(focus_msg)
+
+    @focus.getter
+    def focus(self):
+        return self._focus
+
+    @focus.deleter
+    def focus(self):
+        focus_msg = FocusSignalMsg(None, self._focus)
+        self._focus = None
+        self.focus_signal.emit(focus_msg)
 
     def __iter__(self):
         return self.__selected.__iter__()

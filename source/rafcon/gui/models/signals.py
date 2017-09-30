@@ -25,3 +25,4 @@ Notification = namedtuple('Notification', ['model', 'prop_name', 'info'])
 
 SelectionChangedSignalMsg = namedtuple('SelectionChangedSignalMsg', ['method_name', 'new_selection', 'old_selection',
                                                                      'affected_core_element_classes'])
+FocusSignalMsg = namedtuple('FocusSignalMsg', ['new_focus', 'old_focus'])
