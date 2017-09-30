@@ -81,7 +81,7 @@ def updates_selection(update_selection):
             self.update_core_element_lists()
 
             # Clear focus if no longer in selection
-            if self.focus not in new_selection:
+            if self.focus and self.focus not in new_selection:
                 del self.focus
 
             # Send notifications about changes
@@ -236,7 +236,13 @@ class Selection(ModelMT):
             self.__selected.update(models)
         self.__selected = reduce_to_parent_states(self.__selected)
 
+
     @property
+    def focus(self):
+        """ Returns the currently focused element """
+        return self._focus
+
+    @focus.setter
     @updates_selection
     def focus(self, model):
         """Sets the passed model as focused element
@@ -247,11 +253,6 @@ class Selection(ModelMT):
         self._focus = model
         self.__selected.add(model)
         self.focus_signal.emit(focus_msg)
-
-    @focus.getter
-    def focus(self):
-        """ Returns the currently focused element """
-        return self._focus
 
     @focus.deleter
     def focus(self):
