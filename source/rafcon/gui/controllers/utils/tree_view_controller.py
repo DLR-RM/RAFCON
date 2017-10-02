@@ -361,7 +361,6 @@ class ListViewController(ExtendedController):
                 selection = self.model.get_state_machine_m().selection
                 selection.focus = model
 
-
     def update_selection_sm_prior(self):
         """State machine prior update of tree selection"""
         if self._do_selection_update:
