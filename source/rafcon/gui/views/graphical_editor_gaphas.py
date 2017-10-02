@@ -21,7 +21,7 @@ from gaphas import painter
 
 from rafcon.gui.mygaphas.view import ExtendedGtkView
 from rafcon.gui.mygaphas.tools import HoverItemTool, ConnectionCreationTool, ConnectionModificationTool, \
-    RemoveItemTool, MoveItemTool, MultiSelectionTool, RightClickTool, MoveHandleTool
+    MoveItemTool, MultiSelectionTool, RightClickTool, MoveHandleTool
 from rafcon.gui.mygaphas.painter import StateCornerHandlePainter, NameCornerHandlePainter
 
 from rafcon.gui.config import global_gui_config
@@ -55,7 +55,6 @@ class GraphicalEditorView(View, gobject.GObject):
             append(tool.ZoomTool()). \
             append(MoveItemTool()). \
             append(MultiSelectionTool()). \
-            append(RemoveItemTool()). \
             append(RightClickTool())
         self.editor.painter = painter.PainterChain(). \
             append(painter.ItemPainter()). \

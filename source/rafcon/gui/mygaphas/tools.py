@@ -18,14 +18,13 @@ import gtk
 from enum import Enum
 from gaphas.aspect import HandleFinder, InMotion
 from gaphas.item import NW, Item
-from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, ConnectHandleTool, RubberbandTool
+from gaphas.tool import ItemTool, HoverTool, HandleTool, ConnectHandleTool, RubberbandTool
 
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGaphas
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.mygaphas.aspect import HandleInMotion
 from rafcon.gui.mygaphas.items.connection import ConnectionView, TransitionPlaceholderView, DataFlowPlaceholderView, \
-    TransitionView, DataFlowView
+    TransitionView
 from rafcon.gui.mygaphas.items.ports import InputPortView, PortView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils import gap_helper
@@ -35,17 +34,6 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 PortMoved = Enum('PORT', 'FROM TO')
-
-
-class RemoveItemTool(Tool):
-    """This tool is responsible of deleting the selected item
-    """
-
-    def on_key_press(self, event):
-        if gtk.gdk.keyval_name(event.keyval) == "Delete":
-            selected_models = [item.model for item in self.view.selected_items]
-            gui_helper_state_machine.delete_core_elements_of_models(selected_models)
-            return True
 
 
 class MoveItemTool(ItemTool):
