@@ -72,7 +72,11 @@ def updates_selection(update_selection):
 
         affected_models = old_selection ^ new_selection
         if len(affected_models) != 0:  # The selection was updated
-            # Observe models in the selection
+            # Check new model types
+            if not all([isinstance(model, (AbstractStateModel, StateElementModel)) for model in new_selection]):
+                raise TypeError("The selection supports only models with base class AbstractStateModel or "
+                                "StateElementModel")
+
             deselected_models = old_selection - new_selection
             selected_models = new_selection - old_selection
             map(self.relieve_model, deselected_models)
@@ -153,10 +157,12 @@ class Selection(ModelMT):
     @updates_selection
     def add(self, models):
         """ Adds the passed model(s) to the selection"""
+        if models is None:
+            return
+
         if not hasattr(models, "__iter__"):
-            models = [models]
-        if not all([isinstance(model, (AbstractStateModel, StateElementModel)) for model in models]):
-            raise TypeError("All elements in the selection has to be ModelMT. You tried to add {0}.".format(models))
+            models = {models}
+
         self._selected.update(models)
         self._selected = reduce_to_parent_states(self._selected)
 
@@ -164,7 +170,7 @@ class Selection(ModelMT):
     def remove(self, models):
         """ Removed the passed model(s) from the selection"""
         if not hasattr(models, "__iter__"):
-            models = [models]
+            models = {models}
         for model in models:
             if model in self._selected:
                 self._selected.remove(model)
@@ -174,16 +180,14 @@ class Selection(ModelMT):
         """ Sets the selection to the passed model(s) """
         # Do not add None values to selection
         if models is None:
-            models = []
+            models = set()
 
         if not hasattr(models, "__iter__"):
-            models = [models]
-        if not all([isinstance(model, (AbstractStateModel, StateElementModel)) for model in models]):
-            raise TypeError("All elements in the selection has to be AbstractStateModel or StateElementModel. "
-                            "You tried to set {0}.".format(models))
-        models = reduce_to_parent_states(models)
-        self._selected.clear()
-        self._selected.update(models)
+            models = {models}
+        else:
+            models = reduce_to_parent_states(models)
+
+        self._selected = set(models)
 
     @updates_selection
     def clear(self):
@@ -209,12 +213,12 @@ class Selection(ModelMT):
             self._selected.difference_update(self.get_selected_elements_of_core_class(core_class))
         else:
             self._selected.clear()
+
         if not hasattr(models, "__iter__"):
-            models = [models]
-        if not all([isinstance(model, (AbstractStateModel, StateElementModel)) for model in models]):
-            raise TypeError("All elements in the selection has to be AbstractStateModel or StateElementModel. "
-                            "You tried to handle {0}.".format(models))
-        models = reduce_to_parent_states(models)
+            models = {models}
+        else:
+            models = reduce_to_parent_states(models)
+
         self._selected.update(models)
 
     @updates_selection
@@ -234,19 +238,16 @@ class Selection(ModelMT):
         :param models: The list of models that are newly selected/clicked on
         """
         if not hasattr(models, "__iter__"):
-            models = [models]
-        models = set(models)
-        if not all([isinstance(model, (AbstractStateModel, StateElementModel)) for model in models]):
-            raise TypeError("All elements in the selection has to be AbstractStateModel or StateElementModel. "
-                            "You tried to insert/set {0}.".format(models))
+            models = {models}
+        models = set(models)  # Ensure that models is a set
+
         if extend_selection():
             already_selected_elements = models & self._selected
             newly_selected_elements = models - self._selected
             self._selected.difference_update(already_selected_elements)
             self._selected.update(newly_selected_elements)
         else:
-            self._selected.clear()
-            self._selected.update(models)
+            self._selected = models
         self._selected = reduce_to_parent_states(self._selected)
 
     @property
@@ -264,9 +265,7 @@ class Selection(ModelMT):
         if model is None:
             del self.focus
             return
-        if not isinstance(model, (AbstractStateModel, StateElementModel)):
-            raise TypeError("All elements in the selection has to be AbstractStateModel or StateElementModel. "
-                            "You tried to focus {0}.".format(model))
+
         focus_msg = FocusSignalMsg(model, self._focus)
         self._focus = model
         self._selected.add(model)
