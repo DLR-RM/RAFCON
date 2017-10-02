@@ -120,6 +120,8 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("add_scoped_variable", self._add_scoped_variable_to_selected_state)
         shortcut_manager.add_callback_for_action("add_outcome", self._add_outcome_to_selected_state)
 
+        shortcut_manager.add_callback_for_action("delete", self._remove_selected_elements)
+
         shortcut_manager.add_callback_for_action("copy", self._copy_selection)
         shortcut_manager.add_callback_for_action("paste", self._paste_clipboard)
         shortcut_manager.add_callback_for_action("cut", self._cut_selection)
@@ -996,3 +998,8 @@ class GraphicalEditorController(ExtendedController):
     def _add_outcome_to_selected_state(self, *event):
         if self.react_to_event(event):
             gui_helper_state_machine.add_outcome_to_selected_states()
+
+    @lock_state_machine
+    def _remove_selected_elements(self, *event):
+        if self.react_to_event(event):
+            gui_helper_state_machine.delete_core_elements_of_models(self.model.selection.get_all())

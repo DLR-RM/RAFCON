@@ -22,10 +22,9 @@ import gaphas.tool
 
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGaphas
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.mygaphas.aspect import HandleInMotion
 from rafcon.gui.mygaphas.items.connection import ConnectionView, TransitionPlaceholderView, DataFlowPlaceholderView, \
-    TransitionView, DataFlowView
+    TransitionView
 from rafcon.gui.mygaphas.items.ports import InputPortView, PortView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils import gap_helper
@@ -88,16 +87,6 @@ class ZoomTool(gaphas.tool.ZoomTool):
 
 
 class RemoveItemTool(gaphas.tool.Tool):
-    """This tool is responsible of deleting the selected item
-    """
-
-    def on_key_press(self, event):
-        if gtk.gdk.keyval_name(event.keyval) == "Delete":
-            selected_models = [item.model for item in self.view.selected_items]
-            gui_helper_state_machine.delete_core_elements_of_models(selected_models)
-            return True
-
-
 class MoveItemTool(gaphas.tool.ItemTool):
     """This class is responsible for moving states, names, connections, etc.
     """
