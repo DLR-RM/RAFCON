@@ -23,6 +23,7 @@ from rafcon.core.state_elements.transition import Transition
 from rafcon.core.state_elements.data_flow import DataFlow
 
 from rafcon.gui.models import AbstractStateModel
+from rafcon.gui.models.state_element import StateElementModel
 from rafcon.gui.models.signals import SelectionChangedSignalMsg, FocusSignalMsg
 from rafcon.gui.utils import constants
 
@@ -154,6 +155,8 @@ class Selection(ModelMT):
         """ Adds the passed model(s) to the selection"""
         if not hasattr(models, "__iter__"):
             models = [models]
+        if not all([isinstance(model, (AbstractStateModel, StateElementModel)) for model in models]):
+            raise TypeError("All elements in the selection has to be ModelMT. You tried to add {0}.".format(models))
         self._selected.update(models)
         self._selected = reduce_to_parent_states(self._selected)
 
@@ -169,14 +172,17 @@ class Selection(ModelMT):
     @updates_selection
     def set(self, models):
         """ Sets the selection to the passed model(s) """
-        self._selected.clear()
         # Do not add None values to selection
         if models is None:
             models = []
 
         if not hasattr(models, "__iter__"):
             models = [models]
-            models = reduce_to_parent_states(models)
+        if not all([isinstance(model, (AbstractStateModel, StateElementModel)) for model in models]):
+            raise TypeError("All elements in the selection has to be AbstractStateModel or StateElementModel. "
+                            "You tried to set {0}.".format(models))
+        models = reduce_to_parent_states(models)
+        self._selected.clear()
         self._selected.update(models)
 
     @updates_selection
@@ -205,7 +211,10 @@ class Selection(ModelMT):
             self._selected.clear()
         if not hasattr(models, "__iter__"):
             models = [models]
-            models = reduce_to_parent_states(models)
+        if not all([isinstance(model, (AbstractStateModel, StateElementModel)) for model in models]):
+            raise TypeError("All elements in the selection has to be AbstractStateModel or StateElementModel. "
+                            "You tried to handle {0}.".format(models))
+        models = reduce_to_parent_states(models)
         self._selected.update(models)
 
     @updates_selection
@@ -227,6 +236,9 @@ class Selection(ModelMT):
         if not hasattr(models, "__iter__"):
             models = [models]
         models = set(models)
+        if not all([isinstance(model, (AbstractStateModel, StateElementModel)) for model in models]):
+            raise TypeError("All elements in the selection has to be AbstractStateModel or StateElementModel. "
+                            "You tried to insert/set {0}.".format(models))
         if extend_selection():
             already_selected_elements = models & self._selected
             newly_selected_elements = models - self._selected
@@ -247,8 +259,14 @@ class Selection(ModelMT):
     def focus(self, model):
         """Sets the passed model as focused element
 
-        :param model: The element to be focused
+        :param ModelMT model: The element to be focused
         """
+        if model is None:
+            del self.focus
+            return
+        if not isinstance(model, (AbstractStateModel, StateElementModel)):
+            raise TypeError("All elements in the selection has to be AbstractStateModel or StateElementModel. "
+                            "You tried to focus {0}.".format(model))
         focus_msg = FocusSignalMsg(model, self._focus)
         self._focus = model
         self._selected.add(model)
