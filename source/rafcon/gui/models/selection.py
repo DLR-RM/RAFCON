@@ -298,8 +298,8 @@ class Selection(ModelMT):
         self._transitions = get_selected_elements_of_core_class(Transition)
         self._data_flows = get_selected_elements_of_core_class(DataFlow)
         self._input_data_ports = get_selected_elements_of_core_class(InputDataPort)
-        self._scoped_variables = get_selected_elements_of_core_class(OutputDataPort)
-        self._output_data_ports = get_selected_elements_of_core_class(ScopedVariable)
+        self._output_data_ports = get_selected_elements_of_core_class(OutputDataPort)
+        self._scoped_variables = get_selected_elements_of_core_class(ScopedVariable)
         self._outcomes = get_selected_elements_of_core_class(Outcome)
 
     @property
