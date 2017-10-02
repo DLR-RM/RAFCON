@@ -796,7 +796,7 @@ class ContainerState(State):
         else:
             self.states[state_id].parent = None
         # final delete the state it self
-        del self.states[state_id]
+        return self.states.pop(state_id)
 
     def related_linkage_state(self, state_id):
         """ TODO: document
@@ -1227,7 +1227,7 @@ class ContainerState(State):
             raise AttributeError("The transition_id must not be -1 (Aborted) or -2 (Preempted)")
         if transition_id not in self._transitions:
             raise AttributeError("The transition_id %s does not exist" % str(transition_id))
-        del self._transitions[transition_id]
+        return self._transitions.pop(transition_id)
 
     @lock_state_machine
     def remove_outcome_hook(self, outcome_id):
@@ -1290,7 +1290,7 @@ class ContainerState(State):
         """
         if data_flow_id not in self.data_flows:
             raise AttributeError("The data_flow_id %s does not exist" % str(data_flow_id))
-        del self.data_flows[data_flow_id]
+        return self.data_flows.pop(data_flow_id)
 
     @lock_state_machine
     def remove_data_flows_with_data_port_id(self, data_port_id):

@@ -389,7 +389,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         if data_port_id in self._input_data_ports:
             self.remove_data_flows_with_data_port_id(data_port_id)
-            del self._input_data_ports[data_port_id]
+            return self._input_data_ports.pop(data_port_id)
         else:
             raise AttributeError("input data port with name %s does not exit", data_port_id)
 
@@ -449,7 +449,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         if data_port_id in self._output_data_ports:
             self.remove_data_flows_with_data_port_id(data_port_id)
-            del self._output_data_ports[data_port_id]
+            return self._output_data_ports.pop(data_port_id)
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
 
@@ -656,7 +656,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                     break  # found the one outgoing transition
 
         # delete outcome it self
-        del self._outcomes[outcome_id]
+        return self._outcomes.pop(outcome_id)
 
     @lock_state_machine
     def remove_outcome_hook(self, outcome_id):
