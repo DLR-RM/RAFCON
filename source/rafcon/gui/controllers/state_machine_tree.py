@@ -456,5 +456,5 @@ class StateMachineTreeController(TreeViewController):
                 self._selected_sm_model.selection.get_selected_state():
             self.update_selection_sm_prior()
         elif signal_msg and self.tree_store.get_iter_root():
-            if self.CORE_ELEMENT_CLASS in signal_msg.arg.affected_core_element_classes:
+            if any(issubclass(cls, self.CORE_ELEMENT_CLASS) for cls in signal_msg.arg.affected_core_element_classes):
                 self.update_selection_sm_prior()

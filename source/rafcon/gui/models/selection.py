@@ -90,7 +90,7 @@ def updates_selection(update_selection):
                 del self.focus
 
             # Send notifications about changes
-            affected_classes = set(type(model.core_element) for model in affected_models)
+            affected_classes = set(model.core_element.__class__ for model in affected_models)
             msg_namedtuple = SelectionChangedSignalMsg(update_selection.__name__, new_selection, old_selection,
                                                        affected_classes)
             self.selection_changed_signal.emit(msg_namedtuple)
