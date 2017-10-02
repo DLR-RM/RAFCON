@@ -384,7 +384,7 @@ class ListViewController(ExtendedController):
 
     @ExtendedController.observe("sm_selection_changed_signal", signal=True)
     def state_machine_selection_changed(self, state_machine_m, signal_name, signal_msg):
-        if any(issubclass(cls, self.CORE_ELEMENT_CLASS) for cls in signal_msg.arg.affected_core_element_classes):
+        if self.CORE_ELEMENT_CLASS in signal_msg.arg.affected_core_element_classes:
             self.update_selection_sm_prior()
 
     def selection_changed(self, widget, event=None):
