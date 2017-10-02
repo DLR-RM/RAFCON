@@ -112,7 +112,7 @@ def extend_selection():
 
 class Selection(ModelMT):
     """ This class contains the selected models of a state_machine """
-    __selected = None
+    _selected = None
     _input_data_ports = None
     _output_data_ports = None
     _scoped_variables = None
@@ -131,7 +131,7 @@ class Selection(ModelMT):
     def __init__(self, parent_signal=None):
         ModelMT.__init__(self)
 
-        self.__selected = set()
+        self._selected = set()
         self._input_data_ports = []
         self._output_data_ports = []
         self._outcomes = []
@@ -140,11 +140,12 @@ class Selection(ModelMT):
         self._states = []
         self._scoped_variables = []
         self.selection_changed_signal = Signal()
+        self.focus_signal = Signal()
         self.parent_signal = parent_signal
 
     def __str__(self):
         return_string = "Selected: "
-        for item in self.__selected:
+        for item in self._selected:
             return_string = "%s, %s" % (return_string, str(item))
         return return_string
 
@@ -153,8 +154,8 @@ class Selection(ModelMT):
         """ Adds the passed model(s) to the selection"""
         if not hasattr(models, "__iter__"):
             models = [models]
-        self.__selected.update(models)
-        self.__selected = reduce_to_parent_states(self.__selected)
+        self._selected.update(models)
+        self._selected = reduce_to_parent_states(self._selected)
 
     @updates_selection
     def remove(self, models):
@@ -162,13 +163,13 @@ class Selection(ModelMT):
         if not hasattr(models, "__iter__"):
             models = [models]
         for model in models:
-            if model in self.__selected:
-                self.__selected.remove(model)
+            if model in self._selected:
+                self._selected.remove(model)
 
     @updates_selection
     def set(self, models):
         """ Sets the selection to the passed model(s) """
-        self.__selected.clear()
+        self._selected.clear()
         # Do not add None values to selection
         if models is None:
             models = []
@@ -176,12 +177,12 @@ class Selection(ModelMT):
         if not hasattr(models, "__iter__"):
             models = [models]
             models = reduce_to_parent_states(models)
-        self.__selected.update(models)
+        self._selected.update(models)
 
     @updates_selection
     def clear(self):
         """ Removes all models from the selection """
-        self.__selected.clear()
+        self._selected.clear()
 
     @updates_selection
     def handle_prepared_selection_of_core_class_elements(self, core_class, models):
@@ -199,13 +200,13 @@ class Selection(ModelMT):
         :param models: The list of models that are currently being selected locally
         """
         if extend_selection():
-            self.__selected.difference_update(self.get_selected_elements_of_core_class(core_class))
+            self._selected.difference_update(self.get_selected_elements_of_core_class(core_class))
         else:
-            self.__selected.clear()
+            self._selected.clear()
         if not hasattr(models, "__iter__"):
             models = [models]
             models = reduce_to_parent_states(models)
-        self.__selected.update(models)
+        self._selected.update(models)
 
     @updates_selection
     def handle_new_selection(self, models):
@@ -227,15 +228,14 @@ class Selection(ModelMT):
             models = [models]
         models = set(models)
         if extend_selection():
-            already_selected_elements = models & self.__selected
-            newly_selected_elements = models - self.__selected
-            self.__selected.difference_update(already_selected_elements)
-            self.__selected.update(newly_selected_elements)
+            already_selected_elements = models & self._selected
+            newly_selected_elements = models - self._selected
+            self._selected.difference_update(already_selected_elements)
+            self._selected.update(newly_selected_elements)
         else:
-            self.__selected.clear()
-            self.__selected.update(models)
-        self.__selected = reduce_to_parent_states(self.__selected)
-
+            self._selected.clear()
+            self._selected.update(models)
+        self._selected = reduce_to_parent_states(self._selected)
 
     @property
     def focus(self):
@@ -251,7 +251,7 @@ class Selection(ModelMT):
         """
         focus_msg = FocusSignalMsg(model, self._focus)
         self._focus = model
-        self.__selected.add(model)
+        self._selected.add(model)
         self.focus_signal.emit(focus_msg)
 
     @focus.deleter
@@ -262,21 +262,21 @@ class Selection(ModelMT):
         self.focus_signal.emit(focus_msg)
 
     def __iter__(self):
-        return self.__selected.__iter__()
+        return self._selected.__iter__()
 
     def __len__(self):
-        return len(self.__selected)
+        return len(self._selected)
 
     def __contains__(self, item):
-        return item in self.__selected
+        return item in self._selected
 
     def __getitem__(self, key):
-        return [s for s in self.__selected][key]
+        return [s for s in self._selected][key]
 
     def update_core_element_lists(self):
         """ Maintains inner lists of selected elements with a specific core element class """
         def get_selected_elements_of_core_class(core_class):
-            return set(element for element in self.__selected if isinstance(element.core_element, core_class))
+            return set(element for element in self._selected if isinstance(element.core_element, core_class))
         self._states = get_selected_elements_of_core_class(State)
         self._transitions = get_selected_elements_of_core_class(Transition)
         self._data_flows = get_selected_elements_of_core_class(DataFlow)
@@ -378,8 +378,8 @@ class Selection(ModelMT):
         :rtype: bool
         """
         if model is None:
-            return len(self.__selected) == 0
-        return model in self.__selected
+            return len(self._selected) == 0
+        return model in self._selected
 
     def get_all(self):
         """Return a copy of the selection
@@ -387,7 +387,7 @@ class Selection(ModelMT):
         :return: Copy of the set of selected elements
         :rtype: set
         """
-        return set(s for s in self.__selected)
+        return set(s for s in self._selected)
 
     def get_selected_state(self):
         """Return the first state within the selection
