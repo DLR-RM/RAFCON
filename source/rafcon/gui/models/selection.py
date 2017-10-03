@@ -77,11 +77,6 @@ def updates_selection(update_selection):
                 raise TypeError("The selection supports only models with base class AbstractStateModel or "
                                 "StateElementModel")
 
-            deselected_models = old_selection - new_selection
-            selected_models = new_selection - old_selection
-            map(self.relieve_model, deselected_models)
-            map(self.observe_model, selected_models)
-
             # Maintain internal lists for fast access
             self.update_core_element_lists()
 
@@ -417,7 +412,6 @@ class Selection(ModelMT):
         else:
             return next(iter(self.states))  # sets don't support indexing
 
-    @ModelMT.observe("destruction_signal", signal=True)
-    def on_model_destruct(self, destructed_model, signal, info):
-        """ Deselect models that are being destroyed """
-        self.remove(destructed_model)
+    def on_remove_core_object(self, core_object):
+        """ Deselect models that are being removed """
+        self.remove([model for model in self.get_all() if core_object is model.core_element])

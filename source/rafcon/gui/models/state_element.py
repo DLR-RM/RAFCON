@@ -33,9 +33,8 @@ class StateElementModel(MetaModel, Hashable):
 
     _parent = None
     meta_signal = Signal()
-    destruction_signal = Signal()
 
-    __observables__ = ("meta_signal", "destruction_signal")
+    __observables__ = ("meta_signal", )
 
     def __init__(self, parent, meta=None):
         MetaModel.__init__(self, meta)
@@ -102,7 +101,6 @@ class StateElementModel(MetaModel, Hashable):
 
         Unregisters the model from observing itself.
         """
-        self.destruction_signal.emit()
         try:
             self.unregister_observer(self)
         except KeyError:  # Might happen if the observer was already unregistered
