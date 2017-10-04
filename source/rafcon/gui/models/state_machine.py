@@ -202,10 +202,6 @@ class StateMachineModel(ModelMT, Hashable):
     @ModelMT.observe("output_data_ports", after=True)
     @ModelMT.observe("scoped_variables", after=True)
     def root_state_model_after_change(self, model, prop_name, info):
-        from rafcon.gui.utils.notification_overview import NotificationOverview
-        overview = NotificationOverview(info)
-        if 'remove_' in overview['method_name'][-1] and not isinstance(overview['result'][-1], Exception):
-            self.selection.on_remove_core_object(overview['result'][-1])
         if not self._list_modified(prop_name, info):
             self._send_root_state_notification(model, prop_name, info)
 
@@ -298,7 +294,6 @@ class StateMachineModel(ModelMT, Hashable):
             return
         # print "ASSIGN ROOT_STATE", model, prop_name, info
         try:
-            self.selection.on_remove_core_object(self.root_state.state)
             self.root_state.unregister_observer(self)
         except KeyError:
             pass
