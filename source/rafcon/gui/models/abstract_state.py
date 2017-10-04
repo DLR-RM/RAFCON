@@ -99,6 +99,7 @@ class AbstractStateModel(MetaModel, Hashable):
 
         self.meta_signal = Signal()
         self.action_signal = Signal()
+        self.destruction_signal = Signal()
 
         self.register_observer(self)
 
