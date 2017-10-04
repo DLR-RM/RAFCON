@@ -424,3 +424,6 @@ class Selection(ModelMT):
     def on_remove_core_object(self, core_object):
         """ Deselect models that are being removed """
         self.remove([model for model in self.get_all() if core_object is model.core_element])
+        # check if children are in selection
+        if isinstance(core_object, State):
+            self.remove([model.core_element in core_object for model in self.get_all()])
