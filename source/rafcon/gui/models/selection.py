@@ -72,11 +72,6 @@ def updates_selection(update_selection):
 
         affected_models = old_selection ^ new_selection
         if len(affected_models) != 0:  # The selection was updated
-            # Check new model types
-            if not all([isinstance(model, (AbstractStateModel, StateElementModel)) for model in new_selection]):
-                raise TypeError("The selection supports only models with base class AbstractStateModel or "
-                                "StateElementModel")
-
             # Maintain internal lists for fast access
             self.update_core_element_lists()
 
@@ -149,6 +144,14 @@ class Selection(ModelMT):
             return_string = "%s, %s" % (return_string, str(item))
         return return_string
 
+    def _check_model_types(self, models):
+        """ Check types of passed models for correctness and in case raise exception"""
+        if not hasattr(models, "__iter__"):
+            models = {models}
+        if not all([isinstance(model, (AbstractStateModel, StateElementModel)) for model in models]):
+            raise TypeError("The selection supports only models with base class AbstractStateModel or "
+                            "StateElementModel, see handed elements {0}".format(models))
+
     @updates_selection
     def add(self, models):
         """ Adds the passed model(s) to the selection"""
@@ -158,6 +161,7 @@ class Selection(ModelMT):
         if not hasattr(models, "__iter__"):
             models = {models}
 
+        self._check_model_types(models)
         self._selected.update(models)
         self._selected = reduce_to_parent_states(self._selected)
 
@@ -166,6 +170,7 @@ class Selection(ModelMT):
         """ Removed the passed model(s) from the selection"""
         if not hasattr(models, "__iter__"):
             models = {models}
+        self._check_model_types(models)
         for model in models:
             if model in self._selected:
                 self._selected.remove(model)
@@ -177,6 +182,7 @@ class Selection(ModelMT):
         if models is None:
             models = set()
 
+        self._check_model_types(models)
         if not hasattr(models, "__iter__"):
             models = {models}
         else:
@@ -209,6 +215,7 @@ class Selection(ModelMT):
         else:
             self._selected.clear()
 
+        self._check_model_types(models)
         if not hasattr(models, "__iter__"):
             models = {models}
         else:
@@ -235,6 +242,7 @@ class Selection(ModelMT):
         if not hasattr(models, "__iter__"):
             models = {models}
         models = set(models)  # Ensure that models is a set
+        self._check_model_types(models)
 
         if extend_selection():
             already_selected_elements = models & self._selected
@@ -261,6 +269,7 @@ class Selection(ModelMT):
             del self.focus
             return
 
+        self._check_model_types(model)
         focus_msg = FocusSignalMsg(model, self._focus)
         self._focus = model
         self._selected.add(model)
