@@ -41,6 +41,7 @@ class StateElementModel(MetaModel, Hashable):
         MetaModel.__init__(self, meta)
 
         self.parent = parent
+        self.destruction_signal = Signal()
 
         # this class is an observer of its own properties:
         self.register_observer(self)
