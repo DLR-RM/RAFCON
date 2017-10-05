@@ -42,14 +42,15 @@ def reduce_to_parent_states(models):
     :return: The reduced set of selected models
     :rtype: set
     """
-    models_to_remove = []
+    models_to_remove = set()
     # check all models
     for model in models:
         parent_m = model.parent
         # while parent model is not None, a state model and in selection list then remove this child model
         while parent_m is not None:
             if parent_m in models:
-                models_to_remove.append(model)
+                models_to_remove.add(model)
+                break
             parent_m = parent_m.parent
     for model in models_to_remove:
         models.remove(model)
