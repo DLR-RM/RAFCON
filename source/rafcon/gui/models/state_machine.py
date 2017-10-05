@@ -155,6 +155,8 @@ class StateMachineModel(ModelMT, Hashable):
             pass
         with self.state_machine.modification_lock():
             self.root_state.prepare_destruction()
+        self.root_state = None
+        self.state_machine = None
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.root_state)

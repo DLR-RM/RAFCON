@@ -60,6 +60,10 @@ class ScopedVariableModel(StateElementModel):
     def model_changed(self, model, prop_name, info):
         super(ScopedVariableModel, self).model_changed(model, prop_name, info)
 
+    def prepare_destruction(self):
+        super(ScopedVariableModel, self).prepare_destruction()
+        self.scoped_variable = None
+
     def _meta_data_editor_gaphas2opengl(self, vividict):
         if 'rel_pos' in vividict:
             rel_pos = vividict['rel_pos']
