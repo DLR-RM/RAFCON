@@ -58,8 +58,7 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             finished_thread_id = concurrency_queue.get()
             finisher_state = self.states[finished_thread_id]
             finisher_state.join()
-            self.add_state_execution_output_to_scoped_data(finisher_state.output_data, finisher_state)
-            self.update_scoped_variables_with_output_dictionary(finisher_state.output_data, finisher_state)
+
             # preempt all child states
             if not self.backward_execution:
                 for state_id, state in self.states.iteritems():
@@ -67,7 +66,12 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             # join all states
             for history_index, state in enumerate(self.states.itervalues()):
                 self.join_state(state, history_index, concurrency_history_item)
+                self.add_state_execution_output_to_scoped_data(state.output_data, state)
+                self.update_scoped_variables_with_output_dictionary(state.output_data, state)
 
+            # add the data of the first state now to overwrite data of the preempted states
+            self.add_state_execution_output_to_scoped_data(finisher_state.output_data, finisher_state)
+            self.update_scoped_variables_with_output_dictionary(finisher_state.output_data, finisher_state)
             #######################################################
             # handle backward execution case
             #######################################################
