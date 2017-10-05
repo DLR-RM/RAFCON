@@ -1,3 +1,5 @@
+import pytest
+
 from gtkmvc.observer import Observer
 
 from rafcon.core.states.state import State
@@ -15,6 +17,7 @@ from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.transition import TransitionModel
 from rafcon.gui.models.data_flow import DataFlowModel
+from rafcon.gui.models.meta import MetaModel
 
 
 class SignalCounter(Observer):
@@ -179,6 +182,22 @@ def test_all_models():
     assert 0 == len(selection) == len(selection.states) == len(selection.outcomes) == len(selection.input_data_ports)\
              == len(selection.output_data_ports) == len(selection.scoped_variables) == len(selection.data_flows)\
              == len(selection.transitions)
+
+
+def test_invalid_model():
+    selection = Selection()
+    meta_m = MetaModel()
+
+    with pytest.raises(TypeError):
+        selection.add(meta_m)
+    with pytest.raises(TypeError):
+        selection.set(meta_m)
+    with pytest.raises(TypeError):
+        selection.focus(meta_m)
+    with pytest.raises(TypeError):
+        selection.handle_new_selection(meta_m)
+    with pytest.raises(TypeError):
+        selection.handle_prepared_selection_of_core_class_elements(meta_m, State)
 
 
 def test_selection_reduction():
