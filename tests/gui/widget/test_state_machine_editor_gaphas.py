@@ -28,19 +28,10 @@ logger = log.get_logger(__name__)
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_copy_delete_bug_signals(*args):
-    """The function triggers and test basic functions of the menu bar.
+    """The function triggers multiple actions that result into a gaphas bug.
 
-    At the moment those functions are tested:
-    - New State Machine
-    - Open State Machine
-    - Copy State/HierarchyState -> via GraphicalEditor
-    - Cut State/HierarchyState -> via GraphicalEditor
-    - Paste State/HierarchyState -> via GraphicalEditor
-    - Refresh Libraries
-    - Refresh All
-    - Save as
-    - Stop State Machine
-    - Quit GUI
+    The test should be secured that the bug 'Gaphas removing wrong view if delete state #155'
+    do not occur again.
     """
 
     sm_manager_model = args[0]
