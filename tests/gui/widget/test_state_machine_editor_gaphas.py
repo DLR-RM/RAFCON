@@ -85,7 +85,7 @@ def trigger_copy_delete_bug_signals():
 
     new_estate_m = root_state_m.states.values()[0]
     if new_estate_m.state.get_path() == new_hstate_m.state.get_path():
-        new_estate_m = root_state_m.states.values()[0]
+        new_estate_m = root_state_m.states.values()[1]
 
     call_gui_callback(sm_m.selection.set, new_estate_m)
     call_gui_callback(menubar_ctrl.on_delete_activate, None)
