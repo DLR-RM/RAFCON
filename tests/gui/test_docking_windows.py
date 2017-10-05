@@ -6,7 +6,7 @@ from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
 
 import testing_utils
-from testing_utils import call_gui_callback, run_gui, close_gui
+from testing_utils import call_gui_callback, run_gui, close_gui, wait_for_gui
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -37,6 +37,8 @@ def notify_on_resize_event(window, event=None):
 def wait_for_event_notification():
     if not ready.wait(5):
         raise RuntimeError("A timeout occurred")
+    time.sleep(0.1)
+    wait_for_gui()
 
 
 def assert_size_equality(size1, size2):

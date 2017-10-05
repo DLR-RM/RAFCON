@@ -12,8 +12,21 @@ Next release
 
 - Bug Fixes:
 
+
+
 Patch releases 0.11.\*
 ----------------------
+
+0.11.2
+""""""
+
+- Improvements:
+    - meta data scaling more robust and protect other elements from side effects of it
+
+- Bug Fixes:
+    - :issue:`393` $HOME/.config/rafcon is not generated initially + tests
+    - :issue:`406` Empty library root state without child states cause meta data resize problems with side effects in
+      gaphas drawing
 
 0.11.1
 """"""

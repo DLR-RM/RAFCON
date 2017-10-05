@@ -109,16 +109,17 @@ def setup_argument_parser():
 
     :return: The parser object
     """
-    home_path = filesystem.get_home_path()
+    default_config_path = filesystem.get_default_config_path()
+    filesystem.create_path(default_config_path)
 
     parser = core_singletons.argument_parser
     parser.add_argument('-o', '--open', type=parse_state_machine_path, dest='state_machine_path', metavar='path',
                         nargs='+', help="specify directories of state-machines that shall be opened. The path must "
                                         "contain a statemachine.json file")
-    parser.add_argument('-c', '--config', type=config_path, metavar='path', dest='config_path', default=home_path,
-                        nargs='?', const=home_path,
+    parser.add_argument('-c', '--config', type=config_path, metavar='path', dest='config_path',
+                        default=default_config_path, nargs='?', const=default_config_path,
                         help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "
-                             "a config file and use the default configuration. Default: {0}".format(home_path))
+                             "a config file and use the default configuration. Default: {0}".format(default_config_path))
     parser.add_argument('-r', '--remote', action='store_true', help="remote control mode")
     parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path', default=None, nargs='?',
                         help="path within a state machine to the state that should be launched. The state path "
