@@ -128,8 +128,6 @@ class GlobalVariableManagerController(ListViewController):
             except AttributeError as e:
                 logger.warn("The respective global variable '{1}' couldn't be removed. -> {0}"
                             "".format(e, model))
-        else:
-            logger.warn("Global variable {0} is not editable and thereby could not be removed.".format(gv_name))
 
     def apply_new_global_variable_name(self, path, new_gv_name):
         """Change global variable name/key according handed string
