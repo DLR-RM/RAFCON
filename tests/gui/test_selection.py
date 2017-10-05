@@ -1,10 +1,20 @@
 from gtkmvc.observer import Observer
 
+from rafcon.core.states.state import State
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
+from rafcon.core.state_elements.scope import ScopedVariable
+from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.transition import Transition
+from rafcon.core.state_elements.data_flow import DataFlow
 
 from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.container_state import ContainerStateModel
+from rafcon.gui.models.data_port import DataPortModel
+from rafcon.gui.models.scoped_variable import ScopedVariableModel
+from rafcon.gui.models.transition import TransitionModel
+from rafcon.gui.models.data_flow import DataFlowModel
 
 
 class SignalCounter(Observer):
@@ -123,6 +133,52 @@ def test_add_set_remove_clear():
     assert len(selection) == 2
     assert len(selection.outcomes) == 2
     assert signal_observer.count == 5
+
+
+def test_all_models():
+    selection = Selection()
+    states_m, outcomes_e_m, outcomes_h_m = get_models()
+
+    input_data_port = InputDataPort("i")
+    input_data_port_m = DataPortModel(input_data_port, parent=None)
+    output_data_port = OutputDataPort("o")
+    output_data_port_m = DataPortModel(output_data_port, parent=None)
+    scoped_variable = ScopedVariable("sv")
+    scoped_variable_m = ScopedVariableModel(scoped_variable, parent=None)
+
+    transition = Transition("0", 0, "1", 0, 0)
+    transition_m = TransitionModel(transition, parent=None)
+    data_flow = DataFlow("0", 0, "1", 0, 0)
+    data_flow_m = DataFlowModel(data_flow, parent=None)
+
+    selection.add(states_m[3])  # child_state_m
+    selection.add(outcomes_e_m)
+    selection.add(outcomes_h_m)
+    selection.add((input_data_port_m, output_data_port_m, scoped_variable_m))
+    selection.add(transition_m)
+    selection.add(data_flow_m)
+
+    assert len(selection) == 10
+    assert len(selection.states) == 1
+    assert len(selection.outcomes) == 4
+    assert len(selection.input_data_ports) == 1
+    assert len(selection.output_data_ports) == 1
+    assert len(selection.scoped_variables) == 1
+    assert len(selection.data_flows) == 1
+    assert len(selection.transitions) == 1
+    assert selection.states == selection.get_selected_elements_of_core_class(State)
+    assert selection.outcomes == selection.get_selected_elements_of_core_class(Outcome)
+    assert selection.input_data_ports == selection.get_selected_elements_of_core_class(InputDataPort)
+    assert selection.output_data_ports == selection.get_selected_elements_of_core_class(OutputDataPort)
+    assert selection.scoped_variables == selection.get_selected_elements_of_core_class(ScopedVariable)
+    assert selection.data_flows == selection.get_selected_elements_of_core_class(DataFlow)
+    assert selection.transitions == selection.get_selected_elements_of_core_class(Transition)
+
+    selection.clear()
+
+    assert 0 == len(selection) == len(selection.states) == len(selection.outcomes) == len(selection.input_data_ports)\
+             == len(selection.output_data_ports) == len(selection.scoped_variables) == len(selection.data_flows)\
+             == len(selection.transitions)
 
 
 def test_selection_reduction():
