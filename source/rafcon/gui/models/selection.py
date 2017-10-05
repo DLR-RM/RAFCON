@@ -176,7 +176,7 @@ class Selection(ModelMT):
         """ Removed the passed model(s) from the selection"""
         if not hasattr(models, "__iter__"):
             models = {models}
-        self._check_model_types(models)
+
         for model in models:
             if model in self._selected:
                 self._selected.remove(model)
