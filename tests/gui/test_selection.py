@@ -11,7 +11,7 @@ from rafcon.core.state_elements.outcome import Outcome
 from rafcon.core.state_elements.transition import Transition
 from rafcon.core.state_elements.data_flow import DataFlow
 
-from rafcon.gui.models.selection import Selection
+from rafcon.gui.models.selection import Selection, reduce_to_parent_states
 from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
@@ -198,6 +198,26 @@ def test_invalid_model():
         selection.handle_new_selection(meta_m)
     with pytest.raises(TypeError):
         selection.handle_prepared_selection_of_core_class_elements(meta_m, State)
+
+
+def test_adding_same_model_twice():
+    selection = Selection()
+    states_m, outcomes_e_m, outcomes_h_m = get_models()
+    root_state_m, execution_state_m, hierarchy_state_m, child_state_m = states_m
+    duplicate_states = [root_state_m, execution_state_m, execution_state_m]
+
+    selection.add(duplicate_states)
+    assert len(selection) == 1
+
+    selection.clear()
+
+    selection.set(duplicate_states)
+    assert len(selection) == 1
+
+    reduced_states = reduce_to_parent_states(duplicate_states)
+    assert len(reduced_states) == 1
+
+    assert len(duplicate_states) == 3
 
 
 def test_selection_reduction():
