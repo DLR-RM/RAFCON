@@ -63,7 +63,7 @@ class DataPortModel(StateElementModel):
         super(DataPortModel, self).model_changed(model, prop_name, info)
 
     def prepare_destruction(self):
-        super(DataPort, self).prepare_destruction()
+        super(DataPortModel, self).prepare_destruction()
         self.data_port = None
 
     def _meta_data_editor_gaphas2opengl(self, vividict):
