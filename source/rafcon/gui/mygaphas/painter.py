@@ -16,7 +16,7 @@ from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.utils import constants
 
 from gaphas.aspect import PaintFocused, ItemPaintFocused
-from gaphas.painter import HandlePainter, BoundingBoxPainter, CairoBoundingBoxContext
+import gaphas.painter
 
 from rafcon.gui.mygaphas.items.connection import ConnectionView, DataFlowView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
@@ -28,7 +28,7 @@ from rafcon.gui.mygaphas.utils.gap_draw_helper import get_col_rgba, get_side_len
 # painter.DEBUG_DRAW_BOUNDING_BOX = True
 
 
-class CornerHandlePainter(HandlePainter):
+class CornerHandlePainter(gaphas.painter.HandlePainter):
     """Base class for drawing corner handle for resize operations
     """
 
@@ -36,7 +36,7 @@ class CornerHandlePainter(HandlePainter):
     border_color = gui_config.gtk_colors['STATE_RESIZE_HANDLE_BORDER']
 
     def __init__(self, view=None, item_type=type(None)):
-        super(HandlePainter, self).__init__(view)
+        super(gaphas.painter.HandlePainter, self).__init__(view)
         self._item_type = item_type
 
     def _get_handle_side_length(self, item):
@@ -149,7 +149,7 @@ class LineSegmentPainter(ItemPaintFocused):
                 cr.restore()
 
 
-class RAFCONBoundingBoxPainter(BoundingBoxPainter):
+class BoundingBoxPainter(gaphas.painter.BoundingBoxPainter):
     """
     This specific case of an ItemPainter is used to calculate the bounding
     boxes (in canvas coordinates) for the items.
@@ -158,7 +158,7 @@ class RAFCONBoundingBoxPainter(BoundingBoxPainter):
     draw_all = True
 
     def _draw_item(self, item, cairo, area=None):
-        cairo = CairoBoundingBoxContext(cairo)
+        cairo = gaphas.painter.CairoBoundingBoxContext(cairo)
         super(BoundingBoxPainter, self)._draw_item(item, cairo)
         bounds = cairo.get_bounds()
 

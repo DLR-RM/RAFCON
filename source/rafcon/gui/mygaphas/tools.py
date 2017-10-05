@@ -18,7 +18,7 @@ import gtk
 from enum import Enum
 from gaphas.aspect import HandleFinder, InMotion
 from gaphas.item import NW, Item
-from gaphas.tool import Tool, ItemTool, HoverTool, HandleTool, ConnectHandleTool, RubberbandTool
+import gaphas.tool
 
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGaphas
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
@@ -31,13 +31,63 @@ from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils import gap_helper
 from rafcon.gui.utils import constants
 from rafcon.utils import log
+from rafcon.gui.config import global_gui_config
 
 logger = log.get_logger(__name__)
 
 PortMoved = Enum('PORT', 'FROM TO')
 
 
-class RemoveItemTool(Tool):
+class ToolChain(gaphas.tool.ToolChain):
+
+    def handle(self, event):
+        """
+        Handle the event by calling each tool until the event is handled
+        or grabbed.
+
+        If a tool is returning True on a button press event, the motion and
+        button release events are also passed to this
+        """
+
+        # Allow to handle a subset of events while having a grabbed tool (between a button press & release event)
+        suppressed_grabbed_tool = None
+        if event.type in (gtk.gdk.SCROLL, gtk.gdk.KEY_PRESS, gtk.gdk.KEY_RELEASE):
+            suppressed_grabbed_tool = self._grabbed_tool
+            self._grabbed_tool = None
+
+        rt = super(ToolChain, self).handle(event)
+
+        if suppressed_grabbed_tool:
+            self._grabbed_tool = suppressed_grabbed_tool
+
+        return rt
+
+
+class PanTool(gaphas.tool.PanTool):
+    def __init__(self, view=None):
+        super(PanTool, self).__init__(view)
+        self.zoom_with_control = global_gui_config.get_config_value("ZOOM_WITH_CTRL", False)
+
+    def on_scroll(self, event):
+        if self.zoom_with_control:
+            return False
+        else:
+            super(PanTool, self).on_scroll(event)
+
+
+class ZoomTool(gaphas.tool.ZoomTool):
+
+    def __init__(self, view=None):
+        super(ZoomTool, self).__init__(view)
+        self.zoom_with_control = global_gui_config.get_config_value("ZOOM_WITH_CTRL", False)
+
+    def on_scroll(self, event):
+        if event.state & gtk.gdk.CONTROL_MASK or not self.zoom_with_control:
+            event.state |= gtk.gdk.CONTROL_MASK  # Set CONTROL_MASK
+            return super(ZoomTool, self).on_scroll(event)
+
+
+class RemoveItemTool(gaphas.tool.Tool):
     """This tool is responsible of deleting the selected item
     """
 
@@ -58,7 +108,7 @@ class RemoveItemTool(Tool):
                     return True
 
 
-class MoveItemTool(ItemTool):
+class MoveItemTool(gaphas.tool.ItemTool):
     """This class is responsible of moving states, names, connections, etc.
     """
 
@@ -166,7 +216,7 @@ class MoveItemTool(ItemTool):
         return super(MoveItemTool, self).on_button_release(event)
 
 
-class HoverItemTool(HoverTool):
+class HoverItemTool(gaphas.tool.HoverTool):
     def __init__(self, view=None):
         super(HoverItemTool, self).__init__(view)
         self._prev_hovered_item = None
@@ -266,7 +316,7 @@ class HoverItemTool(HoverTool):
             self._prev_hovered_item = self.view.hovered_item
 
 
-class MultiSelectionTool(RubberbandTool):
+class MultiSelectionTool(gaphas.tool.RubberbandTool):
     def on_button_press(self, event):
         if event.state & constants.RUBBERBAND_MODIFIER:
             return super(MultiSelectionTool, self).on_button_press(event)
@@ -333,7 +383,7 @@ class MultiSelectionTool(RubberbandTool):
         return True
 
 
-class MoveHandleTool(HandleTool):
+class MoveHandleTool(gaphas.tool.HandleTool):
     """Tool to move handles around
 
     Handles can be moved using click'n'drag. This is already implemented in the base class `HandleTool`. This class
@@ -440,7 +490,7 @@ class MoveHandleTool(HandleTool):
         super(MoveHandleTool, self).on_button_release(event)
 
 
-class ConnectionTool(ConnectHandleTool):
+class ConnectionTool(gaphas.tool.ConnectHandleTool):
 
     def __init__(self):
         super(ConnectionTool, self).__init__()
@@ -720,7 +770,7 @@ class ConnectionModificationTool(ConnectionTool):
         self._redraw_port(self._start_port_v)
 
 
-class RightClickTool(ItemTool):
+class RightClickTool(gaphas.tool.ItemTool):
     def __init__(self, view=None, buttons=(3,)):
         super(RightClickTool, self).__init__(view, buttons)
         self.sm_right_click_menu = StateRightClickMenuGaphas()
