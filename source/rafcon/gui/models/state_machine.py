@@ -124,9 +124,6 @@ class StateMachineModel(ModelMT, Hashable):
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
 
-    def __del__(self):
-        self.destroy()
-
     @property
     def core_element(self):
         return self.state_machine
