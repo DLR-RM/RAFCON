@@ -136,7 +136,9 @@ class ListViewController(ExtendedController):
             """
             # secure scrollbar adjustments on active cell
             [path, focus_column] = self.tree_view.get_cursor()
-            self.tree_view.scroll_to_cell(path, self.widget_columns[self.widget_columns.index(focus_column)], use_align=False)
+            if path:
+                self.tree_view.scroll_to_cell(path, self.widget_columns[self.widget_columns.index(focus_column)],
+                                              use_align=False)
 
             editing_cancelled_handler_id = renderer.connect('editing-canceled', on_editing_canceled)
             focus_out_handler_id = editable.connect('focus-out-event', on_focus_out)
