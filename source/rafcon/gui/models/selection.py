@@ -152,12 +152,16 @@ class Selection(ModelMT):
         return return_string
 
     def _check_model_types(self, models):
-        """ Check types of passed models for correctness and in case raise exception"""
+        """ Check types of passed models for correctness and in case raise exception
+
+        :rtype set:
+        :returns set of models that are valid for the class"""
         if not hasattr(models, "__iter__"):
             models = {models}
         if not all([isinstance(model, (AbstractStateModel, StateElementModel)) for model in models]):
             raise TypeError("The selection supports only models with base class AbstractStateModel or "
                             "StateElementModel, see handed elements {0}".format(models))
+        return models if isinstance(models, set) else set(models)
 
     @updates_selection
     def add(self, models):
@@ -165,19 +169,14 @@ class Selection(ModelMT):
         if models is None:
             return
 
-        if not hasattr(models, "__iter__"):
-            models = {models}
-
-        self._check_model_types(models)
+        models = self._check_model_types(models)
         self._selected.update(models)
         self._selected = reduce_to_parent_states(self._selected)
 
     @updates_selection
     def remove(self, models):
         """ Removed the passed model(s) from the selection"""
-        if not hasattr(models, "__iter__"):
-            models = {models}
-
+        models = self._check_model_types(models)
         for model in models:
             if model in self._selected:
                 self._selected.remove(model)
@@ -189,10 +188,8 @@ class Selection(ModelMT):
         if models is None:
             models = set()
 
-        self._check_model_types(models)
-        if not hasattr(models, "__iter__"):
-            models = {models}
-        else:
+        models = self._check_model_types(models)
+        if len(models) > 1:
             models = reduce_to_parent_states(models)
 
         self._selected = set(models)
@@ -222,10 +219,8 @@ class Selection(ModelMT):
         else:
             self._selected.clear()
 
-        self._check_model_types(models)
-        if not hasattr(models, "__iter__"):
-            models = {models}
-        else:
+        models = self._check_model_types(models)
+        if len(models) > 1:
             models = reduce_to_parent_states(models)
 
         self._selected.update(models)
@@ -246,10 +241,7 @@ class Selection(ModelMT):
 
         :param models: The list of models that are newly selected/clicked on
         """
-        if not hasattr(models, "__iter__"):
-            models = {models}
-        models = set(models)  # Ensure that models is a set
-        self._check_model_types(models)
+        models = self._check_model_types(models)
 
         if extend_selection():
             already_selected_elements = models & self._selected
