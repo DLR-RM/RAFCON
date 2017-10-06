@@ -621,6 +621,10 @@ class OutcomeView(LogicPortView):
         return True
 
     def draw(self, context, state, highlight=False):
+        # Do not draw if the core element has already been destroyed
+        if not self.model.core_element:
+            return
+
         if highlight:
             fill_color = gui_config.gtk_colors['STATE_ACTIVE_BORDER']
         elif self.outcome_id == -2:
@@ -660,6 +664,10 @@ class ScopedVariablePortView(PortView):
         return self._last_label_size
 
     def draw(self, context, state):
+        # Do not draw if the core element has already been destroyed
+        if not self.model.core_element:
+            return
+
         c = context.cairo
         view = self._parent.canvas.get_first_view()
         side_length = self.port_side_size
@@ -846,6 +854,10 @@ class DataPortView(PortView):
         return self.parent.selected or self.parent.show_data_port_label
 
     def draw(self, context, state):
+        # Do not draw if the core element has already been destroyed
+        if not self.model.core_element:
+            return
+
         self.draw_port(context, self.fill_color, state.transparent, self._value)
 
 

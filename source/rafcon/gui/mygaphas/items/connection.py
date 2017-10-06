@@ -88,6 +88,10 @@ class TransitionView(ConnectionView):
         self._transition_m = ref(transition_model)
 
     def draw(self, context):
+        # Do not draw if the core element has already been destroyed
+        if not self.model.core_element:
+            return
+
         if context.selected:
             self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE_SELECTED'],
                                                             self.parent.transparent)
@@ -130,6 +134,10 @@ class DataFlowView(ConnectionView):
         return global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
 
     def draw(self, context):
+        # Do not draw if the core element has already been destroyed
+        if not self.model.core_element:
+            return
+
         if not self.show_connection:
             return
         if context.selected:

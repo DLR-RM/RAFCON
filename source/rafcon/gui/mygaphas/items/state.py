@@ -366,9 +366,11 @@ class StateView(Element):
 
     def draw(self, context):
         # Do not draw if
-        # * state (or its parent) is currently moved
+        # * core element is no longer existing (must have just been removed)
+        # * parent state is currently moved
         # * is root state of a library (drawing would hide the LibraryState itself)
-        if self.moving and self.parent and self.parent.moving or self.model.state.is_root_state_of_library:
+        if not self.model.state or self.moving and self.parent and self.parent.moving or \
+                self.model.state.is_root_state_of_library:
             return
 
         width = self.width
@@ -907,9 +909,10 @@ class NameView(Element):
 
     def draw(self, context):
         # Do not draw if
-        # * state (or its parent) is currently moved
+        # * core element is no longer existing (must have just been removed)
+        # * parent state is currently moved
         # * is root state of a library (drawing would hide the LibraryState itself)
-        if self.moving or self.parent.model.state.is_root_state_of_library:
+        if not self.model.state or self.moving or self.parent.model.state.is_root_state_of_library:
             return
 
         width = self.width
