@@ -40,8 +40,9 @@ class MyCanvas(Canvas):
 
         def delete_model_from_maps(model):
             try:
-                del self._core_view_map[model.core_element]
-                del self._model_view_map[model]
+                view = self._model_view_map.pop(model)
+                core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
+                del self._core_view_map[core_element]
             except KeyError:
                 from rafcon.gui.models.library_state import LibraryStateModel
                 if not isinstance(model.parent, LibraryStateModel):
